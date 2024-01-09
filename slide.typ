@@ -3,6 +3,11 @@
 // touying pause mark
 #let pause = [#"<touying-pause>"]
 
+// touying slide counter
+#let slide-counter = counter("touying-slide-counter")
+#let last-slide-counter = counter("touying-last-slide-counter")
+#let last-slide-number = locate(loc => last-slide-counter.final(loc).first())
+
 // parse a sequence into content, and get the repetitions
 #let _parse-content-with-pause(self: empty-object, base: 1, index: 1, it) = {
   // get cover function from self
@@ -39,10 +44,18 @@
 
 // touying-slide
 #let touying-slide(self: empty-object, repeat: auto, body) = {
-  // for multiple pages
+  // update counters
+  let update-counters = {
+    slide-counter.step()
+    if self.freeze-last-slide-number == false {
+      last-slide-counter.step()
+    }
+  }
+  // for speed up, do not parse the content if repeat is none
   if repeat == none {
     return {
-      set page(..self.page-args)
+      let header = self.page-args.at("header", default: none) + update-counters
+      set page(..self.page-args, header: header)
       body
     }
   }
@@ -61,21 +74,31 @@
   let current = 1
   for i in range(1, repeat + 1) {
     let (cont, _) = _parse-content-with-pause(self: self, index: i, body)
-    result.push(page(..self.page-args, cont))
+    // update the counter in the first subslide
+    let header = self.page-args.at("header", default: none)
+    if i == 1 {
+      header += update-counters
+    }
+    result.push(page(..self.page-args, header: header, cont))
   }
   // return the result
-  return result.sum()
+  result.sum()
 }
 
 // build the touying singleton
 #let s = {
   let self = empty-object + (
+    // cover function, default is hide
     cover: hide,
+    // handle mode
     handout: false,
+    // freeze last slide counter
+    freeze-last-slide-number: false,
+    // page args
     page-args: (
       paper: "presentation-16-9",
       header: none,
-      footer: none,
+      footer: align(right, slide-counter.display() + " / " + last-slide-number),
     )
   )
   // register the methods
@@ -83,6 +106,10 @@
   self.methods.init = (self: empty-object, body) => {
     set text(size: 20pt)
     body
+  }
+  self.methods.freeze-last-slide-number = (self: empty-object) => {
+    self.freeze-last-slide-number = true
+    self
   }
   self
 }
