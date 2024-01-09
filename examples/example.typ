@@ -1,11 +1,11 @@
-#import "../lib.typ": s, methods, pause
+#import "../lib.typ": s, methods, pause, themes
 
-#let (init, touying-slide) = methods(s)
-
+#let s = themes.metropolis.register(s, aspect-ratio: "16-9", footer: [Custom footer])
+#let (init, slide) = methods(s)
 #show: init
 
 // simple animations
-#touying-slide[
+#slide[
   a simple #pause dynamic
 
   #pause
@@ -14,7 +14,7 @@
 ]
 
 // complex animations
-#touying-slide(setting: body => {
+#slide(setting: body => {
   set text(fill: blue)
   body
 }, repeat: 3, self => [
@@ -34,18 +34,17 @@
 ])
 
 // multiple pages for one slide
-#touying-slide([
-
+#slide[
   #lorem(200)
 
-  test
-])
+  test multiple pages
+]
 
 // appendix with freeze-last-slide-number
 #let (freeze-last-slide-number,) = methods(s)
 #let s = freeze-last-slide-number()
-#let (touying-slide,) = methods(s)
+#let (slide,) = methods(s)
 
-#touying-slide([
+#slide[
   appendix
-])
+]

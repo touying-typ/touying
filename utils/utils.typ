@@ -1,6 +1,14 @@
 // OOP: empty object
 #let empty-object = (methods: (:))
 
+// OOP: cal
+#let call-or-display(self, fn) = {
+  if type(fn) == function {
+    return fn(self)
+  } else {
+    return fn
+  }
+}
 
 // OOP: assuming all functions in dictionary have a named `self` parameter,
 // `methods` function is used to get all methods in dictionary object

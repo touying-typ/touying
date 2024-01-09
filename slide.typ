@@ -1,4 +1,4 @@
-#import "utils/utils.typ": empty-object, methods, is-sequence
+#import "utils/utils.typ": empty-object, methods, is-sequence, call-or-display
 
 // touying pause mark
 #let pause = [#"<touying-pause>"]
@@ -7,6 +7,10 @@
 #let slide-counter = counter("touying-slide-counter")
 #let last-slide-counter = counter("touying-last-slide-counter")
 #let last-slide-number = locate(loc => last-slide-counter.final(loc).first())
+#let touying-progress(callback) = locate(loc => {
+  let ratio = calc.min(1.0, slide-counter.at(loc).first() / last-slide-counter.final(loc).first())
+  callback(ratio)
+})
 
 // parse a sequence into content, and get the repetitions
 #let _parse-content-with-pause(self: empty-object, base: 1, index: 1, it) = {
@@ -53,13 +57,14 @@
       last-slide-counter.step()
     }
   }
+  // page header and footer
+  let header = call-or-display(self, self.page-args.at("header", default: none))
+  let footer = call-or-display(self, self.page-args.at("footer", default: none))
   // for speed up, do not parse the content if repeat is none
   if repeat == none {
     return {
-      show: setting
-      let header = self.page-args.at("header", default: none) + update-counters
-      set page(..self.page-args, header: header)
-      body
+      header += update-counters
+      page(..(self.page-args + (header: header, footer: footer)), setting(body))
     }
   }
   // for single page slide, get the repetitions
@@ -78,14 +83,12 @@
   for i in range(1, repeat + 1) {
     let (cont, _) = _parse-content-with-pause(self: self, index: i, body)
     // update the counter in the first subslide
-    let header = self.page-args.at("header", default: none)
     if i == 1 {
       header += update-counters
     }
-    result.push(page(..self.page-args, header: header, cont))
+    result.push(page(..(self.page-args + (header: header, footer: footer)), setting(cont)))
   }
   // return the result
-  show: setting
   result.sum()
 }
 
@@ -107,6 +110,7 @@
   )
   // register the methods
   self.methods.touying-slide = touying-slide
+  self.methods.slide = touying-slide
   self.methods.init = (self: empty-object, body) => {
     set text(size: 20pt)
     body
