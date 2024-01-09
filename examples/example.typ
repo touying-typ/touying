@@ -20,7 +20,9 @@
 }, repeat: 3, self => [
   #let (uncover, only) = methods(self)
 
-  in subslide #self.subslide,
+  #place(only(1)[#box()<jump-here>])
+
+  in subslide #self.subslide, #link(<jump-here>)[jump to first subslide].
 
   test #uncover(2)[uncover] function
 
