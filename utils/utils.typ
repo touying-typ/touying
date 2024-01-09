@@ -1,12 +1,12 @@
 // OOP: empty object
 #let empty-object = (methods: (:))
 
-// OOP: cal
-#let call-or-display(self, fn) = {
-  if type(fn) == function {
-    return fn(self)
+// OOP: call it or display it
+#let call-or-display(self, it) = {
+  if type(it) == function {
+    return it(self)
   } else {
-    return fn
+    return it
   }
 }
 
@@ -25,7 +25,7 @@
 }
 
 
-// is sequence
+// Type: is sequence
 #let is-sequence(it) = {
   type(it) == content and it.has("children")
 }

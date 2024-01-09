@@ -11,6 +11,31 @@
   let ratio = calc.min(1.0, slide-counter.at(loc).first() / last-slide-counter.final(loc).first())
   callback(ratio)
 })
+#let sections-state = state("touying-sections-state", ((body: none, count: 0, loc: none),))
+#let new-section(section) = locate(loc => {
+  sections-state.update(sections => {
+    sections.push((body: section, count: 0, loc: loc))
+    sections
+  })
+})
+#let section-step() = sections-state.update(sections => {
+  let last = sections.pop()
+  last.count += 1
+  sections.push(last)
+  sections
+})
+#let touying-outline(enum-args: (:), padding: 0pt) = locate(loc => {
+  let sections = sections-state.final(loc)
+  pad(padding, enum(
+    ..enum-args,
+    ..sections.filter(section => section.loc != none)
+      .map(section => link(section.loc, section.body))
+  ))
+})
+#let current-section = locate(loc => {
+  let sections = sections-state.at(loc)
+  sections.last().body
+})
 
 // parse a sequence into content, and get the repetitions
 #let _parse-content-with-pause(self: empty-object, base: 1, index: 1, it) = {
@@ -53,8 +78,9 @@
   // update counters
   let update-counters = {
     slide-counter.step()
-    if self.freeze-last-slide-number == false {
+    if self.appendix == false {
       last-slide-counter.step()
+      section-step()
     }
   }
   // page header and footer
@@ -99,8 +125,8 @@
     cover: hide,
     // handle mode
     handout: false,
-    // freeze last slide counter
-    freeze-last-slide-number: false,
+    // appendix mode
+    appendix: false,
     // page args
     page-args: (
       paper: "presentation-16-9",
@@ -115,8 +141,11 @@
     set text(size: 20pt)
     body
   }
-  self.methods.freeze-last-slide-number = (self: empty-object) => {
-    self.freeze-last-slide-number = true
+  self.methods.touying-outline = (self: empty-object, ..args) => {
+    touying-outline(..args)
+  }
+  self.methods.appendix = (self: empty-object) => {
+    self.appendix = true
     self
   }
   self

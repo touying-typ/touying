@@ -40,9 +40,9 @@
   test multiple pages
 ]
 
-// appendix with freeze-last-slide-number
-#let (freeze-last-slide-number,) = methods(s)
-#let s = freeze-last-slide-number()
+// appendix by freezing last-slide-number
+#let (appendix,) = methods(s)
+#let s = appendix()
 #let (slide,) = methods(s)
 
 #slide[

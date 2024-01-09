@@ -1,4 +1,4 @@
-#import "../slide.typ": empty-object, methods, call-or-display, slide-counter, last-slide-number, touying-progress
+#import "../slide.typ": empty-object, methods, call-or-display, slide-counter, sections-state, new-section, current-section, touying-outline, last-slide-counter, last-slide-number, touying-progress
 
 #let _saved-align = align
 
@@ -33,7 +33,86 @@
   )
 }
 
-#let register(aspect-ratio: "16-9", footer: [], self) = {
+#let title-slide(
+  self: empty-object,
+  title: [],
+  subtitle: none,
+  author: none,
+  date: none,
+  extra: none,
+  hide-header: true,
+  hide-footer: true,
+) = {
+  if hide-header {
+    self.page-args.header = none
+  }
+  if hide-footer {
+    self.page-args.footer = none
+  }
+  let content = {
+    set text(fill: self.m-colors.dark-teal)
+    set align(horizon)
+    block(width: 100%, inset: 2em, {
+      text(size: 1.3em, strong(title))
+      if subtitle != none {
+        linebreak()
+        text(size: 0.9em, subtitle)
+      }
+      line(length: 100%, stroke: .05em + self.m-colors.light-brown)
+      set text(size: .8em)
+      if author != none {
+        block(spacing: 1em, author)
+      }
+      if date != none {
+        block(spacing: 1em, date)
+      }
+      set text(size: .8em)
+      if extra != none {
+        block(spacing: 1em, extra)
+      }
+    
+    })
+  }
+  let touying-slide = self.methods.touying-slide
+  touying-slide(self: self, repeat: none, content)
+}
+
+#let new-section-slide(self: empty-object, hide-header: true, hide-footer: true, name) = {
+  if hide-header {
+    self.page-args.header = none
+  }
+  if hide-footer {
+    self.page-args.footer = none
+  }
+  let content = {
+    new-section(name)
+    set align(horizon)
+    show: pad.with(20%)
+    set text(size: 1.5em)
+    name
+    block(height: 2pt, width: 100%, spacing: 0pt, self.m-progress-bar)
+  }
+  let touying-slide = self.methods.touying-slide
+  touying-slide(self: self, repeat: none, content)
+}
+
+#let focus-slide(self: empty-object, hide-header: true, hide-footer: true, body) = {
+  if hide-header {
+    self.page-args.header = none
+  }
+  if hide-footer {
+    self.page-args.footer = none
+  }
+  self.page-args = self.page-args + (
+    fill: self.m-colors.dark-teal,
+    margin: 2em,
+  )
+  set text(fill: self.m-colors.extra-light-gray, size: 1.5em)
+  let touying-slide = self.methods.touying-slide
+  touying-slide(self: self, repeat: none, align(horizon + center, body))
+}
+
+#let register(aspect-ratio: "16-9", header: current-section, footer: [], self) = {
   // save the variables for later use
   self.m-cell = block.with(
     width: 100%,
@@ -51,12 +130,12 @@
   self.m-progress-bar = touying-progress(ratio => {
     grid(
       columns: (ratio * 100%, 1fr),
-      self.m-cell(fill: m-light-brown),
-      self.m-cell(fill: m-lighter-brown)
+      (self.m-cell)(fill: self.m-colors.light-brown),
+      (self.m-cell)(fill: self.m-colors.lighter-brown)
     )
   })
   self.m-footer = footer
-  self.m-title = []
+  self.m-title = header
   // set page
   let header(self) = {
     set align(top)
@@ -84,6 +163,13 @@
   )
   // register methods
   self.methods.slide = slide
+  self.methods.title-slide = title-slide
+  self.methods.new-section-slide = new-section-slide
+  self.methods.focus-slide = focus-slide
+  self.methods.touying-outline = (self: empty-object, enum-args: (:), ..args) => {
+    touying-outline(enum-args: (tight: false,) + enum-args, ..args)
+  }
+  self.methods.alert = (self: empty-object, it) => text(fill: self.m-colors.light-brown, it)
   self
 }
 
