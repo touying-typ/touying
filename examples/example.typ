@@ -4,18 +4,34 @@
 
 #show: init
 
-// animations
-#touying-slide(self => [
+// simple animations
+#touying-slide[
+  a simple #pause dynamic
+
+  #pause
+  
+  slide.
+]
+
+// complex animations
+#touying-slide(setting: body => {
+  set text(fill: blue)
+  body
+}, repeat: 3, self => [
   #let (uncover, only) = methods(self)
 
-  abc #uncover(2)[uncover] yes
+  in subslide #self.subslide,
+
+  test #uncover(2)[uncover] function
+
+  test #only(2)[only] function
 
   #pause
 
-  test
+  and paused text.
 ])
 
-// multiple pages
+// multiple pages for one slide
 #touying-slide([
 
   #lorem(200)
@@ -23,7 +39,7 @@
   test
 ])
 
-// appendix
+// appendix with freeze-last-slide-number
 #let (freeze-last-slide-number,) = methods(s)
 #let s = freeze-last-slide-number()
 #let (touying-slide,) = methods(s)

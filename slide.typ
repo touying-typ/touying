@@ -14,6 +14,8 @@
   let cover = self.cover
   // if it is a function, then call it with self, uncover and only
   if type(it) == function {
+    // subslide index
+    self.subslide = index - base + 1
     // register the methods
     self.methods.uncover = (self: empty-object, i, uncover-cont) => if i == index { uncover-cont } else { cover(uncover-cont) }
     self.methods.only = (self: empty-object, i, only-cont) => if i == index { only-cont }
@@ -43,7 +45,7 @@
 }
 
 // touying-slide
-#let touying-slide(self: empty-object, repeat: auto, body) = {
+#let touying-slide(self: empty-object, repeat: auto, setting: body => body, body) = {
   // update counters
   let update-counters = {
     slide-counter.step()
@@ -54,6 +56,7 @@
   // for speed up, do not parse the content if repeat is none
   if repeat == none {
     return {
+      show: setting
       let header = self.page-args.at("header", default: none) + update-counters
       set page(..self.page-args, header: header)
       body
@@ -82,6 +85,7 @@
     result.push(page(..self.page-args, header: header, cont))
   }
   // return the result
+  show: setting
   result.sum()
 }
 
