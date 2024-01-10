@@ -1,3 +1,12 @@
+// This theme is inspired by https://github.com/matze/mtheme
+// The origin code was written by https://github.com/Enivex
+
+// Consider using:
+// #set text(font: "Fira Sans", weight: "light", size: 20pt)
+// #show math.equation: set text(font: "Fira Math")
+// #set strong(delta: 100)
+// #set par(justify: true)
+
 #import "../slide.typ": empty-object, methods, call-or-display, slide-counter, sections-state, new-section, current-section, touying-outline, last-slide-counter, last-slide-number, touying-progress
 
 #let _saved-align = align

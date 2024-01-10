@@ -1,6 +1,6 @@
 # Touying ![logo](https://github.com/touying-typ/touying/assets/34951714/2aa394d3-2319-4572-aef7-ed3c14b09846)
 
-Touying (投影 in chinese, /tóuyǐng/, meaning projection) is a package for creating presentation slides in Typst.
+Touying (投影 in chinese, /tóuyǐng/, meaning projection) is a more efficient package for creating presentation slides in Typst.
 
 Compared to Polylux, it employs a more object-oriented writing style, capable of simulating a mutable global singleton. Additionally, Touying does not rely on `locate` and `counter` for implementing `#pause`, thus offering better performance, albeit with certain limitations.
 
@@ -122,3 +122,12 @@ Compared to Polylux, it employs a more object-oriented writing style, capable of
 ```
 
 ![image](https://github.com/touying-typ/touying/assets/34951714/fddd38a2-a525-4e08-8157-5b80fe0b8cb0)
+
+
+## Acknowledgements
+
+Thank you to...
+
+- [@andreasKroepelin](https://github.com/andreasKroepelin) for the `polylux` package
+- [@Enivex](https://github.com/Enivex) for the `metropolis` theme
+- [@ntjess](https://github.com/ntjess) for contributing to `fit-to-height` and `fit-to-width`
