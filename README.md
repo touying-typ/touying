@@ -4,11 +4,48 @@ Touying (投影 in chinese, /tóuyǐng/, meaning projection) is a more efficient
 
 Touying is a package derived from [Polylux](https://github.com/andreasKroepelin/polylux). Therefore, most concepts and APIs remain consistent with Polylux. You can refer to the [Polylux documentation](https://polylux.dev/book/) for a better understanding of Touying.
 
-Compared to Polylux, Touying employs a more object-oriented writing style, capable of simulating **a mutable global singleton**. So, Touying can conveniently access and update "global variables", such as the 'handout-mode' boolean variable. At the same time, you can easily retrieve and modify page parameters, avoiding the side effects of creating a new page caused by `#set page(..)`.
+Compared to Polylux, Touying employs a more object-oriented writing style, capable of simulating **a mutable global singleton**. So, Touying can conveniently access and update "global variables", such as the 'handout-mode' boolean variable. At the same time, you can easily retrieve and modify page parameters by `self.page-args`, avoiding the side effects of creating a new page caused by `#set page(..)`.
 
 Additionally, Touying does not rely on `locate` and `counter` for implementing `#pause`, thus offering better performance, albeit with certain limitations. The advantage is that you can use `#pause` inline. The drawback is that `#pause` after set-show rule won't take effect (you must use set-show rule in the setting parameters). Currently, `#pause` only works at the outermost level, and it won't work inside layout functions like grid.
 
 **Warning: It is under development, and the API may change at any time.**
+
+## Implemented Features
+
+- [x] **Object-oriented programming:** Singleton `s`, binding methods `utils.methods(s)` and `(self: obj, ..) => {..}` methods.
+- [x] **Page arguments management:** Instead of using `#set page(..)`, you should use `self.page-args` to retrieve or set page parameters, thereby avoiding unnecessary creation of new pages.
+- [x] **`#pause` for sequence content:** You can use #pause at the outermost level of a slide, including inline.
+- [x] **Callback-style `uncover` and `only`:** Based on the concise syntax provided by Polylux, allow precise control of the timing for displaying content.
+  - You should manually control the number of subslides using the `repeat` parameter.
+- [x] **Transparent cover:** Enable transparent cover using oop syntax like `#let s = (s.methods.enable-transparent-cover)(self: s)`.
+- [x] **Handout mode:** enable handout mode by `#let s = (s.methods.enable-handout-mode)(self: s)`.
+- [x] **Fit-to-width and fit-to-height:** Fit-to-width for title in header and fit-to-height for image.
+  - `utils.fit-to-width(grow: true, shrink: true, width, body)`
+  - `utils.fit-to-height(width: none, prescale-width: none, grow: true, shrink: true, height, body)`
+- [x] **Slides counter:** `states.slide-counter.display() + " / " + states.last-slide-number` and `states.touying-progress(ratio => ..)`.
+- [x] **Appendix:** Freeze the `last-slide-number` to prevent the slide number from increasing further.
+- [x] **Sections:** Touying's built-in section support can be used to display the current section title and show progress.
+  - [x] `states.new-section(section)` to register a new section.
+  - [x] `states.current-section` to get the current section.
+  - [x] `states.touying-outline` or `s.methods.touying-outline` to display a outline of sections.
+  - [x] `states.touying-final-sections(sections => ..)` for custom outline display.
+  - [x] `states.touying-progress-with-sections((current-sections: .., final-sections: .., current-slide-number: .., last-slide-number: ..) => ..)` for powerful progress display.
+- [x] **Pdfpc:** pdfpc support and export `.pdfpc` file without external tool by `typst query` command simply.
+
+
+## Features to Implement
+
+- [ ] **`#pause` for list item:** Make `#pause` work with list item.
+- [ ] **`#pause` for layout function:** Make `#pause` work with layout function like grid.
+- [ ] **Alternatives:** Implement `alternatives`.
+- [ ] **More themes:** Add more themes.
+- [ ] **Combinable components**: Combinable components for header, footer and sidebar, .
+- [ ] **Navigation bar**: Navigation bar like [here](https://tex.stackexchange.com/questions/350508/adding-outline-bar-to-the-beamer-for-section-mentioning) by `states.touying-progress-with-sections(..)`.
+- [ ] **Document:** Add a more detailed document.
+- [ ] **External viewers:** Integration with external viewers like impress.js and typst-preview.
+
+Feel free to suggest any ideas and contribute.
+
 
 ## Dynamic slides
 

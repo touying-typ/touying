@@ -13,7 +13,10 @@
 
 #let new-section(section) = locate(loc => {
   sections-state.update(sections => {
-    sections.push((body: section, count: 0, loc: loc))
+    let last = sections.pop()
+    last.count -= 1
+    sections.push(last)
+    sections.push((body: section, count: 1, loc: loc))
     sections
   })
 })
@@ -25,11 +28,11 @@
   sections
 })
 
-#let touying-sections(callback) = locate(loc => {
+#let touying-final-sections(callback) = locate(loc => {
   callback(sections-state.final(loc))
 })
 
-#let touying-outline(enum-args: (:), padding: 0pt) = touying-sections(sections => {
+#let touying-outline(enum-args: (:), padding: 0pt) = touying-final-sections(sections => {
   pad(padding, enum(
     ..enum-args,
     ..sections.filter(section => section.loc != none)
@@ -40,4 +43,13 @@
 #let current-section = locate(loc => {
   let sections = sections-state.at(loc)
   sections.last().body
+})
+
+#let touying-progress-with-sections(callback) = locate(loc => {
+  callback((
+    current-sections: sections-state.at(loc),
+    final-sections: sections-state.final(loc),
+    current-slide-number: slide-counter.at(loc).first(),
+    last-slide-number: last-slide-counter.final(loc).first(),
+  ))
 })
