@@ -1,10 +1,10 @@
 # Touying
 
-Touying (投影 in chinese, /tóuyǐng/, meaning projection) is a is a package for creating presentation slides in Typst.
+Touying (投影 in chinese, /tóuyǐng/, meaning projection) is a package for creating presentation slides in Typst.
 
 Compared to Polylux, it employs a more object-oriented writing style, capable of simulating a mutable global singleton. Additionally, Touying does not rely on `locate` and `counter` for implementing `#pause`, thus offering better performance, albeit with certain limitations.
 
-**Warning: It is under development, and the interface may change at any time.**
+**Warning: It is under development, and the API may change at any time.**
 
 ## Dynamic slides
 
