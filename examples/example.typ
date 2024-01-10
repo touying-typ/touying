@@ -2,6 +2,7 @@
 
 #let s = themes.metropolis.register(s, aspect-ratio: "16-9", footer: [Custom footer])
 #let s = (s.methods.enable-transparent-cover)(self: s)
+// #let s = (s.methods.enable-handout-mode)(self: s)
 #let (init, slide, touying-outline) = utils.methods(s)
 #show: init
 
@@ -21,9 +22,7 @@
 }, repeat: 3, self => [
   #let (uncover, only) = utils.methods(self)
 
-  #place(only(1)[#box()<jump-here>])
-
-  in subslide #self.subslide, #link(<jump-here>)[jump to first subslide].
+  in subslide #self.subslide
 
   test #uncover("2-")[uncover] function
 

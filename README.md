@@ -13,7 +13,8 @@ Compared to Polylux, it employs a more object-oriented writing style, capable of
 
 #let s = themes.metropolis.register(s, aspect-ratio: "16-9", footer: [Custom footer])
 #let s = (s.methods.enable-transparent-cover)(self: s)
-#let (init, slide) = utils.methods(s)
+// #let s = (s.methods.enable-handout-mode)(self: s)
+#let (init, slide, touying-outline) = utils.methods(s)
 #show: init
 
 // simple animations
@@ -32,9 +33,7 @@ Compared to Polylux, it employs a more object-oriented writing style, capable of
 }, repeat: 3, self => [
   #let (uncover, only) = utils.methods(self)
 
-  #place(only(1)[#box()<jump-here>])
-
-  in subslide #self.subslide, #link(<jump-here>)[jump to first subslide].
+  in subslide #self.subslide
 
   test #uncover("2-")[uncover] function
 
@@ -54,7 +53,7 @@ Compared to Polylux, it employs a more object-oriented writing style, capable of
 
 // appendix by freezing last-slide-number
 #let s = (s.methods.appendix)(self: s)
-#let (slide, new-section-slide) = utils.methods(s)
+#let (slide,) = utils.methods(s)
 
 #slide[
   appendix

@@ -90,19 +90,26 @@
     )
     repeat = repetitions
   }
-  // render all the subslides
-  let result = ()
-  let current = 1
-  for i in range(1, repeat + 1) {
-    let (cont, _) = _parse-content-with-pause(self: self, index: i, body)
-    // update the counter in the first subslide
-    if i == 1 {
-      header += update-counters
+  if self.handout {
+    let (cont, _) = _parse-content-with-pause(self: self, index: repeat, body)
+    header += update-counters
+    page(..(self.page-args + (header: header, footer: footer)), setting(cont))
+  } else {
+    // render all the subslides
+    let result = ()
+    let current = 1
+    for i in range(1, repeat + 1) {
+      let new-header = header
+      let (cont, _) = _parse-content-with-pause(self: self, index: i, body)
+      // update the counter in the first subslide
+      if i == 1 {
+        new-header += update-counters
+      }
+      result.push(page(..(self.page-args + (header: new-header, footer: footer)), setting(cont)))
     }
-    result.push(page(..(self.page-args + (header: header, footer: footer)), setting(cont)))
+    // return the result
+    result.sum()
   }
-  // return the result
-  result.sum()
 }
 
 // build the touying singleton
@@ -138,6 +145,11 @@
       utils.cover-with-rect(fill: utils.update-alpha(
         constructor: constructor, self.page-args.fill, alpha), body)
     }
+    self
+  }
+  // handout mode
+  self.methods.enable-handout-mode = (self: utils.empty-object) => {
+    self.handout = true
     self
   }
   // default slide
