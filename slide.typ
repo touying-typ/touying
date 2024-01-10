@@ -7,7 +7,7 @@
 // parse a sequence into content, and get the repetitions
 #let _parse-content-with-pause(self: utils.empty-object, base: 1, index: 1, it) = {
   // get cover function from self
-  let cover = self.cover
+  let cover = self.methods.cover.with(self: self)
   // if it is a function, then call it with self, uncover and only
   if type(it) == function {
     // subslide index
@@ -28,24 +28,36 @@
   // repetitions
   let repetitions = base
   // parse the content
-  let uncover-arr = ()
+  let result = ()
   let cover-arr = ()
   if utils.is-sequence(it) {
     for child in it.children {
       if child == pause {
         repetitions += 1
+      } else if child == linebreak() or child == parbreak() {
+        // clear the cover-arr when linebreak or parbreak
+        if cover-arr.len() != 0 {
+          result.push(cover(cover-arr.sum()))
+          cover-arr = ()
+        }
+        result.push(child)
       } else {
         if repetitions <= index {
-          uncover-arr.push(child)
+          result.push(child)
         } else {
           cover-arr.push(child)
         }
       }
     }
   } else {
-    uncover-arr.push(it)
+    result.push(it)
   }
-  return (uncover-arr.sum(default: []) + if cover-arr.len() > 0 { cover(cover-arr.sum()) }, repetitions)
+  // clear the cover-arr when end
+  if cover-arr.len() != 0 {
+    result.push(cover(cover-arr.sum()))
+    cover-arr = ()
+  }
+  return (result.sum(default: []), repetitions)
 }
 
 // touying-slide
@@ -96,8 +108,6 @@
 // build the touying singleton
 #let s = {
   let self = utils.empty-object + (
-    // cover function, default is hide
-    cover: hide,
     // handle mode
     handout: false,
     // appendix mode
@@ -110,6 +120,15 @@
     )
   )
   // register the methods
+  self.methods.cover = utils.wrap-method(hide)
+  self.methods.update-cover = (self: utils.empty-object, is-method: false, cover-fn) => {
+    if is-method {
+      self.methods.cover = cover-fn
+    } else {
+      self.methods.cover = utils.wrap-method(cover-fn)
+    }
+    self
+  }
   self.methods.touying-slide = touying-slide
   self.methods.slide = touying-slide
   self.methods.init = (self: utils.empty-object, body) => {

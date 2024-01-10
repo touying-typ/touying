@@ -135,7 +135,7 @@
     dark-teal: rgb("#23373b"),
     light-brown: rgb("#eb811b"),
     lighter-brown: rgb("#d6c6b7"),
-    extra-light-gray: white.darken(2%),
+    extra-light-gray: rgb("#fafafa"),
   )
   self.m-progress-bar = states.touying-progress(ratio => {
     grid(

@@ -1,6 +1,9 @@
 #import "../lib.typ": s, pause, utils, states, themes
 
 #let s = themes.metropolis.register(s, aspect-ratio: "16-9", footer: [Custom footer])
+#let s = (s.methods.update-cover)(self: s, is-method: true, (self: utils.empty-object, body) => {
+  utils.cover-with-rect(fill: utils.update-alpha(self.m-colors.extra-light-gray, 80%), body)
+})
 #let (init, slide) = utils.methods(s)
 #show: init
 
