@@ -24,9 +24,9 @@
 
   in subslide #self.subslide, #link(<jump-here>)[jump to first subslide].
 
-  test #uncover(2)[uncover] function
+  test #uncover("2-")[uncover] function
 
-  test #only(2)[only] function
+  test #only("2-")[only] function
 
   #pause
 

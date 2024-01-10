@@ -13,8 +13,16 @@
     // subslide index
     self.subslide = index - base + 1
     // register the methods
-    self.methods.uncover = (self: utils.empty-object, i, uncover-cont) => if i == index { uncover-cont } else { cover(uncover-cont) }
-    self.methods.only = (self: utils.empty-object, i, only-cont) => if i == index { only-cont }
+    self.methods.uncover = (self: utils.empty-object, visible-subslides, uncover-cont) => {
+      if utils._check-visible(index, visible-subslides) { 
+        uncover-cont
+      } else {
+        cover(uncover-cont)
+      }
+    }
+    self.methods.only = (self: utils.empty-object, visible-subslides, only-cont) => {
+      if utils._check-visible(index, visible-subslides) { only-cont }
+    }
     it = it(self)
   }
   // repetitions
