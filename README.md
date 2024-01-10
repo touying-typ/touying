@@ -15,11 +15,7 @@ We can export `example.pdfpc` file by command `typst query --root . ./examples/e
 
 #let s = themes.metropolis.register(s, aspect-ratio: "16-9", footer: [Custom footer])
 #let s = (s.methods.enable-transparent-cover)(self: s)
-// #let s = (s.methods.enable-handout-mode)(self: s)
-#let (init, slide, touying-outline) = utils.methods(s)
-#show: init
-
-#pdfpc.config(
+#let s = (s.methods.append-preamble)(self: s, pdfpc.config(
   duration-minutes: 30,
   start-time: datetime(hour: 14, minute: 10, second: 0),
   end-time: datetime(hour: 14, minute: 40, second: 0),
@@ -33,7 +29,10 @@ We can export `example.pdfpc` file by command `typst query --root . ./examples/e
     alignment: "vertical",
     direction: "inward",
   ),
-)
+))
+// #let s = (s.methods.enable-handout-mode)(self: s)
+#let (init, slide, touying-outline) = utils.methods(s)
+#show: init
 
 // simple animations
 #slide[
