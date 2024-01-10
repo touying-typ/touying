@@ -7,12 +7,13 @@
 // #set strong(delta: 100)
 // #set par(justify: true)
 
-#import "../slide.typ": empty-object, methods, call-or-display, slide-counter, sections-state, new-section, current-section, touying-outline, last-slide-counter, last-slide-number, touying-progress
+#import "../utils/utils.typ"
+#import "../utils/states.typ"
 
 #let _saved-align = align
 
 #let slide(
-  self: empty-object,
+  self: utils.empty-object,
   title: auto,
   align: horizon,
   margin: (top: 3em, bottom: 1em, left: 0em, right: 0em),
@@ -43,7 +44,7 @@
 }
 
 #let title-slide(
-  self: empty-object,
+  self: utils.empty-object,
   title: [],
   subtitle: none,
   author: none,
@@ -86,7 +87,7 @@
   touying-slide(self: self, repeat: none, content)
 }
 
-#let new-section-slide(self: empty-object, hide-header: true, hide-footer: true, name) = {
+#let new-section-slide(self: utils.empty-object, hide-header: true, hide-footer: true, name) = {
   if hide-header {
     self.page-args.header = none
   }
@@ -94,7 +95,7 @@
     self.page-args.footer = none
   }
   let content = {
-    new-section(name)
+    states.new-section(name)
     set align(horizon)
     show: pad.with(20%)
     set text(size: 1.5em)
@@ -105,7 +106,7 @@
   touying-slide(self: self, repeat: none, content)
 }
 
-#let focus-slide(self: empty-object, hide-header: true, hide-footer: true, body) = {
+#let focus-slide(self: utils.empty-object, hide-header: true, hide-footer: true, body) = {
   if hide-header {
     self.page-args.header = none
   }
@@ -121,7 +122,7 @@
   touying-slide(self: self, repeat: none, align(horizon + center, body))
 }
 
-#let register(aspect-ratio: "16-9", header: current-section, footer: [], self) = {
+#let register(aspect-ratio: "16-9", header: states.current-section, footer: [], self) = {
   // save the variables for later use
   self.m-cell = block.with(
     width: 100%,
@@ -136,7 +137,7 @@
     lighter-brown: rgb("#d6c6b7"),
     extra-light-gray: white.darken(2%),
   )
-  self.m-progress-bar = touying-progress(ratio => {
+  self.m-progress-bar = states.touying-progress(ratio => {
     grid(
       columns: (ratio * 100%, 1fr),
       (self.m-cell)(fill: self.m-colors.light-brown),
@@ -152,16 +153,16 @@
       show: self.m-cell.with(fill: self.m-colors.dark-teal, inset: 1em)
       set align(horizon)
       set text(fill: self.m-colors.extra-light-gray, size: 1.2em)
-      strong(call-or-display(self, self.m-title))
+      strong(utils.call-or-display(self, self.m-title))
     } else { [] }
   }
   let footer(self) = {
     set text(size: 0.8em)
     show: pad.with(.5em)
     set align(bottom)
-    text(fill: self.m-colors.dark-teal.lighten(40%), call-or-display(self, self.m-footer))
+    text(fill: self.m-colors.dark-teal.lighten(40%), utils.call-or-display(self, self.m-footer))
     h(1fr)
-    text(fill: self.m-colors.dark-teal, slide-counter.display() + " / " + last-slide-number)
+    text(fill: self.m-colors.dark-teal, states.slide-counter.display() + " / " + states.last-slide-number)
   }
   self.page-args = self.page-args + (
     paper: "presentation-" + aspect-ratio,
@@ -175,10 +176,10 @@
   self.methods.title-slide = title-slide
   self.methods.new-section-slide = new-section-slide
   self.methods.focus-slide = focus-slide
-  self.methods.touying-outline = (self: empty-object, enum-args: (:), ..args) => {
-    touying-outline(enum-args: (tight: false,) + enum-args, ..args)
+  self.methods.touying-outline = (self: utils.empty-object, enum-args: (:), ..args) => {
+    states.touying-outline(enum-args: (tight: false,) + enum-args, ..args)
   }
-  self.methods.alert = (self: empty-object, it) => text(fill: self.m-colors.light-brown, it)
+  self.methods.alert = (self: utils.empty-object, it) => text(fill: self.m-colors.light-brown, it)
   self
 }
 

@@ -1,7 +1,7 @@
-#import "../lib.typ": s, methods, pause, themes
+#import "../lib.typ": s, pause, utils, states, themes
 
 #let s = themes.metropolis.register(s, aspect-ratio: "16-9", footer: [Custom footer])
-#let (init, slide) = methods(s)
+#let (init, slide) = utils.methods(s)
 #show: init
 
 // simple animations
@@ -18,7 +18,7 @@
   set text(fill: blue)
   body
 }, repeat: 3, self => [
-  #let (uncover, only) = methods(self)
+  #let (uncover, only) = utils.methods(self)
 
   #place(only(1)[#box()<jump-here>])
 
@@ -41,9 +41,9 @@
 ]
 
 // appendix by freezing last-slide-number
-#let (appendix,) = methods(s)
+#let (appendix,) = utils.methods(s)
 #let s = appendix()
-#let (slide,) = methods(s)
+#let (slide,) = utils.methods(s)
 
 #slide[
   appendix

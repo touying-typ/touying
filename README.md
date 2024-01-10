@@ -9,10 +9,10 @@ Compared to Polylux, it employs a more object-oriented writing style, capable of
 ## Dynamic slides
 
 ```typst
-#import "../lib.typ": s, methods, pause, themes
+#import "../lib.typ": s, pause, utils, states, themes
 
 #let s = themes.metropolis.register(s, aspect-ratio: "16-9", footer: [Custom footer])
-#let (init, slide) = methods(s)
+#let (init, slide) = utils.methods(s)
 #show: init
 
 // simple animations
@@ -29,7 +29,7 @@ Compared to Polylux, it employs a more object-oriented writing style, capable of
   set text(fill: blue)
   body
 }, repeat: 3, self => [
-  #let (uncover, only) = methods(self)
+  #let (uncover, only) = utils.methods(self)
 
   #place(only(1)[#box()<jump-here>])
 
@@ -52,9 +52,9 @@ Compared to Polylux, it employs a more object-oriented writing style, capable of
 ]
 
 // appendix by freezing last-slide-number
-#let (appendix,) = methods(s)
+#let (appendix,) = utils.methods(s)
 #let s = appendix()
-#let (slide,) = methods(s)
+#let (slide,) = utils.methods(s)
 
 #slide[
   appendix
@@ -67,10 +67,10 @@ Compared to Polylux, it employs a more object-oriented writing style, capable of
 ## Themes
 
 ```typst
-#import "../lib.typ": s, methods, pause, themes
+#import "../lib.typ": s, pause, utils, states, themes
 
 #let s = themes.metropolis.register(s, aspect-ratio: "16-9", footer: [Custom footer])
-#let (init, slide, title-slide, new-section-slide, focus-slide, touying-outline, alert) = methods(s)
+#let (init, slide, title-slide, new-section-slide, focus-slide, touying-outline, alert) = utils.methods(s)
 #show: init
 
 #set text(font: "Fira Sans", weight: "light", size: 20pt)
@@ -86,11 +86,11 @@ Compared to Polylux, it employs a more object-oriented writing style, capable of
   extra: "Extra"
 )
 
-#slide(title: "Table of contents")[
+#slide(title: [Table of contents Table of contents Table of contents Table of contents Table of contents ])[
   #touying-outline()
 ]
 
-#slide(title: "Slide title")[
+#slide(title: [Slide title])[
   A slide with some maths:
   $ x_(n+1) = (x_n + a/x_n) / 2 $
 
@@ -109,12 +109,12 @@ Compared to Polylux, it employs a more object-oriented writing style, capable of
   Wake up!
 ]
 
-#new-section-slide([Appendix])
+#new-section-slide[Appendix]
 
 // appendix by freezing last-slide-number
-#let (appendix,) = methods(s)
+#let (appendix,) = utils.methods(s)
 #let s = appendix()
-#let (slide,) = methods(s)
+#let (slide,) = utils.methods(s)
 
 #slide[
   appendix
