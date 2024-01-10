@@ -102,6 +102,9 @@
         mutable-width = get-pts(mutable-width, "w")
 
         let size = measure(boxed-content, styles)
+        if size.height == 0pt or size.width == 0pt {
+          return body
+        }
         let h-ratio = available-height / size.height
         let w-ratio = mutable-width / size.width
         let ratio = calc.min(h-ratio, w-ratio) * 100%
@@ -136,8 +139,9 @@
       let content-width = content-size.width
       let width = _size-to-pt(width, styles, layout-size.width)
       if (
-        (shrink and (width < content-width))
-        or (grow and (width > content-width))
+        content-width != 0pt and
+        ((shrink and (width < content-width))
+        or (grow and (width > content-width)))
       ) {
         let ratio = width / content-width * 100%
         // The first box keeps content from prematurely wrapping

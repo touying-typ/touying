@@ -21,7 +21,7 @@
   #touying-outline()
 ]
 
-#slide(title: utils.fit-to-width(100%)[A long long long long long long long long long long long long long long long long long long long long long Title])[
+#slide(title: [A long long long long long long long long long long long long long long long long long long long long long Title])[
   A slide with some maths:
   $ x_(n+1) = (x_n + a/x_n) / 2 $
 

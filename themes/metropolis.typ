@@ -153,7 +153,7 @@
       show: self.m-cell.with(fill: self.m-colors.dark-teal, inset: 1em)
       set align(horizon)
       set text(fill: self.m-colors.extra-light-gray, size: 1.2em)
-      strong(utils.call-or-display(self, self.m-title))
+      utils.fit-to-width(grow: false, 100%, strong(utils.call-or-display(self, self.m-title)))
     } else { [] }
   }
   let footer(self) = {
