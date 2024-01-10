@@ -1,8 +1,12 @@
-# Touying ![logo](https://github.com/touying-typ/touying/assets/34951714/2aa394d3-2319-4572-aef7-ed3c14b09846)
+# [Touying](https://github.com/touying-typ/touying) ![logo](https://github.com/touying-typ/touying/assets/34951714/2aa394d3-2319-4572-aef7-ed3c14b09846)
 
 Touying (投影 in chinese, /tóuyǐng/, meaning projection) is a more efficient package for creating presentation slides in Typst.
 
-Compared to Polylux, it employs a more object-oriented writing style, capable of simulating a mutable global singleton. Additionally, Touying does not rely on `locate` and `counter` for implementing `#pause`, thus offering better performance, albeit with certain limitations.
+Touying is a package derived from [Polylux](https://github.com/andreasKroepelin/polylux). Therefore, most concepts and APIs remain consistent with Polylux. You can refer to the [Polylux documentation](https://polylux.dev/book/) for a better understanding of Touying.
+
+Compared to Polylux, Touying employs a more object-oriented writing style, capable of simulating **a mutable global singleton**. So, Touying can conveniently access and update "global variables", such as the 'handout-mode' boolean variable. At the same time, you can easily retrieve and modify page parameters, avoiding the side effects of creating a new page caused by `#set page(..)`.
+
+Additionally, Touying does not rely on `locate` and `counter` for implementing `#pause`, thus offering better performance, albeit with certain limitations. The advantage is that you can use `#pause` inline. The drawback is that `#pause` after set-show rule won't take effect (you must use set-show rule in the setting parameters). Currently, `#pause` only works at the outermost level, and it won't work inside layout functions like grid.
 
 **Warning: It is under development, and the API may change at any time.**
 
@@ -151,7 +155,7 @@ We can export `example.pdfpc` file by command `typst query --root . ./examples/e
 
 ## Acknowledgements
 
-Thank you to...
+Thanks to...
 
 - [@andreasKroepelin](https://github.com/andreasKroepelin) for the `polylux` package
 - [@Enivex](https://github.com/Enivex) for the `metropolis` theme
