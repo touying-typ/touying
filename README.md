@@ -78,7 +78,8 @@ We can export `example.pdfpc` file by command `typst query --root . ./examples/e
 ]
 ```
 
-![image](https://github.com/touying-typ/touying/assets/34951714/4dbaee49-441b-4b59-bc26-feafc18807d3)
+![image](https://github.com/touying-typ/touying/assets/34951714/b635ab7f-ed5e-4e80-922b-fb7c7fb8fcdf)
+
 
 ## Themes
 
@@ -146,7 +147,7 @@ We can export `example.pdfpc` file by command `typst query --root . ./examples/e
 ]
 ```
 
-![image](https://github.com/touying-typ/touying/assets/34951714/e9d0934d-9319-4bf6-b3b4-f1571abea58e)
+![image](https://github.com/touying-typ/touying/assets/34951714/f08dc948-68b4-45d6-8e87-53ca3fc9912c)
 
 
 ## Acknowledgements
