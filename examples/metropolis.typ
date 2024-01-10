@@ -1,6 +1,7 @@
 #import "../lib.typ": s, pause, utils, states, themes
 
 #let s = themes.metropolis.register(s, aspect-ratio: "16-9", footer: [Custom footer])
+#let s = (s.methods.enable-transparent-cover)(self: s)
 #let (init, slide, title-slide, new-section-slide, focus-slide, touying-outline, alert) = utils.methods(s)
 #show: init
 
@@ -40,12 +41,21 @@
   Wake up!
 ]
 
-#new-section-slide[Appendix]
+// simple animations
+#slide[
+  a simple #pause dynamic slide with #alert[alert]
+
+  #pause
+  
+  text.
+]
 
 // appendix by freezing last-slide-number
 #let (appendix,) = utils.methods(s)
 #let s = appendix()
-#let (slide,) = utils.methods(s)
+#let (slide, new-section-slide) = utils.methods(s)
+
+#new-section-slide[Appendix]
 
 #slide[
   appendix
