@@ -61,8 +61,7 @@ Compared to Polylux, it employs a more object-oriented writing style, capable of
 ]
 ```
 
-![image](https://github.com/touying-typ/touying/assets/34951714/4ff11428-d712-4f35-9e33-e155d1af7411)
-
+![image](https://github.com/touying-typ/touying/assets/34951714/4dbaee49-441b-4b59-bc26-feafc18807d3)
 
 ## Themes
 
@@ -130,7 +129,7 @@ Compared to Polylux, it employs a more object-oriented writing style, capable of
 ]
 ```
 
-![image](https://github.com/touying-typ/touying/assets/34951714/fddd38a2-a525-4e08-8157-5b80fe0b8cb0)
+![image](https://github.com/touying-typ/touying/assets/34951714/e9d0934d-9319-4bf6-b3b4-f1571abea58e)
 
 
 ## Acknowledgements
