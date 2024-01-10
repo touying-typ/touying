@@ -63,13 +63,22 @@
 
 // touying-slide
 #let touying-slide(self: utils.empty-object, repeat: auto, setting: body => body, body) = {
-  // pdfpc slide markers
-  let pdfpc-slide-markers(curr-subslide) = locate(loc => [
-    #metadata((t: "NewSlide")) <pdfpc>
-    #metadata((t: "Idx", v: counter(page).at(loc).first() - 1)) <pdfpc>
-    #metadata((t: "Overlay", v: curr-subslide - 1)) <pdfpc>
-    #metadata((t: "LogicalSlide", v: states.slide-counter.at(loc).first())) <pdfpc>
-  ])
+  let page-preamble(curr-subslide) = locate(loc => {
+    if loc.page() == self.first-slide-number {
+      // preamble
+      utils.call-or-display(self, self.preamble)
+      // pdfpc slide markers
+      if self.pdfpc-file {
+        pdfpc.pdfpc-file(loc)
+      }
+    }
+    [
+      #metadata((t: "NewSlide")) <pdfpc>
+      #metadata((t: "Idx", v: loc.page() - 1)) <pdfpc>
+      #metadata((t: "Overlay", v: curr-subslide - 1)) <pdfpc>
+      #metadata((t: "LogicalSlide", v: states.slide-counter.at(loc).first())) <pdfpc>
+    ]
+  })
   // update counters
   let update-counters = {
     states.slide-counter.step()
@@ -86,7 +95,7 @@
     return {
       header += update-counters
       page(..(self.page-args + (header: header, footer: footer)), setting(
-        pdfpc-slide-markers(1) + body
+        page-preamble(1) + body
       ))
     }
   }
@@ -104,7 +113,7 @@
     let (cont, _) = _parse-content-with-pause(self: self, index: repeat, body)
     header += update-counters
     page(..(self.page-args + (header: header, footer: footer)), setting(
-      pdfpc-slide-markers(1) + cont
+      page-preamble(1) + cont
     ))
   } else {
     // render all the subslides
@@ -119,7 +128,7 @@
       }
       result.push(page(
         ..(self.page-args + (header: new-header, footer: footer)),
-        setting(pdfpc-slide-markers(i)  + cont),
+        setting(page-preamble(i)  + cont),
       ))
     }
     // return the result
@@ -134,6 +143,12 @@
     handout: false,
     // appendix mode
     appendix: false,
+    // enable pdfpc-file
+    pdfpc-file: true,
+    // first-slide page number, default is 1
+    first-slide-number: 1,
+    // global preamble
+    preamble: [],
     // page args
     page-args: (
       paper: "presentation-16-9",
@@ -167,15 +182,21 @@
     self.handout = true
     self
   }
+  // disable pdfpc-file mode
+  self.methods.disable-pdfpc-file = (self: utils.empty-object) => {
+    self.pdfpc-file = false
+    self
+  }
   // default slide
   self.methods.touying-slide = touying-slide
   self.methods.slide = touying-slide
+  // append the preamble
+  self.methods.append-preamble = (self: utils.empty-object, preamble) => {
+    self.preamble += preamble
+    self
+  }
   // default init
-  self.methods.init = (self: utils.empty-object, pdfpc-file: true, body) => {
-    // pdfpc file for export
-    if pdfpc-file {
-      pdfpc.pdfpc-file
-    }
+  self.methods.init = (self: utils.empty-object, body) => {
     // default text size
     set text(size: 20pt)
     body
