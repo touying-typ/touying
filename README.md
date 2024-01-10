@@ -1,4 +1,4 @@
-# Touying
+# Touying ![logo](https://github.com/touying-typ/touying/assets/34951714/2aa394d3-2319-4572-aef7-ed3c14b09846)
 
 Touying (投影 in chinese, /tóuyǐng/, meaning projection) is a package for creating presentation slides in Typst.
 
