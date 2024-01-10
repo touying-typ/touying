@@ -42,9 +42,8 @@
 ]
 
 // appendix by freezing last-slide-number
-#let (appendix,) = utils.methods(s)
-#let s = appendix()
-#let (slide,) = utils.methods(s)
+#let s = (s.methods.appendix)(self: s)
+#let (slide, new-section-slide) = utils.methods(s)
 
 #slide[
   appendix

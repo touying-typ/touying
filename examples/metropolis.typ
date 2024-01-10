@@ -12,17 +12,17 @@
 
 #title-slide(
   author: [Authors],
-  title: "Title",
-  subtitle: "Subtitle",
-  date: "Date",
-  extra: "Extra"
+  title: [Title],
+  subtitle: [Subtitle],
+  date: [Date],
+  extra: [Extra],
 )
 
 #slide(title: [Table of contents])[
   #touying-outline()
 ]
 
-#slide(title: [A long long long long long long long long long long long long long long long long long long long long long Title])[
+#slide(title: [A long long long long long long long long long long long long long long long long long long long long long long long long Title])[
   A slide with some maths:
   $ x_(n+1) = (x_n + a/x_n) / 2 $
 
@@ -51,8 +51,7 @@
 ]
 
 // appendix by freezing last-slide-number
-#let (appendix,) = utils.methods(s)
-#let s = appendix()
+#let s = (s.methods.appendix)(self: s)
 #let (slide, new-section-slide) = utils.methods(s)
 
 #new-section-slide[Appendix]

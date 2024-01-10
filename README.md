@@ -12,6 +12,7 @@ Compared to Polylux, it employs a more object-oriented writing style, capable of
 #import "../lib.typ": s, pause, utils, states, themes
 
 #let s = themes.metropolis.register(s, aspect-ratio: "16-9", footer: [Custom footer])
+#let s = (s.methods.enable-transparent-cover)(self: s)
 #let (init, slide) = utils.methods(s)
 #show: init
 
@@ -35,9 +36,9 @@ Compared to Polylux, it employs a more object-oriented writing style, capable of
 
   in subslide #self.subslide, #link(<jump-here>)[jump to first subslide].
 
-  test #uncover(2)[uncover] function
+  test #uncover("2-")[uncover] function
 
-  test #only(2)[only] function
+  test #only("2-")[only] function
 
   #pause
 
@@ -52,9 +53,8 @@ Compared to Polylux, it employs a more object-oriented writing style, capable of
 ]
 
 // appendix by freezing last-slide-number
-#let (appendix,) = utils.methods(s)
-#let s = appendix()
-#let (slide,) = utils.methods(s)
+#let s = (s.methods.appendix)(self: s)
+#let (slide, new-section-slide) = utils.methods(s)
 
 #slide[
   appendix
@@ -70,6 +70,7 @@ Compared to Polylux, it employs a more object-oriented writing style, capable of
 #import "../lib.typ": s, pause, utils, states, themes
 
 #let s = themes.metropolis.register(s, aspect-ratio: "16-9", footer: [Custom footer])
+#let s = (s.methods.enable-transparent-cover)(self: s)
 #let (init, slide, title-slide, new-section-slide, focus-slide, touying-outline, alert) = utils.methods(s)
 #show: init
 
@@ -80,17 +81,17 @@ Compared to Polylux, it employs a more object-oriented writing style, capable of
 
 #title-slide(
   author: [Authors],
-  title: "Title",
-  subtitle: "Subtitle",
-  date: "Date",
-  extra: "Extra"
+  title: [Title],
+  subtitle: [Subtitle],
+  date: [Date],
+  extra: [Extra],
 )
 
-#slide(title: [Table of contents Table of contents Table of contents Table of contents Table of contents ])[
+#slide(title: [Table of contents])[
   #touying-outline()
 ]
 
-#slide(title: [Slide title])[
+#slide(title: [A long long long long long long long long long long long long long long long long long long long long long long long long Title])[
   A slide with some maths:
   $ x_(n+1) = (x_n + a/x_n) / 2 $
 
@@ -109,12 +110,20 @@ Compared to Polylux, it employs a more object-oriented writing style, capable of
   Wake up!
 ]
 
-#new-section-slide[Appendix]
+// simple animations
+#slide[
+  a simple #pause dynamic slide with #alert[alert]
+
+  #pause
+  
+  text.
+]
 
 // appendix by freezing last-slide-number
-#let (appendix,) = utils.methods(s)
-#let s = appendix()
-#let (slide,) = utils.methods(s)
+#let s = (s.methods.appendix)(self: s)
+#let (slide, new-section-slide) = utils.methods(s)
+
+#new-section-slide[Appendix]
 
 #slide[
   appendix
