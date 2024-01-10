@@ -159,4 +159,4 @@ Thanks to...
 
 - [@andreasKroepelin](https://github.com/andreasKroepelin) for the `polylux` package
 - [@Enivex](https://github.com/Enivex) for the `metropolis` theme
-- [@ntjess](https://github.com/ntjess) for contributing to `fit-to-height` and `fit-to-width`
+- [@ntjess](https://github.com/ntjess) for contributing to `fit-to-height`, `fit-to-width` and `cover-with-rect`

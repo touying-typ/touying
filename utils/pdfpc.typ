@@ -1,4 +1,5 @@
-// code from https://github.com/andreasKroepelin/polylux/blob/main/utils/pdfpc.typ
+// Attribution: This file is based on the code from https://github.com/andreasKroepelin/polylux/blob/main/utils/pdfpc.typ
+// Author: Andreas Kröpelin
 
 #let pdfpc-file(loc) = {
   let arr = query(<pdfpc>, loc).map(it => it.value)
