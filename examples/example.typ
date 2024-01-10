@@ -2,7 +2,7 @@
 
 #let s = themes.metropolis.register(s, aspect-ratio: "16-9", footer: [Custom footer])
 #let s = (s.methods.enable-transparent-cover)(self: s)
-#let (init, slide) = utils.methods(s)
+#let (init, slide, touying-outline) = utils.methods(s)
 #show: init
 
 // simple animations
@@ -43,7 +43,7 @@
 
 // appendix by freezing last-slide-number
 #let s = (s.methods.appendix)(self: s)
-#let (slide, new-section-slide) = utils.methods(s)
+#let (slide,) = utils.methods(s)
 
 #slide[
   appendix

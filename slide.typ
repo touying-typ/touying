@@ -121,6 +121,7 @@
     )
   )
   // register the methods
+  // cover method
   self.methods.cover = utils.wrap-method(hide)
   self.methods.update-cover = (self: utils.empty-object, is-method: false, cover-fn) => {
     if is-method {
@@ -139,14 +140,17 @@
     }
     self
   }
+  // default slide
   self.methods.touying-slide = touying-slide
   self.methods.slide = touying-slide
+  // default init
   self.methods.init = (self: utils.empty-object, body) => {
     set text(size: 20pt)
     body
   }
+  // default outline
   self.methods.touying-outline = (self: utils.empty-object, ..args) => {
-    touying-outline(..args)
+    states.touying-outline(..args)
   }
   self.methods.appendix = (self: utils.empty-object) => {
     self.appendix = true
