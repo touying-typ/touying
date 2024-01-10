@@ -8,14 +8,32 @@ Compared to Polylux, it employs a more object-oriented writing style, capable of
 
 ## Dynamic slides
 
+We can export `example.pdfpc` file by command `typst query --root . ./examples/example.typ --field value --one "<pdfpc-file>" > ./examples/example.pdfpc`
+
 ```typst
-#import "../lib.typ": s, pause, utils, states, themes
+#import "../lib.typ": s, pause, utils, states, pdfpc, themes
 
 #let s = themes.metropolis.register(s, aspect-ratio: "16-9", footer: [Custom footer])
 #let s = (s.methods.enable-transparent-cover)(self: s)
 // #let s = (s.methods.enable-handout-mode)(self: s)
 #let (init, slide, touying-outline) = utils.methods(s)
 #show: init
+
+#pdfpc.config(
+  duration-minutes: 30,
+  start-time: datetime(hour: 14, minute: 10, second: 0),
+  end-time: datetime(hour: 14, minute: 40, second: 0),
+  last-minutes: 5,
+  note-font-size: 12,
+  disable-markdown: false,
+  default-transition: (
+    type: "push",
+    duration-seconds: 2,
+    angle: ltr,
+    alignment: "vertical",
+    direction: "inward",
+  ),
+)
 
 // simple animations
 #slide[
@@ -65,7 +83,7 @@ Compared to Polylux, it employs a more object-oriented writing style, capable of
 ## Themes
 
 ```typst
-#import "../lib.typ": s, pause, utils, states, themes
+#import "../lib.typ": s, pause, utils, states, pdfpc, themes
 
 #let s = themes.metropolis.register(s, aspect-ratio: "16-9", footer: [Custom footer])
 #let s = (s.methods.enable-transparent-cover)(self: s)

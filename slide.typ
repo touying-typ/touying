@@ -1,5 +1,6 @@
 #import "utils/utils.typ"
 #import "utils/states.typ"
+#import "utils/pdfpc.typ"
 
 // touying pause mark
 #let pause = [#"<touying-pause>"]
@@ -62,6 +63,13 @@
 
 // touying-slide
 #let touying-slide(self: utils.empty-object, repeat: auto, setting: body => body, body) = {
+  // pdfpc slide markers
+  let pdfpc-slide-markers(curr-subslide) = locate(loc => [
+    #metadata((t: "NewSlide")) <pdfpc>
+    #metadata((t: "Idx", v: counter(page).at(loc).first() - 1)) <pdfpc>
+    #metadata((t: "Overlay", v: curr-subslide - 1)) <pdfpc>
+    #metadata((t: "LogicalSlide", v: states.slide-counter.at(loc).first())) <pdfpc>
+  ])
   // update counters
   let update-counters = {
     states.slide-counter.step()
@@ -77,7 +85,9 @@
   if repeat == none {
     return {
       header += update-counters
-      page(..(self.page-args + (header: header, footer: footer)), setting(body))
+      page(..(self.page-args + (header: header, footer: footer)), setting(
+        pdfpc-slide-markers(1) + body
+      ))
     }
   }
   // for single page slide, get the repetitions
@@ -93,7 +103,9 @@
   if self.handout {
     let (cont, _) = _parse-content-with-pause(self: self, index: repeat, body)
     header += update-counters
-    page(..(self.page-args + (header: header, footer: footer)), setting(cont))
+    page(..(self.page-args + (header: header, footer: footer)), setting(
+      pdfpc-slide-markers(1) + cont
+    ))
   } else {
     // render all the subslides
     let result = ()
@@ -105,7 +117,10 @@
       if i == 1 {
         new-header += update-counters
       }
-      result.push(page(..(self.page-args + (header: new-header, footer: footer)), setting(cont)))
+      result.push(page(
+        ..(self.page-args + (header: new-header, footer: footer)),
+        setting(pdfpc-slide-markers(i)  + cont),
+      ))
     }
     // return the result
     result.sum()
@@ -156,7 +171,12 @@
   self.methods.touying-slide = touying-slide
   self.methods.slide = touying-slide
   // default init
-  self.methods.init = (self: utils.empty-object, body) => {
+  self.methods.init = (self: utils.empty-object, pdfpc-file: true, body) => {
+    // pdfpc file for export
+    if pdfpc-file {
+      pdfpc.pdfpc-file
+    }
+    // default text size
     set text(size: 20pt)
     body
   }
