@@ -214,7 +214,7 @@
 #let update-alpha(constructor: rgb, color, alpha) = constructor(..color.components(alpha: true).slice(0, -1), alpha)
 
 
-// Code: check visible subslides
+// Code: check visible subslides and dynamic control
 // Attribution: This file is based on the code from https://github.com/andreasKroepelin/polylux/blob/main/logic.typ
 // Author: Andreas Kröpelin
 
@@ -275,4 +275,84 @@
   } else {
     panic("you may only provide a single integer, an array of integers, or a string")
   }
+}
+
+#let uncover(self: empty-object, visible-subslides, uncover-cont) = {
+  let cover = self.methods.cover.with(self: self)
+  if _check-visible(self.subslide, visible-subslides) { 
+    uncover-cont
+  } else {
+    cover(uncover-cont)
+  }
+}
+
+#let only(self: empty-object, visible-subslides, only-cont) = {
+  if _check-visible(self.subslide, visible-subslides) { only-cont }
+}
+
+#let alternatives-match(self: empty-object, subslides-contents, position: bottom + left) = {
+  let subslides-contents = if type(subslides-contents) == "dictionary" {
+    subslides-contents.pairs()
+  } else {
+    subslides-contents
+  }
+
+  let subslides = subslides-contents.map(it => it.first())
+  let contents = subslides-contents.map(it => it.last())
+  style(styles => {
+    let sizes = contents.map(c => measure(c, styles))
+    let max-width = calc.max(..sizes.map(sz => sz.width))
+    let max-height = calc.max(..sizes.map(sz => sz.height))
+    for (subslides, content) in subslides-contents {
+      only(self: self, subslides, box(
+        width: max-width,
+        height: max-height,
+        align(position, content)
+      ))
+    }
+  })
+}
+
+#let alternatives(
+  self: empty-object,
+  start: 1,
+  repeat-last: false,
+  ..args
+) = {
+  let contents = args.pos()
+  let kwargs = args.named()
+  let subslides = range(start, start + contents.len())
+  if repeat-last {
+    subslides.last() = (beginning: subslides.last())
+  }
+  alternatives-match(self: self, subslides.zip(contents), ..kwargs)
+}
+
+#let alternatives-fn(
+  self: empty-object,
+  start: 1,
+  end: none,
+  count: none,
+  ..kwargs,
+  fn
+) = {
+  let end = if end == none {
+    if count == none {
+      panic("You must specify either end or count.")
+    } else {
+      start + count
+    }
+  } else {
+    end
+  }
+
+  let subslides = range(start, end)
+  let contents = subslides.map(fn)
+  alternatives-match(self: self, subslides.zip(contents), ..kwargs.named())
+}
+
+#let alternatives-cases(self: empty-object, cases, fn, ..kwargs) = {
+  let idcs = range(cases.len())
+  let contents = idcs.map(fn)
+  alternatives-match(self: self, cases.zip(contents), ..kwargs.named())
 }

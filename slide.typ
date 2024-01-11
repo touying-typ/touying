@@ -13,17 +13,6 @@
   if type(it) == function {
     // subslide index
     self.subslide = index - base + 1
-    // register the methods
-    self.methods.uncover = (self: utils.empty-object, visible-subslides, uncover-cont) => {
-      if utils._check-visible(index, visible-subslides) { 
-        uncover-cont
-      } else {
-        cover(uncover-cont)
-      }
-    }
-    self.methods.only = (self: utils.empty-object, visible-subslides, only-cont) => {
-      if utils._check-visible(index, visible-subslides) { only-cont }
-    }
     it = it(self)
   }
   // repetitions
@@ -207,6 +196,14 @@
     }
     self
   }
+  // dynamic control
+  self.methods.uncover = utils.uncover
+  self.methods.only = utils.only
+  self.methods.uncover = utils.uncover
+  self.methods.alternatives-match = utils.alternatives-match
+  self.methods.alternatives = utils.alternatives
+  self.methods.alternatives-fn = utils.alternatives-fn
+  self.methods.alternatives-cases = utils.alternatives-cases
   // handout mode
   self.methods.enable-handout-mode = (self: utils.empty-object) => {
     self.handout = true

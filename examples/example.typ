@@ -35,7 +35,7 @@
   set text(fill: blue)
   body
 }, repeat: 3, self => [
-  #let (uncover, only) = utils.methods(self)
+  #let (uncover, only, alternatives) = utils.methods(self)
 
   in subslide #self.subslide
 
