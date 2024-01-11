@@ -80,6 +80,8 @@ We can export `example.pdfpc` file by command `typst query --root . ./examples/e
   #pause
   
   slide.
+][
+  second #pause pause.
 ]
 
 // complex animations
@@ -116,7 +118,7 @@ We can export `example.pdfpc` file by command `typst query --root . ./examples/e
 ]
 ```
 
-![image](https://github.com/touying-typ/touying/assets/34951714/b635ab7f-ed5e-4e80-922b-fb7c7fb8fcdf)
+![image](https://github.com/touying-typ/touying/assets/34951714/9365bbc4-9e9c-4a78-a1ab-1716d1bf22f2)
 
 
 ## Themes
