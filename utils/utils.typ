@@ -356,3 +356,17 @@
   let contents = idcs.map(fn)
   alternatives-match(self: self, cases.zip(contents), ..kwargs.named())
 }
+
+// SIDE BY SIDE
+
+#let side-by-side(columns: auto, gutter: 1em, ..bodies) = {
+  let bodies = bodies.pos()
+  if bodies.len() == 1 {
+    return bodies.first()
+  }
+  let columns = if columns == auto { (1fr,) * bodies.len() } else { columns }
+  if columns.len() != bodies.len() {
+    panic("number of columns must match number of content arguments")
+  }
+  grid(columns: columns, gutter: gutter, ..bodies)
+}

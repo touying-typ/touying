@@ -6,7 +6,7 @@ Touying is a package derived from [Polylux](https://github.com/andreasKroepelin/
 
 Compared to Polylux, Touying employs a more object-oriented writing style, capable of simulating **a mutable global singleton**. So, Touying can conveniently access and update "global variables", such as the 'handout-mode' boolean variable. At the same time, you can easily retrieve and modify page parameters by `self.page-args`, avoiding the side effects of creating a new page caused by `#set page(..)`.
 
-Additionally, Touying does not rely on `locate` and `counter` for implementing `#pause`, thus offering better performance, albeit with certain limitations. The advantage is that you can use `#pause` inline. The drawback is that `#pause` after set-show rule won't take effect (you must use set-show rule in the setting parameters). Currently, `#pause` only works at the outermost level, and it won't work inside layout functions like grid.
+Additionally, Touying does not rely on `locate` and `counter` for implementing `#pause`, thus offering better performance, albeit with certain limitations. The advantage is that you can use `#pause` inline. The drawback is that `#pause` after set-show rule won't take effect (you must use set-show rule in the `setting` parameter). Currently, `#pause` only works at the outermost level, and it won't work inside layout functions like grid, but you can use the `composer` parameter to add yourself layout function like `utils.side-by-side`.
 
 **Warning: It is under development, and the API may change at any time.**
 
@@ -15,6 +15,7 @@ Additionally, Touying does not rely on `locate` and `counter` for implementing `
 - [x] **Object-oriented programming:** Singleton `s`, binding methods `utils.methods(s)` and `(self: obj, ..) => {..}` methods.
 - [x] **Page arguments management:** Instead of using `#set page(..)`, you should use `self.page-args` to retrieve or set page parameters, thereby avoiding unnecessary creation of new pages.
 - [x] **`#pause` for sequence content:** You can use #pause at the outermost level of a slide, including inline and list.
+- [x] **`#pause` for layout functions:** You can use the `composer` parameter to add yourself layout function like `utils.side-by-side`, and simply use multiple pos parameters like `#slide[..][..]`.
 - [x] **Callback-style `uncover`, `only` and `alternatives`:** Based on the concise syntax provided by Polylux, allow precise control of the timing for displaying content.
   - You should manually control the number of subslides using the `repeat` parameter.
 - [x] **Transparent cover:** Enable transparent cover using oop syntax like `#let s = (s.methods.enable-transparent-cover)(self: s)`.
@@ -35,7 +36,6 @@ Additionally, Touying does not rely on `locate` and `counter` for implementing `
 
 ## Features to Implement
 
-- [ ] **`#pause` for layout function:** Make `#pause` work with layout function like grid.
 - [ ] **More themes:** Add more themes.
 - [ ] **Combinable components**: Combinable components for header, footer and sidebar, .
 - [ ] **Navigation bar**: Navigation bar like [here](https://tex.stackexchange.com/questions/350508/adding-outline-bar-to-the-beamer-for-section-mentioning) by `states.touying-progress-with-sections(..)`.

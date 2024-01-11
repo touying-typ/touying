@@ -18,7 +18,6 @@
   align: horizon,
   margin: (top: 3em, bottom: 1em, left: 0em, right: 0em),
   padding: 2em,
-  body,
   ..args
 ) = {
   self.page-args = self.page-args + (
@@ -30,7 +29,7 @@
   }
   let touying-slide = self.methods.touying-slide
   touying-slide(
-    ..args,
+    ..args.named(),
     self: self,
     setting: body => {
       show: _saved-align.with(align)
@@ -39,7 +38,7 @@
       show: args.named().at("setting", default: body => body)
       body
     },
-    body,
+    ..args.pos(),
   )
 }
 

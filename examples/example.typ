@@ -28,6 +28,8 @@
   #pause
   
   slide.
+][
+  second #pause pause.
 ]
 
 // complex animations
