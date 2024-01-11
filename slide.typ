@@ -6,7 +6,7 @@
 #let pause = [#"<touying-pause>"]
 
 // parse a sequence into content, and get the repetitions
-#let _parse-content-with-pause(self: utils.empty-object, base: 1, index: 1, it) = {
+#let _parse-content-with-pause(self: utils.empty-object, need-cover: true, base: 1, index: 1, it) = {
   // get cover function from self
   let cover = self.methods.cover.with(self: self)
   // if it is a function, then call it with self, uncover and only
@@ -31,27 +31,57 @@
   // parse the content
   let result = ()
   let cover-arr = ()
-  if utils.is-sequence(it) {
-    for child in it.children {
-      if child == pause {
-        repetitions += 1
-      } else if child == linebreak() or child == parbreak() {
-        // clear the cover-arr when linebreak or parbreak
-        if cover-arr.len() != 0 {
-          result.push(cover(cover-arr.sum()))
-          cover-arr = ()
-        }
+  let children = if utils.is-sequence(it) { it.children } else { (it,) }
+  for child in children {
+    if child == pause {
+      repetitions += 1
+    } else if child == linebreak() or child == parbreak() {
+      // clear the cover-arr when linebreak or parbreak
+      if cover-arr.len() != 0 {
+        result.push(cover(cover-arr.sum()))
+        cover-arr = ()
+      }
+      result.push(child)
+    } else if type(child) == content and child.func() == list.item {
+      // handle the list item
+      let (cont, nextrepetitions) = _parse-content-with-pause(
+        self: self, need-cover: repetitions <= index, base: repetitions, index: index, child.body
+      )
+      if repetitions <= index or not need-cover {
+        result.push(list.item(cont))
+      } else {
+        cover-arr.push(list.item(cont))
+      }
+      repetitions = nextrepetitions
+    } else if type(child) == content and child.func() == enum.item {
+      // handle the enum item
+      let (cont, nextrepetitions) = _parse-content-with-pause(
+        self: self, need-cover: repetitions <= index, base: repetitions, index: index, child.body
+      )
+      if repetitions <= index or not need-cover {
+        result.push(enum.item(child.at("number", default: none), cont))
+      } else {
+        cover-arr.push(enum.item(child.at("number", default: none), cont))
+      }
+      repetitions = nextrepetitions
+    } else if type(child) == content and child.func() == terms.item {
+      // handle the terms item
+      let (cont, nextrepetitions) = _parse-content-with-pause(
+        self: self, need-cover: repetitions <= index, base: repetitions, index: index, child.description
+      )
+      if repetitions <= index or not need-cover {
+        result.push(terms.item(child.term, cont))
+      } else {
+        cover-arr.push(terms.item(child.term, cont))
+      }
+      repetitions = nextrepetitions
+    } else {
+      if repetitions <= index or not need-cover {
         result.push(child)
       } else {
-        if repetitions <= index {
-          result.push(child)
-        } else {
-          cover-arr.push(child)
-        }
+        cover-arr.push(child)
       }
     }
-  } else {
-    result.push(it)
   }
   // clear the cover-arr when end
   if cover-arr.len() != 0 {

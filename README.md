@@ -14,7 +14,7 @@ Additionally, Touying does not rely on `locate` and `counter` for implementing `
 
 - [x] **Object-oriented programming:** Singleton `s`, binding methods `utils.methods(s)` and `(self: obj, ..) => {..}` methods.
 - [x] **Page arguments management:** Instead of using `#set page(..)`, you should use `self.page-args` to retrieve or set page parameters, thereby avoiding unnecessary creation of new pages.
-- [x] **`#pause` for sequence content:** You can use #pause at the outermost level of a slide, including inline.
+- [x] **`#pause` for sequence content:** You can use #pause at the outermost level of a slide, including inline and list.
 - [x] **Callback-style `uncover` and `only`:** Based on the concise syntax provided by Polylux, allow precise control of the timing for displaying content.
   - You should manually control the number of subslides using the `repeat` parameter.
 - [x] **Transparent cover:** Enable transparent cover using oop syntax like `#let s = (s.methods.enable-transparent-cover)(self: s)`.
@@ -35,7 +35,6 @@ Additionally, Touying does not rely on `locate` and `counter` for implementing `
 
 ## Features to Implement
 
-- [ ] **`#pause` for list item:** Make `#pause` work with list item.
 - [ ] **`#pause` for layout function:** Make `#pause` work with layout function like grid.
 - [ ] **Alternatives:** Implement `alternatives`.
 - [ ] **More themes:** Add more themes.
