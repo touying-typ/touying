@@ -156,85 +156,83 @@
 }
 
 // build the touying singleton
-#let s = {
-  let self = utils.empty-object + (
-    // handle mode
-    handout: false,
-    // appendix mode
-    appendix: false,
-    // enable pdfpc-file
-    pdfpc-file: true,
-    // first-slide page number, default is 1
-    first-slide-number: 1,
-    // global preamble
-    preamble: [],
-    // page args
-    page-args: (
-      paper: "presentation-16-9",
-      header: none,
-      footer: align(right, states.slide-counter.display() + " / " + states.last-slide-number),
-      fill: rgb("#ffffff"),
-    )
-  )
+#let s = (
+  // handle mode
+  handout: false,
+  // appendix mode
+  appendix: false,
+  // enable pdfpc-file
+  pdfpc-file: true,
+  // first-slide page number, default is 1
+  first-slide-number: 1,
+  // global preamble
+  preamble: [],
+  // page args
+  page-args: (
+    paper: "presentation-16-9",
+    header: none,
+    footer: align(right, states.slide-counter.display() + " / " + states.last-slide-number),
+    fill: rgb("#ffffff"),
+  ),
   // register the methods
-  // cover method
-  self.methods.cover = utils.wrap-method(hide)
-  self.methods.update-cover = (self: utils.empty-object, is-method: false, cover-fn) => {
-    if is-method {
-      self.methods.cover = cover-fn
-    } else {
-      self.methods.cover = utils.wrap-method(cover-fn)
+  methods: (
+    // cover method
+    cove: utils.wrap-method(hide),
+    update-cover: (self: utils.empty-object, is-method: false, cover-fn) => {
+      if is-method {
+        self.methods.cover = cover-fn
+      } else {
+        self.methods.cover = utils.wrap-method(cover-fn)
+      }
+      self
+    },
+    enable-transparent-cover: (
+      self: utils.empty-object, constructor: rgb, alpha: 80%) => {
+      // it is based on the default cover method
+      self.methods.cover = (self: utils.empty-object, body) => {
+        utils.cover-with-rect(fill: utils.update-alpha(
+          constructor: constructor, self.page-args.fill, alpha), body)
+      }
+      self
+    },
+    // dynamic control
+    uncover: utils.uncover,
+    only: utils.only,
+    alternatives-match: utils.alternatives-match,
+    alternatives: utils.alternatives,
+    alternatives-fn: utils.alternatives-fn,
+    alternatives-cases: utils.alternatives-cases,
+    // handout mode
+    enable-handout-mode: (self: utils.empty-object) => {
+      self.handout = true
+      self
+    },
+    // disable pdfpc-file mode
+    disable-pdfpc-file: (self: utils.empty-object) => {
+      self.pdfpc-file = false
+      self
+    },
+    // default slide
+    touying-slide: touying-slide,
+    slide: touying-slide,
+    // append the preamble
+    append-preamble: (self: utils.empty-object, preamble) => {
+      self.preamble += preamble
+      self
+    },
+    // default init
+    init: (self: utils.empty-object, body) => {
+      // default text size
+      set text(size: 20pt)
+      body
+    },
+    // default outline
+    touying-outline: (self: utils.empty-object, ..args) => {
+      states.touying-outline(..args)
+    },
+    appendix: (self: utils.empty-object) => {
+      self.appendix = true
+      self
     }
-    self
-  }
-  self.methods.enable-transparent-cover = (
-    self: utils.empty-object, constructor: rgb, alpha: 80%) => {
-    // it is based on the default cover method
-    self.methods.cover = (self: utils.empty-object, body) => {
-      utils.cover-with-rect(fill: utils.update-alpha(
-        constructor: constructor, self.page-args.fill, alpha), body)
-    }
-    self
-  }
-  // dynamic control
-  self.methods.uncover = utils.uncover
-  self.methods.only = utils.only
-  self.methods.uncover = utils.uncover
-  self.methods.alternatives-match = utils.alternatives-match
-  self.methods.alternatives = utils.alternatives
-  self.methods.alternatives-fn = utils.alternatives-fn
-  self.methods.alternatives-cases = utils.alternatives-cases
-  // handout mode
-  self.methods.enable-handout-mode = (self: utils.empty-object) => {
-    self.handout = true
-    self
-  }
-  // disable pdfpc-file mode
-  self.methods.disable-pdfpc-file = (self: utils.empty-object) => {
-    self.pdfpc-file = false
-    self
-  }
-  // default slide
-  self.methods.touying-slide = touying-slide
-  self.methods.slide = touying-slide
-  // append the preamble
-  self.methods.append-preamble = (self: utils.empty-object, preamble) => {
-    self.preamble += preamble
-    self
-  }
-  // default init
-  self.methods.init = (self: utils.empty-object, body) => {
-    // default text size
-    set text(size: 20pt)
-    body
-  }
-  // default outline
-  self.methods.touying-outline = (self: utils.empty-object, ..args) => {
-    states.touying-outline(..args)
-  }
-  self.methods.appendix = (self: utils.empty-object) => {
-    self.appendix = true
-    self
-  }
-  self
-}
+  ),
+)
