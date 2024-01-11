@@ -93,7 +93,7 @@
   // for speed up, do not parse the content if repeat is none
   if repeat == none {
     return {
-      header += update-counters
+      header = update-counters + header
       page(..(self.page-args + (header: header, footer: footer)), setting(
         page-preamble(1) + body
       ))
@@ -111,7 +111,7 @@
   }
   if self.handout {
     let (cont, _) = _parse-content-with-pause(self: self, index: repeat, body)
-    header += update-counters
+    header = update-counters + header
     page(..(self.page-args + (header: header, footer: footer)), setting(
       page-preamble(1) + cont
     ))
@@ -124,7 +124,7 @@
       let (cont, _) = _parse-content-with-pause(self: self, index: i, body)
       // update the counter in the first subslide
       if i == 1 {
-        new-header += update-counters
+        new-header = update-counters + new-header
       }
       result.push(page(
         ..(self.page-args + (header: new-header, footer: footer)),
