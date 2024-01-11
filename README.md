@@ -50,7 +50,7 @@ Feel free to suggest any ideas and contribute.
 We can export `example.pdfpc` file by command `typst query --root . ./examples/example.typ --field value --one "<pdfpc-file>" > ./examples/example.pdfpc`
 
 ```typst
-#import "../lib.typ": s, pause, utils, states, pdfpc, themes
+#import "@preview/touying:0.1.0": s, pause, utils, states, pdfpc, themes
 
 #let s = themes.metropolis.register(s, aspect-ratio: "16-9", footer: [Custom footer])
 #let s = (s.methods.enable-transparent-cover)(self: s)
@@ -124,7 +124,7 @@ We can export `example.pdfpc` file by command `typst query --root . ./examples/e
 ## Themes
 
 ```typst
-#import "../lib.typ": s, pause, utils, states, pdfpc, themes
+#import "@preview/touying:0.1.0": s, pause, utils, states, pdfpc, themes
 
 #let s = themes.metropolis.register(s, aspect-ratio: "16-9", footer: [Custom footer])
 #let s = (s.methods.enable-transparent-cover)(self: s)
