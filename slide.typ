@@ -9,10 +9,10 @@
 #let _parse-content-with-pause(self: utils.empty-object, need-cover: true, base: 1, index: 1, it) = {
   // get cover function from self
   let cover = self.methods.cover.with(self: self)
-  // if it is a function, then call it with self, uncover and only
+  // if it is a function, then call it with self
   if type(it) == function {
     // subslide index
-    self.subslide = index - base + 1
+    self.subslide = index
     it = it(self)
   }
   // repetitions
