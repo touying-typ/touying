@@ -86,7 +86,7 @@
   touying-slide(self: self, repeat: none, content)
 }
 
-#let new-section-slide(self: utils.empty-object, hide-header: true, hide-footer: true, name) = {
+#let new-section-slide(self: utils.empty-object, short-title: auto, hide-header: true, hide-footer: true, title) = {
   if hide-header {
     self.page-args.header = none
   }
@@ -94,15 +94,14 @@
     self.page-args.footer = none
   }
   let content = {
-    states.new-section(name)
     set align(horizon)
     show: pad.with(20%)
     set text(size: 1.5em)
-    name
+    title
     block(height: 2pt, width: 100%, spacing: 0pt, self.m-progress-bar)
   }
   let touying-slide = self.methods.touying-slide
-  touying-slide(self: self, repeat: none, content)
+  touying-slide(self: self, repeat: none, update-states: states.new-section(title), content)
 }
 
 #let focus-slide(self: utils.empty-object, hide-header: true, hide-footer: true, body) = {
@@ -121,7 +120,7 @@
   touying-slide(self: self, repeat: none, align(horizon + center, body))
 }
 
-#let register(aspect-ratio: "16-9", header: states.current-section, footer: [], self) = {
+#let register(aspect-ratio: "16-9", header: states.current-section-title, footer: [], self) = {
   // save the variables for later use
   self.m-cell = block.with(
     width: 100%,

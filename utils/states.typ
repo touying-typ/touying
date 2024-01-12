@@ -9,24 +9,24 @@
 })
 
 // sections
-#let sections-state = state("touying-sections-state", ((body: none, count: 0, loc: none),))
+#let sections-state = state("touying-sections-state", ((title: none, short-title: none, loc: none, count: 0, slides: ()),))
 
-#let new-section(section) = locate(loc => {
+#let new-section(short-title: auto, title) = locate(loc => {
   sections-state.update(sections => {
-    let last = sections.pop()
-    last.count -= 1
-    sections.push(last)
-    sections.push((body: section, count: 1, loc: loc))
+    sections.push((title: title, short-title: short-title, loc: loc, count: 0, slides: ()))
     sections
   })
 })
 
-#let section-step() = sections-state.update(sections => {
-  let last = sections.pop()
-  last.count += 1
-  sections.push(last)
-  sections
-})
+#let section-step(repetitions) = locate(loc => {
+  sections-state.update(sections => {
+    let last = sections.pop()
+    last.slides.push((loc: loc, count: repetitions))
+    last.count += 1
+    sections.push(last)
+    sections
+  }
+)})
 
 #let touying-final-sections(callback) = locate(loc => {
   callback(sections-state.final(loc))
@@ -36,13 +36,13 @@
   pad(padding, enum(
     ..enum-args,
     ..sections.filter(section => section.loc != none)
-      .map(section => link(section.loc, section.body))
+      .map(section => link(section.loc, section.title))
   ))
 })
 
-#let current-section = locate(loc => {
+#let current-section-title = locate(loc => {
   let sections = sections-state.at(loc)
-  sections.last().body
+  sections.last().title
 })
 
 #let touying-progress-with-sections(callback) = locate(loc => {

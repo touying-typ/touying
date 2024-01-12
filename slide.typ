@@ -101,7 +101,7 @@
 }
 
 // touying-slide
-#let touying-slide(self: utils.empty-object, repeat: auto, setting: body => body, composer: utils.side-by-side, ..bodies) = {
+#let touying-slide(self: utils.empty-object, repeat: auto, update-states: [], setting: body => body, composer: utils.side-by-side, ..bodies) = {
   assert(bodies.named().len() == 0, message: "unexpected named arguments:" + repr(bodies.named().keys()))
   let bodies = bodies.pos()
   let page-preamble(curr-subslide) = locate(loc => {
@@ -120,12 +120,13 @@
       #metadata((t: "LogicalSlide", v: states.slide-counter.at(loc).first())) <pdfpc>
     ]
   })
-  // update counters
-  let update-counters = {
+  // update states
+  let _update-states(repetitions) = {
     states.slide-counter.step()
+    utils.call-or-display(self, update-states)
     if self.appendix == false {
       states.last-slide-counter.step()
-      states.section-step()
+      states.section-step(repetitions)
     }
   }
   // page header and footer
@@ -134,7 +135,7 @@
   // for speed up, do not parse the content if repeat is none
   if repeat == none {
     return {
-      header = update-counters + header
+      header = _update-states(1) + header
       page(..(self.page-args + (header: header, footer: footer)), setting(
         page-preamble(1) + composer(..bodies)
       ))
@@ -152,7 +153,7 @@
   }
   if self.handout {
     let (conts, _) = _parse-content-with-pause(self: self, index: repeat, ..bodies)
-    header = update-counters + header
+    header = _update-states(1) + header
     page(..(self.page-args + (header: header, footer: footer)), setting(
       page-preamble(1) + composer(..conts)
     ))
@@ -165,7 +166,7 @@
       let (conts, _) = _parse-content-with-pause(self: self, index: i, ..bodies)
       // update the counter in the first subslide
       if i == 1 {
-        new-header = update-counters + new-header
+        new-header = _update-states(repeat) + new-header
       }
       result.push(page(
         ..(self.page-args + (header: new-header, footer: footer)),

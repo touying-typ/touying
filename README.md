@@ -28,7 +28,7 @@ Additionally, Touying does not rely on `locate` and `counter` for implementing `
 - [x] **Appendix:** Freeze the `last-slide-number` to prevent the slide number from increasing further.
 - [x] **Sections:** Touying's built-in section support can be used to display the current section title and show progress.
   - [x] `states.new-section(section)` to register a new section.
-  - [x] `states.current-section` to get the current section.
+  - [x] `states.current-section-title` to get the current section.
   - [x] `states.touying-outline` or `s.methods.touying-outline` to display a outline of sections.
   - [x] `states.touying-final-sections(sections => ..)` for custom outline display.
   - [x] `states.touying-progress-with-sections((current-sections: .., final-sections: .., current-slide-number: .., last-slide-number: ..) => ..)` for powerful progress display.
