@@ -204,7 +204,7 @@
       self
     },
     enable-transparent-cover: (
-      self: utils.empty-object, constructor: rgb, alpha: 80%) => {
+      self: utils.empty-object, constructor: rgb, alpha: 85%) => {
       // it is based on the default cover method
       self.methods.cover = (self: utils.empty-object, body) => {
         utils.cover-with-rect(fill: utils.update-alpha(
