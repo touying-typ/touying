@@ -31,10 +31,15 @@
       if child == pause {
         repetitions += 1
       } else if child == meanwhile {
+        // clear the cover-arr when encounter #meanwhile
+        if cover-arr.len() != 0 {
+          result.push(cover(cover-arr.sum()))
+          cover-arr = ()
+        }
         max-repetitions = calc.max(max-repetitions, repetitions)
         repetitions = 1
       } else if child == linebreak() or child == parbreak() {
-        // clear the cover-arr when linebreak or parbreak
+        // clear the cover-arr when encounter linebreak or parbreak
         if cover-arr.len() != 0 {
           result.push(cover(cover-arr.sum()))
           cover-arr = ()
