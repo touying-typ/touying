@@ -4,6 +4,8 @@
 
 // touying pause mark
 #let pause = [#"<touying-pause>"]
+// touying meanwhile mark
+#let meanwhile = [#"<touying-meanwhile>"]
 
 // parse a sequence into content, and get the repetitions
 #let _parse-content-with-pause(self: utils.empty-object, need-cover: true, base: 1, index: 1, ..bodies) = {
@@ -11,6 +13,7 @@
   let result-arr = ()
   // repetitions
   let repetitions = base
+  let max-repetitions = repetitions
   // get cover function from self
   let cover = self.methods.cover.with(self: self)
   for it in bodies {
@@ -27,6 +30,9 @@
     for child in children {
       if child == pause {
         repetitions += 1
+      } else if child == meanwhile {
+        max-repetitions = calc.max(max-repetitions, repetitions)
+        repetitions = 1
       } else if child == linebreak() or child == parbreak() {
         // clear the cover-arr when linebreak or parbreak
         if cover-arr.len() != 0 {
@@ -85,7 +91,8 @@
     }
     result-arr.push(result.sum(default: []))
   }
-  return (result-arr, repetitions)
+  max-repetitions = calc.max(max-repetitions, repetitions)
+  return (result-arr, max-repetitions)
 }
 
 // touying-slide
@@ -187,7 +194,7 @@
   // register the methods
   methods: (
     // cover method
-    cove: utils.wrap-method(hide),
+    cover: utils.wrap-method(hide),
     update-cover: (self: utils.empty-object, is-method: false, cover-fn) => {
       if is-method {
         self.methods.cover = cover-fn

@@ -16,6 +16,7 @@ Additionally, Touying does not rely on `locate` and `counter` for implementing `
 - [x] **Page arguments management:** Instead of using `#set page(..)`, you should use `self.page-args` to retrieve or set page parameters, thereby avoiding unnecessary creation of new pages.
 - [x] **`#pause` for sequence content:** You can use #pause at the outermost level of a slide, including inline and list.
 - [x] **`#pause` for layout functions:** You can use the `composer` parameter to add yourself layout function like `utils.side-by-side`, and simply use multiple pos parameters like `#slide[..][..]`.
+- [x] **`#meanwhile` for synchronous display:** Provide a `#meanwhile` for resetting subslides counter.
 - [x] **Callback-style `uncover`, `only` and `alternatives`:** Based on the concise syntax provided by Polylux, allow precise control of the timing for displaying content.
   - You should manually control the number of subslides using the `repeat` parameter.
 - [x] **Transparent cover:** Enable transparent cover using oop syntax like `#let s = (s.methods.enable-transparent-cover)(self: s)`.
@@ -37,7 +38,6 @@ Additionally, Touying does not rely on `locate` and `counter` for implementing `
 ## Features to Implement
 
 - [ ] **More themes:** Add more themes.
-- [ ] **`#meanwhile` for reset subslides counter:** Provide a `#meanwhile` for resetting subslides counter.
 - [ ] **`#pause` for math equation:** Provide a `#touying-math("x + y #pause + z")` for math equation animations.
 - [ ] **Combinable components**: Combinable components for header, footer and sidebar, .
 - [ ] **Navigation bar**: Navigation bar like [here](https://tex.stackexchange.com/questions/350508/adding-outline-bar-to-the-beamer-for-section-mentioning) by `states.touying-progress-with-sections(..)`.
@@ -52,7 +52,7 @@ Feel free to suggest any ideas and contribute.
 We can export `example.pdfpc` file by command `typst query --root . ./examples/example.typ --field value --one "<pdfpc-file>" > ./examples/example.pdfpc`
 
 ```typst
-#import "@preview/touying:0.1.0": s, pause, utils, states, pdfpc, themes
+#import "@preview/touying:0.1.0": s, pause, meanwhile, utils, states, pdfpc, themes
 
 #let s = themes.metropolis.register(s, aspect-ratio: "16-9", footer: [Custom footer])
 #let s = (s.methods.enable-transparent-cover)(self: s)
@@ -82,6 +82,10 @@ We can export `example.pdfpc` file by command `typst query --root . ./examples/e
   #pause
   
   slide.
+
+  #meanwhile
+
+  meanwhile #pause with pause.
 ][
   second #pause pause.
 ]
@@ -126,7 +130,7 @@ We can export `example.pdfpc` file by command `typst query --root . ./examples/e
 ## Themes
 
 ```typst
-#import "@preview/touying:0.1.0": s, pause, utils, states, pdfpc, themes
+#import "@preview/touying:0.1.0": s, pause, meanwhile, utils, states, pdfpc, themes
 
 #let s = themes.metropolis.register(s, aspect-ratio: "16-9", footer: [Custom footer])
 #let s = (s.methods.enable-transparent-cover)(self: s)

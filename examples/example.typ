@@ -1,4 +1,4 @@
-#import "../lib.typ": s, pause, utils, states, pdfpc, themes
+#import "../lib.typ": s, pause, meanwhile, utils, states, pdfpc, themes
 
 #let s = themes.metropolis.register(s, aspect-ratio: "16-9", footer: [Custom footer])
 #let s = (s.methods.enable-transparent-cover)(self: s)
@@ -28,6 +28,10 @@
   #pause
   
   slide.
+
+  #meanwhile
+
+  meanwhile #pause with pause.
 ][
   second #pause pause.
 ]
