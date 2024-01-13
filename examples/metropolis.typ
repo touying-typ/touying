@@ -1,6 +1,14 @@
 #import "../lib.typ": s, pause, meanwhile, utils, states, pdfpc, themes
 
-#let s = themes.metropolis.register(s, aspect-ratio: "16-9", footer: [Custom footer])
+#let s = themes.metropolis.register(
+  aspect-ratio: "16-9",
+  footer: [Custom footer],
+  title: [Title],
+  subtitle: [Subtitle],
+  author: [Authors],
+  date: [Date],
+  s,
+)
 #let s = (s.methods.enable-transparent-cover)(self: s)
 #let (init, slide, title-slide, new-section-slide, focus-slide, touying-outline, alert) = utils.methods(s)
 #show: init
@@ -10,13 +18,7 @@
 #set strong(delta: 100)
 #set par(justify: true)
 
-#title-slide(
-  author: [Authors],
-  title: [Title],
-  subtitle: [Subtitle],
-  date: [Date],
-  extra: [Extra],
-)
+#title-slide(extra: [Extra])
 
 #slide(title: [Table of contents])[
   #touying-outline()

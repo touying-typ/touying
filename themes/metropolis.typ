@@ -15,6 +15,7 @@
 #let slide(
   self: utils.empty-object,
   title: auto,
+  footer: auto,
   align: horizon,
   margin: (top: 3em, bottom: 1em, left: 0em, right: 0em),
   padding: 2em,
@@ -26,6 +27,9 @@
   )
   if title != auto {
     self.m-title = title
+  }
+  if footer != auto {
+    self.m-footer = footer
   }
   let touying-slide = self.methods.touying-slide
   touying-slide(
@@ -44,10 +48,11 @@
 
 #let title-slide(
   self: utils.empty-object,
-  title: [],
-  subtitle: none,
-  author: none,
-  date: none,
+  title: auto,
+  subtitle: auto,
+  author: auto,
+  date: auto,
+  institution: auto,
   extra: none,
   hide-header: true,
   hide-footer: true,
@@ -57,6 +62,21 @@
   }
   if hide-footer {
     self.page-args.footer = none
+  }
+  if title == auto {
+    title = self.title
+  }
+  if subtitle == auto {
+    subtitle = self.subtitle
+  }
+  if author == auto {
+    author = self.author
+  }
+  if date == auto {
+    date = self.date
+  }
+  if institution == auto {
+    institution = self.institution
   }
   let content = {
     set text(fill: self.m-colors.dark-teal)
@@ -76,6 +96,9 @@
         block(spacing: 1em, date)
       }
       set text(size: .8em)
+      if institution != none {
+        block(spacing: 1em, institution)
+      }
       if extra != none {
         block(spacing: 1em, extra)
       }
@@ -120,7 +143,27 @@
   touying-slide(self: self, repeat: none, align(horizon + center, body))
 }
 
-#let register(aspect-ratio: "16-9", header: states.current-section-title, footer: [], self) = {
+#let register(
+  aspect-ratio: "16-9",
+  header: states.current-section-title,
+  footer: [],
+  title: [],
+  short-title: auto,
+  subtitle: none,
+  author: none,
+  date: none,
+  institution: none,
+  self,
+) = {
+  // infos
+  self += (
+    title: title,
+    short-title: short-title,
+    subtitle: subtitle,
+    author: author,
+    date: date,
+    institution: institution,
+  )
   // save the variables for later use
   self.m-cell = block.with(
     width: 100%,
