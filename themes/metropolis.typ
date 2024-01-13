@@ -101,7 +101,7 @@
     block(height: 2pt, width: 100%, spacing: 0pt, self.m-progress-bar)
   }
   let touying-slide = self.methods.touying-slide
-  touying-slide(self: self, repeat: none, update-states: states.new-section(title), content)
+  touying-slide(self: self, repeat: none, section: (title: title, short-title: short-title), content)
 }
 
 #let focus-slide(self: utils.empty-object, hide-header: true, hide-footer: true, body) = {

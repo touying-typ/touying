@@ -36,6 +36,7 @@
           result.push(cover(cover-arr.sum()))
           cover-arr = ()
         }
+        // then reset the repetitions
         max-repetitions = calc.max(max-repetitions, repetitions)
         repetitions = 1
       } else if child == linebreak() or child == parbreak() {
@@ -101,7 +102,15 @@
 }
 
 // touying-slide
-#let touying-slide(self: utils.empty-object, repeat: auto, update-states: [], setting: body => body, composer: utils.side-by-side, ..bodies) = {
+#let touying-slide(
+  self: utils.empty-object,
+  repeat: auto,
+  setting: body => body,
+  composer: utils.side-by-side,
+  section: none,
+  subsection: none,
+  ..bodies,
+) = {
   assert(bodies.named().len() == 0, message: "unexpected named arguments:" + repr(bodies.named().keys()))
   let bodies = bodies.pos()
   let page-preamble(curr-subslide) = locate(loc => {
@@ -123,10 +132,25 @@
   // update states
   let _update-states(repetitions) = {
     states.slide-counter.step()
-    utils.call-or-display(self, update-states)
+    // if section is not none, then create a new section
+    if section != none {
+      if type(section) == dictionary {
+        states._new-section(short-title: section.at("short-title", default: auto), id: section.at("id", default: auto), section.title)
+      } else {
+        states._new-section(section)
+      }
+    }
+    // if subsection is not none, then create a new subsection
+    if subsection != none {
+      if type(subsection) == dictionary {
+        states._new-subsection(short-title: subsection.at("short-title", default: auto), id: subsection.at("id", default: auto), subsection.title)
+      } else {
+        states._new-subsection(subsection)
+      }
+    }
     if self.appendix == false {
       states.last-slide-counter.step()
-      states.section-step(repetitions)
+      states._sections-step(repetitions)
     }
   }
   // page header and footer

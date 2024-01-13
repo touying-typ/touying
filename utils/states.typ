@@ -9,21 +9,42 @@
 })
 
 // sections
-#let sections-state = state("touying-sections-state", ((title: none, short-title: none, loc: none, count: 0, slides: ()),))
+#let sections-state = state("touying-sections-state", ((kind: "section", title: none, short-title: none, loc: none, count: 0, children: ()),))
 
-#let new-section(short-title: auto, title) = locate(loc => {
+#let _new-section(short-title: auto, id: auto, title) = locate(loc => {
+  // to avoid multiple sections with the same title
+  let sections = sections-state.at(loc)
+  sections.push((kind: "section", title: title, short-title: short-title, loc: loc, count: 0, children: ()))
+  sections-state.update(sections)
+})
+
+#let _new-subsection(short-title: auto, id: auto, title) = locate(loc => {
+  // to update subsections after the sections are updated,
+  // so we need sections-state.update instead of sections-state.at(loc)
   sections-state.update(sections => {
-    sections.push((title: title, short-title: short-title, loc: loc, count: 0, slides: ()))
+    let last-section = sections.pop()
+    last-section.children.push((kind: "subsection", title: title, short-title: short-title, loc: loc, count: 0, children: ()))
+    sections.push(last-section)
     sections
   })
 })
 
-#let section-step(repetitions) = locate(loc => {
+#let _sections-step(repetitions) = locate(loc => {
   sections-state.update(sections => {
-    let last = sections.pop()
-    last.slides.push((loc: loc, count: repetitions))
-    last.count += 1
-    sections.push(last)
+    let last-section = sections.pop()
+    if last-section.children.len() == 0 or last-section.children.last().kind == "slide" {
+      last-section.children.push((kind: "slide", loc: loc, count: repetitions))
+      last-section.count += 1
+      sections.push(last-section)
+    } else {
+      // update for subsection
+      let last-subsection = last-section.children.pop()
+      last-subsection.children.push((kind: "slide", loc: loc, count: repetitions))
+      last-subsection.count += 1
+      last-section.count += 1
+      last-section.children.push(last-subsection)
+      sections.push(last-section)
+    }
     sections
   }
 )})
@@ -36,7 +57,13 @@
   pad(padding, enum(
     ..enum-args,
     ..sections.filter(section => section.loc != none)
-      .map(section => link(section.loc, section.title))
+      .map(section => link(section.loc, section.title) + if section.children.filter(it => it.kind != "slide").len() > 0 {
+        let subsections = section.children.filter(it => it.kind != "slide")
+        enum(
+          ..enum-args,
+          ..subsections.map(subsection => link(subsection.loc, subsection.title))
+        )
+      })
   ))
 })
 
