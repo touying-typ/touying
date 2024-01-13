@@ -147,6 +147,7 @@
   aspect-ratio: "16-9",
   header: states.current-section-title,
   footer: [],
+  footer-right: states.slide-counter.display() + " / " + states.last-slide-number,
   self,
 ) = {
   // save the variables for later use
@@ -170,8 +171,9 @@
       (self.m-cell)(fill: self.m-colors.lighter-brown)
     )
   })
-  self.m-footer = footer
   self.m-title = header
+  self.m-footer = footer
+  self.m-footer-right = footer-right
   // set page
   let header(self) = {
     set align(top)
@@ -188,7 +190,7 @@
     set align(bottom)
     text(fill: self.m-colors.dark-teal.lighten(40%), utils.call-or-display(self, self.m-footer))
     h(1fr)
-    text(fill: self.m-colors.dark-teal, states.slide-counter.display() + " / " + states.last-slide-number)
+    text(fill: self.m-colors.dark-teal, utils.call-or-display(self, self.m-footer-right))
   }
   self.page-args = self.page-args + (
     paper: "presentation-" + aspect-ratio,
