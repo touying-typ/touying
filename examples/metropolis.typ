@@ -1,21 +1,23 @@
 #import "../lib.typ": s, pause, meanwhile, utils, states, pdfpc, themes
 
-#let s = themes.metropolis.register(
-  aspect-ratio: "16-9",
-  footer: [Custom footer],
+#let s = themes.metropolis.register(s, aspect-ratio: "16-9", footer: self => self.info.institution)
+#let s = (s.methods.info)(
+  self: s,
   title: [Title],
   subtitle: [Subtitle],
   author: [Authors],
-  date: [Date],
-  s,
+  date: datetime.today(),
+  institution: [Institution],
 )
 #let s = (s.methods.enable-transparent-cover)(self: s)
+// #let s = (s.methods.enable-handout-mode)(self: s)
 #let (init, slide, title-slide, new-section-slide, focus-slide, touying-outline, alert) = utils.methods(s)
 #show: init
 
 #set text(font: "Fira Sans", weight: "light", size: 20pt)
 #show math.equation: set text(font: "Fira Math")
 #set strong(delta: 100)
+#show strong: alert
 #set par(justify: true)
 
 #title-slide(extra: [Extra])
@@ -34,7 +36,7 @@
 #new-section-slide[First section]
 
 #slide[
-  A slide without a title but with #alert[important] infos
+  A slide without a title but with *important* infos
 ]
 
 #new-section-slide[Second section]

@@ -64,25 +64,25 @@
     self.page-args.footer = none
   }
   if title == auto {
-    title = self.title
+    title = self.info.title
   }
   if subtitle == auto {
-    subtitle = self.subtitle
+    subtitle = self.info.subtitle
   }
   if author == auto {
-    author = self.author
+    author = self.info.author
   }
   if date == auto {
-    date = self.date
+    date = self.info.date
   }
   if institution == auto {
-    institution = self.institution
+    institution = self.info.institution
   }
   let content = {
     set text(fill: self.m-colors.dark-teal)
     set align(horizon)
     block(width: 100%, inset: 2em, {
-      text(size: 1.3em, strong(title))
+      text(size: 1.3em, text(weight: "medium", title))
       if subtitle != none {
         linebreak()
         text(size: 0.9em, subtitle)
@@ -93,7 +93,7 @@
         block(spacing: 1em, author)
       }
       if date != none {
-        block(spacing: 1em, date)
+        block(spacing: 1em, if type(date) == datetime { date.display(self.datetime-format) } else { date })
       }
       set text(size: .8em)
       if institution != none {
@@ -147,23 +147,8 @@
   aspect-ratio: "16-9",
   header: states.current-section-title,
   footer: [],
-  title: [],
-  short-title: auto,
-  subtitle: none,
-  author: none,
-  date: none,
-  institution: none,
   self,
 ) = {
-  // infos
-  self += (
-    title: title,
-    short-title: short-title,
-    subtitle: subtitle,
-    author: author,
-    date: date,
-    institution: institution,
-  )
   // save the variables for later use
   self.m-cell = block.with(
     width: 100%,
@@ -194,7 +179,7 @@
       show: self.m-cell.with(fill: self.m-colors.dark-teal, inset: 1em)
       set align(horizon)
       set text(fill: self.m-colors.extra-light-gray, size: 1.2em)
-      utils.fit-to-width(grow: false, 100%, strong(utils.call-or-display(self, self.m-title)))
+      utils.fit-to-width(grow: false, 100%, text(weight: "medium", utils.call-or-display(self, self.m-title)))
     } else { [] }
   }
   let footer(self) = {

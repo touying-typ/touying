@@ -1,6 +1,15 @@
 #import "../lib.typ": s, pause, meanwhile, utils, states, pdfpc, themes
 
-#let s = themes.metropolis.register(s, aspect-ratio: "16-9", footer: [Custom footer])
+// You can comment out the theme registration below and it can still work normally
+#let s = themes.metropolis.register(s, aspect-ratio: "16-9", footer: self => self.info.institution)
+#let s = (s.methods.info)(
+  self: s,
+  title: [Title],
+  subtitle: [Subtitle],
+  author: [Authors],
+  date: datetime.today(),
+  institution: [Institution],
+)
 #let s = (s.methods.enable-transparent-cover)(self: s)
 #let s = (s.methods.append-preamble)(self: s, pdfpc.config(
   duration-minutes: 30,
@@ -18,12 +27,14 @@
   ),
 ))
 // #let s = (s.methods.enable-handout-mode)(self: s)
-#let (init, slide, touying-outline) = utils.methods(s)
+#let (init, slide, touying-outline, alert) = utils.methods(s)
 #show: init
+
+#show strong: alert
 
 // simple animations
 #slide[
-  a simple #pause dynamic
+  a simple #pause *dynamic*
 
   #pause
   

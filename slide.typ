@@ -204,6 +204,15 @@
 
 // build the touying singleton
 #let s = (
+  info: (
+    title: none,
+    short-title: auto,
+    subtitle: none,
+    short-subtitle: auto,
+    author: none,
+    date: none,
+    institution: none,
+  ),
   // handle mode
   handout: false,
   // appendix mode
@@ -221,8 +230,15 @@
     footer: align(right, states.slide-counter.display() + " / " + states.last-slide-number),
     fill: rgb("#ffffff"),
   ),
+  // datetime format
+  datetime-format: auto,
   // register the methods
   methods: (
+    // info
+    info: (self: utils.empty-object, ..args) => {
+      self.info += args.named()
+      self
+    },
     // cover method
     cover: utils.wrap-method(hide),
     update-cover: (self: utils.empty-object, is-method: false, cover-fn) => {
@@ -249,6 +265,8 @@
     alternatives: utils.alternatives,
     alternatives-fn: utils.alternatives-fn,
     alternatives-cases: utils.alternatives-cases,
+    // alert
+    alert: utils.wrap-method(text.with(weight: "bold")),
     // handout mode
     enable-handout-mode: (self: utils.empty-object) => {
       self.handout = true
@@ -265,6 +283,11 @@
     // append the preamble
     append-preamble: (self: utils.empty-object, preamble) => {
       self.preamble += preamble
+      self
+    },
+    // datetime format
+    datetime-format: (self: utils.empty-object, format) => {
+      self.datetime-format = format
       self
     },
     // default init
