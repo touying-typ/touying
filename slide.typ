@@ -133,21 +133,16 @@
   let _update-states(repetitions) = {
     states.slide-counter.step()
     // if section is not none, then create a new section
+    let section = utils.unify-section(section)
     if section != none {
-      if type(section) == dictionary {
-        states._new-section(short-title: section.at("short-title", default: auto), id: section.at("id", default: auto), section.title)
-      } else {
-        states._new-section(section)
-      }
+      states._new-section(short-title: section.short-title, section.title)
     }
     // if subsection is not none, then create a new subsection
+    let subsection = utils.unify-section(subsection)
     if subsection != none {
-      if type(subsection) == dictionary {
-        states._new-subsection(short-title: subsection.at("short-title", default: auto), id: subsection.at("id", default: auto), subsection.title)
-      } else {
-        states._new-subsection(subsection)
-      }
+      states._new-subsection(short-title: subsection.short-title, subsection.title)
     }
+    // if appendix is false, then update the last-slide-counter and sections step
     if self.appendix == false {
       states.last-slide-counter.step()
       states._sections-step(repetitions)

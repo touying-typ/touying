@@ -27,6 +27,18 @@
   return methods
 }
 
+// Utils: unify section
+#let unify-section(section) = {
+  if section == none {
+    return none
+  } else if type(section) == dictionary {
+    return section + (short-title: section.at("short-title", default: auto))
+  } else if type(section) == array {
+    return (title: section.at(0), short-title: section.at(1, default: auto))
+  } else {
+    return (title: section, short-title: auto)
+  }
+}
 
 // Type: is sequence
 #let is-sequence(it) = {

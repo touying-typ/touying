@@ -11,6 +11,13 @@
 #import "../utils/states.typ"
 
 #let _saved-align = align
+#let m-cell = block.with(
+  width: 100%,
+  height: 100%,
+  above: 0pt,
+  below: 0pt,
+  breakable: false,
+)
 
 #let slide(
   self: utils.empty-object,
@@ -126,18 +133,11 @@
     secondary-lighter: rgb("#d6c6b7"),
   )
   // save the variables for later use
-  self.m-cell = block.with(
-    width: 100%,
-    height: 100%,
-    above: 0pt,
-    below: 0pt,
-    breakable: false,
-  )
   self.m-progress-bar = states.touying-progress(ratio => {
     grid(
       columns: (ratio * 100%, 1fr),
-      (self.m-cell)(fill: self.colors.secondary-light),
-      (self.m-cell)(fill: self.colors.secondary-lighter)
+      m-cell(fill: self.colors.secondary-light),
+      m-cell(fill: self.colors.secondary-lighter)
     )
   })
   self.m-title = header
@@ -147,7 +147,7 @@
   let header(self) = {
     set align(top)
     if self.m-title != none {
-      show: self.m-cell.with(fill: self.colors.primary-dark, inset: 1em)
+      show: m-cell.with(fill: self.colors.primary-dark, inset: 1em)
       set align(horizon)
       set text(fill: self.colors.neutral-extralight, size: 1.2em)
       utils.fit-to-width(grow: false, 100%, text(weight: "medium", utils.call-or-display(self, self.m-title)))
