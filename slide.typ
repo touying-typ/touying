@@ -8,7 +8,7 @@
 #let meanwhile = [#"<touying-meanwhile>"]
 
 // parse a sequence into content, and get the repetitions
-#let _parse-content-with-pause(self: utils.empty-object, need-cover: true, base: 1, index: 1, ..bodies) = {
+#let _parse-content(self: utils.empty-object, need-cover: true, base: 1, index: 1, ..bodies) = {
   let bodies = bodies.pos()
   let result-arr = ()
   // repetitions
@@ -48,7 +48,7 @@
         result.push(child)
       } else if type(child) == content and child.func() == list.item {
         // handle the list item
-        let (conts, nextrepetitions) = _parse-content-with-pause(
+        let (conts, nextrepetitions) = _parse-content(
           self: self, need-cover: repetitions <= index, base: repetitions, index: index, child.body
         )
         let cont = conts.first()
@@ -60,7 +60,7 @@
         repetitions = nextrepetitions
       } else if type(child) == content and child.func() == enum.item {
         // handle the enum item
-        let (conts, nextrepetitions) = _parse-content-with-pause(
+        let (conts, nextrepetitions) = _parse-content(
           self: self, need-cover: repetitions <= index, base: repetitions, index: index, child.body
         )
         let cont = conts.first()
@@ -72,7 +72,7 @@
         repetitions = nextrepetitions
       } else if type(child) == content and child.func() == terms.item {
         // handle the terms item
-        let (conts, nextrepetitions) = _parse-content-with-pause(
+        let (conts, nextrepetitions) = _parse-content(
           self: self, need-cover: repetitions <= index, base: repetitions, index: index, child.description
         )
         let cont = conts.first()
@@ -167,7 +167,7 @@
   }
   // for single page slide, get the repetitions
   if repeat == auto {
-    let (_, repetitions) = _parse-content-with-pause(
+    let (_, repetitions) = _parse-content(
       self: self,
       base: 1,
       index: 1,
@@ -176,7 +176,7 @@
     repeat = repetitions
   }
   if self.handout {
-    let (conts, _) = _parse-content-with-pause(self: self, index: repeat, ..bodies)
+    let (conts, _) = _parse-content(self: self, index: repeat, ..bodies)
     header = _update-states(1) + header
     page(..(self.page-args + (header: header, footer: footer)), setting(
       page-preamble(1) + composer(..conts)
@@ -187,7 +187,7 @@
     let current = 1
     for i in range(1, repeat + 1) {
       let new-header = header
-      let (conts, _) = _parse-content-with-pause(self: self, index: i, ..bodies)
+      let (conts, _) = _parse-content(self: self, index: i, ..bodies)
       // update the counter in the first subslide
       if i == 1 {
         new-header = _update-states(repeat) + new-header
@@ -204,6 +204,7 @@
 
 // build the touying singleton
 #let s = (
+  // info interface
   info: (
     title: none,
     short-title: auto,
@@ -213,13 +214,45 @@
     date: none,
     institution: none,
   ),
+  // colors interface
+  colors: (
+    neutral: rgb("#303030"),
+    neutral-light: rgb("#a0a0a0"),
+    neutral-lighter: rgb("#d0d0d0"),
+    neutral-extralight: rgb("#ffffff"),
+    neutral-dark: rgb("#202020"),
+    neutral-darker: rgb("#101010"),
+    neutral-extradark: rgb("#000000"),
+    primary: rgb("#303030"),
+    primary-light: rgb("#a0a0a0"),
+    primary-lighter: rgb("#d0d0d0"),
+    primary-extralight: rgb("#ffffff"),
+    primary-dark: rgb("#202020"),
+    primary-darker: rgb("#101010"),
+    primary-extradark: rgb("#000000"),
+    secondary: rgb("#303030"),
+    secondary-light: rgb("#a0a0a0"),
+    secondary-lighter: rgb("#d0d0d0"),
+    secondary-extralight: rgb("#ffffff"),
+    secondary-dark: rgb("#202020"),
+    secondary-darker: rgb("#101010"),
+    secondary-extradark: rgb("#000000"),
+    tertiary: rgb("#303030"),
+    tertiary-light: rgb("#a0a0a0"),
+    tertiary-lighter: rgb("#d0d0d0"),
+    tertiary-extralight: rgb("#ffffff"),
+    tertiary-dark: rgb("#202020"),
+    tertiary-darker: rgb("#101010"),
+    tertiary-extradark: rgb("#000000"),
+  ),
   // handle mode
   handout: false,
   // appendix mode
   appendix: false,
   // enable pdfpc-file
   pdfpc-file: true,
-  // first-slide page number, default is 1
+  // first-slide page number, which will affect preamble,
+  // default is 1
   first-slide-number: 1,
   // global preamble
   preamble: [],
@@ -237,6 +270,11 @@
     // info
     info: (self: utils.empty-object, ..args) => {
       self.info += args.named()
+      self
+    },
+    // colors
+    colors: (self: utils.empty-object, ..args) => {
+      self.colors += args.named()
       self
     },
     // cover method
@@ -265,7 +303,7 @@
     alternatives: utils.alternatives,
     alternatives-fn: utils.alternatives-fn,
     alternatives-cases: utils.alternatives-cases,
-    // alert
+    // alert interface
     alert: utils.wrap-method(text.with(weight: "bold")),
     // handout mode
     enable-handout-mode: (self: utils.empty-object) => {
