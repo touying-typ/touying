@@ -21,7 +21,7 @@
   self.page-args.footer = none
   let touying-slide = self.methods.touying-slide
   touying-slide(self: self, repeat: none, section: section,
-    align(center + horizon, if section != none { utils.unify-section(section).title } + bodis.pos().sum(default: []))
+    align(center + horizon, if section != none { heading(level: 1, utils.unify-section(section).title) } + bodis.pos().sum(default: []))
   )
 }
 

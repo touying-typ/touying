@@ -38,6 +38,7 @@ Additionally, Touying does not rely on `locate` and `counter` for implementing `
 ## Features to Implement
 
 - [ ] **More themes:** Add more themes.
+- [ ] **Slides:** Create simple slides using standard headings.
 - [ ] **`#pause` for math equation:** Provide a `#touying-math("x + y #pause + z")` for math equation animations.
 - [ ] **Combinable components**: Combinable components for header, footer and sidebar, .
 - [ ] **Navigation bar**: Navigation bar like [here](https://tex.stackexchange.com/questions/350508/adding-outline-bar-to-the-beamer-for-section-mentioning) by `states.touying-progress-with-sections(..)`.
