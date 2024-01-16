@@ -42,6 +42,7 @@ Additionally, Touying does not rely on `locate` and `counter` for implementing `
 - [ ] **`#pause` for math equation:** Provide a `#touying-math("x + y #pause + z")` for math equation animations.
 - [ ] **Combinable components**: Combinable components for header, footer and sidebar, .
 - [ ] **Navigation bar**: Navigation bar like [here](https://tex.stackexchange.com/questions/350508/adding-outline-bar-to-the-beamer-for-section-mentioning) by `states.touying-progress-with-sections(..)`.
+- [ ] **Theorem environment**: Theorem environment for each themes.
 - [ ] **Document:** Add a more detailed document.
 - [ ] **External viewers:** Integration with external viewers like impress.js and typst-preview.
 
