@@ -7,7 +7,6 @@
 #let slide(
   self: utils.empty-object,
   footer: auto,
-  padding: 2em,
   ..args,
 ) = {
   self.page-args = self.page-args + (
@@ -28,7 +27,9 @@
     self: self,
     setting: body => {
       show: pad.with(
-        ..(if type(padding) == dictionary { padding } else { (padding,) }),
+        top: (if self.d-navigation == "mini-slides" { self.d-mini-slides.height } else { 2em }),
+        bottom: 1em,
+        x: self.d-mini-slides.x,
         ..(if self.d-navigation == "sidebar" { (x: self.d-sidebar.width) } else { () }),
       )
       set text(fill: self.colors.neutral-extradark)
@@ -123,7 +124,7 @@
   }
 })
 
-#let d-progress(self: utils.empty-object) = states.touying-progress-with-sections(dict => {
+#let d-sidebar(self: utils.empty-object) = states.touying-progress-with-sections(dict => {
   let (current-sections, final-sections) = dict
   current-sections = current-sections
     .filter(section => section.loc != none)
@@ -152,6 +153,68 @@
   }
 })
 
+#let d-mini-slides(self: utils.empty-object) = states.touying-progress-with-sections(dict => {
+  let (current-sections, final-sections) = dict
+  current-sections = current-sections.filter(section => section.loc != none)
+  final-sections = final-sections.filter(section => section.loc != none)
+  let current-i = current-sections.len() - 1
+  let cols = ()
+  let current-count = 0
+  for (i, section) in current-sections.enumerate() {
+    if self.d-mini-slides.section {
+      for subsection in section.children.filter(it => it.kind == "slide") {
+        current-count += 1
+      }
+    }
+    for subsection in section.children.filter(it => it.kind != "slide") {
+      for slide in subsection.children {
+        current-count += 1
+      }
+    }
+  }
+  let final-count = 0
+  for (i, section) in final-sections.enumerate() {
+    let primary-color = if i != current-i { self.colors.primary.lighten(self.d-alpha) } else { self.colors.primary }
+    cols.push({
+      set align(left)
+      set text(fill: primary-color)
+      link(section.loc, utils.section-short-title(section.title))
+      linebreak()
+      if self.d-mini-slides.section {
+        for subsection in section.children.filter(it => it.kind == "slide") {
+          final-count += 1
+          if final-count == current-count {
+            sym.circle.filled
+          } else {
+            sym.circle
+          }
+        }
+      }
+      if self.d-mini-slides.section and self.d-mini-slides.subsection {
+        linebreak()
+      }
+      for subsection in section.children.filter(it => it.kind != "slide") {
+        for slide in subsection.children {
+          final-count += 1
+          if final-count == current-count {
+            sym.circle.filled
+          } else {
+            sym.circle
+          }
+        }
+        if self.d-mini-slides.subsection {
+          linebreak()
+        }
+      }
+    })
+  }
+  set align(top)
+  show: block.with(inset: (top: .5em, x: 2em))
+  show linebreak: it => it + v(-1em)
+  set text(size: .7em)
+  grid(columns: cols.map(_ => auto).intersperse(1fr), ..cols.intersperse([]))
+})
+
 #let slide-in-slides(self: utils.empty-object, section: none, subsection: none, outline-title: [Outline], body, ..args) = {
   if section != none {
     (self.methods.slide)(self: self, section: section, heading(level: 2, outline-title) + parbreak() + (self.methods.touying-outline)(self: self))
@@ -176,7 +239,7 @@
   aspect-ratio: "16-9",
   navigation: "sidebar",
   sidebar: (width: 10em),
-  mini-slides: (height: 2.5em, section: true, subsection: true),
+  mini-slides: (height: 2em, x: 2em, section: false, subsection: true),
   footer: [],
   footer-right: states.slide-counter.display() + " / " + states.last-slide-number,
   primary: rgb("#0c4842"),
@@ -203,8 +266,9 @@
   // set page
   let header(self) = {
     if self.d-navigation == "sidebar" {
-      place(right + top, (self.methods.d-progress)(self: self))
+      place(right + top, (self.methods.d-sidebar)(self: self))
     } else if self.d-navigation == "mini-slides" {
+      (self.methods.d-mini-slides)(self: self)
     }
   }
   let footer(self) = {
@@ -234,7 +298,8 @@
   }
   self.methods.touying-outline = d-outline
   self.methods.d-outline = d-outline
-  self.methods.d-progress = d-progress
+  self.methods.d-sidebar = d-sidebar
+  self.methods.d-mini-slides = d-mini-slides
   self.methods.alert = (self: utils.empty-object, it) => text(fill: self.colors.primary, it)
   self.methods.init = (self: utils.empty-object, body) => {
     set text(size: 20pt)

@@ -134,18 +134,20 @@
   // update states
   let _update-states(repetitions) = {
     states.slide-counter.step()
-    // if section is not none, then create a new section
-    let section = utils.unify-section(section)
-    if section != none {
-      states._new-section(short-title: section.short-title, section.title)
-    }
-    // if subsection is not none, then create a new subsection
-    let subsection = utils.unify-section(subsection)
-    if subsection != none {
-      states._new-subsection(short-title: subsection.short-title, subsection.title)
+    if not self.appendix or self.appendix-in-outline {
+      // if section is not none, then create a new section
+      let section = utils.unify-section(section)
+      if section != none {
+        states._new-section(short-title: section.short-title, section.title)
+      }
+      // if subsection is not none, then create a new subsection
+      let subsection = utils.unify-section(subsection)
+      if subsection != none {
+        states._new-subsection(short-title: subsection.short-title, subsection.title)
+      }
     }
     // if appendix is false, then update the last-slide-counter and sections step
-    if self.appendix == false {
+    if not self.appendix {
       states.last-slide-counter.step()
       states._sections-step(repetitions)
     }
@@ -239,9 +241,9 @@
       subsection = none
       slide = ()
       if child.level == 1 {
-        section = child.body
+        section = if child.body != [] { child.body } else { none }
       } else {
-        subsection = child.body
+        subsection = if child.body != [] { child.body } else { none }
       }
     } else {
       slide.push(child)
@@ -310,6 +312,7 @@
   handout: false,
   // appendix mode
   appendix: false,
+  appendix-in-outline: true,
   // enable pdfpc-file
   pdfpc-file: true,
   // first-slide page number, which will affect preamble,
@@ -421,6 +424,10 @@
     },
     appendix: (self: utils.empty-object) => {
       self.appendix = true
+      self
+    },
+    appendix-in-outline: (self: utils.empty-object, value) => {
+      self.appendix-in-outline = value
       self
     }
   ),

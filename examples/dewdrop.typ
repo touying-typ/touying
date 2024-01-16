@@ -5,6 +5,7 @@
   aspect-ratio: "16-9",
   footer: [Dewdrop],
   navigation: "mini-slides",
+  // navigation: none,
 )
 #let s = (s.methods.info)(
   self: s,
@@ -16,6 +17,7 @@
 )
 #let s = (s.methods.enable-transparent-cover)(self: s)
 // #let s = (s.methods.enable-handout-mode)(self: s)
+// #let s = (s.methods.appendix-in-outline)(self: s, false)
 #let (init, slide, title-slide, focus-slide, touying-outline, alert) = utils.methods(s)
 #show: init
 
