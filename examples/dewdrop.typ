@@ -4,7 +4,7 @@
   s,
   aspect-ratio: "16-9",
   footer: [Dewdrop],
-  // navigation: "mini-slides",
+  navigation: "mini-slides",
 )
 #let s = (s.methods.info)(
   self: s,
@@ -58,7 +58,7 @@
 #slide(subsection: [Subsection B.1])[
   == Another Subsection
 
-  Subsection B.1
+  #lorem(80)
 ]
 
 #focus-slide[
@@ -79,6 +79,12 @@
 // appendix by freezing last-slide-number
 #let s = (s.methods.appendix)(self: s)
 #let (slide,) = utils.methods(s)
+
+#slide(section: [Appendix])[
+  == Outline
+  
+  #touying-outline()
+]
 
 #slide[
   appendix

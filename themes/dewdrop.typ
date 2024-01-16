@@ -98,7 +98,9 @@
 
 #let d-outline(self: utils.empty-object, enum-args: (:), list-args: (:), cover: true) = states.touying-progress-with-sections(dict => {
   let (current-sections, final-sections) = dict
-  let current-index = current-sections.filter(section => section.loc != none).len() - 1
+  current-sections = current-sections.filter(section => section.loc != none)
+  final-sections = final-sections.filter(section => section.loc != none)
+  let current-index = current-sections.len() - 1
   let d-cover(i, body) = if i != current-index and cover {
     (self.methods.d-cover)(self: self, body)
   } else {
@@ -107,7 +109,7 @@
   set enum(..enum-args)
   set list(..enum-args)
   set text(fill: self.colors.primary)
-  for (i, section) in final-sections.filter(section => section.loc != none).enumerate() {
+  for (i, section) in final-sections.enumerate() {
     d-cover(i, {
       enum.item(i + 1, link(section.loc, section.title) + if section.children.filter(it => it.kind != "slide").len() > 0 {
         let subsections = section.children.filter(it => it.kind != "slide")
@@ -117,6 +119,35 @@
         )
       })
     })
+    parbreak()
+  }
+})
+
+#let d-progress(self: utils.empty-object) = states.touying-progress-with-sections(dict => {
+  let (current-sections, final-sections) = dict
+  current-sections = current-sections
+    .filter(section => section.loc != none)
+    .map(section => (section, section.children))
+    .flatten()
+    .filter(item => item.kind != "slide")
+  final-sections = final-sections
+    .filter(section => section.loc != none)
+    .map(section => (section, section.children))
+    .flatten()
+    .filter(item => item.kind != "slide")
+  let current-index = current-sections.len() - 1
+  show: block.with(width: self.d-sidebar.width, inset: (top: 4em, x: 1em))
+  set align(left)
+  set par(justify: false)
+  set text(size: 0.9em)
+  for (i, section) in final-sections.enumerate() {
+    if section.kind == "section" {
+      set text(fill: if i != current-index { self.colors.primary.lighten(self.d-alpha) } else { self.colors.primary })
+      link(section.loc, utils.section-short-title(section.title))
+    } else {
+      set text(fill: if i != current-index { self.colors.neutral-dark.lighten(self.d-alpha) } else { self.colors.neutral-dark }, size: 0.9em)
+      link(section.loc, utils.section-short-title(h(.3em) + section.title))
+    }
     parbreak()
   }
 })
@@ -144,12 +175,12 @@
 #let register(
   aspect-ratio: "16-9",
   navigation: "sidebar",
-  sidebar: (width: 8em),
+  sidebar: (width: 10em),
   mini-slides: (height: 2.5em, section: true, subsection: true),
   footer: [],
   footer-right: states.slide-counter.display() + " / " + states.last-slide-number,
   primary: rgb("#0c4842"),
-  alpha: 85%,
+  alpha: 70%,
   self,
 ) = {
   assert(navigation in ("sidebar", "mini-slides", none), message: "navigation must be one of sidebar, mini-slides, none")
@@ -172,7 +203,8 @@
   // set page
   let header(self) = {
     if self.d-navigation == "sidebar" {
-
+      place(right + top, (self.methods.d-progress)(self: self))
+    } else if self.d-navigation == "mini-slides" {
     }
   }
   let footer(self) = {
@@ -201,6 +233,8 @@
       constructor: rgb, self.page-args.fill, self.d-alpha), body)
   }
   self.methods.touying-outline = d-outline
+  self.methods.d-outline = d-outline
+  self.methods.d-progress = d-progress
   self.methods.alert = (self: utils.empty-object, it) => text(fill: self.colors.primary, it)
   self.methods.init = (self: utils.empty-object, body) => {
     set text(size: 20pt)
