@@ -3,11 +3,26 @@
 #import "utils/pdfpc.typ"
 
 // touying pause mark
-#let pause = [#"<touying-pause>"]
+#let pause = metadata((kind: "touying-pause"))
 // touying meanwhile mark
-#let meanwhile = [#"<touying-meanwhile>"]
+#let meanwhile = metadata((kind: "touying-meanwhile"))
 // touying slides-end mark
-#let slides-end = [#"<touying-slides-end>"]
+#let slides-end = metadata((kind: "touying-slides-end"))
+// touying math mark
+#let touying-math(it) = {
+  metadata((
+    kind: "touying-math",
+    body: {
+      if type(it) == str {
+        it
+      } else if type(it) == content and it.has("text") {
+        it.text
+      } else {
+        panic("Unsupported type: " + str(type(it)))
+      }
+    },
+  ))
+}
 
 // parse a sequence into content, and get the repetitions
 #let _parse-content(self: utils.empty-object, need-cover: true, base: 1, index: 1, ..bodies) = {
@@ -30,17 +45,20 @@
     let cover-arr = ()
     let children = if utils.is-sequence(it) { it.children } else { (it,) }
     for child in children {
-      if child == pause {
-        repetitions += 1
-      } else if child == meanwhile {
-        // clear the cover-arr when encounter #meanwhile
-        if cover-arr.len() != 0 {
-          result.push(cover(cover-arr.sum()))
-          cover-arr = ()
+      if type(child) == content and child.func() == metadata {
+        let kind = child.value.at("kind", default: none)
+        if kind == "touying-pause" {
+          repetitions += 1
+        } else if kind == "touying-meanwhile" {
+          // clear the cover-arr when encounter #meanwhile
+          if cover-arr.len() != 0 {
+            result.push(cover(cover-arr.sum()))
+            cover-arr = ()
+          }
+          // then reset the repetitions
+          max-repetitions = calc.max(max-repetitions, repetitions)
+          repetitions = 1
         }
-        // then reset the repetitions
-        max-repetitions = calc.max(max-repetitions, repetitions)
-        repetitions = 1
       } else if child == linebreak() or child == parbreak() {
         // clear the cover-arr when encounter linebreak or parbreak
         if cover-arr.len() != 0 {
@@ -222,7 +240,7 @@
   let is-end = false
   for child in children {
     i += 1
-    if child == slides-end {
+    if type(child) == content and child.func() == metadata and child.value.at("kind", default: none) == "touying-slides-end" {
       is-end = true
       break
     } else if type(child) == content and child.func() == heading and (child.level == 1 or child.level == 2) {

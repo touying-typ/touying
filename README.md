@@ -33,6 +33,7 @@ Additionally, Touying does not rely on `locate` and `counter` for implementing `
   - [x] `states.touying-outline` or `s.methods.touying-outline` to display a outline of sections.
   - [x] `states.touying-final-sections(sections => ..)` for custom outline display.
   - [x] `states.touying-progress-with-sections((current-sections: .., final-sections: .., current-slide-number: .., last-slide-number: ..) => ..)` for powerful progress display.
+- [x] **Navigation bar**: Navigation bar like [here](https://github.com/zbowang/BeamerTheme) by `states.touying-progress-with-sections(..)`, in `dewdrop` theme.
 - [x] **Pdfpc:** pdfpc support and export `.pdfpc` file without external tool by `typst query` command simply.
 
 
@@ -40,8 +41,7 @@ Additionally, Touying does not rely on `locate` and `counter` for implementing `
 
 - [ ] **More themes:** Add more themes.
 - [ ] **`#pause` for math equation:** Provide a `#touying-math("x + y #pause + z")` for math equation animations.
-- [ ] **Combinable components**: Combinable components for header, footer and sidebar, .
-- [ ] **Navigation bar**: Navigation bar like [here](https://tex.stackexchange.com/questions/350508/adding-outline-bar-to-the-beamer-for-section-mentioning) by `states.touying-progress-with-sections(..)`.
+- [ ] **Combinable components**: Combinable components for header, footer and sidebar.
 - [ ] **Theorem environment**: Theorem environment for each themes.
 - [ ] **Document:** Add a more detailed document.
 - [ ] **External viewers:** Integration with external viewers like impress.js and typst-preview.

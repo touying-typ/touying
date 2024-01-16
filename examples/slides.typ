@@ -12,7 +12,7 @@
   institution: [Institution],
 )
 #let s = (s.methods.enable-transparent-cover)(self: s)
-#let (init, slides, touying-outline, alert) = utils.methods(s)
+#let (init, slide, slides, touying-outline, alert) = utils.methods(s)
 #show: init
 
 #show strong: alert
