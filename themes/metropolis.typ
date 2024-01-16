@@ -142,6 +142,7 @@
   header: states.current-section-title,
   footer: [],
   footer-right: states.slide-counter.display() + " / " + states.last-slide-number,
+  footer-progress: true,
   self,
 ) = {
   // color theme
@@ -160,6 +161,7 @@
       m-cell(fill: self.colors.secondary-lighter)
     )
   })
+  self.m-footer-progress = footer-progress
   self.m-title = header
   self.m-footer = footer
   self.m-footer-right = footer-right
@@ -175,11 +177,15 @@
   }
   let footer(self) = {
     set text(size: 0.8em)
-    show: pad.with(.5em)
     set align(bottom)
-    text(fill: self.colors.primary-dark.lighten(40%), utils.call-or-display(self, self.m-footer))
-    h(1fr)
-    text(fill: self.colors.primary-dark, utils.call-or-display(self, self.m-footer-right))
+    pad(.5em, {
+      text(fill: self.colors.primary-dark.lighten(40%), utils.call-or-display(self, self.m-footer))
+      h(1fr)
+      text(fill: self.colors.primary-dark, utils.call-or-display(self, self.m-footer-right))
+    })
+    if self.m-footer-progress {
+      place(block(height: 2pt, width: 100%, spacing: 0pt, self.m-progress-bar))
+    }
   }
   self.page-args = self.page-args + (
     paper: "presentation-" + aspect-ratio,
