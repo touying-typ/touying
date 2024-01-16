@@ -1,7 +1,8 @@
 #import "../lib.typ": s, pause, meanwhile, slides-end, utils, states, pdfpc, themes
 
-// #let s = themes.metropolis.register(s, aspect-ratio: "16-9", footer: [Custom footer])
 // #let s = themes.simple.register(s, aspect-ratio: "16-9", footer: [Simple slides])
+// #let s = themes.metropolis.register(s, aspect-ratio: "16-9", footer: [Custom footer])
+// #let s = themes.dewdrop.register(s, aspect-ratio: "16-9", footer: [Dewdrop])
 #let s = (s.methods.info)(
   self: s,
   title: [Title],

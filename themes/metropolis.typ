@@ -44,7 +44,7 @@
     self: self,
     setting: body => {
       show: _saved-align.with(align)
-      show: pad.with(padding)
+      show: pad.with(..(if type(padding) == dictionary { padding } else { (padding,) }))
       set text(fill: self.colors.primary-dark)
       show: args.named().at("setting", default: body => body)
       body
@@ -127,12 +127,12 @@
   }
 }
 
-#let slides(self: utils.empty-object, title-slide: true, outline-slide: true, ..args) = {
+#let slides(self: utils.empty-object, title-slide: true, outline-slide: true, outline-title: [Table of contents], ..args) = {
   if title-slide {
     (self.methods.title-slide)(self: self)
   }
   if outline-slide {
-    (self.methods.slide)(self: self, title: [Table of contents], (self.methods.touying-outline)())
+    (self.methods.slide)(self: self, title: outline-title, (self.methods.touying-outline)())
   }
   (self.methods.touying-slides)(self: self, ..args)
 }
