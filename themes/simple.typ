@@ -41,6 +41,16 @@
   centered-slide(self: self, align(center + horizon, body))
 }
 
+#let slide-in-slides(self: utils.empty-object, section: none, subsection: none, body, ..args) = {
+  if section != none {
+    (self.methods.centered-slide)(self: self, section: section)
+  } else if subsection != none {
+    (self.methods.slide)(self: self, ..args, heading(level: 2, subsection) + parbreak() + body)
+  } else {
+    (self.methods.slide)(self: self, ..args, body)
+  }
+}
+
 #let register(
   aspect-ratio: "16-9",
   footer: [],
@@ -79,10 +89,11 @@
   self.methods.title-slide = title-slide
   self.methods.centered-slide = centered-slide
   self.methods.focus-slide = focus-slide
+  self.methods.slide-in-slides = slide-in-slides
   self.methods.init = (self: utils.empty-object, body) => {
     set text(fill: foreground, size: 25pt)
     show footnote.entry: set text(size: .6em)
-    show heading.where(level: 2): set block(below: 2em)
+    show heading.where(level: 2): set block(below: 1.5em)
     set outline(target: heading.where(level: 1), title: none, fill: none)
     show outline.entry: it => it.body
     show outline: it => block(inset: (x: 1em), it)

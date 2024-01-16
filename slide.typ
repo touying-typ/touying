@@ -6,6 +6,8 @@
 #let pause = [#"<touying-pause>"]
 // touying meanwhile mark
 #let meanwhile = [#"<touying-meanwhile>"]
+// touying slides-end mark
+#let slides-end = [#"<touying-slides-end>"]
 
 // parse a sequence into content, and get the repetitions
 #let _parse-content(self: utils.empty-object, need-cover: true, base: 1, index: 1, ..bodies) = {
@@ -197,6 +199,67 @@
   }
 }
 
+// touying-slides
+#let touying-slides(
+  self: utils.empty-object,
+  repeat: auto,
+  setting: body => body,
+  body,
+) = {
+  assert(repeat == none or repeat == auto, message: "unexpected repeat argument: " + repr(repeat))
+  let section = none
+  let subsection = none
+  let slide = ()
+  let children = if utils.is-sequence(body) { body.children } else { (body,) }
+  // trim space of children
+  while children.first() == [ ] or children.first() == parbreak() or children.first() == linebreak() {
+    children = children.slice(1)
+  }
+  let i = 0
+  let is-end = false
+  for child in children {
+    i += 1
+    if child == slides-end {
+      is-end = true
+      break
+    } else if type(child) == content and child.func() == heading and (child.level == 1 or child.level == 2) {
+      if slide != () {
+        (self.methods.slide-in-slides)(
+          self: self,
+          repeat: repeat,
+          setting: setting,
+          section: section,
+          subsection: subsection,
+          slide.sum(),
+        )
+      }
+      section = none
+      subsection = none
+      slide = ()
+      if child.level == 1 {
+        section = child.body
+      } else {
+        subsection = child.body
+      }
+    } else {
+      slide.push(child)
+    }
+  }
+  if section != none or subsection != none or slide != () {
+    (self.methods.slide-in-slides)(
+      self: self,
+      repeat: repeat,
+      setting: setting,
+      section: section,
+      subsection: subsection,
+      slide.sum(default: []),
+    )
+  }
+  if is-end {
+    children.slice(i).sum(default: none)
+  }
+}
+
 // build the touying singleton
 #let s = (
   // info interface
@@ -313,6 +376,25 @@
     // default slide
     touying-slide: touying-slide,
     slide: touying-slide,
+    touying-slides: touying-slides,
+    slides: touying-slides,
+    slide-in-slides: (self: utils.empty-object, section: none, subsection: none, body, ..args) => {
+      if section != none {
+        let no-footer-self = self
+        no-footer-self.page-args.footer = none
+        touying-slide(
+          self: no-footer-self,
+          section: section,
+          subsection: subsection,
+          ..args,
+          align(center + horizon, heading(level: 1, section) + body)
+        )
+      } else if subsection != none {
+        touying-slide(self: self, ..args, heading(level: 2, subsection) + parbreak() + body)
+      } else {
+        touying-slide(self: self, ..args, body)
+      }
+    },
     // append the preamble
     append-preamble: (self: utils.empty-object, preamble) => {
       self.preamble += preamble
@@ -327,6 +409,7 @@
     init: (self: utils.empty-object, body) => {
       // default text size
       set text(size: 20pt)
+      show heading.where(level: 2): set block(below: 1em)
       body
     },
     // default outline

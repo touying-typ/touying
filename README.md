@@ -17,6 +17,7 @@ Additionally, Touying does not rely on `locate` and `counter` for implementing `
 - [x] **`#pause` for sequence content:** You can use #pause at the outermost level of a slide, including inline and list.
 - [x] **`#pause` for layout functions:** You can use the `composer` parameter to add yourself layout function like `utils.side-by-side`, and simply use multiple pos parameters like `#slide[..][..]`.
 - [x] **`#meanwhile` for synchronous display:** Provide a `#meanwhile` for resetting subslides counter.
+- [x] **Slides:** Create simple slides using standard headings.
 - [x] **Callback-style `uncover`, `only` and `alternatives`:** Based on the concise syntax provided by Polylux, allow precise control of the timing for displaying content.
   - You should manually control the number of subslides using the `repeat` parameter.
 - [x] **Transparent cover:** Enable transparent cover using oop syntax like `#let s = (s.methods.enable-transparent-cover)(self: s)`.
@@ -38,7 +39,6 @@ Additionally, Touying does not rely on `locate` and `counter` for implementing `
 ## Features to Implement
 
 - [ ] **More themes:** Add more themes.
-- [ ] **Slides:** Create simple slides using standard headings.
 - [ ] **`#pause` for math equation:** Provide a `#touying-math("x + y #pause + z")` for math equation animations.
 - [ ] **Combinable components**: Combinable components for header, footer and sidebar, .
 - [ ] **Navigation bar**: Navigation bar like [here](https://tex.stackexchange.com/questions/350508/adding-outline-bar-to-the-beamer-for-section-mentioning) by `states.touying-progress-with-sections(..)`.

@@ -14,11 +14,7 @@
 #let (init, slide, title-slide, new-section-slide, focus-slide, touying-outline, alert) = utils.methods(s)
 #show: init
 
-#set text(font: "Fira Sans", weight: "light", size: 20pt)
-#show math.equation: set text(font: "Fira Math")
-#set strong(delta: 100)
 #show strong: alert
-#set par(justify: true)
 
 #title-slide(extra: [Extra])
 
