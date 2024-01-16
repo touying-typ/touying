@@ -96,11 +96,36 @@
   touying-slide(self: self, repeat: none, align(horizon + center, body))
 }
 
-#let slide-in-slides(self: utils.empty-object, section: none, subsection: none, body, ..args) = {
+#let d-outline(self: utils.empty-object, enum-args: (:), list-args: (:), cover: true) = states.touying-progress-with-sections(dict => {
+  let (current-sections, final-sections) = dict
+  let current-index = current-sections.filter(section => section.loc != none).len() - 1
+  let d-cover(i, body) = if i != current-index and cover {
+    (self.methods.d-cover)(self: self, body)
+  } else {
+    body
+  }
+  set enum(..enum-args)
+  set list(..enum-args)
+  set text(fill: self.colors.primary)
+  for (i, section) in final-sections.filter(section => section.loc != none).enumerate() {
+    d-cover(i, {
+      enum.item(i + 1, link(section.loc, section.title) + if section.children.filter(it => it.kind != "slide").len() > 0 {
+        let subsections = section.children.filter(it => it.kind != "slide")
+        set text(fill: self.colors.neutral-dark, size: 0.9em)
+        list(
+          ..subsections.map(subsection => link(subsection.loc, subsection.title))
+        )
+      })
+    })
+    parbreak()
+  }
+})
+
+#let slide-in-slides(self: utils.empty-object, section: none, subsection: none, outline-title: [Outline], body, ..args) = {
   if section != none {
-    (self.methods.slide)(self: self, section: section, [])
+    (self.methods.slide)(self: self, section: section, heading(level: 2, outline-title) + parbreak() + (self.methods.touying-outline)(self: self))
   } else if subsection != none {
-    (self.methods.slide)(self: self, ..args, subsection: subsection, body)
+    (self.methods.slide)(self: self, ..args, subsection: subsection, heading(level: 2, subsection) + body)
   } else {
     (self.methods.slide)(self: self, ..args, body)
   }
@@ -111,7 +136,7 @@
     (self.methods.title-slide)(self: self)
   }
   if outline-slide {
-    (self.methods.slide)(self: self, heading(level: 2, outline-title) + parbreak() + (self.methods.touying-outline)())
+    (self.methods.slide)(self: self, heading(level: 2, outline-title) + parbreak() + (self.methods.touying-outline)(self: self, cover: false))
   }
   (self.methods.touying-slides)(self: self, ..args)
 }
@@ -119,7 +144,7 @@
 #let register(
   aspect-ratio: "16-9",
   navigation: "sidebar",
-  sidebar: (width: 10em),
+  sidebar: (width: 8em),
   mini-slides: (height: 2.5em, section: true, subsection: true),
   footer: [],
   footer-right: states.slide-counter.display() + " / " + states.last-slide-number,
@@ -132,9 +157,8 @@
   self = (self.methods.colors)(
     self: self,
     neutral-extradark: rgb("#000000"),
-    neutral-dark: rgb("#cccccc"),
+    neutral-dark: rgb("#202020"),
     neutral-light: rgb("#f3f3f3"),
-    neutral-lighter: rgb("#f9f9f9"),
     neutral-extralight: rgb("#ffffff"),
     primary: primary,
   )
@@ -176,9 +200,7 @@
     utils.cover-with-rect(fill: utils.update-alpha(
       constructor: rgb, self.page-args.fill, self.d-alpha), body)
   }
-  self.methods.touying-outline = (self: utils.empty-object, cover: false) => {
-    states.touying-outline(enum-args: (tight: false,))
-  }
+  self.methods.touying-outline = d-outline
   self.methods.alert = (self: utils.empty-object, it) => text(fill: self.colors.primary, it)
   self.methods.init = (self: utils.empty-object, body) => {
     set text(size: 20pt)

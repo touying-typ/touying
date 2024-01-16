@@ -40,6 +40,18 @@
   }
 }
 
+#let section-short-title(section) = {
+  if type(section) == dictionary {
+    if section.short-title == auto {
+      return section.title
+    } else {
+      return section.short-title
+    }
+  } else {
+    return section
+  }
+}
+
 // Type: is sequence
 #let is-sequence(it) = {
   type(it) == content and it.has("children")

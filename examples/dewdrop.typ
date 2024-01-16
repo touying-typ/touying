@@ -4,7 +4,7 @@
   s,
   aspect-ratio: "16-9",
   footer: [Dewdrop],
-  navigation: "mini-slides",
+  // navigation: "mini-slides",
 )
 #let s = (s.methods.info)(
   self: s,
@@ -26,18 +26,39 @@
 #slide[
   == Outline
   
+  #touying-outline(cover: false)
+]
+
+#slide(section: [Section A])[
+  == Outline
+  
   #touying-outline()
 ]
 
-#slide[
-  A slide with some maths:
-  $ x_(n+1) = (x_n + a/x_n) / 2 $
+#slide(subsection: [Subsection A.1])[
+  == Title
 
-  #lorem(200)
+  A slide with equation:
+
+  $ x_(n+1) = (x_n + a/x_n) / 2 $
 ]
 
-#slide[
+#slide(subsection: [Subsection A.2])[
+  == Important
+
   A slide without a title but with *important* infos
+]
+
+#slide(section: [Section B])[
+  == Outline
+  
+  #touying-outline()
+]
+
+#slide(subsection: [Subsection B.1])[
+  == Another Subsection
+
+  Subsection B.1
 ]
 
 #focus-slide[
@@ -45,7 +66,9 @@
 ]
 
 // simple animations
-#slide[
+#slide(subsection: [Subsection B.2])[
+  == Dynamic
+
   a simple #pause dynamic slide with #alert[alert]
 
   #pause

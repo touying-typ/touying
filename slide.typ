@@ -204,6 +204,7 @@
   self: utils.empty-object,
   repeat: auto,
   setting: body => body,
+  ..args,
   body,
 ) = {
   assert(repeat == none or repeat == auto, message: "unexpected repeat argument: " + repr(repeat))
@@ -230,6 +231,7 @@
           setting: setting,
           section: section,
           subsection: subsection,
+          ..args,
           slide.sum(),
         )
       }
@@ -252,6 +254,7 @@
       setting: setting,
       section: section,
       subsection: subsection,
+      ..args,
       slide.sum(default: []),
     )
   }
