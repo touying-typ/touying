@@ -30,8 +30,16 @@ const config = {
   // useful metadata like html lang. For example, if your site is Chinese, you
   // may want to replace "en" with "zh-Hans".
   i18n: {
-    defaultLocale: 'en',
-    locales: ['en'],
+    defaultLocale: 'en-US',
+    locales: ['en-US', 'zh-CN'],
+    localeConfigs: {
+        'en-US': {
+            label: 'English',
+        },
+        'zh-CN': {
+            label: '简体中文',
+        },
+    },
   },
 
   presets: [
@@ -80,8 +88,21 @@ const config = {
           },
           {to: '/blog', label: 'Blog', position: 'left'},
           {
+            type: 'docsVersionDropdown',
+            position: 'right',
+            dropdownActiveClassDisabled: true,
+          },
+          {
+            type: 'localeDropdown',
+            position: 'right',
+          },
+          {
             href: 'https://github.com/facebook/docusaurus',
             label: 'GitHub',
+            position: 'right',
+          },
+          {
+            type: 'search',
             position: 'right',
           },
         ],
@@ -124,12 +145,12 @@ const config = {
               },
               {
                 label: 'GitHub',
-                href: 'https://github.com/facebook/docusaurus',
+                href: 'https://github.com/touying-typ/touying',
               },
             ],
           },
         ],
-        copyright: `Copyright © ${new Date().getFullYear()} My Project, Inc. Built with Docusaurus.`,
+        copyright: `Copyright © ${new Date().getFullYear()} Touying. Powered by Typst.`,
       },
       prism: {
         theme: prismThemes.github,
