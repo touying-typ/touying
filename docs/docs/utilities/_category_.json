@@ -1,0 +1,8 @@
+{
+  "label": "工具",
+  "position": 9,
+  "link": {
+    "type": "generated-index",
+    "description": "一些便利的工具函数。"
+  }
+}

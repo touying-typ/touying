@@ -4,9 +4,9 @@ sidebar_position: 2
 
 # 开始
 
-在开始之前，请确保你已经安装了 Typst 环境，如果没有，可以使用 [Web App](https://typst.app/) 或 VS Code 的 [Typst LSP](https://marketplace.visualstudio.com/items?itemName=nvarner.typst-lsp) 和 [Typst Preview](https://marketplace.visualstudio.com/items?itemName=mgt19937.typst-preview) 插件。
+在开始之前，请确保您已经安装了 Typst 环境，如果没有，可以使用 [Web App](https://typst.app/) 或 VS Code 的 [Typst LSP](https://marketplace.visualstudio.com/items?itemName=nvarner.typst-lsp) 和 [Typst Preview](https://marketplace.visualstudio.com/items?itemName=mgt19937.typst-preview) 插件。
 
-要使用 Touying，你只需要在文档里加入
+要使用 Touying，您只需要在文档里加入
 
 ```typst
 #import "@preview/touying:0.2.0": *
@@ -27,11 +27,11 @@ Hello, Touying!
 Hello, Typst!
 ```
 
-这很简单，你创建了你的第一个 Touying slides，恭喜！🎉
+这很简单，您创建了您的第一个 Touying slides，恭喜！🎉
 
 ## 更复杂的例子
 
-事实上，Touying 提供了多种 slides 编写风格，例如这里依靠一级和二级标题来划分新 slide，实际上你也可以使用 `#slide[..]` 的写法，以获得 Touying 提供的更多更强大的功能。
+事实上，Touying 提供了多种 slides 编写风格，例如上面的例子依靠一级和二级标题来划分新 slide，实际上您也可以使用 `#slide[..]` 的写法，以获得 Touying 提供的更多更强大的功能。
 
 ```typst
 #import "@preview/touying:0.2.0": *
