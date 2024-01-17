@@ -57,11 +57,11 @@
   pad(padding, enum(
     ..enum-args,
     ..sections.filter(section => section.loc != none)
-      .map(section => link(section.loc, section.title) + if section.children.filter(it => it.kind != "slide").len() > 0 {
+      .map(section => [#link(section.loc, section.title)<touying-link>] + if section.children.filter(it => it.kind != "slide").len() > 0 {
         let subsections = section.children.filter(it => it.kind != "slide")
         enum(
           ..enum-args,
-          ..subsections.map(subsection => link(subsection.loc, subsection.title))
+          ..subsections.map(subsection => [#link(subsection.loc, subsection.title)<touying-link>])
         )
       })
   ))

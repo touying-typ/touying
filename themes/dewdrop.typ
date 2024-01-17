@@ -112,11 +112,11 @@
   set text(fill: self.colors.primary)
   for (i, section) in final-sections.enumerate() {
     d-cover(i, {
-      enum.item(i + 1, link(section.loc, section.title) + if section.children.filter(it => it.kind != "slide").len() > 0 {
+      enum.item(i + 1, [#link(section.loc, section.title)<touying-link>] + if section.children.filter(it => it.kind != "slide").len() > 0 {
         let subsections = section.children.filter(it => it.kind != "slide")
         set text(fill: self.colors.neutral-dark, size: 0.9em)
         list(
-          ..subsections.map(subsection => link(subsection.loc, subsection.title))
+          ..subsections.map(subsection => [#link(subsection.loc, subsection.title)<touying-link>])
         )
       })
     })
@@ -144,10 +144,10 @@
   for (i, section) in final-sections.enumerate() {
     if section.kind == "section" {
       set text(fill: if i != current-index { self.colors.primary.lighten(self.d-alpha) } else { self.colors.primary })
-      link(section.loc, utils.section-short-title(section.title))
+      [#link(section.loc, utils.section-short-title(section.title))<touying-link>]
     } else {
       set text(fill: if i != current-index { self.colors.neutral-dark.lighten(self.d-alpha) } else { self.colors.neutral-dark }, size: 0.9em)
-      link(section.loc, utils.section-short-title(h(.3em) + section.title))
+      [#link(section.loc, utils.section-short-title(h(.3em) + section.title))<touying-link>]
     }
     parbreak()
   }
@@ -162,7 +162,7 @@
   let current-count = 0
   for (i, section) in current-sections.enumerate() {
     if self.d-mini-slides.section {
-      for subsection in section.children.filter(it => it.kind == "slide") {
+      for slide in section.children.filter(it => it.kind == "slide") {
         current-count += 1
       }
     }
@@ -178,15 +178,15 @@
     cols.push({
       set align(left)
       set text(fill: primary-color)
-      link(section.loc, utils.section-short-title(section.title))
+      [#link(section.loc, utils.section-short-title(section.title))<touying-link>]
       linebreak()
       if self.d-mini-slides.section {
-        for subsection in section.children.filter(it => it.kind == "slide") {
+        for slide in section.children.filter(it => it.kind == "slide") {
           final-count += 1
           if final-count == current-count {
-            sym.circle.filled
+            [#link(slide.loc, sym.circle.filled)<touying-link>]
           } else {
-            sym.circle
+            [#link(slide.loc, sym.circle)<touying-link>]
           }
         }
       }
@@ -197,9 +197,9 @@
         for slide in subsection.children {
           final-count += 1
           if final-count == current-count {
-            sym.circle.filled
+            [#link(slide.loc, sym.circle.filled)<touying-link>]
           } else {
-            sym.circle
+            [#link(slide.loc, sym.circle)<touying-link>]
           }
         }
         if self.d-mini-slides.subsection {
