@@ -2,13 +2,13 @@
 sidebar_position: 4
 ---
 
-# 代码风格
+# Code Styles
 
-## show-slides 风格
+## show-slides Style
 
-如果我们只是需要简单使用，我们可以通过 `#show: slides` 实现更简洁的语法。
+If we only need simplicity, we can use `#show: slides` for a cleaner syntax.
 
-但是这样做也有对应的弊端：第一个弊端是这种方式可能会极大地影响文档渲染性能，第二个弊端是后续不能直接加入 `#slide(..)`，而是需要手动标记 `#slides-end`，以及最大的弊端是实现不了复杂的功能。
+However, this approach has corresponding drawbacks: firstly, this method may significantly impact document rendering performance. Secondly, subsequent `#slide(..)` cannot be added directly. Instead, you need to manually mark `#slides-end`. The most significant drawback is that complex functionalities cannot be achieved.
 
 ```typst
 #import "@preview/touying:0.2.0": *
@@ -35,15 +35,12 @@ Hello, Typst!
 ]
 ```
 
+## slide-block Style
 
-## slide-block 风格
-
-为了更优秀的性能和更强大的能力，大部分情况我们还是需要使用
+For better performance and more powerful capabilities, in most cases, we still need to use the code style like:
 
 ```typst
 #slide[
   A new slide.
 ]
 ```
-
-这样的代码风格。

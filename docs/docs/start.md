@@ -2,11 +2,11 @@
 sidebar_position: 2
 ---
 
-# 开始
+# Getting Started
 
-在开始之前，请确保您已经安装了 Typst 环境，如果没有，可以使用 [Web App](https://typst.app/) 或 VS Code 的 [Typst LSP](https://marketplace.visualstudio.com/items?itemName=nvarner.typst-lsp) 和 [Typst Preview](https://marketplace.visualstudio.com/items?itemName=mgt19937.typst-preview) 插件。
+Before you begin, make sure you have installed the Typst environment. If not, you can use the [Web App](https://typst.app/) or the Typst LSP and Typst Preview plugins for VS Code.
 
-要使用 Touying，您只需要在文档里加入
+To use Touying, you only need to include the following code in your document:
 
 ```typst
 #import "@preview/touying:0.2.0": *
@@ -27,11 +27,11 @@ Hello, Touying!
 Hello, Typst!
 ```
 
-这很简单，您创建了您的第一个 Touying slides，恭喜！🎉
+It's simple. Congratulations on creating your first Touying slide! 🎉
 
-## 更复杂的例子
+## More Complex Examples
 
-事实上，Touying 提供了多种 slides 编写风格，例如上面的例子依靠一级和二级标题来划分新 slide，实际上您也可以使用 `#slide[..]` 的写法，以获得 Touying 提供的更多更强大的功能。
+In fact, Touying provides various styles for writing slides. For example, the above example uses first-level and second-level titles to create new slides. However, you can also use the `#slide[..]` format to access more powerful features provided by Touying.
 
 ```typst
 #import "@preview/touying:0.2.0": *
@@ -103,10 +103,10 @@ Hello, Typst!
 ]
 ```
 
-除此之外，Touying 还提供了很多内置的主题，能够简单地编写精美的 slides，基本上，您只需要在文档顶部加入一行
+In addition, Touying provides many built-in themes to easily create beautiful slides. Basically, you just need to add a line at the top of your document:
 
 ```
 #let s = themes.metropolis.register(s, aspect-ratio: "16-9")
 ```
 
-即可使用 metropolis 主题。关于更详细的教程，您可以参阅后面的章节。
+This will allow you to use the Metropolis theme. For more detailed tutorials, you can refer to the following chapters.

@@ -2,13 +2,13 @@
 sidebar_position: 1
 ---
 
-# 简单动画
+# Simple Animations
 
-Touying 为简单的动画效果提供了两个标记：`#pause` 和 `#meanwhile`。
+Touying provides two markers for simple animation effects: `#pause` and `#meanwhile`.
 
 ## pause
 
-`#pause` 的用途很简单，就是用于将后续的内容放到下一张 subslide 中，并且可以使用多个 `#pause` 以创建多张 subslides，一个简单的例子：
+The purpose of `#pause` is straightforward – it separates the subsequent content into the next subslide. You can use multiple `#pause` to create multiple subslides. Here's a simple example:
 
 ```typst
 #slide[
@@ -20,14 +20,13 @@ Touying 为简单的动画效果提供了两个标记：`#pause` 和 `#meanwhile
 ]
 ```
 
-这个例子将会创建三张 subslides，逐渐地将内容展示出来。
+This example will create three subslides, gradually revealing the content.
 
-如你所见，`#pause` 既可以放在行内，也可以放在单独的一行。
-
+As you can see, `#pause` can be used inline or on a separate line.
 
 ## meanwhile
 
-有些情况下，我们需要在 `#pause` 的同时展示一些其他内容，这时候我们就可以用 `#meanwhile`。
+In some cases, you may need to display additional content simultaneously with `#pause`. In such cases, you can use `#meanwhile`.
 
 ```typst
 #slide[
@@ -47,14 +46,13 @@ Touying 为简单的动画效果提供了两个标记：`#pause` 和 `#meanwhile
 ]
 ```
 
-这个例子只会创建两张 subslides，并且 "First" 和 "Third" 同时显示，"Second" 和 "Fourth" 同时显示。
+This example will create only two subslides, with "First" and "Third" displayed simultaneously, and "Second" and "Fourth" displayed simultaneously.
 
+## Handling set-show rules
 
-## 如何处理 set-show rules?
+If you use set-show rules inside `slide[..]`, you might be surprised to find that subsequent `#pause` and `#meanwhile` do not work. This is because Touying cannot detect the content inside `styled(..)` (content after set-show rules is encompassed by `styled`).
 
-如果你在 `slide[..]` 里面使用了 set-show rules，你会惊讶的发现，在那之后的 `#pause` 和 `#meanwhile` 都失效了。这是因为 Touying 无法探知 `styled(..)` 内部的内容（set-show rules 后的内容会被 `styled` 囊括起来）。
-
-为了解决这个问题，Touying 为 `#slide()` 函数提供了一个 `setting` 参数，你可以将你的 set-show rules 放到 `setting` 参数里，例如修改字体颜色：
+To address this issue, Touying provides a `setting` parameter for the `#slide()` function. You can place your set-show rules in the `setting` parameter. For example, changing the font color:
 
 ```typst
 #slide(setting: body => {
@@ -69,11 +67,10 @@ Touying 为简单的动画效果提供了两个标记：`#pause` 和 `#meanwhile
 ]
 ```
 
-同理，Touying 目前也不支持 `grid` 这类 layout 函数内部的 `#pause` 和 `#meanwhile`，也是由于同样的限制，但是你可以使用 `#slide()` 的 `composer` 参数，大部分情况下都应该能满足需求。
+Similarly, Touying currently does not support `#pause` and `#meanwhile` inside layout functions like `grid`. This is due to the same limitation, but you can use the `composer` parameter of `#slide()` to meet most requirements.
 
+:::tip[Internals]
 
-:::tip[原理]
-
-Touying 不依赖 `counter` 和 `locate` 来实现 `#pause`，而是用 Typst 脚本写了一个 parser。它会将输入内容块作为 sequence 解析，然后改造重组这个 sequence 为我们需要的一系列 subslides。
+Touying doesn't rely on `counter` and `locate` to implement `#pause`. Instead, it has a parser written in Typst script. It parses the input content block as a sequence and then transforms and reorganizes this sequence into the series of subslides we need.
 
 :::

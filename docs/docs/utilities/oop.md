@@ -2,16 +2,16 @@
 sidebar_position: 1
 ---
 
-# 面向对象编程
+# Object-Oriented Programming
 
-Touying 提供了一些便利的工具函数，便于进行面向对象编程。
+Touying provides some convenient utility functions for object-oriented programming.
 
 ---
 
 ```typst
 #let empty-object = (methods: (:))
 ```
-一个空类。
+An empty class.
 
 ---
 
@@ -24,13 +24,11 @@ Touying 提供了一些便利的工具函数，便于进行面向对象编程。
   }
 }
 ```
-call-or-display(self, it) = { .. }
-调用或原样输出。
+Call or display as-is.
 
 ---
 
 ```typst
 #let methods(self) = { .. }
 ```
-用于为方法绑定 self 并返回，十分常用。
-
+Used to bind self to methods and return, very commonly used.

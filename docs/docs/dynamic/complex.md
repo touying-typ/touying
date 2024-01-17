@@ -2,14 +2,13 @@
 sidebar_position: 2
 ---
 
-# 复杂动画
+# Complex Animations
 
-得益于 [Polylux](https://polylux.dev/book/dynamic/syntax.html) 提供的语法，我们同样能够在 Touying 中使用 `only`、`uncover` 和 `alternatives`。
+Thanks to the syntax provided by [Polylux](https://polylux.dev/book/dynamic/syntax.html), we can also use `only`, `uncover`, and `alternatives` in Touying.
 
+## Callback-Style Functions
 
-## 回调风格的函数
-
-为了避免上文提到的 `styled` 与 `layout` 限制，Touying 利用回调函数巧妙实现了总是能生效的 `only`、`uncover` 和 `alternatives`，具体来说，您要这样引入这三个函数：
+To overcome the limitations of `styled` and `layout` mentioned earlier, Touying cleverly implements always-effective `only`, `uncover`, and `alternatives` using callback functions. Specifically, you need to introduce these three functions as follows:
 
 ```typst
 #slide(repeat: 3, self => [
@@ -27,41 +26,39 @@ sidebar_position: 2
 ])
 ```
 
-注意到了吗？我们不再是传入一个内容块，而是传入了一个参数为 `self` 的回调函数，随后我们通过
+Notice that we no longer pass a content block but instead pass a callback function with a `self` parameter. Later, we extract `only`, `uncover`, and `alternatives` functions from `self` using:
 
 ```typst
 #let (uncover, only, alternatives) = utils.methods(self)
 ```
 
-从 `self` 中取出了 `only`、`uncover` 和 `alternatives` 这三个函数，并在后续调用它们。
+We then call these functions in subsequent steps.
 
-这里还有一些有趣的事实，例如 int 类型的 `self.subslide` 指示了当前 subslide 索引，而实际上 `only`、`uncover` 和 `alternatives` 函数也正是依赖 `self.subslide` 实现的获取当前 subslide 索引。
+Here's an interesting fact: the `self.subslide` of type int indicates the current subslide index, and in fact, the `only`, `uncover`, and `alternatives` functions rely on `self.subslide` to determine the current subslide index.
 
-:::warning[警告]
+:::warning[Warning]
 
-我们手动指定了参数 `repeat: 3`，这代表着显示 3 张 subslides，我们需要手动指定是因为 Touying 无法探知 `only`、`uncover` 和 `alternatives` 需要显示多少张 subslides。
+We manually specify the `repeat: 3` parameter, indicating the display of 3 subslides. We need to do this manually because Touying cannot infer how many subslides `only`, `uncover`, and `alternatives` should display.
 
 :::
 
 ## only
 
-`only` 函数表示只在选定的 subslides 中「出现」，如果不出现，则会完全消失，也不会占据任何空间。也即 `#only(index, body)` 要么为 `body` 要么为 `none`。
+The `only` function means it "appears" only on selected subslides. If it doesn't appear, it completely disappears and doesn't occupy any space. In other words, `#only(index, body)` is either `body` or `none`.
 
-其中 index 可以是 int 类型，也可以是 `"2-"` 或 `"2-3"` 这样的 str 类型，更多用法可以参考 [Polylux](https://polylux.dev/book/dynamic/complex.html)。
-
+The index can be an int type or a str type like `"2-"` or `"2-3"`. For more usage, refer to [Polylux](https://polylux.dev/book/dynamic/complex.html).
 
 ## uncover
 
-`uncover` 函数表示只在选定的 subslides 中「显示」，否则会被 `cover` 函数遮挡，但仍会占据原有。也即 `#uncover(index, body)` 要么为 `body` 要么为 `cover(body)`。
+The `uncover` function means it "displays" only on selected subslides; otherwise, it will be covered by the `cover` function but still occupies the original space. In other words, `#uncover(index, body)` is either `body` or `cover(body)`.
 
-其中 index 可以是 int 类型，也可以是 `"2-"` 或 `"2-3"` 这样的 str 类型，更多用法可以参考 [Polylux](https://polylux.dev/book/dynamic/complex.html)。
+The index can be an int type or a str type like `"2-"` or `"2-3"`. For more usage, refer to [Polylux](https://polylux.dev/book/dynamic/complex.html).
 
-您应该也注意到了，事实上 `#pause` 也使用了 `cover` 函数，只是提供了更便利的写法，实际上它们的效果基本上是一致的。
-
+You may also have noticed that `#pause` actually uses the `cover` function, providing a more convenient syntax. In reality, their effects are almost identical.
 
 ## alternatives
 
-`alternatives` 函数表示在不同的 subslides 中展示一系列不同的内容，例如
+The `alternatives` function displays a series of different content in different subslides. For example:
 
 ```typst
 #slide(repeat: 3, self => [
@@ -74,5 +71,4 @@ sidebar_position: 2
 ])
 ```
 
-如你所见，`alternatives` 能够自动撑开到最合适的宽度和高度，这是 `only` 和 `uncover` 所没有的能力。事实上 `alternatives` 还有着其他参数，例如 `start: 2`、`repeat-last: true` 和 `position: center + horizon` 等，更多用法可以参考 [Polylux](https://polylux.dev/book/dynamic/alternatives.html)。
-
+As you can see, `alternatives` can automatically expand to the most suitable width and height, a capability that `only` and `uncover` lack. In fact, `alternatives` has other parameters, such as `start: 2`, `repeat-last: true`, and `position: center + horizon`. For more usage, refer to [Polylux](https://polylux.dev/book/dynamic/alternatives.html).

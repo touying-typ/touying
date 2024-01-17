@@ -2,19 +2,19 @@
 sidebar_position: 2
 ---
 
-# Fit to height / width
+# Fit to Height / Width
 
-感谢 [ntjess](https://github.com/ntjess) 的代码。
+Thanks to [ntjess](https://github.com/ntjess) for the code.
 
-## Fit to height
+## Fit to Height
 
-如果你需要将图片占满剩余的 slide 高度，你可以来试试 `fit-to-height` 函数：
+If you need to make an image fill the remaining slide height, you can try the `fit-to-height` function:
 
 ```typst
 #fit-to-height(1fr)[BIG]
 ```
 
-函数定义：
+Function definition:
 
 ```typst
 #let fit-to-height(
@@ -22,34 +22,32 @@ sidebar_position: 2
 ) = { .. }
 ```
 
-参数：
+Parameters:
 
-- `width`: 如果指定，这将确定缩放后内容的宽度。因此，如果您希望缩放的内容填充幻灯片宽度的一半，则可以使用 `width: 50%`。
-- `prescale-width`: 此参数允许您使 Typst 的布局假设给定的内容在缩放之前要布局在一定宽度的容器中。例如，您可以使用 `prescale-width: 200%` 假设幻灯片的宽度为原来的两倍。
-- `grow`: 是否可扩张，默认为 `true`。
-- `shrink`: 是否可收缩，默认为 `true`。
-- `height`: 需要指定的高度。
-- `body`: 具体的内容。
+- `width`: If specified, this will determine the width of the content after scaling. So, if you want the scaled content to fill half of the slide width, you can use `width: 50%`.
+- `prescale-width`: This parameter allows you to make Typst's layout assume that the given content is to be laid out in a container of a certain width before scaling. For example, you can use `prescale-width: 200%` assuming the slide's width is twice the original.
+- `grow`: Whether it can grow, default is `true`.
+- `shrink`: Whether it can shrink, default is `true`.
+- `height`: The specified height.
+- `body`: The specific content.
 
+## Fit to Width
 
-## Fit to width
-
-如果你需要限制标题宽度刚好占满 slide 的宽度，你可以来试试 `fit-to-width` 函数：
+If you need to limit the title width to exactly fill the slide width, you can try the `fit-to-width` function:
 
 ```typst
 #fit-to-width(1fr)[#lorem(20)]
 ```
 
-函数定义：
+Function definition:
 
 ```typst
 #let fit-to-width(grow: true, shrink: true, width, body) = { .. }
 ```
 
-参数：
+Parameters:
 
-- `grow`: 是否可扩张，默认为 `true`。
-- `shrink`: 是否可收缩，默认为 `true`。
-- `width`: 需要指定的宽度。
-- `body`: 具体的内容。
-
+- `grow`: Whether it can grow, default is `true`.
+- `shrink`: Whether it can shrink, default is `true`.
+- `width`: The specified width.
+- `body`: The specific content.

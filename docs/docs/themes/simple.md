@@ -2,16 +2,15 @@
 sidebar_position: 1
 ---
 
-# Simple 主题
+# Simple Theme
 
-这个主题来源于 [Polylux](https://polylux.dev/book/themes/gallery/simple.html)，作者是 Andreas Kröpelin。
+This theme is derived from [Polylux](https://polylux.dev/book/themes/gallery/simple.html), created by Andreas Kröpelin.
 
-这个主题被认为是一个相对简单的主题，你可以用它来创建一个简单 slides，并且可以随意加入你喜欢的功能。
+Considered a relatively simple theme, you can use it to create straightforward slides and easily incorporate features you like.
 
+## Initialization
 
-## 初始化
-
-你可以通过下面的代码来初始化：
+You can initialize the Simple theme using the following code:
 
 ```typst
 #import "@preview/touying:0.2.0": *
@@ -22,26 +21,25 @@ sidebar_position: 1
 #show: init
 ```
 
-其中 `register` 接收参数:
+The `register` function takes parameters such as:
 
-- `aspect-ratio`: 幻灯片的长宽比为 "16-9" 或 "4-3"，默认为 "16-9"。
-- `footer`: 展示在页脚的内容，默认为 `[]`，也可以传入形如 `self => self.info.author` 的函数。
-- `footer-right`: 展示在页脚右侧的内容，默认为 `states.slide-counter.display() + " / " + states.last-slide-number`。
-- `background`: 背景颜色，默认为白色。
-- `foreground`: 文本颜色，默认为黑色。
-- `primary`: 主题颜色，默认为 `aqua.darken(50%)`。
+- `aspect-ratio`: The aspect ratio of the slides, either "16-9" or "4-3," with the default being "16-9."
+- `footer`: Content to be displayed in the footer, with the default being `[]`. You can also pass a function like `self => self.info.author`.
+- `footer-right`: Content to be displayed on the right side of the footer, with the default being `states.slide-counter.display() + " / " + states.last-slide-number`.
+- `background`: Background color, with the default being white.
+- `foreground`: Text color, with the default being black.
+- `primary`: Theme color, with the default being `aqua.darken(50%)`.
 
+## Slide Function Family
 
-## slide 函数族
-
-simple 主题提供了一系列自定义 slide 函数：
+The Simple theme provides a series of custom slide functions:
 
 ```typst
 #centered-slide(section: ..)[
   ...
 ]
 ```
-内容位于幻灯片中央的幻灯片，`section` 参数可以用于新建一个 section。
+A slide with content centered on the slide. The `section` parameter can be used to create a new section.
 
 ---
 
@@ -50,8 +48,7 @@ simple 主题提供了一系列自定义 slide 函数：
   ...
 ]
 ```
-
-和 `centered-slide` 相同，这里只是为了保持和 Polylux 语法上的一致性。
+Similar to `centered-slide`, this is just for consistency with Polylux syntax.
 
 ---
 
@@ -68,7 +65,7 @@ simple 主题提供了一系列自定义 slide 函数：
   ...
 ]
 ```
-默认拥有页眉和页脚的普通 slide 函数，其中页眉为当前 section，页脚为您设置的页脚。
+This is the default ordinary slide function with a header and footer. The header is set to the current section, and the footer is as per your settings.
 
 ---
 
@@ -77,10 +74,9 @@ simple 主题提供了一系列自定义 slide 函数：
   ...
 ]
 ```
-用于引起观众的注意力。可选接受一个前景色 (默认为 `white`) 和一个背景色 (默认为 `auto`，即 `self.colors.primary`)。
+Used to draw attention. It optionally accepts a foreground color (default is `white`) and a background color (default is `auto`, i.e., `self.colors.primary`).
 
-
-## `slides` 函数
+## `slides` Function
 
 ```typst
 #import "@preview/touying:0.2.0": *
@@ -103,7 +99,7 @@ Hello, Touying!
 Hello, Typst!
 ```
 
-## 示例
+## Example
 
 ```typst
 #import "@preview/touying:0.2.0": *

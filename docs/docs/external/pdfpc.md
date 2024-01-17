@@ -2,23 +2,23 @@
 sidebar_position: 1
 ---
 
-# pdfpc
+# Pdfpc
 
-[pdfpc](https://pdfpc.github.io/) 是一个 "对 PDF 文档具有多显示器支持的演示者控制台"。这意味着，您可以使用它以 PDF 页面的形式显示幻灯片，并且还具有一些已知的出色功能，就像 PowerPoint 一样。
+[pdfpc](https://pdfpc.github.io/) is a "Presenter Console with multi-monitor support for PDF files." This means you can use it to display slides in the form of PDF pages and it comes with some known excellent features, much like PowerPoint.
 
-pdfpc 有一个 JSON 格式的 `.pdfpc` 文件，它可以为 PDF slides 提供更多的信息。虽然您可以手动编写此它，但你也可以通过 Touying 来管理。
-
-
-## 加入 Metadata
-
-Touying 与 [Polylux](https://polylux.dev/book/external/pdfpc.html) 保持一致，以避免 API 之间的冲突。
-
-例如，你可以通过 `#pdfpc.speaker-note("This is a note that only the speaker will see.")` 加入 notes。
+pdfpc has a JSON-formatted `.pdfpc` file that can provide additional information for PDF slides. While you can manually write this file, you can also manage it through Touying.
 
 
-## pdfpc 配置
+## Adding Metadata
 
-为了加入 pdfpc 配置，你可以使用
+Touying remains consistent with [Polylux](https://polylux.dev/book/external/pdfpc.html) to avoid conflicts between APIs.
+
+For example, you can add notes using `#pdfpc.speaker-note("This is a note that only the speaker will see.")`.
+
+
+## Pdfpc Configuration
+
+To add pdfpc configurations, you can use
 
 ```typst
 #let s = (s.methods.append-preamble)(self: s, pdfpc.config(
@@ -38,22 +38,20 @@ Touying 与 [Polylux](https://polylux.dev/book/external/pdfpc.html) 保持一致
 ))
 ```
 
-加入对应的配置，具体配置方法可以参考 [Polylux](https://polylux.dev/book/external/pdfpc.html)。
+Add the corresponding configurations. Refer to [Polylux](https://polylux.dev/book/external/pdfpc.html) for specific configuration details.
 
 
-## 输出 .pdfpc 文件
+## Exporting .pdfpc File
 
-假设你的文档为 `./example.typ`，则你可以通过
+Assuming your document is `./example.typ`, you can export the `.pdfpc` file directly using:
 
 ```sh
 typst query --root . ./example.typ --field value --one "<pdfpc-file>" > ./example.pdfpc
 ```
 
-直接导出 `.pdfpc` 文件。
+With the compatibility of Touying and Polylux, you can make Polylux also support direct export by adding the following code:
 
-借助 Touying 与 Polylux 的兼容性，你可以让 Polylux 也支持直接导出，只需要加入下面的代码即可。
-
-```
+```typst
 #import "@preview/touying:0.2.0"
 
 #locate(loc => touying.pdfpc.pdfpc-file(loc))

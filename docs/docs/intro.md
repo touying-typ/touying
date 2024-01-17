@@ -2,34 +2,34 @@
 sidebar_position: 1
 ---
 
-# Touying 介绍
+# Introduction to Touying
 
-[Touying](https://github.com/touying-typ/touying) 是为 Typst 开发的幻灯片/演示文稿包，在 [Polylux](https://github.com/andreasKroepelin/polylux) 的基础上开发而来。Touying 也类似于 LaTeX 的 Beamer，但是得益于 Typst，你可以拥有更快的渲染速度与更简洁的语法。后面，我们会使用 slides 指代幻灯片，slide 指代单张幻灯片，subslide 指代子幻灯片。
+[Touying](https://github.com/touying-typ/touying) is a slide/presentation package developed for Typst, based on [Polylux](https://github.com/andreasKroepelin/polylux). Touying is similar to LaTeX Beamer but benefits from Typst, providing faster rendering speed and a more concise syntax. Hereafter, we use "slides" to refer to slideshows, "slide" for a single slide, and "subslide" for a sub-slide.
 
-## 为什么使用 Touying
+## Why Use Touying
 
-- 相较于 PowerPoint，Touying 并非「所示即所得的」，你可以使用一种「内容与样式分离」的方式编写你的 slides，尤其是 Typst 作为一个新兴的排版语言，提供了简洁但强大的语法，对于代码块、数学公式和定理等内容有着更好的支持。另一个优势是，在有着模板的情况下，用 Touying 编写 slides 要比 PowerPoint 快得多。因此 Touying 相较于 PowerPoint，更适合有着「科研写作」需求的用户使用。
-- 相较于 Markdown Slides，Touying 所依托的 Typst 有着更强大的排版控制能力，例如页眉、页脚、布局和便捷的自定义函数，而这是 Markdown 很难具备、或者说很难做好的能力。并且 Touying 提供了 `#pause` 和 `#meanwhile` 标记，提供了更为便捷的动态 slides 能力。
-- 相较于 Beamer，Touying 有着更快的编译速度、更简洁的语法，以及更简单的自定义主题的能力。相较于 Beamer 动辄几秒几十秒的编译时间，Touying 的编译速度基本上能够维持在几毫秒几十毫秒。并且 Touying 的语法相较于 Beamer 更为简洁，也更容易更改模板主题，以及创建你自己的模板。在功能上，Touying 支持了 Beamer 大部分的能力，并且还提供了一些 Beamer 所没有的便利功能。
-- 相较于 Polylux，Touying 提供了一种 oop 风格的语法，能够通过全局单例模拟提供「全局变量」的能力，进而可以方便地编写主题。并且 Touying 并不依赖 `counter` 和 `locate` 来实现 `#pause`，因此能有更好的性能。Touying 自身定位是一个社区驱动的项目（我们欢迎更多的人加入），并且不会过分强调维持 API 的一致性，而是选择维护多个版本的文档，因而能够提供更多新颖但强大的功能。
+- Unlike PowerPoint, Touying is not a "what you see is what you get" tool. You can write your slides in a "content and style separation" manner, especially with Typst, which offers a concise yet powerful syntax, better supporting content like code blocks, mathematical formulas, and theorems. Another advantage is that, with templates, writing slides with Touying is much faster than PowerPoint. Therefore, Touying is more suitable for users with a demand for "research writing."
+- Compared to Markdown Slides, Touying, relying on Typst, has more powerful typesetting control, such as headers, footers, layout, and convenient custom functions. These are capabilities that Markdown struggles to provide, or does not do well. Additionally, Touying offers `#pause` and `#meanwhile` markers, providing more convenient dynamic slide capabilities.
+- Compared to Beamer, Touying has faster compilation speed, a more concise syntax, and simpler theme customization capabilities. Touying's compilation speed can be maintained in milliseconds or tens of milliseconds, compared to Beamer's compilation time of seconds or tens of seconds. Touying's syntax is more concise than Beamer, making it easier to change templates and create your own templates. In terms of features, Touying supports most of Beamer's capabilities and provides some convenient features that Beamer lacks.
+- Compared to Polylux, Touying provides an object-oriented programming (OOP) style syntax, allowing the simulation of "global variables" through a global singleton. This makes it easy to write themes. Touying does not rely on `counter` and `locate` to implement `#pause`, resulting in better performance. Touying is a community-driven project (we welcome more people to join), and it does not overly emphasize maintaining API consistency. Instead, it chooses to maintain documentation for multiple versions, providing more novel yet powerful features.
 
-## 名称来源
+## About the Name
 
-Touying 取自中文里的「投影」，在英文中意为 project。相较而言，LaTeX 中的 beamer 就是德文的投影仪的意思。
+"Touying" is derived from the Chinese word "投影" (tóuyǐng), which means "projection" In English, it also conveys the meaning of a "project". In comparison, the term "beamer" in LaTeX means a projector in German.
 
-## 关于文档
+## About the Documentation
 
-这个文档通过 [Docusaurus](https://docusaurus.io/) 驱动开发，我们将会为 Touying 维持英文和中文版本的文档，并且每个大版本维护一份文档，以便你随时可以查阅旧版本的 Touying 文档，并且可以更容易地迁移到新版本。
+This documentation is powered by [Docusaurus](https://docusaurus.io/). We will maintain English and Chinese versions of the documentation for Touying, and for each major version, we will maintain a documentation copy. This allows you to easily refer to old versions of the Touying documentation and migrate to new versions.
 
-Docusaurus 创建新版本：
+Docusaurus creates a new version:
 
 ```sh
 npm run docusaurus docs:version 0.y.x
 ```
 
-## 贡献
+## Contribution
 
-Touying 是免费、开源且社区驱动的。如果你感兴趣，你可以随时访问 [GitHub](https://github.com/touying-typ/touying) 并提出 issue 或 PR，我们也同样欢迎你加入 [touying-typ](https://github.com/touying-typ) 组织。
+Touying is free, open-source, and community-driven. If you're interested, you can visit [GitHub](https://github.com/touying-typ/touying) anytime and raise issues or submit pull requests. We also welcome you to join the [touying-typ](https://github.com/touying-typ) organization.
 
 ## License
 

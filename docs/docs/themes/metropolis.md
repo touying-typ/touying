@@ -2,16 +2,15 @@
 sidebar_position: 2
 ---
 
-# Metropolis 主题
+# Metropolis Theme
 
-这个主题的灵感来自 Matthias Vogelgesang 创作的 [Metropolis beamer](https://github.com/matze/mtheme) 主题，由 [Enivex](https://github.com/Enivex) 改造而来。
+This theme is inspired by the [Metropolis beamer](https://github.com/matze/mtheme) theme created by Matthias Vogelgesang and transformed by [Enivex](https://github.com/Enivex).
 
-这个主题美观大方，很适合日常使用，并且你最好在电脑上安装 Fira Sans 和 Fira Math 字体，以取得最佳效果。
+The Metropolis theme is elegant and suitable for daily use. For the best results, it is recommended to install the Fira Sans and Fira Math fonts on your computer.
 
+## Initialization
 
-## 初始化
-
-你可以通过下面的代码来初始化：
+You can initialize the Metropolis theme using the following code:
 
 ```typst
 #import "@preview/touying:0.2.0": *
@@ -32,19 +31,19 @@ sidebar_position: 2
 #show strong: alert
 ```
 
-其中 `register` 接收参数:
+The `register` function takes parameters such as:
 
-- `aspect-ratio`: 幻灯片的长宽比为 "16-9" 或 "4-3"，默认为 "16-9"。
-- `header`: 显示在页眉的内容，默认为 `states.current-section-title`，也可以传入形如 `self => self.info.title` 的函数。
-- `footer`: 展示在页脚的内容，默认为 `[]`，也可以传入形如 `self => self.info.author` 的函数。
-- `footer-right`: 展示在页脚右侧的内容，默认为 `states.slide-counter.display() + " / " + states.last-slide-number`。
-- `footer-progress`: 是否显示 slide 底部的进度条，默认为 `true`。
+- `aspect-ratio`: The aspect ratio of the slides, either "16-9" or "4-3," with the default being "16-9."
+- `header`: Content to be displayed in the header, with the default being `states.current-section-title`. You can also pass a function like `self => self.info.title`.
+- `footer`: Content to be displayed in the footer, with the default being `[]`. You can also pass a function like `self => self.info.author`.
+- `footer-right`: Content to be displayed on the right side of the footer, with the default being `states.slide-counter.display() + " / " + states.last-slide-number`.
+- `footer-progress`: Whether to show the progress bar at the bottom of the slide, with the default being `true`.
 
-并且 Metropolis 主题会提供一个 `#alert[..]` 函数，你可以通过 `#show strong: alert` 来使用 `*alert text*` 语法。
+The Metropolis theme also provides an `#alert[..]` function that you can use with the `#show strong: alert` syntax.
 
-## 颜色主题
+## Color Themes
 
-Metropolis 默认使用了
+Metropolis uses the following default color theme:
 
 ```typst
 #let s = (s.methods.colors)(
@@ -56,17 +55,17 @@ Metropolis 默认使用了
 )
 ```
 
-颜色主题，你可以通过 `#let s = (s.methods.colors)(self: s, ..)` 对其进行修改。
+You can modify the color theme using `#let s = (s.methods.colors)(self: s, ..)`.
 
-## slide 函数族
+## Slide Function Family
 
-Metropolis 主题提供了一系列自定义 slide 函数：
+Metropolis theme provides a series of custom slide functions:
 
 ```typst
 #title-slide(extra: none, ..args)
 ```
 
-`title-slide` 会读取 `self.info` 里的信息用于显示，你也可以为其传入 `extra` 参数，显示额外的信息。
+The `title-slide` reads information from `self.info` for display. You can also pass an `extra` parameter to display additional information.
 
 ---
 
@@ -87,7 +86,7 @@ Metropolis 主题提供了一系列自定义 slide 函数：
   ...
 ]
 ```
-默认拥有标题和页脚的普通 slide 函数，其中 `title` 默认为当前 section title，页脚为您设置的页脚。
+This is the default ordinary slide function with a title and footer according to your settings. The `title` is set to the current section title by default, and the footer is as per your settings.
 
 ---
 
@@ -96,25 +95,26 @@ Metropolis 主题提供了一系列自定义 slide 函数：
   ...
 ]
 ```
-用于引起观众的注意力。背景色为 `self.colors.primary-dark`。
+
+Used to draw attention. The background color is `self.colors.primary-dark`.
 
 ---
 
 ```typst
 #new-section-slide(short-title: auto, title)
 ```
-用给定标题开启一个新的 section。
 
+Opens a new section with the given title.
 
-## `slides` 函数
+## `slides` Function
 
-`slides` 函数拥有参数
+The `slides` function has parameters:
 
-- `title-slide`: 默认为 `true`。
-- `outline-slide`: 默认为 `true`。
-- `outline-title`: 默认为 `[Table of contents]`。
+- `title-slide`: Default is `true`.
+- `outline-slide`: Default is `true`.
+- `outline-title`: Default is `[Table of contents]`.
 
-可以通过 `#show: slides.with(..)` 的方式设置。
+You can set these using `#show: slides.with(..)`.
 
 ```typst
 #import "@preview/touying:0.2.0": *
@@ -147,7 +147,7 @@ Hello, Touying!
 Hello, Typst!
 ```
 
-## 示例
+## Example
 
 ```typst
 #import "@preview/touying:0.2.0": *

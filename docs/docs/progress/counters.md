@@ -2,36 +2,33 @@
 sidebar_position: 1
 ---
 
-# Touying 的计数器
+# Touying Counters
 
-Touying 的状态均放置于 `states` 命名空间下，包括所有的计数器。
+The states of Touying are placed under the `states` namespace, including all counters.
 
-## slide 计数器
+## Slide Counter
 
-你可以通过 `states.slide-counter` 获取 slide 计数器，并且通过 `states.slide-counter.display()` 展示当前 slide 的序号。
+You can access the slide counter using `states.slide-counter` and display the current slide number with `states.slide-counter.display()`.
 
+## Last-Slide Counter
 
-## last-slide 计数器
+In some cases, we may need to add an appendix to slides, leading to the requirement to freeze the last-slide counter. Therefore, a second counter is maintained here.
 
-因为有些情形下，我们需要为 slides 加入后记，因此就有了冻结 last-slide 计数器的需求，因此这里维护了第二个计数器。
+You can use `states.last-slide-number` to display the number of the last slide before the appendix.
 
-我们可以使用 `states.last-slide-number` 展示后记前最后一张 slide 的序号。
+## Progress
 
-
-## 进度
-
-我们可以使用
+You can use
 
 ```typst
 #states.touying-progress(ratio => ..)
 ```
 
-来显示当前的进度。
+to show the current progress.
 
+## Appendix
 
-## 后记
-
-你可以使用
+You can use
 
 ```typst
 // appendix by freezing last-slide-number
@@ -43,6 +40,6 @@ Touying 的状态均放置于 `states` 命名空间下，包括所有的计数�
 ]
 ```
 
-语法进入后记。
+syntax to enter the appendix.
 
-并且 `#let s = (s.methods.appendix-in-outline)(self: s, false)` 可以让后记的 section 不显示在大纲中。
+Additionally, `#let s = (s.methods.appendix-in-outline)(self: s, false)` can be used to hide the appendix section from the outline.

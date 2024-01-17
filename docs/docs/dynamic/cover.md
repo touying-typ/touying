@@ -2,50 +2,45 @@
 sidebar_position: 4
 ---
 
-# Cover 函数
+# Cover Function
 
-正如您已经了解的那样，`uncover` 和 `#pause` 均会使用 `cover` 函数对不显示的内容进行遮盖。那么，这里的 `cover` 函数究竟是什么呢？
+As you already know, both `uncover` and `#pause` use the `cover` function to conceal content that is not visible. So, what exactly is the `cover` function here?
 
+## Default Cover Function: `hide`
 
-## 默认 Cover 函数：`hide`
+The `cover` function is a method stored in `s.methods.cover`, which is later used by `uncover` and `#pause`.
 
-`cover` 函数是保存在 `s.methods.cover` 的一个方法，后续 `uncover` 和 `#pause` 均会在这里取出 `cover` 函数来使用。
+The default `cover` function is the [hide](https://typst.app/docs/reference/layout/hide/) function. This function makes the internal content invisible without affecting the layout.
 
-默认的 `cover` 函数是 [hide](https://typst.app/docs/reference/layout/hide/) 函数，这个函数能将内部的内容更改为不可见的，且不会影响布局。
+## Updating the Cover Function
 
-
-## 更新 Cover 函数
-
-有的情况下，您想用您自己的 `cover` 函数，那么您可以通过
+In some cases, you might want to use your own `cover` function. In that case, you can set your own `cover` function using:
 
 ```typst
 let s = (s.methods.update-cover)(self: s, is-method: true, cover-fn)
 ```
 
-方法来设置您自己的 `cover` 函数，其中如果设置 `is-method: false`，则 Touying 会帮您将 `cover-fn` 包装成一个方法。
+Here, if you set `is-method: false`, Touying will wrap `cover-fn` into a method for you.
 
+## Semi-Transparent Cover Function
 
-## 半透明 Cover 函数
-
-Touying 提供了半透明 Cover 函数的支持，只需要加入
+Touying supports a semi-transparent cover function, which can be enabled by adding:
 
 ```typst
 #let s = (s.methods.enable-transparent-cover)(self: s)
 ```
 
-即可开启，其中你可以通过 `alpha: ..` 参数调节透明度。
+You can adjust the transparency through the `alpha: ..` parameter.
 
+:::warning[Warning]
 
-:::warning[警告]
-
-注意，这里的 `transparent-cover` 并不能像 `hide` 一样不影响文本布局，因为里面有一层 `box`，因此可能会破坏页面原有的结构。
+Note that the `transparent-cover` here does not preserve text layout like `hide` does because it adds an extra layer of `box`, which may disrupt the original structure of the page.
 
 :::
 
+:::tip[Internals]
 
-:::tip[原理]
-
-`enable-transparent-cover` 方法定义为
+The `enable-transparent-cover` method is defined as:
 
 ```typst
 #let s.methods.enable-transparent-cover = (
@@ -67,6 +62,6 @@ Touying 提供了半透明 Cover 函数的支持，只需要加入
 }
 ```
 
-可以看出，其是通过 `utils.cover-with-rect` 创建了一个与背景色同色的半透明矩形遮罩，以模拟内容透明的效果，其中 `constructor: rgb` 和 `alpha: 85%` 分别表明了背景色的构造函数与透明程度。
+It creates a semi-transparent rectangular mask with the same color as the background to simulate the effect of transparent content. Here, `constructor: rgb` and `alpha: 85%` indicate the background color's construction function and transparency level, respectively.
 
 :::

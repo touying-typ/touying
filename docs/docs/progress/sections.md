@@ -2,19 +2,17 @@
 sidebar_position: 2
 ---
 
-# Touying 的 Sections
+# Touying Sections
 
-Touying 维护了一份自己的 sections state，用于记录 slides 的 sections 和 subsections。
+Touying maintains its own sections state to record the sections and subsections of slides.
 
 ## touying-outline
 
-`#touying-outline(enum-args: (:), padding: 0pt)` 用于显示一个简单的大纲。
-
+`#touying-outline(enum-args: (:), padding: 0pt)` is used to display a simple outline.
 
 ## touying-final-sections
 
-`#states.touying-final-sections(final-sections => ..)` 用于自定义显示大纲。
-
+`#states.touying-final-sections(final-sections => ..)` is used to customize the display of the outline.
 
 ## touying-progress-with-sections
 
@@ -22,4 +20,4 @@ Touying 维护了一份自己的 sections state，用于记录 slides 的 sectio
 #states.touying-progress-with-sections((current-sections: .., final-sections: .., current-slide-number: .., last-slide-number: ..) => ..)
 ```
 
-功能最强大，你可以用其搭建任意复杂的进度展示。
+This is the most powerful one, allowing you to build any complex progress display with its functionalities.

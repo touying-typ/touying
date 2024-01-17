@@ -2,7 +2,7 @@
 sidebar_position: 11
 ---
 
-# 更新日志
+# Changelog
 
 ## v0.2.0
 

@@ -2,13 +2,13 @@
 sidebar_position: 3
 ---
 
-# 数学公式动画
+# Math Equation Animations
 
-Touying 还提供了一个独特且十分有用的功能，即数学公式动画，它让你可以方便地在数学公式里使用 `pause` 和 `meanwhile`。
+Touying also provides a unique and highly useful feature—math equation animations, allowing you to conveniently use `pause` and `meanwhile` within math equations.
 
-## 简单动画
+## Simple Animation
 
-让我们先来看一个例子：
+Let's start with an example:
 
 ```typst
 #slide[
@@ -25,20 +25,19 @@ Touying 还提供了一个独特且十分有用的功能，即数学公式动画
 ]
 ```
 
-我们使用 `touying-equation` 函数来实现在数学公式文本内部使用 `pause` 和 `meanwhile`（事实上，你也能用 `#pause` 或者 `#pause;`）。
+We use the `touying-equation` function to incorporate `pause` and `meanwhile` within the text of math equations (in fact, you can also use `#pause` or `#pause;`).
 
-正如你料想的一样，数学公式会分步显示，这很适合给让演讲者演示自己的数学公式推理思路。
+As you would expect, the math equation is displayed step by step, making it suitable for presenters to demonstrate their math reasoning.
 
-:::warning[警告]
+:::warning[Warning]
 
-虽然 `touying-equation` 函数很便利，但是您需要时刻注意，`touying-equation` 并不会做复杂的语法分析，只是单纯地正则表达式分割字符串，因此您不应在 `display(..)` 这类函数内部使用 `pause` 或 `meanwhile`！
+While the `touying-equation` function is convenient, you should always be aware that it doesn't perform complex syntax analysis. It simply splits the string using regular expressions. Therefore, you should not use `pause` or `meanwhile` within functions like `display(..)`!
 
 :::
 
+## Complex Animation
 
-## 复杂动画
-
-事实上，我们也可以在 `touying-equation` 内部使用 `only`、`uncover` 和 `alternatives`，只是需要一点技巧：
+In fact, we can also use `only`, `uncover`, and `alternatives` within `touying-equation` with a little trick:
 
 ```typst
 #slide(repeat: 3, self => [
@@ -51,15 +50,14 @@ Touying 还提供了一个独特且十分有用的功能，即数学公式动画
 ])
 ```
 
-我们可以在 `touying-equation` 的 `scope` 参数中将我们需要用到的函数传递进去，例如这里的 `uncover`。
+We can pass the functions we need into the `touying-equation` through the `scope` parameter, such as `uncover` in this example.
 
+## Parameters
 
-## 参数
-
-`touying-equation` 的函数定义为
+The function definition of `touying-equation` is:
 
 ```typst
 #let touying-equation(block: true, numbering: none, supplement: auto, scope: (:), body) = { .. }
 ```
 
-因此，我们可以像使用普通数学公式一样，为 `touying-equation` 传入 `block`、`numbering` 和 `supplement` 参数。
+Therefore, you can pass parameters like `block`, `numbering`, and `supplement` to `touying-equation` just like using normal math equations.
