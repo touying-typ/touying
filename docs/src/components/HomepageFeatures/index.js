@@ -8,23 +8,23 @@ const FeatureList = [
     Svg: require('@site/static/img/undraw_docusaurus_mountain.svg').default,
     description: (
       <>
-        Docusaurus was designed from the ground up to be easily installed and
-        used to get your website up and running quickly.
+        Touying provides two different ways to compose slides, based on headings and based on slide blocks.
+        You can choose the style you prefer, simple yet powerful.
       </>
     ),
   },
   {
-    title: 'Focus on What Matters',
+    title: 'Dynamic Slides',
     Svg: require('@site/static/img/undraw_docusaurus_tree.svg').default,
     description: (
       <>
-        Docusaurus lets you focus on your docs, and we&apos;ll do the chores. Go
-        ahead and move your docs into the <code>docs</code> directory.
+        Touying offers markers such as <code>#pause</code> and <code>#meanwhile</code>,
+        allowing you to easily compose dynamic slides, including but not limited to text, lists, and math equations.
       </>
     ),
   },
   {
-    title: 'Powered by React',
+    title: 'Powered by Typst',
     Svg: require('@site/static/img/undraw_docusaurus_react.svg').default,
     description: (
       <>
