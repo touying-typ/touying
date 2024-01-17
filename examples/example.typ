@@ -1,4 +1,4 @@
-#import "../lib.typ": s, pause, meanwhile, utils, states, pdfpc, themes
+#import "../lib.typ": s, pause, meanwhile, touying-equation, utils, states, pdfpc, themes
 
 // You can comment out the theme registration below and it can still work normally
 #let s = themes.metropolis.register(s, aspect-ratio: "16-9", footer: self => self.info.institution)
@@ -64,6 +64,20 @@
 
   and paused text.
 ])
+
+// math equations
+#slide[
+  Touying equation with pause:
+
+  #touying-equation(`
+    f(x) &= pause x^2 + 2x + 1  \
+         &= pause (x + 1)^2  \
+  `)
+
+  #meanwhile
+
+  Touying equation is very simple.
+]
 
 // multiple pages for one slide
 #slide[

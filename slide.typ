@@ -8,20 +8,98 @@
 #let meanwhile = metadata((kind: "touying-meanwhile"))
 // touying slides-end mark
 #let slides-end = metadata((kind: "touying-slides-end"))
-// touying math mark
-#let touying-math(it) = {
+// touying equation mark
+#let touying-equation(block: true, numbering: none, supplement: auto, body) = {
   metadata((
-    kind: "touying-math",
+    kind: "touying-equation",
+    block: block,
+    numbering: numbering,
+    supplement: supplement,
+    scope: (:),
     body: {
-      if type(it) == str {
-        it
-      } else if type(it) == content and it.has("text") {
-        it.text
+      if type(body) == function {
+        body
+      } else if type(body) == str {
+        body
+      } else if type(body) == content and body.has("text") {
+        body.text
       } else {
-        panic("Unsupported type: " + str(type(it)))
+        panic("Unsupported type: " + str(type(body)))
       }
     },
   ))
+}
+
+// parse touying equation, and get the repetitions
+#let _parse-touying-equation(self: utils.empty-object, need-cover: true, base: 1, index: 1, eqt) = {
+  let result-arr = ()
+  // repetitions
+  let repetitions = base
+  let max-repetitions = repetitions
+  // get cover function from self
+  let cover = self.methods.cover.with(self: self)
+  // get eqt body
+  let it = eqt.body
+  // if it is a function, then call it with self
+  if type(it) == function {
+    // subslide index
+    self.subslide = index
+    it = it(self)
+  }
+  assert(type(it) == str, message: "Unsupported type: " + str(type(it)))
+  // parse the content
+  let result = ()
+  let cover-arr = ()
+  let children = it.split(regex("(#meanwhile;?)|(meanwhile)")).intersperse("touying-meanwhile")
+    .map(s => s.split(regex("(#pause;?)|(pause)")).intersperse("touying-pause")).flatten()
+    .map(s => s.split(regex("(\\\\\\s)|(\\\\\\n)")).intersperse("\\\n")).flatten()
+    .map(s => s.split(regex("&")).intersperse("&")).flatten()
+  for child in children {
+    if child == "touying-pause" {
+      repetitions += 1
+    } else if child == "touying-meanwhile" {
+      // clear the cover-arr when encounter #meanwhile
+      if cover-arr.len() != 0 {
+        result.push("cover(" + cover-arr.sum() + ")")
+        cover-arr = ()
+      }
+      // then reset the repetitions
+      max-repetitions = calc.max(max-repetitions, repetitions)
+      repetitions = 1
+    } else if child == "\\\n" or child == "&" {
+      // clear the cover-arr when encounter linebreak or parbreak
+      if cover-arr.len() != 0 {
+        result.push("cover(" + cover-arr.sum() + ")")
+        cover-arr = ()
+      }
+      result.push(child)
+    } else {
+      if repetitions <= index or not need-cover {
+        result.push(child)
+      } else {
+        cover-arr.push(child)
+      }
+    }
+  }
+  // clear the cover-arr when end
+  if cover-arr.len() != 0 {
+    result.push("cover(" + cover-arr.sum() + ")")
+    cover-arr = ()
+  }
+  result-arr.push(
+    math.equation(
+      block: eqt.block,
+      numbering: eqt.numbering,
+      supplement: eqt.supplement,
+      eval("$" + result.sum(default: "") + "$", scope: eqt.scope + (cover: (..args) => {
+        if args.pos().len() != 0 {
+          cover(args.pos().first())
+        }
+      })),
+    )
+  )
+  max-repetitions = calc.max(max-repetitions, repetitions)
+  return (result-arr, max-repetitions)
 }
 
 // parse a sequence into content, and get the repetitions
@@ -58,6 +136,24 @@
           // then reset the repetitions
           max-repetitions = calc.max(max-repetitions, repetitions)
           repetitions = 1
+        } else if kind == "touying-equation" {
+          // handle touying-equation
+          let (conts, nextrepetitions) = _parse-touying-equation(
+            self: self, need-cover: repetitions <= index, base: repetitions, index: index, child.value
+          )
+          let cont = conts.first()
+          if repetitions <= index or not need-cover {
+            result.push(cont)
+          } else {
+            cover-arr.push(cont)
+          }
+          repetitions = nextrepetitions
+        } else {
+          if repetitions <= index or not need-cover {
+            result.push(child)
+          } else {
+            cover-arr.push(child)
+          }
         }
       } else if child == linebreak() or child == parbreak() {
         // clear the cover-arr when encounter linebreak or parbreak
