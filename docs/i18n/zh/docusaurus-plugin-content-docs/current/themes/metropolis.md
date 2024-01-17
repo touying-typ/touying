@@ -49,7 +49,7 @@ Metropolis 默认使用了
 ```typst
 #let s = (s.methods.colors)(
   self: s,
-  neutral-extralight: rgb("#fafafa"),
+  neutral-lightest: rgb("#fafafa"),
   primary-dark: rgb("#23373b"),
   secondary-light: rgb("#eb811b"),
   secondary-lighter: rgb("#d6c6b7"),

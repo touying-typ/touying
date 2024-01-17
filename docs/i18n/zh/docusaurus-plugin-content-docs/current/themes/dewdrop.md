@@ -62,10 +62,10 @@ Dewdrop 默认使用了
 ```typst
 #let s = (s.methods.colors)(
   self: s,
-  neutral-extradark: rgb("#000000"),
+  neutral-darkest: rgb("#000000"),
   neutral-dark: rgb("#202020"),
   neutral-light: rgb("#f3f3f3"),
-  neutral-extralight: rgb("#ffffff"),
+  neutral-lightest: rgb("#ffffff"),
   primary: primary,
 )
 ```

@@ -65,8 +65,8 @@
   self = (self.methods.colors)(
     self: self,
     neutral-light: gray,
-    neutral-extralight: background,
-    neutral-extradark: foreground,
+    neutral-lightest: background,
+    neutral-darkest: foreground,
     primary: primary,
   )
   // save the variables for later use
@@ -80,7 +80,7 @@
   let footer(self) = deco-format(self.simple-footer + h(1fr) + self.simple-footer-right)
   self.page-args = self.page-args + (
     paper: "presentation-" + aspect-ratio,
-    fill: self.colors.neutral-extralight,
+    fill: self.colors.neutral-lightest,
     header: header,
     footer: footer,
   )

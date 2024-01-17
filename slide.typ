@@ -9,13 +9,13 @@
 // touying slides-end mark
 #let slides-end = metadata((kind: "touying-slides-end"))
 // touying equation mark
-#let touying-equation(block: true, numbering: none, supplement: auto, body) = {
+#let touying-equation(block: true, numbering: none, supplement: auto, scope: (:), body) = {
   metadata((
     kind: "touying-equation",
     block: block,
     numbering: numbering,
     supplement: supplement,
-    scope: (:),
+    scope: scope,
     body: {
       if type(body) == function {
         body
@@ -396,31 +396,31 @@
     neutral: rgb("#303030"),
     neutral-light: rgb("#a0a0a0"),
     neutral-lighter: rgb("#d0d0d0"),
-    neutral-extralight: rgb("#ffffff"),
+    neutral-lightest: rgb("#ffffff"),
     neutral-dark: rgb("#202020"),
     neutral-darker: rgb("#101010"),
-    neutral-extradark: rgb("#000000"),
+    neutral-darkest: rgb("#000000"),
     primary: rgb("#303030"),
     primary-light: rgb("#a0a0a0"),
     primary-lighter: rgb("#d0d0d0"),
-    primary-extralight: rgb("#ffffff"),
+    primary-lightest: rgb("#ffffff"),
     primary-dark: rgb("#202020"),
     primary-darker: rgb("#101010"),
-    primary-extradark: rgb("#000000"),
+    primary-darkest: rgb("#000000"),
     secondary: rgb("#303030"),
     secondary-light: rgb("#a0a0a0"),
     secondary-lighter: rgb("#d0d0d0"),
-    secondary-extralight: rgb("#ffffff"),
+    secondary-lightest: rgb("#ffffff"),
     secondary-dark: rgb("#202020"),
     secondary-darker: rgb("#101010"),
-    secondary-extradark: rgb("#000000"),
+    secondary-darkest: rgb("#000000"),
     tertiary: rgb("#303030"),
     tertiary-light: rgb("#a0a0a0"),
     tertiary-lighter: rgb("#d0d0d0"),
-    tertiary-extralight: rgb("#ffffff"),
+    tertiary-lightest: rgb("#ffffff"),
     tertiary-dark: rgb("#202020"),
     tertiary-darker: rgb("#101010"),
-    tertiary-extradark: rgb("#000000"),
+    tertiary-darkest: rgb("#000000"),
   ),
   // handle mode
   handout: false,

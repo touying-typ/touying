@@ -10,7 +10,7 @@
   ..args,
 ) = {
   self.page-args = self.page-args + (
-    fill: self.colors.neutral-extralight,
+    fill: self.colors.neutral-lightest,
   ) + if self.d-navigation == "sidebar" {(
     margin: (top: 0em, bottom: 1em, left: 0em, right: 0em),
   )} else if self.d-navigation == "mini-slides" {(
@@ -32,7 +32,7 @@
         x: self.d-mini-slides.x,
         ..(if self.d-navigation == "sidebar" { (x: self.d-sidebar.width) } else { () }),
       )
-      set text(fill: self.colors.neutral-extradark)
+      set text(fill: self.colors.neutral-darkest)
       show heading: set text(fill: self.colors.primary)
       show: args.named().at("setting", default: body => body)
       body
@@ -50,7 +50,7 @@
   self.page-args.footer = none
   let info = self.info + args.named()
   let content = {
-    set text(fill: self.colors.neutral-extradark)
+    set text(fill: self.colors.neutral-darkest)
     set align(center + horizon)
     block(width: 100%, inset: 3em, {
       block(
@@ -92,7 +92,7 @@
     fill: self.colors.primary,
     margin: 2em,
   )
-  set text(fill: self.colors.neutral-extralight, size: 1.5em)
+  set text(fill: self.colors.neutral-lightest, size: 1.5em)
   let touying-slide = self.methods.touying-slide
   touying-slide(self: self, repeat: none, align(horizon + center, body))
 }
@@ -250,10 +250,10 @@
   // color theme
   self = (self.methods.colors)(
     self: self,
-    neutral-extradark: rgb("#000000"),
+    neutral-darkest: rgb("#000000"),
     neutral-dark: rgb("#202020"),
     neutral-light: rgb("#f3f3f3"),
-    neutral-extralight: rgb("#ffffff"),
+    neutral-lightest: rgb("#ffffff"),
     primary: primary,
   )
   // save the variables for later use
@@ -275,13 +275,13 @@
     set text(size: 0.8em)
     set align(bottom)
     show: pad.with(.5em)
-    text(fill: self.colors.neutral-extradark.lighten(40%), utils.call-or-display(self, self.d-footer))
+    text(fill: self.colors.neutral-darkest.lighten(40%), utils.call-or-display(self, self.d-footer))
     h(1fr)
-    text(fill: self.colors.neutral-extradark.lighten(20%), utils.call-or-display(self, self.d-footer-right))
+    text(fill: self.colors.neutral-darkest.lighten(20%), utils.call-or-display(self, self.d-footer-right))
   }
   self.page-args = self.page-args + (
     paper: "presentation-" + aspect-ratio,
-    fill: self.colors.neutral-extralight,
+    fill: self.colors.neutral-lightest,
     header: header,
     footer: footer,
     margin: 0em,

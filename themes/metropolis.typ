@@ -30,7 +30,7 @@
 ) = {
   self.page-args = self.page-args + (
     margin: margin,
-    fill: self.colors.neutral-extralight,
+    fill: self.colors.neutral-lightest,
   )
   if title != auto {
     self.m-title = title
@@ -112,7 +112,7 @@
     fill: self.colors.primary-dark,
     margin: 2em,
   )
-  set text(fill: self.colors.neutral-extralight, size: 1.5em)
+  set text(fill: self.colors.neutral-lightest, size: 1.5em)
   let touying-slide = self.methods.touying-slide
   touying-slide(self: self, repeat: none, align(horizon + center, body))
 }
@@ -148,7 +148,7 @@
   // color theme
   self = (self.methods.colors)(
     self: self,
-    neutral-extralight: rgb("#fafafa"),
+    neutral-lightest: rgb("#fafafa"),
     primary-dark: rgb("#23373b"),
     secondary-light: rgb("#eb811b"),
     secondary-lighter: rgb("#d6c6b7"),
@@ -171,7 +171,7 @@
     if self.m-title != none {
       show: m-cell.with(fill: self.colors.primary-dark, inset: 1em)
       set align(horizon)
-      set text(fill: self.colors.neutral-extralight, size: 1.2em)
+      set text(fill: self.colors.neutral-lightest, size: 1.2em)
       utils.fit-to-width(grow: false, 100%, text(weight: "medium", utils.call-or-display(self, self.m-title)))
     } else { [] }
   }
@@ -189,7 +189,7 @@
   }
   self.page-args = self.page-args + (
     paper: "presentation-" + aspect-ratio,
-    fill: self.colors.neutral-extralight,
+    fill: self.colors.neutral-lightest,
     header: header,
     footer: footer,
     margin: 0em,

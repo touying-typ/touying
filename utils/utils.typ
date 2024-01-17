@@ -282,6 +282,9 @@
   } else if type(visible-subslides) == "string" {
     let parts = _parse-subslide-indices(visible-subslides)
     _check-visible(idx, parts)
+  } else if type(visible-subslides) == content and visible-subslides.has("text") {
+    let parts = _parse-subslide-indices(visible-subslides.text)
+    _check-visible(idx, parts)
   } else if type(visible-subslides) == "dictionary" {
     let lower-okay = if "beginning" in visible-subslides {
       visible-subslides.beginning <= idx
