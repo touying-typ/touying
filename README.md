@@ -2,86 +2,73 @@
 
 [Touying](https://github.com/touying-typ/touying) (投影 in chinese, /tóuyǐng/, meaning projection) is an object-oriented and efficient package for creating presentation slides in Typst. Touying is a package derived from [Polylux](https://github.com/andreasKroepelin/polylux). Therefore, many concepts and APIs remain consistent with Polylux.
 
-Compared to Polylux, Touying employs a more object-oriented writing style, capable of simulating **a mutable global singleton**. So, Touying can conveniently access and update "global variables", such as the 'handout-mode' boolean variable. At the same time, you can easily retrieve and modify page parameters by `self.page-args`, avoiding the side effects of creating a new page caused by `#set page(..)`.
+Touying provides an object-oriented programming (OOP) style syntax, allowing the simulation of "global variables" through a global singleton. This makes it easy to write themes. Touying does not rely on `counter` and `locate` to implement `#pause`, resulting in better performance.
 
-Additionally, Touying does not rely on `locate` and `counter` for implementing `#pause`, thus offering better performance, albeit with certain limitations. The advantage is that you can use `#pause` inline. The drawback is that `#pause` after set-show rule won't take effect (you must use set-show rule in the `setting` parameter). Currently, `#pause` only works at the outermost level, and it won't work inside layout functions like grid, but you can use the `composer` parameter to add yourself layout function like `utils.side-by-side`.
+If you like it, consider [giving a star on GitHub](https://github.com/touying-typ/touying). Touying is a community-driven project, feel free to suggest any ideas and contribute.
 
-**Warning: It is under development, and the API may change at any time.**
+[![Book badge](https://img.shields.io/badge/docs-book-green)](https://touying-typ.github.io/touying/)
+![GitHub](https://img.shields.io/github/license/touying-typ/touying)
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/touying-typ/touying)
+![GitHub Repo stars](https://img.shields.io/github/stars/touying-typ/touying)
+![Themes badge](https://img.shields.io/badge/themes-3-aqua)
 
-## Implemented Features
+## Document
 
-- [x] **Object-oriented programming:** Singleton `s`, binding methods `utils.methods(s)` and `(self: obj, ..) => {..}` methods.
-- [x] **Page arguments management:** Instead of using `#set page(..)`, you should use `self.page-args` to retrieve or set page parameters, thereby avoiding unnecessary creation of new pages.
-- [x] **`#pause` for sequence content:** You can use #pause at the outermost level of a slide, including inline and list.
-- [x] **`#pause` for layout functions:** You can use the `composer` parameter to add yourself layout function like `utils.side-by-side`, and simply use multiple pos parameters like `#slide[..][..]`.
-- [x] **`#meanwhile` for synchronous display:** Provide a `#meanwhile` for resetting subslides counter.
-- [x] **`#pause` and `#meanwhile` for math equation:** Provide a `#touying-equation("x + y pause + z")` for math equation animations.
-- [x] **Slides:** Create simple slides using standard headings.
-- [x] **Callback-style `uncover`, `only` and `alternatives`:** Based on the concise syntax provided by Polylux, allow precise control of the timing for displaying content.
-  - You should manually control the number of subslides using the `repeat` parameter.
-- [x] **Transparent cover:** Enable transparent cover using oop syntax like `#let s = (s.methods.enable-transparent-cover)(self: s)`.
-- [x] **Handout mode:** enable handout mode by `#let s = (s.methods.enable-handout-mode)(self: s)`.
-- [x] **Fit-to-width and fit-to-height:** Fit-to-width for title in header and fit-to-height for image.
-  - `utils.fit-to-width(grow: true, shrink: true, width, body)`
-  - `utils.fit-to-height(width: none, prescale-width: none, grow: true, shrink: true, height, body)`
-- [x] **Slides counter:** `states.slide-counter.display() + " / " + states.last-slide-number` and `states.touying-progress(ratio => ..)`.
-- [x] **Appendix:** Freeze the `last-slide-number` to prevent the slide number from increasing further.
-- [x] **Sections:** Touying's built-in section support can be used to display the current section title and show progress.
-  - [x] `section` and `subsection` parameter in `#slide` to register a new section or subsection.
-  - [x] `states.current-section-title` to get the current section.
-  - [x] `states.touying-outline` or `s.methods.touying-outline` to display a outline of sections.
-  - [x] `states.touying-final-sections(sections => ..)` for custom outline display.
-  - [x] `states.touying-progress-with-sections((current-sections: .., final-sections: .., current-slide-number: .., last-slide-number: ..) => ..)` for powerful progress display.
-- [x] **Navigation bar**: Navigation bar like [here](https://github.com/zbowang/BeamerTheme) by `states.touying-progress-with-sections(..)`, in `dewdrop` theme.
-- [x] **Pdfpc:** pdfpc support and export `.pdfpc` file without external tool by `typst query` command simply.
+Read [the document](https://touying-typ.github.io/touying/) to learn all about Touying.
 
+This documentation is powered by [Docusaurus](https://docusaurus.io/). We will maintain **English** and **Chinese** versions of the documentation for Touying, and for each major version, we will maintain a documentation copy. This allows you to easily refer to old versions of the Touying documentation and migrate to new versions.
 
-## Features to Implement
+## Quick start
 
-- [ ] **More themes:** Add more themes.
-- [ ] **Combinable components**: Combinable components for header, footer and sidebar.
-- [ ] **Theorem environment**: Theorem environment for each themes.
-- [ ] **Document:** Add a more detailed document.
-- [ ] **External viewers:** Integration with external viewers like impress.js and typst-preview.
+Before you begin, make sure you have installed the Typst environment. If not, you can use the [Web App](https://typst.app/) or the Typst LSP and Typst Preview plugins for VS Code.
 
-Feel free to suggest any ideas and contribute.
-
-
-## Dynamic slides
-
-We can export `example.pdfpc` file by command `typst query --root . ./examples/example.typ --field value --one "<pdfpc-file>" > ./examples/example.pdfpc`
+To use Touying, you only need to include the following code in your document:
 
 ```typst
-#import "@preview/touying:0.1.0": s, pause, utils, states, pdfpc, themes
+#import "@preview/touying:0.2.0": *
 
-#let s = themes.metropolis.register(s, aspect-ratio: "16-9", footer: [Custom footer])
+#let (init, slide, slides) = utils.methods(s)
+#show: init
+
+#show: slides
+
+= Title
+
+== First Slide
+
+Hello, Touying!
+
+#pause
+
+Hello, Typst!
+```
+
+It's simple. Congratulations on creating your first Touying slide! 🎉
+
+
+## More Complex Examples
+
+In fact, Touying provides various styles for writing slides. For example, the above example uses first-level and second-level titles to create new slides. However, you can also use the `#slide[..]` format to access more powerful features provided by Touying.
+
+```typst
+#import "@preview/touying:0.2.0": *
+
+#let s = themes.metropolis.register(s, aspect-ratio: "16-9")
 #let s = (s.methods.enable-transparent-cover)(self: s)
-#let s = (s.methods.append-preamble)(self: s, pdfpc.config(
-  duration-minutes: 30,
-  start-time: datetime(hour: 14, minute: 10, second: 0),
-  end-time: datetime(hour: 14, minute: 40, second: 0),
-  last-minutes: 5,
-  note-font-size: 12,
-  disable-markdown: false,
-  default-transition: (
-    type: "push",
-    duration-seconds: 2,
-    angle: ltr,
-    alignment: "vertical",
-    direction: "inward",
-  ),
-))
-// #let s = (s.methods.enable-handout-mode)(self: s)
-#let (init, slide, touying-outline) = utils.methods(s)
+#let (init, slide) = utils.methods(s)
 #show: init
 
 // simple animations
 #slide[
-  a simple #pause dynamic
+  a simple #pause *dynamic*
 
   #pause
   
   slide.
+
+  #meanwhile
+
+  meanwhile #pause with pause.
 ][
   second #pause pause.
 ]
@@ -104,11 +91,25 @@ We can export `example.pdfpc` file by command `typst query --root . ./examples/e
   and paused text.
 ])
 
+// math equation animations
+#slide[
+  == Touying Equation
+
+  #touying-equation(`
+    f(x) &= pause x^2 + 2x + 1  \
+         &= pause (x + 1)^2  \
+  `)
+
+  #meanwhile
+
+  Touying equation is very simple.
+]
+
 // multiple pages for one slide
 #slide[
-  #lorem(200)
+  == Multiple Pages for One Slide
 
-  test multiple pages
+  #lorem(200)
 ]
 
 // appendix by freezing last-slide-number
@@ -116,80 +117,9 @@ We can export `example.pdfpc` file by command `typst query --root . ./examples/e
 #let (slide,) = utils.methods(s)
 
 #slide[
-  appendix
+  == Appendix
 ]
 ```
-
-![image](https://github.com/touying-typ/touying/assets/34951714/9365bbc4-9e9c-4a78-a1ab-1716d1bf22f2)
-
-
-## Themes
-
-```typst
-#import "@preview/touying:0.1.0": s, pause, utils, states, pdfpc, themes
-
-#let s = themes.metropolis.register(s, aspect-ratio: "16-9", footer: [Custom footer])
-#let s = (s.methods.enable-transparent-cover)(self: s)
-#let (init, slide, title-slide, new-section-slide, focus-slide, touying-outline, alert) = utils.methods(s)
-#show: init
-
-#set text(font: "Fira Sans", weight: "light", size: 20pt)
-#show math.equation: set text(font: "Fira Math")
-#set strong(delta: 100)
-#set par(justify: true)
-
-#title-slide(
-  author: [Authors],
-  title: [Title],
-  subtitle: [Subtitle],
-  date: [Date],
-  extra: [Extra],
-)
-
-#slide(title: [Table of contents])[
-  #touying-outline()
-]
-
-#slide(title: [A long long long long long long long long long long long long long long long long long long long long long long long long Title])[
-  A slide with some maths:
-  $ x_(n+1) = (x_n + a/x_n) / 2 $
-
-  #lorem(200)
-]
-
-#new-section-slide[First section]
-
-#slide[
-  A slide without a title but with #alert[important] infos
-]
-
-#new-section-slide[Second section]
-
-#focus-slide[
-  Wake up!
-]
-
-// simple animations
-#slide[
-  a simple #pause dynamic slide with #alert[alert]
-
-  #pause
-  
-  text.
-]
-
-// appendix by freezing last-slide-number
-#let s = (s.methods.appendix)(self: s)
-#let (slide, new-section-slide) = utils.methods(s)
-
-#new-section-slide[Appendix]
-
-#slide[
-  appendix
-]
-```
-
-![image](https://github.com/touying-typ/touying/assets/34951714/f08dc948-68b4-45d6-8e87-53ca3fc9912c)
 
 
 ## Acknowledgements
