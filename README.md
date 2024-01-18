@@ -18,7 +18,7 @@ Read [the document](https://touying-typ.github.io/touying/) to learn all about T
 
 This documentation is powered by [Docusaurus](https://docusaurus.io/). We will maintain **English** and **Chinese** versions of the documentation for Touying, and for each major version, we will maintain a documentation copy. This allows you to easily refer to old versions of the Touying documentation and migrate to new versions.
 
-## Specil features
+## Special Features
 
 1. `#pause` and `#meanwhile` Marks [document](https://touying-typ.github.io/touying/docs/dynamic/simple)
 
