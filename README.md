@@ -1,8 +1,6 @@
 # [Touying](https://github.com/touying-typ/touying) ![logo](https://github.com/touying-typ/touying/assets/34951714/2aa394d3-2319-4572-aef7-ed3c14b09846)
 
-[Touying](https://github.com/touying-typ/touying) (投影 in chinese, /tóuyǐng/, meaning projection) is an object-oriented and efficient package for creating presentation slides in Typst.
-
-Touying is a package derived from [Polylux](https://github.com/andreasKroepelin/polylux). Therefore, most concepts and APIs remain consistent with Polylux. You can refer to the [Polylux documentation](https://polylux.dev/book/) for a better understanding of Touying.
+[Touying](https://github.com/touying-typ/touying) (投影 in chinese, /tóuyǐng/, meaning projection) is an object-oriented and efficient package for creating presentation slides in Typst. Touying is a package derived from [Polylux](https://github.com/andreasKroepelin/polylux). Therefore, many concepts and APIs remain consistent with Polylux.
 
 Compared to Polylux, Touying employs a more object-oriented writing style, capable of simulating **a mutable global singleton**. So, Touying can conveniently access and update "global variables", such as the 'handout-mode' boolean variable. At the same time, you can easily retrieve and modify page parameters by `self.page-args`, avoiding the side effects of creating a new page caused by `#set page(..)`.
 
