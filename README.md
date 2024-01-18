@@ -18,6 +18,45 @@ Read [the document](https://touying-typ.github.io/touying/) to learn all about T
 
 This documentation is powered by [Docusaurus](https://docusaurus.io/). We will maintain **English** and **Chinese** versions of the documentation for Touying, and for each major version, we will maintain a documentation copy. This allows you to easily refer to old versions of the Touying documentation and migrate to new versions.
 
+## Specil features
+
+1. `#pause` and `#meanwhile` Marks [document](https://touying-typ.github.io/touying/docs/dynamic/simple)
+
+```typst
+#slide[
+  First
+  
+  #pause
+  
+  Second
+
+  #meanwhile
+
+  Third
+
+  #pause
+
+  Fourth
+]
+```
+
+![image](https://github.com/touying-typ/touying/assets/34951714/24ca19a3-b27c-4d31-ab75-09c37911e6ac)
+
+2. Dewdrop Theme Navigation Bar [document](https://touying-typ.github.io/touying/docs/themes/dewdrop)
+
+![image](https://github.com/touying-typ/touying/assets/34951714/0426516d-aa3c-4b7a-b7b6-2d5d276fb971)
+
+3. `touying-equation` Math Equation Animation [document](https://touying-typ.github.io/touying/docs/dynamic/equation)
+
+![image](https://github.com/touying-typ/touying/assets/34951714/8640fe0a-95e4-46ac-b570-c8c79f993de4)
+
+4. `#show: slides` Style and `#slide[..]` Style [document](https://touying-typ.github.io/touying/docs/style)
+
+5. Semi-transparent Cover Mode [document](https://touying-typ.github.io/touying/docs/dynamic/cover)
+
+![image](https://github.com/touying-typ/touying/assets/34951714/22a9ea66-c8b5-431e-a52c-2c8ca3f18e49)
+
+
 ## Quick start
 
 Before you begin, make sure you have installed the Typst environment. If not, you can use the [Web App](https://typst.app/) or the Typst LSP and Typst Preview plugins for VS Code.
