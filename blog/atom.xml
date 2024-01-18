@@ -1,20 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
-    <id>https://your-docusaurus-site.example.com/blog</id>
+    <id>https://touying-typ.github.io/touying/blog</id>
     <title>Touying Blog</title>
     <updated>2024-01-17T00:00:00.000Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
-    <link rel="alternate" href="https://your-docusaurus-site.example.com/blog"/>
+    <link rel="alternate" href="https://touying-typ.github.io/touying/blog"/>
     <subtitle>Touying Blog</subtitle>
-    <icon>https://your-docusaurus-site.example.com/img/favicon.ico</icon>
+    <icon>https://touying-typ.github.io/touying/img/favicon.ico</icon>
     <entry>
         <title type="html"><![CDATA[Touying 0.2.0]]></title>
-        <id>https://your-docusaurus-site.example.com/blog/touying-0-2-0</id>
-        <link href="https://your-docusaurus-site.example.com/blog/touying-0-2-0"/>
+        <id>https://touying-typ.github.io/touying/blog/touying-0-2-0</id>
+        <link href="https://touying-typ.github.io/touying/blog/touying-0-2-0"/>
         <updated>2024-01-17T00:00:00.000Z</updated>
         <summary type="html"><![CDATA[Touying 0.2.0 is done.]]></summary>
         <content type="html"><![CDATA[<p>Touying 0.2.0 is done.</p>
-<h2 class="anchor anchorWithStickyNavbar_LWe7" id="implemented-features">Implemented Features<a href="https://your-docusaurus-site.example.com/blog/touying-0-2-0#implemented-features" class="hash-link" aria-label="Direct link to Implemented Features" title="Direct link to Implemented Features">​</a></h2>
+<h2 class="anchor anchorWithStickyNavbar_LWe7" id="implemented-features">Implemented Features<a href="https://touying-typ.github.io/touying/blog/touying-0-2-0#implemented-features" class="hash-link" aria-label="Direct link to Implemented Features" title="Direct link to Implemented Features">​</a></h2>
 <ul class="contains-task-list containsTaskList_mC6p">
 <li class="task-list-item"><input type="checkbox" disabled="" checked=""> <strong>Object-oriented programming:</strong> Singleton <code>s</code>, binding methods <code>utils.methods(s)</code> and <code>(self: obj, ..) =&gt; {..}</code> methods.</li>
 <li class="task-list-item"><input type="checkbox" disabled="" checked=""> <strong>Page arguments management:</strong> Instead of using <code>#set page(..)</code>, you should use <code>self.page-args</code> to retrieve or set page parameters, thereby avoiding unnecessary creation of new pages.</li>

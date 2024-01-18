@@ -2,7 +2,7 @@
 <rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/">
     <channel>
         <title>Touying Blog</title>
-        <link>https://your-docusaurus-site.example.com/blog</link>
+        <link>https://touying-typ.github.io/touying/blog</link>
         <description>Touying Blog</description>
         <lastBuildDate>Wed, 17 Jan 2024 00:00:00 GMT</lastBuildDate>
         <docs>https://validator.w3.org/feed/docs/rss2.html</docs>
@@ -10,12 +10,12 @@
         <language>en</language>
         <item>
             <title><![CDATA[Touying 0.2.0]]></title>
-            <link>https://your-docusaurus-site.example.com/blog/touying-0-2-0</link>
-            <guid>https://your-docusaurus-site.example.com/blog/touying-0-2-0</guid>
+            <link>https://touying-typ.github.io/touying/blog/touying-0-2-0</link>
+            <guid>https://touying-typ.github.io/touying/blog/touying-0-2-0</guid>
             <pubDate>Wed, 17 Jan 2024 00:00:00 GMT</pubDate>
             <description><![CDATA[Touying 0.2.0 is done.]]></description>
             <content:encoded><![CDATA[<p>Touying 0.2.0 is done.</p>
-<h2 class="anchor anchorWithStickyNavbar_LWe7" id="implemented-features">Implemented Features<a href="https://your-docusaurus-site.example.com/blog/touying-0-2-0#implemented-features" class="hash-link" aria-label="Direct link to Implemented Features" title="Direct link to Implemented Features">​</a></h2>
+<h2 class="anchor anchorWithStickyNavbar_LWe7" id="implemented-features">Implemented Features<a href="https://touying-typ.github.io/touying/blog/touying-0-2-0#implemented-features" class="hash-link" aria-label="Direct link to Implemented Features" title="Direct link to Implemented Features">​</a></h2>
 <ul class="contains-task-list containsTaskList_mC6p">
 <li class="task-list-item"><input type="checkbox" disabled="" checked=""> <strong>Object-oriented programming:</strong> Singleton <code>s</code>, binding methods <code>utils.methods(s)</code> and <code>(self: obj, ..) =&gt; {..}</code> methods.</li>
 <li class="task-list-item"><input type="checkbox" disabled="" checked=""> <strong>Page arguments management:</strong> Instead of using <code>#set page(..)</code>, you should use <code>self.page-args</code> to retrieve or set page parameters, thereby avoiding unnecessary creation of new pages.</li>
