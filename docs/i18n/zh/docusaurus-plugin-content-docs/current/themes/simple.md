@@ -4,6 +4,8 @@ sidebar_position: 1
 
 # Simple 主题
 
+![image](https://github.com/touying-typ/touying/assets/34951714/83d5295e-f961-4ffd-bc56-a7049848d408)
+
 这个主题来源于 [Polylux](https://polylux.dev/book/themes/gallery/simple.html)，作者是 Andreas Kröpelin。
 
 这个主题被认为是一个相对简单的主题，你可以用它来创建一个简单 slides，并且可以随意加入你喜欢的功能。
@@ -102,6 +104,9 @@ Hello, Touying!
 
 Hello, Typst!
 ```
+
+![image](https://github.com/touying-typ/touying/assets/34951714/2c599bd1-6250-497f-a65b-f19ae02a16cb)
+
 
 ## 示例
 

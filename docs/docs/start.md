@@ -27,6 +27,8 @@ Hello, Touying!
 Hello, Typst!
 ```
 
+![image](https://github.com/touying-typ/touying/assets/34951714/6f15b500-b825-4db1-88ff-34212f43723e)
+
 It's simple. Congratulations on creating your first Touying slide! 🎉
 
 ## More Complex Examples
@@ -102,6 +104,8 @@ In fact, Touying provides various styles for writing slides. For example, the ab
   == Appendix
 ]
 ```
+
+![image](https://github.com/touying-typ/touying/assets/34951714/192b13f9-e3fb-4327-864b-fd9084a8ca24)
 
 In addition, Touying provides many built-in themes to easily create beautiful slides. Basically, you just need to add a line at the top of your document:
 

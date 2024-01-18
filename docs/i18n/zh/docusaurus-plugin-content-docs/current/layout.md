@@ -85,6 +85,8 @@ Title is #s.info.title
 Hello, Touying!
 ```
 
+![image](https://github.com/touying-typ/touying/assets/34951714/600876bb-941d-4841-af5c-27137bb04c54)
+
 不过二级标题并非总是对应 subsection，具体的映射方式因主题而异。
 
 而在更通用的 `#slide[..]` 模式下，section 和 subsection 分别作为参数传入 `slide` 函数中，例如
@@ -160,6 +162,8 @@ Hello, Touying!
 ]
 ```
 
+![image](https://github.com/touying-typ/touying/assets/34951714/a39f88a2-f1ba-4420-8f78-6a0fc644704e)
+
 如果你需要更改分栏的方式，可以修改 `slide` 的 `composer` 参数，其中默认的参数是 `utils.with.side-by-side(columns: auto, gutter: 1em)`，如果我们要让左边那一栏占据剩余宽度，可以使用
 
 ```typst
@@ -169,4 +173,6 @@ Hello, Touying!
   Second column.
 ]
 ```
+
+![image](https://github.com/touying-typ/touying/assets/34951714/aa84192a-4082-495d-9773-b06df32ab8dc)
 

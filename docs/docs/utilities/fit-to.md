@@ -11,7 +11,7 @@ Thanks to [ntjess](https://github.com/ntjess) for the code.
 If you need to make an image fill the remaining slide height, you can try the `fit-to-height` function:
 
 ```typst
-#fit-to-height(1fr)[BIG]
+#utils.fit-to-height(1fr)[BIG]
 ```
 
 Function definition:
@@ -36,7 +36,7 @@ Parameters:
 If you need to limit the title width to exactly fill the slide width, you can try the `fit-to-width` function:
 
 ```typst
-#fit-to-width(1fr)[#lorem(20)]
+#utils.fit-to-width(1fr)[#lorem(20)]
 ```
 
 Function definition:

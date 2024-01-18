@@ -35,6 +35,11 @@ Hello, Typst!
 ]
 ```
 
+![image](https://github.com/touying-typ/touying/assets/34951714/db2a1b60-bc56-4fa9-a317-ee9ecc6f3895)
+
+And you can create a new page with the empty header `==`.
+
+
 ## slide-block Style
 
 For better performance and more powerful capabilities, in most cases, we still need to use the code style like:

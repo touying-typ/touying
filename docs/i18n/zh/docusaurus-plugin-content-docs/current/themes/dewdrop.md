@@ -4,6 +4,8 @@ sidebar_position: 3
 
 # Dewdrop 主题
 
+![image](https://github.com/touying-typ/touying/assets/34951714/23a8a9be-1f7c-43f7-88d4-40604dd6b01b)
+
 这个主题的灵感来自 Zhibo Wang 创作的 [BeamerTheme](https://github.com/zbowang/BeamerTheme)，由 [OrangeX4](https://github.com/OrangeX4) 改造而来。
 
 这个主题拥有优雅美观的 navigation，包括 `sidebar` 和 `mini-slides` 两种模式。
@@ -174,6 +176,9 @@ Hello, Touying!
 
 Hello, Typst!
 ```
+
+![image](https://github.com/touying-typ/touying/assets/34951714/09ddfb40-4f97-4062-8261-23f87690c33e)
+
 
 ## 示例
 

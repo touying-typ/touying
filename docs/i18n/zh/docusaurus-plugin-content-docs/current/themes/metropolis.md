@@ -4,6 +4,8 @@ sidebar_position: 2
 
 # Metropolis 主题
 
+![image](https://github.com/touying-typ/touying/assets/34951714/a1b34b11-6797-42fd-b50f-477a0d672ba2)
+
 这个主题的灵感来自 Matthias Vogelgesang 创作的 [Metropolis beamer](https://github.com/matze/mtheme) 主题，由 [Enivex](https://github.com/Enivex) 改造而来。
 
 这个主题美观大方，很适合日常使用，并且你最好在电脑上安装 Fira Sans 和 Fira Math 字体，以取得最佳效果。
@@ -146,6 +148,9 @@ Hello, Touying!
 
 Hello, Typst!
 ```
+
+![image](https://github.com/touying-typ/touying/assets/34951714/4ab45ee6-09f7-498b-b349-e889d6e42e3e)
+
 
 ## 示例
 

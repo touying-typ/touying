@@ -11,7 +11,7 @@ sidebar_position: 2
 如果你需要将图片占满剩余的 slide 高度，你可以来试试 `fit-to-height` 函数：
 
 ```typst
-#fit-to-height(1fr)[BIG]
+#utils.fit-to-height(1fr)[BIG]
 ```
 
 函数定义：
@@ -37,7 +37,7 @@ sidebar_position: 2
 如果你需要限制标题宽度刚好占满 slide 的宽度，你可以来试试 `fit-to-width` 函数：
 
 ```typst
-#fit-to-width(1fr)[#lorem(20)]
+#utils.fit-to-width(1fr)[#lorem(20)]
 ```
 
 函数定义：

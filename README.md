@@ -43,6 +43,8 @@ Hello, Touying!
 Hello, Typst!
 ```
 
+![image](https://github.com/touying-typ/touying/assets/34951714/6f15b500-b825-4db1-88ff-34212f43723e)
+
 It's simple. Congratulations on creating your first Touying slide! 🎉
 
 
@@ -120,6 +122,8 @@ In fact, Touying provides various styles for writing slides. For example, the ab
   == Appendix
 ]
 ```
+
+![image](https://github.com/touying-typ/touying/assets/34951714/2c4ef64c-879b-46da-b18b-5afb9c6d2192)
 
 
 ## Acknowledgements

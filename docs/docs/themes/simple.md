@@ -4,6 +4,8 @@ sidebar_position: 1
 
 # Simple Theme
 
+![image](https://github.com/touying-typ/touying/assets/34951714/83d5295e-f961-4ffd-bc56-a7049848d408)
+
 This theme is derived from [Polylux](https://polylux.dev/book/themes/gallery/simple.html), created by Andreas Kröpelin.
 
 Considered a relatively simple theme, you can use it to create straightforward slides and easily incorporate features you like.
@@ -98,6 +100,8 @@ Hello, Touying!
 
 Hello, Typst!
 ```
+
+![image](https://github.com/touying-typ/touying/assets/34951714/2c599bd1-6250-497f-a65b-f19ae02a16cb)
 
 ## Example
 

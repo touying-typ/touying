@@ -20,6 +20,8 @@ The purpose of `#pause` is straightforward – it separates the subsequent conte
 ]
 ```
 
+![image](https://github.com/touying-typ/touying/assets/34951714/a3bed1d3-e660-456d-8a54-a914436f43bf)
+
 This example will create three subslides, gradually revealing the content.
 
 As you can see, `#pause` can be used inline or on a separate line.
@@ -46,6 +48,8 @@ In some cases, you may need to display additional content simultaneously with `#
 ]
 ```
 
+![image](https://github.com/touying-typ/touying/assets/34951714/24ca19a3-b27c-4d31-ab75-09c37911e6ac)
+
 This example will create only two subslides, with "First" and "Third" displayed simultaneously, and "Second" and "Fourth" displayed simultaneously.
 
 ## Handling set-show rules
@@ -66,6 +70,8 @@ To address this issue, Touying provides a `setting` parameter for the `#slide()`
   Second
 ]
 ```
+
+![image](https://github.com/touying-typ/touying/assets/34951714/8e31fc8a-5ab1-4181-a46a-fa96cf790dff)
 
 Similarly, Touying currently does not support `#pause` and `#meanwhile` inside layout functions like `grid`. This is due to the same limitation, but you can use the `composer` parameter of `#slide()` to meet most requirements.
 

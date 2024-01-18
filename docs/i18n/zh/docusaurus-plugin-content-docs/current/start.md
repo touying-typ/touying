@@ -27,6 +27,8 @@ Hello, Touying!
 Hello, Typst!
 ```
 
+![image](https://github.com/touying-typ/touying/assets/34951714/6f15b500-b825-4db1-88ff-34212f43723e)
+
 这很简单，您创建了您的第一个 Touying slides，恭喜！🎉
 
 ## 更复杂的例子
@@ -102,6 +104,8 @@ Hello, Typst!
   == Appendix
 ]
 ```
+
+![image](https://github.com/touying-typ/touying/assets/34951714/192b13f9-e3fb-4327-864b-fd9084a8ca24)
 
 除此之外，Touying 还提供了很多内置的主题，能够简单地编写精美的 slides，基本上，您只需要在文档顶部加入一行
 

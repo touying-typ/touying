@@ -25,6 +25,9 @@ Touying 还提供了一个独特且十分有用的功能，即数学公式动画
 ]
 ```
 
+![image](https://github.com/touying-typ/touying/assets/34951714/d176e61f-c0da-4c2a-a1bf-52621be5adb2)
+
+
 我们使用 `touying-equation` 函数来实现在数学公式文本内部使用 `pause` 和 `meanwhile`（事实上，你也能用 `#pause` 或者 `#pause;`）。
 
 正如你料想的一样，数学公式会分步显示，这很适合给让演讲者演示自己的数学公式推理思路。
@@ -50,6 +53,9 @@ Touying 还提供了一个独特且十分有用的功能，即数学公式动画
   `)
 ])
 ```
+
+![image](https://github.com/touying-typ/touying/assets/34951714/f2df14a2-6424-4c53-81f7-1595aa330660)
+
 
 我们可以在 `touying-equation` 的 `scope` 参数中将我们需要用到的函数传递进去，例如这里的 `uncover`。
 

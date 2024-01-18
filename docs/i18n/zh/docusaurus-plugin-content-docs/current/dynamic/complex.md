@@ -27,6 +27,8 @@ sidebar_position: 2
 ])
 ```
 
+![image](https://github.com/touying-typ/touying/assets/34951714/e9a6b8c5-daf0-4cf2-8d39-1a768ce1dfea)
+
 注意到了吗？我们不再是传入一个内容块，而是传入了一个参数为 `self` 的回调函数，随后我们通过
 
 ```typst
@@ -73,6 +75,8 @@ sidebar_position: 2
   ice cream.
 ])
 ```
+
+![image](https://github.com/touying-typ/touying/assets/34951714/392707ea-0bcd-426b-b232-5bc63b9a13a3)
 
 如你所见，`alternatives` 能够自动撑开到最合适的宽度和高度，这是 `only` 和 `uncover` 所没有的能力。事实上 `alternatives` 还有着其他参数，例如 `start: 2`、`repeat-last: true` 和 `position: center + horizon` 等，更多用法可以参考 [Polylux](https://polylux.dev/book/dynamic/alternatives.html)。
 

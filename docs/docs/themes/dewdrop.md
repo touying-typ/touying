@@ -4,6 +4,8 @@ sidebar_position: 3
 
 # Dewdrop Theme
 
+![image](https://github.com/touying-typ/touying/assets/34951714/23a8a9be-1f7c-43f7-88d4-40604dd6b01b)
+
 This theme is inspired by [BeamerTheme](https://github.com/zbowang/BeamerTheme) created by Zhibo Wang and transformed by [OrangeX4](https://github.com/OrangeX4).
 
 The Dewdrop theme features an elegant and aesthetic navigation, including `sidebar` and `mini-slides` modes.
@@ -170,6 +172,8 @@ Hello, Touying!
 
 Hello, Typst!
 ```
+
+![image](https://github.com/touying-typ/touying/assets/34951714/09ddfb40-4f97-4062-8261-23f87690c33e)
 
 ## Example
 

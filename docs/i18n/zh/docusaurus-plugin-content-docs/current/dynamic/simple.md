@@ -20,6 +20,8 @@ Touying 为简单的动画效果提供了两个标记：`#pause` 和 `#meanwhile
 ]
 ```
 
+![image](https://github.com/touying-typ/touying/assets/34951714/a3bed1d3-e660-456d-8a54-a914436f43bf)
+
 这个例子将会创建三张 subslides，逐渐地将内容展示出来。
 
 如你所见，`#pause` 既可以放在行内，也可以放在单独的一行。
@@ -47,6 +49,8 @@ Touying 为简单的动画效果提供了两个标记：`#pause` 和 `#meanwhile
 ]
 ```
 
+![image](https://github.com/touying-typ/touying/assets/34951714/24ca19a3-b27c-4d31-ab75-09c37911e6ac)
+
 这个例子只会创建两张 subslides，并且 "First" 和 "Third" 同时显示，"Second" 和 "Fourth" 同时显示。
 
 
@@ -68,6 +72,9 @@ Touying 为简单的动画效果提供了两个标记：`#pause` 和 `#meanwhile
   Second
 ]
 ```
+
+![image](https://github.com/touying-typ/touying/assets/34951714/8e31fc8a-5ab1-4181-a46a-fa96cf790dff)
+
 
 同理，Touying 目前也不支持 `grid` 这类 layout 函数内部的 `#pause` 和 `#meanwhile`，也是由于同样的限制，但是你可以使用 `#slide()` 的 `composer` 参数，大部分情况下都应该能满足需求。
 

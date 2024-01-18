@@ -392,8 +392,5 @@
     return bodies.first()
   }
   let columns = if columns == auto { (1fr,) * bodies.len() } else { columns }
-  if columns.len() != bodies.len() {
-    panic("number of columns must match number of content arguments")
-  }
   grid(columns: columns, gutter: gutter, ..bodies)
 }

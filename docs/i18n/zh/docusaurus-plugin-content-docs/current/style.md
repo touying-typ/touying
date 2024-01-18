@@ -35,6 +35,10 @@ Hello, Typst!
 ]
 ```
 
+![image](https://github.com/touying-typ/touying/assets/34951714/db2a1b60-bc56-4fa9-a317-ee9ecc6f3895)
+
+并且你可以使用空标题 `==` 创建一个新页。
+
 
 ## slide-block 风格
 

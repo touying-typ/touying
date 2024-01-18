@@ -26,6 +26,8 @@ To overcome the limitations of `styled` and `layout` mentioned earlier, Touying 
 ])
 ```
 
+![image](https://github.com/touying-typ/touying/assets/34951714/e9a6b8c5-daf0-4cf2-8d39-1a768ce1dfea)
+
 Notice that we no longer pass a content block but instead pass a callback function with a `self` parameter. Later, we extract `only`, `uncover`, and `alternatives` functions from `self` using:
 
 ```typst
@@ -70,5 +72,7 @@ The `alternatives` function displays a series of different content in different 
   ice cream.
 ])
 ```
+
+![image](https://github.com/touying-typ/touying/assets/34951714/392707ea-0bcd-426b-b232-5bc63b9a13a3)
 
 As you can see, `alternatives` can automatically expand to the most suitable width and height, a capability that `only` and `uncover` lack. In fact, `alternatives` has other parameters, such as `start: 2`, `repeat-last: true`, and `position: center + horizon`. For more usage, refer to [Polylux](https://polylux.dev/book/dynamic/alternatives.html).
