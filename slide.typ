@@ -92,6 +92,7 @@
       numbering: eqt.numbering,
       supplement: eqt.supplement,
       eval("$" + result.sum(default: "") + "$", scope: eqt.scope + (cover: (..args) => {
+        let cover = eqt.scope.at("cover", default: cover)
         if args.pos().len() != 0 {
           cover(args.pos().first())
         }

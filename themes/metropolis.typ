@@ -205,12 +205,5 @@
     states.touying-outline(enum-args: (tight: false,) + enum-args, ..args)
   }
   self.methods.alert = (self: utils.empty-object, it) => text(fill: self.colors.secondary-light, it)
-  self.methods.init = (self: utils.empty-object, body) => {
-    set text(font: "Fira Sans", weight: "light", size: 20pt)
-    show math.equation: set text(font: "Fira Math")
-    set strong(delta: 100)
-    set par(justify: true)
-    body
-  }
   self
 }
