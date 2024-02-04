@@ -184,7 +184,7 @@
       text(fill: self.colors.primary-dark, utils.call-or-display(self, self.m-footer-right))
     })
     if self.m-footer-progress {
-      place(block(height: 2pt, width: 100%, spacing: 0pt, self.m-progress-bar))
+      place(bottom, block(height: 2pt, width: 100%, spacing: 0pt, self.m-progress-bar))
     }
   }
   self.page-args = self.page-args + (
