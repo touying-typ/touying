@@ -12,15 +12,13 @@
 #let sections-state = state("touying-sections-state", ((kind: "section", title: none, short-title: none, loc: none, count: 0, children: ()),))
 
 #let _new-section(short-title: auto, id: auto, title) = locate(loc => {
-  // to avoid multiple sections with the same title
-  let sections = sections-state.at(loc)
-  sections.push((kind: "section", title: title, short-title: short-title, loc: loc, count: 0, children: ()))
-  sections-state.update(sections)
+  sections-state.update(sections => {
+    sections.push((kind: "section", title: title, short-title: short-title, loc: loc, count: 0, children: ()))
+    sections
+  })
 })
 
 #let _new-subsection(short-title: auto, id: auto, title) = locate(loc => {
-  // to update subsections after the sections are updated,
-  // so we need sections-state.update instead of sections-state.at(loc)
   sections-state.update(sections => {
     let last-section = sections.pop()
     last-section.children.push((kind: "subsection", title: title, short-title: short-title, loc: loc, count: 0, children: ()))
