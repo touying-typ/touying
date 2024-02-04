@@ -183,7 +183,7 @@
       if self.d-mini-slides.section {
         for slide in section.children.filter(it => it.kind == "slide") {
           final-count += 1
-          if final-count == current-count {
+          if i == current-i and final-count == current-count {
             [#link(slide.loc, sym.circle.filled)<touying-link>]
           } else {
             [#link(slide.loc, sym.circle)<touying-link>]
@@ -196,7 +196,7 @@
       for subsection in section.children.filter(it => it.kind != "slide") {
         for slide in subsection.children {
           final-count += 1
-          if final-count == current-count {
+          if i == current-i and final-count == current-count {
             [#link(slide.loc, sym.circle.filled)<touying-link>]
           } else {
             [#link(slide.loc, sym.circle)<touying-link>]

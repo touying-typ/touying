@@ -5,10 +5,6 @@
 #import "../utils/states.typ"
 
 #let slide(self: utils.empty-object, footer: auto, ..args) = {
-  self.page-args = self.page-args + (
-    footer-descent: 1em,
-    header-ascent: 1em,
-  )
   if footer != auto {
     self.simple-footer = footer
   }
@@ -83,6 +79,8 @@
     fill: self.colors.neutral-lightest,
     header: header,
     footer: footer,
+    footer-descent: 1em,
+    header-ascent: 1em,
   )
   // register methods
   self.methods.slide = slide
