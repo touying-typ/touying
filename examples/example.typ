@@ -107,7 +107,7 @@
 
 // fletcher animation
 #slide[
-  Cetz in Touying:
+  Fletcher in Touying:
 
   #fletcher-diagram(
     node-stroke: .1em,
