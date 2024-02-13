@@ -1,4 +1,9 @@
-#import "../lib.typ": s, pause, meanwhile, touying-equation, utils, states, pdfpc, themes
+#import "../lib.typ": s, pause, meanwhile, touying-equation, touying-reducer, utils, states, pdfpc, themes
+#import "@preview/cetz:0.2.0"
+#import "@preview/fletcher:0.4.1" as fletcher: node, edge
+
+#let cetz-canvas = touying-reducer.with(reduce: cetz.canvas, cover: cetz.draw.hide)
+#let fletcher-diagram = touying-reducer.with(reduce: (arr, ..args) => fletcher.diagram(..args, ..arr))
 
 // You can comment out the theme registration below and it can still work normally
 #let s = themes.metropolis.register(s, aspect-ratio: "16-9", footer: self => self.info.institution)
@@ -77,6 +82,48 @@
   #meanwhile
 
   Touying equation is very simple.
+]
+
+// cetz animation
+#slide[
+  Cetz in Touying:
+
+  #cetz-canvas({
+    import cetz.draw: *
+    
+    rect((0,0), (5,5))
+
+    (pause,)
+
+    rect((0,0), (1,1))
+    rect((1,1), (2,2))
+    rect((2,2), (3,3))
+
+    (pause,)
+
+    line((0,0), (2.5, 2.5), name: "line")
+  })
+]
+
+// fletcher animation
+#slide[
+  Fletcher in Touying:
+
+  #fletcher-diagram(
+    node-stroke: .1em,
+    node-fill: gradient.radial(blue.lighten(80%), blue, center: (30%, 20%), radius: 80%),
+    spacing: 4em,
+    edge((-1,0), "r", "-|>", `open(path)`, label-pos: 0, label-side: center),
+    node((0,0), `reading`, radius: 2em),
+    edge((0,0), (0,0), `read()`, "--|>", bend: 130deg),
+    pause,
+    edge(`read()`, "-|>"),
+    node((1,0), `eof`, radius: 2em),
+    pause,
+    edge(`close()`, "-|>"),
+    node((2,0), `closed`, radius: 2em, extrude: (-2.5, 0)),
+    edge((0,0), (2,0), `close()`, "-|>", bend: -40deg),
+  )
 ]
 
 // multiple pages for one slide

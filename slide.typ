@@ -29,6 +29,16 @@
     },
   ))
 }
+// touying reducer mark
+#let touying-reducer(reduce: arr => arr.sum(), cover: arr => none, ..args) = {
+  metadata((
+    kind: "touying-reducer",
+    reduce: reduce,
+    cover: cover,
+    kwargs: args.named(),
+    args: args.pos(),
+  ))
+}
 
 // parse touying equation, and get the repetitions
 #let _parse-touying-equation(self: utils.empty-object, need-cover: true, base: 1, index: 1, eqt) = {
@@ -103,6 +113,66 @@
   return (result-arr, max-repetitions)
 }
 
+// parse touying reducer, and get the repetitions
+#let _parse-touying-reducer(self: utils.empty-object, base: 1, index: 1, reducer) = {
+  let result-arr = ()
+  // repetitions
+  let repetitions = base
+  let max-repetitions = repetitions
+  // get cover function from self
+  let cover = reducer.cover
+  // parse the content
+  let result = ()
+  let cover-arr = ()
+  for child in reducer.args.flatten() {
+      if type(child) == content and child.func() == metadata {
+        let kind = child.value.at("kind", default: none)
+        if kind == "touying-pause" {
+          repetitions += 1
+        } else if kind == "touying-meanwhile" {
+          // clear the cover-arr when encounter #meanwhile
+          if cover-arr.len() != 0 {
+            result.push(cover(cover-arr.sum()))
+            cover-arr = ()
+          }
+          // then reset the repetitions
+          max-repetitions = calc.max(max-repetitions, repetitions)
+          repetitions = 1
+        } else {
+          if repetitions <= index {
+            result.push(child)
+          } else {
+            cover-arr.push(child)
+          }
+        }
+      } else {
+        if repetitions <= index {
+          result.push(child)
+        } else {
+          cover-arr.push(child)
+        }
+      }
+  }
+  // clear the cover-arr when end
+  if cover-arr.len() != 0 {
+    let r = cover(cover-arr)
+    if type(r) == array {
+      result += r
+    } else {
+      result.push(r)
+    }
+    cover-arr = ()
+  }
+  result-arr.push(
+    (reducer.reduce)(
+      ..reducer.kwargs,
+      result,
+    )
+  )
+  max-repetitions = calc.max(max-repetitions, repetitions)
+  return (result-arr, max-repetitions)
+}
+
 // parse a sequence into content, and get the repetitions
 #let _parse-content(self: utils.empty-object, need-cover: true, base: 1, index: 1, ..bodies) = {
   let bodies = bodies.pos()
@@ -141,6 +211,18 @@
           // handle touying-equation
           let (conts, nextrepetitions) = _parse-touying-equation(
             self: self, need-cover: repetitions <= index, base: repetitions, index: index, child.value
+          )
+          let cont = conts.first()
+          if repetitions <= index or not need-cover {
+            result.push(cont)
+          } else {
+            cover-arr.push(cont)
+          }
+          repetitions = nextrepetitions
+        } else if kind == "touying-reducer" {
+          // handle touying-reducer
+          let (conts, nextrepetitions) = _parse-touying-reducer(
+            self: self, base: repetitions, index: index, child.value
           )
           let cont = conts.first()
           if repetitions <= index or not need-cover {
