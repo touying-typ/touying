@@ -8,6 +8,7 @@
 #let slide(
   self: utils.empty-object,
   title: none,
+  subtitle: none,
   header: none,
   footer: auto,
   margin: (top: 2em, bottom: 1em, x: 0em),
@@ -24,11 +25,18 @@
     if header != none {
       header
     } else if title != none {
-      block(fill: self.colors.neutral-lightest, inset: (x: .5em), grid(
-        columns: (60%, 40%),
-        align(top + left, heading(level: 2, text(fill: self.colors.primary, title))),
-        align(top + right, text(fill: self.colors.primary.lighten(65%), states.current-section-title))
-      ))
+      block(fill: self.colors.neutral-lightest, inset: (x: .5em), 
+        grid(
+          columns: 1,
+          gutter: .3em,
+          grid(
+            columns: (60%, 40%),
+            align(top + left, heading(level: 2, text(fill: self.colors.primary, title))),
+            align(top + right, text(fill: self.colors.primary.lighten(65%), states.current-section-title))
+          ),
+          text(fill: self.colors.primary.lighten(65%), size: .8em, subtitle)
+        )
+      )
     }
   }
   if footer != auto {
@@ -124,9 +132,9 @@
   self.page-args.header = none
   self.page-args.footer = none
   let touying-slide = self.methods.touying-slide
-  touying-slide(self: self, repeat: none, composer: (..bodies) => {
+  touying-slide(self: self, composer: (..bodies) => {
     let bodies = bodies.pos()
-    let columns = if type(columns) == "integer" {
+    let columns = if type(columns) == int {
       (1fr,) * columns
     } else if columns == none {
       (1fr,) * bodies.len()
@@ -134,7 +142,7 @@
       columns
     }
     let num-cols = columns.len()
-    let rows = if type(rows) == "integer" {
+    let rows = if type(rows) == int {
       (1fr,) * rows
     } else if rows == none {
       let quotient = calc.quo(bodies.len(), num-cols)
@@ -192,8 +200,9 @@
   // color theme
   self = (self.methods.colors)(
     self: self,
-    primary: rgb("#0C6291"),
-    secondary: rgb("#A63446"),
+    primary: rgb("#04364A"),
+    secondary: rgb("#176B87"),
+    tertiary: rgb("#448C95"),
     neutral-lightest: rgb("#FBFEF9"),
   )
   // save the variables for later use
@@ -218,13 +227,13 @@
       columns: (25%, 1fr, 15%, 10%),
       rows: (1.5em, auto),
       cell(fill: self.colors.primary, self.info.author),
-      cell(if self.info.short-title == auto {
+      cell(fill: self.colors.secondary, if self.info.short-title == auto {
         self.info.title
       } else {
         self.info.short-title
       }),
-      cell(if type(self.info.date) == datetime { self.info.date.display(self.datetime-format) } else { self.info.date }),
-      cell(states.slide-counter.display() + [~/~] + states.last-slide-number)
+      cell(fill: self.colors.tertiary, if type(self.info.date) == datetime { self.info.date.display(self.datetime-format) } else { self.info.date }),
+      cell(fill: self.colors.tertiary, states.slide-counter.display() + [~/~] + states.last-slide-number)
     )
   }
   // set page

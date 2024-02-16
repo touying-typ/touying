@@ -18,7 +18,7 @@
   #lorem(40)
 ]
 
-#slide(title: [Slide title])[
+#slide(title: [Slide title], subtitle: emph[What is the problem?])[
   #lorem(40)
 ]
 
