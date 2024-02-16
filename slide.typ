@@ -403,6 +403,7 @@
   self: utils.empty-object,
   repeat: auto,
   setting: body => body,
+  cutting-out: false,
   ..args,
   body,
 ) = {
@@ -423,20 +424,22 @@
       is-end = true
       break
     } else if type(child) == content and child.func() == heading and (child.level == 1 or child.level == 2) {
-      if slide != () {
-        (self.methods.slide-in-slides)(
-          self: self,
-          repeat: repeat,
-          setting: setting,
-          section: section,
-          subsection: subsection,
-          ..args,
-          slide.sum(),
-        )
+      if not cutting-out or not slide.all(it => it == [ ] or it == parbreak() or it == linebreak()) {
+        if slide != () {
+          (self.methods.slide-in-slides)(
+            self: self,
+            repeat: repeat,
+            setting: setting,
+            section: section,
+            subsection: subsection,
+            ..args,
+            slide.sum(),
+          )
+        }
+        section = none
+        subsection = none
+        slide = ()
       }
-      section = none
-      subsection = none
-      slide = ()
       if child.level == 1 {
         section = if child.body != [] { child.body } else { none }
       } else {
