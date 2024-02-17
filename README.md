@@ -50,11 +50,14 @@ This documentation is powered by [Docusaurus](https://docusaurus.io/). We will m
 
 ![image](https://github.com/touying-typ/touying/assets/34951714/8640fe0a-95e4-46ac-b570-c8c79f993de4)
 
-4. `touying-reducer` Cetz and Fletcher Animation [document](https://touying-typ.github.io/touying/docs/dynamic/other)
+4. `touying-reducer` Cetz and Fletcher Animations [document](https://touying-typ.github.io/touying/docs/dynamic/other)
+
+![image](https://github.com/touying-typ/touying/assets/34951714/9ba71f54-2a5d-4144-996c-4a42833cc5cc)
 
 5. `#show: slides` Style and `#slide[..]` Style [document](https://touying-typ.github.io/touying/docs/style)
 
 6. Semi-transparent Cover Mode [document](https://touying-typ.github.io/touying/docs/dynamic/cover)
+
 ![image](https://github.com/touying-typ/touying/assets/34951714/22a9ea66-c8b5-431e-a52c-2c8ca3f18e49)
 
 
