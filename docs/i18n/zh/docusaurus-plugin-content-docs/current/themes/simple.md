@@ -16,7 +16,7 @@ sidebar_position: 1
 你可以通过下面的代码来初始化：
 
 ```typst
-#import "@preview/touying:0.2.0": *
+#import "@preview/touying:0.2.1": *
 
 #let s = themes.simple.register(s, aspect-ratio: "16-9", footer: [Simple slides])
 #let s = (s.methods.enable-transparent-cover)(self: s)
@@ -85,7 +85,7 @@ simple 主题提供了一系列自定义 slide 函数：
 ## `slides` 函数
 
 ```typst
-#import "@preview/touying:0.2.0": *
+#import "@preview/touying:0.2.1": *
 
 #let s = themes.simple.register(s, aspect-ratio: "16-9", footer: [Simple slides])
 #let s = (s.methods.enable-transparent-cover)(self: s)
@@ -111,7 +111,7 @@ Hello, Typst!
 ## 示例
 
 ```typst
-#import "@preview/touying:0.2.0": *
+#import "@preview/touying:0.2.1": *
 
 #let s = themes.simple.register(s, aspect-ratio: "16-9", footer: [Simple slides])
 #let s = (s.methods.enable-transparent-cover)(self: s)

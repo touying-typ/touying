@@ -11,7 +11,7 @@ sidebar_position: 4
 但是这样做也有对应的弊端：第一个弊端是这种方式可能会极大地影响文档渲染性能，第二个弊端是后续不能直接加入 `#slide(..)`，而是需要手动标记 `#slides-end`，以及最大的弊端是实现不了复杂的功能。
 
 ```typst
-#import "@preview/touying:0.2.0": *
+#import "@preview/touying:0.2.1": *
 
 #let (init, slide, slides) = utils.methods(s)
 #show: init

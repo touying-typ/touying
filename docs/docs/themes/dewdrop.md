@@ -15,7 +15,7 @@ The Dewdrop theme features an elegant and aesthetic navigation, including `sideb
 You can initialize the Dewdrop theme using the following code:
 
 ```typst
-#import "@preview/touying:0.2.0": *
+#import "@preview/touying:0.2.1": *
 
 #let s = themes.dewdrop.register(
   s,
@@ -143,7 +143,7 @@ The `slides` function has parameters:
 You can set these using `#show: slides.with(..)`.
 
 ```typst
-#import "@preview/touying:0.2.0": *
+#import "@preview/touying:0.2.1": *
 
 #let s = themes.dewdrop.register(s, aspect-ratio: "16-9", footer: [Dewdrop])
 #let s = (s.methods.info)(
@@ -178,7 +178,7 @@ Hello, Typst!
 ## Example
 
 ```typst
-#import "@preview/touying:0.2.0": *
+#import "@preview/touying:0.2.1": *
 
 #let s = themes.dewdrop.register(
   s,

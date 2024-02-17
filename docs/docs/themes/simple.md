@@ -15,7 +15,7 @@ Considered a relatively simple theme, you can use it to create straightforward s
 You can initialize the Simple theme using the following code:
 
 ```typst
-#import "@preview/touying:0.2.0": *
+#import "@preview/touying:0.2.1": *
 
 #let s = themes.simple.register(s, aspect-ratio: "16-9", footer: [Simple slides])
 #let s = (s.methods.enable-transparent-cover)(self: s)
@@ -81,7 +81,7 @@ Used to draw attention. It optionally accepts a foreground color (default is `wh
 ## `slides` Function
 
 ```typst
-#import "@preview/touying:0.2.0": *
+#import "@preview/touying:0.2.1": *
 
 #let s = themes.simple.register(s, aspect-ratio: "16-9", footer: [Simple slides])
 #let s = (s.methods.enable-transparent-cover)(self: s)
@@ -106,7 +106,7 @@ Hello, Typst!
 ## Example
 
 ```typst
-#import "@preview/touying:0.2.0": *
+#import "@preview/touying:0.2.1": *
 
 #let s = themes.simple.register(s, aspect-ratio: "16-9", footer: [Simple slides])
 #let s = (s.methods.enable-transparent-cover)(self: s)

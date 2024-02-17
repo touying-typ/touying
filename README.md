@@ -10,7 +10,7 @@ If you like it, consider [giving a star on GitHub](https://github.com/touying-ty
 ![GitHub](https://img.shields.io/github/license/touying-typ/touying)
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/touying-typ/touying)
 ![GitHub Repo stars](https://img.shields.io/github/stars/touying-typ/touying)
-![Themes badge](https://img.shields.io/badge/themes-3-aqua)
+![Themes badge](https://img.shields.io/badge/themes-4-aqua)
 
 ## Document
 
@@ -64,7 +64,7 @@ Before you begin, make sure you have installed the Typst environment. If not, yo
 To use Touying, you only need to include the following code in your document:
 
 ```typst
-#import "@preview/touying:0.2.0": *
+#import "@preview/touying:0.2.1": *
 
 #let (init, slide, slides) = utils.methods(s)
 #show: init
@@ -92,7 +92,7 @@ It's simple. Congratulations on creating your first Touying slide! 🎉
 In fact, Touying provides various styles for writing slides. For example, the above example uses first-level and second-level titles to create new slides. However, you can also use the `#slide[..]` format to access more powerful features provided by Touying.
 
 ```typst
-#import "@preview/touying:0.2.0": *
+#import "@preview/touying:0.2.1": *
 
 #let s = themes.metropolis.register(s, aspect-ratio: "16-9")
 #let s = (s.methods.enable-transparent-cover)(self: s)

@@ -67,7 +67,7 @@ Similar to Beamer, Touying also has the concepts of sections and subsections.
 In the `#show: slides` mode, sections and subsections correspond to first-level and second-level titles, respectively. For example:
 
 ```typst
-#import "@preview/touying:0.2.0": *
+#import "@preview/touying:0.2.1": *
 
 #let (init, slide, slides) = utils.methods(s)
 #show: init
@@ -103,7 +103,7 @@ Note that the `section` and `subsection` parameters of `slide` can accept both c
 Displaying a table of contents in Touying is straightforward:
 
 ```typst
-#import "@preview/touying:0.2.0": *
+#import "@preview/touying:0.2.1": *
 
 #let (init, slide, touying-outline) = utils.methods(s)
 #show: init

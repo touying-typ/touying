@@ -71,7 +71,7 @@ Title is #s.info.title
 在 `#show: slides` 模式下，section 和 subsection 分别对应着一级标题和二级标题，例如
 
 ```typst
-#import "@preview/touying:0.2.0": *
+#import "@preview/touying:0.2.1": *
 
 #let (init, slide, slides) = utils.methods(s)
 #show: init
@@ -107,7 +107,7 @@ Hello, Touying!
 在 Touying 中显示目录很简单：
 
 ```typst
-#import "@preview/touying:0.2.0": *
+#import "@preview/touying:0.2.1": *
 
 #let (init, slide, touying-outline) = utils.methods(s)
 #show: init

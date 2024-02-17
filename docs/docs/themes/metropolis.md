@@ -15,7 +15,7 @@ The Metropolis theme is elegant and suitable for daily use. For the best results
 You can initialize the Metropolis theme using the following code:
 
 ```typst
-#import "@preview/touying:0.2.0": *
+#import "@preview/touying:0.2.1": *
 
 #let s = themes.metropolis.register(s, aspect-ratio: "16-9", footer: self => self.info.institution)
 #let s = (s.methods.info)(
@@ -119,7 +119,7 @@ The `slides` function has parameters:
 You can set these using `#show: slides.with(..)`.
 
 ```typst
-#import "@preview/touying:0.2.0": *
+#import "@preview/touying:0.2.1": *
 
 #let s = themes.metropolis.register(s, aspect-ratio: "16-9", footer: self => self.info.institution)
 #let s = (s.methods.info)(
@@ -154,7 +154,7 @@ Hello, Typst!
 ## Example
 
 ```typst
-#import "@preview/touying:0.2.0": *
+#import "@preview/touying:0.2.1": *
 
 #let s = themes.metropolis.register(s, aspect-ratio: "16-9", footer: self => self.info.institution)
 #let s = (s.methods.info)(

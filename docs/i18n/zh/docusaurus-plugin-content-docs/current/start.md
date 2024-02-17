@@ -9,7 +9,7 @@ sidebar_position: 2
 要使用 Touying，您只需要在文档里加入
 
 ```typst
-#import "@preview/touying:0.2.0": *
+#import "@preview/touying:0.2.1": *
 
 #let (init, slide, slides) = utils.methods(s)
 #show: init
@@ -36,7 +36,7 @@ Hello, Typst!
 事实上，Touying 提供了多种 slides 编写风格，例如上面的例子依靠一级和二级标题来划分新 slide，实际上您也可以使用 `#slide[..]` 的写法，以获得 Touying 提供的更多更强大的功能。
 
 ```typst
-#import "@preview/touying:0.2.0": *
+#import "@preview/touying:0.2.1": *
 
 #let s = (s.methods.enable-transparent-cover)(self: s)
 #let (init, slide) = utils.methods(s)
