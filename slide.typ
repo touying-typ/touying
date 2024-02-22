@@ -245,6 +245,18 @@
           cover-arr = ()
         }
         result.push(child)
+      } else if utils.is-sequence(child) {
+        // handle the list item
+        let (conts, nextrepetitions) = _parse-content(
+          self: self, need-cover: repetitions <= index, base: repetitions, index: index, child
+        )
+        let cont = conts.first()
+        if repetitions <= index or not need-cover {
+          result.push(cont)
+        } else {
+          cover-arr.push(cont)
+        }
+        repetitions = nextrepetitions
       } else if type(child) == content and child.func() == list.item {
         // handle the list item
         let (conts, nextrepetitions) = _parse-content(
@@ -412,9 +424,19 @@
   let subsection = none
   let slide = ()
   let children = if utils.is-sequence(body) { body.children } else { (body,) }
+  if children.len() == 0 {
+    return none
+  }
+  // flatten children
+  let children = children.map(it => {
+    if utils.is-sequence(it) { it.children } else { it }
+  }).flatten()
   // trim space of children
-  while children.first() == [ ] or children.first() == parbreak() or children.first() == linebreak() {
+  while children.first() == [] or children.first() == [ ] or children.first() == parbreak() or children.first() == linebreak() {
     children = children.slice(1)
+    if children.len() == 0 {
+      return none
+    }
   }
   let i = 0
   let is-end = false
@@ -424,7 +446,7 @@
       is-end = true
       break
     } else if type(child) == content and child.func() == heading and (child.level == 1 or child.level == 2) {
-      if not cutting-out or not slide.all(it => it == [ ] or it == parbreak() or it == linebreak()) {
+      if not cutting-out or not slide.all(it => it == [] or it == [ ] or it == parbreak() or it == linebreak()) {
         if slide != () {
           (self.methods.slide-in-slides)(
             self: self,
