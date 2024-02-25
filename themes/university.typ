@@ -186,7 +186,7 @@
   if title-slide {
     (self.methods.title-slide)(self: self)
   }
-  (self.methods.touying-slides)(self: self, cutting-out: true, ..args)
+  (self.methods.touying-slides)(self: self, ..args)
 }
 
 #let register(

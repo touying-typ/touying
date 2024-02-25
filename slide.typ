@@ -320,6 +320,7 @@
   composer: utils.side-by-side,
   section: none,
   subsection: none,
+  title: none,
   ..bodies,
 ) = {
   assert(bodies.named().len() == 0, message: "unexpected named arguments:" + repr(bodies.named().keys()))
@@ -411,33 +412,19 @@
 }
 
 // touying-slides
-#let touying-slides(
-  self: utils.empty-object,
-  repeat: auto,
-  setting: body => body,
-  cutting-out: false,
-  ..args,
-  body,
-) = {
-  assert(repeat == none or repeat == auto, message: "unexpected repeat argument: " + repr(repeat))
-  let section = none
-  let subsection = none
-  let slide = ()
+#let touying-slides(self: utils.empty-object, body) = {
+  // init
+  let (section, subsection, title, slide) = (none, none, none, ())
+  let last-title = none
   let children = if utils.is-sequence(body) { body.children } else { (body,) }
-  if children.len() == 0 {
-    return none
-  }
   // flatten children
-  let children = children.map(it => {
+  children = children.map(it => {
     if utils.is-sequence(it) { it.children } else { it }
   }).flatten()
   // trim space of children
-  while children.first() == [] or children.first() == [ ] or children.first() == parbreak() or children.first() == linebreak() {
-    children = children.slice(1)
-    if children.len() == 0 {
-      return none
-    }
-  }
+  children = utils.trim(children)
+  if children.len() == 0 { return none }
+  // begin
   let i = 0
   let is-end = false
   for child in children {
@@ -445,42 +432,51 @@
     if type(child) == content and child.func() == metadata and child.value.at("kind", default: none) == "touying-slides-end" {
       is-end = true
       break
-    } else if type(child) == content and child.func() == heading and (child.level == 1 or child.level == 2) {
-      if not cutting-out or not slide.all(it => it == [] or it == [ ] or it == parbreak() or it == linebreak()) {
-        if slide != () {
-          (self.methods.slide-in-slides)(
-            self: self,
-            repeat: repeat,
-            setting: setting,
-            section: section,
-            subsection: subsection,
-            ..args,
-            slide.sum(),
-          )
-        }
-        section = none
-        subsection = none
-        slide = ()
+    } else if type(child) == content and child.func() == metadata and child.value.at("kind", default: none) == "touying-wrapper" {
+      slide = utils.trim(slide)
+      if slide != () {
+        (self.methods.slide)(self: self, section: section, subsection: subsection, ..(if last-title != none { (title: last-title) }), slide.sum())
+        (section, subsection, title, slide) = (none, none, none, ())
       }
-      if child.level == 1 {
-        section = if child.body != [] { child.body } else { none }
+      if child.value.at("name") in self.slides {
+        (child.value.at("fn"))(section: section, subsection: subsection, ..(if last-title != none { (title: last-title) }), ..child.value.at("args"))
       } else {
-        subsection = if child.body != [] { child.body } else { none }
+        (child.value.at("fn"))(..child.value.at("args"))
+      }
+      (section, subsection, title, slide) = (none, none, none, ())
+    } else if type(child) == content and child.func() == heading and child.level in (1, 2, 3) {
+      slide = utils.trim(slide)
+      if (child.level == 1 and section != none) or (child.level == 2 and subsection != none) or (child.level == 3 and title != none) or slide != () {
+        (self.methods.slide)(self: self, section: section, subsection: subsection, ..(if last-title != none { (title: last-title) }), slide.sum(default: []))
+        (section, subsection, title, slide) = (none, none, none, ())
+        if child.level == 1 or child.level == 2 {
+          last-title = none
+        }
+      }
+      let child-body = if child.body != [] { child.body } else { none }
+      if child.level == 1 {
+        if "new-section-slide" in self.methods {
+          (self.methods.new-section-slide)(self: self, child-body)
+        } else {
+          section = child-body
+        }
+      } else if child.level == 2 {
+        if "new-subsection-slide" in self.methods {
+          (self.methods.new-subsection-slide)(self: self, child-body)
+        } else {
+          subsection = child-body
+        }
+      } else if child.level == 3 {
+        title = child.body
+        last-title = child-body
       }
     } else {
       slide.push(child)
     }
   }
-  if section != none or subsection != none or slide != () {
-    (self.methods.slide-in-slides)(
-      self: self,
-      repeat: repeat,
-      setting: setting,
-      section: section,
-      subsection: subsection,
-      ..args,
-      slide.sum(default: []),
-    )
+  slide = utils.trim(slide)
+  if section != none or subsection != none or title != none or slide != () {
+    (self.methods.slide)(self: self, section: section, subsection: subsection, ..(if last-title != none { (title: last-title) }), slide.sum(default: []))
   }
   if is-end {
     children.slice(i).sum(default: none)
@@ -529,6 +525,23 @@
     tertiary-dark: rgb("#202020"),
     tertiary-darker: rgb("#101010"),
     tertiary-darkest: rgb("#000000"),
+  ),
+  // slides mode
+  slides: ("slide",),
+  handler-in-slides: (
+    section: (self: utils.empty-object, section: none, body, ..args) => {
+      let no-footer-self = self
+      no-footer-self.page-args.footer = none
+      touying-slide(
+        self: no-footer-self,
+        section: section,
+        subsection: subsection,
+        ..args,
+        align(center + horizon, heading(level: 1, section) + body)
+      )
+    },
+    subsection: none,
+    title: none,
   ),
   // handle mode
   handout: false,
@@ -607,17 +620,7 @@
     touying-slides: touying-slides,
     slides: touying-slides,
     slide-in-slides: (self: utils.empty-object, section: none, subsection: none, body, ..args) => {
-      if section != none {
-        let no-footer-self = self
-        no-footer-self.page-args.footer = none
-        touying-slide(
-          self: no-footer-self,
-          section: section,
-          subsection: subsection,
-          ..args,
-          align(center + horizon, heading(level: 1, section) + body)
-        )
-      } else if subsection != none {
+      if subsection != none {
         touying-slide(self: self, ..args, heading(level: 2, subsection) + parbreak() + body)
       } else {
         touying-slide(self: self, ..args, body)
