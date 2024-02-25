@@ -619,13 +619,6 @@
     slide: touying-slide,
     touying-slides: touying-slides,
     slides: touying-slides,
-    slide-in-slides: (self: utils.empty-object, section: none, subsection: none, body, ..args) => {
-      if subsection != none {
-        touying-slide(self: self, ..args, heading(level: 2, subsection) + parbreak() + body)
-      } else {
-        touying-slide(self: self, ..args, body)
-      }
-    },
     // append the preamble
     append-preamble: (self: utils.empty-object, preamble) => {
       self.preamble += preamble

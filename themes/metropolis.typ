@@ -117,16 +117,6 @@
   touying-slide(self: self, repeat: none, align(horizon + center, body))
 }
 
-#let slide-in-slides(self: utils.empty-object, section: none, subsection: none, body, ..args) = {
-  if section != none {
-    (self.methods.new-section-slide)(self: self, section)
-  } else if subsection != none {
-    (self.methods.slide)(self: self, ..args, title: subsection, body)
-  } else {
-    (self.methods.slide)(self: self, ..args, body)
-  }
-}
-
 #let slides(self: utils.empty-object, title-slide: true, outline-slide: true, outline-title: [Table of contents], ..args) = {
   if title-slide {
     (self.methods.title-slide)(self: self)
@@ -201,7 +191,6 @@
   self.methods.touying-new-section-slide = new-section-slide
   self.methods.focus-slide = focus-slide
   self.methods.slides = slides
-  self.methods.slide-in-slides = slide-in-slides
   self.methods.touying-outline = (self: utils.empty-object, enum-args: (:), ..args) => {
     states.touying-outline(enum-args: (tight: false,) + enum-args, ..args)
   }
