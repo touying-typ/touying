@@ -455,14 +455,14 @@
       }
       let child-body = if child.body != [] { child.body } else { none }
       if child.level == 1 {
-        if "new-section-slide" in self.methods {
-          (self.methods.new-section-slide)(self: self, child-body)
+        if "touying-new-section-slide" in self.methods {
+          (self.methods.touying-new-section-slide)(self: self, child-body)
         } else {
           section = child-body
         }
       } else if child.level == 2 {
-        if "new-subsection-slide" in self.methods {
-          (self.methods.new-subsection-slide)(self: self, child-body)
+        if "touying-new-subsection-slide" in self.methods {
+          (self.methods.touying-new-subsection-slide)(self: self, child-body)
         } else {
           subsection = child-body
         }

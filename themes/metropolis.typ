@@ -198,6 +198,7 @@
   self.methods.slide = slide
   self.methods.title-slide = title-slide
   self.methods.new-section-slide = new-section-slide
+  self.methods.touying-new-section-slide = new-section-slide
   self.methods.focus-slide = focus-slide
   self.methods.slides = slides
   self.methods.slide-in-slides = slide-in-slides
