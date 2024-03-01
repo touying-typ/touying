@@ -172,11 +172,11 @@
   }, ..bodies)
 }
 
-#let slides(self: utils.empty-object, title-slide: true, ..args) = {
+#let slides(self: utils.empty-object, title-slide: true, slide-level: 1, ..args) = {
   if title-slide {
     (self.methods.title-slide)(self: self)
   }
-  (self.methods.touying-slides)(self: self, ..args)
+  (self.methods.touying-slides)(self: self, slide-level: 1, ..args)
 }
 
 #let register(

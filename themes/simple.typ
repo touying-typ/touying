@@ -43,16 +43,6 @@
   centered-slide(self: self, align(center + horizon, body))
 }
 
-#let slide-in-slides(self: utils.empty-object, section: none, subsection: none, body, ..args) = {
-  if section != none {
-    (self.methods.centered-slide)(self: self, section: section)
-  } else if subsection != none {
-    (self.methods.slide)(self: self, ..args, heading(level: 2, subsection) + parbreak() + body)
-  } else {
-    (self.methods.slide)(self: self, ..args, body)
-  }
-}
-
 #let register(
   aspect-ratio: "16-9",
   footer: [],

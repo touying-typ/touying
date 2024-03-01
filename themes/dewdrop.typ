@@ -229,14 +229,14 @@
   grid(columns: cols.map(_ => auto).intersperse(1fr), ..cols.intersperse([]))
 })
 
-#let slides(self: utils.empty-object, title-slide: true, outline-slide: true, ..args) = {
+#let slides(self: utils.empty-object, title-slide: true, outline-slide: true, slide-level: 2, ..args) = {
   if title-slide {
     (self.methods.title-slide)(self: self)
   }
   if outline-slide {
     (self.methods.slide)(self: self, heading(level: 2, self.outline-title) + parbreak() + (self.methods.touying-outline)(self: self, cover: false))
   }
-  (self.methods.touying-slides)(self: self, ..args)
+  (self.methods.touying-slides)(self: self, slide-level: 2, ..args)
 }
 
 #let register(

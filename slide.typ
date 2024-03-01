@@ -412,7 +412,7 @@
 }
 
 // touying-slides
-#let touying-slides(self: utils.empty-object, body) = {
+#let touying-slides(self: utils.empty-object, slide-level: 1, body) = {
   // init
   let (section, subsection, title, slide) = (none, none, none, ())
   let last-title = none
@@ -446,27 +446,37 @@
       (section, subsection, title, slide) = (none, none, none, ())
     } else if type(child) == content and child.func() == heading and child.level in (1, 2, 3) {
       slide = utils.trim(slide)
-      if (child.level == 1 and section != none) or (child.level == 2 and subsection != none) or (child.level == 3 and title != none) or slide != () {
+      if (child.level == 1 and section != none) or (child.level == 2 and subsection != none) or (child.level > slide-level and title != none) or slide != () {
         (self.methods.slide)(self: self, section: section, subsection: subsection, ..(if last-title != none { (title: last-title) }), slide.sum(default: []))
         (section, subsection, title, slide) = (none, none, none, ())
-        if child.level == 1 or child.level == 2 {
+        if child.level <= slide-level {
           last-title = none
         }
       }
       let child-body = if child.body != [] { child.body } else { none }
       if child.level == 1 {
-        if "touying-new-section-slide" in self.methods {
-          (self.methods.touying-new-section-slide)(self: self, child-body)
+        if slide-level >= 1 {
+          if "touying-new-section-slide" in self.methods {
+            (self.methods.touying-new-section-slide)(self: self, child-body)
+          } else {
+            section = child-body
+          }
         } else {
-          section = child-body
+          title = child.body
+          last-title = child-body
         }
       } else if child.level == 2 {
-        if "touying-new-subsection-slide" in self.methods {
-          (self.methods.touying-new-subsection-slide)(self: self, child-body)
+        if slide-level >= 2 {
+          if "touying-new-subsection-slide" in self.methods {
+            (self.methods.touying-new-subsection-slide)(self: self, child-body)
+          } else {
+            subsection = child-body
+          }
         } else {
-          subsection = child-body
+          title = child.body
+          last-title = child-body
         }
-      } else if child.level == 3 {
+      } else {
         title = child.body
         last-title = child-body
       }
