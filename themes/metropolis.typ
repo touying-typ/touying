@@ -124,7 +124,7 @@
   if outline-slide {
     (self.methods.slide)(self: self, title: outline-title, (self.methods.touying-outline)())
   }
-  (self.methods.touying-slides)(self: self, slide-level: 1, ..args)
+  (self.methods.touying-slides)(self: self, slide-level: slide-level, ..args)
 }
 
 #let register(

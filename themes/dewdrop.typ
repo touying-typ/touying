@@ -236,7 +236,7 @@
   if outline-slide {
     (self.methods.slide)(self: self, heading(level: 2, self.outline-title) + parbreak() + (self.methods.touying-outline)(self: self, cover: false))
   }
-  (self.methods.touying-slides)(self: self, slide-level: 2, ..args)
+  (self.methods.touying-slides)(self: self, slide-level: slide-level, ..args)
 }
 
 #let register(
