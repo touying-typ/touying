@@ -6,6 +6,8 @@
 
 #let slide(
   self: utils.empty-object,
+  subsection: none,
+  title: none,
   footer: auto,
   ..args,
 ) = {
@@ -25,6 +27,8 @@
   touying-slide(
     ..args.named(),
     self: self,
+    subsection: subsection,
+    title: title,
     setting: body => {
       show: pad.with(
         top: (if self.d-navigation == "mini-slides" { self.d-mini-slides.height } else { 2em }),
@@ -35,6 +39,12 @@
       set text(fill: self.colors.neutral-darkest)
       show heading: set text(fill: self.colors.primary)
       show: args.named().at("setting", default: body => body)
+      if self.auto-heading and subsection != none {
+        heading(level: 1, subsection)
+      }
+      if self.auto-heading and title != none {
+        heading(level: 2, title)
+      }
       body
     },
     ..args.pos(),
@@ -95,6 +105,10 @@
   set text(fill: self.colors.neutral-lightest, size: 1.5em)
   let touying-slide = self.methods.touying-slide
   touying-slide(self: self, repeat: none, align(horizon + center, body))
+}
+
+#let new-section-slide(self: utils.empty-object, section) = {
+  (self.methods.slide)(self: self, section: section, heading(level: 2, self.outline-title) + parbreak() + (self.methods.touying-outline)(self: self))
 }
 
 #let d-outline(self: utils.empty-object, enum-args: (:), list-args: (:), cover: true) = states.touying-progress-with-sections(dict => {
@@ -215,24 +229,14 @@
   grid(columns: cols.map(_ => auto).intersperse(1fr), ..cols.intersperse([]))
 })
 
-#let slide-in-slides(self: utils.empty-object, section: none, subsection: none, outline-title: [Outline], body, ..args) = {
-  if section != none {
-    (self.methods.slide)(self: self, section: section, heading(level: 2, outline-title) + parbreak() + (self.methods.touying-outline)(self: self))
-  } else if subsection != none {
-    (self.methods.slide)(self: self, ..args, subsection: subsection, heading(level: 2, subsection) + body)
-  } else {
-    (self.methods.slide)(self: self, ..args, body)
-  }
-}
-
-#let slides(self: utils.empty-object, title-slide: true, outline-slide: true, outline-title: [Outline], ..args) = {
+#let slides(self: utils.empty-object, title-slide: true, outline-slide: true, slide-level: 2, ..args) = {
   if title-slide {
     (self.methods.title-slide)(self: self)
   }
   if outline-slide {
-    (self.methods.slide)(self: self, heading(level: 2, outline-title) + parbreak() + (self.methods.touying-outline)(self: self, cover: false))
+    (self.methods.slide)(self: self, heading(level: 2, self.outline-title) + parbreak() + (self.methods.touying-outline)(self: self, cover: false))
   }
-  (self.methods.touying-slides)(self: self, ..args)
+  (self.methods.touying-slides)(self: self, slide-level: slide-level, ..args)
 }
 
 #let register(
@@ -263,6 +267,8 @@
   self.d-footer = footer
   self.d-footer-right = footer-right
   self.d-alpha = alpha
+  self.auto-heading = true
+  self.outline-title = [Outline]
   // set page
   let header(self) = {
     if self.d-navigation == "sidebar" {
@@ -290,8 +296,9 @@
   self.methods.slide = slide
   self.methods.title-slide = title-slide
   self.methods.focus-slide = focus-slide
+  self.methods.new-section-slide = new-section-slide
+  self.methods.touying-new-section-slide = new-section-slide
   self.methods.slides = slides
-  self.methods.slide-in-slides = slide-in-slides
   self.methods.d-cover = (self: utils.empty-object, body) => {
     utils.cover-with-rect(fill: utils.update-alpha(
       constructor: rgb, self.page-args.fill, self.d-alpha), body)

@@ -4,12 +4,17 @@
 #import "../utils/utils.typ"
 #import "../utils/states.typ"
 
-#let slide(self: utils.empty-object, footer: auto, ..args) = {
+#let slide(self: utils.empty-object, title: none, footer: auto, ..args) = {
   if footer != auto {
     self.simple-footer = footer
   }
   let touying-slide = self.methods.touying-slide
-  touying-slide(self: self, ..args)
+  touying-slide(self: self, title: title, setting: body => {
+    if self.auto-heading == true and title != none {
+      heading(level: 2, title)
+    }
+    body
+  }, ..args)
 }
 
 #let centered-slide(self: utils.empty-object, section: none, ..bodis) = {
@@ -22,10 +27,11 @@
 }
 
 #let title-slide(self: utils.empty-object, body) = {
-  self.page-args.header = none
-  self.page-args.footer = none
-  let touying-slide = self.methods.touying-slide
   centered-slide(self: self, body)
+}
+
+#let new-section-slide(self: utils.empty-object, section) = {
+  centered-slide(self: self, section: section)
 }
 
 #let focus-slide(self: utils.empty-object, background: auto, foreground: white, body) = {
@@ -35,16 +41,6 @@
   let touying-slide = self.methods.touying-slide
   set text(fill: foreground, size: 1.5em)
   centered-slide(self: self, align(center + horizon, body))
-}
-
-#let slide-in-slides(self: utils.empty-object, section: none, subsection: none, body, ..args) = {
-  if section != none {
-    (self.methods.centered-slide)(self: self, section: section)
-  } else if subsection != none {
-    (self.methods.slide)(self: self, ..args, heading(level: 2, subsection) + parbreak() + body)
-  } else {
-    (self.methods.slide)(self: self, ..args, body)
-  }
 }
 
 #let register(
@@ -68,6 +64,7 @@
   // save the variables for later use
   self.simple-footer = footer
   self.simple-footer-right = footer-right
+  self.auto-heading = true
   // set page
   let header = locate(loc => {
     let sections = states.sections-state.at(loc)
@@ -87,7 +84,8 @@
   self.methods.title-slide = title-slide
   self.methods.centered-slide = centered-slide
   self.methods.focus-slide = focus-slide
-  self.methods.slide-in-slides = slide-in-slides
+  self.methods.new-section-slide = new-section-slide
+  self.methods.touying-new-section-slide = new-section-slide
   self.methods.init = (self: utils.empty-object, body) => {
     set text(fill: foreground, size: 25pt)
     show footnote.entry: set text(size: .6em)

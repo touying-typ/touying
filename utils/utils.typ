@@ -27,6 +27,25 @@
   return methods
 }
 
+// touying wrapper mark
+#let touying-wrapper(name, fn, ..args) = {
+  metadata((
+    kind: "touying-wrapper",
+    name: name,
+    fn: fn,
+    args: args,
+  ))
+}
+
+#let slides(self) = {
+  let m = methods(self)
+  let res = (:)
+  for key in m.keys() {
+    res.insert(key, touying-wrapper.with(key, m.at(key)))
+  }
+  return res
+}
+
 // Utils: unify section
 #let unify-section(section) = {
   if section == none {
@@ -50,6 +69,15 @@
   } else {
     return section
   }
+}
+
+// Utils: trim
+#let trim(arr) = {
+  let i = 0
+  while arr.len() != i and arr.at(i) in ([], [ ], parbreak(), linebreak()) {
+    i += 1
+  }
+  arr.slice(i)
 }
 
 // Type: is sequence

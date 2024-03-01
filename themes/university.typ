@@ -172,21 +172,11 @@
   }, ..bodies)
 }
 
-#let slide-in-slides(self: utils.empty-object, section: none, subsection: none, body, ..args) = {
-  if section != none {
-    (self.methods.slide)(self: self, ..args, section: section, title: subsection, body)
-  } else if subsection != none {
-    (self.methods.slide)(self: self, ..args, title: subsection, body)
-  } else {
-    (self.methods.slide)(self: self, ..args, body)
-  }
-}
-
-#let slides(self: utils.empty-object, title-slide: true, ..args) = {
+#let slides(self: utils.empty-object, title-slide: true, slide-level: 1, ..args) = {
   if title-slide {
     (self.methods.title-slide)(self: self)
   }
-  (self.methods.touying-slides)(self: self, cutting-out: true, ..args)
+  (self.methods.touying-slides)(self: self, slide-level: slide-level, ..args)
 }
 
 #let register(
@@ -269,7 +259,6 @@
   self.methods.focus-slide = focus-slide
   self.methods.matrix-slide = matrix-slide
   self.methods.slides = slides
-  self.methods.slide-in-slides = slide-in-slides
   self.methods.touying-outline = (self: utils.empty-object, enum-args: (:), ..args) => {
     states.touying-outline(enum-args: (tight: false,) + enum-args, ..args)
   }
