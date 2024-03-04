@@ -49,11 +49,11 @@ Touying 提供了半透明 Cover 函数的支持，只需要加入
 
 ```typst
 #let s.methods.enable-transparent-cover = (
-  self: utils.empty-object,
+  self: none,
   constructor: rgb,
   alpha: 85%,
 ) => {
-  self.methods.cover = (self: utils.empty-object, body) => {
+  self.methods.cover = (self: none, body) => {
     utils.cover-with-rect(
       fill: utils.update-alpha(
         constructor: constructor,

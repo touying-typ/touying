@@ -14,7 +14,7 @@
 #let _saved-align = align
 
 #let slide(
-  self: utils.empty-object,
+  self: none,
   title: auto,
   footer: auto,
   align: horizon,
@@ -43,7 +43,7 @@
 }
 
 #let title-slide(
-  self: utils.empty-object,
+  self: none,
   extra: none,
   ..args,
 ) = {
@@ -78,7 +78,7 @@
   (self.methods.touying-slide)(self: self, repeat: none, content)
 }
 
-#let new-section-slide(self: utils.empty-object, short-title: auto, title) = {
+#let new-section-slide(self: none, short-title: auto, title) = {
   self = utils.empty-page(self)
   let content = {
     set align(horizon)
@@ -90,7 +90,7 @@
   (self.methods.touying-slide)(self: self, repeat: none, section: (title: title, short-title: short-title), content)
 }
 
-#let focus-slide(self: utils.empty-object, body) = {
+#let focus-slide(self: none, body) = {
   self = utils.empty-page(self)
   self.page-args = self.page-args + (
     fill: self.colors.primary-dark,
@@ -100,7 +100,7 @@
   (self.methods.touying-slide)(self: self, repeat: none, align(horizon + center, body))
 }
 
-#let slides(self: utils.empty-object, title-slide: true, outline-slide: true, outline-title: [Table of contents], slide-level: 1, ..args) = {
+#let slides(self: none, title-slide: true, outline-slide: true, outline-title: [Table of contents], slide-level: 1, ..args) = {
   if title-slide {
     (self.methods.title-slide)(self: self)
   }
@@ -174,9 +174,9 @@
   self.methods.touying-new-section-slide = new-section-slide
   self.methods.focus-slide = focus-slide
   self.methods.slides = slides
-  self.methods.touying-outline = (self: utils.empty-object, enum-args: (:), ..args) => {
+  self.methods.touying-outline = (self: none, enum-args: (:), ..args) => {
     states.touying-outline(enum-args: (tight: false,) + enum-args, ..args)
   }
-  self.methods.alert = (self: utils.empty-object, it) => text(fill: self.colors.secondary-light, it)
+  self.methods.alert = (self: none, it) => text(fill: self.colors.secondary-light, it)
   self
 }

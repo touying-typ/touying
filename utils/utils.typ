@@ -1,6 +1,3 @@
-// OOP: empty object
-#let empty-object = (methods: (:))
-
 // OOP: call it or display it
 #let call-or-display(self, it) = {
   if type(it) == function {
@@ -22,7 +19,7 @@
 }
 
 // OOP: wrap methods
-#let wrap-method(fn) = (self: empty-object, ..args) => fn(..args)
+#let wrap-method(fn) = (self: none, ..args) => fn(..args)
 
 // OOP: assuming all functions in dictionary have a named `self` parameter,
 // `methods` function is used to get all methods in dictionary object
@@ -343,7 +340,7 @@
   }
 }
 
-#let uncover(self: empty-object, visible-subslides, uncover-cont) = {
+#let uncover(self: none, visible-subslides, uncover-cont) = {
   let cover = self.methods.cover.with(self: self)
   if check-visible(self.subslide, visible-subslides) { 
     uncover-cont
@@ -352,11 +349,11 @@
   }
 }
 
-#let only(self: empty-object, visible-subslides, only-cont) = {
+#let only(self: none, visible-subslides, only-cont) = {
   if check-visible(self.subslide, visible-subslides) { only-cont }
 }
 
-#let alternatives-match(self: empty-object, subslides-contents, position: bottom + left) = {
+#let alternatives-match(self: none, subslides-contents, position: bottom + left) = {
   let subslides-contents = if type(subslides-contents) == "dictionary" {
     subslides-contents.pairs()
   } else {
@@ -380,7 +377,7 @@
 }
 
 #let alternatives(
-  self: empty-object,
+  self: none,
   start: 1,
   repeat-last: false,
   ..args
@@ -395,7 +392,7 @@
 }
 
 #let alternatives-fn(
-  self: empty-object,
+  self: none,
   start: 1,
   end: none,
   count: none,
@@ -417,7 +414,7 @@
   alternatives-match(self: self, subslides.zip(contents), ..kwargs.named())
 }
 
-#let alternatives-cases(self: empty-object, cases, fn, ..kwargs) = {
+#let alternatives-cases(self: none, cases, fn, ..kwargs) = {
   let idcs = range(cases.len())
   let contents = idcs.map(fn)
   alternatives-match(self: self, cases.zip(contents), ..kwargs.named())

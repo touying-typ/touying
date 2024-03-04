@@ -7,7 +7,7 @@
 #import "../utils/components.typ"
 
 #let slide(
-  self: utils.empty-object,
+  self: none,
   title: none,
   subtitle: none,
   header: none,
@@ -50,7 +50,7 @@
 }
 
 #let title-slide(
-  self: utils.empty-object,
+  self: none,
   logo: none,
   ..args,
 ) = {
@@ -97,7 +97,7 @@
   (self.methods.touying-slide)(self: self, repeat: none, content)
 }
 
-#let focus-slide(self: utils.empty-object, background-color: none, background-img: none, body) = {
+#let focus-slide(self: none, background-color: none, background-img: none, body) = {
   let background-color = if background-img == none and background-color ==  none {
     rgb(self.colors.primary)
   } else {
@@ -118,7 +118,7 @@
   (self.methods.touying-slide)(self: self, repeat: none, align(horizon, body))
 }
 
-#let matrix-slide(self: utils.empty-object, columns: none, rows: none, ..bodies) = {
+#let matrix-slide(self: none, columns: none, rows: none, ..bodies) = {
   self = utils.empty-page(self)
   (self.methods.touying-slide)(self: self, composer: (..bodies) => {
     let bodies = bodies.pos()
@@ -160,7 +160,7 @@
   }, ..bodies)
 }
 
-#let slides(self: utils.empty-object, title-slide: true, slide-level: 1, ..args) = {
+#let slides(self: none, title-slide: true, slide-level: 1, ..args) = {
   if title-slide {
     (self.methods.title-slide)(self: self)
   }
@@ -240,11 +240,11 @@
   self.methods.focus-slide = focus-slide
   self.methods.matrix-slide = matrix-slide
   self.methods.slides = slides
-  self.methods.touying-outline = (self: utils.empty-object, enum-args: (:), ..args) => {
+  self.methods.touying-outline = (self: none, enum-args: (:), ..args) => {
     states.touying-outline(enum-args: (tight: false,) + enum-args, ..args)
   }
-  self.methods.alert = (self: utils.empty-object, it) => text(fill: self.colors.primary, it)
-  self.methods.init = (self: utils.empty-object, body) => {
+  self.methods.alert = (self: none, it) => text(fill: self.colors.primary, it)
+  self.methods.init = (self: none, body) => {
     set text(size: 25pt)
     show footnote.entry: set text(size: .6em)
     body

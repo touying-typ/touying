@@ -44,11 +44,11 @@ The `enable-transparent-cover` method is defined as:
 
 ```typst
 #let s.methods.enable-transparent-cover = (
-  self: utils.empty-object,
+  self: none,
   constructor: rgb,
   alpha: 85%,
 ) => {
-  self.methods.cover = (self: utils.empty-object, body) => {
+  self.methods.cover = (self: none, body) => {
     utils.cover-with-rect(
       fill: utils.update-alpha(
         constructor: constructor,

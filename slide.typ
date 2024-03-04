@@ -41,7 +41,7 @@
 }
 
 // parse touying equation, and get the repetitions
-#let _parse-touying-equation(self: utils.empty-object, need-cover: true, base: 1, index: 1, eqt) = {
+#let _parse-touying-equation(self: none, need-cover: true, base: 1, index: 1, eqt) = {
   let result-arr = ()
   // repetitions
   let repetitions = base
@@ -114,7 +114,7 @@
 }
 
 // parse touying reducer, and get the repetitions
-#let _parse-touying-reducer(self: utils.empty-object, base: 1, index: 1, reducer) = {
+#let _parse-touying-reducer(self: none, base: 1, index: 1, reducer) = {
   let result-arr = ()
   // repetitions
   let repetitions = base
@@ -174,7 +174,7 @@
 }
 
 // parse a sequence into content, and get the repetitions
-#let _parse-content(self: utils.empty-object, need-cover: true, base: 1, index: 1, ..bodies) = {
+#let _parse-content(self: none, need-cover: true, base: 1, index: 1, ..bodies) = {
   let bodies = bodies.pos()
   let result-arr = ()
   // repetitions
@@ -314,7 +314,7 @@
 
 // touying-slide
 #let touying-slide(
-  self: utils.empty-object,
+  self: none,
   repeat: auto,
   setting: body => body,
   composer: utils.side-by-side,
@@ -415,7 +415,7 @@
 }
 
 // touying-slides
-#let touying-slides(self: utils.empty-object, slide-level: 1, body) = {
+#let touying-slides(self: none, slide-level: 1, body) = {
   // init
   let (section, subsection, title, slide) = (none, none, none, ())
   let last-title = none
@@ -566,18 +566,18 @@
   // register the methods
   methods: (
     // info
-    info: (self: utils.empty-object, ..args) => {
+    info: (self: none, ..args) => {
       self.info += args.named()
       self
     },
     // colors
-    colors: (self: utils.empty-object, ..args) => {
+    colors: (self: none, ..args) => {
       self.colors += args.named()
       self
     },
     // cover method
     cover: utils.wrap-method(hide),
-    update-cover: (self: utils.empty-object, is-method: false, cover-fn) => {
+    update-cover: (self: none, is-method: false, cover-fn) => {
       if is-method {
         self.methods.cover = cover-fn
       } else {
@@ -586,9 +586,9 @@
       self
     },
     enable-transparent-cover: (
-      self: utils.empty-object, constructor: rgb, alpha: 85%) => {
+      self: none, constructor: rgb, alpha: 85%) => {
       // it is based on the default cover method
-      self.methods.cover = (self: utils.empty-object, body) => {
+      self.methods.cover = (self: none, body) => {
         utils.cover-with-rect(fill: utils.update-alpha(
           constructor: constructor, self.page-args.fill, alpha), body)
       }
@@ -604,12 +604,12 @@
     // alert interface
     alert: utils.wrap-method(text.with(weight: "bold")),
     // handout mode
-    enable-handout-mode: (self: utils.empty-object) => {
+    enable-handout-mode: (self: none) => {
       self.handout = true
       self
     },
     // disable pdfpc-file mode
-    disable-pdfpc-file: (self: utils.empty-object) => {
+    disable-pdfpc-file: (self: none) => {
       self.pdfpc-file = false
       self
     },
@@ -619,31 +619,31 @@
     touying-slides: touying-slides,
     slides: touying-slides,
     // append the preamble
-    append-preamble: (self: utils.empty-object, preamble) => {
+    append-preamble: (self: none, preamble) => {
       self.preamble += preamble
       self
     },
     // datetime format
-    datetime-format: (self: utils.empty-object, format) => {
+    datetime-format: (self: none, format) => {
       self.datetime-format = format
       self
     },
     // default init
-    init: (self: utils.empty-object, body) => {
+    init: (self: none, body) => {
       // default text size
       set text(size: 20pt)
       show heading.where(level: 2): set block(below: 1em)
       body
     },
     // default outline
-    touying-outline: (self: utils.empty-object, ..args) => {
+    touying-outline: (self: none, ..args) => {
       states.touying-outline(..args)
     },
-    appendix: (self: utils.empty-object) => {
+    appendix: (self: none) => {
       self.appendix = true
       self
     },
-    appendix-in-outline: (self: utils.empty-object, value) => {
+    appendix-in-outline: (self: none, value) => {
       self.appendix-in-outline = value
       self
     }

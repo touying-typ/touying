@@ -5,7 +5,7 @@
 #import "../utils/states.typ"
 
 #let slide(
-  self: utils.empty-object,
+  self: none,
   subsection: none,
   title: none,
   footer: auto,
@@ -39,7 +39,7 @@
 }
 
 #let title-slide(
-  self: utils.empty-object,
+  self: none,
   extra: none,
   ..args,
 ) = {
@@ -80,7 +80,7 @@
   (self.methods.touying-slide)(self: self, repeat: none, content)
 }
 
-#let focus-slide(self: utils.empty-object, body) = {
+#let focus-slide(self: none, body) = {
   self = utils.empty-page(self)
   self.page-args = self.page-args + (
     fill: self.colors.primary,
@@ -90,11 +90,11 @@
   (self.methods.touying-slide)(self: self, repeat: none, align(horizon + center, body))
 }
 
-#let new-section-slide(self: utils.empty-object, section) = {
+#let new-section-slide(self: none, section) = {
   (self.methods.slide)(self: self, section: section, heading(level: 2, self.outline-title) + parbreak() + (self.methods.touying-outline)(self: self))
 }
 
-#let d-outline(self: utils.empty-object, enum-args: (:), list-args: (:), cover: true) = states.touying-progress-with-sections(dict => {
+#let d-outline(self: none, enum-args: (:), list-args: (:), cover: true) = states.touying-progress-with-sections(dict => {
   let (current-sections, final-sections) = dict
   current-sections = current-sections.filter(section => section.loc != none)
   final-sections = final-sections.filter(section => section.loc != none)
@@ -121,7 +121,7 @@
   }
 })
 
-#let d-sidebar(self: utils.empty-object) = states.touying-progress-with-sections(dict => {
+#let d-sidebar(self: none) = states.touying-progress-with-sections(dict => {
   let (current-sections, final-sections) = dict
   current-sections = current-sections
     .filter(section => section.loc != none)
@@ -150,7 +150,7 @@
   }
 })
 
-#let d-mini-slides(self: utils.empty-object) = states.touying-progress-with-sections(dict => {
+#let d-mini-slides(self: none) = states.touying-progress-with-sections(dict => {
   let (current-sections, final-sections) = dict
   current-sections = current-sections.filter(section => section.loc != none)
   final-sections = final-sections.filter(section => section.loc != none)
@@ -212,7 +212,7 @@
   grid(columns: cols.map(_ => auto).intersperse(1fr), ..cols.intersperse([]))
 })
 
-#let slides(self: utils.empty-object, title-slide: true, outline-slide: true, slide-level: 2, ..args) = {
+#let slides(self: none, title-slide: true, outline-slide: true, slide-level: 2, ..args) = {
   if title-slide {
     (self.methods.title-slide)(self: self)
   }
@@ -288,7 +288,7 @@
   self.methods.new-section-slide = new-section-slide
   self.methods.touying-new-section-slide = new-section-slide
   self.methods.slides = slides
-  self.methods.d-cover = (self: utils.empty-object, body) => {
+  self.methods.d-cover = (self: none, body) => {
     utils.cover-with-rect(fill: utils.update-alpha(
       constructor: rgb, self.page-args.fill, self.d-alpha), body)
   }
@@ -296,8 +296,8 @@
   self.methods.d-outline = d-outline
   self.methods.d-sidebar = d-sidebar
   self.methods.d-mini-slides = d-mini-slides
-  self.methods.alert = (self: utils.empty-object, it) => text(fill: self.colors.primary, it)
-  self.methods.init = (self: utils.empty-object, body) => {
+  self.methods.alert = (self: none, it) => text(fill: self.colors.primary, it)
+  self.methods.init = (self: none, body) => {
     set text(size: 20pt)
     set par(justify: true)
     show heading: set block(below: 1em)

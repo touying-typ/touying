@@ -4,7 +4,7 @@
 #import "../utils/utils.typ"
 #import "../utils/states.typ"
 
-#let slide(self: utils.empty-object, title: none, footer: auto, ..args) = {
+#let slide(self: none, title: none, footer: auto, ..args) = {
   if footer != auto {
     self.simple-footer = footer
   }
@@ -16,22 +16,22 @@
   }, ..args)
 }
 
-#let centered-slide(self: utils.empty-object, section: none, ..args) = {
+#let centered-slide(self: none, section: none, ..args) = {
   self = utils.empty-page(self)
   (self.methods.touying-slide)(self: self, repeat: none, section: section, ..args.named(),
     align(center + horizon, if section != none { heading(level: 1, utils.unify-section(section).title) } + args.pos().sum(default: []))
   )
 }
 
-#let title-slide(self: utils.empty-object, body) = {
+#let title-slide(self: none, body) = {
   centered-slide(self: self, body)
 }
 
-#let new-section-slide(self: utils.empty-object, section) = {
+#let new-section-slide(self: none, section) = {
   centered-slide(self: self, section: section)
 }
 
-#let focus-slide(self: utils.empty-object, background: auto, foreground: white, body) = {
+#let focus-slide(self: none, background: auto, foreground: white, body) = {
   self.page-args.header = none
   self.page-args.footer = none
   self.page-args.fill = if background == auto { self.colors.primary } else { background }
@@ -82,7 +82,7 @@
   self.methods.focus-slide = focus-slide
   self.methods.new-section-slide = new-section-slide
   self.methods.touying-new-section-slide = new-section-slide
-  self.methods.init = (self: utils.empty-object, body) => {
+  self.methods.init = (self: none, body) => {
     set text(fill: foreground, size: 25pt)
     show footnote.entry: set text(size: .6em)
     show heading.where(level: 2): set block(below: 1.5em)
