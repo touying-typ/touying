@@ -538,21 +538,6 @@
   ),
   // slides mode
   slides: ("slide",),
-  handler-in-slides: (
-    section: (self: utils.empty-object, section: none, body, ..args) => {
-      let no-footer-self = self
-      no-footer-self.page-args.footer = none
-      touying-slide(
-        self: no-footer-self,
-        section: section,
-        subsection: subsection,
-        ..args,
-        align(center + horizon, heading(level: 1, section) + body)
-      )
-    },
-    subsection: none,
-    title: none,
-  ),
   // handle mode
   handout: false,
   // appendix mode
@@ -569,7 +554,7 @@
   page-args: (
     paper: "presentation-16-9",
     header: none,
-    footer: align(right, states.slide-counter.display() + " / " + states.last-slide-number),
+    footer: none,
     fill: rgb("#ffffff"),
   ),
   // datetime format

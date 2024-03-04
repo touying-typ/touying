@@ -38,8 +38,7 @@
   if footer != auto {
     self.m-footer = footer
   }
-  let touying-slide = self.methods.touying-slide
-  touying-slide(
+  (self.methods.touying-slide)(
     ..args.named(),
     self: self,
     setting: body => {
@@ -87,8 +86,7 @@
       }
     })
   }
-  let touying-slide = self.methods.touying-slide
-  touying-slide(self: self, repeat: none, content)
+  (self.methods.touying-slide)(self: self, repeat: none, content)
 }
 
 #let new-section-slide(self: utils.empty-object, short-title: auto, title) = {
@@ -99,10 +97,9 @@
     show: pad.with(20%)
     set text(size: 1.5em)
     title
-    block(height: 2pt, width: 100%, spacing: 0pt, self.m-progress-bar)
+    block(height: 2pt, width: 100%, spacing: 0pt, utils.call-or-display(self, self.m-progress-bar))
   }
-  let touying-slide = self.methods.touying-slide
-  touying-slide(self: self, repeat: none, section: (title: title, short-title: short-title), content)
+  (self.methods.touying-slide)(self: self, repeat: none, section: (title: title, short-title: short-title), content)
 }
 
 #let focus-slide(self: utils.empty-object, body) = {
@@ -113,8 +110,7 @@
     margin: 2em,
   )
   set text(fill: self.colors.neutral-lightest, size: 1.5em)
-  let touying-slide = self.methods.touying-slide
-  touying-slide(self: self, repeat: none, align(horizon + center, body))
+  (self.methods.touying-slide)(self: self, repeat: none, align(horizon + center, body))
 }
 
 #let slides(self: utils.empty-object, title-slide: true, outline-slide: true, outline-title: [Table of contents], slide-level: 1, ..args) = {
@@ -144,7 +140,7 @@
     secondary-lighter: rgb("#d6c6b7"),
   )
   // save the variables for later use
-  self.m-progress-bar = states.touying-progress(ratio => {
+  self.m-progress-bar = self => states.touying-progress(ratio => {
     grid(
       columns: (ratio * 100%, 1fr),
       m-cell(fill: self.colors.secondary-light),
@@ -174,7 +170,7 @@
       text(fill: self.colors.primary-dark, utils.call-or-display(self, self.m-footer-right))
     })
     if self.m-footer-progress {
-      place(bottom, block(height: 2pt, width: 100%, spacing: 0pt, self.m-progress-bar))
+      place(bottom, block(height: 2pt, width: 100%, spacing: 0pt, utils.call-or-display(self, self.m-progress-bar)))
     }
   }
   self.page-args = self.page-args + (

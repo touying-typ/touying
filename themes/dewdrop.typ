@@ -23,8 +23,7 @@
   if footer != auto {
     self.m-footer = footer
   }
-  let touying-slide = self.methods.touying-slide
-  touying-slide(
+  (self.methods.touying-slide)(
     ..args.named(),
     self: self,
     subsection: subsection,
@@ -91,8 +90,7 @@
       }
     })
   }
-  let touying-slide = self.methods.touying-slide
-  touying-slide(self: self, repeat: none, content)
+  (self.methods.touying-slide)(self: self, repeat: none, content)
 }
 
 #let focus-slide(self: utils.empty-object, body) = {
@@ -103,8 +101,7 @@
     margin: 2em,
   )
   set text(fill: self.colors.neutral-lightest, size: 1.5em)
-  let touying-slide = self.methods.touying-slide
-  touying-slide(self: self, repeat: none, align(horizon + center, body))
+  (self.methods.touying-slide)(self: self, repeat: none, align(horizon + center, body))
 }
 
 #let new-section-slide(self: utils.empty-object, section) = {

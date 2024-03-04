@@ -42,8 +42,7 @@
   if footer != auto {
     self.uni-footer = footer
   }
-  let touying-slide = self.methods.touying-slide
-  touying-slide(
+  (self.methods.touying-slide)(
     ..args.named(),
     self: self,
     setting: body => {
@@ -101,8 +100,7 @@
       }
     })
   }
-  let touying-slide = self.methods.touying-slide
-  touying-slide(self: self, repeat: none, content)
+  (self.methods.touying-slide)(self: self, repeat: none, content)
 }
 
 #let focus-slide(self: utils.empty-object, background-color: none, background-img: none, body) = {
@@ -124,15 +122,13 @@
     }),
   )
   set text(fill: white, size: 2em)
-  let touying-slide = self.methods.touying-slide
-  touying-slide(self: self, repeat: none, align(horizon, body))
+  (self.methods.touying-slide)(self: self, repeat: none, align(horizon, body))
 }
 
 #let matrix-slide(self: utils.empty-object, columns: none, rows: none, ..bodies) = {
   self.page-args.header = none
   self.page-args.footer = none
-  let touying-slide = self.methods.touying-slide
-  touying-slide(self: self, composer: (..bodies) => {
+  (self.methods.touying-slide)(self: self, composer: (..bodies) => {
     let bodies = bodies.pos()
     let columns = if type(columns) == int {
       (1fr,) * columns
@@ -181,9 +177,6 @@
 
 #let register(
   aspect-ratio: "16-9",
-  header: states.current-section-title,
-  footer: [],
-  footer-right: states.slide-counter.display() + " / " + states.last-slide-number,
   progress-bar: true,
   self,
 ) = {
@@ -197,7 +190,7 @@
   )
   // save the variables for later use
   self.uni-enable-progress-bar = progress-bar
-  self.uni-progress-bar = states.touying-progress(ratio => {
+  self.uni-progress-bar = self => states.touying-progress(ratio => {
     let cell = block.with(width: 100%, height: 100%, above: 0pt, below: 0pt, breakable: false)
     grid(
       columns: (ratio * 100%, 1fr),
@@ -233,7 +226,7 @@
       rows: (auto, auto),
       row-gutter: 3mm,
       if self.uni-enable-progress-bar {
-        self.uni-progress-bar
+        utils.call-or-display(self, self.uni-progress-bar)
       },
       utils.call-or-display(self, self.uni-header),
     )
