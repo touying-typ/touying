@@ -13,13 +13,7 @@
 ) = {
   self.page-args = self.page-args + (
     fill: self.colors.neutral-lightest,
-  ) + if self.d-navigation == "sidebar" {(
-    margin: (top: 2em, bottom: 1em, x: 0em),
-  )} else if self.d-navigation == "mini-slides" {(
-    margin: (top: self.d-mini-slides.height, bottom: 2em, x: 0em),
-  )} else {(
-    margin: (top: 2em, bottom: 2em, x: 0em),
-  )}
+  )
   if footer != auto {
     self.m-footer = footer
   }
@@ -29,10 +23,6 @@
     subsection: subsection,
     title: title,
     setting: body => {
-      show: pad.with(
-        x: self.d-mini-slides.x,
-        ..(if self.d-navigation == "sidebar" { (x: self.d-sidebar.width) } else { () }),
-      )
       set text(fill: self.colors.neutral-darkest)
       show heading: set text(fill: self.colors.primary)
       show: args.named().at("setting", default: body => body)
@@ -53,8 +43,7 @@
   extra: none,
   ..args,
 ) = {
-  self.page-args.header = none
-  self.page-args.footer = none
+  self = utils.empty-page(self)
   let info = self.info + args.named()
   let content = {
     set text(fill: self.colors.neutral-darkest)
@@ -92,8 +81,7 @@
 }
 
 #let focus-slide(self: utils.empty-object, body) = {
-  self.page-args.header = none
-  self.page-args.footer = none
+  self = utils.empty-page(self)
   self.page-args = self.page-args + (
     fill: self.colors.primary,
     margin: 2em,
@@ -285,8 +273,14 @@
     fill: self.colors.neutral-lightest,
     header: header,
     footer: footer,
-    margin: 0em,
-  )
+  ) + if navigation == "sidebar" {(
+    margin: (top: 2em, bottom: 1em, x: 0em),
+  )} else if navigation == "mini-slides" {(
+    margin: (top: mini-slides.height, bottom: 2em, x: 0em),
+  )} else {(
+    margin: (top: 2em, bottom: 2em, x: 0em),
+  )}
+  self.padding = (x: if navigation == "sidebar" { sidebar.width } else { mini-slides.x }, y: 0em)
   // register methods
   self.methods.slide = slide
   self.methods.title-slide = title-slide

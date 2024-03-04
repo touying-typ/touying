@@ -4,6 +4,7 @@
 
 #import "../utils/utils.typ"
 #import "../utils/states.typ"
+#import "../utils/components.typ"
 
 #let slide(
   self: utils.empty-object,
@@ -11,13 +12,8 @@
   subtitle: none,
   header: none,
   footer: auto,
-  margin: (top: 2em, bottom: 1em, x: 0em),
-  padding: (x: 2em, y: .5em),
   ..args,
 ) = {
-  self.page-args = self.page-args + (
-    margin: margin,
-  )
   if title != auto {
     self.uni-title = title
   }
@@ -25,7 +21,7 @@
     if header != none {
       header
     } else if title != none {
-      block(fill: self.colors.neutral-lightest, inset: (x: .5em), 
+      block(inset: (x: .5em), 
         grid(
           columns: 1,
           gutter: .3em,
@@ -46,7 +42,6 @@
     ..args.named(),
     self: self,
     setting: body => {
-      show: pad.with(..(if type(padding) == dictionary { padding } else { (padding,) }))
       show: args.named().at("setting", default: body => body)
       body
     },
@@ -59,8 +54,7 @@
   logo: none,
   ..args,
 ) = {
-  self.page-args.header = none
-  self.page-args.footer = none
+  self = utils.empty-page(self)
   let info = self.info + args.named()
   info.authors = {
     let authors =  if "authors" in info { info.authors } else { info.author }
@@ -109,8 +103,7 @@
   } else {
     background-color
   }
-  self.page-args.header = none
-  self.page-args.footer = none
+  self = utils.empty-page(self)
   self.page-args = self.page-args + (
     fill: self.colors.primary-dark,
     margin: 1em,
@@ -126,8 +119,7 @@
 }
 
 #let matrix-slide(self: utils.empty-object, columns: none, rows: none, ..bodies) = {
-  self.page-args.header = none
-  self.page-args.footer = none
+  self = utils.empty-page(self)
   (self.methods.touying-slide)(self: self, composer: (..bodies) => {
     let bodies = bodies.pos()
     let columns = if type(columns) == int {
@@ -186,17 +178,15 @@
     primary: rgb("#04364A"),
     secondary: rgb("#176B87"),
     tertiary: rgb("#448C95"),
-    neutral-lightest: rgb("#FBFEF9"),
   )
   // save the variables for later use
   self.uni-enable-progress-bar = progress-bar
   self.uni-progress-bar = self => states.touying-progress(ratio => {
-    let cell = block.with(width: 100%, height: 100%, above: 0pt, below: 0pt, breakable: false)
     grid(
       columns: (ratio * 100%, 1fr),
       rows: 2pt,
-      cell(fill: self.colors.primary),
-      cell(fill: self.colors.secondary)
+      components.cell(fill: self.colors.primary),
+      components.cell(fill: self.colors.secondary)
     )
   })
   self.uni-header = none
@@ -239,13 +229,11 @@
 
   self.page-args = self.page-args + (
     paper: "presentation-" + aspect-ratio,
-    fill: self.colors.neutral-lightest,
     header: header,
     footer: footer,
-    footer-descent: 0em,
-    header-ascent: .6em,
-    margin: 0em,
+    margin: (top: 2.5em, bottom: 1em, x: 0em),
   )
+  self.padding = (x: 2em, y: 0em)
   // register methods
   self.methods.slide = slide
   self.methods.title-slide = title-slide

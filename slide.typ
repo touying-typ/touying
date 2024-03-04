@@ -324,6 +324,9 @@
   ..bodies,
 ) = {
   assert(bodies.named().len() == 0, message: "unexpected named arguments:" + repr(bodies.named().keys()))
+  let setting-with-pad(body) = {
+    pad(..self.padding, setting(body))
+  }
   let bodies = bodies.pos()
   let page-preamble(curr-subslide) = locate(loc => {
     if loc.page() == self.first-slide-number {
@@ -369,7 +372,7 @@
   if repeat == none {
     return {
       header = _update-states(1) + header
-      page(..(self.page-args + (header: header, footer: footer)), setting(
+      page(..(self.page-args + (header: header, footer: footer)), setting-with-pad(
         page-preamble(1) + composer(..bodies)
       ))
     }
@@ -387,7 +390,7 @@
   if self.handout {
     let (conts, _) = _parse-content(self: self, index: repeat, ..bodies)
     header = _update-states(1) + header
-    page(..(self.page-args + (header: header, footer: footer)), setting(
+    page(..(self.page-args + (header: header, footer: footer)), setting-with-pad(
       page-preamble(1) + composer(..conts)
     ))
   } else {
@@ -403,7 +406,7 @@
       }
       result.push(page(
         ..(self.page-args + (header: new-header, footer: footer)),
-        setting(page-preamble(i) + composer(..conts)),
+        setting-with-pad(page-preamble(i) + composer(..conts)),
       ))
     }
     // return the result
@@ -557,6 +560,7 @@
     footer: none,
     fill: rgb("#ffffff"),
   ),
+  padding: (x: 0em, y: 0em),
   // datetime format
   datetime-format: auto,
   // register the methods

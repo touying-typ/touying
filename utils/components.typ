@@ -1,0 +1,1 @@
+#let cell = block.with(width: 100%, height: 100%, above: 0pt, below: 0pt, breakable: false)
