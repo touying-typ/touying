@@ -13,29 +13,16 @@
 ) = {
   self.page-args = self.page-args + (
     fill: self.colors.neutral-lightest,
-  ) + if self.d-navigation == "sidebar" {(
-    margin: (top: 0em, bottom: 1em, left: 0em, right: 0em),
-  )} else if self.d-navigation == "mini-slides" {(
-    margin: (top: self.d-mini-slides.height, bottom: 1em, left: 0em, right: 0em),
-  )} else {(
-    margin: (top: 0em, bottom: 1em, left: 0em, right: 0em),
-  )}
+  )
   if footer != auto {
     self.m-footer = footer
   }
-  let touying-slide = self.methods.touying-slide
-  touying-slide(
+  (self.methods.touying-slide)(
     ..args.named(),
     self: self,
     subsection: subsection,
     title: title,
     setting: body => {
-      show: pad.with(
-        top: (if self.d-navigation == "mini-slides" { self.d-mini-slides.height } else { 2em }),
-        bottom: 1em,
-        x: self.d-mini-slides.x,
-        ..(if self.d-navigation == "sidebar" { (x: self.d-sidebar.width) } else { () }),
-      )
       set text(fill: self.colors.neutral-darkest)
       show heading: set text(fill: self.colors.primary)
       show: args.named().at("setting", default: body => body)
@@ -56,8 +43,7 @@
   extra: none,
   ..args,
 ) = {
-  self.page-args.header = none
-  self.page-args.footer = none
+  self = utils.empty-page(self)
   let info = self.info + args.named()
   let content = {
     set text(fill: self.colors.neutral-darkest)
@@ -91,20 +77,17 @@
       }
     })
   }
-  let touying-slide = self.methods.touying-slide
-  touying-slide(self: self, repeat: none, content)
+  (self.methods.touying-slide)(self: self, repeat: none, content)
 }
 
 #let focus-slide(self: utils.empty-object, body) = {
-  self.page-args.header = none
-  self.page-args.footer = none
+  self = utils.empty-page(self)
   self.page-args = self.page-args + (
     fill: self.colors.primary,
     margin: 2em,
   )
   set text(fill: self.colors.neutral-lightest, size: 1.5em)
-  let touying-slide = self.methods.touying-slide
-  touying-slide(self: self, repeat: none, align(horizon + center, body))
+  (self.methods.touying-slide)(self: self, repeat: none, align(horizon + center, body))
 }
 
 #let new-section-slide(self: utils.empty-object, section) = {
@@ -243,7 +226,7 @@
   aspect-ratio: "16-9",
   navigation: "sidebar",
   sidebar: (width: 10em),
-  mini-slides: (height: 2em, x: 2em, section: false, subsection: true),
+  mini-slides: (height: 4em, x: 2em, section: false, subsection: true),
   footer: [],
   footer-right: states.slide-counter.display() + " / " + states.last-slide-number,
   primary: rgb("#0c4842"),
@@ -290,8 +273,14 @@
     fill: self.colors.neutral-lightest,
     header: header,
     footer: footer,
-    margin: 0em,
-  )
+  ) + if navigation == "sidebar" {(
+    margin: (top: 2em, bottom: 1em, x: 0em),
+  )} else if navigation == "mini-slides" {(
+    margin: (top: mini-slides.height, bottom: 2em, x: 0em),
+  )} else {(
+    margin: (top: 2em, bottom: 2em, x: 0em),
+  )}
+  self.padding = (x: if navigation == "sidebar" { sidebar.width } else { mini-slides.x }, y: 0em)
   // register methods
   self.methods.slide = slide
   self.methods.title-slide = title-slide

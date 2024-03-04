@@ -10,6 +10,17 @@
   }
 }
 
+// OOP: empty page
+#let empty-page(self) = {
+  self.page-args += (
+    header: none,
+    footer: none,
+    margin: 0em,
+  )
+  self.padding = (x: 0em, y: 0em)
+  self
+}
+
 // OOP: wrap methods
 #let wrap-method(fn) = (self: empty-object, ..args) => fn(..args)
 
@@ -302,17 +313,17 @@
   parts.map(parse-part)
 }
 
-#let _check-visible(idx, visible-subslides) = {
+#let check-visible(idx, visible-subslides) = {
   if type(visible-subslides) == "integer" {
     idx == visible-subslides
   } else if type(visible-subslides) == "array" {
-    visible-subslides.any(s => _check-visible(idx, s))
+    visible-subslides.any(s => check-visible(idx, s))
   } else if type(visible-subslides) == "string" {
     let parts = _parse-subslide-indices(visible-subslides)
-    _check-visible(idx, parts)
+    check-visible(idx, parts)
   } else if type(visible-subslides) == content and visible-subslides.has("text") {
     let parts = _parse-subslide-indices(visible-subslides.text)
-    _check-visible(idx, parts)
+    check-visible(idx, parts)
   } else if type(visible-subslides) == "dictionary" {
     let lower-okay = if "beginning" in visible-subslides {
       visible-subslides.beginning <= idx
@@ -334,7 +345,7 @@
 
 #let uncover(self: empty-object, visible-subslides, uncover-cont) = {
   let cover = self.methods.cover.with(self: self)
-  if _check-visible(self.subslide, visible-subslides) { 
+  if check-visible(self.subslide, visible-subslides) { 
     uncover-cont
   } else {
     cover(uncover-cont)
@@ -342,7 +353,7 @@
 }
 
 #let only(self: empty-object, visible-subslides, only-cont) = {
-  if _check-visible(self.subslide, visible-subslides) { only-cont }
+  if check-visible(self.subslide, visible-subslides) { only-cont }
 }
 
 #let alternatives-match(self: empty-object, subslides-contents, position: bottom + left) = {

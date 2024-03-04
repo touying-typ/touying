@@ -9,27 +9,18 @@
 
 #import "../utils/utils.typ"
 #import "../utils/states.typ"
+#import "../utils/components.typ"
 
 #let _saved-align = align
-#let m-cell = block.with(
-  width: 100%,
-  height: 100%,
-  above: 0pt,
-  below: 0pt,
-  breakable: false,
-)
 
 #let slide(
   self: utils.empty-object,
   title: auto,
   footer: auto,
   align: horizon,
-  margin: (top: 3em, bottom: 1em, left: 0em, right: 0em),
-  padding: 2em,
   ..args,
 ) = {
   self.page-args = self.page-args + (
-    margin: margin,
     fill: self.colors.neutral-lightest,
   )
   if title != auto {
@@ -38,13 +29,11 @@
   if footer != auto {
     self.m-footer = footer
   }
-  let touying-slide = self.methods.touying-slide
-  touying-slide(
+  (self.methods.touying-slide)(
     ..args.named(),
     self: self,
     setting: body => {
       show: _saved-align.with(align)
-      show: pad.with(..(if type(padding) == dictionary { padding } else { (padding,) }))
       set text(fill: self.colors.primary-dark)
       show: args.named().at("setting", default: body => body)
       body
@@ -58,8 +47,7 @@
   extra: none,
   ..args,
 ) = {
-  self.page-args.header = none
-  self.page-args.footer = none
+  self = utils.empty-page(self)
   let info = self.info + args.named()
   let content = {
     set text(fill: self.colors.primary-dark)
@@ -87,34 +75,29 @@
       }
     })
   }
-  let touying-slide = self.methods.touying-slide
-  touying-slide(self: self, repeat: none, content)
+  (self.methods.touying-slide)(self: self, repeat: none, content)
 }
 
 #let new-section-slide(self: utils.empty-object, short-title: auto, title) = {
-  self.page-args.header = none
-  self.page-args.footer = none
+  self = utils.empty-page(self)
   let content = {
     set align(horizon)
     show: pad.with(20%)
     set text(size: 1.5em)
     title
-    block(height: 2pt, width: 100%, spacing: 0pt, self.m-progress-bar)
+    block(height: 2pt, width: 100%, spacing: 0pt, utils.call-or-display(self, self.m-progress-bar))
   }
-  let touying-slide = self.methods.touying-slide
-  touying-slide(self: self, repeat: none, section: (title: title, short-title: short-title), content)
+  (self.methods.touying-slide)(self: self, repeat: none, section: (title: title, short-title: short-title), content)
 }
 
 #let focus-slide(self: utils.empty-object, body) = {
-  self.page-args.header = none
-  self.page-args.footer = none
+  self = utils.empty-page(self)
   self.page-args = self.page-args + (
     fill: self.colors.primary-dark,
     margin: 2em,
   )
   set text(fill: self.colors.neutral-lightest, size: 1.5em)
-  let touying-slide = self.methods.touying-slide
-  touying-slide(self: self, repeat: none, align(horizon + center, body))
+  (self.methods.touying-slide)(self: self, repeat: none, align(horizon + center, body))
 }
 
 #let slides(self: utils.empty-object, title-slide: true, outline-slide: true, outline-title: [Table of contents], slide-level: 1, ..args) = {
@@ -144,11 +127,11 @@
     secondary-lighter: rgb("#d6c6b7"),
   )
   // save the variables for later use
-  self.m-progress-bar = states.touying-progress(ratio => {
+  self.m-progress-bar = self => states.touying-progress(ratio => {
     grid(
       columns: (ratio * 100%, 1fr),
-      m-cell(fill: self.colors.secondary-light),
-      m-cell(fill: self.colors.secondary-lighter)
+      components.cell(fill: self.colors.secondary-light),
+      components.cell(fill: self.colors.secondary-lighter)
     )
   })
   self.m-footer-progress = footer-progress
@@ -159,31 +142,31 @@
   let header(self) = {
     set align(top)
     if self.m-title != none {
-      show: m-cell.with(fill: self.colors.primary-dark, inset: 1em)
+      show: components.cell.with(fill: self.colors.primary-dark, inset: 1em)
       set align(horizon)
       set text(fill: self.colors.neutral-lightest, size: 1.2em)
       utils.fit-to-width(grow: false, 100%, text(weight: "medium", utils.call-or-display(self, self.m-title)))
     } else { [] }
   }
   let footer(self) = {
-    set text(size: 0.8em)
     set align(bottom)
+    set text(size: 0.8em)
     pad(.5em, {
       text(fill: self.colors.primary-dark.lighten(40%), utils.call-or-display(self, self.m-footer))
       h(1fr)
       text(fill: self.colors.primary-dark, utils.call-or-display(self, self.m-footer-right))
     })
     if self.m-footer-progress {
-      place(bottom, block(height: 2pt, width: 100%, spacing: 0pt, self.m-progress-bar))
+      place(bottom, block(height: 2pt, width: 100%, spacing: 0pt, utils.call-or-display(self, self.m-progress-bar)))
     }
   }
   self.page-args = self.page-args + (
     paper: "presentation-" + aspect-ratio,
-    fill: self.colors.neutral-lightest,
     header: header,
     footer: footer,
-    margin: 0em,
+    margin: (top: 3em, bottom: 1.5em, x: 0em),
   )
+  self.padding = (x: 2em, y: 0em)
   // register methods
   self.methods.slide = slide
   self.methods.title-slide = title-slide

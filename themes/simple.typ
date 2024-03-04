@@ -8,8 +8,7 @@
   if footer != auto {
     self.simple-footer = footer
   }
-  let touying-slide = self.methods.touying-slide
-  touying-slide(self: self, title: title, setting: body => {
+  (self.methods.touying-slide)(self: self, title: title, setting: body => {
     if self.auto-heading == true and title != none {
       heading(level: 2, title)
     }
@@ -17,12 +16,10 @@
   }, ..args)
 }
 
-#let centered-slide(self: utils.empty-object, section: none, ..bodis) = {
-  self.page-args.header = none
-  self.page-args.footer = none
-  let touying-slide = self.methods.touying-slide
-  touying-slide(self: self, repeat: none, section: section,
-    align(center + horizon, if section != none { heading(level: 1, utils.unify-section(section).title) } + bodis.pos().sum(default: []))
+#let centered-slide(self: utils.empty-object, section: none, ..args) = {
+  self = utils.empty-page(self)
+  (self.methods.touying-slide)(self: self, repeat: none, section: section, ..args.named(),
+    align(center + horizon, if section != none { heading(level: 1, utils.unify-section(section).title) } + args.pos().sum(default: []))
   )
 }
 
@@ -38,7 +35,6 @@
   self.page-args.header = none
   self.page-args.footer = none
   self.page-args.fill = if background == auto { self.colors.primary } else { background }
-  let touying-slide = self.methods.touying-slide
   set text(fill: foreground, size: 1.5em)
   centered-slide(self: self, align(center + horizon, body))
 }
