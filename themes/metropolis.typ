@@ -162,7 +162,6 @@
   }
   self.page-args = self.page-args + (
     paper: "presentation-" + aspect-ratio,
-    fill: self.colors.neutral-lightest,
     header: header,
     footer: footer,
     margin: (top: 3em, bottom: 1.5em, x: 0em),
