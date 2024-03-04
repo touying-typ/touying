@@ -14,11 +14,11 @@
   self.page-args = self.page-args + (
     fill: self.colors.neutral-lightest,
   ) + if self.d-navigation == "sidebar" {(
-    margin: (top: 0em, bottom: 1em, left: 0em, right: 0em),
+    margin: (top: 2em, bottom: 1em, x: 0em),
   )} else if self.d-navigation == "mini-slides" {(
-    margin: (top: self.d-mini-slides.height, bottom: 1em, left: 0em, right: 0em),
+    margin: (top: self.d-mini-slides.height, bottom: 2em, x: 0em),
   )} else {(
-    margin: (top: 0em, bottom: 1em, left: 0em, right: 0em),
+    margin: (top: 2em, bottom: 2em, x: 0em),
   )}
   if footer != auto {
     self.m-footer = footer
@@ -30,8 +30,6 @@
     title: title,
     setting: body => {
       show: pad.with(
-        top: (if self.d-navigation == "mini-slides" { self.d-mini-slides.height } else { 2em }),
-        bottom: 1em,
         x: self.d-mini-slides.x,
         ..(if self.d-navigation == "sidebar" { (x: self.d-sidebar.width) } else { () }),
       )
@@ -240,7 +238,7 @@
   aspect-ratio: "16-9",
   navigation: "sidebar",
   sidebar: (width: 10em),
-  mini-slides: (height: 2em, x: 2em, section: false, subsection: true),
+  mini-slides: (height: 4em, x: 2em, section: false, subsection: true),
   footer: [],
   footer-right: states.slide-counter.display() + " / " + states.last-slide-number,
   primary: rgb("#0c4842"),
