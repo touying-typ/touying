@@ -17,8 +17,7 @@
 }
 
 #let centered-slide(self: utils.empty-object, section: none, ..args) = {
-  self.page-args.header = none
-  self.page-args.footer = none
+  self = utils.empty-page(self)
   (self.methods.touying-slide)(self: self, repeat: none, section: section, ..args.named(),
     align(center + horizon, if section != none { heading(level: 1, utils.unify-section(section).title) } + args.pos().sum(default: []))
   )
