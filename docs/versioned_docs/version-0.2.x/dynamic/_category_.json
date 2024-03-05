@@ -1,0 +1,8 @@
+{
+  "label": "Dynamic Slides",
+  "position": 5,
+  "link": {
+    "type": "generated-index",
+    "description": "To create animations in PDF, we need to create multiple slightly different pages for the same slide. This allows animation by switching between these pages, and we refer to these pages as subslides."
+  }
+}

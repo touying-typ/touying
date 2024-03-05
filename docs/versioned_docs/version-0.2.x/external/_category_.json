@@ -1,0 +1,8 @@
+{
+  "label": "External Tools",
+  "position": 10,
+  "link": {
+    "type": "generated-index",
+    "description": "Integrate external tools with Touying."
+  }
+}

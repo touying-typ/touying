@@ -1,0 +1,8 @@
+{
+  "label": "动态幻灯片",
+  "position": 5,
+  "link": {
+    "type": "generated-index",
+    "description": "想要在 PDF 中创建动画，我们就需要为同一个 slide 创建多个略有不同的页面，以便通过切换页面的方式实现动画，我们称这些页面为 subslides。"
+  }
+}

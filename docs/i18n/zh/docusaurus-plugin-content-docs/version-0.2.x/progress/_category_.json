@@ -1,0 +1,8 @@
+{
+  "label": "进度",
+  "position": 8,
+  "link": {
+    "type": "generated-index",
+    "description": "管理和展示 Touying 中的进度，例如 counters 和 sections 等。"
+  }
+}
