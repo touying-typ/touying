@@ -447,17 +447,17 @@
         (child.value.at("fn"))(..child.value.at("args"))
       }
       (section, subsection, title, slide) = (none, none, none, ())
-    } else if type(child) == content and child.func() == heading and child.level in (1, 2, 3) {
+    } else if type(child) == content and child.func() == heading and utils.heading-depth(child) in (1, 2, 3) {
       slide = utils.trim(slide)
-      if (child.level == 1 and section != none) or (child.level == 2 and subsection != none) or (child.level > slide-level and title != none) or slide != () {
+      if (utils.heading-depth(child) == 1 and section != none) or (utils.heading-depth(child) == 2 and subsection != none) or (utils.heading-depth(child) > slide-level and title != none) or slide != () {
         (self.methods.slide)(self: self, section: section, subsection: subsection, ..(if last-title != none { (title: last-title) }), slide.sum(default: []))
         (section, subsection, title, slide) = (none, none, none, ())
-        if child.level <= slide-level {
+        if utils.heading-depth(child) <= slide-level {
           last-title = none
         }
       }
       let child-body = if child.body != [] { child.body } else { none }
-      if child.level == 1 {
+      if utils.heading-depth(child) == 1 {
         if slide-level >= 1 {
           if "touying-new-section-slide" in self.methods {
             (self.methods.touying-new-section-slide)(self: self, child-body)
@@ -468,7 +468,7 @@
           title = child.body
           last-title = child-body
         }
-      } else if child.level == 2 {
+      } else if utils.heading-depth(child) == 2 {
         if slide-level >= 2 {
           if "touying-new-subsection-slide" in self.methods {
             (self.methods.touying-new-subsection-slide)(self: self, child-body)

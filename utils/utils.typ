@@ -94,6 +94,14 @@
 }
 
 
+#let heading-depth(it) = {
+  if it.has("depth") {
+    it.depth
+  } else {
+    it.level
+  }
+}
+
 // Code: HEIGHT/WIDTH FITTING and cover-with-rect
 // Attribution: This file is based on the code from https://github.com/andreasKroepelin/polylux/pull/91
 // Author: ntjess
