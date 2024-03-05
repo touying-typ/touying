@@ -1,12 +1,17 @@
-#import "../lib.typ": s, pause, meanwhile, touying-equation, touying-reducer, utils, states, pdfpc, themes
-#import "@preview/cetz:0.2.0"
-#import "@preview/fletcher:0.4.1" as fletcher: node, edge
+#import "../lib.typ": *
+#import "@preview/cetz:0.2.1"
+#import "@preview/fletcher:0.4.2" as fletcher: node, edge
 
-#let cetz-canvas = touying-reducer.with(reduce: cetz.canvas, cover: cetz.draw.hide)
+// cetz and fletcher bindings for touying
+#let cetz-canvas = touying-reducer.with(reduce: cetz.canvas, cover: cetz.draw.hide.with(bounds: true))
 #let fletcher-diagram = touying-reducer.with(reduce: (arr, ..args) => fletcher.diagram(..args, ..arr))
 
-// You can comment out the theme registration below and it can still work normally
-#let s = themes.metropolis.register(s, aspect-ratio: "16-9", footer: self => self.info.institution)
+// Register university theme
+// You can remove the theme registration or replace other themes
+// it can still work normally
+#let s = themes.university.register(s, aspect-ratio: "16-9")
+
+// Global information configuration
 #let s = (s.methods.info)(
   self: s,
   title: [Title],
@@ -15,7 +20,9 @@
   date: datetime.today(),
   institution: [Institution],
 )
-#let s = (s.methods.enable-transparent-cover)(self: s)
+
+// Pdfpc configuration
+// typst query --root . ./example.typ --field value --one "<pdfpc-file>" > ./example.pdfpc
 #let s = (s.methods.append-preamble)(self: s, pdfpc.config(
   duration-minutes: 30,
   start-time: datetime(hour: 14, minute: 10, second: 0),
@@ -31,48 +38,51 @@
     direction: "inward",
   ),
 ))
-// #let s = (s.methods.enable-handout-mode)(self: s)
-#let (init, slide, touying-outline, alert) = utils.methods(s)
+
+// Extract methods
+#let (init, slides, touying-outline, alert) = utils.methods(s)
 #show: init
 
 #show strong: alert
 
-// simple animations
+// Extract slide functions
+#let (slide,) = utils.slides(s)
+#show: slides
+
+= Animation
+
+== Simple Animation
+
 #slide[
-  a simple #pause *dynamic*
+  We can use `#pause` to #pause display something later.
 
   #pause
   
-  slide.
+  Just like this.
 
   #meanwhile
-
-  meanwhile #pause with pause.
-][
-  second #pause pause.
+  
+  Meanwhile, #pause we can also use `#meanwhile` to #pause display other content synchronously.
 ]
 
-// complex animations
-#slide(setting: body => {
-  set text(fill: blue)
-  body
-}, repeat: 3, self => [
+== Complex Animation
+
+#slide(repeat: 3, self => [
   #let (uncover, only, alternatives) = utils.methods(self)
 
-  in subslide #self.subslide
+  At subslide #self.subslide, we can
 
-  test #uncover("2-")[uncover] function
+  use #uncover("2-")[`#uncover` function] for reserving space,
 
-  test #only("2-")[only] function
+  use #only("2-")[`#only` function] for not reserving space,
 
-  #pause
-
-  and paused text.
+  #alternatives[call `#only` multiple times \u{2717}][use `#alternatives` function #sym.checkmark] for choosing one of the alternatives.
 ])
 
-// math equations
+== Math Equation Animation
+
 #slide[
-  Touying equation with pause:
+  Touying equation with `pause`:
 
   #touying-equation(`
     f(x) &= pause x^2 + 2x + 1  \
@@ -81,12 +91,17 @@
 
   #meanwhile
 
-  Touying equation is very simple.
+  Here, #pause we have the expression of $f(x)$.
+  
+  #pause
+
+  By factorizing, we can obtain this result.
 ]
 
-// cetz animation
+== CeTZ Animation
+
 #slide[
-  Cetz in Touying:
+  CeTZ Animation in Touying:
 
   #cetz-canvas({
     import cetz.draw: *
@@ -105,9 +120,10 @@
   })
 ]
 
-// fletcher animation
+== Fletcher Animation
+
 #slide[
-  Fletcher in Touying:
+  Fletcher Animation in Touying:
 
   #fletcher-diagram(
     node-stroke: .1em,
@@ -126,17 +142,39 @@
   )
 ]
 
-// multiple pages for one slide
+
+= Others
+
+== Side-by-side
+
+#slide[
+  First column.
+][
+  Second column.
+]
+
+== Setting
+
+#slide(setting: body => {
+  set text(fill: blue)
+  body
+})[
+  This slide has blue text.
+]
+
+== Multiple Pages
+
 #slide[
   #lorem(200)
-
-  test multiple pages
 ]
+
 
 // appendix by freezing last-slide-number
 #let s = (s.methods.appendix)(self: s)
-#let (slide,) = utils.methods(s)
+#let (slide,) = utils.slides(s)
+
+== Appendix
 
 #slide[
-  appendix
+  Please pay attention to the current slide number.
 ]

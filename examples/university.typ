@@ -9,21 +9,28 @@
   date: datetime.today(),
   institution: [Institution],
 )
-#let (init, slide, slides, title-slide, focus-slide, matrix-slide, touying-outline, alert) = utils.methods(s)
+#let (init, slides, touying-outline, alert) = utils.methods(s)
 #show: init
+
+#let (slide, title-slide, focus-slide, matrix-slide) = utils.slides(s)
+#show: slides.with(title-slide: false)
 
 #title-slide(authors: ("Author A", "Author B"))
 
-#slide(title: [Slide title], section: [The section])[
+= The Section
+
+== Slide Title
+
+#slide[
   #lorem(40)
 ]
 
-#slide(title: [Slide title], subtitle: emph[What is the problem?])[
+#slide(subtitle: emph[What is the problem?])[
   #lorem(40)
 ]
 
 #focus-slide[
-  *Another variant with an image in background...*
+  *Another variant with primary color in background...*
 ]
 
 #matrix-slide[

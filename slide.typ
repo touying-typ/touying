@@ -464,6 +464,7 @@
           } else {
             section = child-body
           }
+          last-title = none
         } else {
           title = child.body
           last-title = child-body
@@ -475,6 +476,7 @@
           } else {
             subsection = child-body
           }
+          last-title = none
         } else {
           title = child.body
           last-title = child-body

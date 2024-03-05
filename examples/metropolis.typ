@@ -1,4 +1,4 @@
-#import "../lib.typ": s, pause, meanwhile, utils, states, pdfpc, themes
+#import "../lib.typ": *
 
 #let s = themes.metropolis.register(s, aspect-ratio: "16-9", footer: self => self.info.institution)
 #let s = (s.methods.info)(
@@ -9,45 +9,45 @@
   date: datetime.today(),
   institution: [Institution],
 )
-#let s = (s.methods.enable-transparent-cover)(self: s)
-// #let s = (s.methods.enable-handout-mode)(self: s)
-#let (init, slide, title-slide, new-section-slide, focus-slide, touying-outline, alert) = utils.methods(s)
+#let (init, slides, touying-outline, alert) = utils.methods(s)
 #show: init
 
 #set text(font: "Fira Sans", weight: "light", size: 20pt)
+
 #show math.equation: set text(font: "Fira Math")
 #set strong(delta: 100)
 #set par(justify: true)
 #show strong: alert
 
-#title-slide(extra: [Extra])
+#let (slide, title-slide, new-section-slide, focus-slide) = utils.slides(s)
+#show: slides
 
-#slide(title: [Table of contents])[
-  #touying-outline()
+= First Section
+
+#slide[
+  A slide without a title but with some *important* information.
 ]
 
-#slide(title: [A long long long long long long long long long long long long long long long long long long long long long long long long Title])[
-  A slide with some maths:
+== A long long long long long long long long long long long long long long long long long long long long long long long long Title
+
+#slide[
+  A slide with equation:
+
   $ x_(n+1) = (x_n + a/x_n) / 2 $
 
   #lorem(200)
 ]
 
-#new-section-slide[First section]
-
-#slide[
-  A slide without a title but with *important* infos
-]
-
-#new-section-slide[Second section]
+= Second Section
 
 #focus-slide[
   Wake up!
 ]
 
-// simple animations
+== Simple Animation
+
 #slide[
-  a simple #pause dynamic slide with #alert[alert]
+  A simple #pause dynamic slide with #alert[alert]
 
   #pause
   
@@ -56,10 +56,10 @@
 
 // appendix by freezing last-slide-number
 #let s = (s.methods.appendix)(self: s)
-#let (slide, new-section-slide) = utils.methods(s)
+#let (slide,) = utils.slides(s)
 
-#new-section-slide[Appendix]
+= Appendix
 
 #slide[
-  appendix
+  Appendix.
 ]

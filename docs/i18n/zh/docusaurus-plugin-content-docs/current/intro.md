@@ -4,7 +4,7 @@ sidebar_position: 1
 
 # Touying 介绍
 
-[Touying](https://github.com/touying-typ/touying) 是为 Typst 开发的幻灯片/演示文稿包，在 [Polylux](https://github.com/andreasKroepelin/polylux) 的基础上开发而来。Touying 也类似于 LaTeX 的 Beamer，但是得益于 Typst，你可以拥有更快的渲染速度与更简洁的语法。后面，我们会使用 slides 指代幻灯片，slide 指代单张幻灯片，subslide 指代子幻灯片。
+[Touying](https://github.com/touying-typ/touying) 是为 Typst 开发的幻灯片/演示文稿包。Touying 也类似于 LaTeX 的 Beamer，但是得益于 Typst，你可以拥有更快的渲染速度与更简洁的语法。后面，我们会使用 slides 指代幻灯片，slide 指代单张幻灯片，subslide 指代子幻灯片。
 
 ## 为什么使用 Touying
 
@@ -25,6 +25,12 @@ Docusaurus 创建新版本：
 
 ```sh
 npm run docusaurus docs:version 0.y.x
+```
+
+Docusaurus 多语言：
+
+```sh
+npm run start -- --locale zh
 ```
 
 ## 贡献

@@ -387,7 +387,7 @@
 #let alternatives(
   self: none,
   start: 1,
-  repeat-last: false,
+  repeat-last: true,
   ..args
 ) = {
   let contents = args.pos()

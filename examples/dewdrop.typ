@@ -1,4 +1,4 @@
-#import "../lib.typ": s, pause, meanwhile, utils, states, pdfpc, themes
+#import "../lib.typ": *
 
 #let s = themes.dewdrop.register(
   s,
@@ -15,51 +15,35 @@
   date: datetime.today(),
   institution: [Institution],
 )
-#let s = (s.methods.enable-transparent-cover)(self: s)
-// #let s = (s.methods.enable-handout-mode)(self: s)
-// #let s = (s.methods.appendix-in-outline)(self: s, false)
-#let (init, slide, title-slide, focus-slide, touying-outline, alert) = utils.methods(s)
+#let (init, slides, touying-outline, alert) = utils.methods(s)
 #show: init
 
 #show strong: alert
 
-#title-slide()
+#let (slide, title-slide, new-section-slide, focus-slide) = utils.slides(s)
+#show: slides
+
+= Section A
+
+== Subsection A.1
 
 #slide[
-  == Outline
-  
-  #touying-outline(cover: false)
-]
-
-#slide(section: [Section A])[
-  == Outline
-  
-  #touying-outline()
-]
-
-#slide(subsection: [Subsection A.1])[
-  == Title
-
   A slide with equation:
 
   $ x_(n+1) = (x_n + a/x_n) / 2 $
 ]
 
-#slide(subsection: [Subsection A.2])[
-  == Important
+== Subsection A.2
 
+#slide[
   A slide without a title but with *important* infos
 ]
 
-#slide(section: [Section B])[
-  == Outline
-  
-  #touying-outline()
-]
+= Section B
 
-#slide(subsection: [Subsection B.1])[
-  == Another Subsection
+== Subsection B.1
 
+#slide[
   #lorem(80)
 ]
 
@@ -67,27 +51,28 @@
   Wake up!
 ]
 
-// simple animations
-#slide(subsection: [Subsection B.2])[
-  == Dynamic
+== Subsection B.2
 
-  a simple #pause dynamic slide with #alert[alert]
+#slide[
+  We can use `#pause` to #pause display something later.
 
   #pause
   
-  text.
+  Just like this.
+
+  #meanwhile
+  
+  Meanwhile, #pause we can also use `#meanwhile` to #pause display other content synchronously.
 ]
 
 // appendix by freezing last-slide-number
 #let s = (s.methods.appendix)(self: s)
-#let (slide,) = utils.methods(s)
+#let (slide,) = utils.slides(s)
 
-#slide(section: [Appendix])[
-  == Outline
-  
-  #touying-outline()
-]
+= Appendix
+
+=== Appendix
 
 #slide[
-  appendix
+  Please pay attention to the current slide number.
 ]

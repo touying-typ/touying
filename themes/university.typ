@@ -26,8 +26,9 @@
           columns: 1,
           gutter: .3em,
           grid(
-            columns: (60%, 40%),
+            columns: (auto, 1fr, auto),
             align(top + left, heading(level: 2, text(fill: self.colors.primary, title))),
+            [],
             align(top + right, text(fill: self.colors.primary.lighten(65%), states.current-section-title))
           ),
           text(fill: self.colors.primary.lighten(65%), size: .8em, subtitle)

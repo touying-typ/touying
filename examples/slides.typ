@@ -1,4 +1,4 @@
-#import "../lib.typ": s, pause, meanwhile, slides-end, utils, states, pdfpc, themes
+#import "../lib.typ": *
 
 // #let s = themes.simple.register(s, aspect-ratio: "16-9", footer: [Simple slides])
 // #let s = themes.metropolis.register(s, aspect-ratio: "16-9", footer: [Custom footer])
@@ -12,11 +12,12 @@
   institution: [Institution],
 )
 #let s = (s.methods.enable-transparent-cover)(self: s)
-#let (init, slide, slides, touying-outline, alert) = utils.methods(s)
+#let (init, slides, touying-outline, alert) = utils.methods(s)
 #show: init
 
 #show strong: alert
 
+#let (slide,) = utils.slides(s)
 #show: slides
 
 = Let's start a new section

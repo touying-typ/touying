@@ -1,10 +1,11 @@
-#import "../lib.typ": s, pause, meanwhile, utils, states, pdfpc, themes
+#import "../lib.typ": *
 
 #let s = themes.simple.register(s, aspect-ratio: "16-9", footer: [Simple slides])
-#let s = (s.methods.enable-transparent-cover)(self: s)
-// #let s = (s.methods.enable-handout-mode)(self: s)
-#let (init, slide, title-slide, centered-slide, focus-slide) = utils.methods(s)
+#let (init, slides) = utils.methods(s)
 #show: init
+
+#let (slide, title-slide, centered-slide, focus-slide) = utils.slides(s)
+#show: slides
 
 #title-slide[
   = Keep it simple!
@@ -17,9 +18,9 @@
   July 23
 ]
 
-#slide[
-  == First slide
+== First slide
 
+#slide[
   #lorem(20)
 ]
 
@@ -29,12 +30,14 @@
   This is very important.
 ]
 
-#centered-slide(section: [Let's start a new section!])
+= Let's start a new section!
+
+== Dynamic slide
 
 #slide[
-  == Dynamic slide
   Did you know that...
 
   #pause
+
   ...you can see the current section at the top of the slide?
 ]
