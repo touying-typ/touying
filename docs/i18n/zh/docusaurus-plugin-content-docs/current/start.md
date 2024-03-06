@@ -105,6 +105,7 @@ Hello, Typst!
   Meanwhile, #pause we can also use `#meanwhile` to #pause display other content synchronously.
 ]
 
+
 == Complex Animation
 
 #slide(repeat: 3, self => [
@@ -118,6 +119,7 @@ Hello, Typst!
 
   #alternatives[call `#only` multiple times \u{2717}][use `#alternatives` function #sym.checkmark] for choosing one of the alternatives.
 ])
+
 
 == Math Equation Animation
 
@@ -137,6 +139,7 @@ Hello, Typst!
 
   By factorizing, we can obtain this result.
 ]
+
 
 == CeTZ Animation
 
@@ -159,6 +162,7 @@ Hello, Typst!
     line((0,0), (2.5, 2.5), name: "line")
   })
 ]
+
 
 == Fletcher Animation
 
@@ -193,6 +197,7 @@ Hello, Typst!
   Second column.
 ]
 
+
 == Setting
 
 #slide(setting: body => {
@@ -201,6 +206,7 @@ Hello, Typst!
 })[
   This slide has blue text.
 ]
+
 
 == Multiple Pages
 
