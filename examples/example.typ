@@ -65,6 +65,7 @@
   Meanwhile, #pause we can also use `#meanwhile` to #pause display other content synchronously.
 ]
 
+
 == Complex Animation
 
 #slide(repeat: 3, self => [
@@ -78,6 +79,7 @@
 
   #alternatives[call `#only` multiple times \u{2717}][use `#alternatives` function #sym.checkmark] for choosing one of the alternatives.
 ])
+
 
 == Math Equation Animation
 
@@ -97,6 +99,7 @@
 
   By factorizing, we can obtain this result.
 ]
+
 
 == CeTZ Animation
 
@@ -119,6 +122,7 @@
     line((0,0), (2.5, 2.5), name: "line")
   })
 ]
+
 
 == Fletcher Animation
 
@@ -153,6 +157,7 @@
   Second column.
 ]
 
+
 == Setting
 
 #slide(setting: body => {
@@ -161,6 +166,7 @@
 })[
   This slide has blue text.
 ]
+
 
 == Multiple Pages
 
