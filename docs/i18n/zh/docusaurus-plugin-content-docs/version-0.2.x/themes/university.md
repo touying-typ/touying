@@ -160,7 +160,7 @@ Hello, Typst!
 #let (init, slide, slides, title-slide, focus-slide, matrix-slide, touying-outline, alert) = utils.methods(s)
 #show: init
 
-#title-slide(authors: ("Author A", "Author B"))
+#title-slide(authors: ([Author A], [Author B]))
 
 #slide(title: [Slide title], section: [The section])[
   #lorem(40)

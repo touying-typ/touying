@@ -165,7 +165,7 @@ Hello, Typst!
 #let (slide, title-slide, focus-slide, matrix-slide) = utils.slides(s)
 #show: slides.with(title-slide: false)
 
-#title-slide(authors: ("Author A", "Author B"))
+#title-slide(authors: ([Author A], [Author B]))
 
 = The Section
 

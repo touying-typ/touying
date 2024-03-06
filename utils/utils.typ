@@ -12,7 +12,7 @@
   self.page-args += (
     header: none,
     footer: none,
-    margin: 0em,
+    margin: (x: 0em, y: 0em),
   )
   self.padding = (x: 0em, y: 0em)
   self
