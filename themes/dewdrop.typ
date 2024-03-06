@@ -273,6 +273,8 @@
     fill: self.colors.neutral-lightest,
     header: header,
     footer: footer,
+    header-ascent: 0em,
+    footer-descent: 0em,
   ) + if navigation == "sidebar" {(
     margin: (top: 2em, bottom: 1em, x: 0em),
   )} else if navigation == "mini-slides" {(

@@ -4,16 +4,16 @@ sidebar_position: 4
 
 # University 主题
 
-![image](https://github.com/touying-typ/touying/assets/34951714/a9023bb3-0ef2-45eb-b23c-f94cc68a6fdd)
+![image](https://github.com/touying-typ/touying/assets/34951714/4095163c-0c16-4760-b370-8adc1cdd7e6c)
 
-这个主题来自 [Pol Dellaiera](https://github.com/drupol)。
+这个美观的主题来自 [Pol Dellaiera](https://github.com/drupol)。
 
 ## 初始化
 
 你可以通过下面的代码来初始化：
 
 ```typst
-#import "@preview/touying:0.2.1": *
+#import "@preview/touying:0.3.0": *
 
 #let s = themes.university.register(s, aspect-ratio: "16-9")
 #let s = (s.methods.info)(
@@ -24,8 +24,11 @@ sidebar_position: 4
   date: datetime.today(),
   institution: [Institution],
 )
-#let (init, slide, slides, title-slide, focus-slide, matrix-slide, touying-outline, alert) = utils.methods(s)
+#let (init, slides, touying-outline, alert) = utils.methods(s)
 #show: init
+
+#let (slide, title-slide, focus-slide, matrix-slide) = utils.slides(s)
+#show: slides
 ```
 
 其中 `register` 接收参数:
@@ -45,7 +48,6 @@ University 默认使用了
   primary: rgb("#04364A"),
   secondary: rgb("#176B87"),
   tertiary: rgb("#448C95"),
-  neutral-lightest: rgb("#FBFEF9"),
 )
 ```
 
@@ -75,8 +77,6 @@ University 主题提供了一系列自定义 slide 函数：
   subtitle: none,
   header: none,
   footer: auto,
-  margin: (top: 2em, bottom: 1em, x: 0em),
-  padding: (x: 2em, y: .5em),
 )[
   ...
 ]
@@ -109,11 +109,12 @@ University 主题提供了一系列自定义 slide 函数：
 `slides` 函数拥有参数
 
 - `title-slide`: 默认为 `true`。
+- `slide-level`: 默认为 `1`。
 
 可以通过 `#show: slides.with(..)` 的方式设置。
 
 ```typst
-#import "@preview/touying:0.2.1": *
+#import "@preview/touying:0.3.0": *
 
 #let s = themes.university.register(s, aspect-ratio: "16-9")
 #let s = (s.methods.info)(
@@ -124,9 +125,10 @@ University 主题提供了一系列自定义 slide 函数：
   date: datetime.today(),
   institution: [Institution],
 )
-#let (init, slide, slides, title-slide, focus-slide, matrix-slide, touying-outline, alert) = utils.methods(s)
+#let (init, slides, touying-outline, alert) = utils.methods(s)
 #show: init
 
+#let (slide, title-slide, focus-slide, matrix-slide) = utils.slides(s)
 #show: slides
 
 = Title
@@ -146,7 +148,7 @@ Hello, Typst!
 ## 示例
 
 ```typst
-#import "@preview/touying:0.2.1": *
+#import "@preview/touying:0.3.0": *
 
 #let s = themes.university.register(s, aspect-ratio: "16-9")
 #let s = (s.methods.info)(
@@ -157,21 +159,28 @@ Hello, Typst!
   date: datetime.today(),
   institution: [Institution],
 )
-#let (init, slide, slides, title-slide, focus-slide, matrix-slide, touying-outline, alert) = utils.methods(s)
+#let (init, slides, touying-outline, alert) = utils.methods(s)
 #show: init
+
+#let (slide, title-slide, focus-slide, matrix-slide) = utils.slides(s)
+#show: slides.with(title-slide: false)
 
 #title-slide(authors: ("Author A", "Author B"))
 
-#slide(title: [Slide title], section: [The section])[
+= The Section
+
+== Slide Title
+
+#slide[
   #lorem(40)
 ]
 
-#slide(title: [Slide title], subtitle: emph[What is the problem?])[
+#slide(subtitle: emph[What is the problem?])[
   #lorem(40)
 ]
 
 #focus-slide[
-  *Another variant with an image in background...*
+  *Another variant with primary color in background...*
 ]
 
 #matrix-slide[

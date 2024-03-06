@@ -164,6 +164,8 @@
     paper: "presentation-" + aspect-ratio,
     header: header,
     footer: footer,
+    header-ascent: 30%,
+    footer-descent: 30%,
     margin: (top: 3em, bottom: 1.5em, x: 0em),
   )
   self.padding = (x: 2em, y: 0em)

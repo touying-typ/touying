@@ -1,145 +1,118 @@
 ---
-sidebar_position: 3
+sidebar_position: 5
 ---
 
-# 排篇布局
+# 页面布局
 
-为了更好地掌管 slides 里的每一处细节，并得到更好的渲染结果，就像 Beamer 一样，Touying 不得不引入了一些 Touying 特有的概念。这能帮助您更好地维护全局信息，以及让您可以在不同的主题之间方便地切换。
+## 基础概念
 
-## 全局信息
+要想使用 Typst 制作一个样式美观的 slides，正确理解 Typst 的页面模型是必须的，如果你不关心自定义页面样式，你可以选择跳过这部分，否则还是推荐看一遍这部分。
 
-你可以通过
+下面我们通过一个具体的例子来说明 Typst 的默认页面模型。
 
 ```typst
-#let s = (s.methods.info)(
-  self: s,
-  title: [Title],
-  subtitle: [Subtitle],
-  author: [Authors],
-  date: datetime.today(),
-  institution: [Institution],
+#let container = rect.with(height: 100%, width: 100%, inset: 0pt)
+#let innerbox = rect.with(stroke: (dash: "dashed"))
+
+#set text(size: 30pt)
+#set page(
+  paper: "presentation-16-9",
+  header: container[#innerbox[Header]],
+  header-ascent: 30%,
+  footer: container[#innerbox[Footer]],
+  footer-descent: 30%,
 )
-```
+#let padding = (x: 2em, y: 2em)
 
-分别设置 slides 的标题、副标题、作者、日期和机构信息。
-
-其中 `date` 可以接收 `datetime` 格式和 `content` 格式，并且 `datetime` 格式的日期显示格式，可以通过
-
-```typst
-#let s = (s.methods.datetime-format)(self: s, "[year]-[month]-[day]")
-```
-
-的方式更改。
-
-:::tip[原理]
-
-在这里，我们会稍微引入一点 Touying 的 OOP 概念。
-
-您应该知道，Typst 是一个支持增量渲染的排版语言，也就是说，Typst 会缓存之前的函数调用结果，这就要求 Typst 里只有纯函数，即无法改变外部变量的函数。因此我们很难真正意义上地像 LaTeX 那样修改一个全局变量。即使是使用 `state` 或 `counter`，也需要使用 `locate` 与回调函数来获取里面的值，且实际上这种方式会对性能有很大的影响。
-
-Touying 并没有使用 `state` 和 `counter`，也没有违反 Typst 纯函数的原则，而是使用了一种巧妙的方式，并以面向对象风格的代码，维护了一个全局单例 `s`。在 Touying 中，一个对象指拥有自己的成员变量和方法的 Typst 字典，并且我们约定方法均有一个命名参数 `self` 用于传入对象自身，并且方法均放在 `.methods` 域里。有了这个理念，我们就不难写出更新 `info` 的方法了：
-
-```
-#let s = (
-  info: (:),
-  methods: (
-    // update info
-    info: (self: none, ..args) => {
-      self.info += args.named()
-      self
-    },
-  )
-)
-
-#let s = (s.methods.info)(self: s, title: [title])
-
-Title is #s.info.title
-```
-
-这样，你也能够理解 `utils.methods()` 函数的用途了：将 `self` 绑定到 `s` 的所有方法上并返回，并通过解包语法简化后续的使用。
-
-```typst
-#let (init, slide, slides) = utils.methods(s)
-```
-:::
-
-
-## 节与小节
-
-与 Beamer 相同，Touying 同样有着 section 和 subsection 的概念。
-
-在 `#show: slides` 模式下，section 和 subsection 分别对应着一级标题和二级标题，例如
-
-```typst
-#import "@preview/touying:0.2.1": *
-
-#let (init, slide, slides) = utils.methods(s)
-#show: init
-
-#show: slides
-
-= Section
-
-== Subsection
-
-Hello, Touying!
-```
-
-![image](https://github.com/touying-typ/touying/assets/34951714/600876bb-941d-4841-af5c-27137bb04c54)
-
-不过二级标题并非总是对应 subsection，具体的映射方式因主题而异。
-
-而在更通用的 `#slide[..]` 模式下，section 和 subsection 分别作为参数传入 `slide` 函数中，例如
-
-```typst
-#slide(section: [Let's start a new section!])[..]
-
-#slide(subsection: [Let's start a new subsection!])[..]
-```
-
-会分别新建一个 section 和一个 subsection。当然，这种变化默认只会影响到 Touying 内部的 `sections` state，默认是不会显示在 slide 上的，具体的显示方式依主题而异。
-
-注意，`slide` 的 `section` 和 `subsection` 参数，既能接收内容块，也能接收形如 `([title], [short-title])` 格式的数组，或 `(title: [title], short-title: [short-title])` 格式的字典。其中 `short-title` 会在一些特殊场景下用到，例如 `dewdrop` 主题的 navigation 中将会用到。
-
-
-## 目录
-
-在 Touying 中显示目录很简单：
-
-```typst
-#import "@preview/touying:0.2.1": *
-
-#let (init, slide, touying-outline) = utils.methods(s)
-#show: init
-
-#slide[
-  == Table of contents
-
-  #touying-outline()
+#place(top + right)[Margin→]
+#container[
+  #place[Padding]
+  #pad(..padding)[
+    #container[
+      #innerbox[Content]
+    ]
+  ]
 ]
 ```
 
-其中 `touying-oultine()` 的定义为：
+![image](https://github.com/touying-typ/touying/assets/34951714/6cbb1092-c733-41b6-a15d-822ce970ef13)
+
+我们需要区分以下概念：
+
+1. **Model:** Typst 拥有与 CSS Box Model 类似的模型，分为 Margin、Padding 和 Content，但其中 padding 并非 `set page(..)` 的属性，而是我们手动添加 `#pad(..)` 得到的。
+2. **Margin:** 页边距，分为上下左右四个方向，是 Typst 页面模型的核心，其他属性都会受到页边距的影响，尤其是 Header 和 Footer，其实际上是位于 Margin 内部。
+3. **Padding:** 用于在 Margin 和 Content 之间添加额外的间隙。
+4. **Header:** Header 是页面顶部的内容，又分为 container 和 innerbox。我们可以注意到 header container 和 padding 的边缘并不贴合，而是也有一定的空隙，这个空隙实际上就是 `header-ascent: 30%`，而这里的百分比是相对于 margin-top 而言的。并且，我们注意到 header innerbox 实际上位于 header container 左下角，也即 innerbox 实际上默认有属性 `#set align(left + bottom)`。
+5. **Footer:** Footer 是页面底部的内容，又分为 container 和 innerbox。我们可以注意到 footer container 和 padding 的边缘并不贴合，而是也有一定的空隙，这个空隙实际上就是 `footer-descent: 30%`，而这里的百分比是相对于 margin-bottom 而言的。并且，我们注意到 footer innerbox 实际上位于 footer container 左上角，也即 innerbox 实际上默认有属性 `#set align(left + top)`。
+6. **Place:** `place` 函数可以实现绝对定位，在不影响父容器内其他元素的情况下，相对于父容器来定位，并且可以传入 `alignment`、`dx` 和 `dy`，很适合用来放置一些修饰元素，例如 Logo 之类的图片。
+
+因此，要将 Typst 应用到制作 slides 上，我们只需要设置
 
 ```typst
-#let touying-outline(enum-args: (:), padding: 0pt) = { .. }
+#set page(
+  margin: (x: 0em, y: 2em),
+  header: align(top)[Header],
+  footer: align(bottom)[Footer],
+  header-ascent: 0em,
+  footer-descent: 0em,
+)
+#let padding = (x: 4em, y: 0em)
 ```
 
-你可以通过 `enum-args` 修改内部 enum 的参数。
-
-如果你对目录有着复杂的自定义需求，你可以使用
+即可。例如我们有
 
 ```typst
-#slide[
-  == Table of contents
+#let container = rect.with(stroke: (dash: "dashed"), height: 100%, width: 100%, inset: 0pt)
+#let innerbox = rect.with(fill: rgb("#d0d0d0"))
 
-  #states.touying-final-sections(sections => ..)
+#set text(size: 30pt)
+#set page(
+  paper: "presentation-16-9",
+  margin: (x: 0em, y: 2em),
+  header: container[#align(top)[#innerbox(width: 100%)[Header]]],
+  header-ascent: 0em,
+  footer: container[#align(bottom)[#innerbox(width: 100%)[Footer]]],
+  footer-descent: 0em,
+)
+#let padding = (x: 4em, y: 0em)
+
+#place(top + right)[↑Margin]
+#container[
+  #place[Padding]
+  #pad(..padding)[
+    #container[
+      #innerbox[Content]
+    ]
+  ]
 ]
 ```
+
+![image](https://github.com/touying-typ/touying/assets/34951714/6127d231-86f3-4262-b7c6-b199d47ae12b)
 
 ## 页面管理
 
-由于 Typst 中使用 `set page(..)` 命令，会导致创建一个新的页面，而不能修改当前页面，因此 Touying 选择在单例 `s` 中维护一个 `s.page-args` 成员变量，只在创建新 slide 时才会应用这些参数。
+由于 Typst 中使用 `set page(..)` 命令来修改页面参数，会导致创建一个新的页面，而不能修改当前页面，因此 Touying 选择维护一个 `s.page-args` 成员变量和一个 `s.padding` 成员变量，只在 Touying 自己创建新 slide 时才会自己应用这些参数，因此用户只需要关注 `s.page-args` 和 `s.padding` 即可。
+
+例如，上面的例子就可以改成
+
+```typst
+#(s.page-args += (
+  margin: (x: 0em, y: 2em),
+  header: align(top)[Header],
+  footer: align(bottom)[Footer],
+  header-ascent: 0em,
+  footer-descent: 0em,
+))
+#(s.padding += (x: 4em, y: 0em))
+```
+
+同理，如果你对某个主题的 header 或 footer 样式不满意，你也可以通过
+
+```typst
+#(s.page-args.footer = [Custom Footer])
+```
+
+这样方式进行更换。不过需要注意的是，如果这样更换了页面参数，你需要将其放在 `#let (slide,) = utils.slides(s)` 之前，否则就需要重新调用 `#let (slide,) = utils.slides(s)`。
 
 :::warning[警告]
 
@@ -147,7 +120,7 @@ Hello, Touying!
 
 :::
 
-通过这种方式，我们可以通过 `s.page-args` 实时查询当前页面的参数，这对一些需要获取页边距或当前页面背景颜色的函数很有用，例如 `transparent-cover`。
+借助这种方式，我们也可以通过 `s.page-args` 实时查询当前页面的参数，这对一些需要获取页边距或当前页面背景颜色的函数很有用，例如 `transparent-cover`。这里就部分等价于 context get rule，而且实际上用起来会更方便。
 
 
 ## 页面分栏

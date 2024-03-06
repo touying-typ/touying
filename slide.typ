@@ -125,7 +125,7 @@
   let result = ()
   let cover-arr = ()
   for child in reducer.args.flatten() {
-      if type(child) == content and child.func() == metadata {
+      if type(child) == content and child.func() == metadata and type(child.value) == dictionary {
         let kind = child.value.at("kind", default: none)
         if kind == "touying-pause" {
           repetitions += 1
@@ -194,7 +194,7 @@
     let cover-arr = ()
     let children = if utils.is-sequence(it) { it.children } else { (it,) }
     for child in children {
-      if type(child) == content and child.func() == metadata {
+      if type(child) == content and child.func() == metadata and type(child.value) == dictionary {
         let kind = child.value.at("kind", default: none)
         if kind == "touying-pause" {
           repetitions += 1
@@ -432,10 +432,10 @@
   let is-end = false
   for child in children {
     i += 1
-    if type(child) == content and child.func() == metadata and child.value.at("kind", default: none) == "touying-slides-end" {
+    if type(child) == content and child.func() == metadata and type(child.value) == dictionary and child.value.at("kind", default: none) == "touying-slides-end" {
       is-end = true
       break
-    } else if type(child) == content and child.func() == metadata and child.value.at("kind", default: none) == "touying-wrapper" {
+    } else if type(child) == content and child.func() == metadata and type(child.value) == dictionary and child.value.at("kind", default: none) == "touying-wrapper" {
       slide = utils.trim(slide)
       if slide != () {
         (self.methods.slide)(self: self, section: section, subsection: subsection, ..(if last-title != none { (title: last-title) }), slide.sum())
@@ -459,7 +459,7 @@
       let child-body = if child.body != [] { child.body } else { none }
       if utils.heading-depth(child) == 1 {
         if slide-level >= 1 {
-          if "touying-new-section-slide" in self.methods {
+          if type(self.methods.at("touying-new-section-slide", default: none)) == function {
             (self.methods.touying-new-section-slide)(self: self, child-body)
           } else {
             section = child-body
@@ -471,7 +471,7 @@
         }
       } else if utils.heading-depth(child) == 2 {
         if slide-level >= 2 {
-          if "touying-new-subsection-slide" in self.methods {
+          if type(self.methods.at("touying-new-subsection-slide", default: none)) == function {
             (self.methods.touying-new-subsection-slide)(self: self, child-body)
           } else {
             subsection = child-body

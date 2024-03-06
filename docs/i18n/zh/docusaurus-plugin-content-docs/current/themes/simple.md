@@ -16,12 +16,15 @@ sidebar_position: 1
 你可以通过下面的代码来初始化：
 
 ```typst
-#import "@preview/touying:0.2.1": *
+#import "@preview/touying:0.3.0": *
 
 #let s = themes.simple.register(s, aspect-ratio: "16-9", footer: [Simple slides])
 #let s = (s.methods.enable-transparent-cover)(self: s)
-#let (init, slide, slides, title-slide, centered-slide, focus-slide) = utils.methods(s)
+#let (init, slides) = utils.methods(s)
 #show: init
+
+#let (slide, title-slide, centered-slide, focus-slide) = utils.slides(s)
+#show: slides
 ```
 
 其中 `register` 接收参数:
@@ -84,14 +87,21 @@ simple 主题提供了一系列自定义 slide 函数：
 
 ## `slides` 函数
 
+`slides` 函数拥有参数
+
+- `slide-level`: 默认为 `1`。
+
+可以通过 `#show: slides.with(..)` 的方式设置。
+
 ```typst
-#import "@preview/touying:0.2.1": *
+#import "@preview/touying:0.3.0": *
 
 #let s = themes.simple.register(s, aspect-ratio: "16-9", footer: [Simple slides])
 #let s = (s.methods.enable-transparent-cover)(self: s)
-#let (init, slide, slides, title-slide, centered-slide, focus-slide) = utils.methods(s)
+#let (init, slides) = utils.methods(s)
 #show: init
 
+#let (slide, title-slide, centered-slide, focus-slide) = utils.slides(s)
 #show: slides
 
 = Title
@@ -111,12 +121,14 @@ Hello, Typst!
 ## 示例
 
 ```typst
-#import "@preview/touying:0.2.1": *
+#import "@preview/touying:0.3.0": *
 
 #let s = themes.simple.register(s, aspect-ratio: "16-9", footer: [Simple slides])
-#let s = (s.methods.enable-transparent-cover)(self: s)
-#let (init, slide, slides, title-slide, centered-slide, focus-slide) = utils.methods(s)
+#let (init, slides) = utils.methods(s)
 #show: init
+
+#let (slide, title-slide, centered-slide, focus-slide) = utils.slides(s)
+#show: slides
 
 #title-slide[
   = Keep it simple!
@@ -129,9 +141,9 @@ Hello, Typst!
   July 23
 ]
 
-#slide[
-  == First slide
+== First slide
 
+#slide[
   #lorem(20)
 ]
 
@@ -141,13 +153,15 @@ Hello, Typst!
   This is very important.
 ]
 
-#centered-slide(section: [Let's start a new section!])
+= Let's start a new section!
+
+== Dynamic slide
 
 #slide[
-  == Dynamic slide
   Did you know that...
 
   #pause
+
   ...you can see the current section at the top of the slide?
 ]
 ```

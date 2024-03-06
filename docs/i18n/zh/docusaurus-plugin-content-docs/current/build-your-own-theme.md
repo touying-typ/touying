@@ -1,5 +1,5 @@
 ---
-sidebar_position: 7
+sidebar_position: 10
 ---
 
 # 创建自己的主题
@@ -12,7 +12,6 @@ sidebar_position: 7
 - 自定义 `alert` 函数，可选；
 - 自定义 `slide` 函数；
 - 自定义特殊 slide 函数，如 `title-slide` 和 `focus-slide` 函数；
-- 自定义 `slide-in-slides` 函数，该函数会被 `slides` 函数调用；
 - 自定义 `slides` 函数，可选；
 - 自定义 `register` 函数，初始化全局单例 `s`；
 - 自定义 `init` 函数，可选。

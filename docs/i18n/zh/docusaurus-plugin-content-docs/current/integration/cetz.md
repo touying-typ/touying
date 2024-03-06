@@ -1,10 +1,10 @@
 ---
-sidebar_position: 5
+sidebar_position: 2
 ---
 
-# 其他动画
+# CeTZ
 
-Touying 还提供了 `touying-reducer`，它能为 cetz 与 fletcher 加入 `pause` 和 `meanwhile` 动画。
+Touying 提供了 `touying-reducer`，它能为 cetz 与 fletcher 加入 `pause` 和 `meanwhile` 动画。
 
 ## 简单动画
 

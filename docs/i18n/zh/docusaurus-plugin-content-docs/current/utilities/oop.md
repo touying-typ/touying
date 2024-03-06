@@ -9,13 +9,6 @@ Touying 提供了一些便利的工具函数，便于进行面向对象编程。
 ---
 
 ```typst
-#let empty-object = (methods: (:))
-```
-一个空类。
-
----
-
-```typst
 #let call-or-display(self, it) = {
   if type(it) == function {
     return it(self)

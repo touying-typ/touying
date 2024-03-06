@@ -1,8 +1,27 @@
 ---
-sidebar_position: 11
+sidebar_position: 14
 ---
 
 # 更新日志
+
+## v0.3.0
+
+### Features
+
+- better show-slides mode.
+- support align and pad.
+
+### Documentation
+
+- Add more detailed documentation.
+
+### Refactor
+
+- simplify theme.
+
+### Fix
+
+- fix many bugs.
 
 ## v0.2.1
 

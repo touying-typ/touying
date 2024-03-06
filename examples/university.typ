@@ -1,4 +1,4 @@
-#import "../lib.typ": s, pause, meanwhile, utils, states, pdfpc, themes
+#import "../lib.typ": *
 
 #let s = themes.university.register(s, aspect-ratio: "16-9")
 #let s = (s.methods.info)(

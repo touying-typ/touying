@@ -4,7 +4,8 @@ sidebar_position: 2
 
 # Metropolis 主题
 
-![image](https://github.com/touying-typ/touying/assets/34951714/a1b34b11-6797-42fd-b50f-477a0d672ba2)
+![image](https://github.com/touying-typ/touying/assets/34951714/383ceb22-f696-4450-83a6-c0f17e4597e1)
+
 
 这个主题的灵感来自 Matthias Vogelgesang 创作的 [Metropolis beamer](https://github.com/matze/mtheme) 主题，由 [Enivex](https://github.com/Enivex) 改造而来。
 
@@ -16,7 +17,7 @@ sidebar_position: 2
 你可以通过下面的代码来初始化：
 
 ```typst
-#import "@preview/touying:0.2.1": *
+#import "@preview/touying:0.3.0": *
 
 #let s = themes.metropolis.register(s, aspect-ratio: "16-9", footer: self => self.info.institution)
 #let s = (s.methods.info)(
@@ -27,11 +28,13 @@ sidebar_position: 2
   date: datetime.today(),
   institution: [Institution],
 )
-#let s = (s.methods.enable-transparent-cover)(self: s)
-#let (init, slide, slides, title-slide, new-section-slide, focus-slide, touying-outline, alert) = utils.methods(s)
+#let (init, slides, touying-outline, alert) = utils.methods(s)
 #show: init
 
 #show strong: alert
+
+#let (slide, title-slide, new-section-slide, focus-slide) = utils.slides(s)
+#show: slides
 ```
 
 其中 `register` 接收参数:
@@ -83,8 +86,6 @@ Metropolis 主题提供了一系列自定义 slide 函数：
   title: auto,
   footer: auto,
   align: horizon,
-  margin: (top: 3em, bottom: 1em, left: 0em, right: 0em),
-  padding: 2em,
 )[
   ...
 ]
@@ -114,12 +115,14 @@ Metropolis 主题提供了一系列自定义 slide 函数：
 
 - `title-slide`: 默认为 `true`。
 - `outline-slide`: 默认为 `true`。
-- `outline-title`: 默认为 `[Table of contents]`。
+- `slide-level`: 默认为 `1`。
 
 可以通过 `#show: slides.with(..)` 的方式设置。
 
+PS: 其中 outline title 可以通过 `#(s.outline-title = [Outline])` 的方式修改。
+
 ```typst
-#import "@preview/touying:0.2.1": *
+#import "@preview/touying:0.3.0": *
 
 #let s = themes.metropolis.register(s, aspect-ratio: "16-9", footer: self => self.info.institution)
 #let s = (s.methods.info)(
@@ -155,7 +158,7 @@ Hello, Typst!
 ## 示例
 
 ```typst
-#import "@preview/touying:0.2.1": *
+#import "@preview/touying:0.3.0": *
 
 #let s = themes.metropolis.register(s, aspect-ratio: "16-9", footer: self => self.info.institution)
 #let s = (s.methods.info)(
@@ -166,40 +169,44 @@ Hello, Typst!
   date: datetime.today(),
   institution: [Institution],
 )
-#let s = (s.methods.enable-transparent-cover)(self: s)
-#let (init, slide, title-slide, new-section-slide, focus-slide, touying-outline, alert) = utils.methods(s)
+#let (init, slides, touying-outline, alert) = utils.methods(s)
 #show: init
 
+#set text(font: "Fira Sans", weight: "light", size: 20pt)
+#show math.equation: set text(font: "Fira Math")
+#set strong(delta: 100)
+#set par(justify: true)
 #show strong: alert
 
-#title-slide(extra: [Extra])
+#let (slide, title-slide, new-section-slide, focus-slide) = utils.slides(s)
+#show: slides
 
-#slide(title: [Table of contents])[
-  #touying-outline()
+= First Section
+
+#slide[
+  A slide without a title but with some *important* information.
 ]
 
-#slide(title: [A long long long long long long long long long long long long long long long long long long long long long long long long Title])[
-  A slide with some maths:
+== A long long long long long long long long long long long long long long long long long long long long long long long long Title
+
+#slide[
+  A slide with equation:
+
   $ x_(n+1) = (x_n + a/x_n) / 2 $
 
   #lorem(200)
 ]
 
-#new-section-slide[First section]
-
-#slide[
-  A slide without a title but with *important* infos
-]
-
-#new-section-slide[Second section]
+= Second Section
 
 #focus-slide[
   Wake up!
 ]
 
-// simple animations
+== Simple Animation
+
 #slide[
-  a simple #pause dynamic slide with #alert[alert]
+  A simple #pause dynamic slide with #alert[alert]
 
   #pause
   
@@ -208,12 +215,12 @@ Hello, Typst!
 
 // appendix by freezing last-slide-number
 #let s = (s.methods.appendix)(self: s)
-#let (slide, new-section-slide) = utils.methods(s)
+#let (slide,) = utils.slides(s)
 
-#new-section-slide[Appendix]
+= Appendix
 
 #slide[
-  appendix
+  Appendix.
 ]
 ```
 

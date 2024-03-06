@@ -13,7 +13,6 @@
 #show: init
 
 #set text(font: "Fira Sans", weight: "light", size: 20pt)
-
 #show math.equation: set text(font: "Fira Math")
 #set strong(delta: 100)
 #set par(justify: true)
