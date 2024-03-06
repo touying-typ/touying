@@ -1,6 +1,6 @@
 {
   "label": "Progress",
-  "position": 8,
+  "position": 11,
   "link": {
     "type": "generated-index",
     "description": "Manage and display progress in Touying, such as counters and sections."

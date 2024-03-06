@@ -9,13 +9,6 @@ Touying provides some convenient utility functions for object-oriented programmi
 ---
 
 ```typst
-#let empty-object = (methods: (:))
-```
-An empty class.
-
----
-
-```typst
 #let call-or-display(self, it) = {
   if type(it) == function {
     return it(self)

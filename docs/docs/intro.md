@@ -4,7 +4,7 @@ sidebar_position: 1
 
 # Introduction to Touying
 
-[Touying](https://github.com/touying-typ/touying) is a slide/presentation package developed for Typst, based on [Polylux](https://github.com/andreasKroepelin/polylux). Touying is similar to LaTeX Beamer but benefits from Typst, providing faster rendering speed and a more concise syntax. Hereafter, we use "slides" to refer to slideshows, "slide" for a single slide, and "subslide" for a sub-slide.
+[Touying](https://github.com/touying-typ/touying) is a slide/presentation package developed for Typst. Touying is similar to LaTeX Beamer but benefits from Typst, providing faster rendering speed and a more concise syntax. After, we use "slides" to refer to slideshows, "slide" for a single slide, and "subslide" for a sub-slide.
 
 ## Why Use Touying
 

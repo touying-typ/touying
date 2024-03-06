@@ -2,18 +2,18 @@
 sidebar_position: 4
 ---
 
-# University Theme
+# University 主题
 
-![image](https://github.com/touying-typ/touying/assets/34951714/a9023bb3-0ef2-45eb-b23c-f94cc68a6fdd)
+![image](https://github.com/touying-typ/touying/assets/34951714/4095163c-0c16-4760-b370-8adc1cdd7e6c)
 
-This theme is courtesy of [Pol Dellaiera](https://github.com/drupol).
+这个美观的主题来自 [Pol Dellaiera](https://github.com/drupol)。
 
-## Initialization
+## 初始化
 
-You can initialize it with the following code:
+你可以通过下面的代码来初始化：
 
 ```typst
-#import "@preview/touying:0.2.1": *
+#import "@preview/touying:0.3.0": *
 
 #let s = themes.university.register(s, aspect-ratio: "16-9")
 #let s = (s.methods.info)(
@@ -24,20 +24,23 @@ You can initialize it with the following code:
   date: datetime.today(),
   institution: [Institution],
 )
-#let (init, slide, slides, title-slide, focus-slide, matrix-slide, touying-outline, alert) = utils.methods(s)
+#let (init, slides, touying-outline, alert) = utils.methods(s)
 #show: init
+
+#let (slide, title-slide, focus-slide, matrix-slide) = utils.slides(s)
+#show: slides
 ```
 
-The `register` function takes the following parameters for initialization:
+其中 `register` 接收参数:
 
-- `aspect-ratio`: Sets the aspect ratio of the slides to "16-9" or "4-3," with the default being "16-9."
-- `progress-bar`: Determines whether to display the progress bar at the top of the slides, with the default value of `true`.
+- `aspect-ratio`: 幻灯片的长宽比为 "16-9" 或 "4-3"，默认为 "16-9"。
+- `progress-bar`: 是否显示 slide 顶部的进度条，默认为 `true`。
 
-Additionally, the University theme provides an `#alert[..]` function that you can use with `#show strong: alert` using the `*alert text*` syntax.
+并且 University 主题会提供一个 `#alert[..]` 函数，你可以通过 `#show strong: alert` 来使用 `*alert text*` 语法。
 
-## Color Themes
+## 颜色主题
 
-University theme defaults to using:
+University 默认使用了
 
 ```typst
 #let s = (s.methods.colors)(
@@ -45,21 +48,20 @@ University theme defaults to using:
   primary: rgb("#04364A"),
   secondary: rgb("#176B87"),
   tertiary: rgb("#448C95"),
-  neutral-lightest: rgb("#FBFEF9"),
 )
 ```
 
-You can modify the color theme by using `#let s = (s.methods.colors)(self: s, ..)`.
+颜色主题，你可以通过 `#let s = (s.methods.colors)(self: s, ..)` 对其进行修改。
 
-## Slide Function Family
+## slide 函数族
 
-The University theme provides a series of custom slide functions:
+University 主题提供了一系列自定义 slide 函数：
 
 ```typst
 #title-slide(logo: none, authors: none, ..args)
 ```
 
-The `title-slide` reads information from `self.info` for display, and you can pass in the `logo` parameter and an array-type `authors` parameter.
+`title-slide` 会读取 `self.info` 里的信息用于显示，你也可以为其传入 `logo` 参数和 array 类型的 `authors` 参数。
 
 ---
 
@@ -75,13 +77,11 @@ The `title-slide` reads information from `self.info` for display, and you can pa
   subtitle: none,
   header: none,
   footer: auto,
-  margin: (top: 2em, bottom: 1em, x: 0em),
-  padding: (x: 2em, y: .5em),
 )[
   ...
 ]
 ```
-The default ordinary slide function with a title and footer, where `title` defaults to the current section title, and the footer is set by you.
+默认拥有标题和页脚的普通 slide 函数，其中 `title` 默认为当前 section title，页脚为您设置的页脚。
 
 ---
 
@@ -90,7 +90,7 @@ The default ordinary slide function with a title and footer, where `title` defau
   ...
 ]
 ```
-Used to capture the audience's attention, with the default background color being `self.colors.primary`.
+用于引起观众的注意力。默认背景色为 `self.colors.primary`。
 
 ---
 
@@ -101,18 +101,20 @@ Used to capture the audience's attention, with the default background color bein
   ...
 ]
 ```
-You can refer to the [documentation](https://polylux.dev/book/themes/gallery/university.html).
+可以参考 [文档](https://polylux.dev/book/themes/gallery/university.html)。
 
-## `slides` Function
 
-The `slides` function has the parameter:
+## `slides` 函数
 
-- `title-slide`: Defaults to `true`.
+`slides` 函数拥有参数
 
-You can set it using `#show: slides.with(..)`.
+- `title-slide`: 默认为 `true`。
+- `slide-level`: 默认为 `1`。
+
+可以通过 `#show: slides.with(..)` 的方式设置。
 
 ```typst
-#import "@preview/touying:0.2.1": *
+#import "@preview/touying:0.3.0": *
 
 #let s = themes.university.register(s, aspect-ratio: "16-9")
 #let s = (s.methods.info)(
@@ -123,9 +125,10 @@ You can set it using `#show: slides.with(..)`.
   date: datetime.today(),
   institution: [Institution],
 )
-#let (init, slide, slides, title-slide, focus-slide, matrix-slide, touying-outline, alert) = utils.methods(s)
+#let (init, slides, touying-outline, alert) = utils.methods(s)
 #show: init
 
+#let (slide, title-slide, focus-slide, matrix-slide) = utils.slides(s)
 #show: slides
 
 = Title
@@ -142,10 +145,10 @@ Hello, Typst!
 ![image](https://github.com/touying-typ/touying/assets/34951714/58971045-0b0d-46cb-acc2-caf766c2432d)
 
 
-## Example
+## 示例
 
 ```typst
-#import "@preview/touying:0.2.1": *
+#import "@preview/touying:0.3.0": *
 
 #let s = themes.university.register(s, aspect-ratio: "16-9")
 #let s = (s.methods.info)(
@@ -156,21 +159,28 @@ Hello, Typst!
   date: datetime.today(),
   institution: [Institution],
 )
-#let (init, slide, slides, title-slide, focus-slide, matrix-slide, touying-outline, alert) = utils.methods(s)
+#let (init, slides, touying-outline, alert) = utils.methods(s)
 #show: init
+
+#let (slide, title-slide, focus-slide, matrix-slide) = utils.slides(s)
+#show: slides.with(title-slide: false)
 
 #title-slide(authors: ("Author A", "Author B"))
 
-#slide(title: [Slide title], section: [The section])[
+= The Section
+
+== Slide Title
+
+#slide[
   #lorem(40)
 ]
 
-#slide(title: [Slide title], subtitle: emph[What is the problem?])[
+#slide(subtitle: emph[What is the problem?])[
   #lorem(40)
 ]
 
 #focus-slide[
-  *Another variant with an image in background...*
+  *Another variant with primary color in background...*
 ]
 
 #matrix-slide[

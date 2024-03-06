@@ -1,5 +1,5 @@
 ---
-sidebar_position: 7
+sidebar_position: 10
 ---
 
 # Build Your Own Theme
@@ -12,7 +12,6 @@ You can refer to the [source code of themes](https://github.com/touying-typ/touy
 - Optionally, customize the `alert` function.
 - Customize the `slide` function.
 - Customize special slide functions, such as `title-slide` and `focus-slide` functions.
-- Customize the `slide-in-slides` function, which will be called by the `slides` function.
 - Optionally, customize the `slides` function.
 - Customize the `register` function to initialize the global singleton `s`.
 - Optionally, customize the `init` function.

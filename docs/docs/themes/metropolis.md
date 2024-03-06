@@ -2,20 +2,22 @@
 sidebar_position: 2
 ---
 
-# Metropolis Theme
+# Metropolis 主题
 
-![image](https://github.com/touying-typ/touying/assets/34951714/a1b34b11-6797-42fd-b50f-477a0d672ba2)
+![image](https://github.com/touying-typ/touying/assets/34951714/383ceb22-f696-4450-83a6-c0f17e4597e1)
 
-This theme is inspired by the [Metropolis beamer](https://github.com/matze/mtheme) theme created by Matthias Vogelgesang and transformed by [Enivex](https://github.com/Enivex).
 
-The Metropolis theme is elegant and suitable for daily use. For the best results, it is recommended to install the Fira Sans and Fira Math fonts on your computer.
+这个主题的灵感来自 Matthias Vogelgesang 创作的 [Metropolis beamer](https://github.com/matze/mtheme) 主题，由 [Enivex](https://github.com/Enivex) 改造而来。
 
-## Initialization
+这个主题美观大方，很适合日常使用，并且你最好在电脑上安装 Fira Sans 和 Fira Math 字体，以取得最佳效果。
 
-You can initialize the Metropolis theme using the following code:
+
+## 初始化
+
+你可以通过下面的代码来初始化：
 
 ```typst
-#import "@preview/touying:0.2.1": *
+#import "@preview/touying:0.3.0": *
 
 #let s = themes.metropolis.register(s, aspect-ratio: "16-9", footer: self => self.info.institution)
 #let s = (s.methods.info)(
@@ -26,26 +28,28 @@ You can initialize the Metropolis theme using the following code:
   date: datetime.today(),
   institution: [Institution],
 )
-#let s = (s.methods.enable-transparent-cover)(self: s)
-#let (init, slide, slides, title-slide, new-section-slide, focus-slide, touying-outline, alert) = utils.methods(s)
+#let (init, slides, touying-outline, alert) = utils.methods(s)
 #show: init
 
 #show strong: alert
+
+#let (slide, title-slide, new-section-slide, focus-slide) = utils.slides(s)
+#show: slides
 ```
 
-The `register` function takes parameters such as:
+其中 `register` 接收参数:
 
-- `aspect-ratio`: The aspect ratio of the slides, either "16-9" or "4-3," with the default being "16-9."
-- `header`: Content to be displayed in the header, with the default being `states.current-section-title`. You can also pass a function like `self => self.info.title`.
-- `footer`: Content to be displayed in the footer, with the default being `[]`. You can also pass a function like `self => self.info.author`.
-- `footer-right`: Content to be displayed on the right side of the footer, with the default being `states.slide-counter.display() + " / " + states.last-slide-number`.
-- `footer-progress`: Whether to show the progress bar at the bottom of the slide, with the default being `true`.
+- `aspect-ratio`: 幻灯片的长宽比为 "16-9" 或 "4-3"，默认为 "16-9"。
+- `header`: 显示在页眉的内容，默认为 `states.current-section-title`，也可以传入形如 `self => self.info.title` 的函数。
+- `footer`: 展示在页脚的内容，默认为 `[]`，也可以传入形如 `self => self.info.author` 的函数。
+- `footer-right`: 展示在页脚右侧的内容，默认为 `states.slide-counter.display() + " / " + states.last-slide-number`。
+- `footer-progress`: 是否显示 slide 底部的进度条，默认为 `true`。
 
-The Metropolis theme also provides an `#alert[..]` function that you can use with the `#show strong: alert` syntax.
+并且 Metropolis 主题会提供一个 `#alert[..]` 函数，你可以通过 `#show strong: alert` 来使用 `*alert text*` 语法。
 
-## Color Themes
+## 颜色主题
 
-Metropolis uses the following default color theme:
+Metropolis 默认使用了
 
 ```typst
 #let s = (s.methods.colors)(
@@ -57,17 +61,17 @@ Metropolis uses the following default color theme:
 )
 ```
 
-You can modify the color theme using `#let s = (s.methods.colors)(self: s, ..)`.
+颜色主题，你可以通过 `#let s = (s.methods.colors)(self: s, ..)` 对其进行修改。
 
-## Slide Function Family
+## slide 函数族
 
-Metropolis theme provides a series of custom slide functions:
+Metropolis 主题提供了一系列自定义 slide 函数：
 
 ```typst
 #title-slide(extra: none, ..args)
 ```
 
-The `title-slide` reads information from `self.info` for display. You can also pass an `extra` parameter to display additional information.
+`title-slide` 会读取 `self.info` 里的信息用于显示，你也可以为其传入 `extra` 参数，显示额外的信息。
 
 ---
 
@@ -82,13 +86,11 @@ The `title-slide` reads information from `self.info` for display. You can also p
   title: auto,
   footer: auto,
   align: horizon,
-  margin: (top: 3em, bottom: 1em, left: 0em, right: 0em),
-  padding: 2em,
 )[
   ...
 ]
 ```
-This is the default ordinary slide function with a title and footer according to your settings. The `title` is set to the current section title by default, and the footer is as per your settings.
+默认拥有标题和页脚的普通 slide 函数，其中 `title` 默认为当前 section title，页脚为您设置的页脚。
 
 ---
 
@@ -97,29 +99,30 @@ This is the default ordinary slide function with a title and footer according to
   ...
 ]
 ```
-
-Used to draw attention. The background color is `self.colors.primary-dark`.
+用于引起观众的注意力。背景色为 `self.colors.primary-dark`。
 
 ---
 
 ```typst
 #new-section-slide(short-title: auto, title)
 ```
+用给定标题开启一个新的 section。
 
-Opens a new section with the given title.
 
-## `slides` Function
+## `slides` 函数
 
-The `slides` function has parameters:
+`slides` 函数拥有参数
 
-- `title-slide`: Default is `true`.
-- `outline-slide`: Default is `true`.
-- `outline-title`: Default is `[Table of contents]`.
+- `title-slide`: 默认为 `true`。
+- `outline-slide`: 默认为 `true`。
+- `slide-level`: 默认为 `1`。
 
-You can set these using `#show: slides.with(..)`.
+可以通过 `#show: slides.with(..)` 的方式设置。
+
+PS: 其中 outline title 可以通过 `#(s.outline-title = [Outline])` 的方式修改。
 
 ```typst
-#import "@preview/touying:0.2.1": *
+#import "@preview/touying:0.3.0": *
 
 #let s = themes.metropolis.register(s, aspect-ratio: "16-9", footer: self => self.info.institution)
 #let s = (s.methods.info)(
@@ -151,10 +154,11 @@ Hello, Typst!
 
 ![image](https://github.com/touying-typ/touying/assets/34951714/4ab45ee6-09f7-498b-b349-e889d6e42e3e)
 
-## Example
+
+## 示例
 
 ```typst
-#import "@preview/touying:0.2.1": *
+#import "@preview/touying:0.3.0": *
 
 #let s = themes.metropolis.register(s, aspect-ratio: "16-9", footer: self => self.info.institution)
 #let s = (s.methods.info)(
@@ -165,40 +169,44 @@ Hello, Typst!
   date: datetime.today(),
   institution: [Institution],
 )
-#let s = (s.methods.enable-transparent-cover)(self: s)
-#let (init, slide, title-slide, new-section-slide, focus-slide, touying-outline, alert) = utils.methods(s)
+#let (init, slides, touying-outline, alert) = utils.methods(s)
 #show: init
 
+#set text(font: "Fira Sans", weight: "light", size: 20pt)
+#show math.equation: set text(font: "Fira Math")
+#set strong(delta: 100)
+#set par(justify: true)
 #show strong: alert
 
-#title-slide(extra: [Extra])
+#let (slide, title-slide, new-section-slide, focus-slide) = utils.slides(s)
+#show: slides
 
-#slide(title: [Table of contents])[
-  #touying-outline()
+= First Section
+
+#slide[
+  A slide without a title but with some *important* information.
 ]
 
-#slide(title: [A long long long long long long long long long long long long long long long long long long long long long long long long Title])[
-  A slide with some maths:
+== A long long long long long long long long long long long long long long long long long long long long long long long long Title
+
+#slide[
+  A slide with equation:
+
   $ x_(n+1) = (x_n + a/x_n) / 2 $
 
   #lorem(200)
 ]
 
-#new-section-slide[First section]
-
-#slide[
-  A slide without a title but with *important* infos
-]
-
-#new-section-slide[Second section]
+= Second Section
 
 #focus-slide[
   Wake up!
 ]
 
-// simple animations
+== Simple Animation
+
 #slide[
-  a simple #pause dynamic slide with #alert[alert]
+  A simple #pause dynamic slide with #alert[alert]
 
   #pause
   
@@ -207,12 +215,12 @@ Hello, Typst!
 
 // appendix by freezing last-slide-number
 #let s = (s.methods.appendix)(self: s)
-#let (slide, new-section-slide) = utils.methods(s)
+#let (slide,) = utils.slides(s)
 
-#new-section-slide[Appendix]
+= Appendix
 
 #slide[
-  appendix
+  Appendix.
 ]
 ```
 

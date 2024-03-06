@@ -2,20 +2,20 @@
 sidebar_position: 3
 ---
 
-# Dewdrop Theme
+# Dewdrop 主题
 
-![image](https://github.com/touying-typ/touying/assets/34951714/23a8a9be-1f7c-43f7-88d4-40604dd6b01b)
+![image](https://github.com/touying-typ/touying/assets/34951714/0b5b2bb2-c6ec-45c0-9cea-0af2ed896bba)
 
-This theme is inspired by [BeamerTheme](https://github.com/zbowang/BeamerTheme) created by Zhibo Wang and transformed by [OrangeX4](https://github.com/OrangeX4).
+这个主题的灵感来自 Zhibo Wang 创作的 [BeamerTheme](https://github.com/zbowang/BeamerTheme)，由 [OrangeX4](https://github.com/OrangeX4) 改造而来。
 
-The Dewdrop theme features an elegant and aesthetic navigation, including `sidebar` and `mini-slides` modes.
+这个主题拥有优雅美观的 navigation，包括 `sidebar` 和 `mini-slides` 两种模式。
 
-## Initialization
+## 初始化
 
-You can initialize the Dewdrop theme using the following code:
+你可以通过下面的代码来初始化：
 
 ```typst
-#import "@preview/touying:0.2.1": *
+#import "@preview/touying:0.3.0": *
 
 #let s = themes.dewdrop.register(
   s,
@@ -33,29 +33,35 @@ You can initialize the Dewdrop theme using the following code:
   date: datetime.today(),
   institution: [Institution],
 )
-#let s = (s.methods.enable-transparent-cover)(self: s)
-#let (init, slide, slides, title-slide, focus-slide, touying-outline, alert) = utils.methods(s)
+#let (init, slides, touying-outline, alert) = utils.methods(s)
 #show: init
 
 #show strong: alert
+
+#let (slide, title-slide, new-section-slide, focus-slide) = utils.slides(s)
+#show: slides
 ```
 
-The `register` function takes parameters such as:
+其中 `register` 接收参数:
 
-- `aspect-ratio`: The aspect ratio of the slides, either "16-9" or "4-3," with the default being "16-9."
-- `navigation`: Style of the navigation bar, which can be "sidebar," "mini-slides," or `none`, with the default being "sidebar."
-- `sidebar`: Settings for the sidebar navigation, with the default being `(width: 10em)`.
-- `mini-slides`: Settings for mini-slides, with the default being `(height: 2em, x: 2em, section: false, subsection: true)`.
-- `footer`: Content to be displayed in the footer, with the default being `[]`. You can also pass a function like `self => self.info.author`.
-- `footer-right`: Content to be displayed on the right side of the footer, with the default being `states.slide-counter.display() + " / " + states.last-slide-number`.
-- `primary`: Primary color, with the default being `rgb("#0c4842")`.
-- `alpha`: Transparency, with the default being `70%`.
+- `aspect-ratio`: 幻灯片的长宽比为 "16-9" 或 "4-3"，默认为 "16-9"。
+- `navigation`: 导航栏样式，可以是 `"sidebar"`、`"mini-slides"` 和 `none`，默认为 `"sidebar"`。
+- `sidebar`: 侧边导航栏设置，默认为 `(width: 10em)`。
+- `mini-slides`: mini-slides 设置，默认为 `(height: 2em, x: 2em, section: false, subsection: true)`。
+  - `height`: mini-slides 高度，默认为 `2em`。
+  - `x`: mini-slides 的 x 轴 padding，默认为 `2em`。
+  - `section`: 是否显示 section 之后，subsection 之前的 slides，默认为 `false`。
+  - `subsection`: 是否根据 subsection 分割 mini-slides，设置为 `false` 挤压为一行，默认为 `true`。
+- `footer`: 展示在页脚的内容，默认为 `[]`，也可以传入形如 `self => self.info.author` 的函数。
+- `footer-right`: 展示在页脚右侧的内容，默认为 `states.slide-counter.display() + " / " + states.last-slide-number`。
+- `primary`: primary 颜色，默认为 `rgb("#0c4842")`。
+- `alpha`: 透明度，默认为 `70%`。
 
-The Dewdrop theme also provides an `#alert[..]` function that you can use with the `#show strong: alert` syntax.
+并且 Dewdrop 主题会提供一个 `#alert[..]` 函数，你可以通过 `#show strong: alert` 来使用 `*alert text*` 语法。
 
-## Color Themes
+## 颜色主题
 
-Dewdrop uses the following default color theme:
+Dewdrop 默认使用了
 
 ```typst
 #let s = (s.methods.colors)(
@@ -68,17 +74,17 @@ Dewdrop uses the following default color theme:
 )
 ```
 
-You can modify the color theme using `#let s = (s.methods.colors)(self: s, ..)`.
+颜色主题，你可以通过 `#let s = (s.methods.colors)(self: s, ..)` 对其进行修改。
 
-## Slide Function Family
+## slide 函数族
 
-Dewdrop theme provides a series of custom slide functions:
+Dewdrop 主题提供了一系列自定义 slide 函数：
 
 ```typst
 #title-slide(extra: none, ..args)
 ```
 
-The `title-slide` reads information from `self.info` for display. You can also pass an `extra` parameter to display additional information.
+`title-slide` 会读取 `self.info` 里的信息用于显示，你也可以为其传入 `extra` 参数，显示额外的信息。
 
 ---
 
@@ -95,8 +101,7 @@ The `title-slide` reads information from `self.info` for display. You can also p
   ...
 ]
 ```
-
-This is the default ordinary slide function with a navigation bar and footer according to your settings.
+默认拥有导航栏和页脚的普通 slide 函数，页脚为您设置的页脚。
 
 ---
 
@@ -105,16 +110,16 @@ This is the default ordinary slide function with a navigation bar and footer acc
   ...
 ]
 ```
+用于引起观众的注意力。背景色为 `self.colors.primary`。
 
-Used to draw attention. The background color is `self.colors.primary`.
 
-## Special Functions
+## 特殊函数
 
 ```typst
 #d-outline(enum-args: (:), list-args: (:), cover: true)
 ```
 
-Displays the current outline. The `cover` parameter specifies whether to hide sections that are inactive.
+显示当前的目录，`cover` 参数用于指定是否要隐藏处于 inactive 状态的 sections。
 
 ---
 
@@ -122,7 +127,7 @@ Displays the current outline. The `cover` parameter specifies whether to hide se
 #d-sidebar()
 ```
 
-An internal function for displaying the sidebar.
+内部函数，用于显示侧边栏。
 
 ---
 
@@ -130,20 +135,23 @@ An internal function for displaying the sidebar.
 #d-mini-slides()
 ```
 
-An internal function for displaying mini-slides.
+内部函数，用于显示 mini-slides。
 
-## `slides` Function
 
-The `slides` function has parameters:
+## `slides` 函数
 
-- `title-slide`: Default is `true`.
-- `outline-slide`: Default is `true`.
-- `outline-title`: Default is `[Outline]`.
+`slides` 函数拥有参数
 
-You can set these using `#show: slides.with(..)`.
+- `title-slide`: 默认为 `true`。
+- `outline-slide`: 默认为 `true`。
+- `slide-level`: 默认为 `2`。
+
+可以通过 `#show: slides.with(..)` 的方式设置。
+
+PS: 其中 outline title 可以通过 `#(s.outline-title = [Outline])` 的方式修改。
 
 ```typst
-#import "@preview/touying:0.2.1": *
+#import "@preview/touying:0.3.0": *
 
 #let s = themes.dewdrop.register(s, aspect-ratio: "16-9", footer: [Dewdrop])
 #let s = (s.methods.info)(
@@ -154,12 +162,12 @@ You can set these using `#show: slides.with(..)`.
   date: datetime.today(),
   institution: [Institution],
 )
-#let s = (s.methods.enable-transparent-cover)(self: s)
-#let (init, slide, slides, title-slide, focus-slide, touying-outline, alert) = utils.methods(s)
+#let (init, slides, touying-outline, alert) = utils.methods(s)
 #show: init
 
 #show strong: alert
 
+#let (slide, title-slide, new-section-slide, focus-slide) = utils.slides(s)
 #show: slides
 
 = Title
@@ -175,17 +183,17 @@ Hello, Typst!
 
 ![image](https://github.com/touying-typ/touying/assets/34951714/09ddfb40-4f97-4062-8261-23f87690c33e)
 
-## Example
+
+## 示例
 
 ```typst
-#import "@preview/touying:0.2.1": *
+#import "@preview/touying:0.3.0": *
 
 #let s = themes.dewdrop.register(
   s,
   aspect-ratio: "16-9",
   footer: [Dewdrop],
   navigation: "mini-slides",
-  // navigation: "sidebar",
   // navigation: none,
 )
 #let s = (s.methods.info)(
@@ -196,50 +204,35 @@ Hello, Typst!
   date: datetime.today(),
   institution: [Institution],
 )
-#let s = (s.methods.enable-transparent-cover)(self: s)
-// #let s = (s.methods.appendix-in-outline)(self: s, false)
-#let (init, slide, title-slide, focus-slide, touying-outline, alert) = utils.methods(s)
+#let (init, slides, touying-outline, alert) = utils.methods(s)
 #show: init
 
 #show strong: alert
 
-#title-slide()
+#let (slide, title-slide, new-section-slide, focus-slide) = utils.slides(s)
+#show: slides
+
+= Section A
+
+== Subsection A.1
 
 #slide[
-  == Outline
-  
-  #touying-outline(cover: false)
-]
-
-#slide(section: [Section A])[
-  == Outline
-  
-  #touying-outline()
-]
-
-#slide(subsection: [Subsection A.1])[
-  == Title
-
   A slide with equation:
 
   $ x_(n+1) = (x_n + a/x_n) / 2 $
 ]
 
-#slide(subsection: [Subsection A.2])[
-  == Important
+== Subsection A.2
 
+#slide[
   A slide without a title but with *important* infos
 ]
 
-#slide(section: [Section B])[
-  == Outline
-  
-  #touying-outline()
-]
+= Section B
 
-#slide(subsection: [Subsection B.1])[
-  == Another Subsection
+== Subsection B.1
 
+#slide[
   #lorem(80)
 ]
 
@@ -247,29 +240,30 @@ Hello, Typst!
   Wake up!
 ]
 
-// simple animations
-#slide(subsection: [Subsection B.2])[
-  == Dynamic
+== Subsection B.2
 
-  a simple #pause dynamic slide with #alert[alert]
+#slide[
+  We can use `#pause` to #pause display something later.
 
   #pause
   
-  text.
+  Just like this.
+
+  #meanwhile
+  
+  Meanwhile, #pause we can also use `#meanwhile` to #pause display other content synchronously.
 ]
 
 // appendix by freezing last-slide-number
 #let s = (s.methods.appendix)(self: s)
-#let (slide,) = utils.methods(s)
+#let (slide,) = utils.slides(s)
 
-#slide(section: [Appendix])[
-  == Outline
-  
-  #touying-outline()
-]
+= Appendix
+
+=== Appendix
 
 #slide[
-  appendix
+  Please pay attention to the current slide number.
 ]
 ```
 

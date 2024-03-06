@@ -1,14 +1,12 @@
 ---
-sidebar_position: 6
+sidebar_position: 3
 ---
 
-# Other Animations
+# Fletcher
 
-Touying also provides `touying-reducer`, which adds `pause` and `meanwhile` animations to cetz and fletcher.
+Touying 提供了 `touying-reducer`，它能为 fletcher 加入 `pause` 和 `meanwhile` 动画。
 
-## Simple Animations
-
-Here's an example:
+一个例子：
 
 ```typst
 #import "@preview/touying:0.3.0": *
@@ -69,32 +67,3 @@ Here's an example:
 ```
 
 ![image](https://github.com/touying-typ/touying/assets/34951714/9ba71f54-2a5d-4144-996c-4a42833cc5cc)
-
-
-## only and uncover
-
-In fact, we can also use `only` and `uncover` within cetz, just requiring a bit of skill:
-
-```typst
-#slide(repeat: 3, self => [
-  #let (uncover, only) = utils.methods(self)
-
-  Cetz in Touying in subslide #self.subslide:
-
-  #cetz.canvas({
-    import cetz.draw: *
-    let self = (self.methods.update-cover)(self: self, hide)
-    let (uncover,) = utils.methods(self)
-    
-    rect((0,0), (5,5))
-
-    uncover("2-3", {
-      rect((0,0), (1,1))
-      rect((1,1), (2,2))
-      rect((2,2), (3,3))
-    })
-
-    only(3, line((0,0), (2.5, 2.5), name: "line"))
-  })
-])
-```

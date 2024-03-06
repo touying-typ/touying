@@ -1,6 +1,6 @@
 {
   "label": "Utilities",
-  "position": 9,
+  "position": 12,
   "link": {
     "type": "generated-index",
     "description": "Some convenient utility functions."

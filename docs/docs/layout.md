@@ -1,154 +1,131 @@
 ---
-sidebar_position: 3
+sidebar_position: 5
 ---
 
-# Layout Your Contents
+# 页面布局
 
-To better manage every detail in the slides and achieve better rendering results, like Beamer, Touying has introduced some unique concepts. This helps you maintain global information better and easily switch between different themes.
+## 基础概念
 
-## Global Information
+要想使用 Typst 制作一个样式美观的 slides，正确理解 Typst 的页面模型是必须的，如果你不关心自定义页面样式，你可以选择跳过这部分，否则还是推荐看一遍这部分。
 
-You can set the title, subtitle, author, date, and institution information for slides using:
+下面我们通过一个具体的例子来说明 Typst 的默认页面模型。
 
 ```typst
-#let s = (s.methods.info)(
-  self: s,
-  title: [Title],
-  subtitle: [Subtitle],
-  author: [Authors],
-  date: datetime.today(),
-  institution: [Institution],
+#let container = rect.with(height: 100%, width: 100%, inset: 0pt)
+#let innerbox = rect.with(stroke: (dash: "dashed"))
+
+#set text(size: 30pt)
+#set page(
+  paper: "presentation-16-9",
+  header: container[#innerbox[Header]],
+  header-ascent: 30%,
+  footer: container[#innerbox[Footer]],
+  footer-descent: 30%,
 )
-```
+#let padding = (x: 2em, y: 2em)
 
-The `date` parameter can accept `datetime` format and `content` format. The display format of the date in `datetime` format can be changed using:
-
-```typst
-#let s = (s.methods.datetime-format)(self: s, "[year]-[month]-[day]")
-```
-
-:::tip[Internals]
-
-Here, we introduce a bit of the OOP concept in Touying.
-
-You should know that Typst is a typesetting language that supports incremental rendering. That is, Typst caches the results of previous function calls. This requires Typst to have only pure functions, meaning functions that do not change external variables. Therefore, it's challenging to modify a global variable in the true sense, as done in LaTeX. Even if you use `state` or `counter`, you need to use `locate` and callback functions to access their values, and this approach has a significant impact on performance.
-
-Touying does not use `state` and `counter`, nor does it violate the Internals of Typst's pure functions. Instead, it cleverly uses a method in an object-oriented style to maintain a global singleton `s`. In Touying, an object refers to a Typst dictionary with its own member variables and methods. We have a convention that methods have a named parameter `self` to pass the object itself, and all methods are placed in the `.methods` domain. With this concept, it's not difficult to write a method to update `info`:
-
-```typst
-#let s = (
-  info: (:),
-  methods: (
-    // update info
-    info: (self: none, ..args) => {
-      self.info += args.named()
-      self
-    },
-  )
-)
-
-#let s = (s.methods.info)(self: s, title: [title])
-
-Title is #s.info.title
-```
-
-This way, you can also understand the purpose of the `utils.methods()` function: it binds `self` to all methods of `s` and returns it. It simplifies the subsequent use through unpacking syntax.
-
-```typst
-#let (init, slide, slides) = utils.methods(s)
-```
-:::
-
-
-## Sections and Subsections
-
-Similar to Beamer, Touying also has the concepts of sections and subsections.
-
-In the `#show: slides` mode, sections and subsections correspond to first-level and second-level titles, respectively. For example:
-
-```typst
-#import "@preview/touying:0.2.1": *
-
-#let (init, slide, slides) = utils.methods(s)
-#show: init
-
-#show: slides
-
-= Section
-
-== Subsection
-
-Hello, Touying!
-```
-
-![image](https://github.com/touying-typ/touying/assets/34951714/600876bb-941d-4841-af5c-27137bb04c54)
-
-However, the second-level title does not always correspond to the subsection. The specific mapping may vary depending on the theme.
-
-In the more general `#slide[..]` mode, sections and subsections are passed as parameters to the `slide` function, for example:
-
-```typst
-#slide(section: [Let's start a new section!])[..]
-
-#slide(subsection: [Let's start a new subsection!])[..]
-```
-
-This will create a new section and a new subsection, respectively. However, this change typically only affects the internal `sections` state of Touying and is not displayed on the slide by default. The specific display may vary depending on the theme.
-
-Note that the `section` and `subsection` parameters of `slide` can accept both content blocks and arrays in the format `([title], [short-title])` or dictionaries in the format `(title: [title], short-title: [short-title])`. The `short-title` will be used in some special cases, such as in the navigation of the `dewdrop` theme.
-
-
-## Table of Contents
-
-Displaying a table of contents in Touying is straightforward:
-
-```typst
-#import "@preview/touying:0.2.1": *
-
-#let (init, slide, touying-outline) = utils.methods(s)
-#show: init
-
-#slide[
-  == Table of contents
-
-  #touying-outline()
+#place(top + right)[Margin→]
+#container[
+  #place[Padding]
+  #pad(..padding)[
+    #container[
+      #innerbox[Content]
+    ]
+  ]
 ]
 ```
 
-The definition of `touying-oultine()` is:
+![image](https://github.com/touying-typ/touying/assets/34951714/6cbb1092-c733-41b6-a15d-822ce970ef13)
+
+我们需要区分以下概念：
+
+1. **Model:** Typst 拥有与 CSS Box Model 类似的模型，分为 Margin、Padding 和 Content，但其中 padding 并非 `set page(..)` 的属性，而是我们手动添加 `#pad(..)` 得到的。
+2. **Margin:** 页边距，分为上下左右四个方向，是 Typst 页面模型的核心，其他属性都会受到页边距的影响，尤其是 Header 和 Footer，其实际上是位于 Margin 内部。
+3. **Padding:** 用于在 Margin 和 Content 之间添加额外的间隙。
+4. **Header:** Header 是页面顶部的内容，又分为 container 和 innerbox。我们可以注意到 header container 和 padding 的边缘并不贴合，而是也有一定的空隙，这个空隙实际上就是 `header-ascent: 30%`，而这里的百分比是相对于 margin-top 而言的。并且，我们注意到 header innerbox 实际上位于 header container 左下角，也即 innerbox 实际上默认有属性 `#set align(left + bottom)`。
+5. **Footer:** Footer 是页面底部的内容，又分为 container 和 innerbox。我们可以注意到 footer container 和 padding 的边缘并不贴合，而是也有一定的空隙，这个空隙实际上就是 `footer-descent: 30%`，而这里的百分比是相对于 margin-bottom 而言的。并且，我们注意到 footer innerbox 实际上位于 footer container 左上角，也即 innerbox 实际上默认有属性 `#set align(left + top)`。
+6. **Place:** `place` 函数可以实现绝对定位，在不影响父容器内其他元素的情况下，相对于父容器来定位，并且可以传入 `alignment`、`dx` 和 `dy`，很适合用来放置一些修饰元素，例如 Logo 之类的图片。
+
+因此，要将 Typst 应用到制作 slides 上，我们只需要设置
 
 ```typst
-#let touying-outline(enum-args: (:), padding: 0pt) = { .. }
+#set page(
+  margin: (x: 0em, y: 2em),
+  header: align(top)[Header],
+  footer: align(bottom)[Footer],
+  header-ascent: 0em,
+  footer-descent: 0em,
+)
+#let padding = (x: 4em, y: 0em)
 ```
 
-You can modify the internal enum parameters with `enum-args`.
-
-If you have complex custom requirements for the table of contents, you can use:
+即可。例如我们有
 
 ```typst
-#slide[
-  == Table of contents
+#let container = rect.with(stroke: (dash: "dashed"), height: 100%, width: 100%, inset: 0pt)
+#let innerbox = rect.with(fill: rgb("#d0d0d0"))
 
-  #states.touying-final-sections(sections => ..)
+#set text(size: 30pt)
+#set page(
+  paper: "presentation-16-9",
+  margin: (x: 0em, y: 2em),
+  header: container[#align(top)[#innerbox(width: 100%)[Header]]],
+  header-ascent: 0em,
+  footer: container[#align(bottom)[#innerbox(width: 100%)[Footer]]],
+  footer-descent: 0em,
+)
+#let padding = (x: 4em, y: 0em)
+
+#place(top + right)[↑Margin]
+#container[
+  #place[Padding]
+  #pad(..padding)[
+    #container[
+      #innerbox[Content]
+    ]
+  ]
 ]
 ```
 
-## Page Management
+![image](https://github.com/touying-typ/touying/assets/34951714/6127d231-86f3-4262-b7c6-b199d47ae12b)
 
-Due to the use of the `set page(..)` command in Typst, which creates a new page instead of modifying the current one, Touying chooses to maintain a `s.page-args` member variable in the singleton `s`. These parameters are only applied when creating a new slide.
+## 页面管理
 
-:::warning[Warning]
+由于 Typst 中使用 `set page(..)` 命令来修改页面参数，会导致创建一个新的页面，而不能修改当前页面，因此 Touying 选择维护一个 `s.page-args` 成员变量和一个 `s.padding` 成员变量，只在 Touying 自己创建新 slide 时才会自己应用这些参数，因此用户只需要关注 `s.page-args` 和 `s.padding` 即可。
 
-Therefore, you should not use the `set page(..)` command yourself. Instead, you should modify the `s.page-args` member variable inside `s`.
+例如，上面的例子就可以改成
+
+```typst
+#(s.page-args += (
+  margin: (x: 0em, y: 2em),
+  header: align(top)[Header],
+  footer: align(bottom)[Footer],
+  header-ascent: 0em,
+  footer-descent: 0em,
+))
+#(s.padding += (x: 4em, y: 0em))
+```
+
+同理，如果你对某个主题的 header 或 footer 样式不满意，你也可以通过
+
+```typst
+#(s.page-args.footer = [Custom Footer])
+```
+
+这样方式进行更换。不过需要注意的是，如果这样更换了页面参数，你需要将其放在 `#let (slide,) = utils.slides(s)` 之前，否则就需要重新调用 `#let (slide,) = utils.slides(s)`。
+
+:::warning[警告]
+
+因此，你不应该自己使用 `set page(..)` 命令，而是应该修改 `s` 内部的 `s.page-args` 成员变量。
 
 :::
 
-This way, we can query the parameters of the current page in real-time using `s.page-args`. This is useful for some functions that need to get page margins or the current page background color, such as `transparent-cover`.
+借助这种方式，我们也可以通过 `s.page-args` 实时查询当前页面的参数，这对一些需要获取页边距或当前页面背景颜色的函数很有用，例如 `transparent-cover`。这里就部分等价于 context get rule，而且实际上用起来会更方便。
 
 
-## Page Columns
+## 页面分栏
 
-If you need to divide a page into two or three columns, you can use the default `compose` feature provided by the Touying `slide` function. The simplest examples are:
+如果你需要将页面分为两栏或三栏，你可以使用 Touying `slide` 函数默认提供的 `compose` 功能，最简单的示例如下：
 
 ```typst
 #slide[
@@ -160,7 +137,7 @@ If you need to divide a page into two or three columns, you can use the default 
 
 ![image](https://github.com/touying-typ/touying/assets/34951714/a39f88a2-f1ba-4420-8f78-6a0fc644704e)
 
-If you need to change the way columns are composed, you can modify the `composer` parameter of `slide`. The default parameter is `utils.with.side-by-side(columns: auto, gutter: 1em)`. If we want the left column to occupy the remaining width, we can use:
+如果你需要更改分栏的方式，可以修改 `slide` 的 `composer` 参数，其中默认的参数是 `utils.with.side-by-side(columns: auto, gutter: 1em)`，如果我们要让左边那一栏占据剩余宽度，可以使用
 
 ```typst
 #slide(composer: utils.side-by-side.with(columns: (1fr, auto), gutter: 1em))[
@@ -171,3 +148,4 @@ If you need to change the way columns are composed, you can modify the `composer
 ```
 
 ![image](https://github.com/touying-typ/touying/assets/34951714/aa84192a-4082-495d-9773-b06df32ab8dc)
+
