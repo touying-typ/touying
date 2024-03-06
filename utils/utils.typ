@@ -93,6 +93,16 @@
   type(it) == content and it.has("children")
 }
 
+#let reconstruct(body-name: "body", named: false, it, body) = {
+  let fields = it.fields()
+  let _ = fields.remove("label", default: none)
+  let _ = fields.remove(body-name, default: none)
+  if named {
+    return (it.func())(..fields, body)
+  } else {
+    return (it.func())(..fields.values(), body)
+  }
+}
 
 #let heading-depth(it) = {
   if it.has("depth") {

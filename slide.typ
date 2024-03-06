@@ -257,28 +257,28 @@
           cover-arr.push(cont)
         }
         repetitions = nextrepetitions
-      } else if type(child) == content and child.func() == list.item {
+      } else if type(child) == content and child.func() in (list.item, enum.item, align) {
         // handle the list item
         let (conts, nextrepetitions) = _parse-content(
           self: self, need-cover: repetitions <= index, base: repetitions, index: index, child.body
         )
         let cont = conts.first()
         if repetitions <= index or not need-cover {
-          result.push(list.item(cont))
+          result.push(utils.reconstruct(child, cont))
         } else {
-          cover-arr.push(list.item(cont))
+          cover-arr.push(utils.reconstruct(child, cont))
         }
         repetitions = nextrepetitions
-      } else if type(child) == content and child.func() == enum.item {
-        // handle the enum item
+      } else if type(child) == content and child.func() in (pad,) {
+        // handle the list item
         let (conts, nextrepetitions) = _parse-content(
           self: self, need-cover: repetitions <= index, base: repetitions, index: index, child.body
         )
         let cont = conts.first()
         if repetitions <= index or not need-cover {
-          result.push(enum.item(child.at("number", default: none), cont))
+          result.push(utils.reconstruct(named: true, child, cont))
         } else {
-          cover-arr.push(enum.item(child.at("number", default: none), cont))
+          cover-arr.push(utils.reconstruct(named: true, child, cont))
         }
         repetitions = nextrepetitions
       } else if type(child) == content and child.func() == terms.item {
