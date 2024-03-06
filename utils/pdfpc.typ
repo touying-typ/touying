@@ -24,7 +24,7 @@
       if item.t == "Idx" {
         page.idx = item.v
       } else if item.t == "LogicalSlide" {
-        page.label = item.v
+        page.label = str(item.v)
       } else if item.t == "Overlay" {
         page.overlay = item.v
         page.forcedOverlay = item.v > 0
