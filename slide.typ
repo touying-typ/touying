@@ -416,6 +416,8 @@
 
 // touying-slides
 #let touying-slides(self: none, slide-level: 1, body) = {
+  // make sure 0 <= slide-level <= 2
+  assert(type(slide-level) == int and 0 <= slide-level and slide-level <= 2, message: "slide-level should be 0, 1 or 2")
   // init
   let (section, subsection, title, slide) = (none, none, none, ())
   let last-title = none
@@ -447,7 +449,7 @@
         (child.value.at("fn"))(..child.value.at("args"))
       }
       (section, subsection, title, slide) = (none, none, none, ())
-    } else if type(child) == content and child.func() == heading and utils.heading-depth(child) in (1, 2, 3) {
+    } else if type(child) == content and child.func() == heading and utils.heading-depth(child) <= slide-level + 1 {
       slide = utils.trim(slide)
       if (utils.heading-depth(child) == 1 and section != none) or (utils.heading-depth(child) == 2 and subsection != none) or (utils.heading-depth(child) > slide-level and title != none) or slide != () {
         (self.methods.slide)(self: self, section: section, subsection: subsection, ..(if last-title != none { (title: last-title) }), slide.sum(default: []))
