@@ -122,6 +122,36 @@ sidebar_position: 5
 
 借助这种方式，我们也可以通过 `s.page-args` 实时查询当前页面的参数，这对一些需要获取页边距或当前页面背景颜色的函数很有用，例如 `transparent-cover`。这里就部分等价于 context get rule，而且实际上用起来会更方便。
 
+## 应用：添加 Logo
+
+为 slides 添加一个 Logo 是及其普遍，但是又及其多变的一个需求。其中的难点在于，所需要的 Logo 大小和位置往往因人而异。因此，Touying 的主题大部分都不包含 Logo 的配置选项。但借助本章节提到的页面布局的概念，我们知道可以在 header 或 footer 中使用 `place` 函数来放置 Logo 图片。
+
+例如，我们决定给 metropolis 主题加入 GitHub 的图标，我们可以这样实现：
+
+```typst
+#import "@preview/touying:0.3.0": *
+#import "@preview/octique:0.1.0": *
+
+#let s = themes.metropolis.register(s, aspect-ratio: "16-9")
+#(s.page-args.header = self => {
+  // display the original header
+  utils.call-or-display(self, s.page-args.header)
+  // place logo to top-right
+  place(top + right, dx: -0.5em, dy: 0.3em)[
+    #octique("mark-github", color: rgb("#fafafa"), width: 1.5em, height: 1.5em)
+  ]
+})
+#let (init, slide) = utils.methods(s)
+#show: init
+
+#slide(title: [Title])[
+  Logo example.
+]
+```
+
+![image](https://github.com/touying-typ/touying/assets/34951714/055d77e7-5087-4248-b969-d8ef9d50c54b)
+
+其中 `utils.call-or-display(self, body)` 可以用于显示 `body` 为 content 或 `body` 为形如 `self => content` 形式的回调函数。
 
 ## 页面分栏
 
