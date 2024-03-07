@@ -35,10 +35,10 @@
   return methods
 }
 
-// touying wrapper mark
-#let touying-wrapper(name, fn, ..args) = {
+// touying slide wrapper mark
+#let touying-slide-wrapper(name, fn, ..args) = {
   metadata((
-    kind: "touying-wrapper",
+    kind: "touying-slide-wrapper",
     name: name,
     fn: fn,
     args: args,
@@ -49,7 +49,7 @@
   let m = methods(self)
   let res = (:)
   for key in m.keys() {
-    res.insert(key, touying-wrapper.with(key, m.at(key)))
+    res.insert(key, touying-slide-wrapper.with(key, m.at(key)))
   }
   return res
 }

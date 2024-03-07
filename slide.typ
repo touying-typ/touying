@@ -435,7 +435,7 @@
     if type(child) == content and child.func() == metadata and type(child.value) == dictionary and child.value.at("kind", default: none) == "touying-slides-end" {
       is-end = true
       break
-    } else if type(child) == content and child.func() == metadata and type(child.value) == dictionary and child.value.at("kind", default: none) == "touying-wrapper" {
+    } else if type(child) == content and child.func() == metadata and type(child.value) == dictionary and child.value.at("kind", default: none) == "touying-slide-wrapper" {
       slide = utils.trim(slide)
       if slide != () {
         (self.methods.slide)(self: self, section: section, subsection: subsection, ..(if last-title != none { (title: last-title) }), slide.sum())
