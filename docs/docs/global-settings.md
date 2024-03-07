@@ -117,7 +117,7 @@ Title is #s.info.title
 一般而言，上面的两种方式就已经足够用于加入全局设置了，但是仍然会有部分情况，我们需要初始化 counters 或 states。如果将这些代码放在 `#show: slides` 之前，就会创建一个空白页，这是我们不想看见的，因此这时候我们就可以使用 `s.methods.append-preamble` 方法。例如在使用 codly 包的时候：
 
 ```typst
-#import "@preview/touying:0.3.0": *
+#import "@preview/touying:0.3.1": *
 #import "@preview/codly:0.2.0": *
 
 #let s = themes.simple.register(s, aspect-ratio: "16-9")

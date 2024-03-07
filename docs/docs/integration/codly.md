@@ -7,7 +7,7 @@ sidebar_position: 4
 在使用 codly 的时候，我们应该使用 `s.methods.append-preamble` 方法进行初始化。
 
 ```typst
-#import "@preview/touying:0.3.0": *
+#import "@preview/touying:0.3.1": *
 #import "@preview/codly:0.2.0": *
 
 #let s = themes.simple.register(s, aspect-ratio: "16-9")

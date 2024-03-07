@@ -68,7 +68,7 @@ Before you begin, make sure you have installed the Typst environment. If not, yo
 To use Touying, you only need to include the following code in your document:
 
 ```typst
-#import "@preview/touying:0.3.0": *
+#import "@preview/touying:0.3.1": *
 
 #let s = themes.simple.register(s)
 #let (init, slides) = utils.methods(s)
@@ -92,13 +92,15 @@ Hello, Typst!
 
 It's simple. Congratulations on creating your first Touying slide! 🎉
 
+**Warning:** The comma in `#let (slide,) = utils.slides(s)` is necessary for the unpacking syntax.
+
 
 ## More Complex Examples
 
 In fact, Touying provides various styles for writing slides. For example, the above example uses first-level and second-level titles to create new slides. However, you can also use the `#slide[..]` format to access more powerful features provided by Touying.
 
 ```typst
-#import "@preview/touying:0.3.0": *
+#import "@preview/touying:0.3.1": *
 #import "@preview/cetz:0.2.1"
 #import "@preview/fletcher:0.4.2" as fletcher: node, edge
 

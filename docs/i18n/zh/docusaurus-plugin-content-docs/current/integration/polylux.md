@@ -7,7 +7,7 @@ sidebar_position: 5
 借助 Touying 与 Polylux 的兼容性，你可以让 Polylux 也支持直接导出，只需要在你的 Polylux 源代码中加入下面的代码即可。
 
 ```
-#import "@preview/touying:0.3.0"
+#import "@preview/touying:0.3.1"
 
 #locate(loc => touying.pdfpc.pdfpc-file(loc))
 ```

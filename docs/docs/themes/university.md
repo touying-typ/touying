@@ -13,7 +13,7 @@ sidebar_position: 4
 你可以通过下面的代码来初始化：
 
 ```typst
-#import "@preview/touying:0.3.0": *
+#import "@preview/touying:0.3.1": *
 
 #let s = themes.university.register(s, aspect-ratio: "16-9")
 #let s = (s.methods.info)(
@@ -114,7 +114,7 @@ University 主题提供了一系列自定义 slide 函数：
 可以通过 `#show: slides.with(..)` 的方式设置。
 
 ```typst
-#import "@preview/touying:0.3.0": *
+#import "@preview/touying:0.3.1": *
 
 #let s = themes.university.register(s, aspect-ratio: "16-9")
 #let s = (s.methods.info)(
@@ -148,7 +148,7 @@ Hello, Typst!
 ## 示例
 
 ```typst
-#import "@preview/touying:0.3.0": *
+#import "@preview/touying:0.3.1": *
 
 #let s = themes.university.register(s, aspect-ratio: "16-9")
 #let s = (s.methods.info)(

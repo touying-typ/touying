@@ -9,7 +9,7 @@ Touying 提供了 `touying-reducer`，它能为 fletcher 加入 `pause` 和 `mea
 一个例子：
 
 ```typst
-#import "@preview/touying:0.3.0": *
+#import "@preview/touying:0.3.1": *
 #import "@preview/cetz:0.2.1"
 #import "@preview/fletcher:0.4.2" as fletcher: node, edge
 

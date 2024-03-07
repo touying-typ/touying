@@ -2,16 +2,16 @@
 sidebar_position: 3
 ---
 
-# 节与小节
+# Sections and Subsections
 
-## 结构
+## Structure
 
-与 Beamer 相同，Touying 同样有着 section 和 subsection 的概念。
+Similar to Beamer, Touying also has the concept of sections and subsections.
 
-一般而言，1 级、2 级和 3 级标题分别用来对应 section、subsection 和 title，例如 dewdrop 主题。
+Generally, level 1, level 2, and level 3 headings correspond to section, subsection, and title, respectively, as in the dewdrop theme.
 
 ```typst
-#import "@preview/touying:0.3.0": *
+#import "@preview/touying:0.3.1": *
 
 #let s = themes.dewdrop.register(s)
 #let (init, slides) = utils.methods(s)
@@ -31,10 +31,10 @@ Hello, Touying!
 
 ![image](https://github.com/touying-typ/touying/assets/34951714/1574e74d-25c1-418f-a84f-b974f42edae5)
 
-但是很多时候我们并不需要 subsection，因此也会使用 1 级和 2 级标题来分别对应 section 和 title，例如 university 主题。
+However, often we don't need subsections, and we can use level 1 and level 2 headings to correspond to section and title, as in the university theme.
 
 ```typst
-#import "@preview/touying:0.3.0": *
+#import "@preview/touying:0.3.1": *
 
 #let s = themes.university.register(s)
 #let (init, slides) = utils.methods(s)
@@ -52,15 +52,14 @@ Hello, Touying!
 
 ![image](https://github.com/touying-typ/touying/assets/34951714/9dd77c98-9c08-4811-872e-092bbdebf394)
 
-实际上，我们可以通过 `slides` 函数的 `slide-level` 参数来控制这里的行为。`slide-level` 代表着嵌套结构的复杂度，从 0 开始计算。例如 `#show: slides.with(slide-level: 2)` 等价于 `section`，`subsection` 和 `title` 结构；而 `#show: slides.with(slide-level: 1)` 等价于 `section` 和 `title` 结构。
+In fact, we can control this behavior through the `slide-level` parameter of the `slides` function. `slide-level` represents the complexity of the nested structure, starting from 0. For example, `#show: slides.with(slide-level: 2)` is equivalent to the section, subsection, and title structure; while `#show: slides.with(slide-level: 1)` is equivalent to the section and title structure.
 
+## Table of Contents
 
-## 目录
-
-在 Touying 中显示目录很简单：
+Displaying a table of contents in Touying is straightforward:
 
 ```typst
-#import "@preview/touying:0.3.0": *
+#import "@preview/touying:0.3.1": *
 
 #let (init, slides, alert, touying-outline) = utils.methods(s)
 #show: init
@@ -81,18 +80,18 @@ Hello, Touying!
 
 ![image](https://github.com/touying-typ/touying/assets/34951714/3cc09550-d3cc-40c2-a315-22ca8173798f)
 
-其中 `touying-oultine()` 的定义为：
+Where the definition of `touying-outline()` is:
 
 ```typst
 #let touying-outline(enum-args: (:), padding: 0pt) = { .. }
 ```
 
-你可以通过 `enum-args` 修改内部 enum 的参数。
+You can modify the parameters of the internal enum through `enum-args`.
 
-如果你对目录有着复杂的自定义需求，你可以使用
+If you have complex custom requirements for the table of contents, you can use:
 
 ```typst
 #states.touying-final-sections(sections => ..)
 ```
 
-正如 dewdrop 主题所做的那样。
+As done in the dewdrop theme.

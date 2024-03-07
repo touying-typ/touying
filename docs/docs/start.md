@@ -2,14 +2,14 @@
 sidebar_position: 2
 ---
 
-# 开始
+# Getting Started
 
-在开始之前，请确保您已经安装了 Typst 环境，如果没有，可以使用 [Web App](https://typst.app/) 或 VS Code 的 [Typst LSP](https://marketplace.visualstudio.com/items?itemName=nvarner.typst-lsp) 和 [Typst Preview](https://marketplace.visualstudio.com/items?itemName=mgt19937.typst-preview) 插件。
+Before you begin, make sure you have the Typst environment installed. If not, you can use the [Web App](https://typst.app/) or install the [Typst LSP](https://marketplace.visualstudio.com/items?itemName=nvarner.typst-lsp) and [Typst Preview](https://marketplace.visualstudio.com/items?itemName=mgt19937.typst-preview) plugins for VS Code.
 
-要使用 Touying，您只需要在文档里加入
+To use Touying, you just need to include the following in your document:
 
 ```typst
-#import "@preview/touying:0.3.0": *
+#import "@preview/touying:0.3.1": *
 
 #let s = themes.simple.register(s)
 #let (init, slides) = utils.methods(s)
@@ -31,14 +31,24 @@ Hello, Typst!
 
 ![image](https://github.com/touying-typ/touying/assets/34951714/f5bdbf8f-7bf9-45fd-9923-0fa5d66450b2)
 
-这很简单，您创建了您的第一个 Touying slides，恭喜！🎉
+It's that simple! You've created your first Touying slides. Congratulations! 🎉
 
-## 更复杂的例子
+## More Complex Examples
 
-事实上，Touying 提供了多种 slides 编写风格，实际上您也可以使用 `#slide[..]` 的写法，以获得 Touying 提供的更多更强大的功能。
+In fact, Touying provides various styles for slide writing. You can also use the `#slide[..]` syntax to access more powerful features provided by Touying.
+
+![image](https://github.com/touying-typ/touying/assets/34951714/fcecb505-d2d1-4e36-945a-225f4661a694)
+
+Touying offers many built-in themes to easily create beautiful slides. For example, in this case:
+
+```
+#let s = themes.university.register(s, aspect-ratio: "16-9")
+```
+
+you can use the university theme. For more detailed tutorials on themes, you can refer to the following sections.
 
 ```typst
-#import "@preview/touying:0.3.0": *
+#import "@preview/touying:0.3.1": *
 #import "@preview/cetz:0.2.1"
 #import "@preview/fletcher:0.4.2" as fletcher: node, edge
 
@@ -222,10 +232,10 @@ Hello, Typst!
 
 ![image](https://github.com/touying-typ/touying/assets/34951714/fcecb505-d2d1-4e36-945a-225f4661a694)
 
-Touying 提供了很多内置的主题，能够简单地编写精美的 slides，例如此处的
+Touying offers many built-in themes to easily create beautiful slides. For example, in this case:
 
 ```
 #let s = themes.university.register(s, aspect-ratio: "16-9")
 ```
 
-可以使用 university 主题。关于主题更详细的教程，您可以参阅后面的章节。
+you can use the university theme. For more detailed tutorials on themes, you can refer to the following sections.

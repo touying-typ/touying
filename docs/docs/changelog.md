@@ -4,6 +4,13 @@ sidebar_position: 14
 
 # Changelog
 
+## v0.3.1
+
+- fix some typos
+- fix slide-level bug
+- fix bug of pdfpc label
+
+
 ## v0.3.0
 
 ### Features

@@ -26,7 +26,7 @@ sidebar_position: 10
 如果只是你自己使用，你可以直接导入 Touying：
 
 ```typst
-#import "@preview/touying:0.3.0": *
+#import "@preview/touying:0.3.1": *
 ```
 
 如果你希望这个主题作为 Touying 的一部分，放置在 Touying `themes` 目录下，那你应该将上面的导入语句改为
@@ -52,7 +52,7 @@ sidebar_position: 10
 
 ```typst
 // bamboo.typ
-#import "@preview/touying:0.3.0": *
+#import "@preview/touying:0.3.1": *
 
 #let register(
   aspect-ratio: "16-9",
@@ -69,7 +69,7 @@ sidebar_position: 10
 }
 
 // main.typ
-#import "@preview/touying:0.3.0": *
+#import "@preview/touying:0.3.1": *
 #import "bamboo.typ"
 
 #let s = bamboo.register(s, aspect-ratio: "16-9")
@@ -176,7 +176,7 @@ self.methods.alert = (self: none, it) => text(fill: self.colors.primary, it)
 
 ```typst
 // bamboo.typ
-#import "@preview/touying:0.3.0": *
+#import "@preview/touying:0.3.1": *
 
 #let slide(self: none, title: auto, ..args) = {
   if title != auto {
@@ -238,7 +238,7 @@ self.methods.alert = (self: none, it) => text(fill: self.colors.primary, it)
 
 
 // main.typ
-#import "@preview/touying:0.3.0": *
+#import "@preview/touying:0.3.1": *
 #import "bamboo.typ"
 
 #let s = bamboo.register(s, aspect-ratio: "16-9", footer: self => self.info.institution)
@@ -276,7 +276,7 @@ self.methods.alert = (self: none, it) => text(fill: self.colors.primary, it)
 
 ```
 // bamboo.typ
-#import "@preview/touying:0.3.0": *
+#import "@preview/touying:0.3.1": *
 
 #let slide(self: none, title: auto, ..args) = {
   if title != auto {
@@ -393,7 +393,7 @@ self.methods.alert = (self: none, it) => text(fill: self.colors.primary, it)
 
 
 // main.typ
-#import "@preview/touying:0.3.0": *
+#import "@preview/touying:0.3.1": *
 #import "bamboo.typ"
 
 #let s = bamboo.register(s, aspect-ratio: "16-9", footer: self => self.info.institution)
