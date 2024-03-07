@@ -1,0 +1,8 @@
+{
+  "label": "Package Integration",
+  "position": 8,
+  "link": {
+    "type": "generated-index",
+    "description": "Discover how to integrate third-party packages with Touying."
+  }
+}
