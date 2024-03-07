@@ -1,4 +1,8 @@
-## University Theme
+---
+sidebar_position: 4
+---
+
+# University Theme
 
 ![image](https://github.com/touying-typ/touying/assets/34951714/4095163c-0c16-4760-b370-8adc1cdd7e6c)
 
