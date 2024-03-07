@@ -6,7 +6,7 @@ sidebar_position: 4
 
 ## Simple Style
 
-If we only need simplicity, we can directly input content under the title, just like writing a normal Typst document. The title here serves to divide the pages, and we can use commands like `#pause` to achieve animation effects.
+If we only need simplicity, we can directly input content under the heading, just like writing a normal Typst document. The heading here serves to divide the pages, and we can use commands like `#pause` to achieve animation effects.
 
 ```typst
 #import "@preview/touying:0.3.1": *
@@ -31,7 +31,7 @@ Hello, Typst!
 
 ![image](https://github.com/touying-typ/touying/assets/34951714/f5bdbf8f-7bf9-45fd-9923-0fa5d66450b2)
 
-You can use an empty title `==` to create a new page. This technique also helps clear the continuation of the previous title.
+You can use an empty heading `==` to create a new page. This skill also helps clear the continuation of the previous title.
 
 PS: We can use the `#slides-end` marker to signify the end of `#show: slides`.
 
@@ -73,7 +73,7 @@ There are many advantages to doing this:
 
 ## Convention Over Configuration
 
-You may have noticed that when using the simple theme, using a level-one title automatically creates a section slide. This is because the simple theme registers an `s.methods.touying-new-section-slide` method, so Touying will automatically call this method.
+You may have noticed that when using the simple theme, using a level-one heading automatically creates a new section slide. This is because the simple theme registers an `s.methods.touying-new-section-slide` method, so Touying will automatically call this method.
 
 If we don't want it to automatically create such a section slide, we can delete this method:
 
