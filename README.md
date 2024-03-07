@@ -92,6 +92,8 @@ Hello, Typst!
 
 It's simple. Congratulations on creating your first Touying slide! 🎉
 
+**Tip:** You can use Typst syntax like `#import "config.typ": *` or `#include "content.typ"` to implement Touying's multi-file architecture.
+
 **Warning:** The comma in `#let (slide,) = utils.slides(s)` is necessary for the unpacking syntax.
 
 

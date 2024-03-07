@@ -2,17 +2,17 @@
 sidebar_position: 3
 ---
 
-# Dewdrop 主题
+# Dewdrop Theme
 
 ![image](https://github.com/touying-typ/touying/assets/34951714/0b5b2bb2-c6ec-45c0-9cea-0af2ed896bba)
 
-这个主题的灵感来自 Zhibo Wang 创作的 [BeamerTheme](https://github.com/zbowang/BeamerTheme)，由 [OrangeX4](https://github.com/OrangeX4) 改造而来。
+This theme takes inspiration from Zhibo Wang's [BeamerTheme](https://github.com/zbowang/BeamerTheme) and has been modified by [OrangeX4](https://github.com/OrangeX4).
 
-这个主题拥有优雅美观的 navigation，包括 `sidebar` 和 `mini-slides` 两种模式。
+The Dewdrop theme features an elegantly designed navigation, including two modes: `sidebar` and `mini-slides`.
 
-## 初始化
+## Initialization
 
-你可以通过下面的代码来初始化：
+You can initialize it using the following code:
 
 ```typst
 #import "@preview/touying:0.3.1": *
@@ -42,26 +42,26 @@ sidebar_position: 3
 #show: slides
 ```
 
-其中 `register` 接收参数:
+The `register` function takes the following parameters:
 
-- `aspect-ratio`: 幻灯片的长宽比为 "16-9" 或 "4-3"，默认为 "16-9"。
-- `navigation`: 导航栏样式，可以是 `"sidebar"`、`"mini-slides"` 和 `none`，默认为 `"sidebar"`。
-- `sidebar`: 侧边导航栏设置，默认为 `(width: 10em)`。
-- `mini-slides`: mini-slides 设置，默认为 `(height: 2em, x: 2em, section: false, subsection: true)`。
-  - `height`: mini-slides 高度，默认为 `2em`。
-  - `x`: mini-slides 的 x 轴 padding，默认为 `2em`。
-  - `section`: 是否显示 section 之后，subsection 之前的 slides，默认为 `false`。
-  - `subsection`: 是否根据 subsection 分割 mini-slides，设置为 `false` 挤压为一行，默认为 `true`。
-- `footer`: 展示在页脚的内容，默认为 `[]`，也可以传入形如 `self => self.info.author` 的函数。
-- `footer-right`: 展示在页脚右侧的内容，默认为 `states.slide-counter.display() + " / " + states.last-slide-number`。
-- `primary`: primary 颜色，默认为 `rgb("#0c4842")`。
-- `alpha`: 透明度，默认为 `70%`。
+- `aspect-ratio`: The aspect ratio of the slides, either "16-9" or "4-3," defaulting to "16-9."
+- `navigation`: The navigation bar style, which can be `"sidebar"`, `"mini-slides"`, or `none`, defaulting to `"sidebar"`.
+- `sidebar`: Sidebar navigation settings, defaulting to `(width: 10em)`.
+- `mini-slides`: Mini-slides settings, defaulting to `(height: 2em, x: 2em, section: false, subsection: true)`.
+  - `height`: The height of mini-slides, defaulting to `2em`.
+  - `x`: Padding on the x-axis for mini-slides, defaulting to `2em`.
+  - `section`: Whether to display slides after the section and before the subsection, defaulting to `false`.
+  - `subsection`: Whether to split mini-slides based on subsections or compress them into one line, defaulting to `true`.
+- `footer`: Content displayed in the footer, defaulting to `[]`, or it can be passed as a function like `self => self.info.author`.
+- `footer-right`: Content displayed on the right side of the footer, defaulting to `states.slide-counter.display() + " / " + states.last-slide-number`.
+- `primary`: Primary color, defaulting to `rgb("#0c4842")`.
+- `alpha`: Transparency, defaulting to `70%`.
 
-并且 Dewdrop 主题会提供一个 `#alert[..]` 函数，你可以通过 `#show strong: alert` 来使用 `*alert text*` 语法。
+The Dewdrop theme also provides an `#alert[..]` function, which you can use with `#show strong: alert` using the `*alert text*` syntax.
 
-## 颜色主题
+## Color Theme
 
-Dewdrop 默认使用了
+Dewdrop uses the following default color theme:
 
 ```typst
 #let s = (s.methods.colors)(
@@ -74,17 +74,17 @@ Dewdrop 默认使用了
 )
 ```
 
-颜色主题，你可以通过 `#let s = (s.methods.colors)(self: s, ..)` 对其进行修改。
+You can modify this color theme using `#let s = (s.methods.colors)(self: s, ..)`.
 
-## slide 函数族
+## Slide Function Family
 
-Dewdrop 主题提供了一系列自定义 slide 函数：
+The Dewdrop theme provides a variety of custom slide functions:
 
 ```typst
 #title-slide(extra: none, ..args)
 ```
 
-`title-slide` 会读取 `self.info` 里的信息用于显示，你也可以为其传入 `extra` 参数，显示额外的信息。
+`title-slide` reads information from `self.info` for display, and you can also pass in an `extra` parameter to display additional information.
 
 ---
 
@@ -101,7 +101,8 @@ Dewdrop 主题提供了一系列自定义 slide 函数：
   ...
 ]
 ```
-默认拥有导航栏和页脚的普通 slide 函数，页脚为您设置的页脚。
+
+A default slide with navigation and footer, where the footer is what you set.
 
 ---
 
@@ -110,16 +111,16 @@ Dewdrop 主题提供了一系列自定义 slide 函数：
   ...
 ]
 ```
-用于引起观众的注意力。背景色为 `self.colors.primary`。
 
+Used to draw attention, with the background color set to `self.colors.primary`.
 
-## 特殊函数
+## Special Functions
 
 ```typst
 #d-outline(enum-args: (:), list-args: (:), cover: true)
 ```
 
-显示当前的目录，`cover` 参数用于指定是否要隐藏处于 inactive 状态的 sections。
+Displays the current table of contents. The `cover` parameter specifies whether to hide sections in an inactive state.
 
 ---
 
@@ -127,7 +128,7 @@ Dewdrop 主题提供了一系列自定义 slide 函数：
 #d-sidebar()
 ```
 
-内部函数，用于显示侧边栏。
+An internal function used to display the sidebar.
 
 ---
 
@@ -135,20 +136,19 @@ Dewdrop 主题提供了一系列自定义 slide 函数：
 #d-mini-slides()
 ```
 
-内部函数，用于显示 mini-slides。
+An internal function used to display mini-slides.
 
+## `slides` Function
 
-## `slides` 函数
+The `slides` function has the following parameters:
 
-`slides` 函数拥有参数
+- `title-slide`: Defaults to `true`.
+- `outline-slide`: Defaults to `true`.
+- `slide-level`: Defaults to `2`.
 
-- `title-slide`: 默认为 `true`。
-- `outline-slide`: 默认为 `true`。
-- `slide-level`: 默认为 `2`。
+You can set these using `#show: slides.with(..)`.
 
-可以通过 `#show: slides.with(..)` 的方式设置。
-
-PS: 其中 outline title 可以通过 `#(s.outline-title = [Outline])` 的方式修改。
+PS: You can modify the outline title using `#(s.outline-title = [Outline])`.
 
 ```typst
 #import "@preview/touying:0.3.1": *
@@ -184,7 +184,7 @@ Hello, Typst!
 ![image](https://github.com/touying-typ/touying/assets/34951714/09ddfb40-4f97-4062-8261-23f87690c33e)
 
 
-## 示例
+## Example
 
 ```typst
 #import "@preview/touying:0.3.1": *

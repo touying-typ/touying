@@ -4,7 +4,7 @@ sidebar_position: 4
 
 # Codly
 
-在使用 codly 的时候，我们应该使用 `s.methods.append-preamble` 方法进行初始化。
+When using Codly, we should initialize it using the `s.methods.append-preamble` method.
 
 ```typst
 #import "@preview/touying:0.3.1": *

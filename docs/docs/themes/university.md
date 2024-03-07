@@ -1,16 +1,12 @@
----
-sidebar_position: 4
----
-
-# University 主题
+## University Theme
 
 ![image](https://github.com/touying-typ/touying/assets/34951714/4095163c-0c16-4760-b370-8adc1cdd7e6c)
 
-这个美观的主题来自 [Pol Dellaiera](https://github.com/drupol)。
+This aesthetically pleasing theme is courtesy of [Pol Dellaiera](https://github.com/drupol).
 
-## 初始化
+## Initialization
 
-你可以通过下面的代码来初始化：
+You can initialize the University theme using the following code:
 
 ```typst
 #import "@preview/touying:0.3.1": *
@@ -31,16 +27,16 @@ sidebar_position: 4
 #show: slides
 ```
 
-其中 `register` 接收参数:
+The `register` function accepts the following parameters:
 
-- `aspect-ratio`: 幻灯片的长宽比为 "16-9" 或 "4-3"，默认为 "16-9"。
-- `progress-bar`: 是否显示 slide 顶部的进度条，默认为 `true`。
+- `aspect-ratio`: Sets the aspect ratio of the slides to "16-9" or "4-3," with the default being "16-9."
+- `progress-bar`: Controls whether the progress bar at the top of each slide is displayed, with the default being `true`.
 
-并且 University 主题会提供一个 `#alert[..]` 函数，你可以通过 `#show strong: alert` 来使用 `*alert text*` 语法。
+Additionally, the University theme provides an `#alert[..]` function, which you can use with the `#show strong: alert` syntax for emphasizing text with `*alert text*`.
 
-## 颜色主题
+## Color Theme
 
-University 默认使用了
+The University theme defaults to the following color theme:
 
 ```typst
 #let s = (s.methods.colors)(
@@ -51,19 +47,21 @@ University 默认使用了
 )
 ```
 
-颜色主题，你可以通过 `#let s = (s.methods.colors)(self: s, ..)` 对其进行修改。
+You can modify this color theme using `#let s = (s.methods.colors)(self: s, ..)`.
 
-## slide 函数族
+## Slide Function Family
 
-University 主题提供了一系列自定义 slide 函数：
+The University theme provides a series of custom slide functions:
+
+### Title Slide
 
 ```typst
 #title-slide(logo: none, authors: none, ..args)
 ```
 
-`title-slide` 会读取 `self.info` 里的信息用于显示，你也可以为其传入 `logo` 参数和 array 类型的 `authors` 参数。
+The `title-slide` function reads information from `self.info` for display. You can also pass the `logo` parameter and an array-type `authors` parameter.
 
----
+### Regular Slide
 
 ```typst
 #slide(
@@ -81,18 +79,20 @@ University 主题提供了一系列自定义 slide 函数：
   ...
 ]
 ```
-默认拥有标题和页脚的普通 slide 函数，其中 `title` 默认为当前 section title，页脚为您设置的页脚。
 
----
+The default slide function with a title and footer. The `title` defaults to the current section title, and the footer is set as per your configuration.
+
+### Focus Slide
 
 ```typst
 #focus-slide(background-img: ..., background-color: ...)[
   ...
 ]
 ```
-用于引起观众的注意力。默认背景色为 `self.colors.primary`。
 
----
+Used to capture the audience's attention. The default background color is `self.colors.primary`.
+
+### Matrix Slide
 
 ```typst
 #matrix-slide(columns: ..., rows: ...)[
@@ -101,17 +101,17 @@ University 主题提供了一系列自定义 slide 函数：
   ...
 ]
 ```
-可以参考 [文档](https://polylux.dev/book/themes/gallery/university.html)。
 
+Refer to the [documentation](https://polylux.dev/book/themes/gallery/university.html).
 
-## `slides` 函数
+## `slides` Function
 
-`slides` 函数拥有参数
+The `slides` function has parameters:
 
-- `title-slide`: 默认为 `true`。
-- `slide-level`: 默认为 `1`。
+- `title-slide`: Defaults to `true`.
+- `slide-level`: Defaults to `1`.
 
-可以通过 `#show: slides.with(..)` 的方式设置。
+You can set these parameters using `#show: slides.with(..)`.
 
 ```typst
 #import "@preview/touying:0.3.1": *
@@ -145,7 +145,7 @@ Hello, Typst!
 ![image](https://github.com/touying-typ/touying/assets/34951714/58971045-0b0d-46cb-acc2-caf766c2432d)
 
 
-## 示例
+## Example
 
 ```typst
 #import "@preview/touying:0.3.1": *

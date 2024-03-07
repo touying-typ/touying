@@ -2,11 +2,11 @@
 sidebar_position: 4
 ---
 
-# 代码风格
+# Code Style
 
-## 简单风格
+## Simple Style
 
-如果我们只是需要简单使用，我们可以直接在标题下输入内容，就像是在编写正常 Typst 文档一样。这里的标题有着分割页面的作用，同时我们也能正常地使用 `#pause` 等命令实现动画效果。
+If we only need simplicity, we can directly input content under the title, just like writing a normal Typst document. The title here serves to divide the pages, and we can use commands like `#pause` to achieve animation effects.
 
 ```typst
 #import "@preview/touying:0.3.1": *
@@ -31,16 +31,15 @@ Hello, Typst!
 
 ![image](https://github.com/touying-typ/touying/assets/34951714/f5bdbf8f-7bf9-45fd-9923-0fa5d66450b2)
 
-并且你可以使用空标题 `==` 创建一个新页，这个技巧也有助于清除上一个标题的继续应用。
+You can use an empty title `==` to create a new page. This technique also helps clear the continuation of the previous title.
 
-PS：我们可以使用 `#slides-end` 记号来标志 `#show: slides` 的结束。
+PS: We can use the `#slides-end` marker to signify the end of `#show: slides`.
 
+## Block Style
 
-## 块风格
+Many times, using simple style alone cannot achieve all the functions we need. For more powerful features and clearer structure, we can also use block style in the form of `#slide[...]`. The `#slide` function needs to be unpacked using the syntax `#let (slide,) = utils.slides(s)` to be used correctly after `#show: slides`.
 
-很多时候，仅仅使用简单风格并不能实现我们需要的所有功能，为了更强大的功能和更清晰的结构，我们同样可以使用 `#slide[...]` 形式的块风格，其中 `#slide` 函数需要使用 `#let (slide,) = utils.slides(s)` 语法进行解包，才能正常在 `#show: slides` 后使用。
-
-例如上面的例子就可以改造成
+For example, the previous example can be transformed into:
 
 ```typst
 #import "@preview/touying:0.3.1": *
@@ -65,19 +64,18 @@ PS：我们可以使用 `#slides-end` 记号来标志 `#show: slides` 的结束�
 ]
 ```
 
-这样做的好处有很多：
+There are many advantages to doing this:
 
-1. 很多时候，我们不只是需要默认的 `#slide[...]`，还需要 `#focus-slide[...]` 这些特殊的 `slide` 函数；
-2. 不同主题的 `#slide[...]` 函数可能有比默认更多的参数，例如 university 主题的 `#slide[...]` 函数就会有着 `subtitle` 参数；
-3. 只有 `slide` 函数才可以通过回调风格的内容块来使用 `#only` 和 `#uncover` 函数实现复杂的动画效果。
-4. 能有着更清晰的结构，通过辨别 `#slide[...]` 块，我们可以很容易地分辨出 slides 的具体分页效果。
+1. Many times, we not only need the default `#slide[...]` but also special `slide` functions like `#focus-slide[...]`.
+2. Different themes' `#slide[...]` functions may have more parameters than the default, such as the university theme's `#slide[...]` function having a `subtitle` parameter.
+3. Only `slide` functions can use the callback-style content block to achieve complex animation effects with `#only` and `#uncover` functions.
+4. It has a clearer structure. By identifying `#slide[...]` blocks, we can easily distinguish the specific pagination effects of slides.
 
+## Convention Over Configuration
 
-## 约定优于配置
+You may have noticed that when using the simple theme, using a level-one title automatically creates a section slide. This is because the simple theme registers an `s.methods.touying-new-section-slide` method, so Touying will automatically call this method.
 
-你可能注意到了，在使用 simple 主题时，我们使用一级标题会自动创建一个 section slide，这是因为 simple 主题注册了一个 `s.methods.touying-new-section-slide` 方法，因此 touying 会默认调用这个方法。
-
-如果我们不希望它自动创建这样一个 section slide，我们可以将这个方法删除：
+If we don't want it to automatically create such a section slide, we can delete this method:
 
 ```typst
 #import "@preview/touying:0.3.1": *
@@ -103,9 +101,9 @@ Hello, Typst!
 
 ![image](https://github.com/touying-typ/touying/assets/34951714/17a89a59-9491-4e1f-95c0-09a22105ab35)
 
-如你所见，这样就只会剩下两页，而默认的 section slide 就会消失了。
+As you can see, there are only two pages left, and the default section slide is gone.
 
-同理，我们也可以注册一个新的 section slide：
+Similarly, we can register a new section slide:
 
 ```typst
 #import "@preview/touying:0.3.1": *
@@ -138,15 +136,15 @@ Hello, Typst!
 
 ![image](https://github.com/touying-typ/touying/assets/34951714/5305efda-0cd4-42eb-9f2e-89abc30b6ca2)
 
-同样地，我们也可以修改 `s.methods.touying-new-subsection-slide` 来对 `subsection` 做同样的事。
+Similarly, we can modify `s.methods.touying-new-subsection-slide` to do the same for `subsection`.
 
-实际上，除了 `s.methods.touying-new-section-slide`，另一个特殊的 `slide` 函数就是 `s.methods.slide` 函数，它会在简单风格里没有显示使用 `#slide[...]` 的情况下默认被调用。
+In fact, besides `s.methods.touying-new-section-slide`, another special `slide` function is the `s.methods.slide` function, which will be called by default in simple style when `#slide[...]` is not explicitly used.
 
-同时，由于 `#slide[...]` 被注册在了 `s.slides = ("slide",)` 里，因此 `section`，`subsection` 和 `title` 参数会被自动传入，而其他的如 `#focus-slide[...]` 则不会自动传入这三个参数。
+Also, since `#slide[...]` is registered in `s.slides = ("slide",)`, the `section`, `subsection`, and `title` parameters will be automatically passed, while others like `#focus-slide[...]` will not automatically receive these three parameters.
 
-:::tip[原理]
+:::tip[Principle]
 
-实际上，你也可以不使用 `#show: slides` 和 `utils.slides(s)`，而是只使用 `utils.methods(s)`，例如
+In fact, you can also not use `#show: slides` and `utils.slides(s)`, but only use `utils.methods(s)`, for example:
 
 ```typst
 #import "@preview/touying:0.3.1": *
@@ -164,6 +162,6 @@ Hello, Typst!
 ]
 ```
 
-这时候需要手动传入 `section`、`subsection` 和 `title`，但是会有更好的性能，适合需要更快的性能的情况，例如超过数十数百页的情形。
+Here, you need to manually pass in `section`, `subsection`, and `title`, but it will have better performance, suitable for cases where faster performance is needed, such as when there are more than dozens or hundreds of pages.
 
 :::

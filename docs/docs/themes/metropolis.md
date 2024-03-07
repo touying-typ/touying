@@ -2,19 +2,17 @@
 sidebar_position: 2
 ---
 
-# Metropolis 主题
+# Metropolis Theme
 
 ![image](https://github.com/touying-typ/touying/assets/34951714/383ceb22-f696-4450-83a6-c0f17e4597e1)
 
+This theme draws inspiration from Matthias Vogelgesang's [Metropolis beamer](https://github.com/matze/mtheme) theme and has been modified by [Enivex](https://github.com/Enivex).
 
-这个主题的灵感来自 Matthias Vogelgesang 创作的 [Metropolis beamer](https://github.com/matze/mtheme) 主题，由 [Enivex](https://github.com/Enivex) 改造而来。
+The Metropolis theme is elegant and suitable for everyday use. It is recommended to have Fira Sans and Fira Math fonts installed on your computer for the best results.
 
-这个主题美观大方，很适合日常使用，并且你最好在电脑上安装 Fira Sans 和 Fira Math 字体，以取得最佳效果。
+## Initialization
 
-
-## 初始化
-
-你可以通过下面的代码来初始化：
+You can initialize it using the following code:
 
 ```typst
 #import "@preview/touying:0.3.1": *
@@ -37,19 +35,19 @@ sidebar_position: 2
 #show: slides
 ```
 
-其中 `register` 接收参数:
+The `register` function takes the following parameters:
 
-- `aspect-ratio`: 幻灯片的长宽比为 "16-9" 或 "4-3"，默认为 "16-9"。
-- `header`: 显示在页眉的内容，默认为 `states.current-section-title`，也可以传入形如 `self => self.info.title` 的函数。
-- `footer`: 展示在页脚的内容，默认为 `[]`，也可以传入形如 `self => self.info.author` 的函数。
-- `footer-right`: 展示在页脚右侧的内容，默认为 `states.slide-counter.display() + " / " + states.last-slide-number`。
-- `footer-progress`: 是否显示 slide 底部的进度条，默认为 `true`。
+- `aspect-ratio`: The aspect ratio of the slides, either "16-9" or "4-3," defaulting to "16-9."
+- `header`: Content displayed in the header, defaulting to `states.current-section-title`, or it can be passed as a function like `self => self.info.title`.
+- `footer`: Content displayed in the footer, defaulting to `[]`, or it can be passed as a function like `self => self.info.author`.
+- `footer-right`: Content displayed on the right side of the footer, defaulting to `states.slide-counter.display() + " / " + states.last-slide-number`.
+- `footer-progress`: Whether to show the progress bar at the bottom of the slide, defaulting to `true`.
 
-并且 Metropolis 主题会提供一个 `#alert[..]` 函数，你可以通过 `#show strong: alert` 来使用 `*alert text*` 语法。
+The Metropolis theme also provides an `#alert[..]` function, which you can use with `#show strong: alert` using the `*alert text*` syntax.
 
-## 颜色主题
+## Color Theme
 
-Metropolis 默认使用了
+Metropolis uses the following default color theme:
 
 ```typst
 #let s = (s.methods.colors)(
@@ -61,17 +59,17 @@ Metropolis 默认使用了
 )
 ```
 
-颜色主题，你可以通过 `#let s = (s.methods.colors)(self: s, ..)` 对其进行修改。
+You can modify this color theme using `#let s = (s.methods.colors)(self: s, ..)`.
 
-## slide 函数族
+## Slide Function Family
 
-Metropolis 主题提供了一系列自定义 slide 函数：
+The Metropolis theme provides a variety of custom slide functions:
 
 ```typst
 #title-slide(extra: none, ..args)
 ```
 
-`title-slide` 会读取 `self.info` 里的信息用于显示，你也可以为其传入 `extra` 参数，显示额外的信息。
+`title-slide` reads information from `self.info` for display, and you can also pass in an `extra` parameter to display additional information.
 
 ---
 
@@ -90,7 +88,8 @@ Metropolis 主题提供了一系列自定义 slide 函数：
   ...
 ]
 ```
-默认拥有标题和页脚的普通 slide 函数，其中 `title` 默认为当前 section title，页脚为您设置的页脚。
+
+A default slide with headers and footers, where the title defaults to the current section title, and the footer is what you set.
 
 ---
 
@@ -99,27 +98,28 @@ Metropolis 主题提供了一系列自定义 slide 函数：
   ...
 ]
 ```
-用于引起观众的注意力。背景色为 `self.colors.primary-dark`。
+
+Used to draw attention, with the background color set to `self.colors.primary-dark`.
 
 ---
 
 ```typst
 #new-section-slide(short-title: auto, title)
 ```
-用给定标题开启一个新的 section。
 
+Creates a new section with the given title.
 
-## `slides` 函数
+## `slides` Function
 
-`slides` 函数拥有参数
+The `slides` function has the following parameters:
 
-- `title-slide`: 默认为 `true`。
-- `outline-slide`: 默认为 `true`。
-- `slide-level`: 默认为 `1`。
+- `title-slide`: Defaults to `true`.
+- `outline-slide`: Defaults to `true`.
+- `slide-level`: Defaults to `1`.
 
-可以通过 `#show: slides.with(..)` 的方式设置。
+You can set these using `#show: slides.with(..)`.
 
-PS: 其中 outline title 可以通过 `#(s.outline-title = [Outline])` 的方式修改。
+PS: You can modify the outline title using `#(s.outline-title = [Outline])`.
 
 ```typst
 #import "@preview/touying:0.3.1": *
@@ -155,7 +155,7 @@ Hello, Typst!
 ![image](https://github.com/touying-typ/touying/assets/34951714/4ab45ee6-09f7-498b-b349-e889d6e42e3e)
 
 
-## 示例
+## Example
 
 ```typst
 #import "@preview/touying:0.3.1": *

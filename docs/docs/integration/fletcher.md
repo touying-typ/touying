@@ -4,9 +4,9 @@ sidebar_position: 3
 
 # Fletcher
 
-Touying 提供了 `touying-reducer`，它能为 fletcher 加入 `pause` 和 `meanwhile` 动画。
+Touying provides the `touying-reducer`, which adds `pause` and `meanwhile` animations to Fletcher.
 
-一个例子：
+An example:
 
 ```typst
 #import "@preview/touying:0.3.1": *

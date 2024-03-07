@@ -4,9 +4,9 @@ sidebar_position: 1
 
 # Pinit
 
-[Pinit](https://github.com/OrangeX4/typst-pinit/) 包其提供了一个基于页面绝对定位与基于「图钉」pins 相对定位的能力，可以很方便地为 slides 实现箭头指示与解释说明的效果。
+[Pinit](https://github.com/OrangeX4/typst-pinit/) package provides the ability to perform absolute positioning based on the page and relative positioning based on "pins," making it convenient to implement arrow pointing and explanatory effects for slides.
 
-## 简单示例
+## Simple Example
 
 ```typst
 #import "@preview/pinit:0.1.3": *
@@ -22,18 +22,16 @@ A simple #pin(1)highlighted text#pin(2).
 
 ![image](https://github.com/touying-typ/touying/assets/34951714/b17f9b80-5a8b-4943-a222-bcb0eb38611d)
 
-另一个 [示例](https://github.com/OrangeX4/typst-pinit/blob/main/examples/equation-desc.typ)：
+Another [example](https://github.com/OrangeX4/typst-pinit/blob/main/examples/equation-desc.typ):
 
 ![image](https://github.com/touying-typ/touying/assets/34951714/9b4a6b50-fcfd-497d-9649-ae1f7762ee3f)
 
 
-
-## 复杂示例
+## Complex Example
 
 ![image](https://github.com/touying-typ/touying/assets/34951714/7fb0095a-fd86-49ec-af95-15bc81a341c2)
 
-
-一个与 Touying 共同使用的示例：
+An example of shared usage with Touying:
 
 ```typst
 #import "@preview/touying:0.3.1": *

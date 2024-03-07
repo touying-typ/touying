@@ -33,6 +33,10 @@ Hello, Typst!
 
 这很简单，您创建了您的第一个 Touying slides，恭喜！🎉
 
+**提示:** 你可以使用 `#import "config.typ": *` 或 `#include "content.typ"` 等 Typst 语法来实现 Touying 的多文件架构。
+
+**警告:** `#let (slide,) = utils.slides(s)` 里的逗号对于解包语法来说是必要的！
+
 ## 更复杂的例子
 
 事实上，Touying 提供了多种 slides 编写风格，实际上您也可以使用 `#slide[..]` 的写法，以获得 Touying 提供的更多更强大的功能。
