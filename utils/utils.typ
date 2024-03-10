@@ -89,8 +89,9 @@
 }
 
 // Type: is sequence
+#let _typst-sequence = ([A] + [ ] + [B]).func()
 #let is-sequence(it) = {
-  type(it) == content and it.has("children")
+  type(it) == content and it.func() == _typst-sequence
 }
 
 #let reconstruct(body-name: "body", named: false, it, body) = {
