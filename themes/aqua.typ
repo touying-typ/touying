@@ -143,32 +143,16 @@
   self.page-args = self.page-args + (
     margin: (x:0em, top:10%),
     header: {
-    place(
-      center+top,
-      dy: 45%,
-      rect(width: 100%, height: 100%, fill: self.colors.primary),
-    )
-    place(
-      left+top,
-      line(start: (30%, 30%), end: (27%, 200%), stroke: 7pt+white),
-    )
-    place(
-      left+bottom,
-      dx: 4%,
-      dy: 15%,
-      text(
-        fill:white,
-        self.slide-title
-      ))
+    place(center+top, dy: 45%,
+      rect(width: 100%, height: 100%, fill: self.colors.primary),)
+    place(left+top, line(start: (30%, 30%), end: (27%, 200%), stroke: 7pt+white),)
+    place(left+bottom, dx: 4%, dy: 15%,
+      text(fill:white, self.slide-title))
     },
     footer: {
     set text(size:0.8em)
-    place(
-      right,
-      dx: -5%, 
-      [#counter(page).display("1")]
-    )
-  }
+    place(right, dx: -5%, [#counter(page).display("1")])
+    }
   )
   self.padding = self.padding + (x: 5%, top:7%)
   (self.methods.touying-slide)(self: self, setting: body=>{
@@ -198,10 +182,7 @@
       )
     }else if self.aqua-lang == "en" {
       v(40%)
-      align(
-          center,
-          text(size:70pt,fill:self.colors.primary-light,weight: "bold")[THANKS FOR ALL]
-      )
+      align(center,text(size:70pt,fill:self.colors.primary-light,weight: "bold")[THANKS FOR ALL])
     }
   })
 }
@@ -224,7 +205,6 @@
     primary-light: rgb(33,89,165),
     secondary: rgb(242,244,248),
   )
-
 
   self.slide-title = []
   self.section_num = counter("section")
