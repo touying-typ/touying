@@ -6,7 +6,7 @@
   self = utils.empty-page(self)
   self.page-args = self.page-args + (
     margin: (top: 30%, left:17%, right:17%, bottom:0%),
-    background: self.background,
+    background: utils.call-or-display(self, self.background),
   )
   let info = self.info
 
@@ -56,7 +56,7 @@
   set text(size: 30pt,fill: self.colors.primary)
   set par(leading: leading)
   self.page-args = self.page-args + (
-    background: self.background,
+    background: utils.call-or-display(self, self.background),
   )
 
   let body = {
@@ -105,7 +105,7 @@
   self = utils.empty-page(self)
   self.page-args = self.page-args + (
     margin: (left:0%, right:0%, top: 20%, bottom:0%),
-    background: self.background,
+    background: utils.call-or-display(self, self.background),
   )
   let body = {
     self.section_num.step()
@@ -229,7 +229,7 @@
   self.slide-title = []
   self.section_num = counter("section")
   self.aqua-lang = aqua-lang
-  self.background = {
+  self.background = (self)=> {
   place(left + top, dx: -15pt, dy: -26pt,
     circle(radius: 40pt, fill: self.colors.primary,))
   place(left + top, dx: 65pt, dy: 12pt,
@@ -292,7 +292,6 @@
   )
   self.methods.init = (self: none, body) => {
     set text(
-    font: ("Microsoft YaHei"),
     size: 20pt,
     )
     body
