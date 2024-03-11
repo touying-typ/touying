@@ -260,35 +260,9 @@
     circle(radius: 13pt, fill: white,) )
 }
 
-  let footer(self) = {
-  set text(size:0.8em)
-  place(
-    right,
-    dx: -5%, 
-    [#counter(page).display("1")]
-  )
-}
-
-  let header(self)={
-  place(
-    center+top,
-    dy: 45%,
-    image("./images/header.png", width: 100%)
-  )
-  states.current-section-title
-  set text(fill:white)
-  place(
-    left+bottom,
-    dx: 4%,
-    dy: 15%,
-    self.slide-title
-  )
-}
 
   self.page-args = self.page-args + (
     paper: "presentation-" + aspect-ratio,
-    header: header,
-    footer: footer,
   )
   self.methods.init = (self: none, body) => {
     set text(
