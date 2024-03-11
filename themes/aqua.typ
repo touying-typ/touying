@@ -19,7 +19,7 @@
           text(
             size: 48pt, 
             weight: "bold",
-            fill: self.title_color,
+            fill: self.colors.primary,
             info.title
           )
         )
@@ -28,7 +28,7 @@
         align(
           center, 
           text(
-            fill: self.author_color,
+            fill: self.colors.primary-light,
             size: 28pt, 
             weight: "regular",
             [#info.author]
@@ -39,7 +39,7 @@
         align(
           center, 
             text(
-              fill: self.date_color,
+              fill: self.colors.primary-light,
               size: 20pt, 
               weight: "regular",
               info.date.display()
@@ -51,9 +51,9 @@
   (self.methods.touying-slide)(self: self, repeat: none, content)
 }
 
-#let outline-slide(self: none, leading:50pt, body) = {
+#let outline-slide(self: none, enum-args: (:), leading:50pt) = {
   self = utils.empty-page(self)
-  set text(size: 30pt,fill: self.title_color)
+  set text(size: 30pt,fill: self.colors.primary)
   set par(leading: leading)
   self.page-args = self.page-args + (
     background: self.background,
@@ -67,21 +67,38 @@
       center+horizon,
       {
         set par(leading: 20pt)
-      text(
-        size: 80pt, 
-        weight: "bold",
-        [#text(size:36pt)[CONTENTS]\ 目录]
-      )}
+        if self.aqua-lang == "zh" {
+          text(
+          size: 80pt, 
+          weight: "bold",
+          [#text(size:36pt)[CONTENTS]\ 目录]
+          )
+        } else if self.aqua-lang == "en"{
+          text(
+          size: 48pt, 
+          weight: "bold",
+          [CONTENTS]
+          )
+        }
+        
+      }
     ),
     align(
       left+horizon,
-      body
+      states.touying-final-sections(sections => {
+        set par(leading: leading)
+        //set text(weight: "bold")
+        enum(
+          ..enum-args,
+          ..sections.filter(section => section.loc != none)
+            .map(section => [#link(section.loc, section.title)<touying-link>] )
+        )
+      })
     )
   )
   }
   (self.methods.touying-slide)(self: self, repeat: none, body)
 } 
-
 
 
 #let new-section-slide(self: none, section) = {
@@ -98,7 +115,7 @@
       align(
         center,
         text(
-          fill: self.title_color,
+          fill: self.colors.primary,
           size: 166pt, 
           [0#self.section_num.display()]
         )
@@ -106,7 +123,7 @@
       align(
         center,
         text(
-          fill: self.title_color,
+          fill: self.colors.primary,
           size: 60pt, 
           weight: "bold",
           section
@@ -121,7 +138,7 @@
   self = utils.empty-page(self)
 
   if title != auto {
-    self.slide_title = title
+    self.slide-title = title
   }
   self.page-args = self.page-args + (
     margin: (x:0em, top:10%),
@@ -129,7 +146,7 @@
     place(
       center+top,
       dy: 45%,
-      rect(width: 100%, height: 100%, fill: self.title_color),
+      rect(width: 100%, height: 100%, fill: self.colors.primary),
     )
     place(
       left+top,
@@ -141,7 +158,7 @@
       dy: 15%,
       text(
         fill:white,
-        self.slide_title
+        self.slide-title
       ))
     },
     footer: {
@@ -155,7 +172,7 @@
   )
   self.padding = self.padding + (x: 5%, top:7%)
   (self.methods.touying-slide)(self: self, setting: body=>{
-    show heading.where(level:1): body => text(fill: self.author_color)[#body#v(3%)]
+    show heading.where(level:1): body => text(fill: self.colors.primary-light)[#body#v(3%)]
     body
   },..args)
 }
@@ -165,157 +182,82 @@
     margin: (x:0em, y:10%),
   )
   self.padding = self.padding + (x: 5%, top:1em)
-  (self.methods.slide)(self:self, title:[总结], setting: body =>{
-    v(15%)
-    stack(
-      spacing: 60pt,
-      align(
-        center,
-        text(size:70pt,fill:self.author_color,weight: "bold")[THANKS FOR ALL]
-      ),
-      align(
-        center,
-        text(size:60pt,fill:self.author_color,weight: "bold")[敬请指正！]
+  (self.methods.slide)(self:self, title: if self.aqua-lang=="zh" {[总结]} else if self.aqua-lang=="en" {[Summary]}, setting: body =>{
+    if self.aqua-lang == "zh" {
+      v(15%)
+      stack(
+        spacing: 20%,
+        align(
+          center,
+          text(size:70pt,fill:self.colors.primary-light,weight: "bold")[THANKS FOR ALL]
+        ),
+        align(
+          center,
+          text(size:60pt,fill:self.colors.primary-light,weight: "bold")[敬请指正！]
+        )
       )
-    )
+    }else if self.aqua-lang == "en" {
+      v(40%)
+      align(
+          center,
+          text(size:70pt,fill:self.colors.primary-light,weight: "bold")[THANKS FOR ALL]
+      )
+    }
   })
+}
+
+#let slides(self: none, title-slide: true, slide-level: 1, ..args) = {
+  if title-slide {
+    (self.methods.title-slide)(self: self)
+  }
+  (self.methods.touying-slides)(self: self, slide-level: slide-level, ..args)
 }
 
 #let register(
   aspect-ratio: "16-9",
+  aqua-lang: "en",
   self,
 ) = {
-  self.title_color = rgb(0, 63, 136)
-  self.author_color = rgb(33,89,165)
-  self.date_color = rgb(33,89,165)
-  self.icon_color = rgb(242,244,248)
-  self.slide_title = []
+  self = (self.methods.colors)(
+    self: self,
+    primary: rgb(0, 63, 136),
+    primary-light: rgb(33,89,165),
+    secondary: rgb(242,244,248),
+  )
+
+
+  self.slide-title = []
   self.section_num = counter("section")
+  self.aqua-lang = aqua-lang
   self.background = {
-  place(
-    left+top,
-    dx: -15pt,
-    dy: -26pt,
-    circle(
-    radius: 40pt,
-    fill: self.title_color,
-    )
-  )
-  place(
-    left+top,
-    dx: 65pt,
-    dy: 12pt,
-    circle(
-    radius: 21pt,
-    fill: self.title_color,
-    )
-  )
-  place(
-    left+top,
-    dx: 3%,
-    dy: 15%,
-    circle(
-    radius: 13pt,
-    fill: self.title_color,
-    )
-  )
-  place(
-    left+top,
-    dx: 2.5%,
-    dy: 27%,
-    circle(
-    radius: 8pt,
-    fill: self.title_color,
-    )
-  )
-  place(
-    right+bottom,
-    dx: 15pt,
-    dy: 26pt,
-    circle(
-    radius: 40pt,
-    fill: self.title_color,
-    )
-  )
-  place(
-    right+bottom,
-    dx: -65pt,
-    dy: -12pt,
-    circle(
-    radius: 21pt,
-    fill: self.title_color,
-    )
-  )
-  place(
-    right+bottom,
-    dx: -3%,
-    dy: -15%,
-    circle(
-    radius: 13pt,
-    fill: self.title_color,
-    )
-  )
-  place(
-    right+bottom,
-    dx: -2.5%,
-    dy: -27%,
-    circle(
-    radius: 8pt,
-    fill: self.title_color,
-    )
-  )
-  polygon(
-    fill: self.icon_color,
-    (35%, -17%),
-    (70%, 10%),
-    (35%, 30%),
-    (0%, 10%),
-  )
-  place(
-    center+horizon,
-    dy: 7%,
-    ellipse(
-      fill: white,
-      width: 45%, 
-      height: 120pt
-    )
-  )
-  place(
-    center+horizon,
-    dy: 5%,
-    ellipse(
-      fill: self.icon_color,
-      width: 40%, 
-      height: 80pt
-    )
-  )
-  place(
-    center+horizon,
-    dy: 12%,
-    rect(
-      fill: self.icon_color,
-      width: 40%, 
-      height: 60pt
-    )
-  )
-  place(
-    center+horizon,
-    dy: 20%,
-    ellipse(
-      fill: white,
-      width: 40%, 
-      height: 70pt
-    )
-  )
-  place(
-    center+horizon,
-    dx: 28%,
-    dy: -6%,
-    circle(
-      radius: 13pt,
-      fill: white,
-    ) 
-  )
+  place(left + top, dx: -15pt, dy: -26pt,
+    circle(radius: 40pt, fill: self.colors.primary,))
+  place(left + top, dx: 65pt, dy: 12pt,
+    circle(radius: 21pt, fill: self.colors.primary,))
+  place(left + top, dx: 3%, dy: 15%,
+    circle(radius: 13pt, fill: self.colors.primary,))
+  place(left + top, dx: 2.5%, dy: 27%,
+    circle(radius: 8pt, fill: self.colors.primary,))
+  place(right + bottom, dx: 15pt, dy: 26pt,
+    circle(radius: 40pt, fill: self.colors.primary,))
+  place(right + bottom, dx: -65pt, dy: -12pt,
+    circle(radius: 21pt, fill: self.colors.primary,))
+  place(right + bottom, dx: -3%, dy: -15%,
+    circle(radius: 13pt, fill: self.colors.primary,))
+  place(right + bottom, dx: -2.5%, dy: -27%,
+    circle(radius: 8pt, fill: self.colors.primary,))
+  polygon(fill: self.colors.secondary,
+    (35%, -17%), (70%, 10%), (35%, 30%), (0%, 10%),)
+  place(center + horizon, dy: 7%,
+    ellipse(fill: white, width: 45%, height: 120pt))
+  place(center + horizon, dy: 5%,
+    ellipse(fill: self.colors.secondary, width: 40%, height: 80pt))
+  place(center + horizon, dy: 12%,
+    rect(fill: self.colors.secondary, width: 40%, height: 60pt))
+  place(center + horizon, dy: 20%,
+    ellipse(fill: white, width: 40%, height: 70pt))
+  place(center + horizon, dx: 28%, dy: -6%,
+    circle(radius: 13pt, fill: white,) )
 }
 
   let footer(self) = {
@@ -339,7 +281,7 @@
     left+bottom,
     dx: 4%,
     dy: 15%,
-    self.slide_title
+    self.slide-title
   )
 }
 
@@ -359,7 +301,9 @@
   self.methods.title-slide = title-slide
   self.methods.outline-slide = outline-slide
   self.methods.new-section-slide = new-section-slide
+  self.methods.touying-new-section-slide = new-section-slide
   self.methods.slide = slide
   self.methods.end-slide = end-slide
+  self.methods.slides = slides
   self
 }

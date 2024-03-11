@@ -1,12 +1,15 @@
 #import "../lib.typ": *
 
-#let s = themes.blue.register(
-  s, aspect-ratio: "16-9"
+#let s = themes.aqua.register(
+  s, 
+  aspect-ratio: "16-9",
+  aqua-lang: "en",  // ["en", "zh"]  "zh" for Chinese users.
 )
+#let s = (s.methods.colors)(self: s, primary: red, primary-light:yellow)
 #let s = (s.methods.info)(
   self: s, 
-  title: [Typst Beamer如何做？#linebreak()这是一个新手教程],
-  author: [pride7],
+  title: [An Instruction to Typst Beamer],
+  author: [Author],
   date: datetime.today(),
 )
 #let (init, slides) = utils.methods(s)
@@ -15,15 +18,10 @@
 #show: slides
 
 
-#title-slide()
 
-#outline-slide[
-  1 制作一个标题页 \
-  2 制作一个目录页 \
-  3 制作一个分节页 \
-  4 制作一个正文页 \
-  5 制作一个结尾页 \
-]
+#outline-slide(leading:100pt)
+
+#if s.aqua-lang == "zh" [
 
 #new-section-slide[
   制作一个标题页
@@ -32,9 +30,6 @@
 #new-section-slide[
   制作一个目录页
 ]
-
-
-
 
 == 01 标题页
 #slide[
@@ -45,18 +40,40 @@
 
   我们还邀请您加入我们为 Typst 建立的社区。Typst 仍是一个非常年轻的项目，因此我们非常希望能够得到您的反馈。
 ]
+== 标题2
+#grid(
+  columns: (1fr,1fr),
+  column-gutter: 50pt,
+  row-gutter: 20pt,
+  [属性 1],[属性 2],
+  [abcd],[efgh]
+)
 
-#slide[
-  #grid(
-    columns: (1fr,1fr),
-    column-gutter: 50pt,
-    row-gutter: 20pt,
-    [属性1],[属性2],
-    [abcd],[efgh]
-  )
+]else if s.aqua-lang == "en" [
+
+#new-section-slide[
+  Title Slide
 ]
 
 
+= Content Slide
+== 01 Tite Slide
+#slide[
+  = How to maker Typst Beamer?
+  #lorem(80)
+]
+
+== Test for grid
+#grid(
+  columns: (1fr,1fr),
+  column-gutter: 50pt,
+  row-gutter: 20pt,
+  [feature 1],[feature 2],
+  [abcd],[efgh]
+)
+
+]
 
 #end-slide()
+
 
