@@ -71,9 +71,11 @@
 })
 
 #let _typst-numbering = numbering
-#let current-section-number(numbering: "01") = locate(loc => {
+#let current-section-number(numbering: "01", ignore-zero: true) = locate(loc => {
   let sections = sections-state.at(loc)
-  _typst-numbering(numbering, sections.len() - 1)
+  if not ignore-zero or sections.len() - 1 != 0 {
+    _typst-numbering(numbering, sections.len() - 1)
+  }
 })
 
 #let touying-progress-with-sections(callback) = locate(loc => {
