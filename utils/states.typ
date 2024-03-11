@@ -70,6 +70,12 @@
   sections.last().title
 })
 
+#let _typst-numbering = numbering
+#let current-section-number(numbering: "01") = locate(loc => {
+  let sections = sections-state.at(loc)
+  _typst-numbering(numbering, sections.len() - 1)
+})
+
 #let touying-progress-with-sections(callback) = locate(loc => {
   callback((
     current-sections: sections-state.at(loc),
