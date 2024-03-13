@@ -1,23 +1,23 @@
 #import "../lib.typ": *
 
-// #let s = themes.simple.register(s, aspect-ratio: "16-9", footer: [Simple slides])
-// #let s = themes.metropolis.register(s, aspect-ratio: "16-9", footer: [Custom footer])
-// #let s = themes.dewdrop.register(s, aspect-ratio: "16-9", footer: [Dewdrop])
-#let s = (s.methods.info)(
-  self: s,
+// #let store = themes.simple.register(store, aspect-ratio: "16-9", footer: [Simple slides])
+// #let store = themes.metropolis.register(store, aspect-ratio: "16-9", footer: [Custom footer])
+// #let store = themes.dewdrop.register(store, aspect-ratio: "16-9", footer: [Dewdrop])
+#let store = (store.methods.info)(
+  self: store,
   title: [Title],
   subtitle: [Subtitle],
   author: [Authors],
   date: datetime.today(),
   institution: [Institution],
 )
-#let s = (s.methods.enable-transparent-cover)(self: s)
-#let (init, slides, touying-outline, alert) = utils.methods(s)
+#let store = (store.methods.enable-transparent-cover)(self: store)
+#let (init, slides, touying-outline, alert) = utils.methods(store)
 #show: init
 
 #show strong: alert
 
-#let (slide,) = utils.slides(s)
+#let (slide,) = utils.slides(store)
 #show: slides
 
 = Let's start a new section

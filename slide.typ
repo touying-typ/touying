@@ -500,8 +500,8 @@
   }
 }
 
-// build the touying singleton
-#let s = (
+// build the global touying store
+#let store = (
   // info interface
   info: (
     title: none,

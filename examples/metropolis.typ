@@ -1,15 +1,15 @@
 #import "../lib.typ": *
 
-#let s = themes.metropolis.register(s, aspect-ratio: "16-9", footer: self => self.info.institution)
-#let s = (s.methods.info)(
-  self: s,
+#let store = themes.metropolis.register(store, aspect-ratio: "16-9", footer: self => self.info.institution)
+#let store = (store.methods.info)(
+  self: store,
   title: [Title],
   subtitle: [Subtitle],
   author: [Authors],
   date: datetime.today(),
   institution: [Institution],
 )
-#let (init, slides, touying-outline, alert) = utils.methods(s)
+#let (init, slides, touying-outline, alert) = utils.methods(store)
 #show: init
 
 #set text(font: "Fira Sans", weight: "light", size: 20pt)
@@ -18,7 +18,7 @@
 #set par(justify: true)
 #show strong: alert
 
-#let (slide, title-slide, new-section-slide, focus-slide) = utils.slides(s)
+#let (slide, title-slide, new-section-slide, focus-slide) = utils.slides(store)
 #show: slides
 
 = First Section
@@ -54,8 +54,8 @@
 ]
 
 // appendix by freezing last-slide-number
-#let s = (s.methods.appendix)(self: s)
-#let (slide,) = utils.slides(s)
+#let store = (store.methods.appendix)(self: store)
+#let (slide,) = utils.slides(store)
 
 = Appendix
 

@@ -1,4 +1,4 @@
-#import "slide.typ": s, pause, meanwhile, slides-end, touying-equation, touying-reducer
+#import "slide.typ": store, pause, meanwhile, slides-end, touying-equation, touying-reducer
 #import "utils/utils.typ"
 #import "utils/states.typ"
 #import "utils/pdfpc.typ"

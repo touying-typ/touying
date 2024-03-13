@@ -1,18 +1,18 @@
 #import "../lib.typ": *
 
-#let s = themes.university.register(s, aspect-ratio: "16-9")
-#let s = (s.methods.info)(
-  self: s,
+#let store = themes.university.register(store, aspect-ratio: "16-9")
+#let store = (store.methods.info)(
+  self: store,
   title: [Title],
   subtitle: [Subtitle],
   author: [Authors],
   date: datetime.today(),
   institution: [Institution],
 )
-#let (init, slides, touying-outline, alert) = utils.methods(s)
+#let (init, slides, touying-outline, alert) = utils.methods(store)
 #show: init
 
-#let (slide, title-slide, focus-slide, matrix-slide) = utils.slides(s)
+#let (slide, title-slide, focus-slide, matrix-slide) = utils.slides(store)
 #show: slides.with(title-slide: false)
 
 #title-slide(authors: ([Author A], [Author B]))

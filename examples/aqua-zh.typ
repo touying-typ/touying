@@ -1,18 +1,18 @@
 #import "../lib.typ": *
 
-#let s = themes.aqua.register(s, aspect-ratio: "16-9", lang: "zh")
+#let store = themes.aqua.register(store, aspect-ratio: "16-9", lang: "zh")
 
-#let s = (s.methods.info)(
-  self: s, 
+#let store = (store.methods.info)(
+  self: store, 
   title: [An Instruction to Typst-Beamer],
   author: [Author],
   date: datetime.today(),
 )
-#let (init, slides) = utils.methods(s)
+#let (init, slides) = utils.methods(store)
 #show: init
 
 #set text(font: "Microsoft YaHei") // "Microsoft YaHei" is recommended.
-#let (slide, title-slide, outline-slide, new-section-slide) = utils.slides(s) 
+#let (slide, title-slide, outline-slide, new-section-slide) = utils.slides(store)
 #show: slides
 
 = 制作一个标题页
@@ -42,7 +42,7 @@
 == Summary
 
 #align(center + horizon)[
-  #set text(size: 3em, weight: "bold", s.colors.primary)
+  #set text(size: 3em, weight: "bold", store.colors.primary)
 
   THANKS FOR ALL
 

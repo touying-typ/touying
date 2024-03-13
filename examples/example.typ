@@ -9,11 +9,11 @@
 // Register university theme
 // You can remove the theme registration or replace other themes
 // it can still work normally
-#let s = themes.university.register(s, aspect-ratio: "16-9")
+#let store = themes.university.register(store, aspect-ratio: "16-9")
 
 // Global information configuration
-#let s = (s.methods.info)(
-  self: s,
+#let store = (store.methods.info)(
+  self: store,
   title: [Title],
   subtitle: [Subtitle],
   author: [Authors],
@@ -23,7 +23,7 @@
 
 // Pdfpc configuration
 // typst query --root . ./example.typ --field value --one "<pdfpc-file>" > ./example.pdfpc
-#let s = (s.methods.append-preamble)(self: s, pdfpc.config(
+#let store = (store.methods.append-preamble)(self: store, pdfpc.config(
   duration-minutes: 30,
   start-time: datetime(hour: 14, minute: 10, second: 0),
   end-time: datetime(hour: 14, minute: 40, second: 0),
@@ -40,13 +40,13 @@
 ))
 
 // Extract methods
-#let (init, slides, touying-outline, alert) = utils.methods(s)
+#let (init, slides, touying-outline, alert) = utils.methods(store)
 #show: init
 
 #show strong: alert
 
 // Extract slide functions
-#let (slide,) = utils.slides(s)
+#let (slide,) = utils.slides(store)
 #show: slides
 
 = Animation
@@ -176,8 +176,8 @@
 
 
 // appendix by freezing last-slide-number
-#let s = (s.methods.appendix)(self: s)
-#let (slide,) = utils.slides(s)
+#let store = (store.methods.appendix)(self: store)
+#let (slide,) = utils.slides(store)
 
 == Appendix
 

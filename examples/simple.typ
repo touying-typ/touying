@@ -1,10 +1,10 @@
 #import "../lib.typ": *
 
-#let s = themes.simple.register(s, aspect-ratio: "16-9", footer: [Simple slides])
-#let (init, slides) = utils.methods(s)
+#let store = themes.simple.register(store, aspect-ratio: "16-9", footer: [Simple slides])
+#let (init, slides) = utils.methods(store)
 #show: init
 
-#let (slide, title-slide, centered-slide, focus-slide) = utils.slides(s)
+#let (slide, title-slide, centered-slide, focus-slide) = utils.slides(store)
 #show: slides
 
 #title-slide[
