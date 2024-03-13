@@ -11,11 +11,11 @@ sidebar_position: 2
 ```typst
 #import "@preview/touying:0.3.1": *
 
-#let s = themes.simple.register(s)
-#let (init, slides) = utils.methods(s)
+#let store = themes.simple.register(store)
+#let (init, slides) = utils.methods(store)
 #show: init
 
-#let (slide,) = utils.slides(s)
+#let (slide,) = utils.slides(store)
 #show: slides
 
 = Title
@@ -35,7 +35,7 @@ Hello, Typst!
 
 **提示:** 你可以使用 `#import "config.typ": *` 或 `#include "content.typ"` 等 Typst 语法来实现 Touying 的多文件架构。
 
-**警告:** `#let (slide,) = utils.slides(s)` 里的逗号对于解包语法来说是必要的！
+**警告:** `#let (slide,) = utils.slides(store)` 里的逗号对于解包语法来说是必要的！
 
 ## 更复杂的例子
 
@@ -53,11 +53,11 @@ Hello, Typst!
 // Register university theme
 // You can remove the theme registration or replace other themes
 // it can still work normally
-#let s = themes.university.register(s, aspect-ratio: "16-9")
+#let store = themes.university.register(store, aspect-ratio: "16-9")
 
 // Global information configuration
-#let s = (s.methods.info)(
-  self: s,
+#let store = (store.methods.info)(
+  self: store,
   title: [Title],
   subtitle: [Subtitle],
   author: [Authors],
@@ -67,7 +67,7 @@ Hello, Typst!
 
 // Pdfpc configuration
 // typst query --root . ./example.typ --field value --one "<pdfpc-file>" > ./example.pdfpc
-#let s = (s.methods.append-preamble)(self: s, pdfpc.config(
+#let store = (store.methods.append-preamble)(self: store, pdfpc.config(
   duration-minutes: 30,
   start-time: datetime(hour: 14, minute: 10, second: 0),
   end-time: datetime(hour: 14, minute: 40, second: 0),
@@ -84,13 +84,13 @@ Hello, Typst!
 ))
 
 // Extract methods
-#let (init, slides, touying-outline, alert) = utils.methods(s)
+#let (init, slides, touying-outline, alert) = utils.methods(store)
 #show: init
 
 #show strong: alert
 
 // Extract slide functions
-#let (slide,) = utils.slides(s)
+#let (slide,) = utils.slides(store)
 #show: slides
 
 = Animation
@@ -220,8 +220,8 @@ Hello, Typst!
 
 
 // appendix by freezing last-slide-number
-#let s = (s.methods.appendix)(self: s)
-#let (slide,) = utils.slides(s)
+#let store = (store.methods.appendix)(self: store)
+#let (slide,) = utils.slides(store)
 
 == Appendix
 
@@ -235,7 +235,7 @@ Hello, Typst!
 Touying 提供了很多内置的主题，能够简单地编写精美的 slides，例如此处的
 
 ```
-#let s = themes.university.register(s, aspect-ratio: "16-9")
+#let store = themes.university.register(store, aspect-ratio: "16-9")
 ```
 
 可以使用 university 主题。关于主题更详细的教程，您可以参阅后面的章节。

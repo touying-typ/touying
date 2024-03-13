@@ -21,7 +21,7 @@ For example, you can add notes using `#pdfpc.speaker-note("This is a note that o
 To add pdfpc configurations, you can use
 
 ```typst
-#let s = (s.methods.append-preamble)(self: s, pdfpc.config(
+#let store = (store.methods.append-preamble)(self: store, pdfpc.config(
   duration-minutes: 30,
   start-time: datetime(hour: 14, minute: 10, second: 0),
   end-time: datetime(hour: 14, minute: 40, second: 0),

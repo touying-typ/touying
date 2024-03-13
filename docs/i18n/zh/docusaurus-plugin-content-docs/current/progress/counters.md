@@ -35,8 +35,8 @@ Touying 的状态均放置于 `states` 命名空间下，包括所有的计数�
 
 ```typst
 // appendix by freezing last-slide-number
-#let s = (s.methods.appendix)(self: s)
-#let (slide,) = utils.methods(s)
+#let store = (store.methods.appendix)(self: store)
+#let (slide,) = utils.methods(store)
 
 #slide[
   appendix
@@ -45,4 +45,4 @@ Touying 的状态均放置于 `states` 命名空间下，包括所有的计数�
 
 语法进入后记。
 
-并且 `#let s = (s.methods.appendix-in-outline)(self: s, false)` 可以让后记的 section 不显示在大纲中。
+并且 `#let store = (store.methods.appendix-in-outline)(self: store, false)` 可以让后记的 section 不显示在大纲中。

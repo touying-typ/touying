@@ -40,7 +40,7 @@ A simple #pin(1)highlighted text#pin(2).
 #import "@preview/pinit:0.1.3": *
 
 #(s.page-args.paper = "presentation-4-3")
-#let (init, slides) = utils.methods(s)
+#let (init, slides) = utils.methods(store)
 #show: init
 
 #set text(size: 20pt, font: "Calibri", ligatures: false)
@@ -60,7 +60,7 @@ A simple #pin(1)highlighted text#pin(2).
   body
 }
 
-#let (slide,) = utils.slides(s)
+#let (slide,) = utils.slides(store)
 #show: slides
 
 // Main body

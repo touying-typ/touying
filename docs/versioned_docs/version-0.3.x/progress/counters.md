@@ -32,8 +32,8 @@ You can use
 
 ```typst
 // appendix by freezing last-slide-number
-#let s = (s.methods.appendix)(self: s)
-#let (slide,) = utils.methods(s)
+#let store = (store.methods.appendix)(self: store)
+#let (slide,) = utils.methods(store)
 
 #slide[
   appendix
@@ -42,4 +42,4 @@ You can use
 
 syntax to enter the appendix.
 
-Additionally, `#let s = (s.methods.appendix-in-outline)(self: s, false)` can be used to hide the appendix section from the outline.
+Additionally, `#let store = (store.methods.appendix-in-outline)(self: store, false)` can be used to hide the appendix section from the outline.

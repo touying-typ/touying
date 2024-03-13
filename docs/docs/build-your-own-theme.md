@@ -6,7 +6,7 @@ sidebar_position: 10
 
 Creating your own theme with Touying might seem a bit complex initially due to the introduction of various concepts. However, fear not; if you successfully create a custom theme with Touying, you'll likely experience the convenience and powerful customization features it offers. You can refer to the [source code of existing themes](https://github.com/touying-typ/touying/tree/main/themes) for guidance. The key steps to implement are:
 
-- Customize the `register` function to initialize the global singleton `s`.
+- Customize the `register` function to initialize the global singleton `store`.
 - Customize the `init` method.
 - Define a color theme by modifying the `self.colors` member variable.
 - Customize the `alert` method (optional).
@@ -71,13 +71,13 @@ Generally, the first step in creating slides is to determine font size and page 
 #import "@preview/touying:0.3.1": *
 #import "bamboo.typ"
 
-#let s = bamboo.register(s, aspect-ratio: "16-9")
-#let (init, slides, touying-outline, alert) = utils.methods(s)
+#let store = bamboo.register(store, aspect-ratio: "16-9")
+#let (init, slides, touying-outline, alert) = utils.methods(store)
 #show: init
 
 #show strong: alert
 
-#let (slide,) = utils.slides(s)
+#let (slide,) = utils.slides(store)
 #show: slides
 
 = First Section
@@ -93,9 +93,9 @@ As you can see, we created a `register` function and passed an `aspect-ratio` pa
 
 In addition, we registered a `self.methods.init` method, which can be used for some global style settings. For example, in this case, we added `set text(size: 20pt)` to set the font size. You can also place additional global style settings here, such as `set par(justify: true)`. Since the `init` function is placed inside `self.methods`, it is a method, not a regular function. Therefore, we need to add the parameter `self: none` to use it properly.
 
-As you can see, later in `main.typ`, we apply the global style settings in `init` using `#show: init`, where `init` is bound and unpacked through `utils.methods(s)`.
+As you can see, later in `main.typ`, we apply the global style settings in `init` using `#show: init`, where `init` is bound and unpacked through `utils.methods(store)`.
 
-If you pay extra attention, you'll notice that the `register` function has an independent `self` at the end. This actually represents returning the modified `self` as the return value, which will be saved in `#let s = ..`. This line is therefore indispensable.
+If you pay extra attention, you'll notice that the `register` function has an independent `self` at the end. This actually represents returning the modified `self` as the return value, which will be saved in `#let store = ..`. This line is therefore indispensable.
 
 ## Color Theme
 
@@ -133,7 +133,7 @@ After adding the color theme, we can access the color using syntax like `self.co
 It's worth noting that users can change the theme color at any time using:
 
 ```typst
-#let s = (s.methods.colors)(self: s, primary: rgb("#3578B9"))
+#let store = (store.methods.colors)(self: store, primary: rgb("#3578B9"))
 ```
 
 This flexibility demonstrates Touying's powerful customization capabilities.
@@ -233,13 +233,13 @@ We also need to customize a `slide` method that accepts `slide(self: none, title
 #import "@preview/touying:0.3.1": *
 #import "bamboo.typ"
 
-#let s = bamboo.register(s, aspect-ratio: "16-9", footer: self => self.info.institution)
-#let (init, slides, touying-outline, alert) = utils.methods(s)
+#let store = bamboo.register(store, aspect-ratio: "16-9", footer: self => self.info.institution)
+#let (init, slides, touying-outline, alert) = utils.methods(store)
 #show: init
 
 #show strong: alert
 
-#let (slide,) = utils.slides(s)
+#let (slide,) = utils.slides(store)
 #show: slides
 
 = First Section
@@ -389,21 +389,21 @@ Finally, we update the `slides(self: none, title-slide: true, slide-level: 1, ..
 #import "@preview/touying:0.3.1": *
 #import "bamboo.typ"
 
-#let s = bamboo.register(s, aspect-ratio: "16-9", footer: self => self.info.institution)
-#let s = (s.methods.info)(
-  self: s,
+#let store = bamboo.register(store, aspect-ratio: "16-9", footer: self => self.info.institution)
+#let store = (store.methods.info)(
+  self: store,
   title: [Title],
   subtitle: [Subtitle],
   author: [Authors],
   date: datetime.today(),
   institution: [Institution],
 )
-#let (init, slides, touying-outline, alert) = utils.methods(s)
+#let (init, slides, touying-outline, alert) = utils.methods(store)
 #show: init
 
 #show strong: alert
 
-#let (slide, title-slide, focus-slide) = utils.slides(s)
+#let (slide, title-slide, focus-slide) = utils.slides(store)
 #show: slides
 
 = First Section

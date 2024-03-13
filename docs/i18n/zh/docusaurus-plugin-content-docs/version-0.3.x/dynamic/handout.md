@@ -11,5 +11,5 @@ sidebar_position: 6
 开启讲义模式是很简单的：
 
 ```typst
-#let s = (s.methods.enable-handout-mode)(self: s)
+#let store = (store.methods.enable-handout-mode)(self: store)
 ```

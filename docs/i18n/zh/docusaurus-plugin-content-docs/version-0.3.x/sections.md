@@ -13,11 +13,11 @@ sidebar_position: 3
 ```typst
 #import "@preview/touying:0.3.1": *
 
-#let s = themes.dewdrop.register(s)
-#let (init, slides) = utils.methods(s)
+#let store = themes.dewdrop.register(store)
+#let (init, slides) = utils.methods(store)
 #show: init
 
-#let (slide,) = utils.slides(s)
+#let (slide,) = utils.slides(store)
 #show: slides
 
 = Section
@@ -36,11 +36,11 @@ Hello, Touying!
 ```typst
 #import "@preview/touying:0.3.1": *
 
-#let s = themes.university.register(s)
-#let (init, slides) = utils.methods(s)
+#let store = themes.university.register(store)
+#let (init, slides) = utils.methods(store)
 #show: init
 
-#let (slide,) = utils.slides(s)
+#let (slide,) = utils.slides(store)
 #show: slides
 
 = Section
@@ -62,10 +62,10 @@ Hello, Touying!
 ```typst
 #import "@preview/touying:0.3.1": *
 
-#let (init, slides, alert, touying-outline) = utils.methods(s)
+#let (init, slides, alert, touying-outline) = utils.methods(store)
 #show: init
 
-#let (slide,) = utils.slides(s)
+#let (slide,) = utils.slides(store)
 #show: slides.with(slide-level: 2)
 
 = Section

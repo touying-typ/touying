@@ -112,11 +112,11 @@ sidebar_position: 5
 #(s.page-args.footer = [Custom Footer])
 ```
 
-这样方式进行更换。不过需要注意的是，如果这样更换了页面参数，你需要将其放在 `#let (slide,) = utils.slides(s)` 之前，否则就需要重新调用 `#let (slide,) = utils.slides(s)`。
+这样方式进行更换。不过需要注意的是，如果这样更换了页面参数，你需要将其放在 `#let (slide,) = utils.slides(store)` 之前，否则就需要重新调用 `#let (slide,) = utils.slides(store)`。
 
 :::warning[警告]
 
-因此，你不应该自己使用 `set page(..)` 命令，而是应该修改 `s` 内部的 `s.page-args` 成员变量。
+因此，你不应该自己使用 `set page(..)` 命令，而是应该修改 `store` 内部的 `s.page-args` 成员变量。
 
 :::
 
@@ -132,7 +132,7 @@ sidebar_position: 5
 #import "@preview/touying:0.3.1": *
 #import "@preview/octique:0.1.0": *
 
-#let s = themes.metropolis.register(s, aspect-ratio: "16-9")
+#let store = themes.metropolis.register(store, aspect-ratio: "16-9")
 #(s.page-args.header = self => {
   // display the original header
   utils.call-or-display(self, s.page-args.header)
@@ -141,7 +141,7 @@ sidebar_position: 5
     #octique("mark-github", color: rgb("#fafafa"), width: 1.5em, height: 1.5em)
   ]
 })
-#let (init, slide) = utils.methods(s)
+#let (init, slide) = utils.methods(store)
 #show: init
 
 #slide(title: [Title])[

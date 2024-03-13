@@ -8,7 +8,7 @@ As you already know, both `uncover` and `#pause` use the `cover` function to con
 
 ## Default Cover Function: `hide`
 
-The `cover` function is a method stored in `s.methods.cover`, which is later used by `uncover` and `#pause`.
+The `cover` function is a method stored in `store.methods.cover`, which is later used by `uncover` and `#pause`.
 
 The default `cover` function is the [hide](https://typst.app/docs/reference/layout/hide/) function. This function makes the internal content invisible without affecting the layout.
 
@@ -17,7 +17,7 @@ The default `cover` function is the [hide](https://typst.app/docs/reference/layo
 In some cases, you might want to use your own `cover` function. In that case, you can set your own `cover` function using:
 
 ```typst
-let s = (s.methods.update-cover)(self: s, is-method: true, cover-fn)
+#let store = (store.methods.update-cover)(self: store, is-method: true, cover-fn)
 ```
 
 Here, if you set `is-method: false`, Touying will wrap `cover-fn` into a method for you.
@@ -27,7 +27,7 @@ Here, if you set `is-method: false`, Touying will wrap `cover-fn` into a method 
 Touying supports a semi-transparent cover function, which can be enabled by adding:
 
 ```typst
-#let s = (s.methods.enable-transparent-cover)(self: s)
+#let store = (store.methods.enable-transparent-cover)(self: store)
 ```
 
 You can adjust the transparency through the `alpha: ..` parameter.
@@ -43,7 +43,7 @@ Note that the `transparent-cover` here does not preserve text layout like `hide`
 The `enable-transparent-cover` method is defined as:
 
 ```typst
-#let s.methods.enable-transparent-cover = (
+#let store.methods.enable-transparent-cover = (
   self: none,
   constructor: rgb,
   alpha: 85%,

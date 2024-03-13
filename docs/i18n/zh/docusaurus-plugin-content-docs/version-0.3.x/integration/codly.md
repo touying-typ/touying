@@ -4,24 +4,24 @@ sidebar_position: 5
 
 # Codly
 
-在使用 codly 的时候，我们应该使用 `s.methods.append-preamble` 方法进行初始化。
+在使用 codly 的时候，我们应该使用 `store.methods.append-preamble` 方法进行初始化。
 
 ```typst
 #import "@preview/touying:0.3.1": *
 #import "@preview/codly:0.2.0": *
 
-#let s = themes.simple.register(s, aspect-ratio: "16-9")
-#let s = (s.methods.append-preamble)(self: s)[
+#let store = themes.simple.register(store, aspect-ratio: "16-9")
+#let store = (store.methods.append-preamble)(self: store)[
   #codly(languages: (
     rust: (name: "Rust", icon: "\u{fa53}", color: rgb("#CE412B")),
   ))
 ]
-#let (init, slides) = utils.methods(s)
+#let (init, slides) = utils.methods(store)
 #show heading.where(level: 2): set block(below: 1em)
 #show: init
 #show: codly-init.with()
 
-#let (slide,) = utils.slides(s)
+#let (slide,) = utils.slides(store)
 #show: slides
 
 #slide[

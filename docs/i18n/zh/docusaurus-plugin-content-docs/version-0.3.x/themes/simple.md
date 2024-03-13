@@ -18,12 +18,12 @@ sidebar_position: 1
 ```typst
 #import "@preview/touying:0.3.1": *
 
-#let s = themes.simple.register(s, aspect-ratio: "16-9", footer: [Simple slides])
-#let s = (s.methods.enable-transparent-cover)(self: s)
-#let (init, slides) = utils.methods(s)
+#let store = themes.simple.register(store, aspect-ratio: "16-9", footer: [Simple slides])
+#let store = (store.methods.enable-transparent-cover)(self: store)
+#let (init, slides) = utils.methods(store)
 #show: init
 
-#let (slide, title-slide, centered-slide, focus-slide) = utils.slides(s)
+#let (slide, title-slide, centered-slide, focus-slide) = utils.slides(store)
 #show: slides
 ```
 
@@ -96,12 +96,12 @@ simple 主题提供了一系列自定义 slide 函数：
 ```typst
 #import "@preview/touying:0.3.1": *
 
-#let s = themes.simple.register(s, aspect-ratio: "16-9", footer: [Simple slides])
-#let s = (s.methods.enable-transparent-cover)(self: s)
-#let (init, slides) = utils.methods(s)
+#let store = themes.simple.register(store, aspect-ratio: "16-9", footer: [Simple slides])
+#let store = (store.methods.enable-transparent-cover)(self: store)
+#let (init, slides) = utils.methods(store)
 #show: init
 
-#let (slide, title-slide, centered-slide, focus-slide) = utils.slides(s)
+#let (slide, title-slide, centered-slide, focus-slide) = utils.slides(store)
 #show: slides
 
 = Title
@@ -123,11 +123,11 @@ Hello, Typst!
 ```typst
 #import "@preview/touying:0.3.1": *
 
-#let s = themes.simple.register(s, aspect-ratio: "16-9", footer: [Simple slides])
-#let (init, slides) = utils.methods(s)
+#let store = themes.simple.register(store, aspect-ratio: "16-9", footer: [Simple slides])
+#let (init, slides) = utils.methods(store)
 #show: init
 
-#let (slide, title-slide, centered-slide, focus-slide) = utils.slides(s)
+#let (slide, title-slide, centered-slide, focus-slide) = utils.slides(store)
 #show: slides
 
 #title-slide[

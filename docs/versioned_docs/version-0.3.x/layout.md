@@ -112,7 +112,7 @@ Similarly, if you are not satisfied with the header or footer style of a theme, 
 #(s.page-args.footer = [Custom Footer])
 ```
 
-to replace it. However, please note that if you replace the page parameters in this way, you need to place it before `#let (slide,) = utils.slides(s)`, or you need to call `#let (slide,) = utils.slides(s)` again.
+to replace it. However, please note that if you replace the page parameters in this way, you need to place it before `#let (slide,) = utils.slides(store)`, or you need to call `#let (slide,) = utils.slides(store)` again.
 
 :::warning[Warning]
 
@@ -132,7 +132,7 @@ For example, suppose we decide to add the GitHub icon to the metropolis theme. W
 #import "@preview/touying:0.3.1": *
 #import "@preview/octique:0.1.0": *
 
-#let s = themes.metropolis.register(s, aspect-ratio: "16-9")
+#let store = themes.metropolis.register(store, aspect-ratio: "16-9")
 #(s.page-args.header = self => {
   // display the original header
   utils.call-or-display(self, s.page-args.header)
@@ -141,7 +141,7 @@ For example, suppose we decide to add the GitHub icon to the metropolis theme. W
     #octique("mark-github", color: rgb("#fafafa"), width: 1.5em, height: 1.5em)
   ]
 })
-#let (init, slide) = utils.methods(s)
+#let (init, slide) = utils.methods(store)
 #show: init
 
 #slide(title: [Title])[

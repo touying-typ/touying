@@ -15,19 +15,19 @@ You can initialize the University theme using the following code:
 ```typst
 #import "@preview/touying:0.3.1": *
 
-#let s = themes.university.register(s, aspect-ratio: "16-9")
-#let s = (s.methods.info)(
-  self: s,
+#let store = themes.university.register(store, aspect-ratio: "16-9")
+#let store = (store.methods.info)(
+  self: store,
   title: [Title],
   subtitle: [Subtitle],
   author: [Authors],
   date: datetime.today(),
   institution: [Institution],
 )
-#let (init, slides, touying-outline, alert) = utils.methods(s)
+#let (init, slides, touying-outline, alert) = utils.methods(store)
 #show: init
 
-#let (slide, title-slide, focus-slide, matrix-slide) = utils.slides(s)
+#let (slide, title-slide, focus-slide, matrix-slide) = utils.slides(store)
 #show: slides
 ```
 
@@ -43,15 +43,15 @@ Additionally, the University theme provides an `#alert[..]` function, which you 
 The University theme defaults to the following color theme:
 
 ```typst
-#let s = (s.methods.colors)(
-  self: s,
+#let store = (store.methods.colors)(
+  self: store,
   primary: rgb("#04364A"),
   secondary: rgb("#176B87"),
   tertiary: rgb("#448C95"),
 )
 ```
 
-You can modify this color theme using `#let s = (s.methods.colors)(self: s, ..)`.
+You can modify this color theme using `#let store = (store.methods.colors)(self: store, ..)`.
 
 ## Slide Function Family
 
@@ -120,19 +120,19 @@ You can set these parameters using `#show: slides.with(..)`.
 ```typst
 #import "@preview/touying:0.3.1": *
 
-#let s = themes.university.register(s, aspect-ratio: "16-9")
-#let s = (s.methods.info)(
-  self: s,
+#let store = themes.university.register(store, aspect-ratio: "16-9")
+#let store = (store.methods.info)(
+  self: store,
   title: [Title],
   subtitle: [Subtitle],
   author: [Authors],
   date: datetime.today(),
   institution: [Institution],
 )
-#let (init, slides, touying-outline, alert) = utils.methods(s)
+#let (init, slides, touying-outline, alert) = utils.methods(store)
 #show: init
 
-#let (slide, title-slide, focus-slide, matrix-slide) = utils.slides(s)
+#let (slide, title-slide, focus-slide, matrix-slide) = utils.slides(store)
 #show: slides
 
 = Title
@@ -154,19 +154,19 @@ Hello, Typst!
 ```typst
 #import "@preview/touying:0.3.1": *
 
-#let s = themes.university.register(s, aspect-ratio: "16-9")
-#let s = (s.methods.info)(
-  self: s,
+#let store = themes.university.register(store, aspect-ratio: "16-9")
+#let store = (store.methods.info)(
+  self: store,
   title: [Title],
   subtitle: [Subtitle],
   author: [Authors],
   date: datetime.today(),
   institution: [Institution],
 )
-#let (init, slides, touying-outline, alert) = utils.methods(s)
+#let (init, slides, touying-outline, alert) = utils.methods(store)
 #show: init
 
-#let (slide, title-slide, focus-slide, matrix-slide) = utils.slides(s)
+#let (slide, title-slide, focus-slide, matrix-slide) = utils.slides(store)
 #show: slides.with(title-slide: false)
 
 #title-slide(authors: ([Author A], [Author B]))

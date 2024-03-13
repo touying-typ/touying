@@ -11,5 +11,5 @@ The handout mode differs from the regular mode as it doesn't require intricate a
 Enabling handout mode is simple:
 
 ```typst
-#let s = (s.methods.enable-handout-mode)(self: s)
+#let store = (store.methods.enable-handout-mode)(self: store)
 ```

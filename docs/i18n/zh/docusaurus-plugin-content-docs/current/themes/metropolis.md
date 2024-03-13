@@ -19,21 +19,21 @@ sidebar_position: 2
 ```typst
 #import "@preview/touying:0.3.1": *
 
-#let s = themes.metropolis.register(s, aspect-ratio: "16-9", footer: self => self.info.institution)
-#let s = (s.methods.info)(
-  self: s,
+#let store = themes.metropolis.register(store, aspect-ratio: "16-9", footer: self => self.info.institution)
+#let store = (store.methods.info)(
+  self: store,
   title: [Title],
   subtitle: [Subtitle],
   author: [Authors],
   date: datetime.today(),
   institution: [Institution],
 )
-#let (init, slides, touying-outline, alert) = utils.methods(s)
+#let (init, slides, touying-outline, alert) = utils.methods(store)
 #show: init
 
 #show strong: alert
 
-#let (slide, title-slide, new-section-slide, focus-slide) = utils.slides(s)
+#let (slide, title-slide, new-section-slide, focus-slide) = utils.slides(store)
 #show: slides
 ```
 
@@ -52,8 +52,8 @@ sidebar_position: 2
 Metropolis 默认使用了
 
 ```typst
-#let s = (s.methods.colors)(
-  self: s,
+#let store = (store.methods.colors)(
+  self: store,
   neutral-lightest: rgb("#fafafa"),
   primary-dark: rgb("#23373b"),
   secondary-light: rgb("#eb811b"),
@@ -61,7 +61,7 @@ Metropolis 默认使用了
 )
 ```
 
-颜色主题，你可以通过 `#let s = (s.methods.colors)(self: s, ..)` 对其进行修改。
+颜色主题，你可以通过 `#let store = (store.methods.colors)(self: store, ..)` 对其进行修改。
 
 ## slide 函数族
 
@@ -124,17 +124,17 @@ PS: 其中 outline title 可以通过 `#(s.outline-title = [Outline])` 的方式
 ```typst
 #import "@preview/touying:0.3.1": *
 
-#let s = themes.metropolis.register(s, aspect-ratio: "16-9", footer: self => self.info.institution)
-#let s = (s.methods.info)(
-  self: s,
+#let store = themes.metropolis.register(store, aspect-ratio: "16-9", footer: self => self.info.institution)
+#let store = (store.methods.info)(
+  self: store,
   title: [Title],
   subtitle: [Subtitle],
   author: [Authors],
   date: datetime.today(),
   institution: [Institution],
 )
-#let s = (s.methods.enable-transparent-cover)(self: s)
-#let (init, slide, slides, title-slide, new-section-slide, focus-slide, touying-outline, alert) = utils.methods(s)
+#let store = (store.methods.enable-transparent-cover)(self: store)
+#let (init, slide, slides, title-slide, new-section-slide, focus-slide, touying-outline, alert) = utils.methods(store)
 #show: init
 
 #show strong: alert
@@ -160,16 +160,16 @@ Hello, Typst!
 ```typst
 #import "@preview/touying:0.3.1": *
 
-#let s = themes.metropolis.register(s, aspect-ratio: "16-9", footer: self => self.info.institution)
-#let s = (s.methods.info)(
-  self: s,
+#let store = themes.metropolis.register(store, aspect-ratio: "16-9", footer: self => self.info.institution)
+#let store = (store.methods.info)(
+  self: store,
   title: [Title],
   subtitle: [Subtitle],
   author: [Authors],
   date: datetime.today(),
   institution: [Institution],
 )
-#let (init, slides, touying-outline, alert) = utils.methods(s)
+#let (init, slides, touying-outline, alert) = utils.methods(store)
 #show: init
 
 #set text(font: "Fira Sans", weight: "light", size: 20pt)
@@ -178,7 +178,7 @@ Hello, Typst!
 #set par(justify: true)
 #show strong: alert
 
-#let (slide, title-slide, new-section-slide, focus-slide) = utils.slides(s)
+#let (slide, title-slide, new-section-slide, focus-slide) = utils.slides(store)
 #show: slides
 
 = First Section
@@ -214,8 +214,8 @@ Hello, Typst!
 ]
 
 // appendix by freezing last-slide-number
-#let s = (s.methods.appendix)(self: s)
-#let (slide,) = utils.slides(s)
+#let store = (store.methods.appendix)(self: store)
+#let (slide,) = utils.slides(store)
 
 = Appendix
 

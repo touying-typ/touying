@@ -21,7 +21,7 @@ Touying 与 [Polylux](https://polylux.dev/book/external/pdfpc.html) 保持一致
 为了加入 pdfpc 配置，你可以使用
 
 ```typst
-#let s = (s.methods.append-preamble)(self: s, pdfpc.config(
+#let store = (store.methods.append-preamble)(self: store, pdfpc.config(
   duration-minutes: 30,
   start-time: datetime(hour: 14, minute: 10, second: 0),
   end-time: datetime(hour: 14, minute: 40, second: 0),

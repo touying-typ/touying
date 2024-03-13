@@ -13,11 +13,11 @@ Generally, level 1, level 2, and level 3 headings correspond to section, subsect
 ```typst
 #import "@preview/touying:0.3.1": *
 
-#let s = themes.dewdrop.register(s)
-#let (init, slides) = utils.methods(s)
+#let store = themes.dewdrop.register(store)
+#let (init, slides) = utils.methods(store)
 #show: init
 
-#let (slide,) = utils.slides(s)
+#let (slide,) = utils.slides(store)
 #show: slides
 
 = Section
@@ -36,11 +36,11 @@ However, often we don't need subsections, and we can use level 1 and level 2 hea
 ```typst
 #import "@preview/touying:0.3.1": *
 
-#let s = themes.university.register(s)
-#let (init, slides) = utils.methods(s)
+#let store = themes.university.register(store)
+#let (init, slides) = utils.methods(store)
 #show: init
 
-#let (slide,) = utils.slides(s)
+#let (slide,) = utils.slides(store)
 #show: slides
 
 = Section
@@ -61,10 +61,10 @@ Displaying a table of contents in Touying is straightforward:
 ```typst
 #import "@preview/touying:0.3.1": *
 
-#let (init, slides, alert, touying-outline) = utils.methods(s)
+#let (init, slides, alert, touying-outline) = utils.methods(store)
 #show: init
 
-#let (slide,) = utils.slides(s)
+#let (slide,) = utils.slides(store)
 #show: slides.with(slide-level: 2)
 
 = Section

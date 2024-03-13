@@ -38,7 +38,7 @@ An example of shared usage with Touying:
 #import "@preview/pinit:0.1.3": *
 
 #(s.page-args.paper = "presentation-4-3")
-#let (init, slides) = utils.methods(s)
+#let (init, slides) = utils.methods(store)
 #show: init
 
 #set text(size: 20pt, font: "Calibri", ligatures: false)
@@ -58,7 +58,7 @@ An example of shared usage with Touying:
   body
 }
 
-#let (slide,) = utils.slides(s)
+#let (slide,) = utils.slides(store)
 #show: slides
 
 // Main body

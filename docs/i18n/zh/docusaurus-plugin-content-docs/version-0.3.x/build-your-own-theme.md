@@ -6,7 +6,7 @@ sidebar_position: 10
 
 使用 Touying 创建一个自己的主题是一件略显复杂的事情，因为我们引入了许多的概念。不过请放心，如果您真的用 Touying 创建了一个自己的主题，也许您就可以深切地感受到 Touying 提供的便利的功能的和强大的可定制性。您可以参考 [主题的源代码](https://github.com/touying-typ/touying/tree/main/themes)，主要需要实现的就是：
 
-- 自定义 `register` 函数，初始化全局单例 `s`；
+- 自定义 `register` 函数，初始化全局单例 `store`；
 - 自定义 `init` 方法；
 - 自定义颜色主题，即修改 `self.colors` 成员变量；
 - 自定义 `alert` 方法，可选；
@@ -72,13 +72,13 @@ sidebar_position: 10
 #import "@preview/touying:0.3.1": *
 #import "bamboo.typ"
 
-#let s = bamboo.register(s, aspect-ratio: "16-9")
-#let (init, slides, touying-outline, alert) = utils.methods(s)
+#let store = bamboo.register(store, aspect-ratio: "16-9")
+#let (init, slides, touying-outline, alert) = utils.methods(store)
 #show: init
 
 #show strong: alert
 
-#let (slide,) = utils.slides(s)
+#let (slide,) = utils.slides(store)
 #show: slides
 
 = First Section
@@ -94,9 +94,9 @@ sidebar_position: 10
 
 除此之外，我们还注册了一个 `self.methods.init` 方法，它可以用来进行一些全局的样式设置，例如在此处，我们加上了 `set text(size: 20pt)` 来设置文字大小。你也可以在这里放置一些额外的全局样式设置，例如 `set par(justify: true)` 等。由于 `init` 函数被放置到了 `self.methods` 里，是一个方法，而非普通函数，因此我们需要加上 `self: none` 参数才能正常使用。
 
-如您所见，后续在 `main.typ` 中，我们会通过 `#show: init` 来应用 `init` 方法里面的全局样式设置，其中 `init` 函数是通过 `utils.methods(s)` 绑定并解包而来的。
+如您所见，后续在 `main.typ` 中，我们会通过 `#show: init` 来应用 `init` 方法里面的全局样式设置，其中 `init` 函数是通过 `utils.methods(store)` 绑定并解包而来的。
 
-如果您多加注意，您会发现 `register` 函数最后有一行独立的 `self`，这其实是代表了将修改后的 `self` 作为返回值返回，后续会被保存在 `#let s = ..` 中，因此这一行是不可或缺的。
+如果您多加注意，您会发现 `register` 函数最后有一行独立的 `self`，这其实是代表了将修改后的 `self` 作为返回值返回，后续会被保存在 `#let store = ..` 中，因此这一行是不可或缺的。
 
 
 ## 颜色主题
@@ -135,10 +135,10 @@ sidebar_position: 10
 并且有一点值得注意，用户可以随时在 `main.typ` 里通过
 
 ```typst
-#let s = (s.methods.colors)(self: s, primary: rgb("#3578B9"))
+#let store = (store.methods.colors)(self: store, primary: rgb("#3578B9"))
 ```
 
-这样的方式修改主题色，其中这句语句需要放在 `register(s)` 之后，以及 `utils.methods(s)` 之前。
+这样的方式修改主题色，其中这句语句需要放在 `register(s)` 之后，以及 `utils.methods(store)` 之前。
 
 这种随时更换颜色主题的内容，正是 Touying 强大可定制性的体现。
 
@@ -241,13 +241,13 @@ self.methods.alert = (self: none, it) => text(fill: self.colors.primary, it)
 #import "@preview/touying:0.3.1": *
 #import "bamboo.typ"
 
-#let s = bamboo.register(s, aspect-ratio: "16-9", footer: self => self.info.institution)
-#let (init, slides, touying-outline, alert) = utils.methods(s)
+#let store = bamboo.register(store, aspect-ratio: "16-9", footer: self => self.info.institution)
+#let (init, slides, touying-outline, alert) = utils.methods(store)
 #show: init
 
 #show strong: alert
 
-#let (slide,) = utils.slides(s)
+#let (slide,) = utils.slides(store)
 #show: slides
 
 = First Section
@@ -396,21 +396,21 @@ self.methods.alert = (self: none, it) => text(fill: self.colors.primary, it)
 #import "@preview/touying:0.3.1": *
 #import "bamboo.typ"
 
-#let s = bamboo.register(s, aspect-ratio: "16-9", footer: self => self.info.institution)
-#let s = (s.methods.info)(
-  self: s,
+#let store = bamboo.register(store, aspect-ratio: "16-9", footer: self => self.info.institution)
+#let store = (store.methods.info)(
+  self: store,
   title: [Title],
   subtitle: [Subtitle],
   author: [Authors],
   date: datetime.today(),
   institution: [Institution],
 )
-#let (init, slides, touying-outline, alert) = utils.methods(s)
+#let (init, slides, touying-outline, alert) = utils.methods(store)
 #show: init
 
 #show strong: alert
 
-#let (slide, title-slide, focus-slide) = utils.slides(s)
+#let (slide, title-slide, focus-slide) = utils.slides(store)
 #show: slides
 
 = First Section

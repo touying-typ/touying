@@ -17,12 +17,12 @@ You can initialize it using the following code:
 ```typst
 #import "@preview/touying:0.3.1": *
 
-#let s = themes.simple.register(s, aspect-ratio: "16-9", footer: [Simple slides])
-#let s = (s.methods.enable-transparent-cover)(self: s)
-#let (init, slides) = utils.methods(s)
+#let store = themes.simple.register(store, aspect-ratio: "16-9", footer: [Simple slides])
+#let store = (store.methods.enable-transparent-cover)(self: store)
+#let (init, slides) = utils.methods(store)
 #show: init
 
-#let (slide, title-slide, centered-slide, focus-slide) = utils.slides(s)
+#let (slide, title-slide, centered-slide, focus-slide) = utils.slides(store)
 #show: slides
 ```
 
@@ -98,12 +98,12 @@ You can set it using `#show: slides.with(..)`.
 ```typst
 #import "@preview/touying:0.3.1": *
 
-#let s = themes.simple.register(s, aspect-ratio: "16-9", footer: [Simple slides])
-#let s = (s.methods.enable-transparent-cover)(self: s)
-#let (init, slides) = utils.methods(s)
+#let store = themes.simple.register(store, aspect-ratio: "16-9", footer: [Simple slides])
+#let store = (store.methods.enable-transparent-cover)(self: store)
+#let (init, slides) = utils.methods(store)
 #show: init
 
-#let (slide, title-slide, centered-slide, focus-slide) = utils.slides(s)
+#let (slide, title-slide, centered-slide, focus-slide) = utils.slides(store)
 #show: slides
 
 = Title
@@ -125,11 +125,11 @@ Hello, Typst!
 ```typst
 #import "@preview/touying:0.3.1": *
 
-#let s = themes.simple.register(s, aspect-ratio: "16-9", footer: [Simple slides])
-#let (init, slides) = utils.methods(s)
+#let store = themes.simple.register(store, aspect-ratio: "16-9", footer: [Simple slides])
+#let (init, slides) = utils.methods(store)
 #show: init
 
-#let (slide, title-slide, centered-slide, focus-slide) = utils.slides(s)
+#let (slide, title-slide, centered-slide, focus-slide) = utils.slides(store)
 #show: slides
 
 #title-slide[

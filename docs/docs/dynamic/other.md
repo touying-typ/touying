@@ -18,11 +18,11 @@ Here's an example:
 #let cetz-canvas = touying-reducer.with(reduce: cetz.canvas, cover: cetz.draw.hide.with(bounds: true))
 #let fletcher-diagram = touying-reducer.with(reduce: (arr, ..args) => fletcher.diagram(..args, ..arr))
 
-#let s = themes.metropolis.register(s, aspect-ratio: "16-9", footer: self => self.info.institution)
-#let (init, slides) = utils.methods(s)
+#let store = themes.metropolis.register(store, aspect-ratio: "16-9", footer: self => self.info.institution)
+#let (init, slides) = utils.methods(store)
 #show: init
 
-#let (slide,) = utils.slides(s)
+#let (slide,) = utils.slides(store)
 #show: slides.with(title-slide: false, outline-slide: false)
 
 // cetz animation

@@ -11,11 +11,11 @@ To use Touying, you just need to include the following in your document:
 ```typst
 #import "@preview/touying:0.3.1": *
 
-#let s = themes.simple.register(s)
-#let (init, slides) = utils.methods(s)
+#let store = themes.simple.register(store)
+#let (init, slides) = utils.methods(store)
 #show: init
 
-#let (slide,) = utils.slides(s)
+#let (slide,) = utils.slides(store)
 #show: slides
 
 = Title
@@ -35,7 +35,7 @@ It's that simple! You've created your first Touying slides. Congratulations! ðŸŽ
 
 **Tip:** You can use Typst syntax like `#import "config.typ": *` or `#include "content.typ"` to implement Touying's multi-file architecture.
 
-**Warning:** The comma in `#let (slide,) = utils.slides(s)` is necessary for the unpacking syntax.
+**Warning:** The comma in `#let (slide,) = utils.slides(store)` is necessary for the unpacking syntax.
 
 ## More Complex Examples
 
@@ -46,7 +46,7 @@ In fact, Touying provides various styles for slide writing. You can also use the
 Touying offers many built-in themes to easily create beautiful slides. For example, in this case:
 
 ```
-#let s = themes.university.register(s, aspect-ratio: "16-9")
+#let store = themes.university.register(store, aspect-ratio: "16-9")
 ```
 
 you can use the university theme. For more detailed tutorials on themes, you can refer to the following sections.
@@ -63,11 +63,11 @@ you can use the university theme. For more detailed tutorials on themes, you can
 // Register university theme
 // You can remove the theme registration or replace other themes
 // it can still work normally
-#let s = themes.university.register(s, aspect-ratio: "16-9")
+#let store = themes.university.register(store, aspect-ratio: "16-9")
 
 // Global information configuration
-#let s = (s.methods.info)(
-  self: s,
+#let store = (store.methods.info)(
+  self: store,
   title: [Title],
   subtitle: [Subtitle],
   author: [Authors],
@@ -77,7 +77,7 @@ you can use the university theme. For more detailed tutorials on themes, you can
 
 // Pdfpc configuration
 // typst query --root . ./example.typ --field value --one "<pdfpc-file>" > ./example.pdfpc
-#let s = (s.methods.append-preamble)(self: s, pdfpc.config(
+#let store = (store.methods.append-preamble)(self: store, pdfpc.config(
   duration-minutes: 30,
   start-time: datetime(hour: 14, minute: 10, second: 0),
   end-time: datetime(hour: 14, minute: 40, second: 0),
@@ -94,13 +94,13 @@ you can use the university theme. For more detailed tutorials on themes, you can
 ))
 
 // Extract methods
-#let (init, slides, touying-outline, alert) = utils.methods(s)
+#let (init, slides, touying-outline, alert) = utils.methods(store)
 #show: init
 
 #show strong: alert
 
 // Extract slide functions
-#let (slide,) = utils.slides(s)
+#let (slide,) = utils.slides(store)
 #show: slides
 
 = Animation
@@ -224,8 +224,8 @@ you can use the university theme. For more detailed tutorials on themes, you can
 
 
 // appendix by freezing last-slide-number
-#let s = (s.methods.appendix)(self: s)
-#let (slide,) = utils.slides(s)
+#let store = (store.methods.appendix)(self: store)
+#let (slide,) = utils.slides(store)
 
 == Appendix
 
@@ -239,7 +239,7 @@ you can use the university theme. For more detailed tutorials on themes, you can
 Touying offers many built-in themes to easily create beautiful slides. For example, in this case:
 
 ```
-#let s = themes.university.register(s, aspect-ratio: "16-9")
+#let store = themes.university.register(store, aspect-ratio: "16-9")
 ```
 
 you can use the university theme. For more detailed tutorials on themes, you can refer to the following sections.

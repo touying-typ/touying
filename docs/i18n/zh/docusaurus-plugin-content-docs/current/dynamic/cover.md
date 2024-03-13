@@ -9,7 +9,7 @@ sidebar_position: 4
 
 ## 默认 Cover 函数：`hide`
 
-`cover` 函数是保存在 `s.methods.cover` 的一个方法，后续 `uncover` 和 `#pause` 均会在这里取出 `cover` 函数来使用。
+`cover` 函数是保存在 `store.methods.cover` 的一个方法，后续 `uncover` 和 `#pause` 均会在这里取出 `cover` 函数来使用。
 
 默认的 `cover` 函数是 [hide](https://typst.app/docs/reference/layout/hide/) 函数，这个函数能将内部的内容更改为不可见的，且不会影响布局。
 
@@ -19,7 +19,7 @@ sidebar_position: 4
 有的情况下，您想用您自己的 `cover` 函数，那么您可以通过
 
 ```typst
-let s = (s.methods.update-cover)(self: s, is-method: true, cover-fn)
+#let store = (store.methods.update-cover)(self: store, is-method: true, cover-fn)
 ```
 
 方法来设置您自己的 `cover` 函数，其中如果设置 `is-method: false`，则 Touying 会帮您将 `cover-fn` 包装成一个方法。
@@ -30,7 +30,7 @@ let s = (s.methods.update-cover)(self: s, is-method: true, cover-fn)
 Touying 提供了半透明 Cover 函数的支持，只需要加入
 
 ```typst
-#let s = (s.methods.enable-transparent-cover)(self: s)
+#let store = (store.methods.enable-transparent-cover)(self: store)
 ```
 
 即可开启，其中你可以通过 `alpha: ..` 参数调节透明度。
@@ -48,7 +48,7 @@ Touying 提供了半透明 Cover 函数的支持，只需要加入
 `enable-transparent-cover` 方法定义为
 
 ```typst
-#let s.methods.enable-transparent-cover = (
+#let store.methods.enable-transparent-cover = (
   self: none,
   constructor: rgb,
   alpha: 85%,

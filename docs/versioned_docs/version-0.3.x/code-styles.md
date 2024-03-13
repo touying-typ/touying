@@ -11,11 +11,11 @@ If we only need simplicity, we can directly input content under the heading, jus
 ```typst
 #import "@preview/touying:0.3.1": *
 
-#let s = themes.simple.register(s)
-#let (init, slides) = utils.methods(s)
+#let store = themes.simple.register(store)
+#let (init, slides) = utils.methods(store)
 #show: init
 
-#let (slide,) = utils.slides(s)
+#let (slide,) = utils.slides(store)
 #show: slides
 
 = Title
@@ -37,18 +37,18 @@ PS: We can use the `#slides-end` marker to signify the end of `#show: slides`.
 
 ## Block Style
 
-Many times, using simple style alone cannot achieve all the functions we need. For more powerful features and clearer structure, we can also use block style in the form of `#slide[...]`. The `#slide` function needs to be unpacked using the syntax `#let (slide,) = utils.slides(s)` to be used correctly after `#show: slides`.
+Many times, using simple style alone cannot achieve all the functions we need. For more powerful features and clearer structure, we can also use block style in the form of `#slide[...]`. The `#slide` function needs to be unpacked using the syntax `#let (slide,) = utils.slides(store)` to be used correctly after `#show: slides`.
 
 For example, the previous example can be transformed into:
 
 ```typst
 #import "@preview/touying:0.3.1": *
 
-#let s = themes.simple.register(s)
-#let (init, slides) = utils.methods(s)
+#let store = themes.simple.register(store)
+#let (init, slides) = utils.methods(store)
 #show: init
 
-#let (slide,) = utils.slides(s)
+#let (slide,) = utils.slides(store)
 #show: slides
 
 = Title
@@ -73,19 +73,19 @@ There are many advantages to doing this:
 
 ## Convention Over Configuration
 
-You may have noticed that when using the simple theme, using a level-one heading automatically creates a new section slide. This is because the simple theme registers an `s.methods.touying-new-section-slide` method, so Touying will automatically call this method.
+You may have noticed that when using the simple theme, using a level-one heading automatically creates a new section slide. This is because the simple theme registers an `store.methods.touying-new-section-slide` method, so Touying will automatically call this method.
 
 If we don't want it to automatically create such a section slide, we can delete this method:
 
 ```typst
 #import "@preview/touying:0.3.1": *
 
-#let s = themes.simple.register(s)
-#(s.methods.touying-new-section-slide = none)
-#let (init, slides) = utils.methods(s)
+#let store = themes.simple.register(store)
+#(store.methods.touying-new-section-slide = none)
+#let (init, slides) = utils.methods(store)
 #show: init
 
-#let (slide,) = utils.slides(s)
+#let (slide,) = utils.slides(store)
 #show: slides
 
 = Title
@@ -108,19 +108,19 @@ Similarly, we can register a new section slide:
 ```typst
 #import "@preview/touying:0.3.1": *
 
-#let s = themes.simple.register(s)
-#(s.methods.touying-new-section-slide = (self: none, section, ..args) => {
+#let store = themes.simple.register(store)
+#(store.methods.touying-new-section-slide = (self: none, section, ..args) => {
   self = utils.empty-page(self)
-  (s.methods.touying-slide)(self: self, section: section, {
+  (store.methods.touying-slide)(self: self, section: section, {
     set align(center + horizon)
     set text(size: 2em, fill: s.colors.primary, style: "italic", weight: "bold")
     section
   }, ..args)
 })
-#let (init, slides, touying-outline) = utils.methods(s)
+#let (init, slides, touying-outline) = utils.methods(store)
 #show: init
 
-#let (slide,) = utils.slides(s)
+#let (slide,) = utils.slides(store)
 #show: slides
 
 = Title
@@ -136,21 +136,21 @@ Hello, Typst!
 
 ![image](https://github.com/touying-typ/touying/assets/34951714/5305efda-0cd4-42eb-9f2e-89abc30b6ca2)
 
-Similarly, we can modify `s.methods.touying-new-subsection-slide` to do the same for `subsection`.
+Similarly, we can modify `store.methods.touying-new-subsection-slide` to do the same for `subsection`.
 
-In fact, besides `s.methods.touying-new-section-slide`, another special `slide` function is the `s.methods.slide` function, which will be called by default in simple style when `#slide[...]` is not explicitly used.
+In fact, besides `store.methods.touying-new-section-slide`, another special `slide` function is the `store.methods.slide` function, which will be called by default in simple style when `#slide[...]` is not explicitly used.
 
 Also, since `#slide[...]` is registered in `s.slides = ("slide",)`, the `section`, `subsection`, and `title` parameters will be automatically passed, while others like `#focus-slide[...]` will not automatically receive these three parameters.
 
 :::tip[Principle]
 
-In fact, you can also not use `#show: slides` and `utils.slides(s)`, but only use `utils.methods(s)`, for example:
+In fact, you can also not use `#show: slides` and `utils.slides(store)`, but only use `utils.methods(store)`, for example:
 
 ```typst
 #import "@preview/touying:0.3.1": *
 
-#let s = themes.simple.register(s)
-#let (init, touying-outline, slide) = utils.methods(s)
+#let store = themes.simple.register(store)
+#let (init, touying-outline, slide) = utils.methods(store)
 #show: init
 
 #slide(section: [Title], title: [First Slide])[

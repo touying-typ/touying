@@ -17,28 +17,28 @@ You can initialize it using the following code:
 ```typst
 #import "@preview/touying:0.3.1": *
 
-#let s = themes.dewdrop.register(
-  s,
+#let store = themes.dewdrop.register(
+  store,
   aspect-ratio: "16-9",
   footer: [Dewdrop],
   navigation: "mini-slides",
   // navigation: "sidebar",
   // navigation: none,
 )
-#let s = (s.methods.info)(
-  self: s,
+#let store = (store.methods.info)(
+  self: store,
   title: [Title],
   subtitle: [Subtitle],
   author: [Authors],
   date: datetime.today(),
   institution: [Institution],
 )
-#let (init, slides, touying-outline, alert) = utils.methods(s)
+#let (init, slides, touying-outline, alert) = utils.methods(store)
 #show: init
 
 #show strong: alert
 
-#let (slide, title-slide, new-section-slide, focus-slide) = utils.slides(s)
+#let (slide, title-slide, new-section-slide, focus-slide) = utils.slides(store)
 #show: slides
 ```
 
@@ -64,8 +64,8 @@ The Dewdrop theme also provides an `#alert[..]` function, which you can use with
 Dewdrop uses the following default color theme:
 
 ```typst
-#let s = (s.methods.colors)(
-  self: s,
+#let store = (store.methods.colors)(
+  self: store,
   neutral-darkest: rgb("#000000"),
   neutral-dark: rgb("#202020"),
   neutral-light: rgb("#f3f3f3"),
@@ -74,7 +74,7 @@ Dewdrop uses the following default color theme:
 )
 ```
 
-You can modify this color theme using `#let s = (s.methods.colors)(self: s, ..)`.
+You can modify this color theme using `#let store = (store.methods.colors)(self: store, ..)`.
 
 ## Slide Function Family
 
@@ -153,21 +153,21 @@ PS: You can modify the outline title using `#(s.outline-title = [Outline])`.
 ```typst
 #import "@preview/touying:0.3.1": *
 
-#let s = themes.dewdrop.register(s, aspect-ratio: "16-9", footer: [Dewdrop])
-#let s = (s.methods.info)(
-  self: s,
+#let store = themes.dewdrop.register(store, aspect-ratio: "16-9", footer: [Dewdrop])
+#let store = (store.methods.info)(
+  self: store,
   title: [Title],
   subtitle: [Subtitle],
   author: [Authors],
   date: datetime.today(),
   institution: [Institution],
 )
-#let (init, slides, touying-outline, alert) = utils.methods(s)
+#let (init, slides, touying-outline, alert) = utils.methods(store)
 #show: init
 
 #show strong: alert
 
-#let (slide, title-slide, new-section-slide, focus-slide) = utils.slides(s)
+#let (slide, title-slide, new-section-slide, focus-slide) = utils.slides(store)
 #show: slides
 
 = Title
@@ -189,27 +189,27 @@ Hello, Typst!
 ```typst
 #import "@preview/touying:0.3.1": *
 
-#let s = themes.dewdrop.register(
-  s,
+#let store = themes.dewdrop.register(
+  store,
   aspect-ratio: "16-9",
   footer: [Dewdrop],
   navigation: "mini-slides",
   // navigation: none,
 )
-#let s = (s.methods.info)(
-  self: s,
+#let store = (store.methods.info)(
+  self: store,
   title: [Title],
   subtitle: [Subtitle],
   author: [Authors],
   date: datetime.today(),
   institution: [Institution],
 )
-#let (init, slides, touying-outline, alert) = utils.methods(s)
+#let (init, slides, touying-outline, alert) = utils.methods(store)
 #show: init
 
 #show strong: alert
 
-#let (slide, title-slide, new-section-slide, focus-slide) = utils.slides(s)
+#let (slide, title-slide, new-section-slide, focus-slide) = utils.slides(store)
 #show: slides
 
 = Section A
@@ -255,8 +255,8 @@ Hello, Typst!
 ]
 
 // appendix by freezing last-slide-number
-#let s = (s.methods.appendix)(self: s)
-#let (slide,) = utils.slides(s)
+#let store = (store.methods.appendix)(self: store)
+#let (slide,) = utils.slides(store)
 
 = Appendix
 
