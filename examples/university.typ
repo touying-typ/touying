@@ -12,6 +12,8 @@
 #let (init, slides, touying-outline, alert) = utils.methods(s)
 #show: init
 
+#show strong: alert
+
 #let (slide, title-slide, focus-slide, matrix-slide) = utils.slides(s)
 #show: slides.with(title-slide: false)
 
@@ -30,7 +32,7 @@
 ]
 
 #focus-slide[
-  *Another variant with primary color in background...*
+  Another variant with primary color in background...
 ]
 
 #matrix-slide[

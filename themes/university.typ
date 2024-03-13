@@ -115,7 +115,7 @@
       })
     }),
   )
-  set text(fill: white, size: 2em)
+  set text(fill: white, weight: "bold", size: 2em)
   (self.methods.touying-slide)(self: self, repeat: none, align(horizon, body))
 }
 
