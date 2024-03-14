@@ -1,6 +1,6 @@
 #import "../lib.typ": *
 
-#let s = themes.metropolis.register(s, aspect-ratio: "16-9", footer: self => self.info.institution)
+#let s = themes.metropolis.register(aspect-ratio: "16-9", footer: self => self.info.institution)
 #let s = (s.methods.info)(
   self: s,
   title: [Title],

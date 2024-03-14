@@ -1,8 +1,9 @@
 #import "../lib.typ": *
 
-// #let s = themes.simple.register(s, aspect-ratio: "16-9", footer: [Simple slides])
-// #let s = themes.metropolis.register(s, aspect-ratio: "16-9", footer: [Custom footer])
-// #let s = themes.dewdrop.register(s, aspect-ratio: "16-9", footer: [Dewdrop])
+#let s = themes.default.register(aspect-ratio: "16-9")
+// #let s = themes.simple.register(aspect-ratio: "16-9", footer: [Simple slides])
+// #let s = themes.metropolis.register(aspect-ratio: "16-9", footer: [Custom footer])
+// #let s = themes.dewdrop.register(aspect-ratio: "16-9", footer: [Dewdrop])
 #let s = (s.methods.info)(
   self: s,
   title: [Title],
