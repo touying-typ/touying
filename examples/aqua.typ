@@ -1,6 +1,6 @@
 #import "../lib.typ": *
 
-#let s = themes.aqua.register(aspect-ratio: "16-9")
+#let s = themes.aqua.register(aspect-ratio: "16-9", lang: "en")
 #let s = (s.methods.info)(
   self: s,
   title: [Title],
@@ -20,10 +20,6 @@
 = The Section
 
 == Slide Title
-
-#slide[
-  #lorem(40)
-]
 
 #slide[
   #lorem(40)

@@ -54,8 +54,8 @@ Generally, the first step in creating slides is to determine font size and page 
 #import "@preview/touying:0.3.2": *
 
 #let register(
+  self: themes.default.register(),
   aspect-ratio: "16-9",
-  self,
 ) = {
   self.page-args += (
     paper: "presentation-" + aspect-ratio,
@@ -89,7 +89,7 @@ Generally, the first step in creating slides is to determine font size and page 
 ]
 ```
 
-As you can see, we created a `register` function and passed an `aspect-ratio` parameter to set the page aspect ratio. As you might already know, in Touying, we should not use `set page(..)` to set page parameters but rather use the syntax `self.page-args += (..)` to set them, as explained in the Page Layout section.
+As you can see, we created a `register` function and passed an `aspect-ratio` parameter to set the page aspect ratio. We get default `self` by `self: themes.default.register()`. As you might already know, in Touying, we should not use `set page(..)` to set page parameters but rather use the syntax `self.page-args += (..)` to set them, as explained in the Page Layout section.
 
 In addition, we registered a `self.methods.init` method, which can be used for some global style settings. For example, in this case, we added `set text(size: 20pt)` to set the font size. You can also place additional global style settings here, such as `set par(justify: true)`. Since the `init` function is placed inside `self.methods`, it is a method, not a regular function. Therefore, we need to add the parameter `self: none` to use it properly.
 
@@ -107,8 +107,8 @@ As shown in the code below, we use `(self.methods.colors)(self: self, ..)` to mo
 
 ```typst
 #let register(
+  self: themes.default.register(),
   aspect-ratio: "16-9",
-  self,
 ) = {
   // color theme
   self = (self.methods.colors)(
@@ -178,9 +178,9 @@ We also need to customize a `slide` method that accepts `slide(self: none, title
 }
 
 #let register(
+  self: themes.default.register(),
   aspect-ratio: "16-9",
   footer: [],
-  self,
 ) = {
   // color theme
   self = (self.methods.colors)(
@@ -329,9 +329,9 @@ Finally, we update the `slides(self: none, title-slide: true, slide-level: 1, ..
 }
 
 #let register(
+  self: themes.default.register(),
   aspect-ratio: "16-9",
   footer: [],
-  self,
 ) = {
   // color theme
   self = (self.methods.colors)(

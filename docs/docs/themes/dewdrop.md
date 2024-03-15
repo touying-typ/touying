@@ -149,6 +149,8 @@ You can set these using `#show: slides.with(..)`.
 
 PS: You can modify the outline title using `#(s.outline-title = [Outline])`.
 
+And the function of automatically adding `new-section-slide` can be turned off by `#(s.methods.touying-new-section-slide = none)`.
+
 ```typst
 #import "@preview/touying:0.3.2": *
 

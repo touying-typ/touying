@@ -35,6 +35,20 @@ The `register` function accepts the following parameters:
 
 - `aspect-ratio`: Sets the aspect ratio of the slides to "16-9" or "4-3," with the default being "16-9."
 - `progress-bar`: Controls whether the progress bar at the top of each slide is displayed, with the default being `true`.
+- `footer-columns`: The width of the footer in the bottom three columns, the default is `(25%, 1fr, 25%)`.
+- `footer-a`: The first column, default is `self => self.info.author`.
+- `footer-b`: Second column, default is `self => if self.info.short-title == auto { self.info.title } else { self.info.short-title }`.
+- `footer-c`: third column, default is
+
+```typst
+self => {
+  h(1fr)
+  utils.info-date(self)
+  h(1fr)
+  states.slide-counter.display() + " / " + states.last-slide-number
+  h(1fr)
+}
+```
 
 Additionally, the University theme provides an `#alert[..]` function, which you can use with the `#show strong: alert` syntax for emphasizing text with `*alert text*`.
 
@@ -116,6 +130,8 @@ The `slides` function has parameters:
 - `slide-level`: Defaults to `1`.
 
 You can set these parameters using `#show: slides.with(..)`.
+
+And the function of automatically adding `new-section-slide` can be turned off by `#(s.methods.touying-new-section-slide = none)`.
 
 ```typst
 #import "@preview/touying:0.3.2": *

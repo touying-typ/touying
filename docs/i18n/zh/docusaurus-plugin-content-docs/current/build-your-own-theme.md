@@ -55,8 +55,8 @@ sidebar_position: 10
 #import "@preview/touying:0.3.2": *
 
 #let register(
+  self: themes.default.register(),
   aspect-ratio: "16-9",
-  self,
 ) = {
   self.page-args += (
     paper: "presentation-" + aspect-ratio,
@@ -90,7 +90,7 @@ sidebar_position: 10
 ]
 ```
 
-如您所见，我们创建了一个 `register` 函数，并传入了一个 `aspect-ratio` 参数来设定页面长宽比。您应该已经知道了，在 Touying 中，我们不应该使用 `set page(..)` 来设置页面参数，而是应该使用 `  self.page-args += (..)` 这种语法来设置，具体内容可以参考页面布局章节。
+如您所见，我们创建了一个 `register` 函数，并传入了一个 `aspect-ratio` 参数来设定页面长宽比。我们使用 `self: themes.default.register()` 的方式，获得了缺省的 `self`。然后我们就需要设置页面参数了。您应该已经知道了，在 Touying 中，我们不应该使用 `set page(..)` 来设置页面参数，而是应该使用 `  self.page-args += (..)` 这种语法来设置，具体内容可以参考页面布局章节。
 
 除此之外，我们还注册了一个 `self.methods.init` 方法，它可以用来进行一些全局的样式设置，例如在此处，我们加上了 `set text(size: 20pt)` 来设置文字大小。你也可以在这里放置一些额外的全局样式设置，例如 `set par(justify: true)` 等。由于 `init` 函数被放置到了 `self.methods` 里，是一个方法，而非普通函数，因此我们需要加上 `self: none` 参数才能正常使用。
 
@@ -109,8 +109,8 @@ sidebar_position: 10
 
 ```typst
 #let register(
+  self: themes.default.register(),
   aspect-ratio: "16-9",
-  self,
 ) = {
   // color theme
   self = (self.methods.colors)(
@@ -186,9 +186,9 @@ self.methods.alert = (self: none, it) => text(fill: self.colors.primary, it)
 }
 
 #let register(
+  self: themes.default.register(),
   aspect-ratio: "16-9",
   footer: [],
-  self,
 ) = {
   // color theme
   self = (self.methods.colors)(
@@ -336,9 +336,9 @@ self.methods.alert = (self: none, it) => text(fill: self.colors.primary, it)
 }
 
 #let register(
+  self: themes.default.register(),
   aspect-ratio: "16-9",
   footer: [],
-  self,
 ) = {
   // color theme
   self = (self.methods.colors)(

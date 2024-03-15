@@ -121,6 +121,8 @@ Metropolis 主题提供了一系列自定义 slide 函数：
 
 PS: 其中 outline title 可以通过 `#(s.outline-title = [Outline])` 的方式修改。
 
+以及可以通过 `#(s.methods.touying-new-section-slide = none)` 的方式关闭自动加入 `new-section-slide` 的功能。
+
 ```typst
 #import "@preview/touying:0.3.2": *
 

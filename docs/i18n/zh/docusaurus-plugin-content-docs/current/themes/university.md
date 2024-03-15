@@ -35,6 +35,20 @@ sidebar_position: 4
 
 - `aspect-ratio`: 幻灯片的长宽比为 "16-9" 或 "4-3"，默认为 "16-9"。
 - `progress-bar`: 是否显示 slide 顶部的进度条，默认为 `true`。
+- `footer-columns`: 底部三栏 Footer 的宽度，默认为 `(25%, 1fr, 25%)`。
+- `footer-a`: 第一栏，默认为 `self => self.info.author`。
+- `footer-b`: 第二栏，默认为 `self => if self.info.short-title == auto { self.info.title } else { self.info.short-title }`。
+- `footer-c`: 第三栏，默认为
+
+```typst
+self => {
+  h(1fr)
+  utils.info-date(self)
+  h(1fr)
+  states.slide-counter.display() + " / " + states.last-slide-number
+  h(1fr)
+}
+```
 
 并且 University 主题会提供一个 `#alert[..]` 函数，你可以通过 `#show strong: alert` 来使用 `*alert text*` 语法。
 
@@ -95,6 +109,13 @@ University 主题提供了一系列自定义 slide 函数：
 ---
 
 ```typst
+#new-section-slide(short-title: auto, title)
+```
+用给定标题开启一个新的 section。
+
+---
+
+```typst
 #matrix-slide(columns: ..., rows: ...)[
   ...
 ][
@@ -112,6 +133,8 @@ University 主题提供了一系列自定义 slide 函数：
 - `slide-level`: 默认为 `1`。
 
 可以通过 `#show: slides.with(..)` 的方式设置。
+
+以及可以通过 `#(s.methods.touying-new-section-slide = none)` 的方式关闭自动加入 `new-section-slide` 的功能。
 
 ```typst
 #import "@preview/touying:0.3.2": *

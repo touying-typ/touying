@@ -93,7 +93,7 @@ The `slides` function has the following parameter:
 
 You can set it using `#show: slides.with(..)`.
 
-
+And the function of automatically adding `new-section-slide` can be turned off by `#(s.methods.touying-new-section-slide = none)`.
 
 ```typst
 #import "@preview/touying:0.3.2": *
