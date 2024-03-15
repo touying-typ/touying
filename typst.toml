@@ -6,4 +6,11 @@ authors = ["OrangeX4", "Andreas Kröpelin", "ntjess", "Enivex", "Pol Dellaiera"]
 license = "MIT"
 description = "A powerful package for creating presentation slides in Typst."
 repository = "https://github.com/touying-typ/touying"
+keywords = ["presentation", "slides", "lecture", "touying"]
+categories = ["presentation"]
 exclude = ["examples"]
+
+[template]
+path = "template"
+entrypoint = "main.typ"
+thumbnail = "thumbnail.png"
