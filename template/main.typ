@@ -1,11 +1,12 @@
 #import "@preview/touying:0.3.2": *
 
-#let s = themes.university.register(aspect-ratio: "16-9")
+// Themes: default, simple, metropolis, dewdrop, university, aqua
+#let s = themes.aqua.register(aspect-ratio: "16-9")
 #let s = (s.methods.info)(
   self: s,
-  title: [Title],
+  title: [Start Your Writing in Touying],
   subtitle: [Subtitle],
-  author: [Authors],
+  author: [Author],
   date: datetime.today(),
   institution: [Institution],
 )
@@ -14,7 +15,7 @@
 
 #show strong: alert
 
-#let (slide, title-slide, focus-slide, matrix-slide) = utils.slides(s)
+#let (slide, title-slide, focus-slide) = utils.slides(s)
 #show: slides
 
 
