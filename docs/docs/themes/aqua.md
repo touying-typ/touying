@@ -4,7 +4,7 @@ sidebar_position: 5
 
 # Aqua Theme
 
-![image](https://github.com/touying-typ/touying/assets/34951714/298e9584-ad89-4298-8b60-ac52c87a3ef0)
+![image](https://github.com/touying-typ/touying/assets/34951714/5f9b3c99-a22a-4f3d-a266-93dd75997593)
 
 This theme is created by [@pride7](https://github.com/pride7), featuring beautiful backgrounds made with Typst's visualization capabilities.
 
