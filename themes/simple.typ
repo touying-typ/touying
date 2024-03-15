@@ -33,8 +33,7 @@
 }
 
 #let focus-slide(self: none, background: auto, foreground: white, body) = {
-  self.page-args.header = none
-  self.page-args.footer = none
+  self = utils.empty-page(self)
   self.page-args.fill = if background == auto { self.colors.primary } else { background }
   set text(fill: foreground, size: 1.5em)
   centered-slide(self: self, align(center + horizon, body))

@@ -26,7 +26,7 @@
           fill: self.colors.primary-light,
           size: 20pt, 
           weight: "regular",
-          if type(info.date) == datetime { info.date.display(self.datetime-format) } else { info.date },
+          utils.info-date(self),
         )
       }
     )
@@ -110,6 +110,13 @@
   (self.methods.touying-slide)(self: self, repeat: none, section: section, body)
 }
 
+#let focus-slide(self: none, body) = {
+  self = utils.empty-page(self)
+  self.page-args += (fill: self.colors.primary, margin: 2em)
+  set text(fill: white, size: 2em, weight: "bold")
+  (self.methods.touying-slide)(self: self, repeat: none, align(horizon + center, body))
+}
+
 #let slide(self: none, title: auto, ..args) = {
   if title != auto {
     self.aqua-title = title
@@ -137,6 +144,7 @@
 #let register(
   self: s,
   aspect-ratio: "16-9",
+  footer: states.slide-counter.display(),
   lang: "en",
 ) = {
   assert(lang in ("zh", "en"), message: "lang must be 'zh' or 'en'")
@@ -153,6 +161,7 @@
     [ ]
     states.current-section-title
   }
+  self.aqua-footer = footer
   self.aqua-lang = lang
   self.aqua-background = (self) => {
     place(left + top, dx: -15pt, dy: -26pt,
@@ -193,7 +202,7 @@
   }
   let footer(self) = {
     set text(size: 0.8em)
-    place(right, dx: -5%, states.slide-counter.display())
+    place(right, dx: -5%, utils.call-or-display(self, self.aqua-footer))
   }
   self.page-args += (
     paper: "presentation-" + aspect-ratio,
@@ -208,6 +217,7 @@
   }
   self.methods.title-slide = title-slide
   self.methods.outline-slide = outline-slide
+  self.methods.focus-slide = focus-slide
   self.methods.new-section-slide = new-section-slide
   self.methods.touying-new-section-slide = new-section-slide
   self.methods.slide = slide

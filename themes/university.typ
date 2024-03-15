@@ -88,7 +88,7 @@
       }
       if info.date != none {
         parbreak()
-        text(size: .8em, if type(info.date) == datetime { info.date.display(self.datetime-format) } else { info.date })
+        text(size: .8em, utils.info-date(self))
       }
     })
   }

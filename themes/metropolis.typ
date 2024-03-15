@@ -65,7 +65,7 @@
         block(spacing: 1em, info.author)
       }
       if info.date != none {
-        block(spacing: 1em, if type(info.date) == datetime { info.date.display(self.datetime-format) } else { info.date })
+        block(spacing: 1em, utils.info-date(self))
       }
       set text(size: .8em)
       if info.institution != none {

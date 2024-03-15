@@ -1,37 +1,37 @@
 #import "../lib.typ": *
 
 #let s = themes.aqua.register(aspect-ratio: "16-9")
-
 #let s = (s.methods.info)(
-  self: s, 
-  title: [An Instruction to Typst-Beamer],
-  author: [Author],
+  self: s,
+  title: [Title],
+  subtitle: [Subtitle],
+  author: [Authors],
   date: datetime.today(),
+  institution: [Institution],
 )
-#let (init, slides) = utils.methods(s)
+#let (init, slides, touying-outline, alert) = utils.methods(s)
 #show: init
 
-#let (slide, title-slide, outline-slide, new-section-slide) = utils.slides(s) 
+#show strong: alert
+
+#let (slide, title-slide, outline-slide, focus-slide) = utils.slides(s)
 #show: slides
 
-= Title Slide
+= The Section
+
+== Slide Title
 
 #slide[
-  = How to make Typst-Beamer?
-  #lorem(80)
+  #lorem(40)
 ]
 
-= Content Slide
+#slide[
+  #lorem(40)
+]
 
-== Test for grid
-
-#grid(
-  columns: (1fr, 1fr),
-  column-gutter: 50pt,
-  row-gutter: 20pt,
-  [Feature 1], [Feature 2],
-  [#lorem(20)], [#lorem(20)],
-)
+#focus-slide[
+  Another variant with primary color in background...
+]
 
 == Summary
 
