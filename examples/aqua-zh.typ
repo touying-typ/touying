@@ -1,6 +1,6 @@
 #import "../lib.typ": *
 
-#let s = themes.aqua.register(s, aspect-ratio: "16-9", lang: "zh")
+#let s = themes.aqua.register(aspect-ratio: "16-9", lang: "zh")
 
 #let s = (s.methods.info)(
   self: s, 

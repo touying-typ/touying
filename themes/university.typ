@@ -2,6 +2,7 @@
 
 // Originally contributed by Pol Dellaiera - https://github.com/drupol
 
+#import "../slide.typ": s
 #import "../utils/utils.typ"
 #import "../utils/states.typ"
 #import "../utils/components.typ"
@@ -105,7 +106,7 @@
     background-color
   }
   self = utils.empty-page(self)
-  self.page-args = self.page-args + (
+  self.page-args += (
     fill: self.colors.primary-dark,
     margin: 1em,
     ..(if background-color != none { (fill: background-color) }),
@@ -169,9 +170,9 @@
 }
 
 #let register(
+  self: s,
   aspect-ratio: "16-9",
   progress-bar: true,
-  self,
 ) = {
   // color theme
   self = (self.methods.colors)(
@@ -228,7 +229,7 @@
     utils.call-or-display(self, self.uni-footer)
   }
 
-  self.page-args = self.page-args + (
+  self.page-args += (
     paper: "presentation-" + aspect-ratio,
     header: header,
     footer: footer,

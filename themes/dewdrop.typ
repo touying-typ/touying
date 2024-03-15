@@ -1,6 +1,7 @@
 // This theme is inspired by https://github.com/zbowang/BeamerTheme
 // The typst version was written by https://github.com/OrangeX4
 
+#import "../slide.typ": s
 #import "../utils/utils.typ"
 #import "../utils/states.typ"
 
@@ -11,7 +12,7 @@
   footer: auto,
   ..args,
 ) = {
-  self.page-args = self.page-args + (
+  self.page-args += (
     fill: self.colors.neutral-lightest,
   )
   if footer != auto {
@@ -82,7 +83,7 @@
 
 #let focus-slide(self: none, body) = {
   self = utils.empty-page(self)
-  self.page-args = self.page-args + (
+  self.page-args += (
     fill: self.colors.primary,
     margin: 2em,
   )
@@ -223,6 +224,7 @@
 }
 
 #let register(
+  self: s,
   aspect-ratio: "16-9",
   navigation: "sidebar",
   sidebar: (width: 10em),
@@ -231,7 +233,6 @@
   footer-right: states.slide-counter.display() + " / " + states.last-slide-number,
   primary: rgb("#0c4842"),
   alpha: 70%,
-  self,
 ) = {
   assert(navigation in ("sidebar", "mini-slides", none), message: "navigation must be one of sidebar, mini-slides, none")
   // color theme
@@ -268,7 +269,7 @@
     h(1fr)
     text(fill: self.colors.neutral-darkest.lighten(20%), utils.call-or-display(self, self.d-footer-right))
   }
-  self.page-args = self.page-args + (
+  self.page-args += (
     paper: "presentation-" + aspect-ratio,
     fill: self.colors.neutral-lightest,
     header: header,

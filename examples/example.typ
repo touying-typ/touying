@@ -9,7 +9,7 @@
 // Register university theme
 // You can remove the theme registration or replace other themes
 // it can still work normally
-#let s = themes.university.register(s, aspect-ratio: "16-9")
+#let s = themes.university.register(aspect-ratio: "16-9")
 
 // Global information configuration
 #let s = (s.methods.info)(

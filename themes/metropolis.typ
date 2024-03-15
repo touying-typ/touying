@@ -7,6 +7,7 @@
 // #set strong(delta: 100)
 // #set par(justify: true)
 
+#import "../slide.typ": s
 #import "../utils/utils.typ"
 #import "../utils/states.typ"
 #import "../utils/components.typ"
@@ -20,7 +21,7 @@
   align: horizon,
   ..args,
 ) = {
-  self.page-args = self.page-args + (
+  self.page-args += (
     fill: self.colors.neutral-lightest,
   )
   if title != auto {
@@ -92,7 +93,7 @@
 
 #let focus-slide(self: none, body) = {
   self = utils.empty-page(self)
-  self.page-args = self.page-args + (
+  self.page-args += (
     fill: self.colors.primary-dark,
     margin: 2em,
   )
@@ -111,12 +112,12 @@
 }
 
 #let register(
+  self: s,
   aspect-ratio: "16-9",
   header: states.current-section-title,
   footer: [],
   footer-right: states.slide-counter.display() + " / " + states.last-slide-number,
   footer-progress: true,
-  self,
 ) = {
   // color theme
   self = (self.methods.colors)(
@@ -160,7 +161,7 @@
       place(bottom, block(height: 2pt, width: 100%, spacing: 0pt, utils.call-or-display(self, self.m-progress-bar)))
     }
   }
-  self.page-args = self.page-args + (
+  self.page-args += (
     paper: "presentation-" + aspect-ratio,
     header: header,
     footer: footer,
