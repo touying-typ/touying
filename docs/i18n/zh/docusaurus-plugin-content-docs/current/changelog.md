@@ -4,6 +4,14 @@ sidebar_position: 14
 
 # 更新日志
 
+## v0.3.2
+
+1. **fix critical bug:** fix `is-sequence` function, make `grid` and `table` work correctly in touying
+2. **theme:** add aqua theme, thanks for pride7
+3. **refactor:** don't export variable `s` by default anymore, it will be extracted by `register` function (**Breaking Change**)
+4. **meta:** add `categories` and `template` config to `typst.toml` for Typst 0.11
+
+
 ## v0.3.1
 
 - fix some typos

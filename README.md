@@ -1,6 +1,6 @@
 # [Touying](https://github.com/touying-typ/touying) ![logo](https://github.com/touying-typ/touying/assets/34951714/2aa394d3-2319-4572-aef7-ed3c14b09846)
 
-[Touying](https://github.com/touying-typ/touying) (投影 in chinese, /tóuyǐng/, meaning projection) is a powerful and efficient package for creating presentation slides in Typst. Touying is a package derived from [Polylux](https://github.com/andreasKroepelin/polylux). Therefore, many concepts and APIs remain consistent with Polylux.
+[Touying](https://github.com/touying-typ/touying) (投影 in chinese, /tóuyǐng/, meaning projection) is a powerful and efficient package for creating presentation slides in Typst. Partial code is inherited from [Polylux](https://github.com/andreasKroepelin/polylux). Therefore, many concepts and APIs remain consistent with Polylux.
 
 Touying provides an object-oriented programming (OOP) style syntax, allowing the simulation of "global variables" through a global singleton. This makes it easy to write themes. Touying does not rely on `counter` and `locate` to implement `#pause`, resulting in better performance.
 
@@ -10,7 +10,7 @@ If you like it, consider [giving a star on GitHub](https://github.com/touying-ty
 ![GitHub](https://img.shields.io/github/license/touying-typ/touying)
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/touying-typ/touying)
 ![GitHub Repo stars](https://img.shields.io/github/stars/touying-typ/touying)
-![Themes badge](https://img.shields.io/badge/themes-4-aqua)
+![Themes badge](https://img.shields.io/badge/themes-5-aqua)
 
 ## Document
 
@@ -68,14 +68,15 @@ Before you begin, make sure you have installed the Typst environment. If not, yo
 To use Touying, you only need to include the following code in your document:
 
 ```typst
-#import "@preview/touying:0.3.1": *
+#import "@preview/touying:0.3.2": *
 
-#let s = themes.simple.register(s)
+#let s = themes.simple.register(aspect-ratio: "16-9")
 #let (init, slides) = utils.methods(s)
 #show: init
 
 #let (slide,) = utils.slides(s)
 #show: slides
+
 
 = Title
 
@@ -102,7 +103,7 @@ It's simple. Congratulations on creating your first Touying slide! 🎉
 In fact, Touying provides various styles for writing slides. For example, the above example uses first-level and second-level titles to create new slides. However, you can also use the `#slide[..]` format to access more powerful features provided by Touying.
 
 ```typst
-#import "@preview/touying:0.3.1": *
+#import "@preview/touying:0.3.2": *
 #import "@preview/cetz:0.2.1"
 #import "@preview/fletcher:0.4.2" as fletcher: node, edge
 
@@ -113,7 +114,7 @@ In fact, Touying provides various styles for writing slides. For example, the ab
 // Register university theme
 // You can remove the theme registration or replace other themes
 // it can still work normally
-#let s = themes.university.register(s, aspect-ratio: "16-9")
+#let s = themes.university.register(aspect-ratio: "16-9")
 
 // Global information configuration
 #let s = (s.methods.info)(
@@ -282,4 +283,5 @@ Thanks to...
 - [@andreasKroepelin](https://github.com/andreasKroepelin) for the `polylux` package
 - [@Enivex](https://github.com/Enivex) for the `metropolis` theme
 - [@drupol](https://github.com/drupol) for the `university` theme
+- [@pride7](https://github.com/pride7) for the `aqua` theme
 - [@ntjess](https://github.com/ntjess) for contributing to `fit-to-height`, `fit-to-width` and `cover-with-rect`
