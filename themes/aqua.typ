@@ -1,10 +1,11 @@
+#import "../slide.typ": s
 #import "../utils/utils.typ"
 #import "../utils/states.typ"
 #import "../utils/components.typ"
 
 #let title-slide(self: none, ..args) = {
   self = utils.empty-page(self)
-  self.page-args = self.page-args + (
+  self.page-args += (
     margin: (top: 30%, left: 17%, right: 17%, bottom: 0%),
     background: utils.call-or-display(self, self.aqua-background),
   )
@@ -35,7 +36,7 @@
 
 #let outline-slide(self: none, enum-args: (:), leading: 50pt) = {
   self = utils.empty-page(self)
-  self.page-args = self.page-args + (
+  self.page-args += (
     background: utils.call-or-display(self, self.aqua-background),
   )
   set text(size: 30pt, fill: self.colors.primary)
@@ -79,7 +80,7 @@
 
 #let new-section-slide(self: none, section) = {
   self = utils.empty-page(self)
-  self.page-args = self.page-args + (
+  self.page-args += (
     margin: (left:0%, right:0%, top: 20%, bottom:0%),
     background: utils.call-or-display(self, self.aqua-background),
   )
@@ -134,9 +135,9 @@
 }
 
 #let register(
+  self: s,
   aspect-ratio: "16-9",
   lang: "en",
-  self,
 ) = {
   assert(lang in ("zh", "en"), message: "lang must be 'zh' or 'en'")
 

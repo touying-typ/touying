@@ -1,7 +1,6 @@
 #import "../lib.typ": *
 
 #let s = themes.dewdrop.register(
-  s,
   aspect-ratio: "16-9",
   footer: [Dewdrop],
   navigation: "mini-slides",

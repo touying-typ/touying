@@ -1,6 +1,6 @@
 #import "../lib.typ": *
 
-#let s = themes.university.register(s, aspect-ratio: "16-9")
+#let s = themes.university.register(aspect-ratio: "16-9")
 #let s = (s.methods.info)(
   self: s,
   title: [Title],

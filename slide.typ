@@ -511,6 +511,7 @@
     author: none,
     date: none,
     institution: none,
+    logo: none,
   ),
   // colors interface
   colors: (

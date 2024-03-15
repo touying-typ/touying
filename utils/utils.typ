@@ -79,6 +79,14 @@
   }
 }
 
+#let info-date(self) = {
+  if type(self.info.date) == datetime {
+    self.info.date.display(self.datetime-format)
+  } else {
+    self.info.date
+  }
+}
+
 // Utils: trim
 #let trim(arr) = {
   let i = 0

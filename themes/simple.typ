@@ -1,6 +1,7 @@
 // This theme is from https://github.com/andreasKroepelin/polylux/blob/main/themes/simple.typ
 // Author: Andreas Kröpelin
 
+#import "../slide.typ": s
 #import "../utils/utils.typ"
 #import "../utils/states.typ"
 
@@ -40,13 +41,13 @@
 }
 
 #let register(
+  self: s,
   aspect-ratio: "16-9",
   footer: [],
   footer-right: states.slide-counter.display() + " / " + states.last-slide-number,
   background: rgb("#ffffff"),
   foreground: rgb("#000000"),
   primary: aqua.darken(50%),
-  self,
 ) = {
   let deco-format(it) = text(size: .6em, fill: gray, it)
   // color theme
@@ -67,7 +68,7 @@
     deco-format(sections.last().title)
   })
   let footer(self) = deco-format(self.simple-footer + h(1fr) + self.simple-footer-right)
-  self.page-args = self.page-args + (
+  self.page-args += (
     paper: "presentation-" + aspect-ratio,
     fill: self.colors.neutral-lightest,
     header: header,

@@ -2,6 +2,7 @@
 
 // Originally contributed by Pol Dellaiera - https://github.com/drupol
 
+#import "../slide.typ": s
 #import "../utils/utils.typ"
 #import "../utils/states.typ"
 #import "../utils/components.typ"
@@ -50,11 +51,7 @@
   )
 }
 
-#let title-slide(
-  self: none,
-  logo: none,
-  ..args,
-) = {
+#let title-slide(self: none, ..args) = {
   self = utils.empty-page(self)
   let info = self.info + args.named()
   info.authors = {
@@ -62,8 +59,8 @@
     if type(authors) == array { authors } else { (authors,) }
   }
   let content = {
-    if logo != none {
-      align(right, logo)
+    if info.logo != none {
+      align(right, info.logo)
     }
     align(center + horizon, {
       block(
@@ -98,6 +95,19 @@
   (self.methods.touying-slide)(self: self, repeat: none, content)
 }
 
+#let new-section-slide(self: none, short-title: auto, title) = {
+  self = utils.empty-page(self)
+  let content = {
+    set align(horizon)
+    show: pad.with(20%)
+    set text(size: 1.5em, fill: self.colors.primary, weight: "bold")
+    title
+    v(-.5em)
+    block(height: 2pt, width: 100%, spacing: 0pt, utils.call-or-display(self, self.uni-progress-bar))
+  }
+  (self.methods.touying-slide)(self: self, repeat: none, section: (title: title, short-title: short-title), content)
+}
+
 #let focus-slide(self: none, background-color: none, background-img: none, body) = {
   let background-color = if background-img == none and background-color ==  none {
     rgb(self.colors.primary)
@@ -105,7 +115,7 @@
     background-color
   }
   self = utils.empty-page(self)
-  self.page-args = self.page-args + (
+  self.page-args += (
     fill: self.colors.primary-dark,
     margin: 1em,
     ..(if background-color != none { (fill: background-color) }),
@@ -169,9 +179,19 @@
 }
 
 #let register(
+  self: s,
   aspect-ratio: "16-9",
   progress-bar: true,
-  self,
+  footer-columns: (25%, 1fr, 25%),
+  footer-a: self => self.info.author,
+  footer-b: self => if self.info.short-title == auto { self.info.title } else { self.info.short-title },
+  footer-c: self => {
+    h(1fr)
+    utils.info-date(self)
+    h(1fr)
+    states.slide-counter.display() + " / " + states.last-slide-number
+    h(1fr)
+  },
 ) = {
   // color theme
   self = (self.methods.colors)(
@@ -187,7 +207,7 @@
       columns: (ratio * 100%, 1fr),
       rows: 2pt,
       components.cell(fill: self.colors.primary),
-      components.cell(fill: self.colors.secondary)
+      components.cell(fill: self.colors.tertiary)
     )
   })
   self.uni-header = none
@@ -198,16 +218,11 @@
     )
     show: block.with(width: 100%, height: auto, fill: self.colors.secondary)
     grid(
-      columns: (25%, 1fr, 15%, 10%),
+      columns: (25%, 1fr, 25%),
       rows: (1.5em, auto),
-      cell(fill: self.colors.primary, self.info.author),
-      cell(fill: self.colors.secondary, if self.info.short-title == auto {
-        self.info.title
-      } else {
-        self.info.short-title
-      }),
-      cell(fill: self.colors.tertiary, if type(self.info.date) == datetime { self.info.date.display(self.datetime-format) } else { self.info.date }),
-      cell(fill: self.colors.tertiary, states.slide-counter.display() + [~/~] + states.last-slide-number)
+      cell(fill: self.colors.primary, utils.call-or-display(self, footer-a)),
+      cell(fill: self.colors.secondary, utils.call-or-display(self, footer-b)),
+      cell(fill: self.colors.tertiary, utils.call-or-display(self, footer-c)),
     )
   }
   // set page
@@ -228,7 +243,7 @@
     utils.call-or-display(self, self.uni-footer)
   }
 
-  self.page-args = self.page-args + (
+  self.page-args += (
     paper: "presentation-" + aspect-ratio,
     header: header,
     footer: footer,
@@ -240,6 +255,8 @@
   // register methods
   self.methods.slide = slide
   self.methods.title-slide = title-slide
+  self.methods.new-section-slide = new-section-slide
+  self.methods.touying-new-section-slide = new-section-slide
   self.methods.focus-slide = focus-slide
   self.methods.matrix-slide = matrix-slide
   self.methods.slides = slides
