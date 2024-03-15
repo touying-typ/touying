@@ -9,9 +9,9 @@ sidebar_position: 4
 If we only need simplicity, we can directly input content under the heading, just like writing a normal Typst document. The heading here serves to divide the pages, and we can use commands like `#pause` to achieve animation effects.
 
 ```typst
-#import "@preview/touying:0.3.1": *
+#import "@preview/touying:0.3.2": *
 
-#let s = themes.simple.register(s)
+#let s = themes.simple.register()
 #let (init, slides) = utils.methods(s)
 #show: init
 
@@ -42,9 +42,9 @@ Many times, using simple style alone cannot achieve all the functions we need. F
 For example, the previous example can be transformed into:
 
 ```typst
-#import "@preview/touying:0.3.1": *
+#import "@preview/touying:0.3.2": *
 
-#let s = themes.simple.register(s)
+#let s = themes.simple.register()
 #let (init, slides) = utils.methods(s)
 #show: init
 
@@ -78,9 +78,9 @@ You may have noticed that when using the simple theme, using a level-one heading
 If we don't want it to automatically create such a section slide, we can delete this method:
 
 ```typst
-#import "@preview/touying:0.3.1": *
+#import "@preview/touying:0.3.2": *
 
-#let s = themes.simple.register(s)
+#let s = themes.simple.register()
 #(s.methods.touying-new-section-slide = none)
 #let (init, slides) = utils.methods(s)
 #show: init
@@ -106,9 +106,9 @@ As you can see, there are only two pages left, and the default section slide is 
 Similarly, we can register a new section slide:
 
 ```typst
-#import "@preview/touying:0.3.1": *
+#import "@preview/touying:0.3.2": *
 
-#let s = themes.simple.register(s)
+#let s = themes.simple.register()
 #(s.methods.touying-new-section-slide = (self: none, section, ..args) => {
   self = utils.empty-page(self)
   (s.methods.touying-slide)(self: self, section: section, {
@@ -147,9 +147,9 @@ Also, since `#slide[...]` is registered in `s.slides = ("slide",)`, the `section
 In fact, you can also not use `#show: slides` and `utils.slides(s)`, but only use `utils.methods(s)`, for example:
 
 ```typst
-#import "@preview/touying:0.3.1": *
+#import "@preview/touying:0.3.2": *
 
-#let s = themes.simple.register(s)
+#let s = themes.simple.register()
 #let (init, touying-outline, slide) = utils.methods(s)
 #show: init
 

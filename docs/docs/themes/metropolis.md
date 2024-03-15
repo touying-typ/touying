@@ -15,9 +15,9 @@ The Metropolis theme is elegant and suitable for everyday use. It is recommended
 You can initialize it using the following code:
 
 ```typst
-#import "@preview/touying:0.3.1": *
+#import "@preview/touying:0.3.2": *
 
-#let s = themes.metropolis.register(s, aspect-ratio: "16-9", footer: self => self.info.institution)
+#let s = themes.metropolis.register(aspect-ratio: "16-9", footer: self => self.info.institution)
 #let s = (s.methods.info)(
   self: s,
   title: [Title],
@@ -122,9 +122,9 @@ You can set these using `#show: slides.with(..)`.
 PS: You can modify the outline title using `#(s.outline-title = [Outline])`.
 
 ```typst
-#import "@preview/touying:0.3.1": *
+#import "@preview/touying:0.3.2": *
 
-#let s = themes.metropolis.register(s, aspect-ratio: "16-9", footer: self => self.info.institution)
+#let s = themes.metropolis.register(aspect-ratio: "16-9", footer: self => self.info.institution)
 #let s = (s.methods.info)(
   self: s,
   title: [Title],
@@ -158,9 +158,9 @@ Hello, Typst!
 ## Example
 
 ```typst
-#import "@preview/touying:0.3.1": *
+#import "@preview/touying:0.3.2": *
 
-#let s = themes.metropolis.register(s, aspect-ratio: "16-9", footer: self => self.info.institution)
+#let s = themes.metropolis.register(aspect-ratio: "16-9", footer: self => self.info.institution)
 #let s = (s.methods.info)(
   self: s,
   title: [Title],

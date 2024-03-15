@@ -15,10 +15,9 @@ The Dewdrop theme features an elegantly designed navigation, including two modes
 You can initialize it using the following code:
 
 ```typst
-#import "@preview/touying:0.3.1": *
+#import "@preview/touying:0.3.2": *
 
 #let s = themes.dewdrop.register(
-  s,
   aspect-ratio: "16-9",
   footer: [Dewdrop],
   navigation: "mini-slides",
@@ -151,9 +150,9 @@ You can set these using `#show: slides.with(..)`.
 PS: You can modify the outline title using `#(s.outline-title = [Outline])`.
 
 ```typst
-#import "@preview/touying:0.3.1": *
+#import "@preview/touying:0.3.2": *
 
-#let s = themes.dewdrop.register(s, aspect-ratio: "16-9", footer: [Dewdrop])
+#let s = themes.dewdrop.register(aspect-ratio: "16-9", footer: [Dewdrop])
 #let s = (s.methods.info)(
   self: s,
   title: [Title],
@@ -187,10 +186,9 @@ Hello, Typst!
 ## Example
 
 ```typst
-#import "@preview/touying:0.3.1": *
+#import "@preview/touying:0.3.2": *
 
 #let s = themes.dewdrop.register(
-  s,
   aspect-ratio: "16-9",
   footer: [Dewdrop],
   navigation: "mini-slides",

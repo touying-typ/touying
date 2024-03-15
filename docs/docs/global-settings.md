@@ -21,7 +21,7 @@ self.methods.init = (self: none, body) => {
 If you are not a theme creator but want to add your own global styles to your slides, you can simply place them after `#show: init` and before `#show: slides`. For example, the metropolis theme recommends adding the following global styles:
 
 ```typst
-#let s = themes.metropolis.register(s, aspect-ratio: "16-9")
+#let s = themes.metropolis.register(aspect-ratio: "16-9")
 #let (init, slides, touying-outline, alert) = utils.methods(s)
 #show: init
 
@@ -71,7 +71,7 @@ In subsequent slides, you can access them through `s.info` or `self.info`.
 This information is generally used in the title-slide, header, and footer of the theme, for example:
 
 ```typst
-#let s = themes.metropolis.register(s, aspect-ratio: "16-9", footer: self => self.info.institution)
+#let s = themes.metropolis.register(aspect-ratio: "16-9", footer: self => self.info.institution)
 ```
 
 The `date` can accept `datetime` format or `content` format, and the display format for the `datetime` format can be changed using:
@@ -117,10 +117,10 @@ Now you can understand the purpose of the `utils.methods()` function: to bind `s
 In general, the two ways mentioned above are sufficient for adding global settings. However, there are still situations where we need to initialize counters or states. If you place this code before `#show: slides`, a blank page will be created, which is something we don't want to see. In such cases, you can use the `s.methods.append-preamble` method. For example, when using the codly package:
 
 ```typst
-#import "@preview/touying:0.3.1": *
+#import "@preview/touying:0.3.2": *
 #import "@preview/codly:0.2.0": *
 
-#let s = themes.simple.register(s, aspect-ratio: "16-9")
+#let s = themes.simple.register(aspect-ratio: "16-9")
 #let s = (s.methods.append-preamble)(self: s)[
   #codly(languages: (
     rust: (name: "Rust", icon: "\u{fa53}", color: rgb("#CE412B")),

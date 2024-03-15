@@ -25,7 +25,7 @@ Depending on whether the theme is for personal use or part of Touying, you can i
 If for personal use:
 
 ```typst
-#import "@preview/touying:0.3.1": *
+#import "@preview/touying:0.3.2": *
 ```
 
 If part of Touying themes:
@@ -51,7 +51,7 @@ Generally, the first step in creating slides is to determine font size and page 
 
 ```typst
 // bamboo.typ
-#import "@preview/touying:0.3.1": *
+#import "@preview/touying:0.3.2": *
 
 #let register(
   aspect-ratio: "16-9",
@@ -68,10 +68,10 @@ Generally, the first step in creating slides is to determine font size and page 
 }
 
 // main.typ
-#import "@preview/touying:0.3.1": *
+#import "@preview/touying:0.3.2": *
 #import "bamboo.typ"
 
-#let s = bamboo.register(s, aspect-ratio: "16-9")
+#let s = bamboo.register(aspect-ratio: "16-9")
 #let (init, slides, touying-outline, alert) = utils.methods(s)
 #show: init
 
@@ -168,7 +168,7 @@ We also need to customize a `slide` method that accepts `slide(self: none, title
 
 ```typst
 // bamboo.typ
-#import "@preview/touying:0.3.1": *
+#import "@preview/touying:0.3.2": *
 
 #let slide(self: none, title: auto, ..args) = {
   if title != auto {
@@ -230,10 +230,10 @@ We also need to customize a `slide` method that accepts `slide(self: none, title
 
 
 // main.typ
-#import "@preview/touying:0.3.1": *
+#import "@preview/touying:0.3.2": *
 #import "bamboo.typ"
 
-#let s = bamboo.register(s, aspect-ratio: "16-9", footer: self => self.info.institution)
+#let s = bamboo.register(aspect-ratio: "16-9", footer: self => self.info.institution)
 #let (init, slides, touying-outline, alert) = utils.methods(s)
 #show: init
 
@@ -269,7 +269,7 @@ Finally, we update the `slides(self: none, title-slide: true, slide-level: 1, ..
 
 ```
 // bamboo.typ
-#import "@preview/touying:0.3.1": *
+#import "@preview/touying:0.3.2": *
 
 #let slide(self: none, title: auto, ..args) = {
   if title != auto {
@@ -386,10 +386,10 @@ Finally, we update the `slides(self: none, title-slide: true, slide-level: 1, ..
 
 
 // main.typ
-#import "@preview/touying:0.3.1": *
+#import "@preview/touying:0.3.2": *
 #import "bamboo.typ"
 
-#let s = bamboo.register(s, aspect-ratio: "16-9", footer: self => self.info.institution)
+#let s = bamboo.register(aspect-ratio: "16-9", footer: self => self.info.institution)
 #let s = (s.methods.info)(
   self: s,
   title: [Title],

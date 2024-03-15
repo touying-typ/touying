@@ -7,10 +7,10 @@ sidebar_position: 5
 When using Codly, we should initialize it using the `s.methods.append-preamble` method.
 
 ```typst
-#import "@preview/touying:0.3.1": *
+#import "@preview/touying:0.3.2": *
 #import "@preview/codly:0.2.0": *
 
-#let s = themes.simple.register(s, aspect-ratio: "16-9")
+#let s = themes.simple.register(aspect-ratio: "16-9")
 #let s = (s.methods.append-preamble)(self: s)[
   #codly(languages: (
     rust: (name: "Rust", icon: "\u{fa53}", color: rgb("#CE412B")),

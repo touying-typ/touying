@@ -9,9 +9,9 @@ Before you begin, make sure you have the Typst environment installed. If not, yo
 To use Touying, you just need to include the following in your document:
 
 ```typst
-#import "@preview/touying:0.3.1": *
+#import "@preview/touying:0.3.2": *
 
-#let s = themes.simple.register(s)
+#let s = themes.simple.register()
 #let (init, slides) = utils.methods(s)
 #show: init
 
@@ -46,13 +46,13 @@ In fact, Touying provides various styles for slide writing. You can also use the
 Touying offers many built-in themes to easily create beautiful slides. For example, in this case:
 
 ```
-#let s = themes.university.register(s, aspect-ratio: "16-9")
+#let s = themes.university.register(aspect-ratio: "16-9")
 ```
 
 you can use the university theme. For more detailed tutorials on themes, you can refer to the following sections.
 
 ```typst
-#import "@preview/touying:0.3.1": *
+#import "@preview/touying:0.3.2": *
 #import "@preview/cetz:0.2.1"
 #import "@preview/fletcher:0.4.2" as fletcher: node, edge
 
@@ -63,7 +63,7 @@ you can use the university theme. For more detailed tutorials on themes, you can
 // Register university theme
 // You can remove the theme registration or replace other themes
 // it can still work normally
-#let s = themes.university.register(s, aspect-ratio: "16-9")
+#let s = themes.university.register(aspect-ratio: "16-9")
 
 // Global information configuration
 #let s = (s.methods.info)(
@@ -239,7 +239,7 @@ you can use the university theme. For more detailed tutorials on themes, you can
 Touying offers many built-in themes to easily create beautiful slides. For example, in this case:
 
 ```
-#let s = themes.university.register(s, aspect-ratio: "16-9")
+#let s = themes.university.register(aspect-ratio: "16-9")
 ```
 
 you can use the university theme. For more detailed tutorials on themes, you can refer to the following sections.

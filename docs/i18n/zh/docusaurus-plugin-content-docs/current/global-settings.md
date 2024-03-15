@@ -21,7 +21,7 @@ self.methods.init = (self: none, body) => {
 如果你并非一个主题制作者，而只是想给你的 slides 添加一些自己的全局样式，你可以简单地将它们放在 `#show: init` 之后，以及 `#show: slides` 之前，例如 metropolis 主题就推荐你自行加入以下全局样式：
 
 ```typst
-#let s = themes.metropolis.register(s, aspect-ratio: "16-9")
+#let s = themes.metropolis.register(aspect-ratio: "16-9")
 #let (init, slides, touying-outline, alert) = utils.methods(s)
 #show: init
 
@@ -69,7 +69,7 @@ self.methods.init = (self: none, body) => {
 
 分别设置 slides 的标题、副标题、作者、日期和机构信息。在后续，你就可以通过 `s.info` 或 `self.info` 这样的方式访问它们。
 
-这些信息一般会在主题的 `title-slide`、`header` 和 `footer` 被使用到，例如 `#let s = themes.metropolis.register(s, aspect-ratio: "16-9", footer: self => self.info.institution)`。
+这些信息一般会在主题的 `title-slide`、`header` 和 `footer` 被使用到，例如 `#let s = themes.metropolis.register(aspect-ratio: "16-9", footer: self => self.info.institution)`。
 
 其中 `date` 可以接收 `datetime` 格式和 `content` 格式，并且 `datetime` 格式的日期显示格式，可以通过
 
@@ -117,10 +117,10 @@ Title is #s.info.title
 一般而言，上面的两种方式就已经足够用于加入全局设置了，但是仍然会有部分情况，我们需要初始化 counters 或 states。如果将这些代码放在 `#show: slides` 之前，就会创建一个空白页，这是我们不想看见的，因此这时候我们就可以使用 `s.methods.append-preamble` 方法。例如在使用 codly 包的时候：
 
 ```typst
-#import "@preview/touying:0.3.1": *
+#import "@preview/touying:0.3.2": *
 #import "@preview/codly:0.2.0": *
 
-#let s = themes.simple.register(s, aspect-ratio: "16-9")
+#let s = themes.simple.register(aspect-ratio: "16-9")
 #let s = (s.methods.append-preamble)(self: s)[
   #codly(languages: (
     rust: (name: "Rust", icon: "\u{fa53}", color: rgb("#CE412B")),

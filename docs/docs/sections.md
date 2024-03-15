@@ -11,9 +11,9 @@ Similar to Beamer, Touying also has the concept of sections and subsections.
 Generally, level 1, level 2, and level 3 headings correspond to section, subsection, and title, respectively, as in the dewdrop theme.
 
 ```typst
-#import "@preview/touying:0.3.1": *
+#import "@preview/touying:0.3.2": *
 
-#let s = themes.dewdrop.register(s)
+#let s = themes.dewdrop.register()
 #let (init, slides) = utils.methods(s)
 #show: init
 
@@ -34,9 +34,9 @@ Hello, Touying!
 However, often we don't need subsections, and we can use level 1 and level 2 headings to correspond to section and title, as in the university theme.
 
 ```typst
-#import "@preview/touying:0.3.1": *
+#import "@preview/touying:0.3.2": *
 
-#let s = themes.university.register(s)
+#let s = themes.university.register()
 #let (init, slides) = utils.methods(s)
 #show: init
 
@@ -59,7 +59,7 @@ In fact, we can control this behavior through the `slide-level` parameter of the
 Displaying a table of contents in Touying is straightforward:
 
 ```typst
-#import "@preview/touying:0.3.1": *
+#import "@preview/touying:0.3.2": *
 
 #let (init, slides, alert, touying-outline) = utils.methods(s)
 #show: init

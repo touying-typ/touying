@@ -54,7 +54,7 @@ typst query --root . ./example.typ --field value --one "<pdfpc-file>" > ./exampl
 借助 Touying 与 Polylux 的兼容性，你可以让 Polylux 也支持直接导出，只需要加入下面的代码即可。
 
 ```
-#import "@preview/touying:0.3.1"
+#import "@preview/touying:0.3.2"
 
 #locate(loc => touying.pdfpc.pdfpc-file(loc))
 ```

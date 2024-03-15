@@ -9,9 +9,9 @@ sidebar_position: 2
 要使用 Touying，您只需要在文档里加入
 
 ```typst
-#import "@preview/touying:0.3.1": *
+#import "@preview/touying:0.3.2": *
 
-#let s = themes.simple.register(s)
+#let s = themes.simple.register()
 #let (init, slides) = utils.methods(s)
 #show: init
 
@@ -42,7 +42,7 @@ Hello, Typst!
 事实上，Touying 提供了多种 slides 编写风格，实际上您也可以使用 `#slide[..]` 的写法，以获得 Touying 提供的更多更强大的功能。
 
 ```typst
-#import "@preview/touying:0.3.1": *
+#import "@preview/touying:0.3.2": *
 #import "@preview/cetz:0.2.1"
 #import "@preview/fletcher:0.4.2" as fletcher: node, edge
 
@@ -53,7 +53,7 @@ Hello, Typst!
 // Register university theme
 // You can remove the theme registration or replace other themes
 // it can still work normally
-#let s = themes.university.register(s, aspect-ratio: "16-9")
+#let s = themes.university.register(aspect-ratio: "16-9")
 
 // Global information configuration
 #let s = (s.methods.info)(
@@ -235,7 +235,7 @@ Hello, Typst!
 Touying 提供了很多内置的主题，能够简单地编写精美的 slides，例如此处的
 
 ```
-#let s = themes.university.register(s, aspect-ratio: "16-9")
+#let s = themes.university.register(aspect-ratio: "16-9")
 ```
 
 可以使用 university 主题。关于主题更详细的教程，您可以参阅后面的章节。

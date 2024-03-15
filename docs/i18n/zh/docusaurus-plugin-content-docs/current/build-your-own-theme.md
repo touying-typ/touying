@@ -26,7 +26,7 @@ sidebar_position: 10
 如果只是你自己使用，你可以直接导入 Touying：
 
 ```typst
-#import "@preview/touying:0.3.1": *
+#import "@preview/touying:0.3.2": *
 ```
 
 如果你希望这个主题作为 Touying 的一部分，放置在 Touying `themes` 目录下，那你应该将上面的导入语句改为
@@ -52,7 +52,7 @@ sidebar_position: 10
 
 ```typst
 // bamboo.typ
-#import "@preview/touying:0.3.1": *
+#import "@preview/touying:0.3.2": *
 
 #let register(
   aspect-ratio: "16-9",
@@ -69,10 +69,10 @@ sidebar_position: 10
 }
 
 // main.typ
-#import "@preview/touying:0.3.1": *
+#import "@preview/touying:0.3.2": *
 #import "bamboo.typ"
 
-#let s = bamboo.register(s, aspect-ratio: "16-9")
+#let s = bamboo.register(aspect-ratio: "16-9")
 #let (init, slides, touying-outline, alert) = utils.methods(s)
 #show: init
 
@@ -138,7 +138,7 @@ sidebar_position: 10
 #let s = (s.methods.colors)(self: s, primary: rgb("#3578B9"))
 ```
 
-这样的方式修改主题色，其中这句语句需要放在 `register(s)` 之后，以及 `utils.methods(s)` 之前。
+这样的方式修改主题色，其中这句语句需要放在 `register()` 之后，以及 `utils.methods(s)` 之前。
 
 这种随时更换颜色主题的内容，正是 Touying 强大可定制性的体现。
 
@@ -176,7 +176,7 @@ self.methods.alert = (self: none, it) => text(fill: self.colors.primary, it)
 
 ```typst
 // bamboo.typ
-#import "@preview/touying:0.3.1": *
+#import "@preview/touying:0.3.2": *
 
 #let slide(self: none, title: auto, ..args) = {
   if title != auto {
@@ -238,10 +238,10 @@ self.methods.alert = (self: none, it) => text(fill: self.colors.primary, it)
 
 
 // main.typ
-#import "@preview/touying:0.3.1": *
+#import "@preview/touying:0.3.2": *
 #import "bamboo.typ"
 
-#let s = bamboo.register(s, aspect-ratio: "16-9", footer: self => self.info.institution)
+#let s = bamboo.register(aspect-ratio: "16-9", footer: self => self.info.institution)
 #let (init, slides, touying-outline, alert) = utils.methods(s)
 #show: init
 
@@ -276,7 +276,7 @@ self.methods.alert = (self: none, it) => text(fill: self.colors.primary, it)
 
 ```
 // bamboo.typ
-#import "@preview/touying:0.3.1": *
+#import "@preview/touying:0.3.2": *
 
 #let slide(self: none, title: auto, ..args) = {
   if title != auto {
@@ -393,10 +393,10 @@ self.methods.alert = (self: none, it) => text(fill: self.colors.primary, it)
 
 
 // main.typ
-#import "@preview/touying:0.3.1": *
+#import "@preview/touying:0.3.2": *
 #import "bamboo.typ"
 
-#let s = bamboo.register(s, aspect-ratio: "16-9", footer: self => self.info.institution)
+#let s = bamboo.register(aspect-ratio: "16-9", footer: self => self.info.institution)
 #let s = (s.methods.info)(
   self: s,
   title: [Title],

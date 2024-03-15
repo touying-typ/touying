@@ -17,9 +17,9 @@ sidebar_position: 2
 你可以通过下面的代码来初始化：
 
 ```typst
-#import "@preview/touying:0.3.1": *
+#import "@preview/touying:0.3.2": *
 
-#let s = themes.metropolis.register(s, aspect-ratio: "16-9", footer: self => self.info.institution)
+#let s = themes.metropolis.register(aspect-ratio: "16-9", footer: self => self.info.institution)
 #let s = (s.methods.info)(
   self: s,
   title: [Title],
@@ -122,9 +122,9 @@ Metropolis 主题提供了一系列自定义 slide 函数：
 PS: 其中 outline title 可以通过 `#(s.outline-title = [Outline])` 的方式修改。
 
 ```typst
-#import "@preview/touying:0.3.1": *
+#import "@preview/touying:0.3.2": *
 
-#let s = themes.metropolis.register(s, aspect-ratio: "16-9", footer: self => self.info.institution)
+#let s = themes.metropolis.register(aspect-ratio: "16-9", footer: self => self.info.institution)
 #let s = (s.methods.info)(
   self: s,
   title: [Title],
@@ -158,9 +158,9 @@ Hello, Typst!
 ## 示例
 
 ```typst
-#import "@preview/touying:0.3.1": *
+#import "@preview/touying:0.3.2": *
 
-#let s = themes.metropolis.register(s, aspect-ratio: "16-9", footer: self => self.info.institution)
+#let s = themes.metropolis.register(aspect-ratio: "16-9", footer: self => self.info.institution)
 #let s = (s.methods.info)(
   self: s,
   title: [Title],

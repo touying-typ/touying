@@ -13,9 +13,9 @@ This aesthetically pleasing theme is courtesy of [Pol Dellaiera](https://github.
 You can initialize the University theme using the following code:
 
 ```typst
-#import "@preview/touying:0.3.1": *
+#import "@preview/touying:0.3.2": *
 
-#let s = themes.university.register(s, aspect-ratio: "16-9")
+#let s = themes.university.register(aspect-ratio: "16-9")
 #let s = (s.methods.info)(
   self: s,
   title: [Title],
@@ -118,9 +118,9 @@ The `slides` function has parameters:
 You can set these parameters using `#show: slides.with(..)`.
 
 ```typst
-#import "@preview/touying:0.3.1": *
+#import "@preview/touying:0.3.2": *
 
-#let s = themes.university.register(s, aspect-ratio: "16-9")
+#let s = themes.university.register(aspect-ratio: "16-9")
 #let s = (s.methods.info)(
   self: s,
   title: [Title],
@@ -152,9 +152,9 @@ Hello, Typst!
 ## Example
 
 ```typst
-#import "@preview/touying:0.3.1": *
+#import "@preview/touying:0.3.2": *
 
-#let s = themes.university.register(s, aspect-ratio: "16-9")
+#let s = themes.university.register(aspect-ratio: "16-9")
 #let s = (s.methods.info)(
   self: s,
   title: [Title],

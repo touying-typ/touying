@@ -11,14 +11,14 @@ Touying 提供了 `touying-reducer`，它能为 cetz 与 fletcher 加入 `pause`
 一个例子：
 
 ```typst
-#import "@preview/touying:0.3.1": *
+#import "@preview/touying:0.3.2": *
 #import "@preview/cetz:0.2.1"
 #import "@preview/fletcher:0.4.2" as fletcher: node, edge
 
 #let cetz-canvas = touying-reducer.with(reduce: cetz.canvas, cover: cetz.draw.hide.with(bounds: true))
 #let fletcher-diagram = touying-reducer.with(reduce: (arr, ..args) => fletcher.diagram(..args, ..arr))
 
-#let s = themes.metropolis.register(s, aspect-ratio: "16-9", footer: self => self.info.institution)
+#let s = themes.metropolis.register(aspect-ratio: "16-9", footer: self => self.info.institution)
 #let (init, slides) = utils.methods(s)
 #show: init
 
