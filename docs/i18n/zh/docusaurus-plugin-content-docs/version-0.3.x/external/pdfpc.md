@@ -6,7 +6,7 @@ sidebar_position: 1
 
 [pdfpc](https://pdfpc.github.io/) 是一个 "对 PDF 文档具有多显示器支持的演示者控制台"。这意味着，您可以使用它以 PDF 页面的形式显示幻灯片，并且还具有一些已知的出色功能，就像 PowerPoint 一样。
 
-pdfpc 有一个 JSON 格式的 `.pdfpc` 文件，它可以为 PDF slides 提供更多的信息。虽然您可以手动编写此它，但你也可以通过 Touying 来管理。
+pdfpc 有一个 JSON 格式的 `.pdfpc` 文件，它可以为 PDF slides 提供更多的信息。虽然您可以手动编写它，但你也可以通过 Touying 来管理。
 
 
 ## 加入 Metadata
