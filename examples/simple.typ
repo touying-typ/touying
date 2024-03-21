@@ -4,7 +4,7 @@
 #let (init, slides) = utils.methods(s)
 #show: init
 
-#let (slide, title-slide, centered-slide, focus-slide) = utils.slides(s)
+#let (slide, empty-slide, title-slide, centered-slide, focus-slide) = utils.slides(s)
 #show: slides
 
 #title-slide[

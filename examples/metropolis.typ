@@ -18,7 +18,7 @@
 #set par(justify: true)
 #show strong: alert
 
-#let (slide, title-slide, new-section-slide, focus-slide) = utils.slides(s)
+#let (slide, empty-slide, title-slide, new-section-slide, focus-slide) = utils.slides(s)
 #show: slides
 
 = First Section

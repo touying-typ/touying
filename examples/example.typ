@@ -46,7 +46,7 @@
 #show strong: alert
 
 // Extract slide functions
-#let (slide,) = utils.slides(s)
+#let (slide, empty-slide) = utils.slides(s)
 #show: slides
 
 = Animation

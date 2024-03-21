@@ -20,7 +20,7 @@
 
 #show strong: alert
 
-#let (slide,) = utils.slides(s)
+#let (slide, empty-slide) = utils.slides(s)
 #show: slides
 
 = Let's start a new section

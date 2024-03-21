@@ -14,7 +14,7 @@
 
 #show strong: alert
 
-#let (slide, title-slide, outline-slide, focus-slide) = utils.slides(s)
+#let (slide, empty-slide, title-slide, outline-slide, focus-slide) = utils.slides(s)
 #show: slides
 
 = The Section

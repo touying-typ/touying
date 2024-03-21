@@ -621,6 +621,10 @@
     // default slide
     touying-slide: touying-slide,
     slide: touying-slide,
+    empty-slide: (self: none, ..args) => {
+      self = utils.empty-page(self)
+      (self.methods.slide)(self: self, ..args)
+    },
     touying-slides: touying-slides,
     slides: touying-slides,
     // append the preamble
