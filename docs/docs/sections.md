@@ -61,6 +61,7 @@ Displaying a table of contents in Touying is straightforward:
 ```typst
 #import "@preview/touying:0.3.2": *
 
+#let s = themes.simple.register()
 #let (init, slides, alert, touying-outline) = utils.methods(s)
 #show: init
 
