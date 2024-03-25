@@ -329,7 +329,7 @@
   self: none,
   repeat: auto,
   setting: body => body,
-  composer: utils.side-by-side,
+  composer: auto,
   section: none,
   subsection: none,
   title: none,
@@ -338,6 +338,13 @@
   assert(bodies.named().len() == 0, message: "unexpected named arguments:" + repr(bodies.named().keys()))
   let setting-with-pad(body) = {
     pad(..self.padding, setting(body))
+  }
+  let composer-with-side-by-side(..args) = {
+    if type(composer) == function {
+      composer(..args)
+    } else {
+      utils.side-by-side(columns: composer, ..args)
+    }
   }
   let bodies = bodies.pos()
   let page-preamble(curr-subslide) = locate(loc => {
@@ -385,7 +392,7 @@
     return {
       header = _update-states(1) + header
       page(..(self.page-args + (header: header, footer: footer)), setting-with-pad(
-        page-preamble(1) + composer(..bodies)
+        page-preamble(1) + composer-with-side-by-side(..bodies)
       ))
     }
   }
@@ -403,7 +410,7 @@
     let (conts, _) = _parse-content(self: self, index: repeat, ..bodies)
     header = _update-states(1) + header
     page(..(self.page-args + (header: header, footer: footer)), setting-with-pad(
-      page-preamble(1) + composer(..conts)
+      page-preamble(1) + composer-with-side-by-side(..conts)
     ))
   } else {
     // render all the subslides
@@ -418,7 +425,7 @@
       }
       result.push(page(
         ..(self.page-args + (header: new-header, footer: footer)),
-        setting-with-pad(page-preamble(i) + composer(..conts)),
+        setting-with-pad(page-preamble(i) + composer-with-side-by-side(..conts)),
       ))
     }
     // return the result
