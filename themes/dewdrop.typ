@@ -27,7 +27,7 @@
       set text(fill: self.colors.neutral-darkest)
       show heading: set text(fill: self.colors.primary)
       show: args.named().at("setting", default: body => body)
-      if self.auto-heading and subsection != none {
+      if self.auto-heading-for-subsection and subsection != none {
         heading(level: 1, subsection)
       }
       if self.auto-heading and title != none {
@@ -252,6 +252,7 @@
   self.d-footer-right = footer-right
   self.d-alpha = alpha
   self.auto-heading = true
+  self.auto-heading-for-subsection = true
   self.outline-title = [Outline]
   // set page
   let header(self) = {

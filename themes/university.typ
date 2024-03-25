@@ -9,36 +9,27 @@
 
 #let slide(
   self: none,
-  title: none,
-  subtitle: none,
-  header: none,
+  title: auto,
+  subtitle: auto,
+  header: auto,
   footer: auto,
+  display-current-section: auto,
   ..args,
 ) = {
   if title != auto {
     self.uni-title = title
   }
-  self.uni-header = self => {
-    if header != none {
-      header
-    } else if title != none {
-      block(inset: (x: .5em), 
-        grid(
-          columns: 1,
-          gutter: .3em,
-          grid(
-            columns: (auto, 1fr, auto),
-            align(top + left, heading(level: 2, text(fill: self.colors.primary, title))),
-            [],
-            align(top + right, text(fill: self.colors.primary.lighten(65%), states.current-section-title))
-          ),
-          text(fill: self.colors.primary.lighten(65%), size: .8em, subtitle)
-        )
-      )
-    }
+  if subtitle != auto {
+    self.uni-subtitle = subtitle
+  }
+  if header != auto {
+    self.uni-header = header
   }
   if footer != auto {
     self.uni-footer = footer
+  }
+  if display-current-section != auto {
+    self.uni-display-current-section = display-current-section
   }
   (self.methods.touying-slide)(
     ..args.named(),
@@ -182,6 +173,7 @@
   self: s,
   aspect-ratio: "16-9",
   progress-bar: true,
+  display-current-section: true,
   footer-columns: (25%, 1fr, 25%),
   footer-a: self => self.info.author,
   footer-b: self => if self.info.short-title == auto { self.info.title } else { self.info.short-title },
@@ -210,7 +202,9 @@
       components.cell(fill: self.colors.tertiary)
     )
   })
-  self.uni-header = none
+  self.uni-display-current-section = display-current-section
+  self.uni-title = none
+  self.uni-subtitle = none
   self.uni-footer = self => {
     let cell(fill: none, it) = rect(
       width: 100%, height: 100%, inset: 1mm, outset: 0mm, fill: fill, stroke: none,
@@ -218,12 +212,31 @@
     )
     show: block.with(width: 100%, height: auto, fill: self.colors.secondary)
     grid(
-      columns: (25%, 1fr, 25%),
+      columns: footer-columns,
       rows: (1.5em, auto),
       cell(fill: self.colors.primary, utils.call-or-display(self, footer-a)),
       cell(fill: self.colors.secondary, utils.call-or-display(self, footer-b)),
       cell(fill: self.colors.tertiary, utils.call-or-display(self, footer-c)),
     )
+  }
+  self.uni-header = self => {
+    if self.uni-title != none {
+      block(inset: (x: .5em), 
+        grid(
+          columns: 1,
+          gutter: .3em,
+          grid(
+            columns: (auto, 1fr, auto),
+            align(top + left, heading(level: 2, text(fill: self.colors.primary, self.uni-title))),
+            [],
+            if self.uni-display-current-section {
+              align(top + right, text(fill: self.colors.primary.lighten(65%), states.current-section-title))
+            }
+          ),
+          text(fill: self.colors.primary.lighten(65%), size: .8em, self.uni-subtitle)
+        )
+      )
+    }
   }
   // set page
   let header(self) = {
