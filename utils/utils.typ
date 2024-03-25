@@ -97,9 +97,15 @@
 }
 
 // Type: is sequence
-#let _typst-sequence = ([A] + [ ] + [B]).func()
+#let typst-builtin-sequence = ([A] + [ ] + [B]).func()
 #let is-sequence(it) = {
-  type(it) == content and it.func() == _typst-sequence
+  type(it) == content and it.func() == typst-builtin-sequence
+}
+
+// Type: is styled
+#let typst-builtin-styled = [#set text(fill: red)].func()
+#let is-styled(it) = {
+  type(it) == content and it.func() == typst-builtin-styled
 }
 
 #let reconstruct(body-name: "body", named: false, it, body) = {

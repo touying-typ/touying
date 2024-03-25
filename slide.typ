@@ -246,7 +246,7 @@
         }
         result.push(child)
       } else if utils.is-sequence(child) {
-        // handle the list item
+        // handle the sequence
         let (conts, nextrepetitions) = _parse-content(
           self: self, need-cover: repetitions <= index, base: repetitions, index: index, child
         )
@@ -255,6 +255,18 @@
           result.push(cont)
         } else {
           cover-arr.push(cont)
+        }
+        repetitions = nextrepetitions
+      } else if utils.is-styled(child) {
+        // handle styled
+        let (conts, nextrepetitions) = _parse-content(
+          self: self, need-cover: repetitions <= index, base: repetitions, index: index, child.child
+        )
+        let cont = conts.first()
+        if repetitions <= index or not need-cover {
+          result.push(utils.typst-builtin-styled(cont, child.styles))
+        } else {
+          cover-arr.push(utils.typst-builtin-styled(cont, child.styles))
         }
         repetitions = nextrepetitions
       } else if type(child) == content and child.func() in (list.item, enum.item, align) {
@@ -270,7 +282,7 @@
         }
         repetitions = nextrepetitions
       } else if type(child) == content and child.func() in (pad,) {
-        // handle the list item
+        // handle the pad
         let (conts, nextrepetitions) = _parse-content(
           self: self, need-cover: repetitions <= index, base: repetitions, index: index, child.body
         )
