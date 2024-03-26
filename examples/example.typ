@@ -158,16 +158,6 @@
 ]
 
 
-== Setting
-
-#slide(setting: body => {
-  set text(fill: blue)
-  body
-})[
-  This slide has blue text.
-]
-
-
 == Multiple Pages
 
 #slide[

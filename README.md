@@ -68,13 +68,13 @@ Before you begin, make sure you have installed the Typst environment. If not, yo
 To use Touying, you only need to include the following code in your document:
 
 ```typst
-#import "@preview/touying:0.3.2": *
+#import "@preview/touying:0.3.3": *
 
 #let s = themes.simple.register(aspect-ratio: "16-9")
 #let (init, slides) = utils.methods(s)
 #show: init
 
-#let (slide,) = utils.slides(s)
+#let (slide, empty-slide) = utils.slides(s)
 #show: slides
 
 
@@ -95,15 +95,13 @@ It's simple. Congratulations on creating your first Touying slide! 🎉
 
 **Tip:** You can use Typst syntax like `#import "config.typ": *` or `#include "content.typ"` to implement Touying's multi-file architecture.
 
-**Warning:** The comma in `#let (slide,) = utils.slides(s)` is necessary for the unpacking syntax.
-
 
 ## More Complex Examples
 
 In fact, Touying provides various styles for writing slides. For example, the above example uses first-level and second-level titles to create new slides. However, you can also use the `#slide[..]` format to access more powerful features provided by Touying.
 
 ```typst
-#import "@preview/touying:0.3.2": *
+#import "@preview/touying:0.3.3": *
 #import "@preview/cetz:0.2.1"
 #import "@preview/fletcher:0.4.2" as fletcher: node, edge
 
@@ -112,8 +110,7 @@ In fact, Touying provides various styles for writing slides. For example, the ab
 #let fletcher-diagram = touying-reducer.with(reduce: (arr, ..args) => fletcher.diagram(..args, ..arr))
 
 // Register university theme
-// You can remove the theme registration or replace other themes
-// it can still work normally
+// You can also use other themes
 #let s = themes.university.register(aspect-ratio: "16-9")
 
 // Global information configuration
@@ -130,10 +127,11 @@ In fact, Touying provides various styles for writing slides. For example, the ab
 #let (init, slides, touying-outline, alert) = utils.methods(s)
 #show: init
 
+// Place global settings here
 #show strong: alert
 
 // Extract slide functions
-#let (slide,) = utils.slides(s)
+#let (slide, empty-slide) = utils.slides(s)
 #show: slides
 
 = Animation
@@ -242,16 +240,6 @@ In fact, Touying provides various styles for writing slides. For example, the ab
   First column.
 ][
   Second column.
-]
-
-
-== Setting
-
-#slide(setting: body => {
-  set text(fill: blue)
-  body
-})[
-  This slide has blue text.
 ]
 
 

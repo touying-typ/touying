@@ -1,6 +1,6 @@
 [package]
 name = "touying"
-version = "0.3.2"
+version = "0.3.3"
 entrypoint = "lib.typ"
 authors = ["OrangeX4", "Andreas Kröpelin", "ntjess", "Enivex", "Pol Dellaiera", "pride7"]
 license = "MIT"
@@ -9,8 +9,3 @@ repository = "https://github.com/touying-typ/touying"
 keywords = ["presentation", "slides", "lecture", "touying"]
 categories = ["presentation"]
 exclude = ["examples"]
-
-[template]
-path = "template"
-entrypoint = "main.typ"
-thumbnail = "thumbnail.png"
