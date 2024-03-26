@@ -36,7 +36,7 @@ Touying 的状态均放置于 `states` 命名空间下，包括所有的计数�
 ```typst
 // appendix by freezing last-slide-number
 #let s = (s.methods.appendix)(self: s)
-#let (slide,) = utils.methods(s)
+#let (slide, empty-slide) = utils.methods(s)
 
 #slide[
   appendix

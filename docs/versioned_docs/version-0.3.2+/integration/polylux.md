@@ -7,7 +7,7 @@ sidebar_position: 6
 With the compatibility between Touying and Polylux, you can make Polylux support direct export as well. Just add the following code to your Polylux source code:
 
 ```typst
-#import "@preview/touying:0.3.2"
+#import "@preview/touying:0.3.3"
 
 #locate(loc => touying.pdfpc.pdfpc-file(loc))
 ```

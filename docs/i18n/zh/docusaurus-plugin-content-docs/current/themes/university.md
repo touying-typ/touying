@@ -13,7 +13,7 @@ sidebar_position: 4
 你可以通过下面的代码来初始化：
 
 ```typst
-#import "@preview/touying:0.3.2": *
+#import "@preview/touying:0.3.3": *
 
 #let s = themes.university.register(aspect-ratio: "16-9")
 #let s = (s.methods.info)(
@@ -27,7 +27,7 @@ sidebar_position: 4
 #let (init, slides, touying-outline, alert) = utils.methods(s)
 #show: init
 
-#let (slide, title-slide, focus-slide, matrix-slide) = utils.slides(s)
+#let (slide, empty-slide, title-slide, focus-slide, matrix-slide) = utils.slides(s)
 #show: slides
 ```
 
@@ -35,6 +35,7 @@ sidebar_position: 4
 
 - `aspect-ratio`: 幻灯片的长宽比为 "16-9" 或 "4-3"，默认为 "16-9"。
 - `progress-bar`: 是否显示 slide 顶部的进度条，默认为 `true`。
+- `display-current-section`: 是否显示当前节标题。
 - `footer-columns`: 底部三栏 Footer 的宽度，默认为 `(25%, 1fr, 25%)`。
 - `footer-a`: 第一栏，默认为 `self => self.info.author`。
 - `footer-b`: 第二栏，默认为 `self => if self.info.short-title == auto { self.info.title } else { self.info.short-title }`。
@@ -137,7 +138,7 @@ University 主题提供了一系列自定义 slide 函数：
 以及可以通过 `#(s.methods.touying-new-section-slide = none)` 的方式关闭自动加入 `new-section-slide` 的功能。
 
 ```typst
-#import "@preview/touying:0.3.2": *
+#import "@preview/touying:0.3.3": *
 
 #let s = themes.university.register(aspect-ratio: "16-9")
 #let s = (s.methods.info)(
@@ -151,7 +152,7 @@ University 主题提供了一系列自定义 slide 函数：
 #let (init, slides, touying-outline, alert) = utils.methods(s)
 #show: init
 
-#let (slide, title-slide, focus-slide, matrix-slide) = utils.slides(s)
+#let (slide, empty-slide, title-slide, focus-slide, matrix-slide) = utils.slides(s)
 #show: slides
 
 = Title
@@ -171,7 +172,7 @@ Hello, Typst!
 ## 示例
 
 ```typst
-#import "@preview/touying:0.3.2": *
+#import "@preview/touying:0.3.3": *
 
 #let s = themes.university.register(aspect-ratio: "16-9")
 #let s = (s.methods.info)(
@@ -185,7 +186,7 @@ Hello, Typst!
 #let (init, slides, touying-outline, alert) = utils.methods(s)
 #show: init
 
-#let (slide, title-slide, focus-slide, matrix-slide) = utils.slides(s)
+#let (slide, empty-slide, title-slide, focus-slide, matrix-slide) = utils.slides(s)
 #show: slides.with(title-slide: false)
 
 #title-slide(authors: ([Author A], [Author B]))

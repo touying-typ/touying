@@ -15,7 +15,7 @@ The Dewdrop theme features an elegantly designed navigation, including two modes
 You can initialize it using the following code:
 
 ```typst
-#import "@preview/touying:0.3.2": *
+#import "@preview/touying:0.3.3": *
 
 #let s = themes.dewdrop.register(
   aspect-ratio: "16-9",
@@ -37,7 +37,7 @@ You can initialize it using the following code:
 
 #show strong: alert
 
-#let (slide, title-slide, new-section-slide, focus-slide) = utils.slides(s)
+#let (slide, empty-slide, title-slide, new-section-slide, focus-slide) = utils.slides(s)
 #show: slides
 ```
 
@@ -152,7 +152,7 @@ PS: You can modify the outline title using `#(s.outline-title = [Outline])`.
 And the function of automatically adding `new-section-slide` can be turned off by `#(s.methods.touying-new-section-slide = none)`.
 
 ```typst
-#import "@preview/touying:0.3.2": *
+#import "@preview/touying:0.3.3": *
 
 #let s = themes.dewdrop.register(aspect-ratio: "16-9", footer: [Dewdrop])
 #let s = (s.methods.info)(
@@ -168,7 +168,7 @@ And the function of automatically adding `new-section-slide` can be turned off b
 
 #show strong: alert
 
-#let (slide, title-slide, new-section-slide, focus-slide) = utils.slides(s)
+#let (slide, empty-slide, title-slide, new-section-slide, focus-slide) = utils.slides(s)
 #show: slides
 
 = Title
@@ -188,7 +188,7 @@ Hello, Typst!
 ## Example
 
 ```typst
-#import "@preview/touying:0.3.2": *
+#import "@preview/touying:0.3.3": *
 
 #let s = themes.dewdrop.register(
   aspect-ratio: "16-9",
@@ -209,7 +209,7 @@ Hello, Typst!
 
 #show strong: alert
 
-#let (slide, title-slide, new-section-slide, focus-slide) = utils.slides(s)
+#let (slide, empty-slide, title-slide, new-section-slide, focus-slide) = utils.slides(s)
 #show: slides
 
 = Section A
@@ -256,7 +256,7 @@ Hello, Typst!
 
 // appendix by freezing last-slide-number
 #let s = (s.methods.appendix)(self: s)
-#let (slide,) = utils.slides(s)
+#let (slide, empty-slide) = utils.slides(s)
 
 = Appendix
 

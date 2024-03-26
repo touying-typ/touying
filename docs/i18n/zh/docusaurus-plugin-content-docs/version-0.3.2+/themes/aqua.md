@@ -14,7 +14,7 @@ sidebar_position: 5
 你可以通过下面的代码来初始化：
 
 ```typst
-#import "@preview/touying:0.3.2": *
+#import "@preview/touying:0.3.3": *
 
 #let s = themes.aqua.register(aspect-ratio: "16-9", lang: "en")
 #let s = (s.methods.info)(
@@ -30,7 +30,7 @@ sidebar_position: 5
 
 #show strong: alert
 
-#let (slide, title-slide, outline-slide, focus-slide) = utils.slides(s)
+#let (slide, empty-slide, title-slide, outline-slide, focus-slide) = utils.slides(s)
 #show: slides
 ```
 
@@ -123,7 +123,7 @@ PS: 其中 outline title 可以通过 `#(s.outline-title = [Outline])` 的方式
 以及可以通过 `#(s.methods.touying-new-section-slide = none)` 的方式关闭自动加入 `new-section-slide` 的功能。
 
 ```typst
-#import "@preview/touying:0.3.2": *
+#import "@preview/touying:0.3.3": *
 
 #let s = themes.aqua.register(aspect-ratio: "16-9", lang: "en")
 #let s = (s.methods.info)(
@@ -139,7 +139,7 @@ PS: 其中 outline title 可以通过 `#(s.outline-title = [Outline])` 的方式
 
 #show strong: alert
 
-#let (slide, title-slide, outline-slide, focus-slide) = utils.slides(s)
+#let (slide, empty-slide, title-slide, outline-slide, focus-slide) = utils.slides(s)
 #show: slides
 
 = Title
@@ -176,7 +176,7 @@ Hello, Typst!
 
 #show strong: alert
 
-#let (slide, title-slide, outline-slide, focus-slide) = utils.slides(s)
+#let (slide, empty-slide, title-slide, outline-slide, focus-slide) = utils.slides(s)
 #show: slides
 
 = The Section

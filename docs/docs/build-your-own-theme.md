@@ -18,6 +18,28 @@ Creating your own theme with Touying might seem a bit complex initially due to t
 
 To demonstrate creating a simple and elegant Bamboo theme, let's follow the steps.
 
+
+## Modifying Existing Themes
+
+If you wish to modify a theme within the Touying package locally instead of creating one from scratch, you can achieve this by following these steps:
+
+1. Copy the [theme code](https://github.com/touying-typ/touying/tree/main/themes) from the `themes` directory to your local machine. For example, copy `themes/university.typ` to a local file named `university.typ`.
+2. Remove all `#import "../xxx.typ"` commands at the top of the `university.typ` file.
+3. Add `#import "@preview/touying:0.3.3": *` at the top of the `university.typ` file to import all modules.
+4. Replace `self: s` in the `register` function with `self: themes.default.register()` **(Important)**.
+
+You can then import and use the theme by:
+
+```typst
+#import "@preview/touying:0.3.3": *
+#import "university.typ"
+
+#let s = university.register(aspect-ratio: "16-9")
+```
+
+For a specific example, refer to: [https://typst.app/project/pdWNTS47I-6jxHrWdMSTLx](https://typst.app/project/pdWNTS47I-6jxHrWdMSTLx)
+
+
 ## Import
 
 Depending on whether the theme is for personal use or part of Touying, you can import in two ways:
@@ -25,7 +47,7 @@ Depending on whether the theme is for personal use or part of Touying, you can i
 If for personal use:
 
 ```typst
-#import "@preview/touying:0.3.2": *
+#import "@preview/touying:0.3.3": *
 ```
 
 If part of Touying themes:
@@ -51,7 +73,7 @@ Generally, the first step in creating slides is to determine font size and page 
 
 ```typst
 // bamboo.typ
-#import "@preview/touying:0.3.2": *
+#import "@preview/touying:0.3.3": *
 
 #let register(
   self: themes.default.register(),
@@ -68,7 +90,7 @@ Generally, the first step in creating slides is to determine font size and page 
 }
 
 // main.typ
-#import "@preview/touying:0.3.2": *
+#import "@preview/touying:0.3.3": *
 #import "bamboo.typ"
 
 #let s = bamboo.register(aspect-ratio: "16-9")
@@ -77,7 +99,7 @@ Generally, the first step in creating slides is to determine font size and page 
 
 #show strong: alert
 
-#let (slide,) = utils.slides(s)
+#let (slide, empty-slide) = utils.slides(s)
 #show: slides
 
 = First Section
@@ -168,7 +190,7 @@ We also need to customize a `slide` method that accepts `slide(self: none, title
 
 ```typst
 // bamboo.typ
-#import "@preview/touying:0.3.2": *
+#import "@preview/touying:0.3.3": *
 
 #let slide(self: none, title: auto, ..args) = {
   if title != auto {
@@ -230,7 +252,7 @@ We also need to customize a `slide` method that accepts `slide(self: none, title
 
 
 // main.typ
-#import "@preview/touying:0.3.2": *
+#import "@preview/touying:0.3.3": *
 #import "bamboo.typ"
 
 #let s = bamboo.register(aspect-ratio: "16-9", footer: self => self.info.institution)
@@ -239,7 +261,7 @@ We also need to customize a `slide` method that accepts `slide(self: none, title
 
 #show strong: alert
 
-#let (slide,) = utils.slides(s)
+#let (slide, empty-slide) = utils.slides(s)
 #show: slides
 
 = First Section
@@ -269,7 +291,7 @@ Finally, we update the `slides(self: none, title-slide: true, slide-level: 1, ..
 
 ```
 // bamboo.typ
-#import "@preview/touying:0.3.2": *
+#import "@preview/touying:0.3.3": *
 
 #let slide(self: none, title: auto, ..args) = {
   if title != auto {
@@ -386,7 +408,7 @@ Finally, we update the `slides(self: none, title-slide: true, slide-level: 1, ..
 
 
 // main.typ
-#import "@preview/touying:0.3.2": *
+#import "@preview/touying:0.3.3": *
 #import "bamboo.typ"
 
 #let s = bamboo.register(aspect-ratio: "16-9", footer: self => self.info.institution)
@@ -403,7 +425,7 @@ Finally, we update the `slides(self: none, title-slide: true, slide-level: 1, ..
 
 #show strong: alert
 
-#let (slide, title-slide, focus-slide) = utils.slides(s)
+#let (slide, empty-slide, title-slide, focus-slide) = utils.slides(s)
 #show: slides
 
 = First Section

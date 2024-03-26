@@ -11,7 +11,7 @@ Touying also provides `touying-reducer`, which adds `pause` and `meanwhile` anim
 Here's an example:
 
 ```typst
-#import "@preview/touying:0.3.2": *
+#import "@preview/touying:0.3.3": *
 #import "@preview/cetz:0.2.1"
 #import "@preview/fletcher:0.4.2" as fletcher: node, edge
 
@@ -22,7 +22,7 @@ Here's an example:
 #let (init, slides) = utils.methods(s)
 #show: init
 
-#let (slide,) = utils.slides(s)
+#let (slide, empty-slide) = utils.slides(s)
 #show: slides.with(title-slide: false, outline-slide: false)
 
 // cetz animation

@@ -32,7 +32,7 @@ If you are not a theme creator but want to add your own global styles to your sl
 #set par(justify: true)
 #show strong: alert
 
-#let (slide, title-slide, new-section-slide, focus-slide) = utils.slides(s)
+#let (slide, empty-slide, title-slide, new-section-slide, focus-slide) = utils.slides(s)
 #show: slides
 ```
 
@@ -117,7 +117,7 @@ Now you can understand the purpose of the `utils.methods()` function: to bind `s
 In general, the two ways mentioned above are sufficient for adding global settings. However, there are still situations where we need to initialize counters or states. If you place this code before `#show: slides`, a blank page will be created, which is something we don't want to see. In such cases, you can use the `s.methods.append-preamble` method. For example, when using the codly package:
 
 ```typst
-#import "@preview/touying:0.3.2": *
+#import "@preview/touying:0.3.3": *
 #import "@preview/codly:0.2.0": *
 
 #let s = themes.simple.register(aspect-ratio: "16-9")
@@ -131,7 +131,7 @@ In general, the two ways mentioned above are sufficient for adding global settin
 #show: init
 #show: codly-init.with()
 
-#let (slide,) = utils.slides(s)
+#let (slide, empty-slide) = utils.slides(s)
 #show: slides
 
 #slide[

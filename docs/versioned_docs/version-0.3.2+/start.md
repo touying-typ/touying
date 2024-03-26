@@ -9,13 +9,13 @@ Before you begin, make sure you have the Typst environment installed. If not, yo
 To use Touying, you just need to include the following in your document:
 
 ```typst
-#import "@preview/touying:0.3.2": *
+#import "@preview/touying:0.3.3": *
 
 #let s = themes.simple.register()
 #let (init, slides) = utils.methods(s)
 #show: init
 
-#let (slide,) = utils.slides(s)
+#let (slide, empty-slide) = utils.slides(s)
 #show: slides
 
 = Title
@@ -35,7 +35,7 @@ It's that simple! You've created your first Touying slides. Congratulations! ðŸŽ
 
 **Tip:** You can use Typst syntax like `#import "config.typ": *` or `#include "content.typ"` to implement Touying's multi-file architecture.
 
-**Warning:** The comma in `#let (slide,) = utils.slides(s)` is necessary for the unpacking syntax.
+**Warning:** The comma in `#let (slide, empty-slide) = utils.slides(s)` is necessary for the unpacking syntax.
 
 ## More Complex Examples
 
@@ -52,7 +52,7 @@ Touying offers many built-in themes to easily create beautiful slides. For examp
 you can use the university theme. For more detailed tutorials on themes, you can refer to the following sections.
 
 ```typst
-#import "@preview/touying:0.3.2": *
+#import "@preview/touying:0.3.3": *
 #import "@preview/cetz:0.2.1"
 #import "@preview/fletcher:0.4.2" as fletcher: node, edge
 
@@ -100,7 +100,7 @@ you can use the university theme. For more detailed tutorials on themes, you can
 #show strong: alert
 
 // Extract slide functions
-#let (slide,) = utils.slides(s)
+#let (slide, empty-slide) = utils.slides(s)
 #show: slides
 
 = Animation
@@ -206,16 +206,6 @@ you can use the university theme. For more detailed tutorials on themes, you can
 ][
   Second column.
 ]
-
-== Setting
-
-#slide(setting: body => {
-  set text(fill: blue)
-  body
-})[
-  This slide has blue text.
-]
-
 == Multiple Pages
 
 #slide[
@@ -225,7 +215,7 @@ you can use the university theme. For more detailed tutorials on themes, you can
 
 // appendix by freezing last-slide-number
 #let s = (s.methods.appendix)(self: s)
-#let (slide,) = utils.slides(s)
+#let (slide, empty-slide) = utils.slides(s)
 
 == Appendix
 

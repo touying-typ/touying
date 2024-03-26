@@ -15,14 +15,14 @@ Considered a relatively straightforward theme, you can use it to create simple s
 You can initialize it using the following code:
 
 ```typst
-#import "@preview/touying:0.3.2": *
+#import "@preview/touying:0.3.3": *
 
 #let s = themes.simple.register(aspect-ratio: "16-9", footer: [Simple slides])
 #let s = (s.methods.enable-transparent-cover)(self: s)
 #let (init, slides) = utils.methods(s)
 #show: init
 
-#let (slide, title-slide, centered-slide, focus-slide) = utils.slides(s)
+#let (slide, empty-slide, title-slide, centered-slide, focus-slide) = utils.slides(s)
 #show: slides
 ```
 
@@ -96,14 +96,14 @@ You can set it using `#show: slides.with(..)`.
 And the function of automatically adding `new-section-slide` can be turned off by `#(s.methods.touying-new-section-slide = none)`.
 
 ```typst
-#import "@preview/touying:0.3.2": *
+#import "@preview/touying:0.3.3": *
 
 #let s = themes.simple.register(aspect-ratio: "16-9", footer: [Simple slides])
 #let s = (s.methods.enable-transparent-cover)(self: s)
 #let (init, slides) = utils.methods(s)
 #show: init
 
-#let (slide, title-slide, centered-slide, focus-slide) = utils.slides(s)
+#let (slide, empty-slide, title-slide, centered-slide, focus-slide) = utils.slides(s)
 #show: slides
 
 = Title
@@ -123,13 +123,13 @@ Hello, Typst!
 ## Example
 
 ```typst
-#import "@preview/touying:0.3.2": *
+#import "@preview/touying:0.3.3": *
 
 #let s = themes.simple.register(aspect-ratio: "16-9", footer: [Simple slides])
 #let (init, slides) = utils.methods(s)
 #show: init
 
-#let (slide, title-slide, centered-slide, focus-slide) = utils.slides(s)
+#let (slide, empty-slide, title-slide, centered-slide, focus-slide) = utils.slides(s)
 #show: slides
 
 #title-slide[

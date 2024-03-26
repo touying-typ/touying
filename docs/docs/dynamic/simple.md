@@ -52,28 +52,9 @@ In some cases, you may need to display additional content simultaneously with `#
 
 This example will create only two subslides, with "First" and "Third" displayed simultaneously, and "Second" and "Fourth" displayed simultaneously.
 
-## Handling set-show rules
+## Handling layout functions
 
-If you use set-show rules inside `slide[..]`, you might be surprised to find that subsequent `#pause` and `#meanwhile` do not work. This is because Touying cannot detect the content inside `styled(..)` (content after set-show rules is encompassed by `styled`).
-
-To address this issue, Touying provides a `setting` parameter for the `#slide()` function. You can place your set-show rules in the `setting` parameter. For example, changing the font color:
-
-```typst
-#slide(setting: body => {
-  set text(fill: blue)
-  body
-})[
-  First
-  
-  #pause
-  
-  Second
-]
-```
-
-![image](https://github.com/touying-typ/touying/assets/34951714/8e31fc8a-5ab1-4181-a46a-fa96cf790dff)
-
-Similarly, Touying currently does not support `#pause` and `#meanwhile` inside layout functions like `grid`. This is due to the same limitation, but you can use the `composer` parameter of `#slide()` to meet most requirements.
+If you use layout functions like `grid` inside `slide[..]`, you might be surprised to find that subsequent `#pause` and `#meanwhile` do not work. This is because Touying cannot detect the content inside layout functions. But you can use the `composer` parameter of `#slide()` to meet most requirements.
 
 :::tip[Internals]
 

@@ -112,7 +112,7 @@ Similarly, if you are not satisfied with the header or footer style of a theme, 
 #(s.page-args.footer = [Custom Footer])
 ```
 
-to replace it. However, please note that if you replace the page parameters in this way, you need to place it before `#let (slide,) = utils.slides(s)`, or you need to call `#let (slide,) = utils.slides(s)` again.
+to replace it. However, please note that if you replace the page parameters in this way, you need to place it before `#let (slide, empty-slide) = utils.slides(s)`, or you need to call `#let (slide, empty-slide) = utils.slides(s)` again.
 
 :::warning[Warning]
 
@@ -129,7 +129,7 @@ Adding a logo to slides is a very common but also a very versatile requirement. 
 For example, suppose we decide to add the GitHub icon to the metropolis theme. We can implement it like this:
 
 ```typst
-#import "@preview/touying:0.3.2": *
+#import "@preview/touying:0.3.3": *
 #import "@preview/octique:0.1.0": *
 
 #let s = themes.metropolis.register(aspect-ratio: "16-9")
@@ -170,7 +170,7 @@ If you need to divide the page into two or three columns, you can use the `compo
 If you need to change the way columns are composed, you can modify the `composer` parameter of `slide`. The default parameter is `utils.with.side-by-side(columns: auto, gutter: 1em)`. If we want the left column to occupy the remaining width, we can use
 
 ```typst
-#slide(composer: utils.side-by-side.with(columns: (1fr, auto), gutter: 1em))[
+#slide(composer: (1fr, auto))[
   First column.
 ][
   Second column.

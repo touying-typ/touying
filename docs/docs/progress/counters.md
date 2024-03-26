@@ -33,7 +33,7 @@ You can use
 ```typst
 // appendix by freezing last-slide-number
 #let s = (s.methods.appendix)(self: s)
-#let (slide,) = utils.methods(s)
+#let (slide, empty-slide) = utils.methods(s)
 
 #slide[
   appendix

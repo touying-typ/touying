@@ -4,6 +4,14 @@ sidebar_position: 14
 
 # Changelog
 
+## v0.3.3
+
+- **template:** move template to `touying-aqua` package, make Touying searchable in [Typst Universe Packages](https://typst.app/universe/search?kind=packages)
+- **themes:** fix bugs in university and dewdrop theme
+- **feat:** make set-show rule work without `setting` parameter
+- **feat:** make `composer` parameter more simpler
+- **feat:** add `empty-slide` function
+
 ## v0.3.2
 
 - **fix critical bug:** fix `is-sequence` function, make `grid` and `table` work correctly in touying

@@ -112,7 +112,7 @@ sidebar_position: 5
 #(s.page-args.footer = [Custom Footer])
 ```
 
-这样方式进行更换。不过需要注意的是，如果这样更换了页面参数，你需要将其放在 `#let (slide,) = utils.slides(s)` 之前，否则就需要重新调用 `#let (slide,) = utils.slides(s)`。
+这样方式进行更换。不过需要注意的是，如果这样更换了页面参数，你需要将其放在 `#let (slide, empty-slide) = utils.slides(s)` 之前，否则就需要重新调用 `#let (slide, empty-slide) = utils.slides(s)`。
 
 :::warning[警告]
 
@@ -129,7 +129,7 @@ sidebar_position: 5
 例如，我们决定给 metropolis 主题加入 GitHub 的图标，我们可以这样实现：
 
 ```typst
-#import "@preview/touying:0.3.2": *
+#import "@preview/touying:0.3.3": *
 #import "@preview/octique:0.1.0": *
 
 #let s = themes.metropolis.register(aspect-ratio: "16-9")
@@ -170,7 +170,7 @@ sidebar_position: 5
 如果你需要更改分栏的方式，可以修改 `slide` 的 `composer` 参数，其中默认的参数是 `utils.with.side-by-side(columns: auto, gutter: 1em)`，如果我们要让左边那一栏占据剩余宽度，可以使用
 
 ```typst
-#slide(composer: utils.side-by-side.with(columns: (1fr, auto), gutter: 1em))[
+#slide(composer: (1fr, auto))[
   First column.
 ][
   Second column.

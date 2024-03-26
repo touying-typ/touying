@@ -9,13 +9,13 @@ sidebar_position: 2
 要使用 Touying，您只需要在文档里加入
 
 ```typst
-#import "@preview/touying:0.3.2": *
+#import "@preview/touying:0.3.3": *
 
 #let s = themes.simple.register()
 #let (init, slides) = utils.methods(s)
 #show: init
 
-#let (slide,) = utils.slides(s)
+#let (slide, empty-slide) = utils.slides(s)
 #show: slides
 
 = Title
@@ -35,14 +35,14 @@ Hello, Typst!
 
 **提示:** 你可以使用 `#import "config.typ": *` 或 `#include "content.typ"` 等 Typst 语法来实现 Touying 的多文件架构。
 
-**警告:** `#let (slide,) = utils.slides(s)` 里的逗号对于解包语法来说是必要的！
+**警告:** `#let (slide, empty-slide) = utils.slides(s)` 里的逗号对于解包语法来说是必要的！
 
 ## 更复杂的例子
 
 事实上，Touying 提供了多种 slides 编写风格，实际上您也可以使用 `#slide[..]` 的写法，以获得 Touying 提供的更多更强大的功能。
 
 ```typst
-#import "@preview/touying:0.3.2": *
+#import "@preview/touying:0.3.3": *
 #import "@preview/cetz:0.2.1"
 #import "@preview/fletcher:0.4.2" as fletcher: node, edge
 
@@ -90,7 +90,7 @@ Hello, Typst!
 #show strong: alert
 
 // Extract slide functions
-#let (slide,) = utils.slides(s)
+#let (slide, empty-slide) = utils.slides(s)
 #show: slides
 
 = Animation
@@ -202,16 +202,6 @@ Hello, Typst!
 ]
 
 
-== Setting
-
-#slide(setting: body => {
-  set text(fill: blue)
-  body
-})[
-  This slide has blue text.
-]
-
-
 == Multiple Pages
 
 #slide[
@@ -221,7 +211,7 @@ Hello, Typst!
 
 // appendix by freezing last-slide-number
 #let s = (s.methods.appendix)(self: s)
-#let (slide,) = utils.slides(s)
+#let (slide, empty-slide) = utils.slides(s)
 
 == Appendix
 

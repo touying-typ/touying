@@ -13,7 +13,7 @@ This theme is created by [@pride7](https://github.com/pride7), featuring beautif
 You can initialize it with the following code:
 
 ```typst
-#import "@preview/touying:0.3.2": *
+#import "@preview/touying:0.3.3": *
 
 #let s = themes.aqua.register(aspect-ratio: "16-9", lang: "en")
 #let s = (s.methods.info)(
@@ -29,7 +29,7 @@ You can initialize it with the following code:
 
 #show strong: alert
 
-#let (slide, title-slide, outline-slide, focus-slide) = utils.slides(s)
+#let (slide, empty-slide, title-slide, outline-slide, focus-slide) = utils.slides(s)
 #show: slides
 ```
 
@@ -124,7 +124,7 @@ PS: The outline title can be modified via `#(s.outline-title = [Outline])`.
 Additionally, you can disable the automatic inclusion of `new-section-slide` functionality by `#(s.methods.touying-new-section-slide = none)`.
 
 ```typst
-#import "@preview/touying:0.3.2": *
+#import "@preview/touying:0.3.3": *
 
 #let s = themes.aqua.register(aspect-ratio: "16-9", lang: "en")
 #let s = (s.methods.info)(
@@ -140,7 +140,7 @@ Additionally, you can disable the automatic inclusion of `new-section-slide` fun
 
 #show strong: alert
 
-#let (slide, title-slide, outline-slide, focus-slide) = utils.slides(s)
+#let (slide, empty-slide, title-slide, outline-slide, focus-slide) = utils.slides(s)
 #show: slides
 
 = Title
@@ -159,7 +159,7 @@ Hello, Typst!
 ## Example
 
 ```typst
-#import "@preview/touying:0.3.2": *
+#import "@preview/touying:0.3.3": *
 
 #let s = themes.aqua.register(aspect-ratio: "16-9", lang: "en")
 #let s = (s.methods.info)(
@@ -175,7 +175,7 @@ Hello, Typst!
 
 #show strong: alert
 
-#let (slide, title-slide, outline-slide, focus-slide) = utils.slides(s)
+#let (slide, empty-slide, title-slide, outline-slide, focus-slide) = utils.slides(s)
 #show: slides
 
 = The Section

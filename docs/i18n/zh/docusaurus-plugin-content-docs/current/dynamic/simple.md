@@ -56,27 +56,7 @@ Touying 为简单的动画效果提供了两个标记：`#pause` 和 `#meanwhile
 
 ## 如何处理 set-show rules?
 
-如果你在 `slide[..]` 里面使用了 set-show rules，你会惊讶的发现，在那之后的 `#pause` 和 `#meanwhile` 都失效了。这是因为 Touying 无法探知 `styled(..)` 内部的内容（set-show rules 后的内容会被 `styled` 囊括起来）。
-
-为了解决这个问题，Touying 为 `#slide()` 函数提供了一个 `setting` 参数，你可以将你的 set-show rules 放到 `setting` 参数里，例如修改字体颜色：
-
-```typst
-#slide(setting: body => {
-  set text(fill: blue)
-  body
-})[
-  First
-  
-  #pause
-  
-  Second
-]
-```
-
-![image](https://github.com/touying-typ/touying/assets/34951714/8e31fc8a-5ab1-4181-a46a-fa96cf790dff)
-
-
-同理，Touying 目前也不支持 `grid` 这类 layout 函数内部的 `#pause` 和 `#meanwhile`，也是由于同样的限制，但是你可以使用 `#slide()` 的 `composer` 参数，大部分情况下都应该能满足需求。
+如果你在 `slide[..]` 里面使用了像 `grid` 这类 layout 函数，你会惊讶地发现其内部的 `#pause` 和 `#meanwhile` 失效了。但是你可以使用 `#slide()` 的 `composer` 参数来布局，大部分情况下都应该能满足需求。
 
 
 :::tip[原理]

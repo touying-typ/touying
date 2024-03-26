@@ -9,13 +9,13 @@ sidebar_position: 4
 If we only need simplicity, we can directly input content under the heading, just like writing a normal Typst document. The heading here serves to divide the pages, and we can use commands like `#pause` to achieve animation effects.
 
 ```typst
-#import "@preview/touying:0.3.2": *
+#import "@preview/touying:0.3.3": *
 
 #let s = themes.simple.register()
 #let (init, slides) = utils.methods(s)
 #show: init
 
-#let (slide,) = utils.slides(s)
+#let (slide, empty-slide) = utils.slides(s)
 #show: slides
 
 = Title
@@ -37,18 +37,18 @@ PS: We can use the `#slides-end` marker to signify the end of `#show: slides`.
 
 ## Block Style
 
-Many times, using simple style alone cannot achieve all the functions we need. For more powerful features and clearer structure, we can also use block style in the form of `#slide[...]`. The `#slide` function needs to be unpacked using the syntax `#let (slide,) = utils.slides(s)` to be used correctly after `#show: slides`.
+Many times, using simple style alone cannot achieve all the functions we need. For more powerful features and clearer structure, we can also use block style in the form of `#slide[...]`. The `#slide` function needs to be unpacked using the syntax `#let (slide, empty-slide) = utils.slides(s)` to be used correctly after `#show: slides`.
 
 For example, the previous example can be transformed into:
 
 ```typst
-#import "@preview/touying:0.3.2": *
+#import "@preview/touying:0.3.3": *
 
 #let s = themes.simple.register()
 #let (init, slides) = utils.methods(s)
 #show: init
 
-#let (slide,) = utils.slides(s)
+#let (slide, empty-slide) = utils.slides(s)
 #show: slides
 
 = Title
@@ -64,6 +64,8 @@ For example, the previous example can be transformed into:
 ]
 ```
 
+and `#empty-slide[]` to create an empty slide without header and footer.
+
 There are many advantages to doing this:
 
 1. Many times, we not only need the default `#slide[...]` but also special `slide` functions like `#focus-slide[...]`.
@@ -78,14 +80,14 @@ You may have noticed that when using the simple theme, using a level-one heading
 If we don't want it to automatically create such a section slide, we can delete this method:
 
 ```typst
-#import "@preview/touying:0.3.2": *
+#import "@preview/touying:0.3.3": *
 
 #let s = themes.simple.register()
 #(s.methods.touying-new-section-slide = none)
 #let (init, slides) = utils.methods(s)
 #show: init
 
-#let (slide,) = utils.slides(s)
+#let (slide, empty-slide) = utils.slides(s)
 #show: slides
 
 = Title
@@ -106,7 +108,7 @@ As you can see, there are only two pages left, and the default section slide is 
 Similarly, we can register a new section slide:
 
 ```typst
-#import "@preview/touying:0.3.2": *
+#import "@preview/touying:0.3.3": *
 
 #let s = themes.simple.register()
 #(s.methods.touying-new-section-slide = (self: none, section, ..args) => {
@@ -120,7 +122,7 @@ Similarly, we can register a new section slide:
 #let (init, slides, touying-outline) = utils.methods(s)
 #show: init
 
-#let (slide,) = utils.slides(s)
+#let (slide, empty-slide) = utils.slides(s)
 #show: slides
 
 = Title
@@ -147,7 +149,7 @@ Also, since `#slide[...]` is registered in `s.slides = ("slide",)`, the `section
 In fact, you can also not use `#show: slides` and `utils.slides(s)`, but only use `utils.methods(s)`, for example:
 
 ```typst
-#import "@preview/touying:0.3.2": *
+#import "@preview/touying:0.3.3": *
 
 #let s = themes.simple.register()
 #let (init, touying-outline, slide) = utils.methods(s)

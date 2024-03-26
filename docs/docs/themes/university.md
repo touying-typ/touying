@@ -13,7 +13,7 @@ This aesthetically pleasing theme is courtesy of [Pol Dellaiera](https://github.
 You can initialize the University theme using the following code:
 
 ```typst
-#import "@preview/touying:0.3.2": *
+#import "@preview/touying:0.3.3": *
 
 #let s = themes.university.register(aspect-ratio: "16-9")
 #let s = (s.methods.info)(
@@ -27,7 +27,7 @@ You can initialize the University theme using the following code:
 #let (init, slides, touying-outline, alert) = utils.methods(s)
 #show: init
 
-#let (slide, title-slide, focus-slide, matrix-slide) = utils.slides(s)
+#let (slide, empty-slide, title-slide, focus-slide, matrix-slide) = utils.slides(s)
 #show: slides
 ```
 
@@ -35,6 +35,7 @@ The `register` function accepts the following parameters:
 
 - `aspect-ratio`: Sets the aspect ratio of the slides to "16-9" or "4-3," with the default being "16-9."
 - `progress-bar`: Controls whether the progress bar at the top of each slide is displayed, with the default being `true`.
+- `display-current-section`: Whether to display the current section.
 - `footer-columns`: The width of the footer in the bottom three columns, the default is `(25%, 1fr, 25%)`.
 - `footer-a`: The first column, default is `self => self.info.author`.
 - `footer-b`: Second column, default is `self => if self.info.short-title == auto { self.info.title } else { self.info.short-title }`.
@@ -134,7 +135,7 @@ You can set these parameters using `#show: slides.with(..)`.
 And the function of automatically adding `new-section-slide` can be turned off by `#(s.methods.touying-new-section-slide = none)`.
 
 ```typst
-#import "@preview/touying:0.3.2": *
+#import "@preview/touying:0.3.3": *
 
 #let s = themes.university.register(aspect-ratio: "16-9")
 #let s = (s.methods.info)(
@@ -148,7 +149,7 @@ And the function of automatically adding `new-section-slide` can be turned off b
 #let (init, slides, touying-outline, alert) = utils.methods(s)
 #show: init
 
-#let (slide, title-slide, focus-slide, matrix-slide) = utils.slides(s)
+#let (slide, empty-slide, title-slide, focus-slide, matrix-slide) = utils.slides(s)
 #show: slides
 
 = Title
@@ -168,7 +169,7 @@ Hello, Typst!
 ## Example
 
 ```typst
-#import "@preview/touying:0.3.2": *
+#import "@preview/touying:0.3.3": *
 
 #let s = themes.university.register(aspect-ratio: "16-9")
 #let s = (s.methods.info)(
@@ -182,7 +183,7 @@ Hello, Typst!
 #let (init, slides, touying-outline, alert) = utils.methods(s)
 #show: init
 
-#let (slide, title-slide, focus-slide, matrix-slide) = utils.slides(s)
+#let (slide, empty-slide, title-slide, focus-slide, matrix-slide) = utils.slides(s)
 #show: slides.with(title-slide: false)
 
 #title-slide(authors: ([Author A], [Author B]))

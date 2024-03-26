@@ -36,7 +36,7 @@ A simple #pin(1)highlighted text#pin(2).
 一个与 Touying 共同使用的示例：
 
 ```typst
-#import "@preview/touying:0.3.2": *
+#import "@preview/touying:0.3.3": *
 #import "@preview/pinit:0.1.3": *
 
 #(s.page-args.paper = "presentation-4-3")
@@ -60,7 +60,7 @@ A simple #pin(1)highlighted text#pin(2).
   body
 }
 
-#let (slide,) = utils.slides(s)
+#let (slide, empty-slide) = utils.slides(s)
 #show: slides
 
 // Main body
