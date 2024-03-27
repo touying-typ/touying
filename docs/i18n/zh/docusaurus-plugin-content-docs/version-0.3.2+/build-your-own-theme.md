@@ -39,7 +39,7 @@ sidebar_position: 10
 
 的方式导入和使用主题了。
 
-一个具体的示例：https://typst.app/project/pdWNTS47I-6jxHrWdMSTLx
+一个具体的示例：https://typst.app/project/rqRuzg0keo_ZEB5AdxjweA
 
 
 ## 导入

@@ -37,7 +37,7 @@ You can then import and use the theme by:
 #let s = university.register(aspect-ratio: "16-9")
 ```
 
-For a specific example, refer to: [https://typst.app/project/pdWNTS47I-6jxHrWdMSTLx](https://typst.app/project/pdWNTS47I-6jxHrWdMSTLx)
+For a specific example, refer to: [https://typst.app/project/rqRuzg0keo_ZEB5AdxjweA](https://typst.app/project/rqRuzg0keo_ZEB5AdxjweA)
 
 
 ## Import
