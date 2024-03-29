@@ -186,7 +186,6 @@
     // if it is a function, then call it with self
     if type(it) == function {
       // subslide index
-      self.subslide = index
       it = it(self)
     }
     // parse the content
@@ -385,10 +384,12 @@
     }
   }
   // page header and footer
-  let header = utils.call-or-display(self, self.page-args.at("header", default: none))
-  let footer = utils.call-or-display(self, self.page-args.at("footer", default: none))
   // for speed up, do not parse the content if repeat is none
   if repeat == none {
+    self.repeat = repeat
+    self.subslide = 1
+    let header = utils.call-or-display(self, self.page-args.at("header", default: none))
+    let footer = utils.call-or-display(self, self.page-args.at("footer", default: none))
     return {
       header = _update-states(1) + header
       page(..(self.page-args + (header: header, footer: footer)), setting-with-pad(
@@ -407,6 +408,10 @@
     repeat = repetitions
   }
   if self.handout {
+    self.repeat = repeat
+    self.subslide = repeat
+    let header = utils.call-or-display(self, self.page-args.at("header", default: none))
+    let footer = utils.call-or-display(self, self.page-args.at("footer", default: none))
     let (conts, _) = _parse-content(self: self, index: repeat, ..bodies)
     header = _update-states(1) + header
     page(..(self.page-args + (header: header, footer: footer)), setting-with-pad(
@@ -416,7 +421,11 @@
     // render all the subslides
     let result = ()
     let current = 1
+    self.repeat = repeat
     for i in range(1, repeat + 1) {
+      self.subslide = i
+      let header = utils.call-or-display(self, self.page-args.at("header", default: none))
+      let footer = utils.call-or-display(self, self.page-args.at("footer", default: none))
       let new-header = header
       let (conts, _) = _parse-content(self: self, index: i, ..bodies)
       // update the counter in the first subslide
