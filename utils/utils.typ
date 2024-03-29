@@ -1,10 +1,9 @@
 // OOP: call it or display it
 #let call-or-display(self, it) = {
   if type(it) == function {
-    return it(self)
-  } else {
-    return it
+    it = it(self)
   }
+  return [#it]
 }
 
 // OOP: empty page
