@@ -167,9 +167,8 @@
     footer: footer,
     header-ascent: 30%,
     footer-descent: 30%,
-    margin: (top: 3em, bottom: 1.5em, x: 0em),
+    margin: (top: 3em, bottom: 1.5em, x: 2em),
   )
-  self.padding = (x: 2em, y: 0em)
   // register methods
   self.methods.slide = slide
   self.methods.title-slide = title-slide

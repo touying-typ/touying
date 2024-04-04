@@ -323,9 +323,43 @@
   return (result-arr, max-repetitions)
 }
 
+#let _get-negative-pad(self) = {
+  let margin = self.page-args.margin
+  if type(margin) != dictionary and type(margin) != length and type(margin) != relative {
+    return it => it
+  }
+  let cell = block.with(width: 100%, height: 100%, above: 0pt, below: 0pt, breakable: false)
+  if type(margin) == length or type(margin) == relative {
+    return it => pad(x: -margin, cell(it))
+  }
+  let pad-args = (:)
+  if "x" in margin {
+    pad-args.x = -margin.x
+  }
+  if "left" in margin {
+    pad-args.left = -margin.left
+  }
+  if "right" in margin {
+    pad-args.right = -margin.right
+  }
+  if "rest" in margin {
+    pad-args.rest = -margin.rest
+  }
+  it => pad(..pad-args, cell(it))
+}
+
 #let _get-header-footer(self) = {
   let header = utils.call-or-display(self, self.page-args.at("header", default: none))
   let footer = utils.call-or-display(self, self.page-args.at("footer", default: none))
+  if self.full-header or self.full-footer {
+    let negative-pad = _get-negative-pad(self)
+    if self.full-header {
+      header = negative-pad(header)
+    }
+    if self.full-footer {
+      footer = negative-pad(footer)
+    }
+  }
   (header, footer)
 }
 
@@ -341,9 +375,6 @@
   ..bodies,
 ) = {
   assert(bodies.named().len() == 0, message: "unexpected named arguments:" + repr(bodies.named().keys()))
-  let setting-with-pad(body) = {
-    pad(..self.padding, setting(body))
-  }
   let composer-with-side-by-side(..args) = {
     if type(composer) == function {
       composer(..args)
@@ -407,9 +438,10 @@
   if repeat == none {
     return {
       header = _update-states(1) + header
-      page(..(self.page-args + (header: header, footer: footer)), setting-with-pad(
+      set page(..(self.page-args + (header: header, footer: footer)))
+      setting(
         page-preamble(1) + composer-with-side-by-side(..bodies)
-      ))
+      )
     }
   }
   
@@ -417,9 +449,10 @@
     self.subslide = repeat
     let (conts, _) = _parse-content(self: self, index: repeat, ..bodies)
     header = _update-states(1) + header
-    page(..(self.page-args + (header: header, footer: footer)), setting-with-pad(
+    set page(..(self.page-args + (header: header, footer: footer)))
+    setting(
       page-preamble(1) + composer-with-side-by-side(..conts)
-    ))
+    )
   } else {
     // render all the subslides
     let result = ()
@@ -433,10 +466,10 @@
       if i == 1 {
         new-header = _update-states(repeat) + new-header
       }
-      result.push(page(
-        ..(self.page-args + (header: new-header, footer: footer)),
-        setting-with-pad(page-preamble(i) + composer-with-side-by-side(..conts)),
-      ))
+      result.push({
+        set page(..(self.page-args + (header: new-header, footer: footer)))
+        setting(page-preamble(i) + composer-with-side-by-side(..conts))
+      })
     }
     // return the result
     result.sum()
@@ -593,8 +626,11 @@
     header: none,
     footer: none,
     fill: rgb("#ffffff"),
+    margin: (x: 7%, y: 12%),
   ),
-  padding: (x: 0em, y: 0em),
+  // full header / footer
+  full-header: true,
+  full-footer: true,
   // datetime format
   datetime-format: auto,
   // register the methods

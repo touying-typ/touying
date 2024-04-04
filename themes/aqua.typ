@@ -194,11 +194,15 @@
       circle(radius: 13pt, fill: white))
   }
   let header(self) = {
-    place(center + top, dy: 45%,
-      rect(width: 100%, height: 100%, fill: self.colors.primary))
-    place(left + top, line(start: (30%, 30%), end: (27%, 200%), stroke: 7pt + white))
-    place(left + bottom, dx: 4%, dy: 15%,
-      text(fill:white, self.aqua-title))
+    place(center + top, dy: .5em,
+      rect(
+        width: 100%,
+        height: 1.8em,
+        fill: self.colors.primary,
+        align(left + horizon, h(1.5em) + text(fill:white, self.aqua-title))
+      )
+    )
+    place(left + top, line(start: (30%, 0%), end: (27%, 100%), stroke: .5em + white))
   }
   let footer(self) = {
     set text(size: 0.8em)
@@ -206,11 +210,10 @@
   }
   self.page-args += (
     paper: "presentation-" + aspect-ratio,
-    margin: (x: 0em, top: 10%, bottom: 10%),
+    margin: (x: 2em, top: 3.5em, bottom: 2em),
     header: header,
     footer: footer,
   )
-  self.padding += (x: 5%, top: 7%)
   self.methods.init = (self: none, body) => {
     set text(size: 20pt)
     body

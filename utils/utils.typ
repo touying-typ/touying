@@ -7,13 +7,14 @@
 }
 
 // OOP: empty page
-#let empty-page(self) = {
+#let empty-page(self, margin: (x: 0em, y: 0em)) = {
   self.page-args += (
     header: none,
     footer: none,
-    margin: (x: 0em, y: 0em),
   )
-  self.padding = (x: 0em, y: 0em)
+  if margin != none {
+    self.page-args += (margin: margin)
+  }
   self
 }
 

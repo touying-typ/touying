@@ -278,13 +278,12 @@
     header-ascent: 0em,
     footer-descent: 0em,
   ) + if navigation == "sidebar" {(
-    margin: (top: 2em, bottom: 1em, x: 0em),
+    margin: (top: 2em, bottom: 1em, x: sidebar.width),
   )} else if navigation == "mini-slides" {(
-    margin: (top: mini-slides.height, bottom: 2em, x: 0em),
+    margin: (top: mini-slides.height, bottom: 2em, x: mini-slides.x),
   )} else {(
-    margin: (top: 2em, bottom: 2em, x: 0em),
+    margin: (top: 2em, bottom: 2em, x: mini-slides.x),
   )}
-  self.padding = (x: if navigation == "sidebar" { sidebar.width } else { mini-slides.x }, y: 0em)
   // register methods
   self.methods.slide = slide
   self.methods.title-slide = title-slide
