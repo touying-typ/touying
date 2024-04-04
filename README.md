@@ -63,7 +63,7 @@ This documentation is powered by [Docusaurus](https://docusaurus.io/). We will m
 
 ## Quick start
 
-Before you begin, make sure you have installed the Typst environment. If not, you can use the [Web App](https://typst.app/) or the Typst LSP and Typst Preview plugins for VS Code.
+Before you begin, make sure you have installed the Typst environment. If not, you can use the [Web App](https://typst.app/) or the Tinymist Typst and Typst Preview extensions for VS Code.
 
 To use Touying, you only need to include the following code in your document:
 

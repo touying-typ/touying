@@ -4,6 +4,12 @@ sidebar_position: 14
 
 # Changelog
 
+## v0.3.4
+
+- **refactor:** remove `self.padding` and add `self.full-header` `self.full-footer` config.
+- **feat:** support `#footnote[]` for all themes (without frozen numbering).
+- **feat:** access subslide and repeat in footer and header by `self => self.subslide`.
+
 ## v0.3.3
 
 - **template:** move template to `touying-aqua` package, make Touying searchable in [Typst Universe Packages](https://typst.app/universe/search?kind=packages)
