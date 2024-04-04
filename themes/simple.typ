@@ -18,7 +18,7 @@
 }
 
 #let centered-slide(self: none, section: none, ..args) = {
-  self = utils.empty-page(self)
+  self = utils.empty-page(self, margin: none)
   (self.methods.touying-slide)(self: self, repeat: none, section: section, ..args.named(),
     align(center + horizon, if section != none { heading(level: 1, utils.unify-section(section).title) } + args.pos().sum(default: []))
   )
@@ -33,7 +33,7 @@
 }
 
 #let focus-slide(self: none, background: auto, foreground: white, body) = {
-  self = utils.empty-page(self)
+  self = utils.empty-page(self, margin: none)
   self.page-args.fill = if background == auto { self.colors.primary } else { background }
   set text(fill: foreground, size: 1.5em)
   centered-slide(self: self, align(center + horizon, body))
@@ -75,6 +75,8 @@
     footer-descent: 1em,
     header-ascent: 1em,
   )
+  self.full-header = false
+  self.full-footer = false
   // register methods
   self.methods.slide = slide
   self.methods.title-slide = title-slide
