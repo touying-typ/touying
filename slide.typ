@@ -484,10 +484,15 @@
   let (section, subsection, title, slide) = (none, none, none, ())
   let last-title = none
   let children = if utils.is-sequence(body) { body.children } else { (body,) }
-  // flatten children
-  children = children.map(it => {
-    if utils.is-sequence(it) { it.children } else { it }
-  }).flatten()
+  // convert all sequence to array recursively, and then flatten the array
+  let sequence-to-array(it) = {
+    if utils.is-sequence(it) {
+      it.children.map(sequence-to-array)
+    } else {
+      it
+    }
+  }
+  children = children.map(sequence-to-array).flatten()
   // trim space of children
   children = utils.trim(children)
   if children.len() == 0 { return none }
