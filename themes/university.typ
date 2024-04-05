@@ -227,7 +227,7 @@
           gutter: .3em,
           grid(
             columns: (auto, 1fr, auto),
-            align(top + left, heading(level: 2, text(fill: self.colors.primary, self.uni-title))),
+            align(top + left, text(fill: self.colors.primary, weight: "bold", size: 1.2em, self.uni-title)),
             [],
             if self.uni-display-current-section {
               align(top + right, text(fill: self.colors.primary.lighten(65%), states.current-section-title))

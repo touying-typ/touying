@@ -9,3 +9,4 @@ repository = "https://github.com/touying-typ/touying"
 keywords = ["presentation", "slides", "lecture", "touying"]
 categories = ["presentation"]
 exclude = ["examples"]
+compiler = "0.11.0"

@@ -407,11 +407,13 @@
       let section = utils.unify-section(section)
       if section != none {
         states._new-section(short-title: section.short-title, section.title)
+        counter(heading).step()
       }
       // if subsection is not none, then create a new subsection
       let subsection = utils.unify-section(subsection)
       if subsection != none {
         states._new-subsection(short-title: subsection.short-title, subsection.title)
+        counter(heading).step(level: 2)
       }
     }
     // if appendix is false, then update the last-slide-counter and sections step
@@ -516,17 +518,17 @@
         (child.value.at("fn"))(..child.value.at("args"))
       }
       (section, subsection, title, slide) = (none, none, none, ())
-    } else if type(child) == content and child.func() == heading and utils.heading-depth(child) <= slide-level + 1 {
+    } else if type(child) == content and child.func() == heading and child.depth <= slide-level + 1 {
       slide = utils.trim(slide)
-      if (utils.heading-depth(child) == 1 and section != none) or (utils.heading-depth(child) == 2 and subsection != none) or (utils.heading-depth(child) > slide-level and title != none) or slide != () {
+      if (child.depth == 1 and section != none) or (child.depth == 2 and subsection != none) or (child.depth > slide-level and title != none) or slide != () {
         (self.methods.slide)(self: self, section: section, subsection: subsection, ..(if last-title != none { (title: last-title) }), slide.sum(default: []))
         (section, subsection, title, slide) = (none, none, none, ())
-        if utils.heading-depth(child) <= slide-level {
+        if child.depth <= slide-level {
           last-title = none
         }
       }
       let child-body = if child.body != [] { child.body } else { none }
-      if utils.heading-depth(child) == 1 {
+      if child.depth == 1 {
         if slide-level >= 1 {
           if type(self.methods.at("touying-new-section-slide", default: none)) == function {
             (self.methods.touying-new-section-slide)(self: self, child-body)
@@ -538,7 +540,7 @@
           title = child.body
           last-title = child-body
         }
-      } else if utils.heading-depth(child) == 2 {
+      } else if child.depth == 2 {
         if slide-level >= 2 {
           if type(self.methods.at("touying-new-subsection-slide", default: none)) == function {
             (self.methods.touying-new-subsection-slide)(self: self, child-body)
