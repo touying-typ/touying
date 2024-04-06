@@ -1,17 +1,23 @@
----
-sidebar_position: 14
----
-
 # Changelog
 
-## v0.3.4
+## v0.4.0
 
-- **fix:** make nested includes work correctly. 
-- **refactor:** remove `self.padding` and add `self.full-header` `self.full-footer` config.
-- **feat:** support `#footnote[]` for all themes (without frozen numbering).
+### Features
+
+- **feat:** support `#footnote[]` for all themes.
 - **feat:** access subslide and repeat in footer and header by `self => self.subslide`.
 - **feat:** support numbered theorem environments by [ctheorems](https://typst.app/universe/package/ctheorems).
 - **feat:** support numbering for sections and subsections.
+
+### Fixes
+
+- **fix:** make nested includes work correctly. 
+- **fix:** disable multi-page slides from creating the same section multiple times.
+
+## Breaking changes
+
+- **refactor:** remove `self.padding` and add `self.full-header` `self.full-footer` config.
+
 
 ## v0.3.3
 

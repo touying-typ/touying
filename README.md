@@ -68,7 +68,7 @@ Before you begin, make sure you have installed the Typst environment. If not, yo
 To use Touying, you only need to include the following code in your document:
 
 ```typst
-#import "@preview/touying:0.3.3": *
+#import "@preview/touying:0.4.0": *
 
 #let s = themes.simple.register(aspect-ratio: "16-9")
 #let (init, slides) = utils.methods(s)
@@ -101,17 +101,22 @@ It's simple. Congratulations on creating your first Touying slide! 🎉
 In fact, Touying provides various styles for writing slides. For example, the above example uses first-level and second-level titles to create new slides. However, you can also use the `#slide[..]` format to access more powerful features provided by Touying.
 
 ```typst
-#import "@preview/touying:0.3.3": *
-#import "@preview/cetz:0.2.1"
-#import "@preview/fletcher:0.4.2" as fletcher: node, edge
+#import "@preview/touying:0.4.0": *
+#import "@preview/cetz:0.2.2"
+#import "@preview/fletcher:0.4.3" as fletcher: node, edge
+#import "@preview/ctheorems:1.1.2": *
 
 // cetz and fletcher bindings for touying
 #let cetz-canvas = touying-reducer.with(reduce: cetz.canvas, cover: cetz.draw.hide.with(bounds: true))
-#let fletcher-diagram = touying-reducer.with(reduce: (arr, ..args) => fletcher.diagram(..args, ..arr))
+#let fletcher-diagram = touying-reducer.with(reduce: fletcher.diagram, cover: fletcher.hide)
 
 // Register university theme
-// You can also use other themes
+// You can remove the theme registration or replace other themes
+// it can still work normally
 #let s = themes.university.register(aspect-ratio: "16-9")
+
+// Set the numbering of section and subsection
+#let s = (s.methods.numbering)(self: s, section: "1.", "1.1")
 
 // Global information configuration
 #let s = (s.methods.info)(
@@ -123,11 +128,41 @@ In fact, Touying provides various styles for writing slides. For example, the ab
   institution: [Institution],
 )
 
+// Pdfpc configuration
+// typst query --root . ./example.typ --field value --one "<pdfpc-file>" > ./example.pdfpc
+#let s = (s.methods.append-preamble)(self: s, pdfpc.config(
+  duration-minutes: 30,
+  start-time: datetime(hour: 14, minute: 10, second: 0),
+  end-time: datetime(hour: 14, minute: 40, second: 0),
+  last-minutes: 5,
+  note-font-size: 12,
+  disable-markdown: false,
+  default-transition: (
+    type: "push",
+    duration-seconds: 2,
+    angle: ltr,
+    alignment: "vertical",
+    direction: "inward",
+  ),
+))
+
+// Theroems configuration by ctheorems
+#show: thmrules.with(qed-symbol: $square$)
+#let theorem = thmbox("theorem", "Theorem", fill: rgb("#eeffee"))
+#let corollary = thmplain(
+  "corollary",
+  "Corollary",
+  base: "theorem",
+  titlefmt: strong
+)
+#let definition = thmbox("definition", "Definition", inset: (x: 1.2em, top: 1em))
+#let example = thmplain("example", "Example").with(numbering: none)
+#let proof = thmproof("proof", "Proof")
+
 // Extract methods
 #let (init, slides, touying-outline, alert) = utils.methods(s)
 #show: init
 
-// Place global settings here
 #show strong: alert
 
 // Extract slide functions
@@ -232,6 +267,48 @@ In fact, Touying provides various styles for writing slides. For example, the ab
 ]
 
 
+= Theroems
+
+== Prime numbers
+
+#definition[
+  A natural number is called a #highlight[_prime number_] if it is greater
+  than 1 and cannot be written as the product of two smaller natural numbers.
+]
+#example[
+  The numbers $2$, $3$, and $17$ are prime.
+  @cor_largest_prime shows that this list is not exhaustive!
+]
+
+#theorem("Euclid")[
+  There are infinitely many primes.
+]
+#proof[
+  Suppose to the contrary that $p_1, p_2, dots, p_n$ is a finite enumeration
+  of all primes. Set $P = p_1 p_2 dots p_n$. Since $P + 1$ is not in our list,
+  it cannot be prime. Thus, some prime factor $p_j$ divides $P + 1$.  Since
+  $p_j$ also divides $P$, it must divide the difference $(P + 1) - P = 1$, a
+  contradiction.
+]
+
+#corollary[
+  There is no largest prime number.
+] <cor_largest_prime>
+#corollary[
+  There are infinitely many composite numbers.
+]
+
+#theorem[
+  There are arbitrarily long stretches of composite numbers.
+]
+
+#proof[
+  For any $n > 2$, consider $
+    n! + 2, quad n! + 3, quad ..., quad n! + n #qedhere
+  $
+]
+
+
 = Others
 
 == Side-by-side
@@ -261,7 +338,7 @@ In fact, Touying provides various styles for writing slides. For example, the ab
 ]
 ```
 
-![image](https://github.com/touying-typ/touying/assets/34951714/fcecb505-d2d1-4e36-945a-225f4661a694)
+![image](https://github.com/touying-typ/touying/assets/34951714/5ac2b11c-9e77-4389-ade6-682c9fc3e1fb)
 
 
 ## Acknowledgements
