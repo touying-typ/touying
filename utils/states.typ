@@ -27,7 +27,12 @@
 #let _new-subsection(short-title: auto, duplicate: false, title) = locate(loc => {
   sections-state.update(sections => {
     let last-section = sections.pop()
-    let last-subsection = last-section.children.at(-1, default: (kind: "subsection", title: none, short-title: none, loc: none, count: 0, children: ()))
+    let last-subsection = (kind: "none")
+    let i = -1
+    while last-subsection.kind != "subsection" {
+      last-subsection = last-section.children.at(i, default: (kind: "subsection", title: none, short-title: none, loc: none, count: 0, children: ()))
+      i += 1
+    }
     if duplicate or last-subsection.title != title or last-subsection.short-title != short-title {
       last-section.children.push((kind: "subsection", title: title, short-title: short-title, loc: loc, count: 0, children: ()))
     }
