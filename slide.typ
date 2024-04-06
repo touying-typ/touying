@@ -406,13 +406,13 @@
       // if section is not none, then create a new section
       let section = utils.unify-section(section)
       if section != none {
-        states._new-section(short-title: section.short-title, section.title)
+        states._new-section(duplicate: self.duplicate, short-title: section.short-title, section.title)
         counter(heading).step()
       }
       // if subsection is not none, then create a new subsection
       let subsection = utils.unify-section(subsection)
       if subsection != none {
-        states._new-subsection(short-title: subsection.short-title, subsection.title)
+        states._new-subsection(duplicate: self.duplicate, short-title: subsection.short-title, subsection.title)
         counter(heading).step(level: 2)
       }
     }
@@ -647,6 +647,8 @@
   full-footer: true,
   // numbering
   numbering: none,
+  // duplicate for section and subsection
+  duplicate: false,
   // datetime format
   datetime-format: auto,
   // register the methods
