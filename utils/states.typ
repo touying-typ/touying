@@ -4,6 +4,10 @@
 #let last-slide-number = locate(loc => last-slide-counter.final(loc).first())
 
 #let touying-progress(callback) = locate(loc => {
+  if last-slide-counter.final(loc).first() == 0 {
+    callback(1.0)
+    return
+  }
   let ratio = calc.min(1.0, slide-counter.at(loc).first() / last-slide-counter.final(loc).first())
   callback(ratio)
 })
@@ -11,17 +15,22 @@
 // sections
 #let sections-state = state("touying-sections-state", ((kind: "section", title: none, short-title: none, loc: none, count: 0, children: ()),))
 
-#let _new-section(short-title: auto, id: auto, title) = locate(loc => {
+#let _new-section(short-title: auto, duplicate: false, title) = locate(loc => {
   sections-state.update(sections => {
-    sections.push((kind: "section", title: title, short-title: short-title, loc: loc, count: 0, children: ()))
+    if duplicate or sections.last().title != title or sections.last().short-title != short-title {
+      sections.push((kind: "section", title: title, short-title: short-title, loc: loc, count: 0, children: ()))
+    }
     sections
   })
 })
 
-#let _new-subsection(short-title: auto, id: auto, title) = locate(loc => {
+#let _new-subsection(short-title: auto, duplicate: false, title) = locate(loc => {
   sections-state.update(sections => {
     let last-section = sections.pop()
-    last-section.children.push((kind: "subsection", title: title, short-title: short-title, loc: loc, count: 0, children: ()))
+    let last-subsection = last-section.children.at(-1, default: (kind: "subsection", title: none, short-title: none, loc: none, count: 0, children: ()))
+    if duplicate or last-subsection.title != title or last-subsection.short-title != short-title {
+      last-section.children.push((kind: "subsection", title: title, short-title: short-title, loc: loc, count: 0, children: ()))
+    }
     sections.push(last-section)
     sections
   })
