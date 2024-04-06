@@ -28,7 +28,7 @@
       show heading: set text(fill: self.colors.primary)
       show: args.named().at("setting", default: body => body)
       if self.auto-heading-for-subsection and subsection != none {
-        heading(level: 1, subsection)
+        heading(level: 1, states.current-subsection-with-numbering(self))
       }
       if self.auto-heading and title != none {
         heading(level: 2, title)
@@ -284,6 +284,7 @@
   )} else {(
     margin: (top: 2em, bottom: 2em, x: mini-slides.x),
   )}
+  self = (self.methods.numbering)(self: self, section: "1.", "1.1")
   // register methods
   self.methods.slide = slide
   self.methods.title-slide = title-slide

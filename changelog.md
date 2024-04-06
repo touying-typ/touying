@@ -6,9 +6,12 @@ sidebar_position: 14
 
 ## v0.3.4
 
+- **fix:** make nested includes work correctly. 
 - **refactor:** remove `self.padding` and add `self.full-header` `self.full-footer` config.
 - **feat:** support `#footnote[]` for all themes (without frozen numbering).
 - **feat:** access subslide and repeat in footer and header by `self => self.subslide`.
+- **feat:** support numbered theorem environments by [ctheorems](https://typst.app/universe/package/ctheorems).
+- **feat:** support numbering for sections and subsections.
 
 ## v0.3.3
 

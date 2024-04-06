@@ -51,7 +51,11 @@
   callback(sections-state.final(loc))
 })
 
-#let touying-outline(enum-args: (:), padding: 0pt) = touying-final-sections(sections => {
+#let touying-outline(self: none, enum-args: (:), padding: 0pt) = touying-final-sections(sections => {
+  let enum-args = (full: true) + enum-args
+  if self != none and self.numbering != none {
+    enum-args = (numbering: self.numbering) + enum-args
+  }
   pad(padding, enum(
     ..enum-args,
     ..sections.filter(section => section.loc != none)
@@ -76,6 +80,33 @@
   if not ignore-zero or sections.len() - 1 != 0 {
     _typst-numbering(numbering, sections.len() - 1)
   }
+})
+
+#let current-section-with-numbering(self, ignore-zero: true) = locate(loc => {
+  let sections = sections-state.at(loc)
+  if self.numbering != none and (not ignore-zero or sections.len() - 1 != 0) {
+    _typst-numbering(self.numbering, sections.len() - 1)
+    [ ]
+  }
+  sections.last().title
+})
+
+#let current-subsection-number(numbering: "1.1", ignore-zero: true) = locate(loc => {
+  let sections = sections-state.at(loc)
+  let subsections = sections.last().children
+  if (not ignore-zero or sections.len() - 1 != 0) and (not ignore-zero or subsections.len() - 1 != 0) {
+    _typst-numbering(numbering, sections.len() - 1, subsections.len() - 1)
+  }
+})
+
+#let current-subsection-with-numbering(self, ignore-zero: true) = locate(loc => {
+  let sections = sections-state.at(loc)
+  let subsections = sections.last().children
+  if self.numbering != none and (not ignore-zero or sections.len() - 1 != 0) and (not ignore-zero or subsections.len() - 1 != 0) {
+    _typst-numbering(self.numbering, sections.len() - 1, subsections.len() - 1)
+    [ ]
+  }
+  subsections.last().title
 })
 
 #let touying-progress-with-sections(callback) = locate(loc => {

@@ -85,7 +85,7 @@
     set align(horizon)
     show: pad.with(20%)
     set text(size: 1.5em)
-    title
+    states.current-section-with-numbering(self)
     block(height: 2pt, width: 100%, spacing: 0pt, utils.call-or-display(self, self.m-progress-bar))
   }
   (self.methods.touying-slide)(self: self, repeat: none, section: (title: title, short-title: short-title), content)
@@ -114,7 +114,7 @@
 #let register(
   self: s,
   aspect-ratio: "16-9",
-  header: states.current-section-title,
+  header: states.current-section-with-numbering,
   footer: [],
   footer-right: states.slide-counter.display() + " / " + states.last-slide-number,
   footer-progress: true,
@@ -177,7 +177,7 @@
   self.methods.focus-slide = focus-slide
   self.methods.slides = slides
   self.methods.touying-outline = (self: none, enum-args: (:), ..args) => {
-    states.touying-outline(enum-args: (tight: false,) + enum-args, ..args)
+    states.touying-outline(self: self, enum-args: (tight: false,) + enum-args, ..args)
   }
   self.methods.alert = (self: none, it) => text(fill: self.colors.secondary-light, it)
   self

@@ -17,10 +17,10 @@
   }, ..args)
 }
 
-#let centered-slide(self: none, section: none, ..args) = {
+#let centered-slide(self: none, ..args) = {
   self = utils.empty-page(self, margin: none)
-  (self.methods.touying-slide)(self: self, repeat: none, section: section, ..args.named(),
-    align(center + horizon, if section != none { heading(level: 1, utils.unify-section(section).title) } + args.pos().sum(default: []))
+  (self.methods.touying-slide)(self: self, repeat: none, ..args.named(),
+    align(center + horizon, args.pos().sum(default: []))
   )
 }
 
@@ -29,7 +29,9 @@
 }
 
 #let new-section-slide(self: none, section) = {
-  centered-slide(self: self, section: section)
+  self = utils.empty-page(self, margin: none)
+  (self.methods.touying-slide)(self: self, repeat: none, section: section, align(center + horizon, heading(level: 1, states.current-section-with-numbering(self)))
+  )
 }
 
 #let focus-slide(self: none, background: auto, foreground: white, body) = {
@@ -62,10 +64,7 @@
   self.simple-footer-right = footer-right
   self.auto-heading = true
   // set page
-  let header = locate(loc => {
-    let sections = states.sections-state.at(loc)
-    deco-format(sections.last().title)
-  })
+  let header = self => deco-format(states.current-section-with-numbering(self))
   let footer(self) = deco-format(self.simple-footer + h(1fr) + self.simple-footer-right)
   self.page-args += (
     paper: "presentation-" + aspect-ratio,

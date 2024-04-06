@@ -70,7 +70,7 @@
         {
           set par(leading: leading)
           set text(weight: "bold")
-          (self.methods.touying-outline)(self: self, enum-args: (numbering: "01", ..enum-args))
+          (self.methods.touying-outline)(self: self, enum-args: (numbering: self.numbering, ..enum-args))
         }
       )
     )
@@ -93,7 +93,7 @@
         text(
           fill: self.colors.primary,
           size: 166pt,
-          states.current-section-number(numbering: "01")
+          states.current-section-number(numbering: self.numbering)
         )
       ),
       align(
@@ -156,11 +156,7 @@
     primary-lightest: rgb("#F2F4F8"),
   )
 
-  self.aqua-title = {
-    states.current-section-number(numbering: "01")
-    [ ]
-    states.current-section-title
-  }
+  self.aqua-title = states.current-section-with-numbering
   self.aqua-footer = footer
   self.aqua-lang = lang
   self.aqua-background = (self) => {
@@ -199,14 +195,14 @@
         width: 100%,
         height: 1.8em,
         fill: self.colors.primary,
-        align(left + horizon, h(1.5em) + text(fill:white, self.aqua-title))
+        align(left + horizon, h(1.5em) + text(fill:white, utils.call-or-display(self, self.aqua-title)))
       )
     )
     place(left + top, line(start: (30%, 0%), end: (27%, 100%), stroke: .5em + white))
   }
   let footer(self) = {
     set text(size: 0.8em)
-    place(right, dx: -5%, utils.call-or-display(self, self.aqua-footer))
+    place(right, dx: -5%, utils.call-or-display(self, utils.call-or-display(self, self.aqua-footer)))
   }
   self.page-args += (
     paper: "presentation-" + aspect-ratio,
@@ -218,6 +214,7 @@
     set text(size: 20pt)
     body
   }
+  self.numbering = "01"
   self.methods.title-slide = title-slide
   self.methods.outline-slide = outline-slide
   self.methods.focus-slide = focus-slide

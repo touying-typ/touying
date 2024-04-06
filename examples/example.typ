@@ -1,15 +1,19 @@
 #import "../lib.typ": *
-#import "@preview/cetz:0.2.1"
-#import "@preview/fletcher:0.4.2" as fletcher: node, edge
+#import "@preview/cetz:0.2.2"
+#import "@preview/fletcher:0.4.3" as fletcher: node, edge
+#import "@preview/ctheorems:1.1.2": *
 
 // cetz and fletcher bindings for touying
 #let cetz-canvas = touying-reducer.with(reduce: cetz.canvas, cover: cetz.draw.hide.with(bounds: true))
-#let fletcher-diagram = touying-reducer.with(reduce: (arr, ..args) => fletcher.diagram(..args, ..arr))
+#let fletcher-diagram = touying-reducer.with(reduce: fletcher.diagram, cover: fletcher.hide)
 
 // Register university theme
 // You can remove the theme registration or replace other themes
 // it can still work normally
 #let s = themes.university.register(aspect-ratio: "16-9")
+
+// Set the numbering of section and subsection
+#let s = (s.methods.numbering)(self: s, section: "1.", "1.1")
 
 // Global information configuration
 #let s = (s.methods.info)(
@@ -38,6 +42,19 @@
     direction: "inward",
   ),
 ))
+
+// Theroems configuration by ctheorems
+#show: thmrules.with(qed-symbol: $square$)
+#let theorem = thmbox("theorem", "Theorem", fill: rgb("#eeffee"))
+#let corollary = thmplain(
+  "corollary",
+  "Corollary",
+  base: "theorem",
+  titlefmt: strong
+)
+#let definition = thmbox("definition", "Definition", inset: (x: 1.2em, top: 1em))
+#let example = thmplain("example", "Example").with(numbering: none)
+#let proof = thmproof("proof", "Proof")
 
 // Extract methods
 #let (init, slides, touying-outline, alert) = utils.methods(s)
@@ -144,6 +161,48 @@
     node((2,0), `closed`, radius: 2em, extrude: (-2.5, 0)),
     edge((0,0), (2,0), `close()`, "-|>", bend: -40deg),
   )
+]
+
+
+= Theroems
+
+== Prime numbers
+
+#definition[
+  A natural number is called a #highlight[_prime number_] if it is greater
+  than 1 and cannot be written as the product of two smaller natural numbers.
+]
+#example[
+  The numbers $2$, $3$, and $17$ are prime.
+  @cor_largest_prime shows that this list is not exhaustive!
+]
+
+#theorem("Euclid")[
+  There are infinitely many primes.
+]
+#proof[
+  Suppose to the contrary that $p_1, p_2, dots, p_n$ is a finite enumeration
+  of all primes. Set $P = p_1 p_2 dots p_n$. Since $P + 1$ is not in our list,
+  it cannot be prime. Thus, some prime factor $p_j$ divides $P + 1$.  Since
+  $p_j$ also divides $P$, it must divide the difference $(P + 1) - P = 1$, a
+  contradiction.
+]
+
+#corollary[
+  There is no largest prime number.
+] <cor_largest_prime>
+#corollary[
+  There are infinitely many composite numbers.
+]
+
+#theorem[
+  There are arbitrarily long stretches of composite numbers.
+]
+
+#proof[
+  For any $n > 2$, consider $
+    n! + 2, quad n! + 3, quad ..., quad n! + n #qedhere
+  $
 ]
 
 

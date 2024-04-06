@@ -439,10 +439,17 @@
   // for speed up, do not parse the content if repeat is none
   if repeat == none {
     return {
+      let conts = bodies.map(it => {
+        if type(it) == function {
+          it(self)
+        } else {
+          it
+        }
+      })
       header = _update-states(1) + header
       set page(..(self.page-args + (header: header, footer: footer)))
       setting(
-        page-preamble(1) + composer-with-side-by-side(..bodies)
+        page-preamble(1) + composer-with-side-by-side(..conts)
       )
     }
   }
@@ -638,6 +645,8 @@
   // full header / footer
   full-header: true,
   full-footer: true,
+  // numbering
+  numbering: none,
   // datetime format
   datetime-format: auto,
   // register the methods
@@ -709,6 +718,21 @@
       self.datetime-format = format
       self
     },
+    // numbering
+    numbering: (self: none, section: auto, subsection: auto, numbering) => {
+      if section == auto and subsection == auto {
+        self.numbering = numbering
+        return self
+      }
+      let section-numbering = if section == auto { numbering } else { section }
+      let subsection-numbering = if subsection == auto { numbering } else { subsection }
+      self.numbering = (..args) => if args.pos().len() == 1 {
+        states._typst-numbering(section-numbering, ..args)
+      } else {
+        states._typst-numbering(subsection-numbering, ..args)
+      }
+      self
+    },
     // default init
     init: (self: none, body) => {
       // default text size
@@ -718,7 +742,7 @@
     },
     // default outline
     touying-outline: (self: none, ..args) => {
-      states.touying-outline(..args)
+      states.touying-outline(self: self, ..args)
     },
     appendix: (self: none) => {
       self.appendix = true

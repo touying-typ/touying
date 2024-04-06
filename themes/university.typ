@@ -88,11 +88,11 @@
 
 #let new-section-slide(self: none, short-title: auto, title) = {
   self = utils.empty-page(self)
-  let content = {
+  let content(self) = {
     set align(horizon)
     show: pad.with(20%)
     set text(size: 1.5em, fill: self.colors.primary, weight: "bold")
-    title
+    states.current-section-with-numbering(self)
     v(-.5em)
     block(height: 2pt, width: 100%, spacing: 0pt, utils.call-or-display(self, self.uni-progress-bar))
   }
@@ -230,7 +230,7 @@
             align(top + left, text(fill: self.colors.primary, weight: "bold", size: 1.2em, self.uni-title)),
             [],
             if self.uni-display-current-section {
-              align(top + right, text(fill: self.colors.primary.lighten(65%), states.current-section-title))
+              align(top + right, text(fill: self.colors.primary.lighten(65%), states.current-section-with-numbering(self)))
             }
           ),
           text(fill: self.colors.primary.lighten(65%), size: .8em, self.uni-subtitle)
@@ -262,7 +262,7 @@
     footer: footer,
     header-ascent: 0em,
     footer-descent: 0em,
-    margin: (top: 2.5em, bottom: 1em, x: 2em),
+    margin: (top: 2.5em, bottom: 1.25em, x: 2em),
   )
   // register methods
   self.methods.slide = slide
@@ -273,7 +273,7 @@
   self.methods.matrix-slide = matrix-slide
   self.methods.slides = slides
   self.methods.touying-outline = (self: none, enum-args: (:), ..args) => {
-    states.touying-outline(enum-args: (tight: false,) + enum-args, ..args)
+    states.touying-outline(self: self, enum-args: (tight: false,) + enum-args, ..args)
   }
   self.methods.alert = (self: none, it) => text(fill: self.colors.primary, it)
   self.methods.init = (self: none, body) => {
