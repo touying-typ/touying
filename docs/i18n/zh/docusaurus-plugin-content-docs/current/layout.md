@@ -129,7 +129,7 @@ sidebar_position: 5
 例如，我们决定给 metropolis 主题加入 GitHub 的图标，我们可以这样实现：
 
 ```typst
-#import "@preview/touying:0.3.3": *
+#import "@preview/touying:0.4.0": *
 #import "@preview/octique:0.1.0": *
 
 #let s = themes.metropolis.register(aspect-ratio: "16-9")

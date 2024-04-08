@@ -9,7 +9,7 @@ Before you begin, make sure you have the Typst environment installed. If not, yo
 To use Touying, you just need to include the following in your document:
 
 ```typst
-#import "@preview/touying:0.3.3": *
+#import "@preview/touying:0.4.0": *
 
 #let s = themes.simple.register()
 #let (init, slides) = utils.methods(s)
@@ -52,7 +52,7 @@ Touying offers many built-in themes to easily create beautiful slides. For examp
 you can use the university theme. For more detailed tutorials on themes, you can refer to the following sections.
 
 ```typst
-#import "@preview/touying:0.3.3": *
+#import "@preview/touying:0.4.0": *
 #import "@preview/cetz:0.2.1"
 #import "@preview/fletcher:0.4.2" as fletcher: node, edge
 

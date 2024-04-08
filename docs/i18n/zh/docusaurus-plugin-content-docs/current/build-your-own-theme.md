@@ -25,13 +25,13 @@ sidebar_position: 10
 
 1. 将 `themes` 目录下的 [主题代码](https://github.com/touying-typ/touying/tree/main/themes) 复制到本地，例如将 `themes/university.typ` 复制到本地 `university.typ` 中。
 2. 将 `university.typ` 文件顶部的 `#import "../xxx.typ"` 命令全部移除。
-3. 向 `university.typ` 文件顶部中加入 `#import "@preview/touying:0.3.3": *` 来导入所有模块。
+3. 向 `university.typ` 文件顶部中加入 `#import "@preview/touying:0.4.0": *` 来导入所有模块。
 4. 将 `register` 函数中的 `self: s` 替换成 `self: themes.default.register()` **(重要)**。
 
 然后就可以通过
 
 ```typst
-#import "@preview/touying:0.3.3": *
+#import "@preview/touying:0.4.0": *
 #import "university.typ"
 
 #let s = university.register(aspect-ratio: "16-9")
@@ -49,7 +49,7 @@ sidebar_position: 10
 如果只是你自己使用，你可以直接导入 Touying：
 
 ```typst
-#import "@preview/touying:0.3.3": *
+#import "@preview/touying:0.4.0": *
 ```
 
 如果你希望这个主题作为 Touying 的一部分，放置在 Touying `themes` 目录下，那你应该将上面的导入语句改为
@@ -75,7 +75,7 @@ sidebar_position: 10
 
 ```typst
 // bamboo.typ
-#import "@preview/touying:0.3.3": *
+#import "@preview/touying:0.4.0": *
 
 #let register(
   self: themes.default.register(),
@@ -92,7 +92,7 @@ sidebar_position: 10
 }
 
 // main.typ
-#import "@preview/touying:0.3.3": *
+#import "@preview/touying:0.4.0": *
 #import "bamboo.typ"
 
 #let s = bamboo.register(aspect-ratio: "16-9")
@@ -199,7 +199,7 @@ self.methods.alert = (self: none, it) => text(fill: self.colors.primary, it)
 
 ```typst
 // bamboo.typ
-#import "@preview/touying:0.3.3": *
+#import "@preview/touying:0.4.0": *
 
 #let slide(self: none, title: auto, ..args) = {
   if title != auto {
@@ -261,7 +261,7 @@ self.methods.alert = (self: none, it) => text(fill: self.colors.primary, it)
 
 
 // main.typ
-#import "@preview/touying:0.3.3": *
+#import "@preview/touying:0.4.0": *
 #import "bamboo.typ"
 
 #let s = bamboo.register(aspect-ratio: "16-9", footer: self => self.info.institution)
@@ -299,7 +299,7 @@ self.methods.alert = (self: none, it) => text(fill: self.colors.primary, it)
 
 ```
 // bamboo.typ
-#import "@preview/touying:0.3.3": *
+#import "@preview/touying:0.4.0": *
 
 #let slide(self: none, title: auto, ..args) = {
   if title != auto {
@@ -416,7 +416,7 @@ self.methods.alert = (self: none, it) => text(fill: self.colors.primary, it)
 
 
 // main.typ
-#import "@preview/touying:0.3.3": *
+#import "@preview/touying:0.4.0": *
 #import "bamboo.typ"
 
 #let s = bamboo.register(aspect-ratio: "16-9", footer: self => self.info.institution)

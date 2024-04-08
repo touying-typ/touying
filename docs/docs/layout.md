@@ -129,7 +129,7 @@ Adding a logo to slides is a very common but also a very versatile requirement. 
 For example, suppose we decide to add the GitHub icon to the metropolis theme. We can implement it like this:
 
 ```typst
-#import "@preview/touying:0.3.3": *
+#import "@preview/touying:0.4.0": *
 #import "@preview/octique:0.1.0": *
 
 #let s = themes.metropolis.register(aspect-ratio: "16-9")

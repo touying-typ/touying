@@ -34,7 +34,7 @@ Another [example](https://github.com/OrangeX4/typst-pinit/blob/main/examples/equ
 An example of shared usage with Touying:
 
 ```typst
-#import "@preview/touying:0.3.3": *
+#import "@preview/touying:0.4.0": *
 #import "@preview/pinit:0.1.3": *
 
 #(s.page-args.paper = "presentation-4-3")
