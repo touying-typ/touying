@@ -226,7 +226,7 @@
 
 // appendix by freezing last-slide-number
 #let s = (s.methods.appendix)(self: s)
-#let (slide,) = utils.slides(s)
+#let (slide, empty-slide) = utils.slides(s)
 
 == Appendix
 

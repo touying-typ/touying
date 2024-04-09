@@ -1,5 +1,5 @@
 ---
-sidebar_position: 10
+sidebar_position: 11
 ---
 
 # 创建自己的主题
@@ -193,7 +193,7 @@ self.methods.alert = (self: none, it) => text(fill: self.colors.primary, it)
 
 以及我们发现我们会使用 `utils.call-or-display(self, self.bamboo-footer)` 这样的语法来显示 `self.bamboo-footer`，这是用于应付 `self.bamboo-footer = (self) => {..}` 这种情况，这样我们就能统一 content 函数和 content 的显示。
 
-为了让 header 和 footer 正确显示，并且与正文有足够的间隔，我们还设置了上下 margin 和左右 padding，如 `self.page-args += (margin: (top: 4em, bottom: 1.5em, x: 0em))` 和 `self.padding = (x: 2em, y: 0em)`。左右 margin 为 `0em` 是为了让 header 能占满页面宽度，正文的左右间距就依靠左右 padding `2em` 来实现。
+为了让 header 和 footer 正确显示，并且与正文有足够的间隔，我们需要设置 margin，如 `self.page-args += (margin: (top: 4em, bottom: 1.5em, x: 2em))`。
 
 而我们还需要自定义一个 `slide` 方法，其中接收 `slide(self: none, title: auto, ..args)`，第一个 `self: none` 是一个方法所必须的参数，用于获取最新的 `self`；而第二个 `title` 则是用于更新 `self.bamboo-title`，以便在 header 中显示出来；第三个 `..args` 是用于收集剩余的参数，并传到 `(self.methods.touying-slide)(self: self, ..args)` 里，这也是让 Touying `slide` 功能正常生效所必须的。并且，我们需要在 `register` 函数里使用 `self.methods.slide = slide` 注册这个方法。
 
@@ -246,9 +246,8 @@ self.methods.alert = (self: none, it) => text(fill: self.colors.primary, it)
     paper: "presentation-" + aspect-ratio,
     header: header,
     footer: footer,
-    margin: (top: 4em, bottom: 1.5em, x: 0em),
+    margin: (top: 4em, bottom: 1.5em, x: 2em),
   )
-  self.padding = (x: 2em, y: 0em)
   // register methods
   self.methods.slide = slide
   self.methods.alert = (self: none, it) => text(fill: self.colors.primary, it)
@@ -289,7 +288,7 @@ self.methods.alert = (self: none, it) => text(fill: self.colors.primary, it)
 
 我们在上面的基础 slide 的基础上，进一步加入一些特殊的 slide 函数，例如 `title-slide`，`focus-slide` 以及自定义 `slides` 方法。
 
-对于 `title-slide` 方法，首先，我们调用了 `self = utils.empty-page(self)`，这个函数可以清除 `self.page-args.header` 和 `self.page-args.footer`，以及将 `margin` 和 `padding` 都设为 `0em`，得到一个空白页的效果。然后，我们可以通过 `let info = self.info + args.named()` 获取到 `self.info` 里保存的信息，也可以用函数参数里传入的 `args.named()` 来更新信息，便于后续以 `info.title` 的方式使用。具体的页面内容 `body`，每个 theme 都会有所不同，这里就不再过多赘述。而在最后，我们调用了 `(self.methods.touying-slide)(self: self, repeat: none, body)`，其中的 `repeat: none` 表面这个页面不需要动画效果，而传入 `body` 参数会将 `body` 的内容显示出来。
+对于 `title-slide` 方法，首先，我们调用了 `self = utils.empty-page(self)`，这个函数可以清除 `self.page-args.header` 和 `self.page-args.footer`，以及将 `margin` 设为 `0em`，得到一个空白页的效果。然后，我们可以通过 `let info = self.info + args.named()` 获取到 `self.info` 里保存的信息，也可以用函数参数里传入的 `args.named()` 来更新信息，便于后续以 `info.title` 的方式使用。具体的页面内容 `body`，每个 theme 都会有所不同，这里就不再过多赘述。而在最后，我们调用了 `(self.methods.touying-slide)(self: self, repeat: none, body)`，其中的 `repeat: none` 表面这个页面不需要动画效果，而传入 `body` 参数会将 `body` 的内容显示出来。
 
 对于 `new-section-slide` 方法，也是同理，不过唯一要注意的是我们在 `(self.methods.touying-slide)(self: self, repeat: none, section: section, body)` 的参数里面多传入了一个 `section: section`，这是用来声明新建一个 `section` 的。另一点需要注意的是，我们除了 `self.methods.new-section-slide = new-section-slide`，还注册了 `self.methods.touying-new-section-slide = new-section-slide`，这样 `new-section-slide` 就会在碰到一级标题时自动被调用。
 
@@ -396,9 +395,8 @@ self.methods.alert = (self: none, it) => text(fill: self.colors.primary, it)
     paper: "presentation-" + aspect-ratio,
     header: header,
     footer: footer,
-    margin: (top: 4em, bottom: 1.5em, x: 0em),
+    margin: (top: 4em, bottom: 1.5em, x: 2em),
   )
-  self.padding = (x: 2em, y: 0em)
   // register methods
   self.methods.slide = slide
   self.methods.title-slide = title-slide

@@ -6,9 +6,9 @@ sidebar_position: 5
 
 ## Basic Concepts
 
-To create aesthetically pleasing slides using Typst, it is essential to understand Typst's page model correctly. If you don't care about customizing the page style, you can choose to skip this section. However, it is still recommended to go through this part.
+To create stylish slides using Typst, it's essential to understand Typst's page model correctly. If you're not concerned with customizing page styles, you can choose to skip this section. However, it's still recommended to go through it.
 
-Here, we illustrate Typst's default page model with a specific example.
+Let's illustrate Typst's default page model through a specific example.
 
 ```typst
 #let container = rect.with(height: 100%, width: 100%, inset: 0pt)
@@ -22,105 +22,100 @@ Here, we illustrate Typst's default page model with a specific example.
   footer: container[#innerbox[Footer]],
   footer-descent: 30%,
 )
-#let padding = (x: 2em, y: 2em)
 
 #place(top + right)[Margin→]
 #container[
-  #place[Padding]
-  #pad(..padding)[
-    #container[
-      #innerbox[Content]
-    ]
+  #container[
+    #innerbox[Content]
   ]
 ]
 ```
 
-![image](https://github.com/touying-typ/touying/assets/34951714/6cbb1092-c733-41b6-a15d-822ce970ef13)
+![image](https://github.com/touying-typ/touying/assets/34951714/70d48053-c777-4253-a9ca-ada360b5a987)
 
 We need to distinguish the following concepts:
 
-1. **Model:** Typst has a model similar to the CSS Box Model, divided into Margin, Padding, and Content. However, padding is not a property of `set page(..)` but is obtained manually by adding `#pad(..)`.
-2. **Margin:** Margins, including top, bottom, left, and right, are the core of Typst's page model. Other properties are influenced by margins, especially Header and Footer, which are actually inside the Margin.
-3. **Padding:** Used to add additional space between Margin and Content.
-4. **Header:** The Header is the content at the top of the page, divided into container and innerbox. We can notice that the edge of the header container and padding does not align but has a certain gap. This gap is actually `header-ascent: 30%`, and the percentage is relative to margin-top. Also, we notice that the header innerbox is actually located at the bottom left corner of the header container, meaning the innerbox defaults to `#set align(left + bottom)`.
-5. **Footer:** The Footer is the content at the bottom of the page, divided into container and innerbox. We can notice that the edge of the footer container and padding does not align but has a certain gap. This gap is actually `footer-descent: 30%`, and the percentage is relative to margin-bottom. Also, we notice that the footer innerbox is actually located at the top left corner of the footer container, meaning the innerbox defaults to `#set align(left + top)`.
-6. **Place:** The `place` function can achieve absolute positioning, relative to the parent container, without affecting other elements within the parent container. It can take parameters like `alignment`, `dx`, and `dy`, making it suitable for placing decorative elements such as logos.
+1. **Model:** Typst has a model similar to the CSS Box Model, divided into Margin, Padding, and Content. However, padding is not a property of `set page(..)` but is obtained by manually adding `#pad(..)`.
+2. **Margin:** Margins are the edges of the page, divided into top, bottom, left, and right. They are the core of Typst's page model, and all other properties are influenced by margins, especially Header and Footer. Header and Footer are actually located within the Margin.
+4. **Header:** The Header is the content at the top of the page, divided into container and innerbox. We can observe that the edge of the header container and padding does not align but has some space in between, which is actually `header-ascent: 30%`, where the percentage is relative to the margin-top. Additionally, we notice that the header innerbox is actually located at the bottom left corner of the header container, meaning innerbox defaults to `#set align(left + bottom)`.
+5. **Footer:** The Footer is the content at the bottom of the page, similar to the Header but in the opposite direction.
+6. **Place:** The `place` function enables absolute positioning relative to the parent container without affecting other elements inside the parent container. It allows specifying `alignment`, `dx`, and `dy`, making it suitable for placing decorative elements like logos.
 
-Therefore, to apply Typst to create slides, we only need to set
+Therefore, to apply Typst to create slides, we only need to set:
 
 ```typst
 #set page(
-  margin: (x: 0em, y: 2em),
+  margin: (x: 4em, y: 2em),
   header: align(top)[Header],
   footer: align(bottom)[Footer],
   header-ascent: 0em,
   footer-descent: 0em,
 )
-#let padding = (x: 4em, y: 0em)
 ```
 
-For example, we have
+However, we still need to address how the header occupies the entire page width. Here, we use negative padding to achieve this. For instance:
 
 ```typst
 #let container = rect.with(stroke: (dash: "dashed"), height: 100%, width: 100%, inset: 0pt)
 #let innerbox = rect.with(fill: rgb("#d0d0d0"))
+#let margin = (x: 4em, y: 2em)
+
+// negative padding for header and footer
+#let negative-padding = pad.with(x: -margin.x, y: 0em)
 
 #set text(size: 30pt)
 #set page(
   paper: "presentation-16-9",
-  margin: (x: 0em, y: 2em),
-  header: container[#align(top)[#innerbox(width: 100%)[Header]]],
+  margin: margin,
+  header: negative-padding[#container[#align(top)[#innerbox(width: 100%)[Header]]]],
   header-ascent: 0em,
-  footer: container[#align(bottom)[#innerbox(width: 100%)[Footer]]],
+  footer: negative-padding[#container[#align(bottom)[#innerbox(width: 100%)[Footer]]]],
   footer-descent: 0em,
 )
-#let padding = (x: 4em, y: 0em)
 
-#place(top + right)[↑Margin]
+#place(top + right)[↑Margin→]
 #container[
-  #place[Padding]
-  #pad(..padding)[
-    #container[
-      #innerbox[Content]
-    ]
+  #container[
+    #innerbox[Content]
   ]
 ]
 ```
 
-![image](https://github.com/touying-typ/touying/assets/34951714/6127d231-86f3-4262-b7c6-b199d47ae12b)
+![image](https://github.com/touying-typ/touying/assets/34951714/d74896f4-90e7-4b36-a5a9-9c44307eb192)
 
 ## Page Management
 
-Since using the `set page(..)` command in Typst to modify page parameters creates a new page and cannot modify the current one, Touying chooses to maintain an `s.page-args` member variable and an `s.padding` member variable. Touying applies these parameters only when creating new slides, so users only need to focus on `s.page-args` and `s.padding`.
+Since modifying page parameters using the `set page(..)` command in Typst creates a new page instead of modifying the current one, Touying chooses to maintain a `s.page-args` member variable and a `s.padding` member variable. These parameters are only applied when Touying creates a new slide, so users only need to focus on `s.page-args` and `s.padding`.
 
-For example, the previous example can be transformed into
+For example, the previous example can be modified as follows:
 
 ```typst
 #(s.page-args += (
-  margin: (x: 0em, y: 2em),
+  margin: (x: 4em, y: 2em),
   header: align(top)[Header],
   footer: align(bottom)[Footer],
   header-ascent: 0em,
   footer-descent: 0em,
 ))
-#(s.padding += (x: 4em, y: 0em))
 ```
 
-Similarly, if you are not satisfied with the header or footer style of a theme, you can use
+Touying automatically detects the value of `margin.x` and adds negative padding to the header if `self.full-header == true`.
+
+Similarly, if you're unsatisfied with the header or footer style of a particular theme, you can change it using:
 
 ```typst
 #(s.page-args.footer = [Custom Footer])
 ```
 
-to replace it. However, please note that if you replace the page parameters in this way, you need to place it before `#let (slide, empty-slide) = utils.slides(s)`, or you need to call `#let (slide, empty-slide) = utils.slides(s)` again.
+However, it's essential to note that if you change page parameters in this way, you need to place it before `#let (slide, empty-slide) = utils.slides(s)`, or you'll have to call `#let (slide, empty-slide) = utils.slides(s)` again.
 
 :::warning[Warning]
 
-Therefore, you should not use the `set page(..)` command on your own; instead, you should modify the `s.page-args` member variable internally.
+Therefore, you should not use the `set page(..)` command directly but instead modify the `s.page-args` member variable internally.
 
 :::
 
-In this way, we can also query the current page parameters in real-time through `s.page-args`. This is useful for some functions that need to get margin or the current page's background color, such as `transparent-cover`. This is partly equivalent to the context get rule, and it is actually more convenient to use.
+This approach also allows us to query the current page parameters in real-time using `s.page-args`, which is useful for functions that need to obtain margins or the current page's background color, such as `transparent-cover`. This is partially equivalent to context get rule and is actually more convenient to use.
 
 ## Application: Adding a Logo
 
@@ -167,7 +162,7 @@ If you need to divide the page into two or three columns, you can use the `compo
 
 ![image](https://github.com/touying-typ/touying/assets/34951714/a39f88a2-f1ba-4420-8f78-6a0fc644704e)
 
-If you need to change the way columns are composed, you can modify the `composer` parameter of `slide`. The default parameter is `utils.with.side-by-side(columns: auto, gutter: 1em)`. If we want the left column to occupy the remaining width, we can use
+If you need to change the way columns are composed, you can modify the `composer` parameter of `slide`. The default parameter is `utils.side-by-side.with(columns: auto, gutter: 1em)`. If we want the left column to occupy the remaining width, we can use
 
 ```typst
 #slide(composer: (1fr, auto))[

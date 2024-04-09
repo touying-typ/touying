@@ -55,6 +55,17 @@ Hello, Touying!
 实际上，我们可以通过 `slides` 函数的 `slide-level` 参数来控制这里的行为。`slide-level` 代表着嵌套结构的复杂度，从 0 开始计算。例如 `#show: slides.with(slide-level: 2)` 等价于 `section`，`subsection` 和 `title` 结构；而 `#show: slides.with(slide-level: 1)` 等价于 `section` 和 `title` 结构。
 
 
+## 编号
+
+为了给节与小节加入编号，我们只需要使用
+
+```typst
+#let s = (s.methods.numbering)(self: s, section: "1.", "1.1")
+```
+
+即可设置默认编号为 `1.1`，且 section 对应的编号为 `1.`。
+
+
 ## 目录
 
 在 Touying 中显示目录很简单：

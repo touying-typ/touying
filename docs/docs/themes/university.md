@@ -27,6 +27,8 @@ You can initialize the University theme using the following code:
 #let (init, slides, touying-outline, alert) = utils.methods(s)
 #show: init
 
+#show strong: alert
+
 #let (slide, empty-slide, title-slide, focus-slide, matrix-slide) = utils.slides(s)
 #show: slides
 ```
@@ -149,6 +151,8 @@ And the function of automatically adding `new-section-slide` can be turned off b
 #let (init, slides, touying-outline, alert) = utils.methods(s)
 #show: init
 
+#show strong: alert
+
 #let (slide, empty-slide, title-slide, focus-slide, matrix-slide) = utils.slides(s)
 #show: slides
 
@@ -183,6 +187,8 @@ Hello, Typst!
 #let (init, slides, touying-outline, alert) = utils.methods(s)
 #show: init
 
+#show strong: alert
+
 #let (slide, empty-slide, title-slide, focus-slide, matrix-slide) = utils.slides(s)
 #show: slides.with(title-slide: false)
 
@@ -201,7 +207,7 @@ Hello, Typst!
 ]
 
 #focus-slide[
-  *Another variant with primary color in background...*
+  Another variant with primary color in background...
 ]
 
 #matrix-slide[

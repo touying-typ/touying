@@ -27,6 +27,8 @@ sidebar_position: 4
 #let (init, slides, touying-outline, alert) = utils.methods(s)
 #show: init
 
+#show strong: alert
+
 #let (slide, empty-slide, title-slide, focus-slide, matrix-slide) = utils.slides(s)
 #show: slides
 ```
@@ -152,6 +154,8 @@ University 主题提供了一系列自定义 slide 函数：
 #let (init, slides, touying-outline, alert) = utils.methods(s)
 #show: init
 
+#show strong: alert
+
 #let (slide, empty-slide, title-slide, focus-slide, matrix-slide) = utils.slides(s)
 #show: slides
 
@@ -186,6 +190,8 @@ Hello, Typst!
 #let (init, slides, touying-outline, alert) = utils.methods(s)
 #show: init
 
+#show strong: alert
+
 #let (slide, empty-slide, title-slide, focus-slide, matrix-slide) = utils.slides(s)
 #show: slides.with(title-slide: false)
 
@@ -204,7 +210,7 @@ Hello, Typst!
 ]
 
 #focus-slide[
-  *Another variant with primary color in background...*
+  Another variant with primary color in background...
 ]
 
 #matrix-slide[

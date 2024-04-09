@@ -167,7 +167,7 @@ sidebar_position: 5
 
 ![image](https://github.com/touying-typ/touying/assets/34951714/a39f88a2-f1ba-4420-8f78-6a0fc644704e)
 
-如果你需要更改分栏的方式，可以修改 `slide` 的 `composer` 参数，其中默认的参数是 `utils.with.side-by-side(columns: auto, gutter: 1em)`，如果我们要让左边那一栏占据剩余宽度，可以使用
+如果你需要更改分栏的方式，可以修改 `slide` 的 `composer` 参数，其中默认的参数是 `utils.side-by-side.with(columns: auto, gutter: 1em)`，如果我们要让左边那一栏占据剩余宽度，可以使用
 
 ```typst
 #slide(composer: utils.side-by-side.with(columns: (1fr, auto), gutter: 1em))[

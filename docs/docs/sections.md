@@ -54,6 +54,16 @@ Hello, Touying!
 
 In fact, we can control this behavior through the `slide-level` parameter of the `slides` function. `slide-level` represents the complexity of the nested structure, starting from 0. For example, `#show: slides.with(slide-level: 2)` is equivalent to the section, subsection, and title structure; while `#show: slides.with(slide-level: 1)` is equivalent to the section and title structure.
 
+## Numbering
+
+To add numbering to sections and subsections, we simply use:
+
+```typst
+#let s = (s.methods.numbering)(self: s, section: "1.", "1.1")
+```
+
+This sets the default numbering to `1.1`, with the section corresponding to `1.`.
+
 ## Table of Contents
 
 Displaying a table of contents in Touying is straightforward:

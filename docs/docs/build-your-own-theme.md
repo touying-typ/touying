@@ -1,5 +1,5 @@
 ---
-sidebar_position: 10
+sidebar_position: 11
 ---
 
 # Creating Your Own Theme
@@ -184,7 +184,7 @@ Another point to note is the `states` module, which contains many counters and s
 
 We observe the usage of `utils.call-or-display(self, self.bamboo-footer)` to display `self.bamboo-footer`. This is used to handle situations like `self.bamboo-footer = (self) => {..}`, ensuring a unified approach to displaying content functions and content.
 
-To ensure proper display of the header and footer and sufficient spacing from the main content, we also set top and bottom margins and left and right padding, such as `self.page-args += (margin: (top: 4em, bottom: 1.5em, x: 0em))` and `self.padding = (x: 2em, y: 0em)`. The left and right margin is `0em` to allow the header to occupy the full page width. The left and right spacing of the main content is achieved through left and right padding of `2em`.
+To ensure proper display of the header and footer and sufficient spacing from the main content, we also set margins, such as `self.page-args += (margin: (top: 4em, bottom: 1.5em, x: 2em))`.
 
 We also need to customize a `slide` method that accepts `slide(self: none, title: auto, ..args)`. The first `self: none` is a required method parameter for getting the latest `self`. The second `title` is used to update `self.bamboo-title` for displaying in the header. The third `..args` collects the remaining parameters and passes them to `(self.methods.touying-slide)(self: self, ..args)`, which is necessary for the Touying `slide` functionality to work properly. Additionally, we need to register this method in the `register` function with `self.methods.slide = slide`.
 
@@ -237,9 +237,8 @@ We also need to customize a `slide` method that accepts `slide(self: none, title
     paper: "presentation-" + aspect-ratio,
     header: header,
     footer: footer,
-    margin: (top: 4em, bottom: 1.5em, x: 0em),
+    margin: (top: 4em, bottom: 1.5em, x: 2em),
   )
-  self.padding = (x: 2em, y: 0em)
   // register methods
   self.methods.slide = slide
   self.methods.alert = (self: none, it) => text(fill: self.colors.primary, it)
@@ -279,7 +278,7 @@ We also need to customize a `slide` method that accepts `slide(self: none, title
 
 Building upon the basic slide, we further add some special slide functions such as `title-slide`, `focus-slide`, and a custom `slides` method.
 
-For the `title-slide` method, first, we call `self = utils.empty-page(self)`. This function clears `self.page-args.header`, `self.page-args.footer`, and sets `margin` and `padding` to `0em`, creating a blank page effect. Then, we use `let info = self.info + args.named()` to get information stored in `self.info` and update it with the passed `args.named()` for later use as `info.title`. The specific page content `body` will vary for each theme, so we won't go into details here. Finally, we call `(self.methods.touying-slide)(self: self, repeat: none, body
+For the `title-slide` method, first, we call `self = utils.empty-page(self)`. This function clears `self.page-args.header`, `self.page-args.footer`, and sets `margin` to `0em`, creating a blank page effect. Then, we use `let info = self.info + args.named()` to get information stored in `self.info` and update it with the passed `args.named()` for later use as `info.title`. The specific page content `body` will vary for each theme, so we won't go into details here. Finally, we call `(self.methods.touying-slide)(self: self, repeat: none, body
 
 )`, where `repeat: none` indicates that this page does not require animation effects, and passing the `body` parameter displays its content.
 
@@ -388,9 +387,8 @@ Finally, we update the `slides(self: none, title-slide: true, slide-level: 1, ..
     paper: "presentation-" + aspect-ratio,
     header: header,
     footer: footer,
-    margin: (top: 4em, bottom: 1.5em, x: 0em),
+    margin: (top: 4em, bottom: 1.5em, x: 2em),
   )
-  self.padding = (x: 2em, y: 0em)
   // register methods
   self.methods.slide = slide
   self.methods.title-slide = title-slide

@@ -167,7 +167,7 @@ If you need to divide the page into two or three columns, you can use the `compo
 
 ![image](https://github.com/touying-typ/touying/assets/34951714/a39f88a2-f1ba-4420-8f78-6a0fc644704e)
 
-If you need to change the way columns are composed, you can modify the `composer` parameter of `slide`. The default parameter is `utils.with.side-by-side(columns: auto, gutter: 1em)`. If we want the left column to occupy the remaining width, we can use
+If you need to change the way columns are composed, you can modify the `composer` parameter of `slide`. The default parameter is `utils.side-by-side.with(columns: auto, gutter: 1em)`. If we want the left column to occupy the remaining width, we can use
 
 ```typst
 #slide(composer: utils.side-by-side.with(columns: (1fr, auto), gutter: 1em))[

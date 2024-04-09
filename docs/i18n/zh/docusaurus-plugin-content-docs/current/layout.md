@@ -22,72 +22,66 @@ sidebar_position: 5
   footer: container[#innerbox[Footer]],
   footer-descent: 30%,
 )
-#let padding = (x: 2em, y: 2em)
 
 #place(top + right)[Margin→]
 #container[
-  #place[Padding]
-  #pad(..padding)[
-    #container[
-      #innerbox[Content]
-    ]
+  #container[
+    #innerbox[Content]
   ]
 ]
 ```
 
-![image](https://github.com/touying-typ/touying/assets/34951714/6cbb1092-c733-41b6-a15d-822ce970ef13)
+![image](https://github.com/touying-typ/touying/assets/34951714/70d48053-c777-4253-a9ca-ada360b5a987)
 
 我们需要区分以下概念：
 
 1. **Model:** Typst 拥有与 CSS Box Model 类似的模型，分为 Margin、Padding 和 Content，但其中 padding 并非 `set page(..)` 的属性，而是我们手动添加 `#pad(..)` 得到的。
-2. **Margin:** 页边距，分为上下左右四个方向，是 Typst 页面模型的核心，其他属性都会受到页边距的影响，尤其是 Header 和 Footer，其实际上是位于 Margin 内部。
-3. **Padding:** 用于在 Margin 和 Content 之间添加额外的间隙。
+2. **Margin:** 页边距，分为上下左右四个方向，是 Typst 页面模型的核心，其他属性都会受到页边距的影响，尤其是 Header 和 Footer。Header 和 Footer 实际上是位于 Margin 内部。
 4. **Header:** Header 是页面顶部的内容，又分为 container 和 innerbox。我们可以注意到 header container 和 padding 的边缘并不贴合，而是也有一定的空隙，这个空隙实际上就是 `header-ascent: 30%`，而这里的百分比是相对于 margin-top 而言的。并且，我们注意到 header innerbox 实际上位于 header container 左下角，也即 innerbox 实际上默认有属性 `#set align(left + bottom)`。
-5. **Footer:** Footer 是页面底部的内容，又分为 container 和 innerbox。我们可以注意到 footer container 和 padding 的边缘并不贴合，而是也有一定的空隙，这个空隙实际上就是 `footer-descent: 30%`，而这里的百分比是相对于 margin-bottom 而言的。并且，我们注意到 footer innerbox 实际上位于 footer container 左上角，也即 innerbox 实际上默认有属性 `#set align(left + top)`。
+5. **Footer:** Footer 是页面底部的内容，与 Header 类似，只不过方向相反。
 6. **Place:** `place` 函数可以实现绝对定位，在不影响父容器内其他元素的情况下，相对于父容器来定位，并且可以传入 `alignment`、`dx` 和 `dy`，很适合用来放置一些修饰元素，例如 Logo 之类的图片。
 
 因此，要将 Typst 应用到制作 slides 上，我们只需要设置
 
 ```typst
 #set page(
-  margin: (x: 0em, y: 2em),
+  margin: (x: 4em, y: 2em),
   header: align(top)[Header],
   footer: align(bottom)[Footer],
   header-ascent: 0em,
   footer-descent: 0em,
 )
-#let padding = (x: 4em, y: 0em)
 ```
 
-即可。例如我们有
+即可。但是我们还需要解决 header 如何占据整个页面宽度的问题，在这里我们使用 negative padding 实现，例如我们有
 
 ```typst
 #let container = rect.with(stroke: (dash: "dashed"), height: 100%, width: 100%, inset: 0pt)
 #let innerbox = rect.with(fill: rgb("#d0d0d0"))
+#let margin = (x: 4em, y: 2em)
+
+// negative padding for header and footer
+#let negative-padding = pad.with(x: -margin.x, y: 0em)
 
 #set text(size: 30pt)
 #set page(
   paper: "presentation-16-9",
-  margin: (x: 0em, y: 2em),
-  header: container[#align(top)[#innerbox(width: 100%)[Header]]],
+  margin: margin,
+  header: negative-padding[#container[#align(top)[#innerbox(width: 100%)[Header]]]],
   header-ascent: 0em,
-  footer: container[#align(bottom)[#innerbox(width: 100%)[Footer]]],
+  footer: negative-padding[#container[#align(bottom)[#innerbox(width: 100%)[Footer]]]],
   footer-descent: 0em,
 )
-#let padding = (x: 4em, y: 0em)
 
-#place(top + right)[↑Margin]
+#place(top + right)[↑Margin→]
 #container[
-  #place[Padding]
-  #pad(..padding)[
-    #container[
-      #innerbox[Content]
-    ]
+  #container[
+    #innerbox[Content]
   ]
 ]
 ```
 
-![image](https://github.com/touying-typ/touying/assets/34951714/6127d231-86f3-4262-b7c6-b199d47ae12b)
+![image](https://github.com/touying-typ/touying/assets/34951714/d74896f4-90e7-4b36-a5a9-9c44307eb192)
 
 ## 页面管理
 
@@ -97,14 +91,15 @@ sidebar_position: 5
 
 ```typst
 #(s.page-args += (
-  margin: (x: 0em, y: 2em),
+  margin: (x: 4em, y: 2em),
   header: align(top)[Header],
   footer: align(bottom)[Footer],
   header-ascent: 0em,
   footer-descent: 0em,
 ))
-#(s.padding += (x: 4em, y: 0em))
 ```
+
+Touying 会自动检测 `margin.x` 的值，并且判断如果 `self.full-header == true`，就会自动为 header 加入负填充。
 
 同理，如果你对某个主题的 header 或 footer 样式不满意，你也可以通过
 
@@ -167,7 +162,7 @@ sidebar_position: 5
 
 ![image](https://github.com/touying-typ/touying/assets/34951714/a39f88a2-f1ba-4420-8f78-6a0fc644704e)
 
-如果你需要更改分栏的方式，可以修改 `slide` 的 `composer` 参数，其中默认的参数是 `utils.with.side-by-side(columns: auto, gutter: 1em)`，如果我们要让左边那一栏占据剩余宽度，可以使用
+如果你需要更改分栏的方式，可以修改 `slide` 的 `composer` 参数，其中默认的参数是 `utils.side-by-side.with(columns: auto, gutter: 1em)`，如果我们要让左边那一栏占据剩余宽度，可以使用
 
 ```typst
 #slide(composer: (1fr, auto))[

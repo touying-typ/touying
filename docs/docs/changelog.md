@@ -4,6 +4,25 @@ sidebar_position: 14
 
 # Changelog
 
+## v0.4.0
+
+### Features
+
+- **feat:** support `#footnote[]` for all themes.
+- **feat:** access subslide and repeat in footer and header by `self => self.subslide`.
+- **feat:** support numbered theorem environments by [ctheorems](https://typst.app/universe/package/ctheorems).
+- **feat:** support numbering for sections and subsections.
+
+### Fixes
+
+- **fix:** make nested includes work correctly. 
+- **fix:** disable multi-page slides from creating the same section multiple times.
+
+## Breaking changes
+
+- **refactor:** remove `self.padding` and add `self.full-header` `self.full-footer` config.
+
+
 ## v0.3.3
 
 - **template:** move template to `touying-aqua` package, make Touying searchable in [Typst Universe Packages](https://typst.app/universe/search?kind=packages)
