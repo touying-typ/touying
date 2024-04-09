@@ -422,6 +422,7 @@
       states._sections-step(repetitions)
     }
   }
+  self.subslide = 1
   // for single page slide, get the repetitions
   if repeat == auto {
     let (_, repetitions) = _parse-content(
@@ -433,7 +434,6 @@
     repeat = repetitions
   }
   self.repeat = repeat
-  self.subslide = 1
   let (header, footer) = _get-header-footer(self)
   // page header and footer
   // for speed up, do not parse the content if repeat is none
