@@ -81,6 +81,10 @@
   (self.methods.touying-slide)(self: self, repeat: none, content)
 }
 
+#let outline-slide(self: none, ..args) = {
+  (self.methods.slide)(self: self, heading(level: 2, self.outline-title) + parbreak() + (self.methods.touying-outline)(self: self, cover: false))
+}
+
 #let focus-slide(self: none, body) = {
   self = utils.empty-page(self)
   self.page-args += (
@@ -218,7 +222,7 @@
     (self.methods.title-slide)(self: self)
   }
   if outline-slide {
-    (self.methods.slide)(self: self, heading(level: 2, self.outline-title) + parbreak() + (self.methods.touying-outline)(self: self, cover: false))
+    (self.methods.outline-slide)(self: self)
   }
   (self.methods.touying-slides)(self: self, slide-level: slide-level, ..args)
 }
@@ -288,6 +292,7 @@
   // register methods
   self.methods.slide = slide
   self.methods.title-slide = title-slide
+  self.methods.outline-slide = outline-slide
   self.methods.focus-slide = focus-slide
   self.methods.new-section-slide = new-section-slide
   self.methods.touying-new-section-slide = new-section-slide

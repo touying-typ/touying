@@ -19,7 +19,7 @@
 
 #show strong: alert
 
-#let (slide, empty-slide, title-slide, new-section-slide, focus-slide) = utils.slides(s)
+#let (slide, empty-slide, title-slide, outline-slide, new-section-slide, focus-slide) = utils.slides(s)
 #show: slides
 
 = Section A
