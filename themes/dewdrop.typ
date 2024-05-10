@@ -237,6 +237,7 @@
   footer-right: states.slide-counter.display() + " / " + states.last-slide-number,
   primary: rgb("#0c4842"),
   alpha: 70%,
+  ..args,
 ) = {
   assert(navigation in ("sidebar", "mini-slides", none), message: "navigation must be one of sidebar, mini-slides, none")
   // color theme

@@ -49,6 +49,7 @@
   background: rgb("#ffffff"),
   foreground: rgb("#000000"),
   primary: aqua.darken(50%),
+  ..args,
 ) = {
   let deco-format(it) = text(size: .6em, fill: gray, it)
   // color theme

@@ -146,6 +146,7 @@
   aspect-ratio: "16-9",
   footer: states.slide-counter.display(),
   lang: "en",
+  ..args,
 ) = {
   assert(lang in ("zh", "en"), message: "lang must be 'zh' or 'en'")
 

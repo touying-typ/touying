@@ -184,6 +184,7 @@
     states.slide-counter.display() + " / " + states.last-slide-number
     h(1fr)
   },
+  ..args,
 ) = {
   // color theme
   self = (self.methods.colors)(

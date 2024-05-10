@@ -118,6 +118,7 @@
   footer: [],
   footer-right: states.slide-counter.display() + " / " + states.last-slide-number,
   footer-progress: true,
+  ..args,
 ) = {
   // color theme
   self = (self.methods.colors)(
