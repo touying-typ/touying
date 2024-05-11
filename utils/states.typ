@@ -88,6 +88,16 @@
   sections.last().title
 })
 
+#let current-subsection-title = locate(loc => {
+  let sections = sections-state.at(loc)
+  let subsections = sections.last().children.filter(v => v.kind == "subsection")
+  if subsections.len() > 0 {
+    subsections.last().title
+  } else {
+    none
+  }
+})
+
 #let _typst-numbering = numbering
 #let current-section-number(numbering: "01", ignore-zero: true) = locate(loc => {
   let sections = sections-state.at(loc)
