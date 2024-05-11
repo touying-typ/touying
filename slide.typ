@@ -384,6 +384,15 @@
   }
   let bodies = bodies.pos()
   let page-preamble(curr-subslide) = locate(loc => {
+    [
+      #metadata((t: "NewSlide")) <pdfpc>
+      #metadata((t: "Idx", v: loc.page() - 1)) <pdfpc>
+      #metadata((t: "Overlay", v: curr-subslide - 1)) <pdfpc>
+      #metadata((t: "LogicalSlide", v: states.slide-counter.at(loc).first())) <pdfpc>
+    ]
+    if self.reset-footnote {
+      counter(footnote).update(0)
+    }
     if loc.page() == self.first-slide-number {
       // preamble
       utils.call-or-display(self, self.preamble)
@@ -392,12 +401,7 @@
         pdfpc.pdfpc-file(loc)
       }
     }
-    [
-      #metadata((t: "NewSlide")) <pdfpc>
-      #metadata((t: "Idx", v: loc.page() - 1)) <pdfpc>
-      #metadata((t: "Overlay", v: curr-subslide - 1)) <pdfpc>
-      #metadata((t: "LogicalSlide", v: states.slide-counter.at(loc).first())) <pdfpc>
-    ]
+    utils.call-or-display(self, self.page-preamble)
   })
   // update states
   let _update-states(repetitions) = {
@@ -641,7 +645,11 @@
   // default is 1
   first-slide-number: 1,
   // global preamble
-  preamble: [],
+  preamble: none,
+  // page preamble
+  page-preamble: none,
+  // reset footnote
+  reset-footnote: true,
   // page args
   page-args: (
     paper: "presentation-16-9",
