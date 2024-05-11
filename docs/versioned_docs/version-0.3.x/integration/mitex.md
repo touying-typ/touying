@@ -9,7 +9,7 @@ During the process of creating slides, we often already have a LaTeX math equati
 Example:
 
 ```typst
-#import "@preview/mitex:0.2.1": *
+#import "@preview/mitex:0.2.3": *
 
 Write inline equations like #mi("x") or #mi[y].
 

@@ -29,6 +29,27 @@
     },
   ))
 }
+// touying mitex mark
+#let touying-mitex(block: true, numbering: none, supplement: auto, mitex, body) = {
+  metadata((
+    kind: "touying-mitex",
+    block: block,
+    numbering: numbering,
+    supplement: supplement,
+    mitex: mitex,
+    body: {
+      if type(body) == function {
+        body
+      } else if type(body) == str {
+        body
+      } else if type(body) == content and body.has("text") {
+        body.text
+      } else {
+        panic("Unsupported type: " + str(type(body)))
+      }
+    },
+  ))
+}
 // touying reducer mark
 #let touying-reducer(reduce: arr => arr.sum(), cover: arr => none, ..args) = {
   metadata((
@@ -52,8 +73,6 @@
   let it = eqt.body
   // if it is a function, then call it with self
   if type(it) == function {
-    // subslide index
-    self.subslide = index
     it = it(self)
   }
   assert(type(it) == str, message: "Unsupported type: " + str(type(it)))
@@ -107,6 +126,70 @@
           cover(args.pos().first())
         }
       })),
+    )
+  )
+  max-repetitions = calc.max(max-repetitions, repetitions)
+  return (result-arr, max-repetitions)
+}
+
+// parse touying mitex, and get the repetitions
+#let _parse-touying-mitex(self: none, need-cover: true, base: 1, index: 1, eqt) = {
+  let result-arr = ()
+  // repetitions
+  let repetitions = base
+  let max-repetitions = repetitions
+  // get eqt body
+  let it = eqt.body
+  // if it is a function, then call it with self
+  if type(it) == function {
+    it = it(self)
+  }
+  assert(type(it) == str, message: "Unsupported type: " + str(type(it)))
+  // parse the content
+  let result = ()
+  let cover-arr = ()
+  let children = it.split(regex("\\\\meanwhile")).intersperse("touying-meanwhile")
+    .map(s => s.split(regex("\\\\pause")).intersperse("touying-pause")).flatten()
+    .map(s => s.split(regex("(\\\\\\\\\s)|(\\\\\\\\\n)")).intersperse("\\\\\n")).flatten()
+    .map(s => s.split(regex("&")).intersperse("&")).flatten()
+  for child in children {
+    if child == "touying-pause" {
+      repetitions += 1
+    } else if child == "touying-meanwhile" {
+      // clear the cover-arr when encounter #meanwhile
+      if cover-arr.len() != 0 {
+        result.push("\\phantom{" + cover-arr.sum() + "}")
+        cover-arr = ()
+      }
+      // then reset the repetitions
+      max-repetitions = calc.max(max-repetitions, repetitions)
+      repetitions = 1
+    } else if child == "\\\n" or child == "&" {
+      // clear the cover-arr when encounter linebreak or parbreak
+      if cover-arr.len() != 0 {
+        result.push("\\phantom{" + cover-arr.sum() + "}")
+        cover-arr = ()
+      }
+      result.push(child)
+    } else {
+      if repetitions <= index or not need-cover {
+        result.push(child)
+      } else {
+        cover-arr.push(child)
+      }
+    }
+  }
+  // clear the cover-arr when end
+  if cover-arr.len() != 0 {
+    result.push("\\phantom{" + cover-arr.sum() + "}")
+    cover-arr = ()
+  }
+  result-arr.push(
+    (eqt.mitex)(
+      block: eqt.block,
+      numbering: eqt.numbering,
+      supplement: eqt.supplement,
+      result.sum(default: ""),
     )
   )
   max-repetitions = calc.max(max-repetitions, repetitions)
@@ -209,6 +292,18 @@
         } else if kind == "touying-equation" {
           // handle touying-equation
           let (conts, nextrepetitions) = _parse-touying-equation(
+            self: self, need-cover: repetitions <= index, base: repetitions, index: index, child.value
+          )
+          let cont = conts.first()
+          if repetitions <= index or not need-cover {
+            result.push(cont)
+          } else {
+            cover-arr.push(cont)
+          }
+          repetitions = nextrepetitions
+        } else if kind == "touying-mitex" {
+          // handle touying-mitex
+          let (conts, nextrepetitions) = _parse-touying-mitex(
             self: self, need-cover: repetitions <= index, base: repetitions, index: index, child.value
           )
           let cont = conts.first()

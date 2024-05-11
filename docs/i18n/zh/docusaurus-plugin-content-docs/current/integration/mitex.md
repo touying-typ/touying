@@ -9,7 +9,7 @@ sidebar_position: 2
 示例：
 
 ```typst
-#import "@preview/mitex:0.2.1": *
+#import "@preview/mitex:0.2.3": *
 
 Write inline equations like #mi("x") or #mi[y].
 
@@ -24,3 +24,12 @@ Also block equations (this case is from #text(blue.lighten(20%), link("https://k
 ```
 
 ![image](https://github.com/mitex-rs/mitex/assets/34951714/c425b2ae-b50b-46a8-a451-4d9e8e70626b)
+
+Touying 也提供了一个 `touying-mitex` 函数，用法如
+
+```typst
+#touying-mitex(mitex, `
+  f(x) &= \pause x^2 + 2x + 1  \\
+      &= \pause (x + 1)^2  \\
+`)
+```
