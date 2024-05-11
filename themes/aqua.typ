@@ -123,6 +123,7 @@
   }
   (self.methods.touying-slide)(
     self: self,
+    title: title,
     setting: body => {
       show heading.where(level:1): body => text(fill: self.colors.primary-light)[#body#v(3%)]
       body

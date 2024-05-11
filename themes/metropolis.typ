@@ -33,6 +33,7 @@
   (self.methods.touying-slide)(
     ..args.named(),
     self: self,
+    title: title,
     setting: body => {
       show: _saved-align.with(align)
       set text(fill: self.colors.primary-dark)
