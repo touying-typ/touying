@@ -65,18 +65,19 @@
   callback(sections-state.final(loc))
 })
 
-#let touying-outline(self: none, enum-args: (:), padding: 0pt) = touying-final-sections(sections => {
+#let touying-outline(self: none, func: enum, enum-args: (:), list-args: (:), padding: 0pt) = touying-final-sections(sections => {
   let enum-args = (full: true) + enum-args
   if self != none and self.numbering != none {
     enum-args = (numbering: self.numbering) + enum-args
   }
-  pad(padding, enum(
-    ..enum-args,
+  let args = if func == enum { enum-args } else { list-args }
+  pad(padding, func(
+    ..args,
     ..sections.filter(section => section.loc != none)
       .map(section => [#link(section.loc, section.title)<touying-link>] + if section.children.filter(it => it.kind != "slide").len() > 0 {
         let subsections = section.children.filter(it => it.kind != "slide")
-        enum(
-          ..enum-args,
+        func(
+          ..args,
           ..subsections.map(subsection => [#link(subsection.loc, subsection.title)<touying-link>])
         )
       })
