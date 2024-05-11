@@ -1,6 +1,6 @@
 #import "../lib.typ": *
 #import "@preview/cetz:0.2.2"
-#import "@preview/fletcher:0.4.3" as fletcher: node, edge
+#import "@preview/fletcher:0.4.4" as fletcher: node, edge
 #import "@preview/ctheorems:1.1.2": *
 
 // cetz and fletcher bindings for touying
@@ -70,17 +70,15 @@
 
 == Simple Animation
 
-#slide[
-  We can use `#pause` to #pause display something later.
+We can use `#pause` to #pause display something later.
 
-  #pause
-  
-  Just like this.
+#pause
 
-  #meanwhile
-  
-  Meanwhile, #pause we can also use `#meanwhile` to #pause display other content synchronously.
-]
+Just like this.
+
+#meanwhile
+
+Meanwhile, #pause we can also use `#meanwhile` to #pause display other content synchronously.
 
 
 == Complex Animation
@@ -100,68 +98,62 @@
 
 == Math Equation Animation
 
-#slide[
-  Touying equation with `pause`:
+Touying equation with `pause`:
 
-  #touying-equation(`
-    f(x) &= pause x^2 + 2x + 1  \
-         &= pause (x + 1)^2  \
-  `)
+#touying-equation(`
+  f(x) &= pause x^2 + 2x + 1  \
+        &= pause (x + 1)^2  \
+`)
 
-  #meanwhile
+#meanwhile
 
-  Here, #pause we have the expression of $f(x)$.
-  
-  #pause
+Here, #pause we have the expression of $f(x)$.
 
-  By factorizing, we can obtain this result.
-]
+#pause
+
+By factorizing, we can obtain this result.
 
 
 == CeTZ Animation
 
-#slide[
-  CeTZ Animation in Touying:
+CeTZ Animation in Touying:
 
-  #cetz-canvas({
-    import cetz.draw: *
-    
-    rect((0,0), (5,5))
+#cetz-canvas({
+  import cetz.draw: *
+  
+  rect((0,0), (5,5))
 
-    (pause,)
+  (pause,)
 
-    rect((0,0), (1,1))
-    rect((1,1), (2,2))
-    rect((2,2), (3,3))
+  rect((0,0), (1,1))
+  rect((1,1), (2,2))
+  rect((2,2), (3,3))
 
-    (pause,)
+  (pause,)
 
-    line((0,0), (2.5, 2.5), name: "line")
-  })
-]
+  line((0,0), (2.5, 2.5), name: "line")
+})
 
 
 == Fletcher Animation
 
-#slide[
-  Fletcher Animation in Touying:
+Fletcher Animation in Touying:
 
-  #fletcher-diagram(
-    node-stroke: .1em,
-    node-fill: gradient.radial(blue.lighten(80%), blue, center: (30%, 20%), radius: 80%),
-    spacing: 4em,
-    edge((-1,0), "r", "-|>", `open(path)`, label-pos: 0, label-side: center),
-    node((0,0), `reading`, radius: 2em),
-    edge((0,0), (0,0), `read()`, "--|>", bend: 130deg),
-    pause,
-    edge(`read()`, "-|>"),
-    node((1,0), `eof`, radius: 2em),
-    pause,
-    edge(`close()`, "-|>"),
-    node((2,0), `closed`, radius: 2em, extrude: (-2.5, 0)),
-    edge((0,0), (2,0), `close()`, "-|>", bend: -40deg),
-  )
-]
+#fletcher-diagram(
+  node-stroke: .1em,
+  node-fill: gradient.radial(blue.lighten(80%), blue, center: (30%, 20%), radius: 80%),
+  spacing: 4em,
+  edge((-1,0), "r", "-|>", `open(path)`, label-pos: 0, label-side: center),
+  node((0,0), `reading`, radius: 2em),
+  edge((0,0), (0,0), `read()`, "--|>", bend: 130deg),
+  pause,
+  edge(`read()`, "-|>"),
+  node((1,0), `eof`, radius: 2em),
+  pause,
+  edge(`close()`, "-|>"),
+  node((2,0), `closed`, radius: 2em, extrude: (-2.5, 0)),
+  edge((0,0), (2,0), `close()`, "-|>", bend: -40deg),
+)
 
 
 = Theroems
@@ -210,7 +202,7 @@
 
 == Side-by-side
 
-#slide[
+#slide(composer: (1fr, 1fr))[
   First column.
 ][
   Second column.
@@ -219,9 +211,7 @@
 
 == Multiple Pages
 
-#slide[
-  #lorem(200)
-]
+#lorem(200)
 
 
 // appendix by freezing last-slide-number
@@ -230,6 +220,4 @@
 
 == Appendix
 
-#slide[
-  Please pay attention to the current slide number.
-]
+Please pay attention to the current slide number.

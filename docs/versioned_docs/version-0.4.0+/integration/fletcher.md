@@ -11,7 +11,7 @@ An example:
 ```typst
 #import "@preview/touying:0.4.0": *
 #import "@preview/cetz:0.2.2"
-#import "@preview/fletcher:0.4.3" as fletcher: node, edge
+#import "@preview/fletcher:0.4.4" as fletcher: node, edge
 
 // cetz and fletcher bindings for touying
 #let cetz-canvas = touying-reducer.with(reduce: cetz.canvas, cover: cetz.draw.hide.with(bounds: true))

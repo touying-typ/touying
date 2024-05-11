@@ -2,7 +2,7 @@
 
 [Touying](https://github.com/touying-typ/touying) (投影 in chinese, /tóuyǐng/, meaning projection) is a powerful and efficient package for creating presentation slides in Typst. Partial code is inherited from [Polylux](https://github.com/andreasKroepelin/polylux). Therefore, many concepts and APIs remain consistent with Polylux.
 
-Touying provides an object-oriented programming (OOP) style syntax, allowing the simulation of "global variables" through a global singleton. This makes it easy to write themes. Touying does not rely on `counter` and `locate` to implement `#pause`, resulting in better performance.
+Touying provides an object-oriented programming (OOP) style syntax, allowing the simulation of "global variables" through a global singleton, which makes it easy to write themes for Touying. Touying does not rely on `counter` and `locate` to implement `#pause`, resulting in better performance.
 
 If you like it, consider [giving a star on GitHub](https://github.com/touying-typ/touying). Touying is a community-driven project, feel free to suggest any ideas and contribute.
 
@@ -20,14 +20,30 @@ This documentation is powered by [Docusaurus](https://docusaurus.io/). We will m
 
 ## Special Features
 
-1. `#pause` and `#meanwhile` Marks [document](https://touying-typ.github.io/touying/docs/dynamic/simple)
+1. Split slides by headings [document](https://touying-typ.github.io/touying/docs/sections)
+
+```typst
+= Section
+
+== Subsection
+
+=== First Slide
+
+Hello, Touying!
+
+=== Second Slide
+
+Hello, Typst!
+```
+
+2. `#pause` and `#meanwhile` animations [document](https://touying-typ.github.io/touying/docs/dynamic/simple)
 
 ```typst
 #slide[
   First
-  
+
   #pause
-  
+
   Second
 
   #meanwhile
@@ -42,10 +58,6 @@ This documentation is powered by [Docusaurus](https://docusaurus.io/). We will m
 
 ![image](https://github.com/touying-typ/touying/assets/34951714/24ca19a3-b27c-4d31-ab75-09c37911e6ac)
 
-2. Dewdrop Theme Navigation Bar [document](https://touying-typ.github.io/touying/docs/themes/dewdrop)
-
-![image](https://github.com/touying-typ/touying/assets/34951714/0426516d-aa3c-4b7a-b7b6-2d5d276fb971)
-
 3. `touying-equation` Math Equation Animation [document](https://touying-typ.github.io/touying/docs/dynamic/equation)
 
 ![image](https://github.com/touying-typ/touying/assets/34951714/8640fe0a-95e4-46ac-b570-c8c79f993de4)
@@ -54,16 +66,18 @@ This documentation is powered by [Docusaurus](https://docusaurus.io/). We will m
 
 ![image](https://github.com/touying-typ/touying/assets/34951714/9ba71f54-2a5d-4144-996c-4a42833cc5cc)
 
-5. `#show: slides` Style and `#slide[..]` Style
+5. Dewdrop Theme Navigation Bar [document](https://touying-typ.github.io/touying/docs/themes/dewdrop)
 
-6. Semi-transparent Cover Mode [document](https://touying-typ.github.io/touying/docs/dynamic/cover)
+![image](https://github.com/touying-typ/touying/assets/34951714/0426516d-aa3c-4b7a-b7b6-2d5d276fb971)
+
+6. Semi-transparent cover mode [document](https://touying-typ.github.io/touying/docs/dynamic/cover)
 
 ![image](https://github.com/touying-typ/touying/assets/34951714/22a9ea66-c8b5-431e-a52c-2c8ca3f18e49)
 
 
 ## Quick start
 
-Before you begin, make sure you have installed the Typst environment. If not, you can use the [Web App](https://typst.app/) or the Tinymist Typst and Typst Preview extensions for VS Code.
+Before you begin, make sure you have installed the Typst environment. If not, you can use the [Web App](https://typst.app/) or the [Tinymist LSP](https://marketplace.visualstudio.com/items?itemName=myriad-dreamin.tinymist) and [Typst Preview](https://marketplace.visualstudio.com/items?itemName=mgt19937.typst-preview) extensions for VS Code.
 
 To use Touying, you only need to include the following code in your document:
 
@@ -76,7 +90,6 @@ To use Touying, you only need to include the following code in your document:
 
 #let (slide, empty-slide) = utils.slides(s)
 #show: slides
-
 
 = Title
 
@@ -103,7 +116,7 @@ In fact, Touying provides various styles for writing slides. For example, the ab
 ```typst
 #import "@preview/touying:0.4.0": *
 #import "@preview/cetz:0.2.2"
-#import "@preview/fletcher:0.4.3" as fletcher: node, edge
+#import "@preview/fletcher:0.4.4" as fletcher: node, edge
 #import "@preview/ctheorems:1.1.2": *
 
 // cetz and fletcher bindings for touying
@@ -173,17 +186,15 @@ In fact, Touying provides various styles for writing slides. For example, the ab
 
 == Simple Animation
 
-#slide[
-  We can use `#pause` to #pause display something later.
+We can use `#pause` to #pause display something later.
 
-  #pause
-  
-  Just like this.
+#pause
 
-  #meanwhile
-  
-  Meanwhile, #pause we can also use `#meanwhile` to #pause display other content synchronously.
-]
+Just like this.
+
+#meanwhile
+
+Meanwhile, #pause we can also use `#meanwhile` to #pause display other content synchronously.
 
 
 == Complex Animation
@@ -203,68 +214,62 @@ In fact, Touying provides various styles for writing slides. For example, the ab
 
 == Math Equation Animation
 
-#slide[
-  Touying equation with `pause`:
+Touying equation with `pause`:
 
-  #touying-equation(`
-    f(x) &= pause x^2 + 2x + 1  \
-         &= pause (x + 1)^2  \
-  `)
+#touying-equation(`
+  f(x) &= pause x^2 + 2x + 1  \
+        &= pause (x + 1)^2  \
+`)
 
-  #meanwhile
+#meanwhile
 
-  Here, #pause we have the expression of $f(x)$.
-  
-  #pause
+Here, #pause we have the expression of $f(x)$.
 
-  By factorizing, we can obtain this result.
-]
+#pause
+
+By factorizing, we can obtain this result.
 
 
 == CeTZ Animation
 
-#slide[
-  CeTZ Animation in Touying:
+CeTZ Animation in Touying:
 
-  #cetz-canvas({
-    import cetz.draw: *
-    
-    rect((0,0), (5,5))
+#cetz-canvas({
+  import cetz.draw: *
+  
+  rect((0,0), (5,5))
 
-    (pause,)
+  (pause,)
 
-    rect((0,0), (1,1))
-    rect((1,1), (2,2))
-    rect((2,2), (3,3))
+  rect((0,0), (1,1))
+  rect((1,1), (2,2))
+  rect((2,2), (3,3))
 
-    (pause,)
+  (pause,)
 
-    line((0,0), (2.5, 2.5), name: "line")
-  })
-]
+  line((0,0), (2.5, 2.5), name: "line")
+})
 
 
 == Fletcher Animation
 
-#slide[
-  Fletcher Animation in Touying:
+Fletcher Animation in Touying:
 
-  #fletcher-diagram(
-    node-stroke: .1em,
-    node-fill: gradient.radial(blue.lighten(80%), blue, center: (30%, 20%), radius: 80%),
-    spacing: 4em,
-    edge((-1,0), "r", "-|>", `open(path)`, label-pos: 0, label-side: center),
-    node((0,0), `reading`, radius: 2em),
-    edge((0,0), (0,0), `read()`, "--|>", bend: 130deg),
-    pause,
-    edge(`read()`, "-|>"),
-    node((1,0), `eof`, radius: 2em),
-    pause,
-    edge(`close()`, "-|>"),
-    node((2,0), `closed`, radius: 2em, extrude: (-2.5, 0)),
-    edge((0,0), (2,0), `close()`, "-|>", bend: -40deg),
-  )
-]
+#fletcher-diagram(
+  node-stroke: .1em,
+  node-fill: gradient.radial(blue.lighten(80%), blue, center: (30%, 20%), radius: 80%),
+  spacing: 4em,
+  edge((-1,0), "r", "-|>", `open(path)`, label-pos: 0, label-side: center),
+  node((0,0), `reading`, radius: 2em),
+  edge((0,0), (0,0), `read()`, "--|>", bend: 130deg),
+  pause,
+  edge(`read()`, "-|>"),
+  node((1,0), `eof`, radius: 2em),
+  pause,
+  edge(`close()`, "-|>"),
+  node((2,0), `closed`, radius: 2em, extrude: (-2.5, 0)),
+  edge((0,0), (2,0), `close()`, "-|>", bend: -40deg),
+)
 
 
 = Theroems
@@ -313,7 +318,7 @@ In fact, Touying provides various styles for writing slides. For example, the ab
 
 == Side-by-side
 
-#slide[
+#slide(composer: (1fr, 1fr))[
   First column.
 ][
   Second column.
@@ -322,9 +327,7 @@ In fact, Touying provides various styles for writing slides. For example, the ab
 
 == Multiple Pages
 
-#slide[
-  #lorem(200)
-]
+#lorem(200)
 
 
 // appendix by freezing last-slide-number
@@ -333,9 +336,7 @@ In fact, Touying provides various styles for writing slides. For example, the ab
 
 == Appendix
 
-#slide[
-  Please pay attention to the current slide number.
-]
+Please pay attention to the current slide number.
 ```
 
 ![image](https://github.com/touying-typ/touying/assets/34951714/5ac2b11c-9e77-4389-ade6-682c9fc3e1fb)
