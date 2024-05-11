@@ -15,6 +15,9 @@
   if margin != none {
     self.page-args += (margin: margin)
   }
+  if self.freeze-in-empty-page {
+    self.freeze-slide-counter = true
+  }
   self
 }
 

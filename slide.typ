@@ -401,7 +401,16 @@
   })
   // update states
   let _update-states(repetitions) = {
-    states.slide-counter.step()
+    // 1. slide counter part
+    //    if freeze-slide-counter is false, then update the slide-counter
+    if not self.freeze-slide-counter {
+      states.slide-counter.step()
+      //  if appendix is false, then update the last-slide-counter
+      if not self.appendix {
+        states.last-slide-counter.step()
+      }
+    }
+    // 2. section and subsection part
     if not self.appendix or self.appendix-in-outline {
       // if section is not none, then create a new section
       let section = utils.unify-section(section)
@@ -415,10 +424,6 @@
         states._new-subsection(duplicate: self.duplicate, short-title: subsection.short-title, subsection.title)
         counter(heading).step(level: 2)
       }
-    }
-    // if appendix is false, then update the last-slide-counter and sections step
-    if not self.appendix {
-      states.last-slide-counter.step()
       states._sections-step(repetitions)
     }
   }
@@ -627,6 +632,9 @@
   // appendix mode
   appendix: false,
   appendix-in-outline: true,
+  // freeze slide counter
+  freeze-slide-counter: false,
+  freeze-in-empty-page: true,
   // enable pdfpc-file
   pdfpc-file: true,
   // first-slide page number, which will affect preamble,
