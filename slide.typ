@@ -488,10 +488,10 @@
         height: page-height,
         {
           set align(left + top)
+          set text(size: 24pt, fill: black, weight: "regular")
           block(
             width: 100%, height: 88pt, inset: (left: 32pt, top: 16pt), outset: 0pt, fill: rgb("#CCCCCC"), 
             {
-              set text(24pt)
               states.current-section-title
               linebreak()
               [ --- ]
