@@ -274,7 +274,9 @@ Fletcher Animation in Touying:
 
 == Appendix
 
-Please pay attention to the current slide number.
+#slide[
+  Please pay attention to the current slide number.
+]
 ```
 
 ![image](https://github.com/touying-typ/touying/assets/34951714/fcecb505-d2d1-4e36-945a-225f4661a694)

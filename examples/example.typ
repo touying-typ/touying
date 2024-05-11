@@ -220,4 +220,6 @@ Fletcher Animation in Touying:
 
 == Appendix
 
-Please pay attention to the current slide number.
+#slide[
+  Please pay attention to the current slide number.
+]
