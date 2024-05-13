@@ -31,6 +31,10 @@ npm run docusaurus docs:version 0.y.x
 
 Touying is free, open-source, and community-driven. If you're interested, you can visit [GitHub](https://github.com/touying-typ/touying) anytime and raise issues or submit pull requests. We also welcome you to join the [touying-typ](https://github.com/touying-typ) organization.
 
+## Gallery
+
+Touying offers [a gallery page](https://github.com/touying-typ/touying/wiki) via wiki, where you can browse elegant slides created by Touying users. You're also encouraged to contribute your own beautiful slides here!
+
 ## License
 
 Touying is released under the [MIT license](https://github.com/touying-typ/touying/blob/main/LICENSE).

@@ -7,6 +7,7 @@ Touying provides an object-oriented programming (OOP) style syntax, allowing the
 If you like it, consider [giving a star on GitHub](https://github.com/touying-typ/touying). Touying is a community-driven project, feel free to suggest any ideas and contribute.
 
 [![Book badge](https://img.shields.io/badge/docs-book-green)](https://touying-typ.github.io/touying/)
+[![Gallery badge](https://img.shields.io/badge/docs-gallery-orange)](https://github.com/touying-typ/touying/wiki)
 ![GitHub](https://img.shields.io/github/license/touying-typ/touying)
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/touying-typ/touying)
 ![GitHub Repo stars](https://img.shields.io/github/stars/touying-typ/touying)
@@ -17,6 +18,10 @@ If you like it, consider [giving a star on GitHub](https://github.com/touying-ty
 Read [the document](https://touying-typ.github.io/touying/) to learn all about Touying.
 
 This documentation is powered by [Docusaurus](https://docusaurus.io/). We will maintain **English** and **Chinese** versions of the documentation for Touying, and for each major version, we will maintain a documentation copy. This allows you to easily refer to old versions of the Touying documentation and migrate to new versions.
+
+## Gallery
+
+Touying offers [a gallery page](https://github.com/touying-typ/touying/wiki) via wiki, where you can browse elegant slides created by Touying users. You're also encouraged to contribute your own beautiful slides here!
 
 ## Special Features
 

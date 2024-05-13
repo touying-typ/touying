@@ -37,6 +37,10 @@ npm run start -- --locale zh
 
 Touying 是免费、开源且社区驱动的。如果你感兴趣，你可以随时访问 [GitHub](https://github.com/touying-typ/touying) 并提出 issue 或 PR，我们也同样欢迎你加入 [touying-typ](https://github.com/touying-typ) 组织。
 
+## 画廊
+
+Touying 通过 wiki 提供 [画廊页面](https://github.com/touying-typ/touying/wiki)，您可以在其中浏览由 Touying 用户创建的优雅幻灯片。我们也鼓励您在这里贡献自己的精美幻灯片！
+
 ## License
 
 Touying is released under the [MIT license](https://github.com/touying-typ/touying/blob/main/LICENSE).
