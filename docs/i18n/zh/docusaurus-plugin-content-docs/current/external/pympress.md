@@ -4,10 +4,10 @@ sidebar_position: 2
 
 # Pympress
 
-[Pympress](https://github.com/Cimbali/pympress) is a PDF presentation tool designed for dual-screen setups such as presentations and public talks. Highly configurable, fully-featured, and portable
+[Pympress](https://github.com/Cimbali/pympress) 是一种 PDF 演示工具，专为演示文稿和公开演讲等双屏设置而设计。高度可配置、功能齐全且可移植。
 
 
-## Speaker Notes
+## 笔记支持
 
 ```typst
 #import "@preview/touying:0.4.1": *
@@ -45,7 +45,7 @@ Meanwhile, #pause we can also use `#meanwhile` to #pause display other content s
 
 ![image](https://github.com/touying-typ/touying/assets/34951714/b43c7f99-c5f9-4084-aa70-c1561e8aafee)
 
-Then we can use the pympress to show it.
+然后我们就可以使用 pympress 放映了。
 
 ![image](https://github.com/touying-typ/touying/assets/34951714/afbe17cb-46d4-4507-90e8-959c53de95d5)
 
