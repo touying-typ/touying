@@ -14,7 +14,7 @@
 // Set the numbering of section and subsection
 #let s = (s.methods.numbering)(self: s, section: "1.", "1.1")
 
-// Set the speaker notes configuration
+// Set the speaker notes configuration, you can show it by pympress
 // #let s = (s.methods.show-notes-on-second-screen)(self: s, right)
 
 // Global information configuration
