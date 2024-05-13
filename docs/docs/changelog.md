@@ -4,6 +4,27 @@ sidebar_position: 14
 
 # Changelog
 
+## v0.4.1
+
+### Features
+
+- feat: support builtin outline and bookmark
+- feat: support speaker note for dual-screen
+- feat: add touying-mitex function
+
+### Fixes
+
+- fix: add outline-slide for dewdrop theme
+- fix: fix regression of default value "auto" for repeat
+
+### Miscellaneous Improvements
+
+- feat: add list support for `touying-outline` function
+- feat: add auto-reset-footnote
+- feat: add `freeze-in-empty-page` for better page counter
+- feat: add `..args` for register method to capture unused arguments
+
+
 ## v0.4.0
 
 ### Features
