@@ -68,6 +68,10 @@
 #let (slide, empty-slide) = utils.slides(s)
 #show: slides
 
+== Outline
+
+#outline(indent: 2em, title: none)
+
 = Animation
 
 == Simple Animation

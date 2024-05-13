@@ -85,6 +85,7 @@
   self.methods.new-section-slide = new-section-slide
   self.methods.touying-new-section-slide = new-section-slide
   self.methods.init = (self: none, body) => {
+    set heading(outlined: false)
     set text(fill: foreground, size: 25pt)
     show footnote.entry: set text(size: .6em)
     show heading.where(level: 2): set block(below: 1.5em)

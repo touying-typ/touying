@@ -215,6 +215,7 @@
     footer: footer,
   )
   self.methods.init = (self: none, body) => {
+    set heading(outlined: false)
     set text(size: 20pt)
     body
   }

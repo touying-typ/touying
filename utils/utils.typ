@@ -99,6 +99,11 @@
   arr.slice(i)
 }
 
+// Utils: bookmark
+#let bookmark(level: 1, numbering: none, outlined: true, body) = {
+  place(top + left, text(0pt, hide(heading(depth: level, outlined: outlined, bookmarked: true, numbering: numbering, [#body]))))
+}
+
 // Type: is sequence
 #let typst-builtin-sequence = ([A] + [ ] + [B]).func()
 #let is-sequence(it) = {
