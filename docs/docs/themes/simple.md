@@ -15,7 +15,7 @@ Considered a relatively straightforward theme, you can use it to create simple s
 You can initialize it using the following code:
 
 ```typst
-#import "@preview/touying:0.4.0": *
+#import "@preview/touying:0.4.1": *
 
 #let s = themes.simple.register(aspect-ratio: "16-9", footer: [Simple slides])
 #let s = (s.methods.enable-transparent-cover)(self: s)
@@ -96,7 +96,7 @@ You can set it using `#show: slides.with(..)`.
 And the function of automatically adding `new-section-slide` can be turned off by `#(s.methods.touying-new-section-slide = none)`.
 
 ```typst
-#import "@preview/touying:0.4.0": *
+#import "@preview/touying:0.4.1": *
 
 #let s = themes.simple.register(aspect-ratio: "16-9", footer: [Simple slides])
 #let s = (s.methods.enable-transparent-cover)(self: s)
@@ -123,7 +123,7 @@ Hello, Typst!
 ## Example
 
 ```typst
-#import "@preview/touying:0.4.0": *
+#import "@preview/touying:0.4.1": *
 
 #let s = themes.simple.register(aspect-ratio: "16-9", footer: [Simple slides])
 #let (init, slides) = utils.methods(s)

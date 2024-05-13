@@ -11,7 +11,7 @@ sidebar_position: 3
 一般而言，1 级、2 级和 3 级标题分别用来对应 section、subsection 和 title，例如 dewdrop 主题。
 
 ```typst
-#import "@preview/touying:0.4.0": *
+#import "@preview/touying:0.4.1": *
 
 #let s = themes.dewdrop.register()
 #let (init, slides) = utils.methods(s)
@@ -34,7 +34,7 @@ Hello, Touying!
 但是很多时候我们并不需要 subsection，因此也会使用 1 级和 2 级标题来分别对应 section 和 title，例如 university 主题。
 
 ```typst
-#import "@preview/touying:0.4.0": *
+#import "@preview/touying:0.4.1": *
 
 #let s = themes.university.register()
 #let (init, slides) = utils.methods(s)
@@ -71,7 +71,7 @@ Hello, Touying!
 在 Touying 中显示目录很简单：
 
 ```typst
-#import "@preview/touying:0.4.0": *
+#import "@preview/touying:0.4.1": *
 
 #let s = themes.simple.register()
 #let (init, slides, alert, touying-outline) = utils.methods(s)

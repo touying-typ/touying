@@ -7,7 +7,7 @@ sidebar_position: 5
 When using Codly, we should initialize it using the `s.methods.append-preamble` method.
 
 ```typst
-#import "@preview/touying:0.4.0": *
+#import "@preview/touying:0.4.1": *
 #import "@preview/codly:0.2.0": *
 
 #let s = themes.simple.register(aspect-ratio: "16-9")

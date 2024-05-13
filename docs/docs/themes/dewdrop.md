@@ -15,7 +15,7 @@ The Dewdrop theme features an elegantly designed navigation, including two modes
 You can initialize it using the following code:
 
 ```typst
-#import "@preview/touying:0.4.0": *
+#import "@preview/touying:0.4.1": *
 
 #let s = themes.dewdrop.register(
   aspect-ratio: "16-9",
@@ -152,7 +152,7 @@ PS: You can modify the outline title using `#(s.outline-title = [Outline])`.
 And the function of automatically adding `new-section-slide` can be turned off by `#(s.methods.touying-new-section-slide = none)`.
 
 ```typst
-#import "@preview/touying:0.4.0": *
+#import "@preview/touying:0.4.1": *
 
 #let s = themes.dewdrop.register(aspect-ratio: "16-9", footer: [Dewdrop])
 #let s = (s.methods.info)(
@@ -188,7 +188,7 @@ Hello, Typst!
 ## Example
 
 ```typst
-#import "@preview/touying:0.4.0": *
+#import "@preview/touying:0.4.1": *
 
 #let s = themes.dewdrop.register(
   aspect-ratio: "16-9",

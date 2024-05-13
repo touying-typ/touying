@@ -9,7 +9,7 @@ Touying can work seamlessly with the `ctheorems` package, allowing you to direct
 Moreover, you can utilize `#let s = (s.methods.numbering)(self: s, section: "1.", "1.1")` to set numbering for sections and subsections.
 
 ```typst
-#import "@preview/touying:0.4.0": *
+#import "@preview/touying:0.4.1": *
 #import "@preview/ctheorems:1.1.2": *
 
 // Register university theme

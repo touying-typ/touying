@@ -19,7 +19,7 @@ Touying 有着如同原生 Typst 文档一般简洁的语法，以及繁多的�
 
 ```typst
 // globals.typ
-#import "@preview/touying:0.4.0": *
+#import "@preview/touying:0.4.1": *
 
 #let s = themes.university.register(aspect-ratio: "16-9")
 #let s = (s.methods.numbering)(self: s, section: "1.", "1.1")
