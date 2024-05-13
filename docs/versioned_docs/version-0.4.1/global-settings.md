@@ -22,7 +22,7 @@ If you are not a theme creator but want to add your own global styles to your sl
 
 ```typst
 #let s = themes.metropolis.register(aspect-ratio: "16-9")
-#let (init, slides, touying-outline, alert) = utils.methods(s)
+#let (init, slides, touying-outline, alert, speaker-note) = utils.methods(s)
 #show: init
 
 // global styles

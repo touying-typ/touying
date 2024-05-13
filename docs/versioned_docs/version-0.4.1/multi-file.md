@@ -30,7 +30,7 @@ These three files are separated to allow both `main.typ` and `content.typ` to im
   date: datetime.today(),
   institution: [Institution],
 )
-#let (init, slides, touying-outline, alert) = utils.methods(s)
+#let (init, slides, touying-outline, alert, speaker-note) = utils.methods(s)
 #let (slide, empty-slide, title-slide, focus-slide, matrix-slide) = utils.slides(s)
 
 // as well as some utility functions

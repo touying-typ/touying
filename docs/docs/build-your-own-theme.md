@@ -94,7 +94,7 @@ Generally, the first step in creating slides is to determine font size and page 
 #import "bamboo.typ"
 
 #let s = bamboo.register(aspect-ratio: "16-9")
-#let (init, slides, touying-outline, alert) = utils.methods(s)
+#let (init, slides, touying-outline, alert, speaker-note) = utils.methods(s)
 #show: init
 
 #show strong: alert
@@ -255,7 +255,7 @@ We also need to customize a `slide` method that accepts `slide(self: none, title
 #import "bamboo.typ"
 
 #let s = bamboo.register(aspect-ratio: "16-9", footer: self => self.info.institution)
-#let (init, slides, touying-outline, alert) = utils.methods(s)
+#let (init, slides, touying-outline, alert, speaker-note) = utils.methods(s)
 #show: init
 
 #show strong: alert
@@ -418,7 +418,7 @@ Finally, we update the `slides(self: none, title-slide: true, slide-level: 1, ..
   date: datetime.today(),
   institution: [Institution],
 )
-#let (init, slides, touying-outline, alert) = utils.methods(s)
+#let (init, slides, touying-outline, alert, speaker-note) = utils.methods(s)
 #show: init
 
 #show strong: alert

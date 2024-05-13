@@ -24,7 +24,7 @@ sidebar_position: 4
   date: datetime.today(),
   institution: [Institution],
 )
-#let (init, slides, touying-outline, alert) = utils.methods(s)
+#let (init, slides, touying-outline, alert, speaker-note) = utils.methods(s)
 #show: init
 
 #show strong: alert
@@ -151,7 +151,7 @@ University 主题提供了一系列自定义 slide 函数：
   date: datetime.today(),
   institution: [Institution],
 )
-#let (init, slides, touying-outline, alert) = utils.methods(s)
+#let (init, slides, touying-outline, alert, speaker-note) = utils.methods(s)
 #show: init
 
 #show strong: alert
@@ -187,7 +187,7 @@ Hello, Typst!
   date: datetime.today(),
   institution: [Institution],
 )
-#let (init, slides, touying-outline, alert) = utils.methods(s)
+#let (init, slides, touying-outline, alert, speaker-note) = utils.methods(s)
 #show: init
 
 #show strong: alert

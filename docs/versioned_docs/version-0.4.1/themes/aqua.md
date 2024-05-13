@@ -24,7 +24,7 @@ You can initialize it with the following code:
   date: datetime.today(),
   institution: [Institution],
 )
-#let (init, slides, touying-outline, alert) = utils.methods(s)
+#let (init, slides, touying-outline, alert, speaker-note) = utils.methods(s)
 #show: init
 
 #show strong: alert
@@ -135,7 +135,7 @@ Additionally, you can disable the automatic inclusion of `new-section-slide` fun
   date: datetime.today(),
   institution: [Institution],
 )
-#let (init, slides, touying-outline, alert) = utils.methods(s)
+#let (init, slides, touying-outline, alert, speaker-note) = utils.methods(s)
 #show: init
 
 #show strong: alert
@@ -170,7 +170,7 @@ Hello, Typst!
   date: datetime.today(),
   institution: [Institution],
 )
-#let (init, slides, touying-outline, alert) = utils.methods(s)
+#let (init, slides, touying-outline, alert, speaker-note) = utils.methods(s)
 #show: init
 
 #show strong: alert

@@ -32,7 +32,7 @@ Touying 能够与 ctheorems 包一起正常工作，你可以直接使用 ctheor
 #let proof = thmproof("proof", "Proof")
 
 // Extract methods
-#let (init, slides, touying-outline, alert) = utils.methods(s)
+#let (init, slides, touying-outline, alert, speaker-note) = utils.methods(s)
 #show: init
 
 #show strong: alert

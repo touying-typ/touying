@@ -26,7 +26,7 @@ You can initialize it using the following code:
   date: datetime.today(),
   institution: [Institution],
 )
-#let (init, slides, touying-outline, alert) = utils.methods(s)
+#let (init, slides, touying-outline, alert, speaker-note) = utils.methods(s)
 #show: init
 
 #show strong: alert
@@ -171,7 +171,7 @@ Hello, Typst!
   date: datetime.today(),
   institution: [Institution],
 )
-#let (init, slides, touying-outline, alert) = utils.methods(s)
+#let (init, slides, touying-outline, alert, speaker-note) = utils.methods(s)
 #show: init
 
 #set text(font: "Fira Sans", weight: "light", size: 20pt)

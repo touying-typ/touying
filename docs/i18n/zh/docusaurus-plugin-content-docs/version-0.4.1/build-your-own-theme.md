@@ -96,7 +96,7 @@ sidebar_position: 11
 #import "bamboo.typ"
 
 #let s = bamboo.register(aspect-ratio: "16-9")
-#let (init, slides, touying-outline, alert) = utils.methods(s)
+#let (init, slides, touying-outline, alert, speaker-note) = utils.methods(s)
 #show: init
 
 #show strong: alert
@@ -264,7 +264,7 @@ self.methods.alert = (self: none, it) => text(fill: self.colors.primary, it)
 #import "bamboo.typ"
 
 #let s = bamboo.register(aspect-ratio: "16-9", footer: self => self.info.institution)
-#let (init, slides, touying-outline, alert) = utils.methods(s)
+#let (init, slides, touying-outline, alert, speaker-note) = utils.methods(s)
 #show: init
 
 #show strong: alert
@@ -426,7 +426,7 @@ self.methods.alert = (self: none, it) => text(fill: self.colors.primary, it)
   date: datetime.today(),
   institution: [Institution],
 )
-#let (init, slides, touying-outline, alert) = utils.methods(s)
+#let (init, slides, touying-outline, alert, speaker-note) = utils.methods(s)
 #show: init
 
 #show strong: alert

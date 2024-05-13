@@ -32,7 +32,7 @@ Moreover, you can utilize `#let s = (s.methods.numbering)(self: s, section: "1."
 #let proof = thmproof("proof", "Proof")
 
 // Extract methods
-#let (init, slides, touying-outline, alert) = utils.methods(s)
+#let (init, slides, touying-outline, alert, speaker-note) = utils.methods(s)
 #show: init
 
 #show strong: alert
