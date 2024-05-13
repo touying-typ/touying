@@ -1,0 +1,8 @@
+{
+  "label": "第三方包集成",
+  "position": 9,
+  "link": {
+    "type": "generated-index",
+    "description": "让第三方包与 Touying 集成。"
+  }
+}
