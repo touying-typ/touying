@@ -34,6 +34,7 @@
   (self.methods.touying-slide)(
     ..args.named(),
     self: self,
+    title: title,
     setting: body => {
       show: args.named().at("setting", default: body => body)
       body

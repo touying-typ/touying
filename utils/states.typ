@@ -15,6 +15,12 @@
 // sections
 #let sections-state = state("touying-sections-state", ((kind: "section", title: none, short-title: none, loc: none, count: 0, children: ()),))
 
+// slide title state
+#let slide-title-state = state("touying-slide-title-state", none)
+
+// slide note state
+#let slide-note-state = state("touying-slide-note-state", none)
+
 #let _new-section(short-title: auto, duplicate: false, title) = locate(loc => {
   sections-state.update(sections => {
     if duplicate or sections.last().title != title or sections.last().short-title != short-title {
@@ -98,6 +104,10 @@
     none
   }
 })
+
+#let current-slide-title = context slide-title-state.get()
+
+#let current-slide-note = context slide-note-state.get()
 
 #let _typst-numbering = numbering
 #let current-section-number(numbering: "01", ignore-zero: true) = locate(loc => {

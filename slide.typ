@@ -443,9 +443,69 @@
   it => pad(..pad-args, cell(it))
 }
 
+#let _get-page-extra-args(self) = {
+  if self.show-notes-on-second-screen == right {
+    let margin = self.page-args.margin
+    assert(
+      self.page-args.paper == "presentation-16-9" or self.page-args.paper == "presentation-4-3",
+      message: "The paper of page should be presentation-16-9 or presentation-4-3"
+    )
+    let page-width = if self.page-args.paper == "presentation-16-9" { 841.89pt } else { 793.7pt }
+    if type(margin) != dictionary and type(margin) != length and type(margin) != relative {
+      return (:)
+    }
+    if type(margin) == length or type(margin) == relative {
+      margin = (x: margin, y: margin)
+    }
+    if "right" not in margin {
+      assert("x" in margin, message: "The margin should have right or x")
+      margin.right = margin.x
+    }
+    margin.right += page-width
+    return (margin: margin, width: 2 * page-width)
+  } else {
+    return (:)
+  }
+}
+
 #let _get-header-footer(self) = {
   let header = utils.call-or-display(self, self.page-args.at("header", default: none))
   let footer = utils.call-or-display(self, self.page-args.at("footer", default: none))
+  // speaker note
+  if self.show-notes-on-second-screen == right {
+    assert(
+      self.page-args.paper == "presentation-16-9" or self.page-args.paper == "presentation-4-3",
+      message: "The paper of page should be presentation-16-9 or presentation-4-3"
+    )
+    let page-width = if self.page-args.paper == "presentation-16-9" { 841.89pt } else { 793.7pt }
+    let page-height = if self.page-args.paper == "presentation-16-9" { 473.56pt } else { 595.28pt }
+    footer += place(
+      left + bottom,
+      dx: page-width,
+      block(
+        fill: rgb("#E6E6E6"),
+        width: page-width,
+        height: page-height,
+        {
+          set align(left + top)
+          set text(size: 24pt, fill: black, weight: "regular")
+          block(
+            width: 100%, height: 88pt, inset: (left: 32pt, top: 16pt), outset: 0pt, fill: rgb("#CCCCCC"), 
+            {
+              states.current-section-title
+              linebreak()
+              [ --- ]
+              states.current-slide-title
+            },
+          )
+          pad(x: 48pt, states.current-slide-note)
+          // clear the slide note
+          states.slide-note-state.update(none)
+        }
+      )
+    )
+  }
+  // negative padding
   if self.full-header or self.full-footer {
     let negative-pad = _get-negative-pad(self)
     if self.full-header {
@@ -525,6 +585,8 @@
       }
       states._sections-step(repetitions)
     }
+    // 3. slide title part
+    states.slide-title-state.update(title)
   }
   self.subslide = 1
   // for single page slide, get the repetitions
@@ -539,6 +601,7 @@
   }
   self.repeat = repeat
   let (header, footer) = _get-header-footer(self)
+  let page-extra-args = _get-page-extra-args(self)
   // page header and footer
   // for speed up, do not parse the content if repeat is none
   if repeat == none {
@@ -551,7 +614,7 @@
         }
       })
       header = _update-states(1) + header
-      set page(..(self.page-args + (header: header, footer: footer)))
+      set page(..(self.page-args + page-extra-args + (header: header, footer: footer)))
       setting(
         page-preamble(1) + composer-with-side-by-side(..conts)
       )
@@ -562,7 +625,7 @@
     self.subslide = repeat
     let (conts, _) = _parse-content(self: self, index: repeat, ..bodies)
     header = _update-states(1) + header
-    set page(..(self.page-args + (header: header, footer: footer)))
+    set page(..(self.page-args + page-extra-args + (header: header, footer: footer)))
     setting(
       page-preamble(1) + composer-with-side-by-side(..conts)
     )
@@ -580,7 +643,7 @@
         new-header = _update-states(repeat) + new-header
       }
       result.push({
-        set page(..(self.page-args + (header: new-header, footer: footer)))
+        set page(..(self.page-args + page-extra-args + (header: new-header, footer: footer)))
         setting(page-preamble(i) + composer-with-side-by-side(..conts))
       })
     }
@@ -751,11 +814,13 @@
     header: none,
     footer: none,
     fill: rgb("#ffffff"),
-    margin: (x: 7%, y: 12%),
+    margin: (x: 3em, y: 2.8em),
   ),
   // full header / footer
   full-header: true,
   full-footer: true,
+  // speaker notes
+  show-notes-on-second-screen: none,
   // numbering
   numbering: none,
   // duplicate for section and subsection
@@ -864,6 +929,19 @@
     appendix-in-outline: (self: none, value) => {
       self.appendix-in-outline = value
       self
+    },
+    show-notes-on-second-screen: (self: none, value) => {
+      assert(value == none or value == right, message: "value should be none or right")
+      self.show-notes-on-second-screen = value
+      self
+    },
+    speaker-note: (self: none, pdfpc: false, setting: it => it, note) => {
+      if pdfpc {
+        pdfpc.speaker-note(note)
+      }
+      if self.show-notes-on-second-screen != none {
+        states.slide-note-state.update(setting(note))
+      }
     }
   ),
 )

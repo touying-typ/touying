@@ -5,10 +5,8 @@
 
 #let title-slide(self: none, ..args) = {
   self = utils.empty-page(self)
-  self.page-args += (
-    margin: (top: 30%, left: 17%, right: 17%, bottom: 0%),
-    background: utils.call-or-display(self, self.aqua-background),
-  )
+  self.page-args.margin += (top: 30%, bottom: 0%)
+  self.page-args.background = utils.call-or-display(self, self.aqua-background)
   let info = self.info + args.named()
 
   let content = {
@@ -123,6 +121,7 @@
   }
   (self.methods.touying-slide)(
     self: self,
+    title: title,
     setting: body => {
       show heading.where(level:1): body => text(fill: self.colors.primary-light)[#body#v(3%)]
       body
@@ -161,33 +160,37 @@
   self.aqua-footer = footer
   self.aqua-lang = lang
   self.aqua-background = (self) => {
+    let page-width = if self.page-args.paper == "presentation-16-9" { 841.89pt } else { 793.7pt }
+    let r = if self.show-notes-on-second-screen == none { 1.0 } else { 0.5 }
+    let bias1 = - page-width * (1-r)
+    let bias2 = - page-width * 2 * (1-r)
     place(left + top, dx: -15pt, dy: -26pt,
       circle(radius: 40pt, fill: self.colors.primary))
     place(left + top, dx: 65pt, dy: 12pt,
       circle(radius: 21pt, fill: self.colors.primary))
-    place(left + top, dx: 3%, dy: 15%,
+    place(left + top, dx: r * 3%, dy: 15%,
       circle(radius: 13pt, fill: self.colors.primary))
-    place(left + top, dx: 2.5%, dy: 27%,
+    place(left + top, dx: r * 2.5%, dy: 27%,
       circle(radius: 8pt, fill: self.colors.primary))
-    place(right + bottom, dx: 15pt, dy: 26pt,
+    place(right + bottom, dx: 15pt + bias2, dy: 26pt,
       circle(radius: 40pt, fill: self.colors.primary))
-    place(right + bottom, dx: -65pt, dy: -12pt,
+    place(right + bottom, dx: -65pt + bias2, dy: -12pt,
       circle(radius: 21pt, fill: self.colors.primary))
-    place(right + bottom, dx: -3%, dy: -15%,
+    place(right + bottom, dx: r * -3% + bias2, dy: -15%,
       circle(radius: 13pt, fill: self.colors.primary))
-    place(right + bottom, dx: -2.5%, dy: -27%,
+    place(right + bottom, dx: r * -2.5% + bias2, dy: -27%,
       circle(radius: 8pt, fill: self.colors.primary))
-    polygon(fill: self.colors.primary-lightest,
-      (35%, -17%), (70%, 10%), (35%, 30%), (0%, 10%))
-    place(center + horizon, dy: 7%,
-      ellipse(fill: white, width: 45%, height: 120pt))
-    place(center + horizon, dy: 5%,
-      ellipse(fill: self.colors.primary-lightest, width: 40%, height: 80pt))
-    place(center + horizon, dy: 12%,
-      rect(fill: self.colors.primary-lightest, width: 40%, height: 60pt))
-    place(center + horizon, dy: 20%,
-      ellipse(fill: white, width: 40%, height: 70pt))
-    place(center + horizon, dx: 28%, dy: -6%,
+    place(center + horizon, dx: bias1, polygon(fill: self.colors.primary-lightest,
+      (35% * page-width, -17%), (70% * page-width, 10%), (35% * page-width, 30%), (0% * page-width, 10%)))
+    place(center + horizon, dy: 7%, dx: bias1,
+      ellipse(fill: white, width: r * 45%, height: 120pt))
+    place(center + horizon, dy: 5%, dx: bias1,
+      ellipse(fill: self.colors.primary-lightest, width: r * 40%, height: 80pt))
+    place(center + horizon, dy: 12%, dx: bias1,
+      rect(fill: self.colors.primary-lightest, width: r * 40%, height: 60pt))
+    place(center + horizon, dy: 20%, dx: bias1,
+      ellipse(fill: white, width: r * 40%, height: 70pt))
+    place(center + horizon, dx: r * 28% + bias1, dy: -6%,
       circle(radius: 13pt, fill: white))
   }
   let header(self) = {

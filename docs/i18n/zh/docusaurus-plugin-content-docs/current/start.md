@@ -52,8 +52,7 @@ Hello, Typst!
 #let fletcher-diagram = touying-reducer.with(reduce: fletcher.diagram, cover: fletcher.hide)
 
 // Register university theme
-// You can remove the theme registration or replace other themes
-// it can still work normally
+// You can replace it with other themes and it can still work normally
 #let s = themes.university.register(aspect-ratio: "16-9")
 
 // Set the numbering of section and subsection

@@ -124,12 +124,14 @@ In fact, Touying provides various styles for writing slides. For example, the ab
 #let fletcher-diagram = touying-reducer.with(reduce: fletcher.diagram, cover: fletcher.hide)
 
 // Register university theme
-// You can remove the theme registration or replace other themes
-// it can still work normally
+// You can replace it with other themes and it can still work normally
 #let s = themes.university.register(aspect-ratio: "16-9")
 
 // Set the numbering of section and subsection
 #let s = (s.methods.numbering)(self: s, section: "1.", "1.1")
+
+// Set the speaker notes configuration
+// #let s = (s.methods.show-notes-on-second-screen)(self: s, right)
 
 // Global information configuration
 #let s = (s.methods.info)(
@@ -173,7 +175,7 @@ In fact, Touying provides various styles for writing slides. For example, the ab
 #let proof = thmproof("proof", "Proof")
 
 // Extract methods
-#let (init, slides, touying-outline, alert) = utils.methods(s)
+#let (init, slides, touying-outline, alert, speaker-note) = utils.methods(s)
 #show: init
 
 #show strong: alert
@@ -196,6 +198,10 @@ Just like this.
 
 Meanwhile, #pause we can also use `#meanwhile` to #pause display other content synchronously.
 
+#speaker-note[
+  + This is a speaker note.
+  + You won't see it unless you use `#let s = (s.math.show-notes-on-second-screen)(self: s, right)`
+]
 
 == Complex Animation
 
@@ -339,6 +345,7 @@ Fletcher Animation in Touying:
 #slide[
   Please pay attention to the current slide number.
 ]
+
 ```
 
 ![image](https://github.com/touying-typ/touying/assets/34951714/5ac2b11c-9e77-4389-ade6-682c9fc3e1fb)
