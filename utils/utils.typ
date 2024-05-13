@@ -101,7 +101,9 @@
 
 // Utils: bookmark
 #let bookmark(level: 1, numbering: none, outlined: true, body) = {
-  place(top + left, text(0pt, hide(heading(depth: level, outlined: outlined, bookmarked: true, numbering: numbering, [#body]))))
+  if body != auto and body != none {
+    place(top + left, text(0pt, hide(heading(depth: level, outlined: outlined, bookmarked: true, numbering: numbering, body))))
+  }
 }
 
 // Type: is sequence
