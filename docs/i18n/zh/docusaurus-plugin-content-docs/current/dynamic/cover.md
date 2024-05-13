@@ -25,6 +25,15 @@ let s = (s.methods.update-cover)(self: s, is-method: true, cover-fn)
 方法来设置您自己的 `cover` 函数，其中如果设置 `is-method: false`，则 Touying 会帮您将 `cover-fn` 包装成一个方法。
 
 
+## hack: 处理 enum 和 list
+
+你会发现现有的 cover 函数无法隐藏 enum 和 list 的 mark，参考 [这里](https://github.com/touying-typ/touying/issues/10)，因此你可以进行 hack：
+
+```typst
+#let s = (s.methods.update-cover)(self: s, body => box(scale(x: 0%, body)))
+```
+
+
 ## 半透明 Cover 函数
 
 Touying 提供了半透明 Cover 函数的支持，只需要加入

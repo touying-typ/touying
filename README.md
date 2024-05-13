@@ -74,9 +74,13 @@ Hello, Typst!
 
 ![image](https://github.com/touying-typ/touying/assets/34951714/0426516d-aa3c-4b7a-b7b6-2d5d276fb971)
 
-6. Semi-transparent cover mode [document](https://touying-typ.github.io/touying/docs/dynamic/cover)
+7. Semi-transparent cover mode [document](https://touying-typ.github.io/touying/docs/dynamic/cover)
 
 ![image](https://github.com/touying-typ/touying/assets/34951714/22a9ea66-c8b5-431e-a52c-2c8ca3f18e49)
+
+8. Speaker notes for dual-screen [document](https://touying-typ.github.io/touying/docs/external/pympress)
+
+![image](https://github.com/touying-typ/touying/assets/34951714/afbe17cb-46d4-4507-90e8-959c53de95d5)
 
 
 ## Quick start
@@ -86,7 +90,7 @@ Before you begin, make sure you have installed the Typst environment. If not, yo
 To use Touying, you only need to include the following code in your document:
 
 ```typst
-#import "@preview/touying:0.4.0": *
+#import "@preview/touying:0.4.1": *
 
 #let s = themes.simple.register(aspect-ratio: "16-9")
 #let (init, slides) = utils.methods(s)
@@ -118,7 +122,7 @@ It's simple. Congratulations on creating your first Touying slide! 🎉
 In fact, Touying provides various styles for writing slides. For example, the above example uses first-level and second-level titles to create new slides. However, you can also use the `#slide[..]` format to access more powerful features provided by Touying.
 
 ```typst
-#import "@preview/touying:0.4.0": *
+#import "@preview/touying:0.4.1": *
 #import "@preview/cetz:0.2.2"
 #import "@preview/fletcher:0.4.4" as fletcher: node, edge
 #import "@preview/ctheorems:1.1.2": *

@@ -22,6 +22,14 @@ let s = (s.methods.update-cover)(self: s, is-method: true, cover-fn)
 
 Here, if you set `is-method: false`, Touying will wrap `cover-fn` into a method for you.
 
+## hack: handle enum and list
+
+You will find that the existing cover function cannot hide the mark of enum and list, refer to [here](https://github.com/touying-typ/touying/issues/10), so you can hack:
+
+```typst
+#let s = (s.methods.update-cover)(self: s, body => box(scale(x: 0%, body)))
+```
+
 ## Semi-Transparent Cover Function
 
 Touying supports a semi-transparent cover function, which can be enabled by adding:
