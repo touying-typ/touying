@@ -280,6 +280,7 @@
   self.methods.alert = (self: none, it) => text(fill: self.colors.primary, it)
   self.methods.init = (self: none, body) => {
     set text(size: 25pt)
+    set heading(outlined: false)
     show footnote.entry: set text(size: .6em)
     body
   }

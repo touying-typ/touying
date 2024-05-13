@@ -308,6 +308,7 @@
   self.methods.d-mini-slides = d-mini-slides
   self.methods.alert = (self: none, it) => text(fill: self.colors.primary, it)
   self.methods.init = (self: none, body) => {
+    set heading(outlined: false)
     set text(size: 20pt)
     set par(justify: true)
     show heading: set block(below: 1em)

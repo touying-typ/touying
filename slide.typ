@@ -557,6 +557,9 @@
       }
     }
     utils.call-or-display(self, self.page-preamble)
+    if curr-subslide == 1 and title != none {
+      utils.bookmark(level: 3, title)
+    }
   })
   // update states
   let _update-states(repetitions) = {
@@ -569,19 +572,21 @@
         states.last-slide-counter.step()
       }
     }
+    // update page counter
+    context counter(page).update(states.slide-counter.get())
     // 2. section and subsection part
     if not self.appendix or self.appendix-in-outline {
       // if section is not none, then create a new section
       let section = utils.unify-section(section)
       if section != none {
         states._new-section(duplicate: self.duplicate, short-title: section.short-title, section.title)
-        counter(heading).step()
+        utils.bookmark(level: 1, numbering: self.numbering, section.title)
       }
       // if subsection is not none, then create a new subsection
       let subsection = utils.unify-section(subsection)
       if subsection != none {
         states._new-subsection(duplicate: self.duplicate, short-title: subsection.short-title, subsection.title)
-        counter(heading).step(level: 2)
+        utils.bookmark(level: 2, numbering: self.numbering, subsection.title)
       }
       states._sections-step(repetitions)
     }
@@ -600,9 +605,9 @@
     repeat = repetitions
   }
   self.repeat = repeat
+  // page header and footer
   let (header, footer) = _get-header-footer(self)
   let page-extra-args = _get-page-extra-args(self)
-  // page header and footer
   // for speed up, do not parse the content if repeat is none
   if repeat == none {
     return {
@@ -915,6 +920,7 @@
     init: (self: none, body) => {
       // default text size
       set text(size: 20pt)
+      set heading(outlined: false)
       show heading.where(level: 2): set block(below: 1em)
       body
     },

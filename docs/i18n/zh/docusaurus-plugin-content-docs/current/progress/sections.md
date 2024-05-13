@@ -10,6 +10,8 @@ Touying 维护了一份自己的 sections state，用于记录 slides 的 sectio
 
 `#touying-outline(enum-args: (:), padding: 0pt)` 用于显示一个简单的大纲。
 
+当然，你现在也可以直接使用 `#outline(indent: 2em, title: none)`。
+
 
 ## touying-final-sections
 

@@ -10,6 +10,8 @@ Touying maintains its own sections state to record the sections and subsections 
 
 `#touying-outline(enum-args: (:), padding: 0pt)` is used to display a simple outline.
 
+Of course, you can now just use `#outline(indent: 2em, title: none)`.
+
 ## touying-final-sections
 
 `#states.touying-final-sections(final-sections => ..)` is used to customize the display of the outline.
