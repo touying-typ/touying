@@ -373,3 +373,13 @@ Thanks to...
 - [@drupol](https://github.com/drupol) for the `university` theme
 - [@pride7](https://github.com/pride7) for the `aqua` theme
 - [@ntjess](https://github.com/ntjess) for contributing to `fit-to-height`, `fit-to-width` and `cover-with-rect`
+
+## Star History
+
+<a href="https://star-history.com/#touying-typ/touying&Date">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=touying-typ/touying&type=Date&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=touying-typ/touying&type=Date" />
+   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=touying-typ/touying&type=Date" />
+ </picture>
+</a>
