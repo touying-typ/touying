@@ -700,7 +700,7 @@
     } else if type(child) == content and child.func() == heading and child.depth <= slide-level + 1 {
       slide = utils.trim(slide)
       if (child.depth == 1 and section != none) or (child.depth == 2 and subsection != none) or (child.depth > slide-level and title != none) or slide != () {
-        (self.methods.slide)(self: self, section: section, subsection: subsection, ..(if last-title != none { (title: last-title) }), slide.sum(default: []))
+        (self.methods.slide)(self: self, section: section, subsection: subsection, ..(if last-title != none { (title: last-title) }), slide.sum(default: ""))
         (section, subsection, title, slide) = (none, none, none, ())
         if child.depth <= slide-level {
           last-title = none
@@ -741,10 +741,10 @@
   }
   slide = utils.trim(slide)
   if section != none or subsection != none or title != none or slide != () {
-    (self.methods.slide)(self: self, section: section, subsection: subsection, ..(if last-title != none { (title: last-title) }), slide.sum(default: []))
+    (self.methods.slide)(self: self, section: section, subsection: subsection, ..(if last-title != none { (title: last-title) }), slide.sum(default: ""))
   }
   if is-end {
-    children.slice(i).sum(default: none)
+    children.slice(i).sum(default: "")
   }
 }
 
