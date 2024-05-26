@@ -3,14 +3,14 @@
 #import "utils/pdfpc.typ"
 
 // touying pause mark
-#let pause = metadata((kind: "touying-pause"))
+#let pause = [#metadata((kind: "touying-pause"))<touying-temporary-mark>]
 // touying meanwhile mark
-#let meanwhile = metadata((kind: "touying-meanwhile"))
+#let meanwhile = [#metadata((kind: "touying-meanwhile"))<touying-temporary-mark>]
 // touying slides-end mark
-#let slides-end = metadata((kind: "touying-slides-end"))
+#let slides-end = [#metadata((kind: "touying-slides-end"))<touying-temporary-mark>]
 // touying equation mark
-#let touying-equation(block: true, numbering: none, supplement: auto, scope: (:), body) = {
-  metadata((
+#let touying-equation(block: true, numbering: none, supplement: auto, scope: (:), body) = [
+  #metadata((
     kind: "touying-equation",
     block: block,
     numbering: numbering,
@@ -27,11 +27,11 @@
         panic("Unsupported type: " + str(type(body)))
       }
     },
-  ))
-}
+  ))<touying-temporary-mark>
+]
 // touying mitex mark
-#let touying-mitex(block: true, numbering: none, supplement: auto, mitex, body) = {
-  metadata((
+#let touying-mitex(block: true, numbering: none, supplement: auto, mitex, body) = [
+  #metadata((
     kind: "touying-mitex",
     block: block,
     numbering: numbering,
@@ -48,18 +48,18 @@
         panic("Unsupported type: " + str(type(body)))
       }
     },
-  ))
-}
+  ))<touying-temporary-mark>
+]
 // touying reducer mark
-#let touying-reducer(reduce: arr => arr.sum(), cover: arr => none, ..args) = {
-  metadata((
+#let touying-reducer(reduce: arr => arr.sum(), cover: arr => none, ..args) = [
+  #metadata((
     kind: "touying-reducer",
     reduce: reduce,
     cover: cover,
     kwargs: args.named(),
     args: args.pos(),
-  ))
-}
+  ))<touying-temporary-mark>
+]
 
 // parse touying equation, and get the repetitions
 #let _parse-touying-equation(self: none, need-cover: true, base: 1, index: 1, eqt) = {
@@ -807,8 +807,22 @@
   // first-slide page number, which will affect preamble,
   // default is 1
   first-slide-number: 1,
+  // warnings
+  enable-mark-warning: true,
+  enable-styled-warning: true,
   // global preamble
-  preamble: none,
+  preamble: self => {
+    if self.enable-mark-warning {
+      context {
+        let marks = query(<touying-temporary-mark>)
+        if marks.len() > 0 {
+          let page-num = marks.at(0).location().page()
+          let kind = marks.at(0).value.kind
+          panic("Unsupported mark `" + kind + "` at page " + str(page-num) + ". You can't use it inside some layout functions like `grid`. You may want to use the callback-style `uncover` function instead. Or you may want to use #slide[][] for a two-column layout. ")
+        }
+      }
+    }
+  },
   // page preamble
   page-preamble: none,
   // reset footnote
@@ -893,7 +907,8 @@
     slides: touying-slides,
     // append the preamble
     append-preamble: (self: none, preamble) => {
-      self.preamble += preamble
+      let origin-preamble = self.preamble
+      self.preamble = self => utils.call-or-display(self, origin-preamble) + utils.call-or-display(self, preamble)
       self
     },
     // datetime format

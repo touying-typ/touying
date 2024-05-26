@@ -39,14 +39,14 @@
 }
 
 // touying slide wrapper mark
-#let touying-slide-wrapper(name, fn, ..args) = {
-  metadata((
+#let touying-slide-wrapper(name, fn, ..args) = [
+  #metadata((
     kind: "touying-slide-wrapper",
     name: name,
     fn: fn,
     args: args,
-  ))
-}
+  ))<touying-temporary-mark>
+]
 
 #let slides(self) = {
   let m = methods(self)
