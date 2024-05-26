@@ -941,9 +941,14 @@
       self.show-notes-on-second-screen = value
       self
     },
-    speaker-note: (self: none, pdfpc: false, setting: it => it, note) => {
-      if pdfpc {
-        pdfpc.speaker-note(note)
+    speaker-note: (self: none, enable-pdfpc: true, mode: "typ", setting: it => it, note) => {
+      if enable-pdfpc {
+        let raw-text = if type(note) == content and note.has("text") {
+          note.text
+        } else {
+          utils.markup-text(note, mode: mode).trim()
+        }
+        pdfpc.speaker-note(raw-text)
       }
       if self.show-notes-on-second-screen != none {
         states.slide-note-state.update(setting(note))
