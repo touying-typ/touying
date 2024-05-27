@@ -87,6 +87,10 @@ Hello, Typst!
 
 ![image](https://github.com/touying-typ/touying/assets/34951714/afbe17cb-46d4-4507-90e8-959c53de95d5)
 
+9. Export slides to PPTX and HTML formats and show presentation online. [touying-exporter](https://github.com/touying-typ/touying-exporter) [touying-template](https://github.com/touying-typ/touying-template) [online](https://touying-typ.github.io/touying-template/)
+
+![image](https://github.com/touying-typ/touying-exporter/assets/34951714/207ddffc-87c8-4976-9bf4-4c6c5e2573ea)
+
 
 ## Quick start
 
