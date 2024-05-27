@@ -10,7 +10,7 @@ sidebar_position: 2
 ## Speaker Notes
 
 ```typst
-#import "@preview/touying:0.4.1": *
+#import "@preview/touying:0.4.2": *
 
 #let s = themes.university.register(aspect-ratio: "16-9")
 

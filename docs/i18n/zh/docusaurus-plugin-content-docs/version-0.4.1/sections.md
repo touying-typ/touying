@@ -101,6 +101,14 @@ Hello, Touying!
 
 你可以通过 `enum-args` 修改内部 enum 的参数。
 
+你当然也可以使用 Typst 原生的目录：
+
+```typst
+#outline(title: none, indent: 2em)
+```
+
+![image](https://github.com/touying-typ/touying/assets/34951714/7b62fcaf-6342-4dba-901b-818c16682529)
+
 如果你对目录有着复杂的自定义需求，你可以使用
 
 ```typst

@@ -15,7 +15,7 @@ sidebar_position: 3
 你可以通过下面的代码来初始化：
 
 ```typst
-#import "@preview/touying:0.4.1": *
+#import "@preview/touying:0.4.2": *
 
 #let s = themes.dewdrop.register(
   aspect-ratio: "16-9",
@@ -152,7 +152,7 @@ PS: 其中 outline title 可以通过 `#(s.outline-title = [Outline])` 的方式
 以及可以通过 `#(s.methods.touying-new-section-slide = none)` 的方式关闭自动加入 `new-section-slide` 的功能。
 
 ```typst
-#import "@preview/touying:0.4.1": *
+#import "@preview/touying:0.4.2": *
 
 #let s = themes.dewdrop.register(aspect-ratio: "16-9", footer: [Dewdrop])
 #let s = (s.methods.info)(
@@ -188,7 +188,7 @@ Hello, Typst!
 ## 示例
 
 ```typst
-#import "@preview/touying:0.4.1": *
+#import "@preview/touying:0.4.2": *
 
 #let s = themes.dewdrop.register(
   aspect-ratio: "16-9",

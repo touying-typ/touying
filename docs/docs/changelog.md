@@ -4,6 +4,16 @@ sidebar_position: 14
 
 # Changelog
 
+## v0.4.2
+
+- theme(metropolis): decoupled text color with `neutral-dark` (Breaking change)
+- feat: add mark-style uncover, only and alternatives
+- feat: add warning for styled block for slides
+- feat: add warning for touying-temporary-mark
+- feat: add markup-text for speaker-note
+- fix: fix bug of slides
+
+
 ## v0.4.1
 
 ### Features

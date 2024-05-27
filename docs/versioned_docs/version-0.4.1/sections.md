@@ -99,6 +99,14 @@ Where the definition of `touying-outline()` is:
 
 You can modify the parameters of the internal enum through `enum-args`.
 
+Of course, you can also use Typst's native outline:
+
+```typst
+#outline(title: none, indent: 2em)
+```
+
+![image](https://github.com/touying-typ/touying/assets/34951714/7b62fcaf-6342-4dba-901b-818c16682529)
+
 If you have complex custom requirements for the table of contents, you can use:
 
 ```typst

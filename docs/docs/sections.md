@@ -11,7 +11,7 @@ Similar to Beamer, Touying also has the concept of sections and subsections.
 Generally, level 1, level 2, and level 3 headings correspond to section, subsection, and title, respectively, as in the dewdrop theme.
 
 ```typst
-#import "@preview/touying:0.4.1": *
+#import "@preview/touying:0.4.2": *
 
 #let s = themes.dewdrop.register()
 #let (init, slides) = utils.methods(s)
@@ -34,7 +34,7 @@ Hello, Touying!
 However, often we don't need subsections, and we can use level 1 and level 2 headings to correspond to section and title, as in the university theme.
 
 ```typst
-#import "@preview/touying:0.4.1": *
+#import "@preview/touying:0.4.2": *
 
 #let s = themes.university.register()
 #let (init, slides) = utils.methods(s)
@@ -69,7 +69,7 @@ This sets the default numbering to `1.1`, with the section corresponding to `1.`
 Displaying a table of contents in Touying is straightforward:
 
 ```typst
-#import "@preview/touying:0.4.1": *
+#import "@preview/touying:0.4.2": *
 
 #let s = themes.simple.register()
 #let (init, slides, alert, touying-outline) = utils.methods(s)
@@ -98,6 +98,14 @@ Where the definition of `touying-outline()` is:
 ```
 
 You can modify the parameters of the internal enum through `enum-args`.
+
+Of course, you can also use Typst's native outline:
+
+```typst
+#outline(title: none, indent: 2em)
+```
+
+![image](https://github.com/touying-typ/touying/assets/34951714/7b62fcaf-6342-4dba-901b-818c16682529)
 
 If you have complex custom requirements for the table of contents, you can use:
 

@@ -7,23 +7,38 @@ sidebar_position: 2
 得益于 [Polylux](https://polylux.dev/book/dynamic/syntax.html) 提供的语法，我们同样能够在 Touying 中使用 `only`、`uncover` 和 `alternatives`。
 
 
+## 标记风格的函数
+
+我们可以使用标记风格的函数，用起来十分方便。
+
+```typst
+At subslide #utils.touying-wrapper((self: none) => str(self.subslide)), we can
+
+use #uncover("2-")[`#uncover` function] for reserving space,
+
+use #only("2-")[`#only` function] for not reserving space,
+
+#alternatives[call `#only` multiple times \u{2717}][use `#alternatives` function #sym.checkmark] for choosing one of the alternatives.
+```
+
+但是这种方式并非在所有情况下都能生效，例如你将 `uncover` 放入 `grid` 函数中，就会报错。
+
+
 ## 回调风格的函数
 
-为了避免上文提到的 `styled` 与 `layout` 限制，Touying 利用回调函数巧妙实现了总是能生效的 `only`、`uncover` 和 `alternatives`，具体来说，您要这样引入这三个函数：
+为了避免上文提到的布局函数的限制，Touying 利用回调函数巧妙实现了总是能生效的 `only`、`uncover` 和 `alternatives`，具体来说，您要这样引入这三个函数：
 
 ```typst
 #slide(repeat: 3, self => [
   #let (uncover, only, alternatives) = utils.methods(self)
 
-  In subslide #self.subslide,
+  At subslide #self.subslide, we can
 
-  test #uncover("2-")[uncover] function,
+  use #uncover("2-")[`#uncover` function] for reserving space,
 
-  and test #only("2-")[only] function,
+  use #only("2-")[`#only` function] for not reserving space,
 
-  #pause
-
-  and paused text.
+  #alternatives[call `#only` multiple times \u{2717}][use `#alternatives` function #sym.checkmark] for choosing one of the alternatives.
 ])
 ```
 

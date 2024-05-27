@@ -6,23 +6,39 @@ sidebar_position: 2
 
 Thanks to the syntax provided by [Polylux](https://polylux.dev/book/dynamic/syntax.html), we can also use `only`, `uncover`, and `alternatives` in Touying.
 
+
+## Mark-Style Functions
+
+We can use mark-style functions, which are very convenient to use.
+
+```typst
+At subslide #utils.touying-wrapper((self: none) => str(self.subslide)), we can
+
+use #uncover("2-")[`#uncover` function] for reserving space,
+
+use #only("2-")[`#only` function] for not reserving space,
+
+#alternatives[call `#only` multiple times \u{2717}][use `#alternatives` function #sym.checkmark] for choosing one of the alternatives.
+```
+
+However, this does not work in all cases, for example if you put `uncover` into the layout function like `grid` function, you will get an error.
+
+
 ## Callback-Style Functions
 
-To overcome the limitations of `styled` and `layout` mentioned earlier, Touying cleverly implements always-effective `only`, `uncover`, and `alternatives` using callback functions. Specifically, you need to introduce these three functions as follows:
+To overcome the limitations of layout functions mentioned earlier, Touying cleverly implements always-effective `only`, `uncover`, and `alternatives` using callback functions. Specifically, you need to introduce these three functions as follows:
 
 ```typst
 #slide(repeat: 3, self => [
   #let (uncover, only, alternatives) = utils.methods(self)
 
-  In subslide #self.subslide,
+  At subslide #self.subslide, we can
 
-  test #uncover("2-")[uncover] function,
+  use #uncover("2-")[`#uncover` function] for reserving space,
 
-  and test #only("2-")[only] function,
+  use #only("2-")[`#only` function] for not reserving space,
 
-  #pause
-
-  and paused text.
+  #alternatives[call `#only` multiple times \u{2717}][use `#alternatives` function #sym.checkmark] for choosing one of the alternatives.
 ])
 ```
 

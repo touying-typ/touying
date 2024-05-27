@@ -25,13 +25,13 @@ If you wish to modify a theme within the Touying package locally instead of crea
 
 1. Copy the [theme code](https://github.com/touying-typ/touying/tree/main/themes) from the `themes` directory to your local machine. For example, copy `themes/university.typ` to a local file named `university.typ`.
 2. Remove all `#import "../xxx.typ"` commands at the top of the `university.typ` file.
-3. Add `#import "@preview/touying:0.4.1": *` at the top of the `university.typ` file to import all modules.
+3. Add `#import "@preview/touying:0.4.2": *` at the top of the `university.typ` file to import all modules.
 4. Replace `self: s` in the `register` function with `self: themes.default.register()` **(Important)**.
 
 You can then import and use the theme by:
 
 ```typst
-#import "@preview/touying:0.4.1": *
+#import "@preview/touying:0.4.2": *
 #import "university.typ"
 
 #let s = university.register(aspect-ratio: "16-9")
@@ -47,7 +47,7 @@ Depending on whether the theme is for personal use or part of Touying, you can i
 If for personal use:
 
 ```typst
-#import "@preview/touying:0.4.1": *
+#import "@preview/touying:0.4.2": *
 ```
 
 If part of Touying themes:
@@ -73,7 +73,7 @@ Generally, the first step in creating slides is to determine font size and page 
 
 ```typst
 // bamboo.typ
-#import "@preview/touying:0.4.1": *
+#import "@preview/touying:0.4.2": *
 
 #let register(
   self: themes.default.register(),
@@ -90,7 +90,7 @@ Generally, the first step in creating slides is to determine font size and page 
 }
 
 // main.typ
-#import "@preview/touying:0.4.1": *
+#import "@preview/touying:0.4.2": *
 #import "bamboo.typ"
 
 #let s = bamboo.register(aspect-ratio: "16-9")
@@ -190,7 +190,7 @@ We also need to customize a `slide` method that accepts `slide(self: none, title
 
 ```typst
 // bamboo.typ
-#import "@preview/touying:0.4.1": *
+#import "@preview/touying:0.4.2": *
 
 #let slide(self: none, title: auto, ..args) = {
   if title != auto {
@@ -251,7 +251,7 @@ We also need to customize a `slide` method that accepts `slide(self: none, title
 
 
 // main.typ
-#import "@preview/touying:0.4.1": *
+#import "@preview/touying:0.4.2": *
 #import "bamboo.typ"
 
 #let s = bamboo.register(aspect-ratio: "16-9", footer: self => self.info.institution)
@@ -290,7 +290,7 @@ Finally, we update the `slides(self: none, title-slide: true, slide-level: 1, ..
 
 ```
 // bamboo.typ
-#import "@preview/touying:0.4.1": *
+#import "@preview/touying:0.4.2": *
 
 #let slide(self: none, title: auto, ..args) = {
   if title != auto {
@@ -406,7 +406,7 @@ Finally, we update the `slides(self: none, title-slide: true, slide-level: 1, ..
 
 
 // main.typ
-#import "@preview/touying:0.4.1": *
+#import "@preview/touying:0.4.2": *
 #import "bamboo.typ"
 
 #let s = bamboo.register(aspect-ratio: "16-9", footer: self => self.info.institution)

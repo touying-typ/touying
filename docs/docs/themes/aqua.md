@@ -13,7 +13,7 @@ This theme is created by [@pride7](https://github.com/pride7), featuring beautif
 You can initialize it with the following code:
 
 ```typst
-#import "@preview/touying:0.4.1": *
+#import "@preview/touying:0.4.2": *
 
 #let s = themes.aqua.register(aspect-ratio: "16-9", lang: "en")
 #let s = (s.methods.info)(
@@ -124,7 +124,7 @@ PS: The outline title can be modified via `#(s.outline-title = [Outline])`.
 Additionally, you can disable the automatic inclusion of `new-section-slide` functionality by `#(s.methods.touying-new-section-slide = none)`.
 
 ```typst
-#import "@preview/touying:0.4.1": *
+#import "@preview/touying:0.4.2": *
 
 #let s = themes.aqua.register(aspect-ratio: "16-9", lang: "en")
 #let s = (s.methods.info)(
@@ -159,7 +159,7 @@ Hello, Typst!
 ## Example
 
 ```typst
-#import "@preview/touying:0.4.1": *
+#import "@preview/touying:0.4.2": *
 
 #let s = themes.aqua.register(aspect-ratio: "16-9", lang: "en")
 #let s = (s.methods.info)(

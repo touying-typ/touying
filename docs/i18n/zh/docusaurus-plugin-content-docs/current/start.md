@@ -9,7 +9,7 @@ sidebar_position: 2
 要使用 Touying，您只需要在文档里加入
 
 ```typst
-#import "@preview/touying:0.4.1": *
+#import "@preview/touying:0.4.2": *
 
 #let s = themes.simple.register()
 #let (init, slides) = utils.methods(s)
@@ -42,7 +42,7 @@ Hello, Typst!
 事实上，Touying 提供了多种 slides 编写风格，实际上您也可以使用 `#slide[..]` 的写法，以获得 Touying 提供的更多更强大的功能。
 
 ```typst
-#import "@preview/touying:0.4.1": *
+#import "@preview/touying:0.4.2": *
 #import "@preview/cetz:0.2.2"
 #import "@preview/fletcher:0.4.4" as fletcher: node, edge
 #import "@preview/ctheorems:1.1.2": *
@@ -57,6 +57,9 @@ Hello, Typst!
 
 // Set the numbering of section and subsection
 #let s = (s.methods.numbering)(self: s, section: "1.", "1.1")
+
+// Set the speaker notes configuration
+// #let s = (s.methods.show-notes-on-second-screen)(self: s, right)
 
 // Global information configuration
 #let s = (s.methods.info)(
@@ -123,8 +126,24 @@ Just like this.
 
 Meanwhile, #pause we can also use `#meanwhile` to #pause display other content synchronously.
 
+#speaker-note[
+  + This is a speaker note.
+  + You won't see it unless you use `#let s = (s.math.show-notes-on-second-screen)(self: s, right)`
+]
 
-== Complex Animation
+
+== Complex Animation - Mark-Style
+
+At subslide #utils.touying-wrapper((self: none) => str(self.subslide)), we can
+
+use #uncover("2-")[`#uncover` function] for reserving space,
+
+use #only("2-")[`#only` function] for not reserving space,
+
+#alternatives[call `#only` multiple times \u{2717}][use `#alternatives` function #sym.checkmark] for choosing one of the alternatives.
+
+
+== Complex Animation - Callback-Style
 
 #slide(repeat: 3, self => [
   #let (uncover, only, alternatives) = utils.methods(self)

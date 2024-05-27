@@ -9,7 +9,7 @@ sidebar_position: 4
 如果我们只是需要简单使用，我们可以直接在标题下输入内容，就像是在编写正常 Typst 文档一样。这里的标题有着分割页面的作用，同时我们也能正常地使用 `#pause` 等命令实现动画效果。
 
 ```typst
-#import "@preview/touying:0.4.1": *
+#import "@preview/touying:0.4.2": *
 
 #let s = themes.simple.register()
 #let (init, slides) = utils.methods(s)
@@ -43,7 +43,7 @@ PS：我们可以使用 `#slides-end` 记号来标志 `#show: slides` 的结束�
 例如上面的例子就可以改造成
 
 ```typst
-#import "@preview/touying:0.4.1": *
+#import "@preview/touying:0.4.2": *
 
 #let s = themes.simple.register()
 #let (init, slides) = utils.methods(s)
@@ -82,7 +82,7 @@ PS：我们可以使用 `#slides-end` 记号来标志 `#show: slides` 的结束�
 如果我们不希望它自动创建这样一个 section slide，我们可以将这个方法删除：
 
 ```typst
-#import "@preview/touying:0.4.1": *
+#import "@preview/touying:0.4.2": *
 
 #let s = themes.simple.register()
 #(s.methods.touying-new-section-slide = none)
@@ -110,7 +110,7 @@ Hello, Typst!
 同理，我们也可以注册一个新的 section slide：
 
 ```typst
-#import "@preview/touying:0.4.1": *
+#import "@preview/touying:0.4.2": *
 
 #let s = themes.simple.register()
 #(s.methods.touying-new-section-slide = (self: none, section, ..args) => {
@@ -151,7 +151,7 @@ Hello, Typst!
 实际上，你也可以不使用 `#show: slides` 和 `utils.slides(s)`，而是只使用 `utils.methods(s)`，例如
 
 ```typst
-#import "@preview/touying:0.4.1": *
+#import "@preview/touying:0.4.2": *
 
 #let s = themes.simple.register()
 #let (init, touying-outline, slide) = utils.methods(s)

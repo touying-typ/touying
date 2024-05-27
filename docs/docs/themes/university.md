@@ -13,7 +13,7 @@ This aesthetically pleasing theme is courtesy of [Pol Dellaiera](https://github.
 You can initialize the University theme using the following code:
 
 ```typst
-#import "@preview/touying:0.4.1": *
+#import "@preview/touying:0.4.2": *
 
 #let s = themes.university.register(aspect-ratio: "16-9")
 #let s = (s.methods.info)(
@@ -137,7 +137,7 @@ You can set these parameters using `#show: slides.with(..)`.
 And the function of automatically adding `new-section-slide` can be turned off by `#(s.methods.touying-new-section-slide = none)`.
 
 ```typst
-#import "@preview/touying:0.4.1": *
+#import "@preview/touying:0.4.2": *
 
 #let s = themes.university.register(aspect-ratio: "16-9")
 #let s = (s.methods.info)(
@@ -173,7 +173,7 @@ Hello, Typst!
 ## Example
 
 ```typst
-#import "@preview/touying:0.4.1": *
+#import "@preview/touying:0.4.2": *
 
 #let s = themes.university.register(aspect-ratio: "16-9")
 #let s = (s.methods.info)(

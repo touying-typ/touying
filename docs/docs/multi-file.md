@@ -18,7 +18,7 @@ These three files are separated to allow both `main.typ` and `content.typ` to im
 
 ```typst
 // globals.typ
-#import "@preview/touying:0.4.1": *
+#import "@preview/touying:0.4.2": *
 
 #let s = themes.university.register(aspect-ratio: "16-9")
 #let s = (s.methods.numbering)(self: s, section: "1.", "1.1")

@@ -95,7 +95,7 @@ Before you begin, make sure you have installed the Typst environment. If not, yo
 To use Touying, you only need to include the following code in your document:
 
 ```typst
-#import "@preview/touying:0.4.1": *
+#import "@preview/touying:0.4.2": *
 
 #let s = themes.simple.register(aspect-ratio: "16-9")
 #let (init, slides) = utils.methods(s)
@@ -127,7 +127,7 @@ It's simple. Congratulations on creating your first Touying slide! 🎉
 In fact, Touying provides various styles for writing slides. For example, the above example uses first-level and second-level titles to create new slides. However, you can also use the `#slide[..]` format to access more powerful features provided by Touying.
 
 ```typst
-#import "@preview/touying:0.4.1": *
+#import "@preview/touying:0.4.2": *
 #import "@preview/cetz:0.2.2"
 #import "@preview/fletcher:0.4.4" as fletcher: node, edge
 #import "@preview/ctheorems:1.1.2": *
@@ -216,7 +216,19 @@ Meanwhile, #pause we can also use `#meanwhile` to #pause display other content s
   + You won't see it unless you use `#let s = (s.math.show-notes-on-second-screen)(self: s, right)`
 ]
 
-== Complex Animation
+
+== Complex Animation - Mark-Style
+
+At subslide #utils.touying-wrapper((self: none) => str(self.subslide)), we can
+
+use #uncover("2-")[`#uncover` function] for reserving space,
+
+use #only("2-")[`#only` function] for not reserving space,
+
+#alternatives[call `#only` multiple times \u{2717}][use `#alternatives` function #sym.checkmark] for choosing one of the alternatives.
+
+
+== Complex Animation - Callback-Style
 
 #slide(repeat: 3, self => [
   #let (uncover, only, alternatives) = utils.methods(self)
@@ -358,7 +370,6 @@ Fletcher Animation in Touying:
 #slide[
   Please pay attention to the current slide number.
 ]
-
 ```
 
 ![image](https://github.com/touying-typ/touying/assets/34951714/5ac2b11c-9e77-4389-ade6-682c9fc3e1fb)

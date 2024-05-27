@@ -117,7 +117,7 @@ Now you can understand the purpose of the `utils.methods()` function: to bind `s
 In general, the two ways mentioned above are sufficient for adding global settings. However, there are still situations where we need to initialize counters or states. If you place this code before `#show: slides`, a blank page will be created, which is something we don't want to see. In such cases, you can use the `s.methods.append-preamble` method. For example, when using the codly package:
 
 ```typst
-#import "@preview/touying:0.4.1": *
+#import "@preview/touying:0.4.2": *
 #import "@preview/codly:0.2.0": *
 
 #let s = themes.simple.register(aspect-ratio: "16-9")
