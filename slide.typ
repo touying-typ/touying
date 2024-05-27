@@ -8,6 +8,13 @@
 #let meanwhile = [#metadata((kind: "touying-meanwhile"))<touying-temporary-mark>]
 // touying slides-end mark
 #let slides-end = [#metadata((kind: "touying-slides-end"))<touying-temporary-mark>]
+// dynamic control mark
+#let uncover = utils.touying-wrapper.with(utils.uncover, with-visible-subslides: true)
+#let only = utils.touying-wrapper.with(utils.only, with-visible-subslides: true)
+#let alternatives-match = utils.touying-wrapper.with(utils.alternatives-match)
+#let alternatives = utils.touying-wrapper.with(utils.alternatives)
+#let alternatives-fn = utils.touying-wrapper.with(utils.alternatives-fn)
+#let alternatives-cases = utils.touying-wrapper.with(utils.alternatives-cases)
 // touying equation mark
 #let touying-equation(block: true, numbering: none, supplement: auto, scope: (:), body) = [
   #metadata((
@@ -325,6 +332,17 @@
             cover-arr.push(cont)
           }
           repetitions = nextrepetitions
+        } else if kind == "touying-wrapper" {
+          // handle touying-wrapper
+          self.subslide = index
+          if repetitions <= index or not need-cover {
+            result.push((child.value.fn)(self: self, ..child.value.args))
+          } else {
+            cover-arr.push((child.value.fn)(self: self, ..child.value.args))
+          }
+          if child.value.with-visible-subslides {
+            max-repetitions = calc.max(max-repetitions, utils.last-required-subslide(child.value.args.pos().at(0)))
+          }
         } else {
           if repetitions <= index or not need-cover {
             result.push(child)
@@ -693,10 +711,10 @@
         (self.methods.slide)(self: self, section: section, subsection: subsection, ..(if last-title != none { (title: last-title) }), slide.sum())
         (section, subsection, title, slide) = (none, none, none, ())
       }
-      if child.value.at("name") in self.slides {
-        (child.value.at("fn"))(section: section, subsection: subsection, ..(if last-title != none { (title: last-title) }), ..child.value.at("args"))
+      if child.value.name in self.slides {
+        (child.value.fn)(section: section, subsection: subsection, ..(if last-title != none { (title: last-title) }), ..child.value.args)
       } else {
-        (child.value.at("fn"))(..child.value.at("args"))
+        (child.value.fn)(..child.value.args)
       }
       (section, subsection, title, slide) = (none, none, none, ())
     } else if type(child) == content and child.func() == heading and child.depth <= slide-level + 1 {

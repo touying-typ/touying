@@ -48,6 +48,16 @@
   ))<touying-temporary-mark>
 ]
 
+// touying wrapper mark
+#let touying-wrapper(fn, with-visible-subslides: false, ..args) = [
+  #metadata((
+    kind: "touying-wrapper",
+    fn: fn,
+    args: args,
+    with-visible-subslides: with-visible-subslides,
+  ))<touying-temporary-mark>
+]
+
 #let slides(self) = {
   let m = methods(self)
   let res = (:)
@@ -450,6 +460,28 @@
     }
 
     lower-okay and upper-okay
+  } else {
+    panic("you may only provide a single integer, an array of integers, or a string")
+  }
+}
+
+#let last-required-subslide(visible-subslides) = {
+  if type(visible-subslides) == "integer" {
+    visible-subslides
+  } else if type(visible-subslides) == "array" {
+    calc.max(..visible-subslides.map(s => last-required-subslide(s)))
+  } else if type(visible-subslides) == "string" {
+    let parts = _parse-subslide-indices(visible-subslides)
+    last-required-subslide(parts)
+  } else if type(visible-subslides) == "dictionary" {
+    let last = 0
+    if "beginning" in visible-subslides {
+      last = calc.max(last, visible-subslides.beginning)
+    }
+    if "until" in visible-subslides {
+      last = calc.max(last, visible-subslides.until)
+    }
+    last
   } else {
     panic("you may only provide a single integer, an array of integers, or a string")
   }

@@ -87,7 +87,19 @@ Meanwhile, #pause we can also use `#meanwhile` to #pause display other content s
   + You won't see it unless you use `#let s = (s.math.show-notes-on-second-screen)(self: s, right)`
 ]
 
-== Complex Animation
+
+== Complex Animation - Mark-Style
+
+At subslide #utils.touying-wrapper((self: none) => str(self.subslide)), we can
+
+use #uncover("2-")[`#uncover` function] for reserving space,
+
+use #only("2-")[`#only` function] for not reserving space,
+
+#alternatives[call `#only` multiple times \u{2717}][use `#alternatives` function #sym.checkmark] for choosing one of the alternatives.
+
+
+== Complex Animation - Callback-Style
 
 #slide(repeat: 3, self => [
   #let (uncover, only, alternatives) = utils.methods(self)
