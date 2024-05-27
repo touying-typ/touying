@@ -556,13 +556,14 @@
     }
   }
   let bodies = bodies.pos()
+  // update pdfpc
+  let update-pdfpc(curr-subslide) = locate(loc => [
+    #metadata((t: "NewSlide")) <pdfpc>
+    #metadata((t: "Idx", v: loc.page() - 1)) <pdfpc>
+    #metadata((t: "Overlay", v: curr-subslide - 1)) <pdfpc>
+    #metadata((t: "LogicalSlide", v: states.slide-counter.at(loc).first())) <pdfpc>
+  ])
   let page-preamble(curr-subslide) = locate(loc => {
-    [
-      #metadata((t: "NewSlide")) <pdfpc>
-      #metadata((t: "Idx", v: loc.page() - 1)) <pdfpc>
-      #metadata((t: "Overlay", v: curr-subslide - 1)) <pdfpc>
-      #metadata((t: "LogicalSlide", v: states.slide-counter.at(loc).first())) <pdfpc>
-    ]
     if self.reset-footnote {
       counter(footnote).update(0)
     }
@@ -636,7 +637,7 @@
           it
         }
       })
-      header = _update-states(1) + header
+      header = _update-states(1) + update-pdfpc(1) + header
       set page(..(self.page-args + page-extra-args + (header: header, footer: footer)))
       setting(
         page-preamble(1) + composer-with-side-by-side(..conts)
@@ -647,7 +648,7 @@
   if self.handout {
     self.subslide = repeat
     let (conts, _) = _parse-content(self: self, index: repeat, ..bodies)
-    header = _update-states(1) + header
+    header = _update-states(1) + update-pdfpc(1) + header
     set page(..(self.page-args + page-extra-args + (header: header, footer: footer)))
     setting(
       page-preamble(1) + composer-with-side-by-side(..conts)
@@ -663,7 +664,9 @@
       let (conts, _) = _parse-content(self: self, index: i, ..bodies)
       // update the counter in the first subslide
       if i == 1 {
-        new-header = _update-states(repeat) + new-header
+        new-header = _update-states(repeat) + update-pdfpc(i) + new-header
+      } else {
+        new-header = update-pdfpc(i) + new-header
       }
       result.push({
         set page(..(self.page-args + page-extra-args + (header: new-header, footer: footer)))
