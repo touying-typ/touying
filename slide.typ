@@ -682,7 +682,9 @@
   let is-end = false
   for child in children {
     i += 1
-    if type(child) == content and child.func() == metadata and type(child.value) == dictionary and child.value.at("kind", default: none) == "touying-slides-end" {
+    if self.enable-styled-warning and utils.is-styled(child) and type(child.child) == content and not child.child.has("text") {
+      panic("You should not use set/show rule here, please put it before `#show: slides` or inside `#slide[]`, or use `#slides-end` to terminate `#show: slides` first. Use `#(s.enable-styled-warning = false)` if you think it's a false warning.")
+    } else if type(child) == content and child.func() == metadata and type(child.value) == dictionary and child.value.at("kind", default: none) == "touying-slides-end" {
       is-end = true
       break
     } else if type(child) == content and child.func() == metadata and type(child.value) == dictionary and child.value.at("kind", default: none) == "touying-slide-wrapper" {
