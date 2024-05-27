@@ -36,7 +36,7 @@
     title: if title == auto { self.m-title = title } else { title },
     setting: body => {
       show: _saved-align.with(align)
-      set text(fill: self.colors.primary-dark)
+      set text(fill: self.colors.neutral-dark)
       show: args.named().at("setting", default: body => body)
       body
     },
@@ -52,7 +52,7 @@
   self = utils.empty-page(self)
   let info = self.info + args.named()
   let content = {
-    set text(fill: self.colors.primary-dark)
+    set text(fill: self.colors.neutral-dark)
     set align(horizon)
     block(width: 100%, inset: 2em, {
       text(size: 1.3em, text(weight: "medium", info.title))
@@ -125,6 +125,7 @@
   self = (self.methods.colors)(
     self: self,
     neutral-lightest: rgb("#fafafa"),
+    neutral-dark: rgb("#23373b"),
     primary-dark: rgb("#23373b"),
     secondary-light: rgb("#eb811b"),
     secondary-lighter: rgb("#d6c6b7"),
@@ -155,9 +156,9 @@
     set align(bottom)
     set text(size: 0.8em)
     pad(.5em, {
-      text(fill: self.colors.primary-dark.lighten(40%), utils.call-or-display(self, self.m-footer))
+      text(fill: self.colors.neutral-dark.lighten(40%), utils.call-or-display(self, self.m-footer))
       h(1fr)
-      text(fill: self.colors.primary-dark, utils.call-or-display(self, self.m-footer-right))
+      text(fill: self.colors.neutral-dark, utils.call-or-display(self, self.m-footer-right))
     })
     if self.m-footer-progress {
       place(bottom, block(height: 2pt, width: 100%, spacing: 0pt, utils.call-or-display(self, self.m-progress-bar)))
