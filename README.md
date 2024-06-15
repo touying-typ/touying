@@ -178,7 +178,7 @@ In fact, Touying provides various styles for writing slides. For example, the ab
   ),
 ))
 
-// Theroems configuration by ctheorems
+// Theorems configuration by ctheorems
 #show: thmrules.with(qed-symbol: $square$)
 #let theorem = thmbox("theorem", "Theorem", fill: rgb("#eeffee"))
 #let corollary = thmplain(
@@ -307,7 +307,7 @@ Fletcher Animation in Touying:
 )
 
 
-= Theroems
+= Theorems
 
 == Prime numbers
 
