@@ -90,7 +90,7 @@ Hello, Typst!
 
 ## Quick start
 
-Before you begin, make sure you have installed the Typst environment. If not, you can use the [Web App](https://typst.app/) or the [Tinymist LSP](https://marketplace.visualstudio.com/items?itemName=myriad-dreamin.tinymist) and [Typst Preview](https://marketplace.visualstudio.com/items?itemName=mgt19937.typst-preview) extensions for VS Code.
+Before you begin, make sure you have installed the Typst environment. If not, you can use the [Web App](https://typst.app/) or the [Tinymist LSP](https://marketplace.visualstudio.com/items?itemName=myriad-dreamin.tinymist) extensions for VS Code.
 
 To use Touying, you only need to include the following code in your document:
 
