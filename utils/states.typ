@@ -1,16 +1,16 @@
 // touying slide counters
 #let slide-counter = counter("touying-slide-counter")
 #let last-slide-counter = counter("touying-last-slide-counter")
-#let last-slide-number = locate(loc => last-slide-counter.final(loc).first())
+#let last-slide-number = context { last-slide-counter.final().first() }
 
-#let touying-progress(callback) = locate(loc => {
-  if last-slide-counter.final(loc).first() == 0 {
+#let touying-progress(callback) = context {
+  if last-slide-counter.final().first() == 0 {
     callback(1.0)
     return
   }
-  let ratio = calc.min(1.0, slide-counter.at(loc).first() / last-slide-counter.final(loc).first())
+  let ratio = calc.min(1.0, slide-counter.get().first() / last-slide-counter.final().first())
   callback(ratio)
-})
+}
 
 // sections
 #let sections-state = state("touying-sections-state", ((kind: "section", title: none, short-title: none, loc: none, count: 0, children: ()),))
@@ -21,16 +21,18 @@
 // slide note state
 #let slide-note-state = state("touying-slide-note-state", none)
 
-#let _new-section(short-title: auto, duplicate: false, title) = locate(loc => {
+#let _new-section(short-title: auto, duplicate: false, title) = context {
+  let loc = here()
   sections-state.update(sections => {
     if duplicate or sections.last().title != title or sections.last().short-title != short-title {
       sections.push((kind: "section", title: title, short-title: short-title, loc: loc, count: 0, children: ()))
     }
     sections
   })
-})
+}
 
-#let _new-subsection(short-title: auto, duplicate: false, title) = locate(loc => {
+#let _new-subsection(short-title: auto, duplicate: false, title) = context {
+  let loc = here()
   sections-state.update(sections => {
     let last-section = sections.pop()
     let last-subsection = (kind: "none")
@@ -45,9 +47,10 @@
     sections.push(last-section)
     sections
   })
-})
+}
 
-#let _sections-step(repetitions) = locate(loc => {
+#let _sections-step(repetitions) = context {
+  let loc = here()
   sections-state.update(sections => {
     let last-section = sections.pop()
     if last-section.children.len() == 0 or last-section.children.last().kind == "slide" {
@@ -65,11 +68,11 @@
     }
     sections
   }
-)})
+)}
 
-#let touying-final-sections(callback) = locate(loc => {
-  callback(sections-state.final(loc))
-})
+#let touying-final-sections(callback) = context {
+  callback(sections-state.final())
+}
 
 #let touying-outline(self: none, func: enum, enum-args: (:), list-args: (:), padding: 0pt) = touying-final-sections(sections => {
   let enum-args = (full: true) + enum-args
@@ -90,65 +93,65 @@
   ))
 })
 
-#let current-section-title = locate(loc => {
-  let sections = sections-state.at(loc)
+#let current-section-title = context {
+  let sections = sections-state.get()
   sections.last().title
-})
+}
 
-#let current-subsection-title = locate(loc => {
-  let sections = sections-state.at(loc)
+#let current-subsection-title = context {
+  let sections = sections-state.get()
   let subsections = sections.last().children.filter(v => v.kind == "subsection")
   if subsections.len() > 0 {
     subsections.last().title
   } else {
     none
   }
-})
+}
 
 #let current-slide-title = context slide-title-state.get()
 
 #let current-slide-note = context slide-note-state.get()
 
 #let _typst-numbering = numbering
-#let current-section-number(numbering: "01", ignore-zero: true) = locate(loc => {
-  let sections = sections-state.at(loc)
+#let current-section-number(numbering: "01", ignore-zero: true) = context {
+  let sections = sections-state.get()
   if not ignore-zero or sections.len() - 1 != 0 {
     _typst-numbering(numbering, sections.len() - 1)
   }
-})
+}
 
-#let current-section-with-numbering(self, ignore-zero: true) = locate(loc => {
-  let sections = sections-state.at(loc)
+#let current-section-with-numbering(self, ignore-zero: true) = context {
+  let sections = sections-state.get()
   if self.numbering != none and (not ignore-zero or sections.len() - 1 != 0) {
     _typst-numbering(self.numbering, sections.len() - 1)
     [ ]
   }
   sections.last().title
-})
+}
 
-#let current-subsection-number(numbering: "1.1", ignore-zero: true) = locate(loc => {
-  let sections = sections-state.at(loc)
+#let current-subsection-number(numbering: "1.1", ignore-zero: true) = context {
+  let sections = sections-state.get()
   let subsections = sections.last().children
   if (not ignore-zero or sections.len() - 1 != 0) and (not ignore-zero or subsections.len() - 1 != 0) {
     _typst-numbering(numbering, sections.len() - 1, subsections.len() - 1)
   }
-})
+}
 
-#let current-subsection-with-numbering(self, ignore-zero: true) = locate(loc => {
-  let sections = sections-state.at(loc)
+#let current-subsection-with-numbering(self, ignore-zero: true) = context {
+  let sections = sections-state.get()
   let subsections = sections.last().children
   if self.numbering != none and (not ignore-zero or sections.len() - 1 != 0) and (not ignore-zero or subsections.len() - 1 != 0) {
     _typst-numbering(self.numbering, sections.len() - 1, subsections.len() - 1)
     [ ]
   }
   subsections.last().title
-})
+}
 
-#let touying-progress-with-sections(callback) = locate(loc => {
+#let touying-progress-with-sections(callback) = context {
   callback((
-    current-sections: sections-state.at(loc),
-    final-sections: sections-state.final(loc),
-    current-slide-number: slide-counter.at(loc).first(),
-    last-slide-number: last-slide-counter.final(loc).first(),
+    current-sections: sections-state.get(),
+    final-sections: sections-state.final(),
+    current-slide-number: slide-counter.get().first(),
+    last-slide-number: last-slide-counter.final().first(),
   ))
-})
+}

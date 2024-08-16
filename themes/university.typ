@@ -178,7 +178,7 @@
   footer-columns: (25%, 1fr, 25%),
   footer-a: self => self.info.author,
   footer-b: self => if self.info.short-title == auto { self.info.title } else { self.info.short-title },
-  footer-c: self => {
+  footer-c: self => context {
     h(1fr)
     utils.info-date(self)
     h(1fr)
