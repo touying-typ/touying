@@ -18,7 +18,7 @@ Touying 能够与 ctheorems 包一起正常工作，你可以直接使用 ctheor
 // Set the numbering of section and subsection
 #let s = (s.methods.numbering)(self: s, section: "1.", "1.1")
 
-// Theroems configuration by ctheorems
+// Theorems configuration by ctheorems
 #show: thmrules.with(qed-symbol: $square$)
 #let theorem = thmbox("theorem", "Theorem", fill: rgb("#eeffee"))
 #let corollary = thmplain(
@@ -41,7 +41,7 @@ Touying 能够与 ctheorems 包一起正常工作，你可以直接使用 ctheor
 #let (slide, empty-slide) = utils.slides(s)
 #show: slides
 
-= Theroems
+= Theorems
 
 == Prime numbers
 

@@ -18,7 +18,7 @@ Moreover, you can utilize `#let s = (s.methods.numbering)(self: s, section: "1."
 // Set the numbering of section and subsection
 #let s = (s.methods.numbering)(self: s, section: "1.", "1.1")
 
-// Theroems configuration by ctheorems
+// Theorems configuration by ctheorems
 #show: thmrules.with(qed-symbol: $square$)
 #let theorem = thmbox("theorem", "Theorem", fill: rgb("#eeffee"))
 #let corollary = thmplain(
@@ -41,7 +41,7 @@ Moreover, you can utilize `#let s = (s.methods.numbering)(self: s, section: "1."
 #let (slide, empty-slide) = utils.slides(s)
 #show: slides
 
-= Theroems
+= Theorems
 
 == Prime numbers
 
