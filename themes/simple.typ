@@ -45,7 +45,7 @@
   self: s,
   aspect-ratio: "16-9",
   footer: [],
-  footer-right: states.slide-counter.display() + " / " + states.last-slide-number,
+    footer-right: context { states.slide-counter.display() + " / " + states.last-slide-number },
   background: rgb("#ffffff"),
   foreground: rgb("#000000"),
   primary: aqua.darken(50%),

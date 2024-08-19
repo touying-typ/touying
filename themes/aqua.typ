@@ -143,7 +143,7 @@
 #let register(
   self: s,
   aspect-ratio: "16-9",
-  footer: states.slide-counter.display(),
+    footer: context { states.slide-counter.display() },
   lang: "en",
   ..args,
 ) = {

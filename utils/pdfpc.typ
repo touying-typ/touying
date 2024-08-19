@@ -2,7 +2,7 @@
 // Author: Andreas Kröpelin
 
 #let pdfpc-file(loc) = {
-  let arr = query(<pdfpc>, loc).map(it => it.value)
+  let arr = query(<pdfpc>).map(it => it.value)
   let (config, ..slides) = arr.split((t: "NewSlide"))
   let pdfpc = (
     pdfpcFormat: 2,

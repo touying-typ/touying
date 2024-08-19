@@ -117,7 +117,7 @@
   aspect-ratio: "16-9",
   header: states.current-section-with-numbering,
   footer: [],
-  footer-right: states.slide-counter.display() + " / " + states.last-slide-number,
+    footer-right: context { states.slide-counter.display() + " / " + states.last-slide-number },
   footer-progress: true,
   ..args,
 ) = {

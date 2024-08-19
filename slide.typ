@@ -557,29 +557,29 @@
   }
   let bodies = bodies.pos()
   // update pdfpc
-  let update-pdfpc(curr-subslide) = locate(loc => [
+  let update-pdfpc(curr-subslide) = context [
     #metadata((t: "NewSlide")) <pdfpc>
-    #metadata((t: "Idx", v: loc.page() - 1)) <pdfpc>
+    #metadata((t: "Idx", v: here().page() - 1)) <pdfpc>
     #metadata((t: "Overlay", v: curr-subslide - 1)) <pdfpc>
-    #metadata((t: "LogicalSlide", v: states.slide-counter.at(loc).first())) <pdfpc>
-  ])
-  let page-preamble(curr-subslide) = locate(loc => {
+    #metadata((t: "LogicalSlide", v: states.slide-counter.get().first())) <pdfpc>
+  ]
+  let page-preamble(curr-subslide) = context {
     if self.reset-footnote {
       counter(footnote).update(0)
     }
-    if loc.page() == self.first-slide-number {
+    if here().page() == self.first-slide-number {
       // preamble
       utils.call-or-display(self, self.preamble)
       // pdfpc slide markers
       if self.pdfpc-file {
-        pdfpc.pdfpc-file(loc)
+        pdfpc.pdfpc-file(here())
       }
     }
     utils.call-or-display(self, self.page-preamble)
     if curr-subslide == 1 and title != none {
       utils.bookmark(level: 3, title)
     }
-  })
+  }
   // update states
   let _update-states(repetitions) = {
     // 1. slide counter part

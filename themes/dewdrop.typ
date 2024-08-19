@@ -234,7 +234,7 @@
   sidebar: (width: 10em),
   mini-slides: (height: 4em, x: 2em, section: false, subsection: true),
   footer: [],
-  footer-right: states.slide-counter.display() + " / " + states.last-slide-number,
+    footer-right: context { states.slide-counter.display() + " / " + states.last-slide-number },
   primary: rgb("#0c4842"),
   alpha: 70%,
   ..args,

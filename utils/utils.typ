@@ -223,12 +223,12 @@
 // Attribution: This file is based on the code from https://github.com/andreasKroepelin/polylux/pull/91
 // Author: ntjess
 
-#let _size-to-pt(size, styles, container-dimension) = {
+#let _size-to-pt(size, container-dimension) = {
   let to-convert = size
   if type(size) == "ratio" {
     to-convert = container-dimension * size
   }
-  measure(v(to-convert), styles).height
+  measure(v(to-convert)).height
 }
 
 #let _limit-content-width(width: none, body, container-size, styles) = {
@@ -323,28 +323,26 @@
 }
 
 #let fit-to-width(grow: true, shrink: true, width, content) = {
-  style(styles => {
-    layout(layout-size => {
-      let content-size = measure(content, styles)
-      let content-width = content-size.width
-      let width = _size-to-pt(width, styles, layout-size.width)
-      if (
-        content-width != 0pt and
-        ((shrink and (width < content-width))
-        or (grow and (width > content-width)))
-      ) {
-        let ratio = width / content-width * 100%
-        // The first box keeps content from prematurely wrapping
-        let scaled = scale(
-          box(content, width: content-width), origin: top + left, x: ratio, y: ratio
-        )
-        // The second box lets typst know the post-scaled dimensions, since `scale`
-        // doesn't update layout information
-        box(scaled, width: width, height: content-size.height * ratio)
-      } else {
-        content
-      }
-    })
+  layout(layout-size => {
+    let content-size = measure(content)
+    let content-width = content-size.width
+    let width = _size-to-pt(width, layout-size.width)
+    if (
+      content-width != 0pt and
+      ((shrink and (width < content-width))
+      or (grow and (width > content-width)))
+    ) {
+      let ratio = width / content-width * 100%
+      // The first box keeps content from prematurely wrapping
+      let scaled = scale(
+        box(content, width: content-width), origin: top + left, x: ratio, y: ratio
+      )
+      // The second box lets typst know the post-scaled dimensions, since `scale`
+      // doesn't update layout information
+      box(scaled, width: width, height: content-size.height * ratio)
+    } else {
+      content
+    }
   })
 }
 
@@ -361,10 +359,10 @@
   }
 
   let to-display = layout(layout-size => {
-    style(styles => {
-      let body-size = measure(body, styles)
+    context {
+      let body-size = measure(body)
       let bounding-width = calc.min(body-size.width, layout-size.width)
-      let wrapped-body-size = measure(box(body, width: bounding-width), styles)
+      let wrapped-body-size = measure(box(body, width: bounding-width))
       let named = cover-args.named()
       if "width" not in named {
         named.insert("width", wrapped-body-size.width)
@@ -387,7 +385,7 @@
         body,
         rect(fill: fill, ..named, ..cover-args.pos())
       )
-    })
+    }
   })
   if inline {
     box(to-display)
@@ -509,8 +507,8 @@
 
   let subslides = subslides-contents.map(it => it.first())
   let contents = subslides-contents.map(it => it.last())
-  style(styles => {
-    let sizes = contents.map(c => measure(c, styles))
+  context {
+    let sizes = contents.map(c => measure(c))
     let max-width = calc.max(..sizes.map(sz => sz.width))
     let max-height = calc.max(..sizes.map(sz => sz.height))
     for (subslides, content) in subslides-contents {
@@ -520,7 +518,7 @@
         align(position, content)
       ))
     }
-  })
+  }
 }
 
 #let alternatives(
