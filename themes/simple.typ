@@ -2,8 +2,8 @@
 // Author: Andreas Kröpelin
 
 #import "../slide.typ": s
-#import "../utils/utils.typ"
-#import "../utils/states.typ"
+#import "../src/utils.typ"
+#import "../src/states.typ"
 
 #let slide(self: none, title: none, footer: auto, ..args) = {
   if footer != auto {

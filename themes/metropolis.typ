@@ -8,9 +8,9 @@
 // #set par(justify: true)
 
 #import "../slide.typ": s
-#import "../utils/utils.typ"
-#import "../utils/states.typ"
-#import "../utils/components.typ"
+#import "../src/utils.typ"
+#import "../src/states.typ"
+#import "../src/components.typ"
 
 #let _saved-align = align
 

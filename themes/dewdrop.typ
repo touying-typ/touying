@@ -2,8 +2,8 @@
 // The typst version was written by https://github.com/OrangeX4
 
 #import "../slide.typ": s
-#import "../utils/utils.typ"
-#import "../utils/states.typ"
+#import "../src/utils.typ"
+#import "../src/states.typ"
 
 #let slide(
   self: none,

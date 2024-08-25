@@ -3,9 +3,9 @@
 // Originally contributed by Pol Dellaiera - https://github.com/drupol
 
 #import "../slide.typ": s
-#import "../utils/utils.typ"
-#import "../utils/states.typ"
-#import "../utils/components.typ"
+#import "../src/utils.typ"
+#import "../src/states.typ"
+#import "../src/components.typ"
 
 #let slide(
   self: none,

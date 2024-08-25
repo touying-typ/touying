@@ -1,6 +1,6 @@
-#import "utils/utils.typ"
-#import "utils/states.typ"
-#import "utils/pdfpc.typ"
+#import "src/utils.typ"
+#import "src/states.typ"
+#import "src/pdfpc.typ"
 
 // touying pause mark
 #let pause = [#metadata((kind: "touying-pause"))<touying-temporary-mark>]
