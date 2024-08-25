@@ -49,6 +49,10 @@
   assert("slide-fn" in self and type(self.slide-fn) == function, message: "`self.slide-fn` must be a function")
   let slide-level = self.slide-level
   let slide-fn = self.slide-fn
+  let new-section-slide-fn = self.at("new-section-slide-fn", default: none)
+  let new-subsection-slide-fn = self.at("new-subsection-slide-fn", default: none)
+  let new-subsubsection-slide-fn = self.at("new-subsubsection-slide-fn", default: none)
+  let new-subsubsubsection-slide-fn = self.at("new-subsubsubsection-slide-fn", default: none)
   let horizontal-line-to-pagebreak = self.at("horizontal-line-to-pagebreak", default: true)
   let children = if utils.is-sequence(body) {
     body.children
@@ -158,18 +162,60 @@
       continue
     } else if utils.is-heading(child, depth: slide-level) {
       let last-heading-depth = get-last-heading-depth(current-headings)
-      if child.depth <= last-heading-depth {
-        current-slide = utils.trim(current-slide)
+      current-slide = utils.trim(current-slide)
+      if child.depth <= last-heading-depth or current-slide != () or (child.depth == 1 and new-section-slide-fn != none) or (
+        child.depth == 2 and new-subsection-slide-fn != none
+      ) or (child.depth == 3 and new-subsubsection-slide-fn != none) or (
+        child.depth == 4 and new-subsubsubsection-slide-fn != none
+      ) {
+        if current-slide != () or current-headings != () {
+          (cont, recaller-map, current-headings, current-slide, first-slide) = call-slide-fn-and-reset(
+            self + (headings: current-headings),
+            slide-fn,
+            current-slide.sum(default: none),
+            recaller-map,
+          )
+          cont
+        }
+      }
+
+      current-headings.push(child)
+      first-slide = true
+
+      if child.depth == 1 and new-section-slide-fn != none {
         (cont, recaller-map, current-headings, current-slide, first-slide) = call-slide-fn-and-reset(
           self + (headings: current-headings),
-          slide-fn,
-          current-slide.sum(default: none),
+          new-section-slide-fn,
+          child.body,
+          recaller-map,
+        )
+        cont
+      } else if child.depth == 2 and new-subsection-slide-fn != none {
+        (cont, recaller-map, current-headings, current-slide, first-slide) = call-slide-fn-and-reset(
+          self + (headings: current-headings),
+          new-subsection-slide-fn,
+          child.body,
+          recaller-map,
+        )
+        cont
+      } else if child.depth == 3 and new-subsubsection-slide-fn != none {
+        (cont, recaller-map, current-headings, current-slide, first-slide) = call-slide-fn-and-reset(
+          self + (headings: current-headings),
+          new-subsubsection-slide-fn,
+          child.body,
+          recaller-map,
+        )
+        cont
+      } else if child.depth == 4 and new-subsubsubsection-slide-fn != none {
+        (cont, recaller-map, current-headings, current-slide, first-slide) = call-slide-fn-and-reset(
+          self + (headings: current-headings),
+          new-subsubsubsection-slide-fn,
+          child.body,
           recaller-map,
         )
         cont
       }
-      current-headings.push(child)
-      first-slide = true
+
     } else {
       let child = if utils.is-sequence(child) {
         // Split the content into slides recursively
@@ -202,15 +248,25 @@
   }
 }
 
-#show: split-content-into-slides.with(self: default-config + config-common(slide-fn: body => touying-slide-wrapper(self => [
-  #set page(paper: "presentation-16-9")
+#show: split-content-into-slides.with(self: default-config + config-common(
+  slide-fn: body => touying-slide-wrapper(self => [
+    #set page(paper: "presentation-16-9")
 
-  #self.headings
+    #self.headings
 
-  #body
-])))
+    #body
+  ]),
+  new-section-slide-fn: title => touying-slide-wrapper(self => [
+    #set page(paper: "presentation-16-9")
+    #set text(green)
 
-= sdfsdf
+    #self.headings
+
+    #title
+  ]),
+))
+
+= Title
 
 == recall
 
