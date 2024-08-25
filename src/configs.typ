@@ -1,5 +1,7 @@
+#import "utils.typ": merge-dicts
+
 /// The private configurations of the theme.
-#let store(..args) = {
+#let config-store(..args) = {
   assert(args.pos().len() == 0, message: "Unexpected positional arguments.")
   return (store: args.named())
 }
@@ -12,7 +14,7 @@
 ///
 /// - slide-level (int): The level of the slides. The default value is `2`, which means the level 1 and 2 headings will be treated as slides.
 ///
-/// - slide (function): The function to create a new slide.
+/// - slide-fn (function): The function to create a new slide.
 ///
 /// - new-section-slide (function): The function to create a new slide for a new section. The default value is `none`.
 ///
@@ -27,6 +29,8 @@
 /// - zero-margin-footer (bool): Whether to show the full footer (with negative padding). The default value is `true`.
 ///
 /// - datetime-format (string): The format of the datetime.
+///
+/// - auto-offset-for-heading (bool): Whether to add an offset relative to slide-level for headings.
 ///
 /// - with-pdfpc-file-label (bool): Whether to add `<pdfpc-file>` label for querying.
 ///
@@ -52,18 +56,19 @@
 /// - align-list-marker-with-baseline (bool): Whether to align the list marker with the baseline. The default value is `true`.
 ///
 /// - scale-list-items (none, float): Whether to scale the list items recursively. The default value is `none`.
-#let common(
+#let config-common(
   handout: false,
   cover: hide,
   slide-level: 2,
-  slide: none,
-  new-section-slide: none,
-  new-subsection-slide: none,
-  new-subsubsection-slide: none,
-  new-subsubsubsection-slide: none,
+  slide-fn: none,
+  new-section-slide-fn: none,
+  new-subsection-slide-fn: none,
+  new-subsubsection-slide-fn: none,
+  new-subsubsubsection-slide-fn: none,
   zero-margin-header: true,
   zero-margin-footer: true,
   datetime-format: auto,
+  auto-offset-for-heading: true,
   with-pdfpc-file-label: true,
   // some black magics for better slides writing,
   // maybe will be deprecated in the future
@@ -80,14 +85,15 @@
     handout: handout,
     cover: cover,
     slide-level: slide-level,
-    slide: slide,
-    new-section-slide: new-section-slide,
-    new-subsection-slide: new-subsection-slide,
-    new-subsubsection-slide: new-subsubsection-slide,
-    new-subsubsubsection-slide: new-subsubsubsection-slide,
+    slide-fn: slide-fn,
+    new-section-slide-fn: new-section-slide-fn,
+    new-subsection-slide-fn: new-subsection-slide-fn,
+    new-subsubsection-slide-fn: new-subsubsection-slide-fn,
+    new-subsubsubsection-slide-fn: new-subsubsubsection-slide-fn,
     zero-margin-header: zero-margin-header,
     zero-margin-footer: zero-margin-footer,
     datetime-format: datetime-format,
+    auto-offset-for-heading: auto-offset-for-heading,
     with-pdfpc-file-label: with-pdfpc-file-label,
     show-notes-on-second-screen: show-notes-on-second-screen,
     horizontal-line-to-pagebreak: horizontal-line-to-pagebreak,
@@ -102,7 +108,7 @@
 /// The configuration of important information of the presentation.
 ///
 /// #example(```
-/// configs.info(
+/// config-info(
 ///   title: "Title",
 ///   subtitle: "Subtitle",
 ///   author: "Author",
@@ -131,7 +137,7 @@
 /// - institution (content): The institution of the presentation.
 ///
 /// - logo (content): The logo of the institution.
-#let info(
+#let config-info(
   title: none,
   short-title: auto,
   subtitle: none,
@@ -167,7 +173,7 @@
 /// The configuration of the colors used in the theme.
 ///
 /// #example(```
-/// configs.colors(
+/// config-colors(
 ///   primary: rgb("#04364A"),
 ///   secondary: rgb("#176B87"),
 ///   tertiary: rgb("#448C95"),
@@ -180,7 +186,7 @@
 ///
 /// There are four main colors in the theme: primary, secondary, tertiary, and neutral,
 /// and each of them has a light, lighter, lightest, dark, darker, and darkest version.
-#let colors(
+#let config-colors(
   neutral: rgb("#303030"),
   neutral-light: rgb("#a0a0a0"),
   neutral-lighter: rgb("#d0d0d0"),
@@ -251,7 +257,7 @@
 /// It is equivalent to the `#set page()` rule in Touying.
 ///
 /// #example(```
-/// configs.page(
+/// config-page(
 ///   paper: "presentation-16-9",
 ///   header: none,
 ///   footer: none,
@@ -284,7 +290,7 @@
 ///     - rest: The margins on all sides except those for which the dictionary explicitly sets a size.
 ///
 ///   The values for left and right are mutually exclusive with the values for inside and outside.
-#let page(
+#let config-page(
   paper: "presentation-16-9",
   header: none,
   footer: none,
@@ -303,3 +309,12 @@
     ) + args.named(),
   )
 }
+
+
+/// The default configurations
+#let default-config = merge-dicts(
+  config-common(),
+  config-info(),
+  config-colors(),
+  config-page(), 
+)

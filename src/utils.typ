@@ -1,3 +1,156 @@
+/// Add a dictionary to another dictionary recursively
+///
+/// Example: `add-dicts((a: (b: 1), (a: (c: 2))` returns `(a: (b: 1, c: 2)`
+#let add-dicts(dict-a, dict-b) = {
+  let res = dict-a
+  for key in dict-b.keys() {
+    if key in res and type(res.at(key)) == dictionary and type(dict-b.at(key)) == dictionary {
+      res.insert(key, add-dicts(res.at(key), dict-b.at(key)))
+    } else {
+      res.insert(key, dict-b.at(key))
+    }
+  }
+  return res
+}
+
+
+/// Merge some dictionaries recursively
+///
+/// Example: `merge-dicts((a: (b: 1)), (a: (c: 2)))` returns `(a: (b: 1, c: 2))`
+#let merge-dicts(init-dict, ..dicts) = {
+  assert(dicts.named().len() == 0, message: "You must provide dictionaries as positional arguments")
+  let res = init-dict
+  for dict in dicts.pos() {
+    res = add-dicts(res, dict)
+  }
+  return res
+}
+
+
+/// Remove leading and trailing empty elements from an array of content
+///
+/// - `empty-contents` is a array of content that is considered empty
+///
+/// Example: `trim(([], [ ], parbreak(), linebreak(), [a], [ ], [b], [c], linebreak(), parbreak(), [ ], [ ]))` returns `([a], [ ], [b], [c])`
+#let trim(arr, empty-contents: ([], [ ], parbreak(), linebreak())) = {
+  let i = 0
+  let j = arr.len() - 1
+  while i != arr.len()  and arr.at(i) in empty-contents {
+    i += 1
+  }
+  while j != i - 1 and arr.at(j) in empty-contents {
+    j -= 1
+  }
+  arr.slice(i, j + 1)
+}
+
+
+/// Add a label to a content
+///
+/// Example: `label-it("key", [a])` is equivalent to `[a <key>]`
+///
+/// - `it` is the content to label
+///
+/// - `label-name` is the name of the label, or a label
+#let label-it(it, label-name) = {
+  if type(label-name) == label {
+    [#it#label-name]
+  } else {
+    [#it#label(label-name)]
+  }
+}
+
+/// Reconstruct a content with a new body
+///
+/// - `body-name` is the property name of the body field
+///
+/// - `named` is a boolean indicating whether the fields should be named
+///
+/// - `it` is the content to reconstruct
+///
+/// - `new-body` is the new body you want to replace the old body with
+#let reconstruct(body-name: "body", named: false, it, new-body) = {
+  let fields = it.fields()
+  let label = fields.remove("label", default: none)
+  let _ = fields.remove(body-name, default: none)
+  if named {
+    if label != none {
+      return label-it(label, (it.func())(..fields, new-body))
+    } else {
+      return (it.func())(..fields, new-body)
+    }
+  } else {
+    if label != none {
+      return label-it(label, (it.func())(..fields.values(), new-body))
+    } else {
+      return (it.func())(..fields.values(), new-body)
+    }
+  }
+}
+
+
+/// Reconstruct a table-like content with new children
+///
+/// - `named` is a boolean indicating whether the fields should be named
+///
+/// - `it` is the content to reconstruct
+///
+/// - `new-children` is the new children you want to replace the old children with
+#let reconstruct-table-like(named: true, it, new-children) = {
+  reconstruct(body-name: "children", named: named, it, new-children)
+}
+
+
+#let typst-builtin-sequence = ([A] + [ ] + [B]).func()
+
+/// Determine if a content is a sequence
+///
+/// Example: `is-sequence([a])` returns `true`
+#let is-sequence(it) = {
+  type(it) == content and it.func() == typst-builtin-sequence
+}
+
+
+#let typst-builtin-styled = [#set text(fill: red)].func()
+
+/// Determine if a content is styled
+///
+/// Example: `is-styled(text(fill: red)[Red])` returns `true`
+#let is-styled(it) = {
+  type(it) == content and it.func() == typst-builtin-styled
+}
+
+
+/// Reconstruct a styled content with a new body
+///
+/// - `it` is the content to reconstruct
+///
+/// - `new-child` is the new child you want to replace the old body with
+#let reconstruct-styled(it, new-child) = {
+  typst-builtin-styled(new-child, it.styles)
+}
+
+
+/// Determine if a content is a metadata
+///
+/// Example: `is-metadata(metadata((a: 1)))` returns `true`
+#let is-metadata(it) = {
+  type(it) == content and it.func() == metadata
+}
+
+
+/// Determine if a content is a metadata with a specific kind
+#let is-kind(it, kind) = {
+  is-metadata(it) and type(it.value) == dictionary and it.value.at("kind", default: none) == kind
+}
+
+
+/// Determine if a content is a heading in a specific depth
+#let is-heading(it, depth: 9999) = {
+  type(it) == content and it.func() == heading and it.depth <= depth
+}
+
+
 // OOP: call it or display it
 #let call-or-display(self, it) = {
   if type(it) == function {
@@ -38,15 +191,6 @@
   return methods
 }
 
-// touying slide wrapper mark
-#let touying-slide-wrapper(name, fn, ..args) = [
-  #metadata((
-    kind: "touying-slide-wrapper",
-    name: name,
-    fn: fn,
-    args: args,
-  ))<touying-temporary-mark>
-]
 
 // touying wrapper mark
 #let touying-wrapper(fn, with-visible-subslides: false, ..args) = [
@@ -100,14 +244,6 @@
   }
 }
 
-// Utils: trim
-#let trim(arr) = {
-  let i = 0
-  while arr.len() != i and arr.at(i) in ([], [ ], parbreak(), linebreak()) {
-    i += 1
-  }
-  arr.slice(i)
-}
 
 // Utils: bookmark
 #let bookmark(level: 1, numbering: none, outlined: true, body) = {
@@ -116,36 +252,6 @@
   }
 }
 
-// Type: is sequence
-#let typst-builtin-sequence = ([A] + [ ] + [B]).func()
-#let is-sequence(it) = {
-  type(it) == content and it.func() == typst-builtin-sequence
-}
-
-// Type: is styled
-#let typst-builtin-styled = [#set text(fill: red)].func()
-#let is-styled(it) = {
-  type(it) == content and it.func() == typst-builtin-styled
-}
-
-#let reconstruct(body-name: "body", named: false, it, body) = {
-  let fields = it.fields()
-  let _ = fields.remove("label", default: none)
-  let _ = fields.remove(body-name, default: none)
-  if named {
-    return (it.func())(..fields, body)
-  } else {
-    return (it.func())(..fields.values(), body)
-  }
-}
-
-#let heading-depth(it) = {
-  if it.has("depth") {
-    it.depth
-  } else {
-    it.level
-  }
-}
 
 
 // Convert content to markup text, partly from
