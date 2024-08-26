@@ -24,11 +24,15 @@
 ///
 /// - new-subsubsubsection-slide (function): The function to create a new slide for a new subsubsubsection. The default value is `none`.
 ///
+/// - datetime-format (string): The format of the datetime.
+///
+/// - appendix (bool): Is touying in the appendix mode. The last-slide-counter will be frozen in the appendix mode.
+///
+/// - freeze-slide-counter (bool): Whether to freeze the slide counter. The default value is `false`.
+///
 /// - zero-margin-header (bool): Whether to show the full header (with negative padding). The default value is `true`.
 ///
 /// - zero-margin-footer (bool): Whether to show the full footer (with negative padding). The default value is `true`.
-///
-/// - datetime-format (string): The format of the datetime.
 ///
 /// - auto-offset-for-heading (bool): Whether to add an offset relative to slide-level for headings.
 ///
@@ -65,9 +69,11 @@
   new-subsection-slide-fn: none,
   new-subsubsection-slide-fn: none,
   new-subsubsubsection-slide-fn: none,
+  datetime-format: auto,
+  appendix: false,
+  freeze-slide-counter: false,
   zero-margin-header: true,
   zero-margin-footer: true,
-  datetime-format: auto,
   auto-offset-for-heading: true,
   with-pdfpc-file-label: true,
   // some black magics for better slides writing,
@@ -90,9 +96,11 @@
     new-subsection-slide-fn: new-subsection-slide-fn,
     new-subsubsection-slide-fn: new-subsubsection-slide-fn,
     new-subsubsubsection-slide-fn: new-subsubsubsection-slide-fn,
+    datetime-format: datetime-format,
+    appendix: appendix,
+    freeze-slide-counter: freeze-slide-counter,
     zero-margin-header: zero-margin-header,
     zero-margin-footer: zero-margin-footer,
-    datetime-format: datetime-format,
     auto-offset-for-heading: auto-offset-for-heading,
     with-pdfpc-file-label: with-pdfpc-file-label,
     show-notes-on-second-screen: show-notes-on-second-screen,

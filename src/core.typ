@@ -14,6 +14,24 @@
 )
 
 
+/// Set config
+#let touying-set-config(config, body) = utils.label-it(
+  metadata((
+    kind: "touying-set-config",
+    config: config,
+    body: body,
+  )),
+  "touying-temporary-mark",
+)
+
+
+/// Appendix for the presentation. The last-slide-counter will be frozen at the last slide before the appendix.
+#let appendix(body) = touying-set-config(
+  (appendix: true),
+  body,
+)
+
+
 /// Recall a slide by its label
 ///
 /// - `lbl` (str): The label of the slide to recall
@@ -42,7 +60,7 @@
 
 
 /// Use headings to split a content block into slides
-#let split-content-into-slides(self: none, recaller-map: (:), body) = {
+#let split-content-into-slides(self: none, recaller-map: (:), first-slide: false, body) = {
   // Extract arguments
   assert(type(self) == dictionary, message: "`self` must be a dictionary")
   assert("slide-level" in self and type(self.slide-level) == int, message: "`self.slide-level` must be an integer")
@@ -92,7 +110,7 @@
   // The current slide content
   let cont = none
   // Is the first part should be a slide
-  let first-slide = false
+  let first-slide = first-slide
 
 
   // Is we have a horizontal line
@@ -163,11 +181,11 @@
     } else if utils.is-heading(child, depth: slide-level) {
       let last-heading-depth = get-last-heading-depth(current-headings)
       current-slide = utils.trim(current-slide)
-      if child.depth <= last-heading-depth or current-slide != () or (child.depth == 1 and new-section-slide-fn != none) or (
-        child.depth == 2 and new-subsection-slide-fn != none
-      ) or (child.depth == 3 and new-subsubsection-slide-fn != none) or (
-        child.depth == 4 and new-subsubsubsection-slide-fn != none
-      ) {
+      if child.depth <= last-heading-depth or current-slide != () or (
+        child.depth == 1 and new-section-slide-fn != none
+      ) or (child.depth == 2 and new-subsection-slide-fn != none) or (
+        child.depth == 3 and new-subsubsection-slide-fn != none
+      ) or (child.depth == 4 and new-subsubsubsection-slide-fn != none) {
         if current-slide != () or current-headings != () {
           (cont, recaller-map, current-headings, current-slide, first-slide) = call-slide-fn-and-reset(
             self + (headings: current-headings),
@@ -216,6 +234,23 @@
         cont
       }
 
+    } else if utils.is-kind(child, "touying-set-config") {
+      if current-slide != () or current-headings != () {
+        (cont, recaller-map, current-headings, current-slide, first-slide) = call-slide-fn-and-reset(
+          self + (headings: current-headings),
+          slide-fn,
+          current-slide.sum(default: none),
+          recaller-map,
+        )
+        cont
+      }
+      // Appendix content
+      split-content-into-slides(
+        self: self + child.value.config,
+        recaller-map: recaller-map,
+        first-slide: true,
+        child.value.body,
+      )
     } else {
       let child = if utils.is-sequence(child) {
         // Split the content into slides recursively
@@ -254,6 +289,8 @@
 
     #self.headings
 
+    #self.appendix
+
     #body
   ]),
   new-section-slide-fn: title => touying-slide-wrapper(self => [
@@ -262,17 +299,21 @@
 
     #self.headings
 
+    #self.appendix
+
     #title
   ]),
 ))
 
 = Title
 
-== recall
+== recall1
 
-sdf
+sdfdf
 
-== recall
+sdfsdfdsfsdfsdf
+
+== recall2
 
 sdf
 
