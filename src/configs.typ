@@ -1,4 +1,5 @@
-#import "utils.typ": merge-dicts
+#import "utils.typ"
+#import "slide.typ": touying-slide-wrapper, touying-slide
 
 /// The private configurations of the theme.
 #let config-store(..args) = {
@@ -62,9 +63,13 @@
 /// - scale-list-items (none, float): Whether to scale the list items recursively. The default value is `none`.
 #let config-common(
   handout: false,
-  cover: hide,
   slide-level: 2,
-  slide-fn: none,
+  slide-fn: (
+    repeat: auto,
+    setting: body => body,
+    composer: auto,
+    ..bodies,
+  ) => touying-slide-wrapper(self => touying-slide(self: self, repeat: repeat, setting: setting, composer: composer, ..bodies)),
   new-section-slide-fn: none,
   new-subsection-slide-fn: none,
   new-subsubsection-slide-fn: none,
@@ -76,8 +81,41 @@
   zero-margin-footer: true,
   auto-offset-for-heading: true,
   with-pdfpc-file-label: true,
+  enable-mark-warning: true,
   // some black magics for better slides writing,
   // maybe will be deprecated in the future
+  frozen-states: (),
+  default-frozen-states: (
+    // ctheorems state
+    state("thm",
+      (
+        "counters": ("heading": ()),
+        "latest": ()
+      )
+    ),
+  ),
+  frozen-counters: (),
+  default-frozen-counters: (counter(math.equation), counter(figure.where(kind: table)), counter(figure.where(kind: image))),
+  first-slide-number: 1,
+  preamble: none,
+  default-preamble: self => {
+    if self.at("enable-mark-warning", default: true) {
+      context {
+        let marks = query(<touying-temporary-mark>)
+        if marks.len() > 0 {
+          let page-num = marks.at(0).location().page()
+          let kind = marks.at(0).value.kind
+          panic("Unsupported mark `" + kind + "` at page " + str(page-num) + ". You can't use it inside some layout functions like `grid`. You may want to use the callback-style `uncover` function instead. Or you may want to use #slide[][] for a two-column layout. ")
+        }
+      }
+    }
+  },
+  page-preamble: none,
+  default-page-preamble: self => {
+    if self.at("reset-footnote-number-per-slide", default: true) {
+      counter(footnote).update(0)
+    }
+  },
   show-notes-on-second-screen: none,
   horizontal-line-to-pagebreak: true,
   reset-footnote-number-per-slide: true,
@@ -89,7 +127,6 @@
   assert(args.pos().len() == 0, message: "Unexpected positional arguments.")
   return (
     handout: handout,
-    cover: cover,
     slide-level: slide-level,
     slide-fn: slide-fn,
     new-section-slide-fn: new-section-slide-fn,
@@ -103,6 +140,16 @@
     zero-margin-footer: zero-margin-footer,
     auto-offset-for-heading: auto-offset-for-heading,
     with-pdfpc-file-label: with-pdfpc-file-label,
+    enable-mark-warning: enable-mark-warning,
+    frozen-states: frozen-states,
+    frozen-counters: frozen-counters,
+    default-frozen-states: default-frozen-states,
+    default-frozen-counters: default-frozen-counters,
+    first-slide-number: first-slide-number,
+    preamble: preamble,
+    default-preamble: default-preamble,
+    page-preamble: page-preamble,
+    default-page-preamble: default-page-preamble,
     show-notes-on-second-screen: show-notes-on-second-screen,
     horizontal-line-to-pagebreak: horizontal-line-to-pagebreak,
     reset-footnote-number-per-slide: reset-footnote-number-per-slide,
@@ -110,6 +157,36 @@
     align-list-marker-with-baseline: align-list-marker-with-baseline,
     scale-list-items: scale-list-items,
   ) + args.named()
+}
+
+
+/// The configuration of the methods
+#let config-methods(
+  cover: utils.wrap-method(hide),
+  // dynamic control
+  uncover: utils.uncover,
+  only: utils.only,
+  alternatives-match: utils.alternatives-match,
+  alternatives: utils.alternatives,
+  alternatives-fn: utils.alternatives-fn,
+  alternatives-cases: utils.alternatives-cases,
+  // alert interface
+  alert: utils.wrap-method(text.with(weight: "bold")),
+  ..args,
+) = {
+  assert(args.pos().len() == 0, message: "Unexpected positional arguments.")
+  return (
+    methods: (
+      cover: cover,
+      uncover: uncover,
+      only: only,
+      alternatives-match: alternatives-match,
+      alternatives: alternatives,
+      alternatives-fn: alternatives-fn,
+      alternatives-cases: alternatives-cases,
+      alert: alert,
+    ) + args.named(),
+  )
 }
 
 
@@ -320,9 +397,10 @@
 
 
 /// The default configurations
-#let default-config = merge-dicts(
+#let default-config = utils.merge-dicts(
   config-common(),
+  config-methods(),
   config-info(),
   config-colors(),
-  config-page(), 
+  config-page(),
 )

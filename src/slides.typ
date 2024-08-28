@@ -1,18 +1,9 @@
 #import "utils.typ"
-#import "configs.typ": *
+#import "configs.typ"
 
-
-/// Wrapper for a slide function
-///
-/// - `fn` (self => { .. }): The function that will be called to render the slide
-#let touying-slide-wrapper(fn) = utils.label-it(
-  metadata((
-    kind: "touying-slide-wrapper",
-    fn: fn,
-  )),
-  "touying-temporary-mark",
-)
-
+/// ------------------------------------------------
+/// Slides
+/// ------------------------------------------------
 
 /// Set config
 #let touying-set-config(config, body) = utils.label-it(
@@ -49,7 +40,7 @@
 
 
 /// Call touying slide function
-#let call-slide-fn(self, fn, body) = {
+#let _call-slide-fn(self, fn, body) = {
   let slide-wrapper = fn(body)
   assert(
     utils.is-kind(slide-wrapper, "touying-slide-wrapper"),
@@ -60,7 +51,7 @@
 
 
 /// Use headings to split a content block into slides
-#let split-content-into-slides(self: none, recaller-map: (:), first-slide: false, body) = {
+#let _split-content-into-slides(self: none, recaller-map: (:), first-slide: false, body) = {
   // Extract arguments
   assert(type(self) == dictionary, message: "`self` must be a dictionary")
   assert("slide-level" in self and type(self.slide-level) == int, message: "`self.slide-level` must be an integer")
@@ -91,8 +82,12 @@
       }
     }
   }
-  let call-slide-fn-and-reset(self, slide-fn, current-slide-cont, recaller-map) = {
-    let cont = call-slide-fn(self, slide-fn, current-slide-cont)
+  let call-slide-fn-and-reset(self, already-slide-wrapper: false, slide-fn, current-slide-cont, recaller-map) = {
+    let cont = if already-slide-wrapper {
+      slide-fn(self)
+    } else {
+      _call-slide-fn(self, slide-fn, current-slide-cont)
+    }
     let last-heading-label = get-last-heading-label(self.headings)
     if last-heading-label != none {
       recaller-map.insert(last-heading-label, cont)
@@ -143,8 +138,9 @@
       }
       (cont, recaller-map, current-headings, current-slide, first-slide) = call-slide-fn-and-reset(
         self + (headings: current-headings),
+        already-slide-wrapper: true,
         child.value.fn,
-        current-slide.sum(default: none),
+        none,
         recaller-map,
       )
       cont
@@ -245,7 +241,7 @@
         cont
       }
       // Appendix content
-      split-content-into-slides(
+      _split-content-into-slides(
         self: self + child.value.config,
         recaller-map: recaller-map,
         first-slide: true,
@@ -254,10 +250,10 @@
     } else {
       let child = if utils.is-sequence(child) {
         // Split the content into slides recursively
-        split-content-into-slides(self: self, recaller-map: recaller-map, child)
+        _split-content-into-slides(self: self, recaller-map: recaller-map, child)
       } else if utils.is-styled(child) {
         // Split the content into slides recursively for styled content
-        utils.reconstruct-styled(child, split-content-into-slides(self: self, recaller-map: recaller-map, child.child))
+        utils.reconstruct-styled(child, _split-content-into-slides(self: self, recaller-map: recaller-map, child.child))
       } else {
         child
       }
@@ -283,40 +279,13 @@
   }
 }
 
-#show: split-content-into-slides.with(self: default-config + config-common(
-  slide-fn: body => touying-slide-wrapper(self => [
-    #set page(paper: "presentation-16-9")
 
-    #self.headings
+#let touying-slides(..args, body) = {
+  assert(args.named().len() == 0, message: "unexpected named arguments:" + repr(args.named().keys()))
+  let args = (configs.default-config,) + args.pos()
+  let self = utils.merge-dicts(..args)
 
-    #self.appendix
+  show: _split-content-into-slides.with(self: self, first-slide: true)
 
-    #body
-  ]),
-  new-section-slide-fn: title => touying-slide-wrapper(self => [
-    #set page(paper: "presentation-16-9")
-    #set text(green)
-
-    #self.headings
-
-    #self.appendix
-
-    #title
-  ]),
-))
-
-= Title
-
-== recall1
-
-sdfdf
-
-sdfsdfdsfsdfsdf
-
-== recall2
-
-sdf
-
-= sdfsdfsdf
-
-sdfddd
+  body
+}

@@ -191,17 +191,6 @@
   return methods
 }
 
-
-// touying wrapper mark
-#let touying-wrapper(fn, with-visible-subslides: false, ..args) = [
-  #metadata((
-    kind: "touying-wrapper",
-    fn: fn,
-    args: args,
-    with-visible-subslides: with-visible-subslides,
-  ))<touying-temporary-mark>
-]
-
 #let slides(self) = {
   let m = methods(self)
   let res = (:)
