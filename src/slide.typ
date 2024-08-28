@@ -6,7 +6,18 @@
 /// Slide
 /// ------------------------------------------------
 
-// touying function wrapper mark
+/// Wrapper for a function to make it can receive `self` as an argument.
+/// It is useful when you want to use `self` to get current subslide index, like `uncover` and `only` functions.
+///
+/// Example: `#let alternatives = touying-fn-wrapper.with(utils.alternatives)`
+///
+/// - `fn` ((self: none, ..args) => { .. }): The function that will be called.
+///
+/// - `with-visible-subslides` (bool): Whether the first argument of the function is the visible subslides.
+///
+///   It is useful for functions like `uncover` and `only`.
+///
+///   Touying will automatically update the max repetitions for the slide if the function is called with visible subslides.
 #let touying-fn-wrapper(fn, with-visible-subslides: false, ..args) = utils.label-it(
   metadata((
     kind: "touying-fn-wrapper",
@@ -17,9 +28,19 @@
   "touying-temporary-mark",
 )
 
-/// Wrapper for a slide function
+/// Wrapper for a slide function to make it can receive `self` as an argument.
 ///
-/// - `fn` (self => { .. }): The function that will be called to render the slide
+/// Notice: This function is necessary for the slide function to work in Touying.
+///
+/// Example:
+///
+/// ```typst
+/// #let slide(..args) = touying-slide-wrapper(self => {
+///   touying-slide(self: self, ..args)
+/// })
+/// ```
+///
+/// - `fn` (self => { .. }): The function that will be called with an argument `self`.
 #let touying-slide-wrapper(fn) = utils.label-it(
   metadata((
     kind: "touying-slide-wrapper",
@@ -28,10 +49,14 @@
   "touying-temporary-mark",
 )
 
-// touying pause mark
+
+/// Uncover content after the `#pause` mark in next subslide.
 #let pause = [#metadata((kind: "touying-pause"))<touying-temporary-mark>]
-// touying meanwhile mark
+
+
+/// Display content after the `#meanwhile` mark meanwhile.
 #let meanwhile = [#metadata((kind: "touying-meanwhile"))<touying-temporary-mark>]
+
 
 /// Uncover content in some subslides. Reserved space when hidden (like `#hide()`).
 ///
@@ -147,7 +172,24 @@
 }
 
 
-// touying equation mark
+/// Touying also provides a unique and highly useful feature—math equation animations, allowing you to conveniently use pause and meanwhile within math equations.
+///
+/// #example(```
+/// #touying-equation(`
+///   f(x) &= pause x^2 + 2x + 1  \
+///         &= pause (x + 1)^2  \
+/// `)
+/// ```)
+///
+/// - `block` is a boolean indicating whether the equation is a block. Default is `true`.
+///
+/// - `numbering` is the numbering of the equation. Default is `none`.
+///
+/// - `supplement` is the supplement of the equation. Default is `auto`.
+///
+/// - `scope` is the scope when we use `eval()` function to evaluate the equation.
+///
+/// - `body` is the content of the equation. It should be a string, a raw text or a function that receives `self` as an argument and returns a string.
 #let touying-equation(block: true, numbering: none, supplement: auto, scope: (:), body) = utils.label(
   metadata((
     kind: "touying-equation",
@@ -170,7 +212,26 @@
   "touying-temporary-mark",
 )
 
-// touying mitex mark
+
+/// Touying can integrate with `mitex` to display math equations.
+/// You can use `#touying-mitex` to display math equations with pause and meanwhile.
+///
+/// #example(```
+/// #touying-mitex(mitex, `
+///   f(x) &= \pause x^2 + 2x + 1  \\
+///       &= \pause (x + 1)^2  \\
+/// `)
+/// ```)
+///
+/// - `mitex` is the mitex function. You can import it by code like `#import "@preview/mitex:0.2.3": mitex`
+///
+/// - `block` is a boolean indicating whether the equation is a block. Default is `true`.
+///
+/// - `numbering` is the numbering of the equation. Default is `none`.
+///
+/// - `supplement` is the supplement of the equation. Default is `auto`.
+///
+/// - `body` is the content of the equation. It should be a string, a raw text or a function that receives `self` as an argument and returns a string.
 #let touying-mitex(block: true, numbering: none, supplement: auto, mitex, body) = utils.label(
   metadata((
     kind: "touying-mitex",
@@ -193,7 +254,20 @@
   "touying-temporary-mark",
 )
 
-// touying reducer mark
+
+/// Touying reducer is a powerful tool to provide more powerful animation effects for other packages or functions.
+///
+/// For example, you can adds `pause` and `meanwhile` animations to cetz and fletcher packages.
+///
+/// Cetz: `#let cetz-canvas = touying-reducer.with(reduce: cetz.canvas, cover: cetz.draw.hide.with(bounds: true))`
+///
+/// Fletcher: `#let fletcher-diagram = touying-reducer.with(reduce: fletcher.diagram, cover: fletcher.hide)`
+///
+/// - `reduce` is the reduce function that will be called. It is usually a function that receives an array of content and returns a content it painted. Just like the `cetz.canvas` or `fletcher.diagram` function.
+///
+/// - `cover` is the cover function that will be called when some content is hidden. It is usually a function that receives an the argument of the content that will be hidden. Just like the `cetz.draw.hide` or `fletcher.hide` function. 
+///
+/// - `..args` is the arguments of the reducer function.
 #let touying-reducer(reduce: arr => arr.sum(), cover: arr => none, ..args) = utils.label-it(
   metadata((
     kind: "touying-reducer",
@@ -204,6 +278,7 @@
   )),
   "touying-temporary-mark",
 )
+
 
 // parse touying equation, and get the repetitions
 #let _parse-touying-equation(self: none, need-cover: true, base: 1, index: 1, eqt) = {
@@ -742,7 +817,41 @@
   (header, footer)
 }
 
-// touying-slide
+
+/// Touying slide function, the core function of touying. It usually is used to create a slide with animation effects and works with `touying-slide-wrapper` function.
+///
+/// Example:
+///
+/// ```
+/// #let slide(
+///   repeat: auto,
+///   setting: body => body,
+///   composer: auto,
+///   ..bodies,
+/// ) = touying-slide-wrapper(self => {
+///   touying-slide(self: self, repeat: repeat, setting: setting, composer: composer, ..bodies)
+/// })
+/// ```
+///
+/// - `repeat` is the number of subslides. Default is `auto`，which means touying will automatically calculate the number of subslides.
+///
+///   The `repeat` argument is necessary when you use `#slide(repeat: 3, self => [ .. ])` style code to create a slide. The callback-style `uncover` and `only` cannot be detected by touying automatically.
+///
+/// - `setting` is the setting of the slide. You can use it to add some set/show rules for the slide.
+///
+/// - `composer` is the composer of the slide. You can use it to set the layout of the slide.
+///
+///   For example, `#slide(composer: (1fr, 2fr, 1fr))[A][B][C]` to split the slide into three parts. The first and the last parts will take 1/4 of the slide, and the second part will take 1/2 of the slide.
+///
+///   If you pass a non-function value like `(1fr, 2fr, 1fr)`, it will be assumed to be the first argument of the `utils.side-by-side` function.
+///
+///   The `utils.side-by-side` function is a simple wrapper of the `grid` function. It means you can use the `grid.cell(colspan: 2, ..)` to make the cell take 2 columns.
+///
+///   For example, `#slide(composer: 2)[A][B][#grid.cell(colspan: 2)[Footer]] will make the `Footer` cell take 2 columns.
+///
+///   If you want to customize the composer, you can pass a function to the `composer` argument. The function should receive the contents of the slide and return the content of the slide, like `#slide(composer: grid.with(columns: 2))[A][B]`.
+///
+/// - `..bodies` is the contents of the slide. You can call the `slide` function with syntax like `#slide[A][B][C]` to create a slide.
 #let touying-slide(
   self: none,
   repeat: auto,
@@ -858,6 +967,27 @@
 }
 
 
+/// Touying slide function.
+///
+/// - `repeat` is the number of subslides. Default is `auto`，which means touying will automatically calculate the number of subslides.
+///
+///   The `repeat` argument is necessary when you use `#slide(repeat: 3, self => [ .. ])` style code to create a slide. The callback-style `uncover` and `only` cannot be detected by touying automatically.
+///
+/// - `setting` is the setting of the slide. You can use it to add some set/show rules for the slide.
+///
+/// - `composer` is the composer of the slide. You can use it to set the layout of the slide.
+///
+///   For example, `#slide(composer: (1fr, 2fr, 1fr))[A][B][C]` to split the slide into three parts. The first and the last parts will take 1/4 of the slide, and the second part will take 1/2 of the slide.
+///
+///   If you pass a non-function value like `(1fr, 2fr, 1fr)`, it will be assumed to be the first argument of the `utils.side-by-side` function.
+///
+///   The `utils.side-by-side` function is a simple wrapper of the `grid` function. It means you can use the `grid.cell(colspan: 2, ..)` to make the cell take 2 columns.
+///
+///   For example, `#slide(composer: 2)[A][B][#grid.cell(colspan: 2)[Footer]] will make the `Footer` cell take 2 columns.
+///
+///   If you want to customize the composer, you can pass a function to the `composer` argument. The function should receive the contents of the slide and return the content of the slide, like `#slide(composer: grid.with(columns: 2))[A][B]`.
+///
+/// - `..bodies` is the contents of the slide. You can call the `slide` function with syntax like `#slide[A][B][C]` to create a slide.
 #let slide(
   repeat: auto,
   setting: body => body,
