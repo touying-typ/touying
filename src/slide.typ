@@ -7,7 +7,7 @@
 /// ------------------------------------------------
 
 // touying function wrapper mark
-#let touying-fn-wrapper(fn, with-visible-subslides: false, ..args) = label-it(
+#let touying-fn-wrapper(fn, with-visible-subslides: false, ..args) = utils.label-it(
   metadata((
     kind: "touying-fn-wrapper",
     fn: fn,
@@ -32,13 +32,121 @@
 #let pause = [#metadata((kind: "touying-pause"))<touying-temporary-mark>]
 // touying meanwhile mark
 #let meanwhile = [#metadata((kind: "touying-meanwhile"))<touying-temporary-mark>]
-// dynamic control mark
-#let uncover = touying-fn-wrapper.with(utils.uncover, with-visible-subslides: true)
-#let only = touying-fn-wrapper.with(utils.only, with-visible-subslides: true)
-#let alternatives-match = touying-fn-wrapper.with(utils.alternatives-match)
-#let alternatives = touying-fn-wrapper.with(utils.alternatives)
-#let alternatives-fn = touying-fn-wrapper.with(utils.alternatives-fn)
-#let alternatives-cases = touying-fn-wrapper.with(utils.alternatives-cases)
+
+/// Uncover content in some subslides. Reserved space when hidden (like `#hide()`).
+///
+/// Example: `uncover("2-")[abc]` will display `[abc]` if the current slide is 2 or later
+///
+/// - `visible-subslides` is a single integer, an array of integers,
+///    or a string that specifies the visible subslides
+///
+///    Read [polylux book](https://polylux.dev/book/dynamic/complex.html)
+///
+///    The simplest extension is to use an array, such as `(1, 2, 4)` indicating that
+///    slides 1, 2, and 4 are visible. This is equivalent to the string `"1, 2, 4"`.
+///
+///    You can also use more convenient and complex strings to specify visible slides.
+///
+///    For example, "-2, 4, 6-8, 10-" means slides 1, 2, 4, 6, 7, 8, 10, and slides after 10 are visible.
+///
+/// - `uncover-cont` is the content to display when the content is visible in the subslide.
+#let uncover(visible-subslides, uncover-cont) = {
+  touying-fn-wrapper(utils.uncover, with-visible-subslides: true, visible-subslides, uncover-cont)
+}
+
+
+/// Display content in some subslides only.
+/// Don't reserve space when hidden, content is completely not existing there.
+///
+/// - `visible-subslides` is a single integer, an array of integers,
+///    or a string that specifies the visible subslides
+///
+///    Read [polylux book](https://polylux.dev/book/dynamic/complex.html)
+///
+///    The simplest extension is to use an array, such as `(1, 2, 4)` indicating that
+///    slides 1, 2, and 4 are visible. This is equivalent to the string `"1, 2, 4"`.
+///
+///    You can also use more convenient and complex strings to specify visible slides.
+///
+///    For example, "-2, 4, 6-8, 10-" means slides 1, 2, 4, 6, 7, 8, 10, and slides after 10 are visible.
+///
+/// - `only-cont` is the content to display when the content is visible in the subslide.
+#let only(visible-subslides, only-cont) = {
+  touying-fn-wrapper(utils.only, with-visible-subslides: true, visible-subslides, only-cont)
+}
+
+
+/// `#alternatives` has a couple of "cousins" that might be more convenient in some situations. The first one is `#alternatives-match` that has a name inspired by match-statements in many functional programming languages. The idea is that you give it a dictionary mapping from subslides to content:
+///
+/// #example(```
+/// #alternatives-match((
+///   "1, 3-5": [this text has the majority],
+///   "2, 6": [this is shown less often]
+/// ))
+/// ```)
+///
+/// - `subslides-contents` is a dictionary mapping from subslides to content.
+///
+/// - `position` is the position of the content. Default is `bottom + left`.
+#let alternatives-match(self: none, subslides-contents, position: bottom + left) = {
+  touying-fn-wrapper(utils.alternatives-match, subslides-contents, position: position)
+}
+
+
+/// `#alternatives` is able to show contents sequentially in subslides.
+///
+/// Example: `#alternatives[Ann][Bob][Christopher]` will show "Ann" in the first subslide, "Bob" in the second subslide, and "Christopher" in the third subslide.
+///
+/// - `start` is the starting subslide number. Default is `1`.
+///
+/// - `repeat-last` is a boolean indicating whether the last subslide should be repeated. Default is `true`.
+#let alternatives(
+  start: 1,
+  repeat-last: true,
+  ..args,
+) = {
+  touying-fn-wrapper(utils.alternatives, start: start, repeat-last: repeat-last, ..args)
+}
+
+
+/// You can have very fine-grained control over the content depending on the current subslide by using #alternatives-fn. It accepts a function (hence the name) that maps the current subslide index to some content.
+///
+/// Example: `#alternatives-fn(start: 2, count: 7, subslide => { numbering("(i)", subslide) })`
+///
+/// - `start` is the starting subslide number. Default is `1`.
+///
+/// - `end` is the ending subslide number. Default is `none`.
+///
+/// - `count` is the number of subslides. Default is `none`.
+#let alternatives-fn(
+  self: none,
+  start: 1,
+  end: none,
+  count: none,
+  ..kwargs,
+  fn,
+) = {
+  touying-fn-wrapper(utils.alternatives-fn, start: start, end: end, count: count, ..kwargs, fn)
+}
+
+
+/// You can use this function if you want to have one piece of content that changes only slightly depending of what "case" of subslides you are in.
+///
+/// #example(```
+/// #alternatives-cases(("1, 3", "2"), case => [
+///   #set text(fill: teal) if case == 1
+///   Some text
+/// ])
+/// ```)
+///
+/// - `cases` is an array of strings that specify the subslides for each case.
+///
+/// - `fn` is a function that maps the case to content. The argument `case` is the index of the cases array you input.
+#let alternatives-cases(self: none, cases, fn, ..kwargs) = {
+  touying-fn-wrapper(utils.alternatives-cases, cases, fn, ..kwargs)
+}
+
+
 // touying equation mark
 #let touying-equation(block: true, numbering: none, supplement: auto, scope: (:), body) = utils.label(
   metadata((
@@ -748,3 +856,13 @@
     result.sum()
   }
 }
+
+
+#let slide(
+  repeat: auto,
+  setting: body => body,
+  composer: auto,
+  ..bodies,
+) = touying-slide-wrapper(self => {
+  touying-slide(self: self, repeat: repeat, setting: setting, composer: composer, ..bodies)
+})

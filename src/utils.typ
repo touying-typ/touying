@@ -35,7 +35,7 @@
 #let trim(arr, empty-contents: ([], [ ], parbreak(), linebreak())) = {
   let i = 0
   let j = arr.len() - 1
-  while i != arr.len()  and arr.at(i) in empty-contents {
+  while i != arr.len() and arr.at(i) in empty-contents {
     i += 1
   }
   while j != i - 1 and arr.at(j) in empty-contents {
@@ -237,7 +237,10 @@
 // Utils: bookmark
 #let bookmark(level: 1, numbering: none, outlined: true, body) = {
   if body != auto and body != none {
-    place(top + left, text(0pt, hide(heading(depth: level, outlined: outlined, bookmarked: true, numbering: numbering, body))))
+    place(
+      top + left,
+      text(0pt, hide(heading(depth: level, outlined: outlined, bookmarked: true, numbering: numbering, body))),
+    )
   }
 }
 
@@ -254,7 +257,11 @@
   } else if type(it) == content {
     if it.func() == raw {
       if it.block {
-        "\n" + indent * " " + "```" + it.lang + it.text.split("\n").map(l => "\n" + indent * " " + l).sum(default: "") + "\n" + indent * " " + "```"
+        "\n" + indent * " " + "```" + it.lang + it
+          .text
+          .split("\n")
+          .map(l => "\n" + indent * " " + l)
+          .sum(default: "") + "\n" + indent * " " + "```"
       } else {
         "`" + it.text + "`"
       }
@@ -265,7 +272,7 @@
     } else if it.func() == list.item {
       "\n" + indent * " " + "- " + indent-markup-text(it.body)
     } else if it.func() == terms.item {
-      "\n" + indent * " " + "/ " + markup-text(it.term) +  ": " + indent-markup-text(it.description)
+      "\n" + indent * " " + "/ " + markup-text(it.term) + ": " + indent-markup-text(it.description)
     } else if it.func() == linebreak {
       "\n" + indent * " "
     } else if it.func() == parbreak {
@@ -305,7 +312,11 @@
         markup-text(it.text)
       }
     } else if it.func() == smartquote {
-      if it.double { "\"" } else { "'" }
+      if it.double {
+        "\""
+      } else {
+        "'"
+      }
     } else {
       ""
     }
@@ -320,7 +331,7 @@
 
 #let _size-to-pt(size, container-dimension) = {
   let to-convert = size
-  if type(size) == "ratio" {
+  if type(size) == ratio {
     to-convert = container-dimension * size
   }
   measure(v(to-convert)).height
@@ -337,7 +348,12 @@
 }
 
 #let fit-to-height(
-  width: none, prescale-width: none, grow: true, shrink: true, height, body
+  width: none,
+  prescale-width: none,
+  grow: true,
+  shrink: true,
+  height,
+  body,
 ) = {
   // Place two labels with the requested vertical separation to be able to
   // measure their vertical distance in pt.
@@ -356,10 +372,10 @@
     hidden#after-label
   ]
 
-  locate(loc => {
-    let before = query(selector(before-label).before(loc), loc)
+  context {
+    let before = query(selector(before-label).before(here()))
     let before-pos = before.last().location().position()
-    let after = query(selector(after-label).before(loc), loc)
+    let after = query(selector(after-label).before(here()))
     let after-pos = after.last().location().position()
 
     let available-height = after-pos.y - before-pos.y
@@ -368,7 +384,11 @@
       layout(container-size => {
         // Helper function to more easily grab absolute units
         let get-pts(body, w-or-h) = {
-          let dim = if w-or-h == "w" {container-size.width} else {container-size.height}
+          let dim = if w-or-h == "w" {
+            container-size.width
+          } else {
+            container-size.height
+          }
           _size-to-pt(body, styles, dim)
         }
 
@@ -376,7 +396,10 @@
         // Note this is different from the post-scale width, which is a limiting factor
         // on the allowable scaling ratio
         let boxed-content = _limit-content-width(
-          width: prescale-width, body, container-size, styles
+          width: prescale-width,
+          body,
+          container-size,
+          styles,
         )
 
         // post-scaling width
@@ -394,10 +417,7 @@
         let w-ratio = mutable-width / size.width
         let ratio = calc.min(h-ratio, w-ratio) * 100%
 
-        if (
-          (shrink and (ratio < 100%))
-          or (grow and (ratio > 100%))
-        ) {
+        if ((shrink and (ratio < 100%)) or (grow and (ratio > 100%))) {
           let new-width = size.width * ratio
           v(-available-height)
           // If not boxed, the content can overflow to the next page even though it will
@@ -407,14 +427,14 @@
           box(
             width: new-width,
             height: available-height,
-            scale(x: ratio, y: ratio, origin: top + left, boxed-content)
+            scale(x: ratio, y: ratio, origin: top + left, boxed-content),
           )
         } else {
           body
         }
       })
     })
-  })
+  }
 }
 
 #let fit-to-width(grow: true, shrink: true, width, content) = {
@@ -422,15 +442,14 @@
     let content-size = measure(content)
     let content-width = content-size.width
     let width = _size-to-pt(width, layout-size.width)
-    if (
-      content-width != 0pt and
-      ((shrink and (width < content-width))
-      or (grow and (width > content-width)))
-    ) {
+    if (content-width != 0pt and ((shrink and (width < content-width)) or (grow and (width > content-width)))) {
       let ratio = width / content-width * 100%
       // The first box keeps content from prematurely wrapping
       let scaled = scale(
-        box(content, width: content-width), origin: top + left, x: ratio, y: ratio
+        box(content, width: content-width),
+        origin: top + left,
+        x: ratio,
+        y: ratio,
       )
       // The second box lets typst know the post-scaled dimensions, since `scale`
       // doesn't update layout information
@@ -444,12 +463,9 @@
 // semitransparency cover
 #let cover-with-rect(..cover-args, fill: auto, inline: true, body) = {
   if fill == auto {
-    panic(
-      "`auto` fill value is not supported until typst provides utilities to"
-      + " retrieve the current page background"
-    )
+    panic("`auto` fill value is not supported until typst provides utilities to" + " retrieve the current page background")
   }
-  if type(fill) == "string" {
+  if type(fill) == str {
     fill = rgb(fill)
   }
 
@@ -478,7 +494,7 @@
       stack(
         spacing: -wrapped-body-size.height,
         body,
-        rect(fill: fill, ..named, ..cover-args.pos())
+        rect(fill: fill, ..named, ..cover-args.pos()),
       )
     }
   })
@@ -506,17 +522,17 @@
     if match-until != none {
       let parsed = int(match-until.captures.first())
       // assert(parsed > 0, "parsed idx is non-positive")
-      ( until: parsed )
+      (until: parsed)
     } else if match-beginning != none {
       let parsed = int(match-beginning.captures.first())
       // assert(parsed > 0, "parsed idx is non-positive")
-      ( beginning: parsed )
+      (beginning: parsed)
     } else if match-range != none {
       let parsed-first = int(match-range.captures.first())
       let parsed-last = int(match-range.captures.last())
       // assert(parsed-first > 0, "parsed idx is non-positive")
       // assert(parsed-last > 0, "parsed idx is non-positive")
-      ( beginning: parsed-first, until: parsed-last )
+      (beginning: parsed-first, until: parsed-last)
     } else if match-single != none {
       let parsed = int(match-single.captures.first())
       // assert(parsed > 0, "parsed idx is non-positive")
@@ -528,18 +544,36 @@
   parts.map(parse-part)
 }
 
+
+/// Check if a slide is visible
+///
+/// Example: `check-visible(3, "2-")` returns `true`
+///
+/// - `idx` is the index of the slide
+///
+/// - `visible-subslides` is a single integer, an array of integers,
+///    or a string that specifies the visible subslides
+///
+///    Read [polylux book](https://polylux.dev/book/dynamic/complex.html)
+///
+///    The simplest extension is to use an array, such as `(1, 2, 4)` indicating that
+///    slides 1, 2, and 4 are visible. This is equivalent to the string `"1, 2, 4"`.
+///
+///    You can also use more convenient and complex strings to specify visible slides.
+///
+///    For example, "-2, 4, 6-8, 10-" means slides 1, 2, 4, 6, 7, 8, 10, and slides after 10 are visible.
 #let check-visible(idx, visible-subslides) = {
-  if type(visible-subslides) == "integer" {
+  if type(visible-subslides) == int {
     idx == visible-subslides
-  } else if type(visible-subslides) == "array" {
+  } else if type(visible-subslides) == array {
     visible-subslides.any(s => check-visible(idx, s))
-  } else if type(visible-subslides) == "string" {
+  } else if type(visible-subslides) == str {
     let parts = _parse-subslide-indices(visible-subslides)
     check-visible(idx, parts)
   } else if type(visible-subslides) == content and visible-subslides.has("text") {
     let parts = _parse-subslide-indices(visible-subslides.text)
     check-visible(idx, parts)
-  } else if type(visible-subslides) == "dictionary" {
+  } else if type(visible-subslides) == dictionary {
     let lower-okay = if "beginning" in visible-subslides {
       visible-subslides.beginning <= idx
     } else {
@@ -558,15 +592,16 @@
   }
 }
 
+
 #let last-required-subslide(visible-subslides) = {
-  if type(visible-subslides) == "integer" {
+  if type(visible-subslides) == int {
     visible-subslides
-  } else if type(visible-subslides) == "array" {
+  } else if type(visible-subslides) == array {
     calc.max(..visible-subslides.map(s => last-required-subslide(s)))
-  } else if type(visible-subslides) == "string" {
+  } else if type(visible-subslides) == str {
     let parts = _parse-subslide-indices(visible-subslides)
     last-required-subslide(parts)
-  } else if type(visible-subslides) == "dictionary" {
+  } else if type(visible-subslides) == dictionary {
     let last = 0
     if "beginning" in visible-subslides {
       last = calc.max(last, visible-subslides.beginning)
@@ -580,21 +615,70 @@
   }
 }
 
+/// Uncover content in some subslides. Reserved space when hidden (like `#hide()`).
+///
+/// Example: `uncover("2-")[abc]` will display `[abc]` if the current slide is 2 or later
+///
+/// - `visible-subslides` is a single integer, an array of integers,
+///    or a string that specifies the visible subslides
+///
+///    Read [polylux book](https://polylux.dev/book/dynamic/complex.html)
+///
+///    The simplest extension is to use an array, such as `(1, 2, 4)` indicating that
+///    slides 1, 2, and 4 are visible. This is equivalent to the string `"1, 2, 4"`.
+///
+///    You can also use more convenient and complex strings to specify visible slides.
+///
+///    For example, "-2, 4, 6-8, 10-" means slides 1, 2, 4, 6, 7, 8, 10, and slides after 10 are visible.
+///
+/// - `uncover-cont` is the content to display when the content is visible in the subslide.
 #let uncover(self: none, visible-subslides, uncover-cont) = {
   let cover = self.methods.cover.with(self: self)
-  if check-visible(self.subslide, visible-subslides) { 
+  if check-visible(self.subslide, visible-subslides) {
     uncover-cont
   } else {
     cover(uncover-cont)
   }
 }
 
+
+/// Display content in some subslides only.
+/// Don't reserve space when hidden, content is completely not existing there.
+///
+/// - `visible-subslides` is a single integer, an array of integers,
+///    or a string that specifies the visible subslides
+///
+///    Read [polylux book](https://polylux.dev/book/dynamic/complex.html)
+///
+///    The simplest extension is to use an array, such as `(1, 2, 4)` indicating that
+///    slides 1, 2, and 4 are visible. This is equivalent to the string `"1, 2, 4"`.
+///
+///    You can also use more convenient and complex strings to specify visible slides.
+///
+///    For example, "-2, 4, 6-8, 10-" means slides 1, 2, 4, 6, 7, 8, 10, and slides after 10 are visible.
+///
+/// - `only-cont` is the content to display when the content is visible in the subslide.
 #let only(self: none, visible-subslides, only-cont) = {
-  if check-visible(self.subslide, visible-subslides) { only-cont }
+  if check-visible(self.subslide, visible-subslides) {
+    only-cont
+  }
 }
 
+
+/// `#alternatives` has a couple of "cousins" that might be more convenient in some situations. The first one is `#alternatives-match` that has a name inspired by match-statements in many functional programming languages. The idea is that you give it a dictionary mapping from subslides to content:
+///
+/// #example(```
+/// #alternatives-match((
+///   "1, 3-5": [this text has the majority],
+///   "2, 6": [this is shown less often]
+/// ))
+/// ```)
+///
+/// - `subslides-contents` is a dictionary mapping from subslides to content.
+///
+/// - `position` is the position of the content. Default is `bottom + left`.
 #let alternatives-match(self: none, subslides-contents, position: bottom + left) = {
-  let subslides-contents = if type(subslides-contents) == "dictionary" {
+  let subslides-contents = if type(subslides-contents) == dictionary {
     subslides-contents.pairs()
   } else {
     subslides-contents
@@ -607,20 +691,32 @@
     let max-width = calc.max(..sizes.map(sz => sz.width))
     let max-height = calc.max(..sizes.map(sz => sz.height))
     for (subslides, content) in subslides-contents {
-      only(self: self, subslides, box(
-        width: max-width,
-        height: max-height,
-        align(position, content)
-      ))
+      only(
+        self: self,
+        subslides,
+        box(
+          width: max-width,
+          height: max-height,
+          align(position, content),
+        ),
+      )
     }
   }
 }
 
+
+/// `#alternatives` is able to show contents sequentially in subslides.
+///
+/// Example: `#alternatives[Ann][Bob][Christopher]` will show "Ann" in the first subslide, "Bob" in the second subslide, and "Christopher" in the third subslide.
+///
+/// - `start` is the starting subslide number. Default is `1`.
+///
+/// - `repeat-last` is a boolean indicating whether the last subslide should be repeated. Default is `true`.
 #let alternatives(
   self: none,
   start: 1,
   repeat-last: true,
-  ..args
+  ..args,
 ) = {
   let contents = args.pos()
   let kwargs = args.named()
@@ -631,13 +727,23 @@
   alternatives-match(self: self, subslides.zip(contents), ..kwargs)
 }
 
+
+/// You can have very fine-grained control over the content depending on the current subslide by using #alternatives-fn. It accepts a function (hence the name) that maps the current subslide index to some content.
+///
+/// Example: `#alternatives-fn(start: 2, count: 7, subslide => { numbering("(i)", subslide) })`
+///
+/// - `start` is the starting subslide number. Default is `1`.
+///
+/// - `end` is the ending subslide number. Default is `none`.
+///
+/// - `count` is the number of subslides. Default is `none`.
 #let alternatives-fn(
   self: none,
   start: 1,
   end: none,
   count: none,
   ..kwargs,
-  fn
+  fn,
 ) = {
   let end = if end == none {
     if count == none {
@@ -654,6 +760,19 @@
   alternatives-match(self: self, subslides.zip(contents), ..kwargs.named())
 }
 
+
+/// You can use this function if you want to have one piece of content that changes only slightly depending of what "case" of subslides you are in.
+///
+/// #example(```
+/// #alternatives-cases(("1, 3", "2"), case => [
+///   #set text(fill: teal) if case == 1
+///   Some text
+/// ])
+/// ```)
+///
+/// - `cases` is an array of strings that specify the subslides for each case.
+///
+/// - `fn` is a function that maps the case to content. The argument `case` is the index of the cases array you input.
 #let alternatives-cases(self: none, cases, fn, ..kwargs) = {
   let idcs = range(cases.len())
   let contents = idcs.map(fn)
@@ -662,11 +781,27 @@
 
 // SIDE BY SIDE
 
+/// A simple wrapper around `grid` that creates a grid with a single row.
+/// It is useful for creating side-by-side slide.
+///
+/// It is also the default function for composer in the slide function.
+///
+/// Example: `side-by-side[a][b][c]` will display `a`, `b`, and `c` side by side.
+///
+/// - `columns` is the number of columns. Default is `auto`, which means the number of columns is equal to the number of bodies.
+///
+/// - `gutter` is the space between columns. Default is `1em`.
+///
+/// - `..bodies` is the contents to display side by side.
 #let side-by-side(columns: auto, gutter: 1em, ..bodies) = {
   let bodies = bodies.pos()
   if bodies.len() == 1 {
     return bodies.first()
   }
-  let columns = if columns == auto { (1fr,) * bodies.len() } else { columns }
+  let columns = if columns == auto {
+    (1fr,) * bodies.len()
+  } else {
+    columns
+  }
   grid(columns: columns, gutter: gutter, ..bodies)
 }

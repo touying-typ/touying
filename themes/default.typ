@@ -17,9 +17,9 @@
 ) = {
   show: touying-slides.with(
     config-page(paper: "presentation-" + aspect-ratio),
-    // config-common(
-    //   slide-fn: slide,
-    // ),
+    config-common(
+      slide-fn: slide,
+    ),
     ..args,
   )
 
