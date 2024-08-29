@@ -265,7 +265,7 @@
 ///
 /// - `reduce` is the reduce function that will be called. It is usually a function that receives an array of content and returns a content it painted. Just like the `cetz.canvas` or `fletcher.diagram` function.
 ///
-/// - `cover` is the cover function that will be called when some content is hidden. It is usually a function that receives an the argument of the content that will be hidden. Just like the `cetz.draw.hide` or `fletcher.hide` function. 
+/// - `cover` is the cover function that will be called when some content is hidden. It is usually a function that receives an the argument of the content that will be hidden. Just like the `cetz.draw.hide` or `fletcher.hide` function.
 ///
 /// - `..args` is the arguments of the reducer function.
 #let touying-reducer(reduce: arr => arr.sum(), cover: arr => none, ..args) = utils.label-it(
@@ -868,6 +868,8 @@
     }
   }
   let bodies = bodies.pos()
+
+  // preambles
   let slide-preamble(self) = {
     if self.at("is-first-slide", default: false) {
       utils.call-or-display(self, self.at("preamble", default: none))
@@ -884,6 +886,41 @@
   let subslide-preamble(self) = {
     if self.subslide == 1 {
       slide-preamble(self)
+    }
+    if self.at("enable-frozen-states-and-counters", default: true) {
+      if self.subslide == 1 {
+        // save the states and counters
+        context {
+          states.saved-frozen-states.update(self.frozen-states.map(s => s.get()))
+          states.saved-default-frozen-states.update(self.default-frozen-states.map(s => s.get()))
+          states.saved-frozen-counters.update(self.frozen-counters.map(s => s.get()))
+          states.saved-default-frozen-counters.update(self.default-frozen-counters.map(s => s.get()))
+        }
+      } else {
+        // restore the states and counters
+        context {
+          self
+            .frozen-states
+            .zip(states.saved-frozen-states.get())
+            .map(pair => pair.at(0).update(pair.at(1)))
+            .sum(default: none)
+          self
+            .default-frozen-states
+            .zip(states.saved-default-frozen-states.get())
+            .map(pair => pair.at(0).update(pair.at(1)))
+            .sum(default: none)
+          self
+            .frozen-counters
+            .zip(states.saved-frozen-counters.get())
+            .map(pair => pair.at(0).update(pair.at(1)))
+            .sum(default: none)
+          self
+            .default-frozen-counters
+            .zip(states.saved-default-frozen-counters.get())
+            .map(pair => pair.at(0).update(pair.at(1)))
+            .sum(default: none)
+        }
+      }
     }
     utils.call-or-display(self, self.at("subslide-preamble", default: none))
     utils.call-or-display(self, self.at("default-subslide-preamble", default: none))
@@ -904,6 +941,8 @@
     utils.call-or-display(self, self.at("page-preamble", default: none))
     utils.call-or-display(self, self.at("default-page-preamble", default: none))
   }
+
+
   self.subslide = 1
   // for single page slide, get the repetitions
   if repeat == auto {

@@ -87,6 +87,7 @@
   reset-page-counter-to-slide-counter: true,
   // some black magics for better slides writing,
   // maybe will be deprecated in the future
+  enable-frozen-states-and-counters: true,
   frozen-states: (),
   default-frozen-states: (
     // ctheorems state

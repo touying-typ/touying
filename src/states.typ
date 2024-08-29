@@ -155,3 +155,14 @@
     last-slide-number: last-slide-counter.final().first(),
   ))
 }
+
+
+
+// -------------------------------------
+// Saved states and counters
+// -------------------------------------
+
+#let saved-frozen-states = state("touying-saved-frozen-states", ())
+#let saved-default-frozen-states = state("touying-saved-default-frozen-states", ())
+#let saved-frozen-counters = state("touying-saved-frozen-counters", ())
+#let saved-default-frozen-counters = state("touying-saved-default-frozen-counters", ())
