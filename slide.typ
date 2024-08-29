@@ -975,12 +975,11 @@
       self
     },
     show-notes-on-second-screen: (self: none, value) => {
-      assert(value == none or value == right, message: "value should be none or right")
       self.show-notes-on-second-screen = value
       self
     },
-    speaker-note: (self: none, enable-pdfpc: true, mode: "typ", setting: it => it, note) => {
-      if enable-pdfpc {
+    speaker-note: (self: none, mode: "typ", setting: it => it, note) => {
+      if self.at("enable-pdfpc", default: true) {
         let raw-text = if type(note) == content and note.has("text") {
           note.text
         } else {
@@ -988,7 +987,9 @@
         }
         pdfpc.speaker-note(raw-text)
       }
-      if self.show-notes-on-second-screen != none {
+      let show-notes-on-second-screen = self.at("show-notes-on-second-screen", default: none)
+      assert(show-notes-on-second-screen == none or show-notes-on-second-screen == right, message: "`show-notes-on-second-screen` should be none or right")
+      if show-notes-on-second-screen != none {
         states.slide-note-state.update(setting(note))
       }
     }

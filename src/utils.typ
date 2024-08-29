@@ -1,3 +1,6 @@
+#import "pdfpc.typ"
+#import "states.typ"
+
 /// Add a dictionary to another dictionary recursively
 ///
 /// Example: `add-dicts((a: (b: 1), (a: (c: 2))` returns `(a: (b: 1, c: 2)`
@@ -790,6 +793,34 @@
   let idcs = range(cases.len())
   let contents = idcs.map(fn)
   alternatives-match(self: self, cases.zip(contents), ..kwargs.named())
+}
+
+
+/// Speaker notes are a way to add additional information to your slides that is not visible to the audience. This can be useful for providing additional context or reminders to yourself.
+///
+/// Example: `#speaker-note[This is a speaker note]`
+///
+/// - `self` is the current context.
+///
+/// - `mode` is the mode of the markup text, either `typ` or `md`. Default is `typ`.
+///
+/// - `setting` is a function that takes the note as input and returns a processed note.
+///
+/// - `note` is the content of the speaker note.
+#let speaker-note(self: none, mode: "typ", setting: it => it, note) = {
+  if self.at("enable-pdfpc", default: true) {
+    let raw-text = if type(note) == content and note.has("text") {
+      note.text
+    } else {
+      markup-text(note, mode: mode).trim()
+    }
+    pdfpc.speaker-note(raw-text)
+  }
+  let show-notes-on-second-screen = self.at("show-notes-on-second-screen", default: none)
+  assert(show-notes-on-second-screen == none or show-notes-on-second-screen == right, message: "`show-notes-on-second-screen` should be `none` or `right`")
+  if show-notes-on-second-screen != none {
+    states.slide-note-state.update(setting(note))
+  }
 }
 
 // SIDE BY SIDE

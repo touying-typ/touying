@@ -428,7 +428,7 @@
 /// - `subslides-contents` is a dictionary mapping from subslides to content.
 ///
 /// - `position` is the position of the content. Default is `bottom + left`.
-#let alternatives-match(self: none, subslides-contents, position: bottom + left) = {
+#let alternatives-match(subslides-contents, position: bottom + left) = {
   touying-fn-wrapper(utils.alternatives-match, subslides-contents, position: position)
 }
 
@@ -459,7 +459,6 @@
 ///
 /// - `count` is the number of subslides. Default is `none`.
 #let alternatives-fn(
-  self: none,
   start: 1,
   end: none,
   count: none,
@@ -482,8 +481,24 @@
 /// - `cases` is an array of strings that specify the subslides for each case.
 ///
 /// - `fn` is a function that maps the case to content. The argument `case` is the index of the cases array you input.
-#let alternatives-cases(self: none, cases, fn, ..kwargs) = {
+#let alternatives-cases(cases, fn, ..kwargs) = {
   touying-fn-wrapper(utils.alternatives-cases, cases, fn, ..kwargs)
+}
+
+
+/// Speaker notes are a way to add additional information to your slides that is not visible to the audience. This can be useful for providing additional context or reminders to yourself.
+///
+/// Example: `#speaker-note[This is a speaker note]`
+///
+/// - `self` is the current context.
+///
+/// - `mode` is the mode of the markup text, either `typ` or `md`. Default is `typ`.
+///
+/// - `setting` is a function that takes the note as input and returns a processed note.
+///
+/// - `note` is the content of the speaker note.
+#let speaker-note(mode: "typ", setting: it => it, note) = {
+  touying-fn-wrapper(utils.speaker-note, mode: mode, setting: setting, note)
 }
 
 
@@ -1154,6 +1169,11 @@
       841.89pt
     } else {
       793.7pt
+    }
+    let page-height = if self.page.paper == "presentation-16-9" {
+      473.56pt
+    } else {
+      595.28pt
     }
     if type(margin) != dictionary and type(margin) != length and type(margin) != relative {
       return (:)
