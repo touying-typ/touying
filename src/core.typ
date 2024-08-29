@@ -11,7 +11,13 @@
   "touying-temporary-mark",
 )
 
-/// Set config
+/// Update configurations for the presentation.
+///
+/// Example: `#let appendix(body) = touying-set-config((appendix: true), body)` and you can use `#show: appendix` to set the appendix for the presentation.
+///
+/// - `config` (dict): The new configurations for the presentation.
+///
+/// - `body` (content): The content of the slide.
 #let touying-set-config(config, body) = utils.label-it(
   metadata((
     kind: "touying-set-config",
@@ -23,6 +29,10 @@
 
 
 /// Appendix for the presentation. The last-slide-counter will be frozen at the last slide before the appendix.
+///
+/// Example: `#show: appendix`
+///
+/// - `body` (content): The content of the appendix.
 #let appendix(body) = touying-set-config(
   (appendix: true),
   body,
@@ -30,6 +40,8 @@
 
 
 /// Recall a slide by its label
+///
+/// Example: `#touying-recall(<recall>)` or `#touying-recall("recall")`
 ///
 /// - `lbl` (str): The label of the slide to recall
 #let touying-recall(lbl) = utils.label-it(

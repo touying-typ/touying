@@ -151,7 +151,7 @@
 }
 
 
-// OOP: call it or display it
+/// Call a `self => {..}` function and return the result, or just return the content
 #let call-or-display(self, it) = {
   if type(it) == function {
     it = it(self)
@@ -177,8 +177,10 @@
 // OOP: wrap methods
 #let wrap-method(fn) = (self: none, ..args) => fn(..args)
 
-// OOP: assuming all functions in dictionary have a named `self` parameter,
-// `methods` function is used to get all methods in dictionary object
+/// Assuming all functions in dictionary have a named `self` parameter,
+/// `methods` function is used to get all methods in dictionary object
+///
+/// Example: `#let (uncover, only) = utils.methods(self)` to get `uncover` and `only` methods.
 #let methods(self) = {
   assert(type(self) == dictionary, message: "self must be a dictionary")
   assert("methods" in self and type(self.methods) == dictionary, message: "self.methods must be a dictionary")
@@ -191,63 +193,26 @@
   return methods
 }
 
-#let slides(self) = {
-  let m = methods(self)
-  let res = (:)
-  for key in m.keys() {
-    res.insert(key, touying-slide-wrapper.with(key, m.at(key)))
-  }
-  return res
-}
 
-// Utils: unify section
-#let unify-section(section) = {
-  if section == none {
-    return none
-  } else if type(section) == dictionary {
-    return section + (short-title: section.at("short-title", default: auto))
-  } else if type(section) == array {
-    return (title: section.at(0), short-title: section.at(1, default: auto))
-  } else {
-    return (title: section, short-title: auto)
-  }
-}
-
-#let section-short-title(section) = {
-  if type(section) == dictionary {
-    if section.short-title == auto {
-      return section.title
-    } else {
-      return section.short-title
-    }
-  } else {
-    return section
-  }
-}
-
-#let info-date(self) = {
+/// Display the date of `self.info.date` with `self.datetime-format` format.
+#let display-info-date(self) = {
+  assert("info" in self, message: "self must have an info field")
   if type(self.info.date) == datetime {
-    self.info.date.display(self.datetime-format)
+    self.info.date.display(self.at("datetime-format", default: auto))
   } else {
     self.info.date
   }
 }
 
 
-// Utils: bookmark
-#let bookmark(level: 1, numbering: none, outlined: true, body) = {
-  if body != auto and body != none {
-    place(
-      top + left,
-      text(0pt, hide(heading(depth: level, outlined: outlined, bookmarked: true, numbering: numbering, body))),
-    )
-  }
-}
-
-
-
-// Convert content to markup text, partly from
-// https://sitandr.github.io/typst-examples-book/book/typstonomicon/extract_markup_text.html
+/// Convert content to markup text, partly from
+/// [typst-examples-book](https://sitandr.github.io/typst-examples-book/book/typstonomicon/extract_markup_text.html).
+///
+/// - `it` is the content to convert.
+///
+/// - `mode` is the mode of the markup text, either `typ` or `md`.
+///
+/// - `indent` is the number of spaces to indent, default is `0`.
 #let markup-text(it, mode: "typ", indent: 0) = {
   assert(mode == "typ" or mode == "md", message: "mode must be 'typ' or 'md'")
   let indent-markup-text = markup-text.with(mode: mode, indent: indent + 2)
@@ -347,6 +312,22 @@
   box(width: mutable-width, body)
 }
 
+
+/// Fit content to specified height.
+///
+/// Example: `#utils.fit-to-height(1fr)[BIG]`
+///
+/// - `width` will determine the width of the content after scaling. So, if you want the scaled content to fill half of the slide width, you can use width: 50%.
+///
+/// - `prescale-width` allows you to make typst's layout assume that the given content is to be laid out in a container of a certain width before scaling. For example, you can use `prescale-width: 200%` assuming the slide's width is twice the original.
+///
+/// - `grow` is a boolean indicating whether the content should be scaled up if it is smaller than the available height. Default is `true`.
+///
+/// - `shrink` is a boolean indicating whether the content should be scaled down if it is larger than the available height. Default is `true`.
+///
+/// - `height` is the height to fit the content to.
+///
+/// - `body` is the content to fit.
 #let fit-to-height(
   width: none,
   prescale-width: none,
@@ -437,6 +418,18 @@
   }
 }
 
+
+/// Fit content to specified width.
+///
+/// Example: `#utils.fit-to-width(1fr)[BIG]`
+///
+/// - `grow` is a boolean indicating whether the content should be scaled up if it is smaller than the available width. Default is `true`.
+///
+/// - `shrink` is a boolean indicating whether the content should be scaled down if it is larger than the available width. Default is `true`.
+///
+/// - `width` is the width to fit the content to.
+///
+/// - `body` is the content to fit.
 #let fit-to-width(grow: true, shrink: true, width, content) = {
   layout(layout-size => {
     let content-size = measure(content)
@@ -460,7 +453,18 @@
   })
 }
 
-// semitransparency cover
+
+/// Cover content with a rectangle of a specified color. If you set the fill to the background color of the page, you can use this to create a semi-transparent overlay.
+///
+/// Example: `#utils.cover-with-rect(fill: "red")[Hidden]`
+///
+/// - `cover-args` are the arguments to pass to the rectangle.
+///
+/// - `fill` is the color to fill the rectangle with.
+///
+/// - `inline` is a boolean indicating whether the content should be displayed inline. Default is `true`.
+///
+/// - `body` is the content to cover.
 #let cover-with-rect(..cover-args, fill: auto, inline: true, body) = {
   if fill == auto {
     panic("`auto` fill value is not supported until typst provides utilities to" + " retrieve the current page background")
@@ -505,6 +509,15 @@
   }
 }
 
+/// Update the alpha channel of a color.
+///
+/// Example: `update-alpha(rgb("#ff0000"), 0.5)` returns `rgb(255, 0, 0, 0.5)`
+///
+/// - `constructor` is the color constructor to use. Default is `rgb`.
+///
+/// - `color` is the color to update.
+///
+/// - `alpha` is the new alpha value.
 #let update-alpha(constructor: rgb, color, alpha) = constructor(..color.components(alpha: true).slice(0, -1), alpha)
 
 
