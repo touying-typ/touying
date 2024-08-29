@@ -267,21 +267,33 @@
         result.push(cont)
       }
       // Appendix content
-      result.push(split-content-into-slides(
-        self: self + child.value.config,
-        recaller-map: recaller-map,
-        new-start: true,
-        child.value.body,
-      ))
+      result.push(
+        split-content-into-slides(
+          self: self + child.value.config,
+          recaller-map: recaller-map,
+          new-start: true,
+          child.value.body,
+        ),
+      )
     } else {
       let child = if utils.is-sequence(child) {
         // Split the content into slides recursively
-        let (start-part, cont) = split-content-into-slides(self: self, recaller-map: recaller-map, new-start: false, child)
+        let (start-part, cont) = split-content-into-slides(
+          self: self,
+          recaller-map: recaller-map,
+          new-start: false,
+          child,
+        )
         start-part
         _delayed-wrapper(cont)
       } else if utils.is-styled(child) {
         // Split the content into slides recursively for styled content
-        let (start-part, cont) = split-content-into-slides(self: self, recaller-map: recaller-map, new-start: false, child.child)
+        let (start-part, cont) = split-content-into-slides(
+          self: self,
+          recaller-map: recaller-map,
+          new-start: false,
+          child.child,
+        )
         if start-part != none {
           utils.reconstruct-styled(child, start-part)
         }
@@ -821,7 +833,14 @@
 }
 
 // parse content into results and repetitions
-#let _parse-content-into-results-and-repetitions(self: none, need-cover: true, base: 1, index: 1, show-delayed-wrapper: false, ..bodies) = {
+#let _parse-content-into-results-and-repetitions(
+  self: none,
+  need-cover: true,
+  base: 1,
+  index: 1,
+  show-delayed-wrapper: false,
+  ..bodies,
+) = {
   let bodies = bodies.pos()
   let result-arr = ()
   // repetitions
@@ -1014,7 +1033,32 @@
           cover-arr.push(utils.reconstruct-table-like(child, conts))
         }
         repetitions = nextrepetitions
-      } else if type(child) == content and child.func() in (pad, figure, quote, strong, emph, footnote, highlight, overline, underline, strike, smallcaps, sub, super, box, block, hide, move, scale, circle, ellipse, rect, square, table.cell, grid.cell) {
+      } else if type(child) == content and child.func() in (
+        pad,
+        figure,
+        quote,
+        strong,
+        emph,
+        footnote,
+        highlight,
+        overline,
+        underline,
+        strike,
+        smallcaps,
+        sub,
+        super,
+        box,
+        block,
+        hide,
+        move,
+        scale,
+        circle,
+        ellipse,
+        rect,
+        square,
+        table.cell,
+        grid.cell,
+      ) {
         let (conts, nextrepetitions) = _parse-content-into-results-and-repetitions(
           self: self,
           need-cover: repetitions <= index,
@@ -1159,7 +1203,7 @@
 
 // get page extra args for show-notes-on-second-screen
 #let _get-page-extra-args(self) = {
-  if self.show-notes-on-second-screen == right {
+  if self.show-notes-on-second-screen in (bottom, right) {
     let margin = self.page.margin
     assert(
       self.page.paper == "presentation-16-9" or self.page.paper == "presentation-4-3",
@@ -1181,12 +1225,22 @@
     if type(margin) == length or type(margin) == relative {
       margin = (x: margin, y: margin)
     }
-    if "right" not in margin {
-      assert("x" in margin, message: "The margin should have right or x")
-      margin.right = margin.x
+    if self.show-notes-on-second-screen == bottom {
+      if "bottom" not in margin {
+        assert("y" in margin, message: "The margin should have bottom or y")
+        margin.bottom = margin.y
+      }
+      margin.bottom += page-height
+      return (margin: margin, height: 2 * page-height)
+    } else if self.show-notes-on-second-screen == right {
+      if "right" not in margin {
+        assert("x" in margin, message: "The margin should have right or x")
+        margin.right = margin.x
+      }
+      margin.right += page-width
+      return (margin: margin, width: 2 * page-width)
     }
-    margin.right += page-width
-    return (margin: margin, width: 2 * page-width)
+    return (:)
   } else {
     return (:)
   }
@@ -1196,7 +1250,7 @@
   let header = utils.call-or-display(self, self.page.at("header", default: none))
   let footer = utils.call-or-display(self, self.page.at("footer", default: none))
   // speaker note
-  if self.show-notes-on-second-screen == right {
+  if self.show-notes-on-second-screen in (bottom, right) {
     assert(
       self.page.paper == "presentation-16-9" or self.page.paper == "presentation-4-3",
       message: "The paper of page should be presentation-16-9 or presentation-4-3",
@@ -1211,35 +1265,43 @@
     } else {
       595.28pt
     }
-    footer += place(
-      left + bottom,
-      dx: page-width,
-      block(
-        fill: rgb("#E6E6E6"),
-        width: page-width,
-        height: page-height,
-        {
-          set align(left + top)
-          set text(size: 24pt, fill: black, weight: "regular")
-          block(
-            width: 100%,
-            height: 88pt,
-            inset: (left: 32pt, top: 16pt),
-            outset: 0pt,
-            fill: rgb("#CCCCCC"),
-            {
-              states.current-section-title
-              linebreak()
-              [ --- ]
-              states.current-slide-title
-            },
-          )
-          pad(x: 48pt, states.current-slide-note)
-          // clear the slide note
-          states.slide-note-state.update(none)
-        },
-      ),
+    let display-note = block(
+      fill: rgb("#E6E6E6"),
+      width: page-width,
+      height: page-height,
+      {
+        set align(left + top)
+        set text(size: 24pt, fill: black, weight: "regular")
+        block(
+          width: 100%,
+          height: 88pt,
+          inset: (left: 32pt, top: 16pt),
+          outset: 0pt,
+          fill: rgb("#CCCCCC"),
+          {
+            states.current-section-title
+            linebreak()
+            [ --- ]
+            states.current-slide-title
+          },
+        )
+        pad(x: 48pt, states.current-slide-note)
+        // clear the slide note
+        states.slide-note-state.update(none)
+      },
     )
+    if self.show-notes-on-second-screen == bottom {
+      footer += place(
+        left + bottom,
+        display-note,
+      )
+    } else if self.show-notes-on-second-screen == right {
+      footer += place(
+        left + bottom,
+        dx: page-width,
+        display-note,
+      )
+    }
   }
   // negative padding
   if self.at("zero-margin-header", default: true) or self.at("zero-margin-footer", default: true) {
@@ -1399,7 +1461,12 @@
 
   if self.handout {
     self.subslide = repeat
-    let (conts, _) = _parse-content-into-results-and-repetitions(self: self, index: repeat, show-delayed-wrapper: true, ..bodies)
+    let (conts, _) = _parse-content-into-results-and-repetitions(
+      self: self,
+      index: repeat,
+      show-delayed-wrapper: true,
+      ..bodies,
+    )
     header = page-preamble(self) + header
     set page(..(self.page + page-extra-args + (header: header, footer: footer)))
     setting(subslide-preamble(self) + composer-with-side-by-side(..conts))

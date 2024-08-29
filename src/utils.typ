@@ -817,7 +817,7 @@
     pdfpc.speaker-note(raw-text)
   }
   let show-notes-on-second-screen = self.at("show-notes-on-second-screen", default: none)
-  assert(show-notes-on-second-screen == none or show-notes-on-second-screen == right, message: "`show-notes-on-second-screen` should be `none` or `right`")
+  assert(show-notes-on-second-screen in (none, bottom, right), message: "`show-notes-on-second-screen` should be `none`, `bottom` or `right`")
   if show-notes-on-second-screen != none {
     states.slide-note-state.update(setting(note))
   }
