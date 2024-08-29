@@ -882,12 +882,12 @@
       self
     },
     // cover method
-    cover: utils.wrap-method(hide),
+    cover: utils.method-wrapper(hide),
     update-cover: (self: none, is-method: false, cover-fn) => {
       if is-method {
         self.methods.cover = cover-fn
       } else {
-        self.methods.cover = utils.wrap-method(cover-fn)
+        self.methods.cover = utils.method-wrapper(cover-fn)
       }
       self
     },
@@ -908,7 +908,7 @@
     alternatives-fn: utils.alternatives-fn,
     alternatives-cases: utils.alternatives-cases,
     // alert interface
-    alert: utils.wrap-method(text.with(weight: "bold")),
+    alert: utils.method-wrapper(text.with(weight: "bold")),
     // handout mode
     enable-handout-mode: (self: none) => {
       self.handout = true

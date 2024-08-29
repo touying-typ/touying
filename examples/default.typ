@@ -5,6 +5,7 @@
 #show: default-theme.with(
   config-common(
     slide-level: 2,
+    show-notes-on-second-screen: bottom,
   )
 )
 
@@ -14,6 +15,8 @@
 == Recall <recall>
 
 Recall
+
+#speaker-note[sdfsdf]
 
 == Animation
 

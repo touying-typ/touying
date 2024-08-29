@@ -178,7 +178,7 @@
 }
 
 // OOP: wrap methods
-#let wrap-method(fn) = (self: none, ..args) => fn(..args)
+#let method-wrapper(fn) = (self: none, ..args) => fn(..args)
 
 /// Assuming all functions in dictionary have a named `self` parameter,
 /// `methods` function is used to get all methods in dictionary object

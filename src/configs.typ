@@ -187,8 +187,28 @@
 
 
 /// The configuration of the methods
+///
+/// - cover (function): The function to cover content. The default value is `utils.method-wrapper(hide)` function.
+///
+/// - uncover (function): The function to uncover content.
+///
+/// - only (function): The function to show only the content.
+///
+/// - alternatives-match (function): The function to match alternatives.
+///
+/// - alternatives (function): The function to show alternatives.
+///
+/// - alternatives-fn (function): The function to show alternatives with a function.
+///
+/// - alternatives-cases (function): The function to show alternatives with cases.
+///
+/// - alert (function): The function to alert the content.
+///
+/// - show-notes (function): The function to show notes on second screen.
+///
+///   It should be `(self: none, width: 0pt, height: 0pt) => { .. }`.
 #let config-methods(
-  cover: utils.wrap-method(hide),
+  cover: utils.method-wrapper(hide),
   // dynamic control
   uncover: utils.uncover,
   only: utils.only,
@@ -197,7 +217,33 @@
   alternatives-fn: utils.alternatives-fn,
   alternatives-cases: utils.alternatives-cases,
   // alert interface
-  alert: utils.wrap-method(text.with(weight: "bold")),
+  alert: utils.method-wrapper(text.with(weight: "bold")),
+  // show notes
+  show-notes: (self: none, width: 0pt, height: 0pt) => block(
+    fill: rgb("#E6E6E6"),
+    width: width,
+    height: height,
+    {
+      set align(left + top)
+      set text(size: 24pt, fill: black, weight: "regular")
+      block(
+        width: 100%,
+        height: 88pt,
+        inset: (left: 32pt, top: 16pt),
+        outset: 0pt,
+        fill: rgb("#CCCCCC"),
+        {
+          states.current-section-title
+          linebreak()
+          [ --- ]
+          states.current-slide-title
+        },
+      )
+      pad(x: 48pt, states.current-slide-note)
+      // clear the slide note
+      states.slide-note-state.update(none)
+    },
+  ),
   ..args,
 ) = {
   assert(args.pos().len() == 0, message: "Unexpected positional arguments.")
@@ -211,6 +257,7 @@
       alternatives-fn: alternatives-fn,
       alternatives-cases: alternatives-cases,
       alert: alert,
+      show-notes: show-notes,
     ) + args.named(),
   )
 }

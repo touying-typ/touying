@@ -1265,41 +1265,17 @@
     } else {
       595.28pt
     }
-    let display-note = block(
-      fill: rgb("#E6E6E6"),
-      width: page-width,
-      height: page-height,
-      {
-        set align(left + top)
-        set text(size: 24pt, fill: black, weight: "regular")
-        block(
-          width: 100%,
-          height: 88pt,
-          inset: (left: 32pt, top: 16pt),
-          outset: 0pt,
-          fill: rgb("#CCCCCC"),
-          {
-            states.current-section-title
-            linebreak()
-            [ --- ]
-            states.current-slide-title
-          },
-        )
-        pad(x: 48pt, states.current-slide-note)
-        // clear the slide note
-        states.slide-note-state.update(none)
-      },
-    )
+    let show-notes = (self.methods.show-notes)(self: self, width: page-width, height: page-height)
     if self.show-notes-on-second-screen == bottom {
       footer += place(
         left + bottom,
-        display-note,
+        show-notes,
       )
     } else if self.show-notes-on-second-screen == right {
       footer += place(
         left + bottom,
         dx: page-width,
-        display-note,
+        show-notes,
       )
     }
   }
