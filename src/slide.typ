@@ -868,41 +868,41 @@
     }
   }
   let bodies = bodies.pos()
-  // update pdfpc
-  let update-pdfpc(curr-subslide) = (
-    context [
-      #metadata((t: "NewSlide")) <pdfpc>
-      #metadata((t: "Idx", v: here().page() - 1)) <pdfpc>
-      #metadata((t: "Overlay", v: curr-subslide - 1)) <pdfpc>
-      #metadata((t: "LogicalSlide", v: states.slide-counter.get().first())) <pdfpc>
-    ]
-  )
-  let page-preamble(curr-subslide) = (
-    context {
-      // global preamble
-      if here().page() == self.at("first-slide-number", default: 1) {
-        utils.call-or-display(self, self.preamble)
-        // pdfpc slide markers
-        if self.at("with-pdfpc-file-label", default: true) {
-          pdfpc.pdfpc-file(here())
-        }
-      }
-      utils.call-or-display(self, self.page-preamble)
+  let slide-preamble(self) = {
+    if self.at("is-first-slide", default: false) {
+      utils.call-or-display(self, self.at("preamble", default: none))
+      utils.call-or-display(self, self.at("default-preamble", default: none))
     }
-  )
+    // add headings for the first subslide
+    if self.at("headings", default: ()) != () {
+      place(hide(self.at("headings", default: none).sum(default: none)))
+    }
+    utils.call-or-display(self, self.at("slide-preamble", default: none))
+    utils.call-or-display(self, self.at("default-slide-preamble", default: none))
+  }
+  // preamble for the subslides
+  let subslide-preamble(self) = {
+    if self.subslide == 1 {
+      slide-preamble(self)
+    }
+    utils.call-or-display(self, self.at("subslide-preamble", default: none))
+    utils.call-or-display(self, self.at("default-subslide-preamble", default: none))
+  }
   // update states for every page
-  let _update-states(repetitions) = {
+  let page-preamble(self) = {
     // 1. slide counter part
     //    if freeze-slide-counter is false, then update the slide-counter
-    if not self.at("freeze-slide-counter", default: false) {
-      states.slide-counter.step()
-      //  if appendix is false, then update the last-slide-counter
-      if not self.at("appendix", default: false) {
-        states.last-slide-counter.step()
+    if self.subslide == 1 {
+      if not self.at("freeze-slide-counter", default: false) {
+        states.slide-counter.step()
+        //  if appendix is false, then update the last-slide-counter
+        if not self.at("appendix", default: false) {
+          states.last-slide-counter.step()
+        }
       }
     }
-    // update page counter
-    context counter(page).update(states.slide-counter.get())
+    utils.call-or-display(self, self.at("page-preamble", default: none))
+    utils.call-or-display(self, self.at("default-page-preamble", default: none))
   }
   self.subslide = 1
   // for single page slide, get the repetitions
@@ -929,18 +929,18 @@
           it
         }
       })
-      header = _update-states(1) + update-pdfpc(1) + header
+      header = page-preamble(self) + header
       set page(..(self.page + page-extra-args + (header: header, footer: footer)))
-      setting(page-preamble(1) + composer-with-side-by-side(..conts))
+      setting(subslide-preamble(self) + composer-with-side-by-side(..conts))
     }
   }
 
   if self.handout {
     self.subslide = repeat
     let (conts, _) = _parse-content-into-results-and-repetitions(self: self, index: repeat, ..bodies)
-    header = _update-states(1) + update-pdfpc(1) + header
+    header = page-preamble(self) + header
     set page(..(self.page + page-extra-args + (header: header, footer: footer)))
-    setting(page-preamble(1) + composer-with-side-by-side(..conts))
+    setting(subslide-preamble(self) + composer-with-side-by-side(..conts))
   } else {
     // render all the subslides
     let result = ()
@@ -948,17 +948,12 @@
     for i in range(1, repeat + 1) {
       self.subslide = i
       let (header, footer) = _get-header-footer(self)
-      let new-header = header
       let (conts, _) = _parse-content-into-results-and-repetitions(self: self, index: i, ..bodies)
-      // update the counter in the first subslide
-      if i == 1 {
-        new-header = _update-states(repeat) + update-pdfpc(i) + new-header
-      } else {
-        new-header = update-pdfpc(i) + new-header
-      }
+      let new-header = page-preamble(self) + header
+      // update the counter in the first subslide only
       result.push({
         set page(..(self.page + page-extra-args + (header: new-header, footer: footer)))
-        setting(page-preamble(i) + composer-with-side-by-side(..conts))
+        setting(subslide-preamble(self) + composer-with-side-by-side(..conts))
       })
     }
     // return the result

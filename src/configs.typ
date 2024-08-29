@@ -1,3 +1,5 @@
+#import "states.typ"
+#import "pdfpc.typ"
 #import "utils.typ"
 #import "slide.typ": touying-slide-wrapper, touying-slide
 
@@ -37,7 +39,7 @@
 ///
 /// - auto-offset-for-heading (bool): Whether to add an offset relative to slide-level for headings.
 ///
-/// - with-pdfpc-file-label (bool): Whether to add `<pdfpc-file>` label for querying.
+/// - enable-pdfpc (bool): Whether to add `<pdfpc-file>` label for querying.
 ///
 ///   You can export the .pdfpc file directly using: `typst query --root . ./example.typ --field value --one "<pdfpc-file>" > ./example.pdfpc`
 ///
@@ -80,8 +82,9 @@
   zero-margin-header: true,
   zero-margin-footer: true,
   auto-offset-for-heading: true,
-  with-pdfpc-file-label: true,
+  enable-pdfpc: true,
   enable-mark-warning: true,
+  reset-page-counter-to-slide-counter: true,
   // some black magics for better slides writing,
   // maybe will be deprecated in the future
   frozen-states: (),
@@ -109,11 +112,29 @@
         }
       }
     }
+    if self.at("enable-pdfpc", default: true) {
+      context pdfpc.pdfpc-file(here())
+    }
   },
+  slide-preamble: none,
+  default-slide-preamble: none,
+  subslide-preamble: none,
+  default-subslide-preamble: none,
   page-preamble: none,
   default-page-preamble: self => {
     if self.at("reset-footnote-number-per-slide", default: true) {
       counter(footnote).update(0)
+    }
+    if self.at("reset-page-counter-to-slide-counter", default: true) {
+      context counter(page).update(states.slide-counter.get())
+    }
+    if self.at("enable-pdfpc", default: true) {
+      context [
+        #metadata((t: "NewSlide")) <pdfpc>
+        #metadata((t: "Idx", v: here().page() - 1)) <pdfpc>
+        #metadata((t: "Overlay", v: self.subslide - 1)) <pdfpc>
+        #metadata((t: "LogicalSlide", v: states.slide-counter.get().first())) <pdfpc>
+      ]
     }
   },
   show-notes-on-second-screen: none,
@@ -139,7 +160,7 @@
     zero-margin-header: zero-margin-header,
     zero-margin-footer: zero-margin-footer,
     auto-offset-for-heading: auto-offset-for-heading,
-    with-pdfpc-file-label: with-pdfpc-file-label,
+    enable-pdfpc: enable-pdfpc,
     enable-mark-warning: enable-mark-warning,
     frozen-states: frozen-states,
     frozen-counters: frozen-counters,
@@ -148,6 +169,10 @@
     first-slide-number: first-slide-number,
     preamble: preamble,
     default-preamble: default-preamble,
+    slide-preamble: slide-preamble,
+    default-slide-preamble: default-slide-preamble,
+    subslide-preamble: subslide-preamble,
+    default-subslide-preamble: default-subslide-preamble,
     page-preamble: page-preamble,
     default-page-preamble: default-page-preamble,
     show-notes-on-second-screen: show-notes-on-second-screen,

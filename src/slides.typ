@@ -51,7 +51,7 @@
 
 
 /// Use headings to split a content block into slides
-#let _split-content-into-slides(self: none, recaller-map: (:), first-slide: false, body) = {
+#let _split-content-into-slides(self: none, recaller-map: (:), new-start: true, is-first-slide: false, body) = {
   // Extract arguments
   assert(type(self) == dictionary, message: "`self` must be a dictionary")
   assert("slide-level" in self and type(self.slide-level) == int, message: "`self.slide-level` must be an integer")
@@ -92,7 +92,7 @@
     if last-heading-label != none {
       recaller-map.insert(last-heading-label, cont)
     }
-    (cont, recaller-map, (), (), true)
+    (cont, recaller-map, (), (), true, false)
   }
   // The empty content list
   let empty-contents = ([], [ ], parbreak(), linebreak())
@@ -104,9 +104,6 @@
   let current-slide = ()
   // The current slide content
   let cont = none
-  // Is the first part should be a slide
-  let first-slide = first-slide
-
 
   // Is we have a horizontal line
   let horizontal-line = false
@@ -116,8 +113,8 @@
     // split content when we have a horizontal line
     if horizontal-line-to-pagebreak and horizontal-line and child not in ([—], [–], [-]) {
       current-slide = utils.trim(current-slide)
-      (cont, recaller-map, current-headings, current-slide, first-slide) = call-slide-fn-and-reset(
-        self + (headings: current-headings),
+      (cont, recaller-map, current-headings, current-slide, new-start, is-first-slide) = call-slide-fn-and-reset(
+        self + (headings: current-headings, is-first-slide: is-first-slide),
         slide-fn,
         current-slide.sum(default: none),
         recaller-map,
@@ -128,16 +125,16 @@
     if utils.is-kind(child, "touying-slide-wrapper") {
       current-slide = utils.trim(current-slide)
       if current-slide != () {
-        (cont, recaller-map, current-headings, current-slide, first-slide) = call-slide-fn-and-reset(
-          self + (headings: current-headings),
+        (cont, recaller-map, current-headings, current-slide, new-start, is-first-slide) = call-slide-fn-and-reset(
+          self + (headings: current-headings, is-first-slide: is-first-slide),
           slide-fn,
           current-slide.sum(default: none),
           recaller-map,
         )
         cont
       }
-      (cont, recaller-map, current-headings, current-slide, first-slide) = call-slide-fn-and-reset(
-        self + (headings: current-headings),
+      (cont, recaller-map, current-headings, current-slide, new-start, is-first-slide) = call-slide-fn-and-reset(
+        self + (headings: current-headings, is-first-slide: is-first-slide),
         already-slide-wrapper: true,
         child.value.fn,
         none,
@@ -147,8 +144,8 @@
     } else if utils.is-kind(child, "touying-slide-recaller") {
       current-slide = utils.trim(current-slide)
       if current-slide != () or current-headings != () {
-        (cont, recaller-map, current-headings, current-slide, first-slide) = call-slide-fn-and-reset(
-          self + (headings: current-headings),
+        (cont, recaller-map, current-headings, current-slide, new-start, is-first-slide) = call-slide-fn-and-reset(
+          self + (headings: current-headings, is-first-slide: is-first-slide),
           slide-fn,
           current-slide.sum(default: none),
           recaller-map,
@@ -162,8 +159,8 @@
     } else if child == pagebreak() {
       // split content when we have a pagebreak
       current-slide = utils.trim(current-slide)
-      (cont, recaller-map, current-headings, current-slide, first-slide) = call-slide-fn-and-reset(
-        self + (headings: current-headings),
+      (cont, recaller-map, current-headings, current-slide, new-start, is-first-slide) = call-slide-fn-and-reset(
+        self + (headings: current-headings, is-first-slide: is-first-slide),
         slide-fn,
         current-slide.sum(default: none),
         recaller-map,
@@ -183,8 +180,8 @@
         child.depth == 3 and new-subsubsection-slide-fn != none
       ) or (child.depth == 4 and new-subsubsubsection-slide-fn != none) {
         if current-slide != () or current-headings != () {
-          (cont, recaller-map, current-headings, current-slide, first-slide) = call-slide-fn-and-reset(
-            self + (headings: current-headings),
+          (cont, recaller-map, current-headings, current-slide, new-start, is-first-slide) = call-slide-fn-and-reset(
+            self + (headings: current-headings, is-first-slide: is-first-slide),
             slide-fn,
             current-slide.sum(default: none),
             recaller-map,
@@ -194,35 +191,35 @@
       }
 
       current-headings.push(child)
-      first-slide = true
+      new-start = true
 
       if child.depth == 1 and new-section-slide-fn != none {
-        (cont, recaller-map, current-headings, current-slide, first-slide) = call-slide-fn-and-reset(
-          self + (headings: current-headings),
+        (cont, recaller-map, current-headings, current-slide, new-start, is-first-slide) = call-slide-fn-and-reset(
+          self + (headings: current-headings, is-first-slide: is-first-slide),
           new-section-slide-fn,
           child.body,
           recaller-map,
         )
         cont
       } else if child.depth == 2 and new-subsection-slide-fn != none {
-        (cont, recaller-map, current-headings, current-slide, first-slide) = call-slide-fn-and-reset(
-          self + (headings: current-headings),
+        (cont, recaller-map, current-headings, current-slide, new-start, is-first-slide) = call-slide-fn-and-reset(
+          self + (headings: current-headings, is-first-slide: is-first-slide),
           new-subsection-slide-fn,
           child.body,
           recaller-map,
         )
         cont
       } else if child.depth == 3 and new-subsubsection-slide-fn != none {
-        (cont, recaller-map, current-headings, current-slide, first-slide) = call-slide-fn-and-reset(
-          self + (headings: current-headings),
+        (cont, recaller-map, current-headings, current-slide, new-start, is-first-slide) = call-slide-fn-and-reset(
+          self + (headings: current-headings, is-first-slide: is-first-slide),
           new-subsubsection-slide-fn,
           child.body,
           recaller-map,
         )
         cont
       } else if child.depth == 4 and new-subsubsubsection-slide-fn != none {
-        (cont, recaller-map, current-headings, current-slide, first-slide) = call-slide-fn-and-reset(
-          self + (headings: current-headings),
+        (cont, recaller-map, current-headings, current-slide, new-start, is-first-slide) = call-slide-fn-and-reset(
+          self + (headings: current-headings, is-first-slide: is-first-slide),
           new-subsubsubsection-slide-fn,
           child.body,
           recaller-map,
@@ -232,8 +229,8 @@
 
     } else if utils.is-kind(child, "touying-set-config") {
       if current-slide != () or current-headings != () {
-        (cont, recaller-map, current-headings, current-slide, first-slide) = call-slide-fn-and-reset(
-          self + (headings: current-headings),
+        (cont, recaller-map, current-headings, current-slide, new-start, is-first-slide) = call-slide-fn-and-reset(
+          self + (headings: current-headings, is-first-slide: is-first-slide),
           slide-fn,
           current-slide.sum(default: none),
           recaller-map,
@@ -244,20 +241,20 @@
       _split-content-into-slides(
         self: self + child.value.config,
         recaller-map: recaller-map,
-        first-slide: true,
+        new-start: true,
         child.value.body,
       )
     } else {
       let child = if utils.is-sequence(child) {
         // Split the content into slides recursively
-        _split-content-into-slides(self: self, recaller-map: recaller-map, child)
+        _split-content-into-slides(self: self, recaller-map: recaller-map, new-start: false, child)
       } else if utils.is-styled(child) {
         // Split the content into slides recursively for styled content
-        utils.reconstruct-styled(child, _split-content-into-slides(self: self, recaller-map: recaller-map, child.child))
+        utils.reconstruct-styled(child, _split-content-into-slides(self: self, recaller-map: recaller-map, new-start: false, child.child))
       } else {
         child
       }
-      if first-slide {
+      if new-start {
         // Add the child to the current slide
         current-slide.push(child)
       } else {
@@ -269,8 +266,8 @@
   // Handle the last slide
   current-slide = utils.trim(current-slide)
   if current-slide != () or current-headings != () {
-    (cont, recaller-map, current-headings, current-slide, first-slide) = call-slide-fn-and-reset(
-      self + (headings: current-headings),
+    (cont, recaller-map, current-headings, current-slide, new-start, is-first-slide) = call-slide-fn-and-reset(
+      self + (headings: current-headings, is-first-slide: is-first-slide),
       slide-fn,
       current-slide.sum(default: none),
       recaller-map,
@@ -285,7 +282,7 @@
   let args = (configs.default-config,) + args.pos()
   let self = utils.merge-dicts(..args)
 
-  show: _split-content-into-slides.with(self: self, first-slide: true)
+  show: _split-content-into-slides.with(self: self, is-first-slide: true)
 
   body
 }
