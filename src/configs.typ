@@ -1,7 +1,7 @@
 #import "states.typ"
 #import "pdfpc.typ"
 #import "utils.typ"
-#import "slide.typ": touying-slide-wrapper, touying-slide
+#import "core.typ": touying-slide-wrapper, touying-slide
 
 /// The private configurations of the theme.
 #let config-store(..args) = {

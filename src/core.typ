@@ -3,6 +3,304 @@
 #import "pdfpc.typ"
 
 /// ------------------------------------------------
+/// Slides
+/// ------------------------------------------------
+
+#let _delayed-wrapper(body) = utils.label-it(
+  metadata((kind: "touying-delayed-wrapper", body: body)),
+  "touying-temporary-mark",
+)
+
+/// Set config
+#let touying-set-config(config, body) = utils.label-it(
+  metadata((
+    kind: "touying-set-config",
+    config: config,
+    body: body,
+  )),
+  "touying-temporary-mark",
+)
+
+
+/// Appendix for the presentation. The last-slide-counter will be frozen at the last slide before the appendix.
+#let appendix(body) = touying-set-config(
+  (appendix: true),
+  body,
+)
+
+
+/// Recall a slide by its label
+///
+/// - `lbl` (str): The label of the slide to recall
+#let touying-recall(lbl) = utils.label-it(
+  metadata((
+    kind: "touying-slide-recaller",
+    label: if type(lbl) == label {
+      str(lbl)
+    } else {
+      lbl
+    },
+  )),
+  "touying-temporary-mark",
+)
+
+
+/// Call touying slide function
+#let _call-slide-fn(self, fn, body) = {
+  let slide-wrapper = fn(body)
+  assert(
+    utils.is-kind(slide-wrapper, "touying-slide-wrapper"),
+    message: "you must use `touying-slide-wrapper` in your slide function",
+  )
+  return (slide-wrapper.value.fn)(self)
+}
+
+
+/// Use headings to split a content block into slides
+#let split-content-into-slides(self: none, recaller-map: (:), new-start: true, is-first-slide: false, body) = {
+  // Extract arguments
+  assert(type(self) == dictionary, message: "`self` must be a dictionary")
+  assert("slide-level" in self and type(self.slide-level) == int, message: "`self.slide-level` must be an integer")
+  assert("slide-fn" in self and type(self.slide-fn) == function, message: "`self.slide-fn` must be a function")
+  let slide-level = self.slide-level
+  let slide-fn = self.slide-fn
+  let new-section-slide-fn = self.at("new-section-slide-fn", default: none)
+  let new-subsection-slide-fn = self.at("new-subsection-slide-fn", default: none)
+  let new-subsubsection-slide-fn = self.at("new-subsubsection-slide-fn", default: none)
+  let new-subsubsubsection-slide-fn = self.at("new-subsubsubsection-slide-fn", default: none)
+  let horizontal-line-to-pagebreak = self.at("horizontal-line-to-pagebreak", default: true)
+  let children = if utils.is-sequence(body) {
+    body.children
+  } else {
+    (body,)
+  }
+  let get-last-heading-depth(current-headings) = {
+    if current-headings != () {
+      current-headings.at(-1).depth
+    } else {
+      0
+    }
+  }
+  let get-last-heading-label(current-headings) = {
+    if current-headings != () {
+      if current-headings.at(-1).has("label") {
+        str(current-headings.at(-1).label)
+      }
+    }
+  }
+  let call-slide-fn-and-reset(self, already-slide-wrapper: false, slide-fn, current-slide-cont, recaller-map) = {
+    let cont = if already-slide-wrapper {
+      slide-fn(self)
+    } else {
+      _call-slide-fn(self, slide-fn, current-slide-cont)
+    }
+    let last-heading-label = get-last-heading-label(self.headings)
+    if last-heading-label != none {
+      recaller-map.insert(last-heading-label, cont)
+    }
+    (cont, recaller-map, (), (), true, false)
+  }
+  // The empty content list
+  let empty-contents = ([], [ ], parbreak(), linebreak())
+  // The headings that we currently have
+  let current-headings = ()
+  // Recaller map
+  let recaller-map = recaller-map
+  // The current slide we are building
+  let current-slide = ()
+  // The current slide content
+  let cont = none
+  // is new start
+  let is-new-start = new-start
+  // start part
+  let start-part = ()
+  // result
+  let result = ()
+
+  // Is we have a horizontal line
+  let horizontal-line = false
+  // Iterate over the children
+  for child in children {
+    // Handle horizontal-line
+    // split content when we have a horizontal line
+    if horizontal-line-to-pagebreak and horizontal-line and child not in ([—], [–], [-]) {
+      current-slide = utils.trim(current-slide)
+      (cont, recaller-map, current-headings, current-slide, new-start, is-first-slide) = call-slide-fn-and-reset(
+        self + (headings: current-headings, is-first-slide: is-first-slide),
+        slide-fn,
+        current-slide.sum(default: none),
+        recaller-map,
+      )
+      result.push(cont)
+    }
+    // Main logic
+    if utils.is-kind(child, "touying-slide-wrapper") {
+      current-slide = utils.trim(current-slide)
+      if current-slide != () {
+        (cont, recaller-map, current-headings, current-slide, new-start, is-first-slide) = call-slide-fn-and-reset(
+          self + (headings: current-headings, is-first-slide: is-first-slide),
+          slide-fn,
+          current-slide.sum(default: none),
+          recaller-map,
+        )
+        result.push(cont)
+      }
+      (cont, recaller-map, current-headings, current-slide, new-start, is-first-slide) = call-slide-fn-and-reset(
+        self + (headings: current-headings, is-first-slide: is-first-slide),
+        already-slide-wrapper: true,
+        child.value.fn,
+        none,
+        recaller-map,
+      )
+      result.push(cont)
+    } else if utils.is-kind(child, "touying-slide-recaller") {
+      current-slide = utils.trim(current-slide)
+      if current-slide != () or current-headings != () {
+        (cont, recaller-map, current-headings, current-slide, new-start, is-first-slide) = call-slide-fn-and-reset(
+          self + (headings: current-headings, is-first-slide: is-first-slide),
+          slide-fn,
+          current-slide.sum(default: none),
+          recaller-map,
+        )
+        result.push(cont)
+      }
+      let lbl = child.value.label
+      assert(lbl in recaller-map, message: "label not found in the recaller map for slides")
+      // recall the slide
+      result.push(recaller-map.at(lbl))
+    } else if child == pagebreak() {
+      // split content when we have a pagebreak
+      current-slide = utils.trim(current-slide)
+      (cont, recaller-map, current-headings, current-slide, new-start, is-first-slide) = call-slide-fn-and-reset(
+        self + (headings: current-headings, is-first-slide: is-first-slide),
+        slide-fn,
+        current-slide.sum(default: none),
+        recaller-map,
+      )
+      result.push(cont)
+    } else if horizontal-line-to-pagebreak and child == [—] {
+      horizontal-line = true
+      continue
+    } else if horizontal-line-to-pagebreak and horizontal-line and child in ([–], [-]) {
+      continue
+    } else if utils.is-heading(child, depth: slide-level) {
+      let last-heading-depth = get-last-heading-depth(current-headings)
+      current-slide = utils.trim(current-slide)
+      if child.depth <= last-heading-depth or current-slide != () or (
+        child.depth == 1 and new-section-slide-fn != none
+      ) or (child.depth == 2 and new-subsection-slide-fn != none) or (
+        child.depth == 3 and new-subsubsection-slide-fn != none
+      ) or (child.depth == 4 and new-subsubsubsection-slide-fn != none) {
+        if current-slide != () or current-headings != () {
+          (cont, recaller-map, current-headings, current-slide, new-start, is-first-slide) = call-slide-fn-and-reset(
+            self + (headings: current-headings, is-first-slide: is-first-slide),
+            slide-fn,
+            current-slide.sum(default: none),
+            recaller-map,
+          )
+          result.push(cont)
+        }
+      }
+
+      current-headings.push(child)
+      new-start = true
+
+      if child.depth == 1 and new-section-slide-fn != none {
+        (cont, recaller-map, current-headings, current-slide, new-start, is-first-slide) = call-slide-fn-and-reset(
+          self + (headings: current-headings, is-first-slide: is-first-slide),
+          new-section-slide-fn,
+          child.body,
+          recaller-map,
+        )
+        result.push(cont)
+      } else if child.depth == 2 and new-subsection-slide-fn != none {
+        (cont, recaller-map, current-headings, current-slide, new-start, is-first-slide) = call-slide-fn-and-reset(
+          self + (headings: current-headings, is-first-slide: is-first-slide),
+          new-subsection-slide-fn,
+          child.body,
+          recaller-map,
+        )
+        result.push(cont)
+      } else if child.depth == 3 and new-subsubsection-slide-fn != none {
+        (cont, recaller-map, current-headings, current-slide, new-start, is-first-slide) = call-slide-fn-and-reset(
+          self + (headings: current-headings, is-first-slide: is-first-slide),
+          new-subsubsection-slide-fn,
+          child.body,
+          recaller-map,
+        )
+        result.push(cont)
+      } else if child.depth == 4 and new-subsubsubsection-slide-fn != none {
+        (cont, recaller-map, current-headings, current-slide, new-start, is-first-slide) = call-slide-fn-and-reset(
+          self + (headings: current-headings, is-first-slide: is-first-slide),
+          new-subsubsubsection-slide-fn,
+          child.body,
+          recaller-map,
+        )
+        result.push(cont)
+      }
+
+    } else if utils.is-kind(child, "touying-set-config") {
+      if current-slide != () or current-headings != () {
+        (cont, recaller-map, current-headings, current-slide, new-start, is-first-slide) = call-slide-fn-and-reset(
+          self + (headings: current-headings, is-first-slide: is-first-slide),
+          slide-fn,
+          current-slide.sum(default: none),
+          recaller-map,
+        )
+        result.push(cont)
+      }
+      // Appendix content
+      _delayed-wrapper(split-content-into-slides(
+        self: self + child.value.config,
+        recaller-map: recaller-map,
+        new-start: true,
+        child.value.body,
+      ))
+    } else {
+      let child = if utils.is-sequence(child) {
+        // Split the content into slides recursively
+        let (start-part, cont) = split-content-into-slides(self: self, recaller-map: recaller-map, new-start: false, child)
+        start-part
+        _delayed-wrapper(cont)
+      } else if utils.is-styled(child) {
+        // Split the content into slides recursively for styled content
+        let (start-part, cont) = split-content-into-slides(self: self, recaller-map: recaller-map, new-start: false, child.child)
+        if start-part != none {
+          utils.reconstruct-styled(child, start-part)
+        }
+        _delayed-wrapper(utils.reconstruct-styled(child, cont))
+      } else {
+        child
+      }
+      if new-start {
+        // Add the child to the current slide
+        current-slide.push(child)
+      } else {
+        start-part.push(child)
+      }
+    }
+  }
+
+  // Handle the last slide
+  current-slide = utils.trim(current-slide)
+  if current-slide != () or current-headings != () {
+    (cont, recaller-map, current-headings, current-slide, new-start, is-first-slide) = call-slide-fn-and-reset(
+      self + (headings: current-headings, is-first-slide: is-first-slide),
+      slide-fn,
+      current-slide.sum(default: none),
+      recaller-map,
+    )
+    result.push(cont)
+  }
+
+  if is-new-start {
+    return result.sum(default: none)
+  } else {
+    return (start-part.sum(default: none), result.sum(default: none))
+  }
+}
+
+/// ------------------------------------------------
 /// Slide
 /// ------------------------------------------------
 
@@ -491,7 +789,7 @@
 }
 
 // parse content into results and repetitions
-#let _parse-content-into-results-and-repetitions(self: none, need-cover: true, base: 1, index: 1, ..bodies) = {
+#let _parse-content-into-results-and-repetitions(self: none, need-cover: true, base: 1, index: 1, show-delayed-wrapper: false, ..bodies) = {
   let bodies = bodies.pos()
   let result-arr = ()
   // repetitions
@@ -576,7 +874,6 @@
           repetitions = nextrepetitions
         } else if kind == "touying-fn-wrapper" {
           // handle touying-fn-wrapper
-          self.subslide = index
           if repetitions <= index or not need-cover {
             result.push((child.value.fn)(self: self, ..child.value.args))
           } else {
@@ -585,6 +882,14 @@
           if child.value.with-visible-subslides {
             let visible-subslides = child.value.args.pos().at(0)
             max-repetitions = calc.max(max-repetitions, utils.last-required-subslide(visible-subslides))
+          }
+        } else if kind == "touying-delayed-wrapper" {
+          if show-delayed-wrapper {
+            if repetitions <= index or not need-cover {
+              result.push(child.value.body)
+            } else {
+              cover-arr.push(child.value.body)
+            }
           }
         } else {
           if repetitions <= index or not need-cover {
@@ -954,29 +1259,15 @@
     )
     repeat = repetitions
   }
+  assert(type(repeat) == int, message: "The repeat should be an integer")
   self.repeat = repeat
   // page header and footer
   let (header, footer) = _get-header-footer(self)
   let page-extra-args = _get-page-extra-args(self)
-  // for speed up, do not parse the content if repeat is none
-  if repeat == none {
-    return {
-      let conts = bodies.map(it => {
-        if type(it) == function {
-          it(self)
-        } else {
-          it
-        }
-      })
-      header = page-preamble(self) + header
-      set page(..(self.page + page-extra-args + (header: header, footer: footer)))
-      setting(subslide-preamble(self) + composer-with-side-by-side(..conts))
-    }
-  }
 
   if self.handout {
     self.subslide = repeat
-    let (conts, _) = _parse-content-into-results-and-repetitions(self: self, index: repeat, ..bodies)
+    let (conts, _) = _parse-content-into-results-and-repetitions(self: self, index: repeat, show-delayed-wrapper: true, ..bodies)
     header = page-preamble(self) + header
     set page(..(self.page + page-extra-args + (header: header, footer: footer)))
     setting(subslide-preamble(self) + composer-with-side-by-side(..conts))
@@ -987,7 +1278,10 @@
     for i in range(1, repeat + 1) {
       self.subslide = i
       let (header, footer) = _get-header-footer(self)
-      let (conts, _) = _parse-content-into-results-and-repetitions(self: self, index: i, ..bodies)
+      let delayed-args = if i == repeat {
+        (show-delayed-wrapper: true)
+      }
+      let (conts, _) = _parse-content-into-results-and-repetitions(self: self, index: i, ..delayed-args, ..bodies)
       let new-header = page-preamble(self) + header
       // update the counter in the first subslide only
       result.push({
