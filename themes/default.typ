@@ -2,6 +2,8 @@
 
 /// Touying slide function.
 ///
+/// - `config` is the configuration of the slide. You can use `config-xxx` to set the configuration of the slide. For more several configurations, you can use `utils.merge-dicts` to merge them.
+///
 /// - `repeat` is the number of subslides. Default is `auto`，which means touying will automatically calculate the number of subslides.
 ///
 ///   The `repeat` argument is necessary when you use `#slide(repeat: 3, self => [ .. ])` style code to create a slide. The callback-style `uncover` and `only` cannot be detected by touying automatically.
@@ -22,12 +24,13 @@
 ///
 /// - `..bodies` is the contents of the slide. You can call the `slide` function with syntax like `#slide[A][B][C]` to create a slide.
 #let slide(
+  config: (:),
   repeat: auto,
   setting: body => body,
   composer: auto,
   ..bodies,
 ) = touying-slide-wrapper(self => {
-  touying-slide(self: self, repeat: repeat, setting: setting, composer: composer, ..bodies)
+  touying-slide(self: self, config: config, repeat: repeat, setting: setting, composer: composer, ..bodies)
 })
 
 
@@ -36,6 +39,8 @@
   ..args,
   body,
 ) = {
+  set text(size: 20pt)
+
   show: touying-slides.with(
     config-page(paper: "presentation-" + aspect-ratio),
     config-common(

@@ -1,13 +1,64 @@
 #import "states.typ"
 #import "pdfpc.typ"
 #import "utils.typ"
-#import "core.typ": touying-slide-wrapper, touying-slide
+#import "core.typ": touying-slide-wrapper, touying-slide, slide
 
 /// The private configurations of the theme.
 #let config-store(..args) = {
   assert(args.pos().len() == 0, message: "Unexpected positional arguments.")
   return (store: args.named())
 }
+
+
+#let _default-frozen-states = (
+  // ctheorems state
+  state("thm",
+    (
+      "counters": ("heading": ()),
+      "latest": ()
+    )
+  ),
+)
+
+#let _default-frozen-counters = (
+  counter(math.equation),
+  counter(figure.where(kind: table)),
+  counter(figure.where(kind: image)),
+)
+
+#let _default-preamble = self => {
+  if self.at("enable-mark-warning", default: true) {
+    context {
+      let marks = query(<touying-temporary-mark>)
+      if marks.len() > 0 {
+        let page-num = marks.at(0).location().page()
+        let kind = marks.at(0).value.kind
+        panic("Unsupported mark `" + kind + "` at page " + str(page-num) + ". You can't use it inside some functions like `context`. You may want to use the callback-style `uncover` function instead.")
+      }
+    }
+  }
+  if self.at("enable-pdfpc", default: true) {
+    context pdfpc.pdfpc-file(here())
+  }
+}
+
+#let _default-page-preamble = self => {
+  if self.at("reset-footnote-number-per-slide", default: true) {
+    counter(footnote).update(0)
+  }
+  if self.at("reset-page-counter-to-slide-counter", default: true) {
+    context counter(page).update(states.slide-counter.get())
+  }
+  if self.at("enable-pdfpc", default: true) {
+    context [
+      #metadata((t: "NewSlide")) <pdfpc>
+      #metadata((t: "Idx", v: here().page() - 1)) <pdfpc>
+      #metadata((t: "Overlay", v: self.subslide - 1)) <pdfpc>
+      #metadata((t: "LogicalSlide", v: states.slide-counter.get().first())) <pdfpc>
+    ]
+  }
+}
+
 
 /// The common configurations of the slides.
 ///
@@ -66,12 +117,7 @@
 #let config-common(
   handout: false,
   slide-level: 2,
-  slide-fn: (
-    repeat: auto,
-    setting: body => body,
-    composer: auto,
-    ..bodies,
-  ) => touying-slide-wrapper(self => touying-slide(self: self, repeat: repeat, setting: setting, composer: composer, ..bodies)),
+  slide-fn: slide,
   new-section-slide-fn: none,
   new-subsection-slide-fn: none,
   new-subsubsection-slide-fn: none,
@@ -89,55 +135,18 @@
   // maybe will be deprecated in the future
   enable-frozen-states-and-counters: true,
   frozen-states: (),
-  default-frozen-states: (
-    // ctheorems state
-    state("thm",
-      (
-        "counters": ("heading": ()),
-        "latest": ()
-      )
-    ),
-  ),
+  default-frozen-states: _default-frozen-states,
   frozen-counters: (),
-  default-frozen-counters: (counter(math.equation), counter(figure.where(kind: table)), counter(figure.where(kind: image))),
+  default-frozen-counters: _default-frozen-counters,
   first-slide-number: 1,
   preamble: none,
-  default-preamble: self => {
-    if self.at("enable-mark-warning", default: true) {
-      context {
-        let marks = query(<touying-temporary-mark>)
-        if marks.len() > 0 {
-          let page-num = marks.at(0).location().page()
-          let kind = marks.at(0).value.kind
-          panic("Unsupported mark `" + kind + "` at page " + str(page-num) + ". You can't use it inside some functions like `context`. You may want to use the callback-style `uncover` function instead.")
-        }
-      }
-    }
-    if self.at("enable-pdfpc", default: true) {
-      context pdfpc.pdfpc-file(here())
-    }
-  },
+  default-preamble: _default-preamble,
   slide-preamble: none,
   default-slide-preamble: none,
   subslide-preamble: none,
   default-subslide-preamble: none,
   page-preamble: none,
-  default-page-preamble: self => {
-    if self.at("reset-footnote-number-per-slide", default: true) {
-      counter(footnote).update(0)
-    }
-    if self.at("reset-page-counter-to-slide-counter", default: true) {
-      context counter(page).update(states.slide-counter.get())
-    }
-    if self.at("enable-pdfpc", default: true) {
-      context [
-        #metadata((t: "NewSlide")) <pdfpc>
-        #metadata((t: "Idx", v: here().page() - 1)) <pdfpc>
-        #metadata((t: "Overlay", v: self.subslide - 1)) <pdfpc>
-        #metadata((t: "LogicalSlide", v: states.slide-counter.get().first())) <pdfpc>
-      ]
-    }
-  },
+  default-page-preamble: _default-page-preamble,
   show-notes-on-second-screen: none,
   horizontal-line-to-pagebreak: true,
   reset-footnote-number-per-slide: true,
@@ -186,7 +195,47 @@
 }
 
 
+#let _default-init(self: none, body) = {
+  show strong: self.methods.alert.with(self: self)
+
+  body
+}
+
+#let _default-cover = utils.method-wrapper(hide)
+
+#let _default-show-notes(self: none, width: 0pt, height: 0pt) = block(
+  fill: rgb("#E6E6E6"),
+  width: width,
+  height: height,
+  {
+    set align(left + top)
+    set text(size: 24pt, fill: black, weight: "regular")
+    block(
+      width: 100%,
+      height: 88pt,
+      inset: (left: 32pt, top: 16pt),
+      outset: 0pt,
+      fill: rgb("#CCCCCC"),
+      {
+        states.current-section-title
+        linebreak()
+        [ --- ]
+        states.current-slide-title
+      },
+    )
+    pad(x: 48pt, states.current-slide-note)
+    // clear the slide note
+    states.slide-note-state.update(none)
+  },
+)
+
+#let _default-alert = utils.method-wrapper(text.with(weight: "bold"))
+
 /// The configuration of the methods
+///
+/// - init (function): The function to initialize the presentation. It should be `(self: none, body) => { .. }`.
+///
+///   By default, it shows the strong content with the `alert` function: `show strong: self.methods.alert.with(self: self)`
 ///
 /// - cover (function): The function to cover content. The default value is `utils.method-wrapper(hide)` function.
 ///
@@ -208,7 +257,9 @@
 ///
 ///   It should be `(self: none, width: 0pt, height: 0pt) => { .. }`.
 #let config-methods(
-  cover: utils.method-wrapper(hide),
+  // init
+  init: _default-init,
+  cover: _default-cover,
   // dynamic control
   uncover: utils.uncover,
   only: utils.only,
@@ -217,38 +268,15 @@
   alternatives-fn: utils.alternatives-fn,
   alternatives-cases: utils.alternatives-cases,
   // alert interface
-  alert: utils.method-wrapper(text.with(weight: "bold")),
+  alert: _default-alert,
   // show notes
-  show-notes: (self: none, width: 0pt, height: 0pt) => block(
-    fill: rgb("#E6E6E6"),
-    width: width,
-    height: height,
-    {
-      set align(left + top)
-      set text(size: 24pt, fill: black, weight: "regular")
-      block(
-        width: 100%,
-        height: 88pt,
-        inset: (left: 32pt, top: 16pt),
-        outset: 0pt,
-        fill: rgb("#CCCCCC"),
-        {
-          states.current-section-title
-          linebreak()
-          [ --- ]
-          states.current-slide-title
-        },
-      )
-      pad(x: 48pt, states.current-slide-note)
-      // clear the slide note
-      states.slide-note-state.update(none)
-    },
-  ),
+  show-notes: _default-show-notes,
   ..args,
 ) = {
   assert(args.pos().len() == 0, message: "Unexpected positional arguments.")
   return (
     methods: (
+      init: init,
       cover: cover,
       uncover: uncover,
       only: only,

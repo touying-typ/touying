@@ -3,9 +3,15 @@
 
 
 #show: default-theme.with(
+  aspect-ratio: "16-9",
   config-common(
     slide-level: 2,
-    show-notes-on-second-screen: bottom,
+  ),
+  config-colors(
+    primary: blue,
+  ),
+  config-methods(
+    alert: utils.alert-with-primary-color,
   )
 )
 
@@ -14,13 +20,15 @@
 
 == Recall <recall>
 
-Recall
+*Recall*
 
 #speaker-note[sdfsdf]
 
+#show: touying-set-config.with(config-methods(cover: utils.semi-transparent-cover))
+
 == Animation
 
-#set text(blue)
+#set math.equation(numbering: "(1)")
 
 Simple
 
@@ -35,6 +43,6 @@ animation
 
 = Appendix
 
-appendix
+Appendix
 
 #touying-recall(<recall>)

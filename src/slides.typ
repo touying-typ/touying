@@ -18,9 +18,19 @@
 ///
 /// `body` is the contents of the slides.
 #let touying-slides(..args, body) = {
+  // get the default config
   assert(args.named().len() == 0, message: "unexpected named arguments:" + repr(args.named().keys()))
   let args = (configs.default-config,) + args.pos()
   let self = utils.merge-dicts(..args)
+
+  // get the init function
+  let init = if "init" in self.methods and type(self.methods.init) == function {
+    self.methods.init.with(self: self)
+  } else {
+    body => body
+  }
+
+  show: init
 
   show: core.split-content-into-slides.with(self: self, is-first-slide: true)
 

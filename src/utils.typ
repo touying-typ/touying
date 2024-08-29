@@ -162,22 +162,24 @@
   return [#it]
 }
 
-// OOP: empty page
-#let empty-page(self, margin: (x: 0em, y: 0em)) = {
-  self.page-args += (
-    header: none,
-    footer: none,
-  )
-  if margin != none {
-    self.page-args += (margin: margin)
-  }
-  if self.freeze-in-empty-page {
-    self.freeze-slide-counter = true
-  }
-  self
-}
+// // OOP: empty page
+// #let empty-page(self, margin: (x: 0em, y: 0em)) = {
+//   self.page-args += (
+//     header: none,
+//     footer: none,
+//   )
+//   if margin != none {
+//     self.page-args += (margin: margin)
+//   }
+//   if self.freeze-in-empty-page {
+//     self.freeze-slide-counter = true
+//   }
+//   self
+// }
 
-// OOP: wrap methods
+/// Wrap a function with a `self` parameter to make it a method
+///
+/// Example: `#let hide = method-wrapper(hide)` to get a `hide` method
 #let method-wrapper(fn) = (self: none, ..args) => fn(..args)
 
 /// Assuming all functions in dictionary have a named `self` parameter,
@@ -524,6 +526,27 @@
 #let update-alpha(constructor: rgb, color, alpha) = constructor(..color.components(alpha: true).slice(0, -1), alpha)
 
 
+/// Cover content with a transparent rectangle.
+///
+/// Example: `config-methods(cover: utils.semi-transparent-cover)`
+#let semi-transparent-cover(self: none, constructor: rgb, alpha: 85%, body) = {
+  cover-with-rect(
+    fill: update-alpha(
+      constructor: constructor,
+      self.page.fill,
+      alpha,
+    ),
+    body,
+  )
+}
+
+
+/// Alert content with a primary color.
+///
+/// Example: `config-methods(alert: utils.alert-with-primary-color)`
+#let alert-with-primary-color(self: none, it) = text(fill: self.colors.primary, it)
+
+
 // Code: check visible subslides and dynamic control
 // Attribution: This file is based on the code from https://github.com/andreasKroepelin/polylux/blob/main/logic.typ
 // Author: Andreas Kröpelin
@@ -817,7 +840,10 @@
     pdfpc.speaker-note(raw-text)
   }
   let show-notes-on-second-screen = self.at("show-notes-on-second-screen", default: none)
-  assert(show-notes-on-second-screen in (none, bottom, right), message: "`show-notes-on-second-screen` should be `none`, `bottom` or `right`")
+  assert(
+    show-notes-on-second-screen in (none, bottom, right),
+    message: "`show-notes-on-second-screen` should be `none`, `bottom` or `right`",
+  )
   if show-notes-on-second-screen != none {
     states.slide-note-state.update(setting(note))
   }
