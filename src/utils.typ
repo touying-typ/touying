@@ -69,21 +69,21 @@
 /// - `it` is the content to reconstruct
 ///
 /// - `new-body` is the new body you want to replace the old body with
-#let reconstruct(body-name: "body", named: false, it, new-body) = {
+#let reconstruct(body-name: "body", named: false, it, ..new-body) = {
   let fields = it.fields()
   let label = fields.remove("label", default: none)
   let _ = fields.remove(body-name, default: none)
   if named {
     if label != none {
-      return label-it(label, (it.func())(..fields, new-body))
+      return label-it(label, (it.func())(..fields, ..new-body))
     } else {
-      return (it.func())(..fields, new-body)
+      return (it.func())(..fields, ..new-body)
     }
   } else {
     if label != none {
-      return label-it(label, (it.func())(..fields.values(), new-body))
+      return label-it(label, (it.func())(..fields.values(), ..new-body))
     } else {
-      return (it.func())(..fields.values(), new-body)
+      return (it.func())(..fields.values(), ..new-body)
     }
   }
 }
@@ -97,7 +97,7 @@
 ///
 /// - `new-children` is the new children you want to replace the old children with
 #let reconstruct-table-like(named: true, it, new-children) = {
-  reconstruct(body-name: "children", named: named, it, new-children)
+  reconstruct(body-name: "children", named: named, it, ..new-children)
 }
 
 

@@ -109,7 +109,7 @@
         if marks.len() > 0 {
           let page-num = marks.at(0).location().page()
           let kind = marks.at(0).value.kind
-          panic("Unsupported mark `" + kind + "` at page " + str(page-num) + ". You can't use it inside some layout functions like `grid`. You may want to use the callback-style `uncover` function instead. Or you may want to use #slide[][] for a two-column layout. ")
+          panic("Unsupported mark `" + kind + "` at page " + str(page-num) + ". You can't use it inside some functions like `context`. You may want to use the callback-style `uncover` function instead.")
         }
       }
     }

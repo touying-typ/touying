@@ -815,6 +815,20 @@
   // get cover function from self
   let cover = self.methods.cover.with(self: self)
   for it in bodies {
+    // a hack for code like #table([A], pause, [B])
+    if type(it) == content and it.func() in (table.cell, grid.cell) {
+      if type(it.body) == content and it.body.func() == metadata and type(it.body.value) == dictionary {
+        let kind = it.body.value.at("kind", default: none)
+        if kind == "touying-pause" {
+          repetitions += 1
+        } else if kind == "touying-meanwhile" {
+          // reset the repetitions
+          max-repetitions = calc.max(max-repetitions, repetitions)
+          repetitions = 1
+        }
+        continue
+      }
+    }
     // if it is a function, then call it with self
     if type(it) == function {
       // subslide index
@@ -954,7 +968,7 @@
           cover-arr.push(utils.typst-builtin-styled(cont, child.styles))
         }
         repetitions = nextrepetitions
-      } else if type(child) == content and child.func() in (list.item, enum.item, align) {
+      } else if type(child) == content and child.func() in (list.item, enum.item, align, link) {
         // handle the list item
         let (conts, nextrepetitions) = _parse-content-into-results-and-repetitions(
           self: self,
@@ -970,8 +984,22 @@
           cover-arr.push(utils.reconstruct(child, cont))
         }
         repetitions = nextrepetitions
-      } else if type(child) == content and child.func() in (pad,) {
-        // handle the pad
+      } else if type(child) == content and child.func() in (table, grid, stack) {
+        // handle the table-like
+        let (conts, nextrepetitions) = _parse-content-into-results-and-repetitions(
+          self: self,
+          need-cover: repetitions <= index,
+          base: repetitions,
+          index: index,
+          ..child.children,
+        )
+        if repetitions <= index or not need-cover {
+          result.push(utils.reconstruct-table-like(child, conts))
+        } else {
+          cover-arr.push(utils.reconstruct-table-like(child, conts))
+        }
+        repetitions = nextrepetitions
+      } else if type(child) == content and child.func() in (pad, figure, quote, strong, emph, footnote, highlight, overline, underline, strike, smallcaps, sub, super, box, block, hide, move, scale, circle, ellipse, rect, square, table.cell, grid.cell) {
         let (conts, nextrepetitions) = _parse-content-into-results-and-repetitions(
           self: self,
           need-cover: repetitions <= index,
@@ -1000,6 +1028,73 @@
           result.push(terms.item(child.term, cont))
         } else {
           cover-arr.push(terms.item(child.term, cont))
+        }
+        repetitions = nextrepetitions
+      } else if type(child) == content and child.func() == columns {
+        // handle columns
+        let (conts, nextrepetitions) = _parse-content-into-results-and-repetitions(
+          self: self,
+          need-cover: repetitions <= index,
+          base: repetitions,
+          index: index,
+          child.body,
+        )
+        let cont = conts.first()
+        let args = if child.has("gutter") {
+          (gutter: child.gutter)
+        }
+        if repetitions <= index or not need-cover {
+          result.push(columns(child.count, ..args, cont))
+        } else {
+          cover-arr.push(columns(child.count, ..args, cont))
+        }
+        repetitions = nextrepetitions
+      } else if type(child) == content and child.func() == place {
+        // handle place
+        let (conts, nextrepetitions) = _parse-content-into-results-and-repetitions(
+          self: self,
+          need-cover: repetitions <= index,
+          base: repetitions,
+          index: index,
+          child.body,
+        )
+        let cont = conts.first()
+        let fields = child.fields()
+        let _ = fields.remove("alignment", default: none)
+        let _ = fields.remove("body", default: none)
+        let alignment = if child.has("alignment") {
+          child.alignment
+        } else {
+          start
+        }
+        if repetitions <= index or not need-cover {
+          result.push(place(alignment, ..fields, cont))
+        } else {
+          cover-arr.push(place(alignment, ..fields, cont))
+        }
+        repetitions = nextrepetitions
+      } else if type(child) == content and child.func() == rotate {
+        // handle rotate
+        let (conts, nextrepetitions) = _parse-content-into-results-and-repetitions(
+          self: self,
+          need-cover: repetitions <= index,
+          base: repetitions,
+          index: index,
+          child.body,
+        )
+        let cont = conts.first()
+        let fields = child.fields()
+        let _ = fields.remove("angle", default: none)
+        let _ = fields.remove("body", default: none)
+        let angle = if child.has("angle") {
+          child.angle
+        } else {
+          0deg
+        }
+        if repetitions <= index or not need-cover {
+          result.push(rotate(angle, ..fields, cont))
+        } else {
+          cover-arr.push(rotate(angle, ..fields, cont))
         }
         repetitions = nextrepetitions
       } else {
