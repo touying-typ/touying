@@ -152,6 +152,9 @@
         none,
         recaller-map,
       )
+      if child.has("label") and child.label != <touying-temporary-mark> {
+        recaller-map.insert(str(child.label), cont)
+      }
       result.push(cont)
     } else if utils.is-kind(child, "touying-slide-recaller") {
       current-slide = utils.trim(current-slide)
@@ -191,6 +194,7 @@
       ) or (child.depth == 2 and new-subsection-slide-fn != none) or (
         child.depth == 3 and new-subsubsection-slide-fn != none
       ) or (child.depth == 4 and new-subsubsubsection-slide-fn != none) {
+        current-slide = utils.trim(current-slide)
         if current-slide != () or current-headings != () {
           (cont, recaller-map, current-headings, current-slide, new-start, is-first-slide) = call-slide-fn-and-reset(
             self + (headings: current-headings, is-first-slide: is-first-slide),
@@ -240,6 +244,7 @@
       }
 
     } else if utils.is-kind(child, "touying-set-config") {
+      current-slide = utils.trim(current-slide)
       if current-slide != () or current-headings != () {
         (cont, recaller-map, current-headings, current-slide, new-start, is-first-slide) = call-slide-fn-and-reset(
           self + (headings: current-headings, is-first-slide: is-first-slide),
@@ -250,7 +255,7 @@
         result.push(cont)
       }
       // Appendix content
-      _delayed-wrapper(split-content-into-slides(
+      result.push(split-content-into-slides(
         self: self + child.value.config,
         recaller-map: recaller-map,
         new-start: true,
