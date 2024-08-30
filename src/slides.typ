@@ -1,6 +1,7 @@
 #import "utils.typ"
 #import "configs.typ"
 #import "core.typ"
+#import "magic.typ"
 
 /// Touying slides function.
 ///
@@ -28,6 +29,30 @@
     self.methods.init.with(self: self)
   } else {
     body => body
+  }
+
+  show: body => {
+    if self.at("scale-list-items", default: none) != none {
+      magic.scale-list-items(scale: self.at("scale-list-items", default: none), body)
+    } else {
+      body
+    }
+  }
+
+  show: body => {
+    if self.at("nontight-list-enum-and-terms", default: true) {
+      magic.nontight-list-enum-and-terms(body)
+    } else {
+      body
+    }
+  }
+
+  show: body => {
+    if self.at("align-list-marker-with-baseline", default: false) {
+      magic.align-list-marker-with-baseline(body)
+    } else {
+      body
+    }
   }
 
   show: init

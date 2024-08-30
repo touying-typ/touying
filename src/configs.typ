@@ -111,7 +111,7 @@
 ///
 /// - nontight-list-enum-and-terms (bool): Whether to make `tight` argument always be `false` for list, enum, and terms. The default value is `true`.
 ///
-/// - align-list-marker-with-baseline (bool): Whether to align the list marker with the baseline. The default value is `true`.
+/// - align-list-marker-with-baseline (bool): Whether to align the list marker with the baseline. The default value is `false`.
 ///
 /// - scale-list-items (none, float): Whether to scale the list items recursively. The default value is `none`.
 #let config-common(
@@ -151,7 +151,7 @@
   horizontal-line-to-pagebreak: true,
   reset-footnote-number-per-slide: true,
   nontight-list-enum-and-terms: true,
-  align-list-marker-with-baseline: true,
+  align-list-marker-with-baseline: false,
   scale-list-items: none,
   ..args,
 ) = {

@@ -1342,6 +1342,10 @@
     self = utils.merge-dicts(self, config)
   }
   assert(bodies.named().len() == 0, message: "unexpected named arguments:" + repr(bodies.named().keys()))
+  let setting-with-auto-offset-for-heading(body) = {
+    set heading(offset: self.at("slide-level", default: 0)) if self.at("auto-offset-for-heading", default: true)
+    setting(body)
+  }
   let composer-with-side-by-side(..args) = {
     if type(composer) == function {
       composer(..args)
@@ -1452,7 +1456,7 @@
     )
     header = page-preamble(self) + header
     set page(..(self.page + page-extra-args + (header: header, footer: footer)))
-    setting(subslide-preamble(self) + composer-with-side-by-side(..conts))
+    setting-with-auto-offset-for-heading(subslide-preamble(self) + composer-with-side-by-side(..conts))
   } else {
     // render all the subslides
     let result = ()
@@ -1468,7 +1472,7 @@
       // update the counter in the first subslide only
       result.push({
         set page(..(self.page + page-extra-args + (header: new-header, footer: footer)))
-        setting(subslide-preamble(self) + composer-with-side-by-side(..conts))
+        setting-with-auto-offset-for-heading(subslide-preamble(self) + composer-with-side-by-side(..conts))
       })
     }
     // return the result

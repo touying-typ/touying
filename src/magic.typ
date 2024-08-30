@@ -8,10 +8,13 @@
 /// Usage: `#show: align-list-marker-with-baseline`
 #let align-list-marker-with-baseline(body) = {
   show list.item: it => {
-    let current-marker = if type(list.marker) == array {
-      list.marker.at(0)
-    } else {
-      list.marker
+    let current-marker = {
+      set text(fill: text.fill)
+      if type(list.marker) == array {
+        list.marker.at(0)
+      } else {
+        list.marker
+      }
     }
     let hanging-indent = measure(current-marker).width + .6em + .3pt
     set terms(hanging-indent: hanging-indent)
@@ -61,9 +64,9 @@
 ///
 /// Usage: `#show: nontight-list-enum-and-terms`
 #let nontight-list-enum-and-terms(body) = {
-  show list: nontight(list)
-  show enum: nontight(enum)
-  show terms: nontight(terms)
+  show list.where(tight: true): nontight
+  show enum.where(tight: true): nontight
+  show terms.where(tight: true): nontight
   body
 }
 
