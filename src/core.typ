@@ -1361,9 +1361,13 @@
       utils.call-or-display(self, self.at("preamble", default: none))
       utils.call-or-display(self, self.at("default-preamble", default: none))
     }
+    [#metadata((kind: "touying-new-slide")) <touying-metadata>]
     // add headings for the first subslide
     if self.at("headings", default: ()) != () {
-      place(hide(self.at("headings", default: none).sum(default: none)))
+      place(hide({
+        set heading(offset: 0)
+        self.at("headings", default: none).sum(default: none)
+      }))
     }
     utils.call-or-display(self, self.at("slide-preamble", default: none))
     utils.call-or-display(self, self.at("default-slide-preamble", default: none))
@@ -1373,6 +1377,7 @@
     if self.subslide == 1 {
       slide-preamble(self)
     }
+    [#metadata((kind: "touying-new-subslide")) <touying-metadata>]
     if self.at("enable-frozen-states-and-counters", default: true) {
       if self.subslide == 1 {
         // save the states and counters
@@ -1413,6 +1418,7 @@
   }
   // update states for every page
   let page-preamble(self) = {
+    [#metadata((kind: "touying-new-page")) <touying-metadata>]
     // 1. slide counter part
     //    if freeze-slide-counter is false, then update the slide-counter
     if self.subslide == 1 {

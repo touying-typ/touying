@@ -1,161 +1,95 @@
 // touying slide counters
 #let slide-counter = counter("touying-slide-counter")
 #let last-slide-counter = counter("touying-last-slide-counter")
-#let last-slide-number = context { last-slide-counter.final().first() }
-
-#let touying-progress(callback) = context {
-  if last-slide-counter.final().first() == 0 {
-    callback(1.0)
-    return
-  }
-  let ratio = calc.min(1.0, slide-counter.get().first() / last-slide-counter.final().first())
-  callback(ratio)
+#let last-slide-number = context {
+  last-slide-counter.final().first()
 }
 
-// sections
-#let sections-state = state("touying-sections-state", ((kind: "section", title: none, short-title: none, loc: none, count: 0, children: ()),))
+/// Get the progress of the current slide.
+///
+/// - `callback` is the callback function `ratio => { .. }` to get the progress of the current slide. The `ratio` is a float number between 0 and 1.
+#let touying-progress(callback) = (
+  context {
+    if last-slide-counter.final().first() == 0 {
+      callback(1.0)
+      return
+    }
+    let ratio = calc.min(1.0, slide-counter.get().first() / last-slide-counter.final().first())
+    callback(ratio)
+  }
+)
 
-// slide title state
-#let slide-title-state = state("touying-slide-title-state", none)
 
 // slide note state
 #let slide-note-state = state("touying-slide-note-state", none)
-
-#let _new-section(short-title: auto, duplicate: false, title) = context {
-  let loc = here()
-  sections-state.update(sections => {
-    if duplicate or sections.last().title != title or sections.last().short-title != short-title {
-      sections.push((kind: "section", title: title, short-title: short-title, loc: loc, count: 0, children: ()))
-    }
-    sections
-  })
-}
-
-#let _new-subsection(short-title: auto, duplicate: false, title) = context {
-  let loc = here()
-  sections-state.update(sections => {
-    let last-section = sections.pop()
-    let last-subsection = (kind: "none")
-    let i = -1
-    while last-subsection.kind != "subsection" {
-      last-subsection = last-section.children.at(i, default: (kind: "subsection", title: none, short-title: none, loc: none, count: 0, children: ()))
-      i += 1
-    }
-    if duplicate or last-subsection.title != title or last-subsection.short-title != short-title {
-      last-section.children.push((kind: "subsection", title: title, short-title: short-title, loc: loc, count: 0, children: ()))
-    }
-    sections.push(last-section)
-    sections
-  })
-}
-
-#let _sections-step(repetitions) = context {
-  let loc = here()
-  sections-state.update(sections => {
-    let last-section = sections.pop()
-    if last-section.children.len() == 0 or last-section.children.last().kind == "slide" {
-      last-section.children.push((kind: "slide", loc: loc, count: repetitions))
-      last-section.count += 1
-      sections.push(last-section)
-    } else {
-      // update for subsection
-      let last-subsection = last-section.children.pop()
-      last-subsection.children.push((kind: "slide", loc: loc, count: repetitions))
-      last-subsection.count += 1
-      last-section.count += 1
-      last-section.children.push(last-subsection)
-      sections.push(last-section)
-    }
-    sections
-  }
-)}
-
-#let touying-final-sections(callback) = context {
-  callback(sections-state.final())
-}
-
-#let touying-outline(self: none, func: enum, enum-args: (:), list-args: (:), padding: 0pt) = touying-final-sections(sections => {
-  let enum-args = (full: true) + enum-args
-  if self != none and self.numbering != none {
-    enum-args = (numbering: self.numbering) + enum-args
-  }
-  let args = if func == enum { enum-args } else { list-args }
-  pad(padding, func(
-    ..args,
-    ..sections.filter(section => section.loc != none)
-      .map(section => [#link(section.loc, section.title)<touying-link>] + if section.children.filter(it => it.kind != "slide").len() > 0 {
-        let subsections = section.children.filter(it => it.kind != "slide")
-        func(
-          ..args,
-          ..subsections.map(subsection => [#link(subsection.loc, subsection.title)<touying-link>])
-        )
-      })
-  ))
-})
-
-#let current-section-title = context {
-  let sections = sections-state.get()
-  sections.last().title
-}
-
-#let current-subsection-title = context {
-  let sections = sections-state.get()
-  let subsections = sections.last().children.filter(v => v.kind == "subsection")
-  if subsections.len() > 0 {
-    subsections.last().title
-  } else {
-    none
-  }
-}
-
-#let current-slide-title = context slide-title-state.get()
-
 #let current-slide-note = context slide-note-state.get()
 
-#let _typst-numbering = numbering
-#let current-section-number(numbering: "01", ignore-zero: true) = context {
-  let sections = sections-state.get()
-  if not ignore-zero or sections.len() - 1 != 0 {
-    _typst-numbering(numbering, sections.len() - 1)
+
+// -------------------------------------
+// Headings
+// -------------------------------------
+
+/// Get the current heading On or before the current page.
+///
+/// - `level` is the level of the heading. If `level` is `auto`, it will return the last heading on or before the current page. If `level` is a number, it will return the last heading on or before the current page with the same level.
+///
+/// - `hierachical` is a boolean value to indicate whether to return the heading hierachically. If `hierachical` is `true`, it will return the last heading according to the hierachical structure. If `hierachical` is `false`, it will return the last heading on or before the current page with the same level.
+///
+/// - `depth` is the maximum depth of the heading to search. Usually, it should be set as slide-level.
+#let current-heading(level: auto, hierachical: true, depth: 9999) = {
+  let current-page = here().page()
+  if not hierachical and level != auto {
+    let headings = query(heading).filter(h => (
+      h.location().page() <= current-page and h.level <= depth and h.level == level
+    ))
+    return headings.at(-1, default: none)
+  }
+  let headings = query(heading).filter(h => h.location().page() <= current-page and h.level <= depth)
+  if headings == () {
+    return
+  }
+  if level == auto {
+    return headings.last()
+  }
+  let current-level = headings.last().level
+  let current-heading = headings.pop()
+  while headings.len() > 0 and level < current-level {
+    current-level = headings.last().level
+    current-heading = headings.pop()
+  }
+  if level == current-level {
+    return current-heading
   }
 }
 
-#let current-section-with-numbering(self, ignore-zero: true) = context {
-  let sections = sections-state.get()
-  if self.numbering != none and (not ignore-zero or sections.len() - 1 != 0) {
-    _typst-numbering(self.numbering, sections.len() - 1)
-    [ ]
+
+/// Display the current heading on the page.
+///
+/// - `level` is the level of the heading. If `level` is `auto`, it will return the last heading on or before the current page. If `level` is a number, it will return the last heading on or before the current page with the same level.
+///
+/// - `hierachical` is a boolean value to indicate whether to return the heading hierachically. If `hierachical` is `true`, it will return the last heading according to the hierachical structure. If `hierachical` is `false`, it will return the last heading on or before the current page with the same level.
+///
+/// - `depth` is the maximum depth of the heading to search. Usually, it should be set as slide-level.
+///
+/// - `sty` is the style of the heading. If `sty` is a function, it will use the function to style the heading. For example, `sty: current-heading => current-heading.body`.
+#let display-current-heading(level: auto, hierachical: true, depth: 9999, ..sty) = (
+  context {
+    let sty = if sty.pos().len() > 1 {
+      sty.pos().at(0)
+    } else {
+      current-heading => {
+        if current-heading.numbering != none {
+          numbering(current-heading.numbering, ..counter(heading).at(current-heading.location())) + h(.3em)
+        }
+        current-heading.body
+      }
+    }
+    let current-heading = current-heading(level: level, hierachical: hierachical, depth: depth)
+    if current-heading != none {
+      sty(current-heading)
+    }
   }
-  sections.last().title
-}
-
-#let current-subsection-number(numbering: "1.1", ignore-zero: true) = context {
-  let sections = sections-state.get()
-  let subsections = sections.last().children
-  if (not ignore-zero or sections.len() - 1 != 0) and (not ignore-zero or subsections.len() - 1 != 0) {
-    _typst-numbering(numbering, sections.len() - 1, subsections.len() - 1)
-  }
-}
-
-#let current-subsection-with-numbering(self, ignore-zero: true) = context {
-  let sections = sections-state.get()
-  let subsections = sections.last().children
-  if self.numbering != none and (not ignore-zero or sections.len() - 1 != 0) and (not ignore-zero or subsections.len() - 1 != 0) {
-    _typst-numbering(self.numbering, sections.len() - 1, subsections.len() - 1)
-    [ ]
-  }
-  subsections.last().title
-}
-
-#let touying-progress-with-sections(callback) = context {
-  callback((
-    current-sections: sections-state.get(),
-    final-sections: sections-state.final(),
-    current-slide-number: slide-counter.get().first(),
-    last-slide-number: last-slide-counter.final().first(),
-  ))
-}
-
+)
 
 
 // -------------------------------------

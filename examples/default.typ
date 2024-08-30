@@ -1,5 +1,6 @@
 #import "../lib.typ": *
 #import themes.default: *
+#import "@preview/hydra:0.5.1": hydra
 
 
 #show: default-theme.with(
@@ -12,7 +13,10 @@
   ),
   config-methods(
     alert: utils.alert-with-primary-color,
-  )
+  ),
+  config-page(
+    header: states.display-current-heading(level: 2),
+  ),
 )
 
 

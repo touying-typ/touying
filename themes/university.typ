@@ -182,7 +182,7 @@
     h(1fr)
     utils.info-date(self)
     h(1fr)
-    states.slide-counter.display() + " / " + states.last-slide-number
+    context states.slide-counter.display() + " / " + states.last-slide-number
     h(1fr)
   },
   ..args,
