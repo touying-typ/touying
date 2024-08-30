@@ -115,7 +115,7 @@
 /// - scale-list-items (none, float): Whether to scale the list items recursively. The default value is `none`.
 #let config-common(
   handout: false,
-  slide-level: 2,
+  slide-level: 3,
   slide-fn: slide,
   new-section-slide-fn: none,
   new-subsection-slide-fn: none,

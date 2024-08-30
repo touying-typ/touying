@@ -1,12 +1,12 @@
 #import "../lib.typ": *
 #import themes.default: *
-#import "@preview/hydra:0.5.1": hydra
 
+#import "@preview/numbly:0.1.0": numbly
 
 #show: default-theme.with(
   aspect-ratio: "16-9",
   config-common(
-    slide-level: 2,
+    slide-level: 3,
   ),
   config-colors(
     primary: blue,
@@ -19,6 +19,11 @@
   ),
 )
 
+#set heading(numbering: numbly("{1}.", default: "1.1"))
+
+== Outline <touying:unoutlined>
+
+#outline(title: none, indent: 1em)
 
 = Title
 

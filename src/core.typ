@@ -1102,10 +1102,15 @@
         let args = if child.has("gutter") {
           (gutter: child.gutter)
         }
-        if repetitions <= index or not need-cover {
-          result.push(columns(child.count, ..args, cont))
+        let count = if child.has("count") {
+          child.count
         } else {
-          cover-arr.push(columns(child.count, ..args, cont))
+          2
+        }
+        if repetitions <= index or not need-cover {
+          result.push(columns(count, ..args, cont))
+        } else {
+          cover-arr.push(columns(count, ..args, cont))
         }
         repetitions = nextrepetitions
       } else if type(child) == content and child.func() == place {
@@ -1366,7 +1371,25 @@
     if self.at("headings", default: ()) != () {
       place(hide({
         set heading(offset: 0)
-        self.at("headings", default: none).sum(default: none)
+        let headings = self.at("headings", default: ()).map(it => if it.has("label") {
+          if str(it.label) in ("touying:unoutlined", "touying:unbookmarked") {
+            let fields = it.fields()
+            let _ = fields.remove("label", default: none)
+            let _ = fields.remove("body", default: none)
+            if str(it.label) == "touying:unoutlined" {
+              fields.outlined = false
+            }
+            if str(it.label) == "touying:unbookmarked" {
+              fields.bookmarked = false
+            }
+            heading(..fields, it.body)
+          } else {
+            it
+          }
+        } else {
+          it
+        })
+        headings.sum(default: none)
       }))
     }
     utils.call-or-display(self, self.at("slide-preamble", default: none))
