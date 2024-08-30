@@ -7,6 +7,7 @@
   aspect-ratio: "16-9",
   config-common(
     slide-level: 3,
+    zero-margin-header: false,
   ),
   config-colors(
     primary: blue,
@@ -15,7 +16,7 @@
     alert: utils.alert-with-primary-color,
   ),
   config-page(
-    header: utils.display-current-short-heading(level: 2),
+    header: text(gray, utils.display-current-short-heading(level: 2)),
   ),
 )
 

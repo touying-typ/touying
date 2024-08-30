@@ -203,10 +203,6 @@
 })
 
 
-/// Alert some content.
-#let alert(body) = touying-fn-wrapper(utils.alert-with-primary-color, body)
-
-
 /// Touying metropolis theme.
 ///
 /// Example:

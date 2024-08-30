@@ -704,19 +704,11 @@
 /// Alert content with a primary color.
 ///
 /// Example: `config-methods(alert: utils.alert-with-primary-color)`
-#let alert-with-primary-color(self: none, it) = text(fill: self.colors.primary, it)
+#let alert-with-primary-color(self: none, body) = text(fill: self.colors.primary, body)
 
 
-/// Alert content with a sencondary color.
-///
-/// Example: `config-methods(alert: utils.alert-with-sencondary-color)`
-#let alert-with-sencondary-color(self: none, it) = text(fill: self.colors.sencondary, it)
-
-
-/// Alert content with a tertiary color.
-///
-/// Example: `config-methods(alert: utils.alert-with-tertiary-color)`
-#let alert-with-tertiary-color(self: none, it) = text(fill: self.colors.tertiary, it)
+/// Alert content.
+#let alert(self: none, body) = (self.methods.alert)(self: self, body)
 
 
 // Code: check visible subslides and dynamic control

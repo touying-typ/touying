@@ -133,8 +133,6 @@
   let cont = none
   // is new start
   let is-new-start = new-start
-  // is root
-  let is-root = is-first-slide
   // start part
   let start-part = ()
   // result
@@ -287,7 +285,7 @@
           child.value.body,
         ),
       )
-    } else if is-root and utils.is-styled(child) {
+    } else if is-first-slide and utils.is-styled(child) {
       current-slide = utils.trim(current-slide)
       if current-slide != () or current-headings != () {
         (cont, recaller-map, current-headings, current-slide, new-start, is-first-slide) = call-slide-fn-and-reset(
@@ -305,6 +303,7 @@
             self: self,
             recaller-map: recaller-map,
             new-start: true,
+            is-first-slide: is-first-slide,
             child.child,
           ),
         ),
@@ -536,6 +535,10 @@
 #let speaker-note(mode: "typ", setting: it => it, note) = {
   touying-fn-wrapper(utils.speaker-note, mode: mode, setting: setting, note)
 }
+
+
+/// Alert is a way to display a message to the audience. It can be used to draw attention to important information or to provide instructions.
+#let alert(body) = touying-fn-wrapper(utils.alert, body)
 
 
 /// Touying also provides a unique and highly useful feature—math equation animations, allowing you to conveniently use pause and meanwhile within math equations.
