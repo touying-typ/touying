@@ -34,6 +34,15 @@
 })
 
 
+/// Touying metropolis theme.
+///
+/// Example:
+///
+/// ```typst
+/// #show: default-theme.with(aspect-ratio: "16-9", config-colors(primary: blue))`
+/// ```
+///
+/// - `aspect-ratio` is the aspect ratio of the slides. Default is `16-9`.
 #let default-theme(
   aspect-ratio: "16-9",
   ..args,

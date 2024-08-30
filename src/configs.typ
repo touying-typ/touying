@@ -2,6 +2,18 @@
 #import "utils.typ"
 #import "core.typ": touying-slide-wrapper, touying-slide, slide
 
+#let _default = metadata((kind: "touying-default"))
+
+#let _get-dict-without-default(dict) = {
+  let new-dict = (:)
+  for (key, value) in dict.pairs() {
+    if value != _default {
+      new-dict.insert(key, value)
+    }
+  }
+  return new-dict
+}
+
 /// The private configurations of the theme.
 #let config-store(..args) = {
   assert(args.pos().len() == 0, message: "Unexpected positional arguments.")
@@ -114,48 +126,48 @@
 ///
 /// - scale-list-items (none, float): Whether to scale the list items recursively. The default value is `none`.
 #let config-common(
-  handout: false,
-  slide-level: 3,
-  slide-fn: slide,
-  new-section-slide-fn: none,
-  new-subsection-slide-fn: none,
-  new-subsubsection-slide-fn: none,
-  new-subsubsubsection-slide-fn: none,
-  datetime-format: auto,
-  appendix: false,
-  freeze-slide-counter: false,
-  zero-margin-header: true,
-  zero-margin-footer: true,
-  auto-offset-for-heading: true,
-  enable-pdfpc: true,
-  enable-mark-warning: true,
-  reset-page-counter-to-slide-counter: true,
+  handout: _default,
+  slide-level: _default,
+  slide-fn: _default,
+  new-section-slide-fn: _default,
+  new-subsection-slide-fn: _default,
+  new-subsubsection-slide-fn: _default,
+  new-subsubsubsection-slide-fn: _default,
+  datetime-format: _default,
+  appendix: _default,
+  freeze-slide-counter: _default,
+  zero-margin-header: _default,
+  zero-margin-footer: _default,
+  auto-offset-for-heading: _default,
+  enable-pdfpc: _default,
+  enable-mark-warning: _default,
+  reset-page-counter-to-slide-counter: _default,
   // some black magics for better slides writing,
   // maybe will be deprecated in the future
-  enable-frozen-states-and-counters: true,
-  frozen-states: (),
-  default-frozen-states: _default-frozen-states,
-  frozen-counters: (),
-  default-frozen-counters: _default-frozen-counters,
-  first-slide-number: 1,
-  preamble: none,
-  default-preamble: _default-preamble,
-  slide-preamble: none,
-  default-slide-preamble: none,
-  subslide-preamble: none,
-  default-subslide-preamble: none,
-  page-preamble: none,
-  default-page-preamble: _default-page-preamble,
-  show-notes-on-second-screen: none,
-  horizontal-line-to-pagebreak: true,
-  reset-footnote-number-per-slide: true,
-  nontight-list-enum-and-terms: true,
-  align-list-marker-with-baseline: false,
-  scale-list-items: none,
+  enable-frozen-states-and-counters: _default,
+  frozen-states: _default,
+  default-frozen-states: _default,
+  frozen-counters: _default,
+  default-frozen-counters: _default,
+  first-slide-number: _default,
+  preamble: _default,
+  default-preamble: _default,
+  slide-preamble: _default,
+  default-slide-preamble: _default,
+  subslide-preamble: _default,
+  default-subslide-preamble: _default,
+  page-preamble: _default,
+  default-page-preamble: _default,
+  show-notes-on-second-screen: _default,
+  horizontal-line-to-pagebreak: _default,
+  reset-footnote-number-per-slide: _default,
+  nontight-list-enum-and-terms: _default,
+  align-list-marker-with-baseline: _default,
+  scale-list-items: _default,
   ..args,
 ) = {
   assert(args.pos().len() == 0, message: "Unexpected positional arguments.")
-  return (
+  return _get-dict-without-default((
     handout: handout,
     slide-level: slide-level,
     slide-fn: slide-fn,
@@ -190,7 +202,7 @@
     nontight-list-enum-and-terms: nontight-list-enum-and-terms,
     align-list-marker-with-baseline: align-list-marker-with-baseline,
     scale-list-items: scale-list-items,
-  ) + args.named()
+  )) + args.named()
 }
 
 
@@ -263,26 +275,26 @@
 ///   It should be `(self: none, width: 0pt, height: 0pt) => { .. }`.
 #let config-methods(
   // init
-  init: _default-init,
-  cover: _default-cover,
+  init: _default,
+  cover: _default,
   // dynamic control
-  uncover: utils.uncover,
-  only: utils.only,
-  alternatives-match: utils.alternatives-match,
-  alternatives: utils.alternatives,
-  alternatives-fn: utils.alternatives-fn,
-  alternatives-cases: utils.alternatives-cases,
+  uncover: _default,
+  only: _default,
+  alternatives-match: _default,
+  alternatives: _default,
+  alternatives-fn: _default,
+  alternatives-cases: _default,
   // alert interface
-  alert: _default-alert,
+  alert: _default,
   // show notes
-  show-notes: _default-show-notes,
+  show-notes: _default,
   // convert label to short heading
-  convert-label-to-short-heading: _default-convert-label-to-short-heading,
+  convert-label-to-short-heading: _default,
   ..args,
 ) = {
   assert(args.pos().len() == 0, message: "Unexpected positional arguments.")
   return (
-    methods: (
+    methods: _get-dict-without-default((
       init: init,
       cover: cover,
       uncover: uncover,
@@ -294,7 +306,7 @@
       alert: alert,
       show-notes: show-notes,
       convert-label-to-short-heading: convert-label-to-short-heading,
-    ) + args.named(),
+    )) + args.named(),
   )
 }
 
@@ -332,14 +344,14 @@
 ///
 /// - logo (content): The logo of the institution.
 #let config-info(
-  title: none,
-  short-title: auto,
-  subtitle: none,
-  short-subtitle: auto,
-  author: none,
-  date: none,
-  institution: none,
-  logo: none,
+  title: _default,
+  short-title: _default,
+  subtitle: _default,
+  short-subtitle: _default,
+  author: _default,
+  date: _default,
+  institution: _default,
+  logo: _default,
   ..args,
 ) = {
   assert(args.pos().len() == 0, message: "Unexpected positional arguments.")
@@ -350,7 +362,7 @@
     short-subtitle = subtitle
   }
   return (
-    info: (
+    info: _get-dict-without-default((
       title: title,
       short-title: short-title,
       subtitle: subtitle,
@@ -359,7 +371,7 @@
       date: date,
       institution: institution,
       logo: logo,
-    ) + args.named(),
+    )) + args.named(),
   )
 }
 
@@ -381,39 +393,39 @@
 /// There are four main colors in the theme: primary, secondary, tertiary, and neutral,
 /// and each of them has a light, lighter, lightest, dark, darker, and darkest version.
 #let config-colors(
-  neutral: rgb("#303030"),
-  neutral-light: rgb("#a0a0a0"),
-  neutral-lighter: rgb("#d0d0d0"),
-  neutral-lightest: rgb("#ffffff"),
-  neutral-dark: rgb("#202020"),
-  neutral-darker: rgb("#101010"),
-  neutral-darkest: rgb("#000000"),
-  primary: rgb("#303030"),
-  primary-light: rgb("#a0a0a0"),
-  primary-lighter: rgb("#d0d0d0"),
-  primary-lightest: rgb("#ffffff"),
-  primary-dark: rgb("#202020"),
-  primary-darker: rgb("#101010"),
-  primary-darkest: rgb("#000000"),
-  secondary: rgb("#303030"),
-  secondary-light: rgb("#a0a0a0"),
-  secondary-lighter: rgb("#d0d0d0"),
-  secondary-lightest: rgb("#ffffff"),
-  secondary-dark: rgb("#202020"),
-  secondary-darker: rgb("#101010"),
-  secondary-darkest: rgb("#000000"),
-  tertiary: rgb("#303030"),
-  tertiary-light: rgb("#a0a0a0"),
-  tertiary-lighter: rgb("#d0d0d0"),
-  tertiary-lightest: rgb("#ffffff"),
-  tertiary-dark: rgb("#202020"),
-  tertiary-darker: rgb("#101010"),
-  tertiary-darkest: rgb("#000000"),
+  neutral: _default,
+  neutral-light: _default,
+  neutral-lighter: _default,
+  neutral-lightest: _default,
+  neutral-dark: _default,
+  neutral-darker: _default,
+  neutral-darkest: _default,
+  primary: _default,
+  primary-light: _default,
+  primary-lighter: _default,
+  primary-lightest: _default,
+  primary-dark: _default,
+  primary-darker: _default,
+  primary-darkest: _default,
+  secondary: _default,
+  secondary-light: _default,
+  secondary-lighter: _default,
+  secondary-lightest: _default,
+  secondary-dark: _default,
+  secondary-darker: _default,
+  secondary-darkest: _default,
+  tertiary: _default,
+  tertiary-light: _default,
+  tertiary-lighter: _default,
+  tertiary-lightest: _default,
+  tertiary-dark: _default,
+  tertiary-darker: _default,
+  tertiary-darkest: _default,
   ..args,
 ) = {
   assert(args.pos().len() == 0, message: "Unexpected positional arguments.")
   return (
-    colors: (
+    colors: _get-dict-without-default((
       neutral: neutral,
       neutral-light: neutral-light,
       neutral-lighter: neutral-lighter,
@@ -442,7 +454,7 @@
       tertiary-dark: tertiary-dark,
       tertiary-darker: tertiary-darker,
       tertiary-darkest: tertiary-darkest,
-    ) + args.named(),
+    )) + args.named(),
   )
 }
 
@@ -485,31 +497,131 @@
 ///
 ///   The values for left and right are mutually exclusive with the values for inside and outside.
 #let config-page(
-  paper: "presentation-16-9",
-  header: none,
-  footer: none,
-  fill: rgb("#ffffff"),
-  margin: (x: 3em, y: 2.8em),
+  paper: _default,
+  header: _default,
+  footer: _default,
+  fill: _default,
+  margin: _default,
   ..args,
 ) = {
   assert(args.pos().len() == 0, message: "Unexpected positional arguments.")
   return (
-    page: (
+    page: _get-dict-without-default((
       paper: paper,
       header: header,
       footer: footer,
       fill: fill,
       margin: margin,
-    ) + args.named(),
+    )) + args.named(),
   )
 }
 
 
 /// The default configurations
 #let default-config = utils.merge-dicts(
-  config-common(),
-  config-methods(),
-  config-info(),
-  config-colors(),
-  config-page(),
+  config-common(
+    handout: false,
+    slide-level: 3,
+    slide-fn: slide,
+    new-section-slide-fn: none,
+    new-subsection-slide-fn: none,
+    new-subsubsection-slide-fn: none,
+    new-subsubsubsection-slide-fn: none,
+    datetime-format: auto,
+    appendix: false,
+    freeze-slide-counter: false,
+    zero-margin-header: true,
+    zero-margin-footer: true,
+    auto-offset-for-heading: true,
+    enable-pdfpc: true,
+    enable-mark-warning: true,
+    reset-page-counter-to-slide-counter: true,
+    // some black magics for better slides writing,
+    // maybe will be deprecated in the future
+    enable-frozen-states-and-counters: true,
+    frozen-states: (),
+    default-frozen-states: _default-frozen-states,
+    frozen-counters: (),
+    default-frozen-counters: _default-frozen-counters,
+    first-slide-number: 1,
+    preamble: none,
+    default-preamble: _default-preamble,
+    slide-preamble: none,
+    default-slide-preamble: none,
+    subslide-preamble: none,
+    default-subslide-preamble: none,
+    page-preamble: none,
+    default-page-preamble: _default-page-preamble,
+    show-notes-on-second-screen: none,
+    horizontal-line-to-pagebreak: true,
+    reset-footnote-number-per-slide: true,
+    nontight-list-enum-and-terms: true,
+    align-list-marker-with-baseline: false,
+    scale-list-items: none,
+  ),
+  config-methods(
+    // init
+    init: _default-init,
+    cover: _default-cover,
+    // dynamic control
+    uncover: utils.uncover,
+    only: utils.only,
+    alternatives-match: utils.alternatives-match,
+    alternatives: utils.alternatives,
+    alternatives-fn: utils.alternatives-fn,
+    alternatives-cases: utils.alternatives-cases,
+    // alert interface
+    alert: _default-alert,
+    // show notes
+    show-notes: _default-show-notes,
+    // convert label to short heading
+    convert-label-to-short-heading: _default-convert-label-to-short-heading,
+  ),
+  config-info(
+    title: none,
+    short-title: auto,
+    subtitle: none,
+    short-subtitle: auto,
+    author: none,
+    date: none,
+    institution: none,
+    logo: none,
+  ),
+  config-colors(
+    neutral: rgb("#303030"),
+    neutral-light: rgb("#a0a0a0"),
+    neutral-lighter: rgb("#d0d0d0"),
+    neutral-lightest: rgb("#ffffff"),
+    neutral-dark: rgb("#202020"),
+    neutral-darker: rgb("#101010"),
+    neutral-darkest: rgb("#000000"),
+    primary: rgb("#303030"),
+    primary-light: rgb("#a0a0a0"),
+    primary-lighter: rgb("#d0d0d0"),
+    primary-lightest: rgb("#ffffff"),
+    primary-dark: rgb("#202020"),
+    primary-darker: rgb("#101010"),
+    primary-darkest: rgb("#000000"),
+    secondary: rgb("#303030"),
+    secondary-light: rgb("#a0a0a0"),
+    secondary-lighter: rgb("#d0d0d0"),
+    secondary-lightest: rgb("#ffffff"),
+    secondary-dark: rgb("#202020"),
+    secondary-darker: rgb("#101010"),
+    secondary-darkest: rgb("#000000"),
+    tertiary: rgb("#303030"),
+    tertiary-light: rgb("#a0a0a0"),
+    tertiary-lighter: rgb("#d0d0d0"),
+    tertiary-lightest: rgb("#ffffff"),
+    tertiary-dark: rgb("#202020"),
+    tertiary-darker: rgb("#101010"),
+    tertiary-darkest: rgb("#000000"),
+  ),
+  config-page(
+    paper: "presentation-16-9",
+    header: none,
+    footer: none,
+    fill: rgb("#ffffff"),
+    margin: (x: 3em, y: 2.8em),
+  ),
 )

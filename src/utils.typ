@@ -33,9 +33,7 @@
 // -------------------------------------
 #let slide-counter = counter("touying-slide-counter")
 #let last-slide-counter = counter("touying-last-slide-counter")
-#let last-slide-number = context {
-  last-slide-counter.final().first()
-}
+#let last-slide-number = context last-slide-counter.final().first()
 
 /// Get the progress of the current slide.
 ///
@@ -309,18 +307,22 @@
 ///
 /// - `level` is the level of the heading. If `level` is `auto`, it will return the last heading on or before the current page. If `level` is a number, it will return the last heading on or before the current page with the same level.
 ///
+/// - `numbered` is a boolean value to indicate whether to display the numbering of the heading. Default is `true`.
+///
 /// - `hierachical` is a boolean value to indicate whether to return the heading hierachically. If `hierachical` is `true`, it will return the last heading according to the hierachical structure. If `hierachical` is `false`, it will return the last heading on or before the current page with the same level.
 ///
 /// - `depth` is the maximum depth of the heading to search. Usually, it should be set as slide-level.
 ///
+/// - `setting` is the setting of the heading. Default is `body => body`.
+///
 /// - `sty` is the style of the heading. If `sty` is a function, it will use the function to style the heading. For example, `sty: current-heading => current-heading.body`.
-#let display-current-heading(self: none, level: auto, hierachical: true, depth: 9999, ..sty) = (
+#let display-current-heading(self: none, level: auto, numbered: true, hierachical: true, depth: 9999, setting: body => body, ..sty) = (
   context {
     let sty = if sty.pos().len() > 1 {
       sty.pos().at(0)
     } else {
       current-heading => {
-        if current-heading.numbering != none {
+        if numbered and current-heading.numbering != none {
           numbering(current-heading.numbering, ..counter(heading).at(current-heading.location())) + h(.3em)
         }
         current-heading.body
@@ -328,7 +330,7 @@
     }
     let current-heading = current-heading(level: level, hierachical: hierachical, depth: depth)
     if current-heading != none {
-      sty(current-heading)
+      setting(sty(current-heading))
     }
   }
 )
@@ -343,7 +345,7 @@
 /// - `depth` is the maximum depth of the heading to search. Usually, it should be set as slide-level.
 ///
 /// - `sty` is the style of the heading. If `sty` is a function, it will use the function to style the heading. For example, `sty: current-heading => current-heading.body`.
-#let display-current-short-heading(self: none, level: auto, hierachical: true, depth: 9999, ..sty) = (
+#let display-current-short-heading(self: none, level: auto, hierachical: true, depth: 9999, setting: body => body, ..sty) = (
   context {
     let sty = if sty.pos().len() > 1 {
       sty.pos().at(0)
@@ -354,7 +356,7 @@
     }
     let current-heading = current-heading(level: level, hierachical: hierachical, depth: depth)
     if current-heading != none {
-      sty(current-heading)
+      setting(sty(current-heading))
     }
   }
 )
@@ -468,12 +470,12 @@
   measure(v(to-convert)).height
 }
 
-#let _limit-content-width(width: none, body, container-size, styles) = {
+#let _limit-content-width(width: none, body, container-size) = {
   let mutable-width = width
   if width == none {
-    mutable-width = calc.min(container-size.width, measure(body, styles).width)
+    mutable-width = calc.min(container-size.width, measure(body).width)
   } else {
-    mutable-width = _size-to-pt(width, styles, container-size.width)
+    mutable-width = _size-to-pt(width, container-size.width)
   }
   box(width: mutable-width, body)
 }
@@ -527,59 +529,56 @@
 
     let available-height = after-pos.y - before-pos.y
 
-    style(styles => {
-      layout(container-size => {
-        // Helper function to more easily grab absolute units
-        let get-pts(body, w-or-h) = {
-          let dim = if w-or-h == "w" {
-            container-size.width
-          } else {
-            container-size.height
-          }
-          _size-to-pt(body, styles, dim)
-        }
-
-        // Provide a sensible initial width, which will define initial scale parameters.
-        // Note this is different from the post-scale width, which is a limiting factor
-        // on the allowable scaling ratio
-        let boxed-content = _limit-content-width(
-          width: prescale-width,
-          body,
-          container-size,
-          styles,
-        )
-
-        // post-scaling width
-        let mutable-width = width
-        if width == none {
-          mutable-width = container-size.width
-        }
-        mutable-width = get-pts(mutable-width, "w")
-
-        let size = measure(boxed-content, styles)
-        if size.height == 0pt or size.width == 0pt {
-          return body
-        }
-        let h-ratio = available-height / size.height
-        let w-ratio = mutable-width / size.width
-        let ratio = calc.min(h-ratio, w-ratio) * 100%
-
-        if ((shrink and (ratio < 100%)) or (grow and (ratio > 100%))) {
-          let new-width = size.width * ratio
-          v(-available-height)
-          // If not boxed, the content can overflow to the next page even though it will
-          // fit. This is because scale doesn't update the layout information.
-          // Boxing in a container without clipping will inform typst that content
-          // will indeed fit in the remaining space
-          box(
-            width: new-width,
-            height: available-height,
-            scale(x: ratio, y: ratio, origin: top + left, boxed-content),
-          )
+    layout(container-size => {
+      // Helper function to more easily grab absolute units
+      let get-pts(body, w-or-h) = {
+        let dim = if w-or-h == "w" {
+          container-size.width
         } else {
-          body
+          container-size.height
         }
-      })
+        _size-to-pt(body, dim)
+      }
+
+      // Provide a sensible initial width, which will define initial scale parameters.
+      // Note this is different from the post-scale width, which is a limiting factor
+      // on the allowable scaling ratio
+      let boxed-content = _limit-content-width(
+        width: prescale-width,
+        body,
+        container-size,
+      )
+
+      // post-scaling width
+      let mutable-width = width
+      if width == none {
+        mutable-width = container-size.width
+      }
+      mutable-width = get-pts(mutable-width, "w")
+
+      let size = measure(boxed-content)
+      if size.height == 0pt or size.width == 0pt {
+        return body
+      }
+      let h-ratio = available-height / size.height
+      let w-ratio = mutable-width / size.width
+      let ratio = calc.min(h-ratio, w-ratio) * 100%
+
+      if ((shrink and (ratio < 100%)) or (grow and (ratio > 100%))) {
+        let new-width = size.width * ratio
+        v(-available-height)
+        // If not boxed, the content can overflow to the next page even though it will
+        // fit. This is because scale doesn't update the layout information.
+        // Boxing in a container without clipping will inform typst that content
+        // will indeed fit in the remaining space
+        box(
+          width: new-width,
+          height: available-height,
+          scale(x: ratio, y: ratio, origin: top + left, boxed-content),
+        )
+      } else {
+        body
+      }
     })
   }
 }
@@ -706,6 +705,18 @@
 ///
 /// Example: `config-methods(alert: utils.alert-with-primary-color)`
 #let alert-with-primary-color(self: none, it) = text(fill: self.colors.primary, it)
+
+
+/// Alert content with a sencondary color.
+///
+/// Example: `config-methods(alert: utils.alert-with-sencondary-color)`
+#let alert-with-sencondary-color(self: none, it) = text(fill: self.colors.sencondary, it)
+
+
+/// Alert content with a tertiary color.
+///
+/// Example: `config-methods(alert: utils.alert-with-tertiary-color)`
+#let alert-with-tertiary-color(self: none, it) = text(fill: self.colors.tertiary, it)
 
 
 // Code: check visible subslides and dynamic control

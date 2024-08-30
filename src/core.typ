@@ -86,6 +86,15 @@
   } else {
     (body,)
   }
+  // convert all sequence to array recursively, and then flatten the array
+  let sequence-to-array(it) = {
+    if utils.is-sequence(it) {
+      it.children.map(sequence-to-array)
+    } else {
+      it
+    }
+  }
+  children = children.map(sequence-to-array).flatten()
   let get-last-heading-depth(current-headings) = {
     if current-headings != () {
       current-headings.at(-1).depth
@@ -124,6 +133,8 @@
   let cont = none
   // is new start
   let is-new-start = new-start
+  // is root
+  let is-root = is-first-slide
   // start part
   let start-part = ()
   // result
@@ -221,40 +232,41 @@
       current-headings.push(child)
       new-start = true
 
-      if child.depth == 1 and new-section-slide-fn != none {
-        (cont, recaller-map, current-headings, current-slide, new-start, is-first-slide) = call-slide-fn-and-reset(
-          self + (headings: current-headings, is-first-slide: is-first-slide),
-          new-section-slide-fn,
-          child.body,
-          recaller-map,
-        )
-        result.push(cont)
-      } else if child.depth == 2 and new-subsection-slide-fn != none {
-        (cont, recaller-map, current-headings, current-slide, new-start, is-first-slide) = call-slide-fn-and-reset(
-          self + (headings: current-headings, is-first-slide: is-first-slide),
-          new-subsection-slide-fn,
-          child.body,
-          recaller-map,
-        )
-        result.push(cont)
-      } else if child.depth == 3 and new-subsubsection-slide-fn != none {
-        (cont, recaller-map, current-headings, current-slide, new-start, is-first-slide) = call-slide-fn-and-reset(
-          self + (headings: current-headings, is-first-slide: is-first-slide),
-          new-subsubsection-slide-fn,
-          child.body,
-          recaller-map,
-        )
-        result.push(cont)
-      } else if child.depth == 4 and new-subsubsubsection-slide-fn != none {
-        (cont, recaller-map, current-headings, current-slide, new-start, is-first-slide) = call-slide-fn-and-reset(
-          self + (headings: current-headings, is-first-slide: is-first-slide),
-          new-subsubsubsection-slide-fn,
-          child.body,
-          recaller-map,
-        )
-        result.push(cont)
+      if not child.has("label") or str(child.label) != "touying:hidden" {
+        if child.depth == 1 and new-section-slide-fn != none {
+          (cont, recaller-map, current-headings, current-slide, new-start, is-first-slide) = call-slide-fn-and-reset(
+            self + (headings: current-headings, is-first-slide: is-first-slide),
+            new-section-slide-fn,
+            child.body,
+            recaller-map,
+          )
+          result.push(cont)
+        } else if child.depth == 2 and new-subsection-slide-fn != none {
+          (cont, recaller-map, current-headings, current-slide, new-start, is-first-slide) = call-slide-fn-and-reset(
+            self + (headings: current-headings, is-first-slide: is-first-slide),
+            new-subsection-slide-fn,
+            child.body,
+            recaller-map,
+          )
+          result.push(cont)
+        } else if child.depth == 3 and new-subsubsection-slide-fn != none {
+          (cont, recaller-map, current-headings, current-slide, new-start, is-first-slide) = call-slide-fn-and-reset(
+            self + (headings: current-headings, is-first-slide: is-first-slide),
+            new-subsubsection-slide-fn,
+            child.body,
+            recaller-map,
+          )
+          result.push(cont)
+        } else if child.depth == 4 and new-subsubsubsection-slide-fn != none {
+          (cont, recaller-map, current-headings, current-slide, new-start, is-first-slide) = call-slide-fn-and-reset(
+            self + (headings: current-headings, is-first-slide: is-first-slide),
+            new-subsubsubsection-slide-fn,
+            child.body,
+            recaller-map,
+          )
+          result.push(cont)
+        }
       }
-
     } else if utils.is-kind(child, "touying-set-config") {
       current-slide = utils.trim(current-slide)
       if current-slide != () or current-headings != () {
@@ -275,18 +287,30 @@
           child.value.body,
         ),
       )
-    } else {
-      let child = if utils.is-sequence(child) {
-        // Split the content into slides recursively
-        let (start-part, cont) = split-content-into-slides(
-          self: self,
-          recaller-map: recaller-map,
-          new-start: false,
-          child,
+    } else if is-root and utils.is-styled(child) {
+      current-slide = utils.trim(current-slide)
+      if current-slide != () or current-headings != () {
+        (cont, recaller-map, current-headings, current-slide, new-start, is-first-slide) = call-slide-fn-and-reset(
+          self + (headings: current-headings, is-first-slide: is-first-slide),
+          slide-fn,
+          current-slide.sum(default: none),
+          recaller-map,
         )
-        start-part
-        _delayed-wrapper(cont)
-      } else if utils.is-styled(child) {
+        result.push(cont)
+      }
+      result.push(
+        utils.reconstruct-styled(
+          child,
+          split-content-into-slides(
+            self: self,
+            recaller-map: recaller-map,
+            new-start: true,
+            child.child,
+          ),
+        ),
+      )
+    } else {
+      let child = if utils.is-styled(child) {
         // Split the content into slides recursively for styled content
         let (start-part, cont) = split-content-into-slides(
           self: self,
@@ -1369,28 +1393,38 @@
     [#metadata((kind: "touying-new-slide")) <touying-metadata>]
     // add headings for the first subslide
     if self.at("headings", default: ()) != () {
-      place(hide({
-        set heading(offset: 0)
-        let headings = self.at("headings", default: ()).map(it => if it.has("label") {
-          if str(it.label) in ("touying:unoutlined", "touying:unbookmarked") {
-            let fields = it.fields()
-            let _ = fields.remove("label", default: none)
-            let _ = fields.remove("body", default: none)
-            if str(it.label) == "touying:unoutlined" {
-              fields.outlined = false
+      place(
+        hide({
+          set heading(offset: 0)
+          let headings = self.at("headings", default: ()).map(it => if it.has("label") {
+            if str(it.label) in ("touying:hidden", "touying:unnumbered", "touying:unoutlined", "touying:unbookmarked") {
+              let fields = it.fields()
+              let _ = fields.remove("label", default: none)
+              let _ = fields.remove("body", default: none)
+              if str(it.label) == "touying:hidden" {
+                fields.numbering = none
+                fields.outlined = false
+                fields.bookmarked = false
+              }
+              if str(it.label) == "touying:unnumbered" {
+                fields.numbering = none
+              }
+              if str(it.label) == "touying:unoutlined" {
+                fields.outlined = false
+              }
+              if str(it.label) == "touying:unbookmarked" {
+                fields.bookmarked = false
+              }
+              heading(..fields, it.body)
+            } else {
+              it
             }
-            if str(it.label) == "touying:unbookmarked" {
-              fields.bookmarked = false
-            }
-            heading(..fields, it.body)
           } else {
             it
-          }
-        } else {
-          it
-        })
-        headings.sum(default: none)
-      }))
+          })
+          headings.sum(default: none)
+        }),
+      )
     }
     utils.call-or-display(self, self.at("slide-preamble", default: none))
     utils.call-or-display(self, self.at("default-slide-preamble", default: none))

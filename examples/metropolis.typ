@@ -1,41 +1,40 @@
 #import "../lib.typ": *
+#import themes.metropolis: *
 
-#let s = themes.metropolis.register(aspect-ratio: "16-9", footer: self => self.info.institution)
-#let s = (s.methods.info)(
-  self: s,
-  title: [Title],
-  subtitle: [Subtitle],
-  author: [Authors],
-  date: datetime.today(),
-  institution: [Institution],
+#import "@preview/numbly:0.1.0": numbly
+
+#show: metropolis-theme.with(
+  aspect-ratio: "16-9",
+  footer: self => self.info.institution,
+  config-info(
+    title: [Title],
+    subtitle: [Subtitle],
+    author: [Authors],
+    date: datetime.today(),
+    institution: [Institution],
+    logo: emoji.city,
+  ),
 )
-#let (init, slides, touying-outline, alert) = utils.methods(s)
-#show: init
 
-#set text(font: "Fira Sans", weight: "light", size: 20pt)
-#show math.equation: set text(font: "Fira Math")
-#set strong(delta: 100)
-#set par(justify: true)
-#show strong: alert
+#set heading(numbering: numbly("{1}.", default: "1.1"))
 
-#let (slide, empty-slide, title-slide, new-section-slide, focus-slide) = utils.slides(s)
-#show: slides
+#title-slide()
+
+= Outline <touying:hidden>
+
+#outline(title: none, indent: 1em, depth: 1)
 
 = First Section
 
-#slide[
-  A slide without a title but with some *important* information.
-]
+A slide without a title but with some *important* information.
 
 == A long long long long long long long long long long long long long long long long long long long long long long long long Title
 
-#slide[
-  A slide with equation:
+A slide with equation:
 
-  $ x_(n+1) = (x_n + a/x_n) / 2 $
+$ x_(n+1) = (x_n + a/x_n) / 2 $
 
-  #lorem(200)
-]
+#lorem(200)
 
 = Second Section
 
@@ -45,20 +44,19 @@
 
 == Simple Animation
 
-#slide[
-  A simple #pause dynamic slide with #alert[alert]
+We can use `#pause` to #pause display something later.
 
-  #pause
-  
-  text.
+#meanwhile
+
+Meanwhile, #pause we can also use `#meanwhile` to display other content synchronously.
+
+#speaker-note[
+  + This is a speaker note.
+  + You won't see it unless you use `#let s = (s.math.show-notes-on-second-screen)(self: s, right)`
 ]
 
-// appendix by freezing last-slide-number
-#let s = (s.methods.appendix)(self: s)
-#let (slide,) = utils.slides(s)
+#show: appendix
 
 = Appendix
 
-#slide[
-  Appendix.
-]
+Please pay attention to the current slide number.

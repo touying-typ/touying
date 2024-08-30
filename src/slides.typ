@@ -20,7 +20,6 @@
 /// `body` is the contents of the slides.
 #let touying-slides(..args, body) = {
   // get the default config
-  assert(args.named().len() == 0, message: "unexpected named arguments:" + repr(args.named().keys()))
   let args = (configs.default-config,) + args.pos()
   let self = utils.merge-dicts(..args)
 

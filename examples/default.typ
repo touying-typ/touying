@@ -21,7 +21,7 @@
 
 #set heading(numbering: numbly("{1}.", default: "1.1"))
 
-== Outline <touying:unoutlined>
+= Outline  <touying:hidden>
 
 #outline(title: none, indent: 1em)
 
@@ -31,7 +31,7 @@
 
 *Recall*
 
-#speaker-note[sdfsdf]
+#speaker-note[Recall]
 
 #show: touying-set-config.with(config-methods(cover: utils.semi-transparent-cover))
 
@@ -47,11 +47,11 @@ $ x + y $
 
 animation
 
+#touying-recall(<recall>)
+
 
 #show: appendix
 
 = Appendix
 
 Appendix
-
-#touying-recall(<recall>)
