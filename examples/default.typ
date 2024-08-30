@@ -15,7 +15,7 @@
     alert: utils.alert-with-primary-color,
   ),
   config-page(
-    header: states.display-current-heading(level: 2),
+    header: utils.display-current-short-heading(level: 2),
   ),
 )
 

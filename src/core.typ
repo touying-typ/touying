@@ -1,5 +1,5 @@
 #import "utils.typ"
-#import "states.typ"
+#import "utils.typ"
 #import "pdfpc.typ"
 
 /// ------------------------------------------------
@@ -1382,32 +1382,32 @@
       if self.subslide == 1 {
         // save the states and counters
         context {
-          states.saved-frozen-states.update(self.frozen-states.map(s => s.get()))
-          states.saved-default-frozen-states.update(self.default-frozen-states.map(s => s.get()))
-          states.saved-frozen-counters.update(self.frozen-counters.map(s => s.get()))
-          states.saved-default-frozen-counters.update(self.default-frozen-counters.map(s => s.get()))
+          utils.saved-frozen-states.update(self.frozen-states.map(s => s.get()))
+          utils.saved-default-frozen-states.update(self.default-frozen-states.map(s => s.get()))
+          utils.saved-frozen-counters.update(self.frozen-counters.map(s => s.get()))
+          utils.saved-default-frozen-counters.update(self.default-frozen-counters.map(s => s.get()))
         }
       } else {
         // restore the states and counters
         context {
           self
             .frozen-states
-            .zip(states.saved-frozen-states.get())
+            .zip(utils.saved-frozen-states.get())
             .map(pair => pair.at(0).update(pair.at(1)))
             .sum(default: none)
           self
             .default-frozen-states
-            .zip(states.saved-default-frozen-states.get())
+            .zip(utils.saved-default-frozen-states.get())
             .map(pair => pair.at(0).update(pair.at(1)))
             .sum(default: none)
           self
             .frozen-counters
-            .zip(states.saved-frozen-counters.get())
+            .zip(utils.saved-frozen-counters.get())
             .map(pair => pair.at(0).update(pair.at(1)))
             .sum(default: none)
           self
             .default-frozen-counters
-            .zip(states.saved-default-frozen-counters.get())
+            .zip(utils.saved-default-frozen-counters.get())
             .map(pair => pair.at(0).update(pair.at(1)))
             .sum(default: none)
         }
@@ -1423,10 +1423,10 @@
     //    if freeze-slide-counter is false, then update the slide-counter
     if self.subslide == 1 {
       if not self.at("freeze-slide-counter", default: false) {
-        states.slide-counter.step()
+        utils.slide-counter.step()
         //  if appendix is false, then update the last-slide-counter
         if not self.at("appendix", default: false) {
-          states.last-slide-counter.step()
+          utils.last-slide-counter.step()
         }
       }
     }

@@ -1,5 +1,4 @@
 #import "pdfpc.typ"
-#import "states.typ"
 
 /// Add a dictionary to another dictionary recursively
 ///
@@ -28,6 +27,42 @@
   }
   return res
 }
+
+// -------------------------------------
+// Slide counter
+// -------------------------------------
+#let slide-counter = counter("touying-slide-counter")
+#let last-slide-counter = counter("touying-last-slide-counter")
+#let last-slide-number = context {
+  last-slide-counter.final().first()
+}
+
+/// Get the progress of the current slide.
+///
+/// - `callback` is the callback function `ratio => { .. }` to get the progress of the current slide. The `ratio` is a float number between 0 and 1.
+#let touying-progress(callback) = (
+  context {
+    if last-slide-counter.final().first() == 0 {
+      callback(1.0)
+      return
+    }
+    let ratio = calc.min(1.0, slide-counter.get().first() / last-slide-counter.final().first())
+    callback(ratio)
+  }
+)
+
+// slide note state
+#let slide-note-state = state("touying-slide-note-state", none)
+#let current-slide-note = context slide-note-state.get()
+
+// -------------------------------------
+// Saved states and counters
+// -------------------------------------
+
+#let saved-frozen-states = state("touying-saved-frozen-states", ())
+#let saved-default-frozen-states = state("touying-saved-default-frozen-states", ())
+#let saved-frozen-counters = state("touying-saved-frozen-counters", ())
+#let saved-default-frozen-counters = state("touying-saved-default-frozen-counters", ())
 
 
 /// Remove leading and trailing empty elements from an array of content
@@ -162,25 +197,12 @@
   return [#it]
 }
 
-// // OOP: empty page
-// #let empty-page(self, margin: (x: 0em, y: 0em)) = {
-//   self.page-args += (
-//     header: none,
-//     footer: none,
-//   )
-//   if margin != none {
-//     self.page-args += (margin: margin)
-//   }
-//   if self.freeze-in-empty-page {
-//     self.freeze-slide-counter = true
-//   }
-//   self
-// }
 
 /// Wrap a function with a `self` parameter to make it a method
 ///
 /// Example: `#let hide = method-wrapper(hide)` to get a `hide` method
 #let method-wrapper(fn) = (self: none, ..args) => fn(..args)
+
 
 /// Assuming all functions in dictionary have a named `self` parameter,
 /// `methods` function is used to get all methods in dictionary object
@@ -197,6 +219,145 @@
   }
   return methods
 }
+
+
+// -------------------------------------
+// Headings
+// -------------------------------------
+
+
+/// Capitalize a string
+#let capitalize(s) = {
+  assert(type(s) == str, message: "s must be a string")
+  if s.len() == 0 {
+    return s
+  }
+  let lowercase = lower(s)
+  upper(lowercase.at(0)) + lowercase.slice(1)
+}
+
+
+/// Convert a string into title case
+#let titlecase(s) = {
+  assert(type(s) == str, message: "s must be a string")
+  if s.len() == 0 {
+    return s
+  }
+  s.split(" ").map(capitalize).join(" ")
+}
+
+
+/// Convert a heading with label to short form
+///
+/// - `it` is the heading
+#let short-heading(self: none, it) = {
+  if it == none {
+    return
+  }
+  let convert-label-to-short-heading = if (
+    type(self) == dictionary and "methods" in self and "convert-label-to-short-heading" in self.methods
+  ) {
+    self.methods.convert-label-to-short-heading
+  } else {
+    (self: none, lbl) => titlecase(lbl.replace(regex("^[^:]*:"), "").replace("_", " ").replace("-", " "))
+  }
+  convert-label-to-short-heading = convert-label-to-short-heading.with(self: self)
+  assert(type(it) == content and it.func() == heading, message: "it must be a heading")
+  if not it.has("label") {
+    return it.body
+  }
+  let lbl = str(it.label)
+  return convert-label-to-short-heading(lbl)
+}
+
+
+/// Get the current heading On or before the current page.
+///
+/// - `level` is the level of the heading. If `level` is `auto`, it will return the last heading on or before the current page. If `level` is a number, it will return the last heading on or before the current page with the same level.
+///
+/// - `hierachical` is a boolean value to indicate whether to return the heading hierachically. If `hierachical` is `true`, it will return the last heading according to the hierachical structure. If `hierachical` is `false`, it will return the last heading on or before the current page with the same level.
+///
+/// - `depth` is the maximum depth of the heading to search. Usually, it should be set as slide-level.
+#let current-heading(level: auto, hierachical: true, depth: 9999) = {
+  let current-page = here().page()
+  if not hierachical and level != auto {
+    let headings = query(heading).filter(h => (
+      h.location().page() <= current-page and h.level <= depth and h.level == level
+    ))
+    return headings.at(-1, default: none)
+  }
+  let headings = query(heading).filter(h => h.location().page() <= current-page and h.level <= depth)
+  if headings == () {
+    return
+  }
+  if level == auto {
+    return headings.last()
+  }
+  let current-level = headings.last().level
+  let current-heading = headings.pop()
+  while headings.len() > 0 and level < current-level {
+    current-level = headings.last().level
+    current-heading = headings.pop()
+  }
+  if level == current-level {
+    return current-heading
+  }
+}
+
+
+/// Display the current heading on the page.
+///
+/// - `level` is the level of the heading. If `level` is `auto`, it will return the last heading on or before the current page. If `level` is a number, it will return the last heading on or before the current page with the same level.
+///
+/// - `hierachical` is a boolean value to indicate whether to return the heading hierachically. If `hierachical` is `true`, it will return the last heading according to the hierachical structure. If `hierachical` is `false`, it will return the last heading on or before the current page with the same level.
+///
+/// - `depth` is the maximum depth of the heading to search. Usually, it should be set as slide-level.
+///
+/// - `sty` is the style of the heading. If `sty` is a function, it will use the function to style the heading. For example, `sty: current-heading => current-heading.body`.
+#let display-current-heading(self: none, level: auto, hierachical: true, depth: 9999, ..sty) = (
+  context {
+    let sty = if sty.pos().len() > 1 {
+      sty.pos().at(0)
+    } else {
+      current-heading => {
+        if current-heading.numbering != none {
+          numbering(current-heading.numbering, ..counter(heading).at(current-heading.location())) + h(.3em)
+        }
+        current-heading.body
+      }
+    }
+    let current-heading = current-heading(level: level, hierachical: hierachical, depth: depth)
+    if current-heading != none {
+      sty(current-heading)
+    }
+  }
+)
+
+
+/// Display the current short heading on the page.
+///
+/// - `level` is the level of the heading. If `level` is `auto`, it will return the last heading on or before the current page. If `level` is a number, it will return the last heading on or before the current page with the same level.
+///
+/// - `hierachical` is a boolean value to indicate whether to return the heading hierachically. If `hierachical` is `true`, it will return the last heading according to the hierachical structure. If `hierachical` is `false`, it will return the last heading on or before the current page with the same level.
+///
+/// - `depth` is the maximum depth of the heading to search. Usually, it should be set as slide-level.
+///
+/// - `sty` is the style of the heading. If `sty` is a function, it will use the function to style the heading. For example, `sty: current-heading => current-heading.body`.
+#let display-current-short-heading(self: none, level: auto, hierachical: true, depth: 9999, ..sty) = (
+  context {
+    let sty = if sty.pos().len() > 1 {
+      sty.pos().at(0)
+    } else {
+      current-heading => {
+        short-heading(self: self, current-heading)
+      }
+    }
+    let current-heading = current-heading(level: level, hierachical: hierachical, depth: depth)
+    if current-heading != none {
+      sty(current-heading)
+    }
+  }
+)
 
 
 /// Display the date of `self.info.date` with `self.datetime-format` format.
@@ -845,7 +1006,7 @@
     message: "`show-notes-on-second-screen` should be `none`, `bottom` or `right`",
   )
   if show-notes-on-second-screen != none {
-    states.slide-note-state.update(setting(note))
+    slide-note-state.update(setting(note))
   }
 }
 

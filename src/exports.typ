@@ -2,7 +2,6 @@
 #import "slides.typ": touying-slides
 #import "configs.typ": config-colors, config-common, config-info, config-methods, config-page, config-store, default-config
 #import "utils.typ"
-#import "states.typ"
 #import "magic.typ"
 #import "pdfpc.typ"
 #import "components.typ"

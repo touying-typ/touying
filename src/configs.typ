@@ -1,4 +1,3 @@
-#import "states.typ"
 #import "pdfpc.typ"
 #import "utils.typ"
 #import "core.typ": touying-slide-wrapper, touying-slide, slide
@@ -47,14 +46,14 @@
     counter(footnote).update(0)
   }
   if self.at("reset-page-counter-to-slide-counter", default: true) {
-    context counter(page).update(states.slide-counter.get())
+    context counter(page).update(utils.slide-counter.get())
   }
   if self.at("enable-pdfpc", default: true) {
     context [
       #metadata((t: "NewSlide")) <pdfpc>
       #metadata((t: "Idx", v: here().page() - 1)) <pdfpc>
       #metadata((t: "Overlay", v: self.subslide - 1)) <pdfpc>
-      #metadata((t: "LogicalSlide", v: states.slide-counter.get().first())) <pdfpc>
+      #metadata((t: "LogicalSlide", v: utils.slide-counter.get().first())) <pdfpc>
     ]
   }
 }
@@ -217,19 +216,23 @@
       outset: 0pt,
       fill: rgb("#CCCCCC"),
       {
-        states.current-section-title
+        utils.current-section-title
         linebreak()
         [ --- ]
-        states.current-slide-title
+        utils.current-slide-title
       },
     )
-    pad(x: 48pt, states.current-slide-note)
+    pad(x: 48pt, utils.current-slide-note)
     // clear the slide note
-    states.slide-note-state.update(none)
+    utils.slide-note-state.update(none)
   },
 )
 
 #let _default-alert = utils.method-wrapper(text.with(weight: "bold"))
+
+#let _default-convert-label-to-short-heading(self: none, lbl) = utils.titlecase(
+  lbl.replace(regex("^[^:]*:"), "").replace("_", " ").replace("-", " "),
+)
 
 /// The configuration of the methods
 ///
@@ -255,6 +258,8 @@
 ///
 /// - show-notes (function): The function to show notes on second screen.
 ///
+/// - convert-label-to-short-heading (function): The function to convert label to short heading. It is useful for the short heading for heading with label.
+///
 ///   It should be `(self: none, width: 0pt, height: 0pt) => { .. }`.
 #let config-methods(
   // init
@@ -271,6 +276,8 @@
   alert: _default-alert,
   // show notes
   show-notes: _default-show-notes,
+  // convert label to short heading
+  convert-label-to-short-heading: _default-convert-label-to-short-heading,
   ..args,
 ) = {
   assert(args.pos().len() == 0, message: "Unexpected positional arguments.")
@@ -286,6 +293,7 @@
       alternatives-cases: alternatives-cases,
       alert: alert,
       show-notes: show-notes,
+      convert-label-to-short-heading: convert-label-to-short-heading,
     ) + args.named(),
   )
 }
