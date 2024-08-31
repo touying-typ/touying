@@ -5,6 +5,46 @@
 
 #let _typst-builtin-repeat = repeat
 
+#let dewdrop-header(self) = {
+  if self.store.navigation == "sidebar" {
+    place(
+      right + top,
+      {
+        v(4em)
+        show: block.with(width: self.store.sidebar.width, inset: (x: 1em))
+        set align(left)
+        set par(justify: false)
+        set text(size: .9em)
+        components.custom-progressive-outline(
+          self: self,
+          level: auto,
+          alpha: self.store.alpha,
+          text-fill: (self.colors.primary, self.colors.neutral-darkest),
+          text-size: (1em, .9em),
+          vspace: (-.2em,),
+          indent: (0em, self.store.sidebar.at("indent", default: .5em)),
+          fill: (self.store.sidebar.at("fill", default: _typst-builtin-repeat[.]),),
+          filled: (self.store.sidebar.at("filled", default: false),),
+          paged: (self.store.sidebar.at("paged", default: false),),
+          short-heading: self.store.sidebar.at("short-heading", default: true),
+        )
+      },
+    )
+  } else if self.store.navigation == "mini-slides" {
+    // (self.methods.d-mini-slides)(self: self)
+  }
+}
+
+#let dewdrop-footer(self) = {
+  set align(bottom)
+  set text(size: 0.8em)
+  show: pad.with(.5em)
+  components.left-and-right(
+    text(fill: self.colors.neutral-darkest.lighten(40%), utils.call-or-display(self, self.store.footer)),
+    text(fill: self.colors.neutral-darkest.lighten(20%), utils.call-or-display(self, self.store.footer-right)),
+  )
+}
+
 /// Default slide function for the presentation.
 ///
 /// - `config` is the configuration of the slide. You can use `config-xxx` to set the configuration of the slide. For more several configurations, you can use `utils.merge-dicts` to merge them.
@@ -35,51 +75,14 @@
   composer: auto,
   ..bodies,
 ) = touying-slide-wrapper(self => {
-  let header(self) = {
-    if self.store.navigation == "sidebar" {
-      place(
-        right + top,
-        {
-          v(4em)
-          show: block.with(width: self.store.sidebar.width, inset: (x: 1em))
-          set align(left)
-          set par(justify: false)
-          set text(size: .9em)
-          components.custom-progressive-outline(
-            self: self,
-            level: auto,
-            alpha: self.store.alpha,
-            text-fill: (self.colors.primary, self.colors.neutral-darkest),
-            text-size: (1em, .9em),
-            vspace: (-.2em,),
-            indent: (0em, self.store.sidebar.at("indent", default: .5em)),
-            fill: (self.store.sidebar.at("fill", default: _typst-builtin-repeat[.]),),
-            filled: (self.store.sidebar.at("filled", default: false),),
-            paged: (self.store.sidebar.at("paged", default: false),),
-            short-heading: self.store.sidebar.at("short-heading", default: true),
-          )
-        },
-      )
-    } else if self.store.navigation == "mini-slides" {
-      // (self.methods.d-mini-slides)(self: self)
-    }
-  }
-  let footer(self) = {
-    set align(bottom)
-    set text(size: 0.8em)
-    show: pad.with(.5em)
-    components.left-and-right(
-      text(fill: self.colors.neutral-darkest.lighten(40%), utils.call-or-display(self, self.store.footer)),
-      text(fill: self.colors.neutral-darkest.lighten(20%), utils.call-or-display(self, self.store.footer-right)),
-    )
-  }
   let self = utils.merge-dicts(
     self,
     config-page(
       fill: self.colors.neutral-lightest,
-      header: header,
-      footer: footer,
+      header: dewdrop-header,
+      footer: dewdrop-footer,
     ),
+    config-common(subslide-preamble: self.store.subslide-preamble),
   )
   let new-setting(body) = {
     set text(fill: self.colors.neutral-darkest)
@@ -135,7 +138,7 @@
         }
         v(1em)
         if info.date != none {
-          block(spacing: 1em, utils.info-date(self))
+          block(spacing: 1em, utils.display-info-date(self))
         }
         set text(size: .8em)
         if info.institution != none {
@@ -150,9 +153,31 @@
   self = utils.merge-dicts(
     self,
     config-common(freeze-slide-counter: true),
-    config-page(fill: self.colors.neutral-lightest),
+    config-page(fill: self.colors.neutral-lightest, margin: 0em),
   )
   touying-slide(self: self, body)
+})
+
+
+/// Outline slide for the presentation.
+#let outline-slide(..args) = touying-slide-wrapper(self => {
+  self = utils.merge-dicts(
+    self,
+    config-page(
+      fill: self.colors.neutral-lightest,
+      footer: dewdrop-footer,
+    ),
+  )
+  touying-slide(
+    self: self,
+    {
+      text(1.2em, fill: self.colors.primary, weight: "bold", utils.call-or-display(self, self.store.outline-title))
+      text(
+        fill: self.colors.neutral-darkest,
+        outline(title: none, indent: 1em, ..args),
+      )
+    },
+  )
 })
 
 
@@ -164,7 +189,10 @@
 #let new-section-slide(..args, title) = touying-slide-wrapper(self => {
   self = utils.merge-dicts(
     self,
-    config-page(fill: self.colors.neutral-lightest),
+    config-page(
+      fill: self.colors.neutral-lightest,
+      footer: dewdrop-footer,
+    ),
   )
   touying-slide(
     self: self,
@@ -214,6 +242,9 @@
   primary: rgb("#0c4842"),
   alpha: 60%,
   outline-title: [Outline],
+  subslide-preamble: self => block(
+    text(1.2em, weight: "bold", fill: self.colors.primary, utils.display-current-heading(depth: self.slide-level)),
+  ),
   ..args,
   body,
 ) = {
@@ -256,6 +287,7 @@
       footer-right: footer-right,
       alpha: alpha,
       outline-title: outline-title,
+      subslide-preamble: subslide-preamble,
     ),
     ..args,
   )

@@ -12,11 +12,14 @@
     author: [Authors],
     date: datetime.today(),
     institution: [Institution],
-    logo: emoji.city,
   ),
 )
 
 #set heading(numbering: numbly("{1}.", default: "1.1"))
+
+#title-slide()
+
+#outline-slide()
 
 = Section A
 
