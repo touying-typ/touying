@@ -265,6 +265,21 @@
           result.push(cont)
         }
       }
+    } else if self.at("auto-offset-for-heading", default: true) and utils.is-heading(child) {
+      let fields = child.fields()
+      let lbl = fields.remove("label", default: none)
+      let _ = fields.remove("body", default: none)
+      fields.offset = 0
+      let new-heading = if lbl != none {
+        utils.label-it(heading(..fields, child.body), it.label)
+      } else {
+        heading(..fields, child.body)
+      }
+      if new-start {
+        current-slide.push(new-heading)
+      } else {
+        start-part.push(new-heading)
+      }
     } else if utils.is-kind(child, "touying-set-config") {
       current-slide = utils.trim(current-slide)
       if current-slide != () or current-headings != () {
@@ -1418,7 +1433,7 @@
               if str(it.label) == "touying:unbookmarked" {
                 fields.bookmarked = false
               }
-              heading(..fields, it.body)
+              utils.label-it(heading(..fields, it.body), it.label)
             } else {
               it
             }

@@ -99,7 +99,7 @@
 ///
 /// - zero-margin-footer (bool): Whether to show the full footer (with negative padding). The default value is `true`.
 ///
-/// - auto-offset-for-heading (bool): Whether to add an offset relative to slide-level for headings. The default value is `false`.
+/// - auto-offset-for-heading (bool): Whether to add an offset relative to slide-level for headings. The default value is `true`.
 ///
 /// - enable-pdfpc (bool): Whether to add `<pdfpc-file>` label for querying.
 ///
@@ -532,7 +532,7 @@
     freeze-slide-counter: false,
     zero-margin-header: true,
     zero-margin-footer: true,
-    auto-offset-for-heading: false,
+    auto-offset-for-heading: true,
     enable-pdfpc: true,
     enable-mark-warning: true,
     reset-page-counter-to-slide-counter: true,

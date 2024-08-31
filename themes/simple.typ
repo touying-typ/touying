@@ -126,8 +126,7 @@
     config-page(
       paper: "presentation-" + aspect-ratio,
       fill: background,
-      footer-descent: 1em,
-      header-ascent: 1em,
+      margin: 2em,
     ),
     config-common(
       slide-fn: slide,
@@ -136,6 +135,12 @@
       zero-margin-footer: false,
     ),
     config-methods(
+      init: (self: none, body) => {
+        show strong: self.methods.alert.with(self: self)
+        show heading.where(level: self.slide-level + 1): set text(1.4em)
+
+        body
+      },
       alert: utils.alert-with-primary-color,
     ),
     config-colors(
