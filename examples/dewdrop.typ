@@ -1,26 +1,22 @@
 #import "../lib.typ": *
+#import themes.dewdrop: *
 
-#let s = themes.dewdrop.register(
+#import "@preview/numbly:0.1.0": numbly
+
+#show: dewdrop-theme.with(
   aspect-ratio: "16-9",
-  footer: [Dewdrop],
-  navigation: "mini-slides",
-  // navigation: none,
+  footer: self => self.info.institution,
+  config-info(
+    title: [Title],
+    subtitle: [Subtitle],
+    author: [Authors],
+    date: datetime.today(),
+    institution: [Institution],
+    logo: emoji.city,
+  ),
 )
-#let s = (s.methods.info)(
-  self: s,
-  title: [Title],
-  subtitle: [Subtitle],
-  author: [Authors],
-  date: datetime.today(),
-  institution: [Institution],
-)
-#let (init, slides, touying-outline, alert) = utils.methods(s)
-#show: init
 
-#show strong: alert
-
-#let (slide, empty-slide, title-slide, outline-slide, new-section-slide, focus-slide) = utils.slides(s)
-#show: slides
+#set heading(numbering: numbly("{1}.", default: "1.1"))
 
 = Section A
 
@@ -64,13 +60,11 @@
   Meanwhile, #pause we can also use `#meanwhile` to #pause display other content synchronously.
 ]
 
-// appendix by freezing last-slide-number
-#let s = (s.methods.appendix)(self: s)
-#let (slide,) = utils.slides(s)
+#show: appendix
 
 = Appendix
 
-=== Appendix
+== Appendix
 
 #slide[
   Please pay attention to the current slide number.

@@ -90,3 +90,179 @@
   )
   body
 }
+
+
+/// Show progressive outline. It will make other sections except the current section to be semi-transparent.
+///
+/// - `alpha` is the transparency of the other sections. Default is `60%`.
+///
+/// - `level` is the level of the outline. Default is `1`.
+///
+/// - `transform` is the transformation applied to the text of the outline. It should take the following arguments:
+///
+///   - `cover` is a boolean indicating whether the current entry should be covered.
+///
+///   - `..args` are the other arguments passed to the `progressive-outline`.
+#let progressive-outline(
+  alpha: 60%,
+  level: 1,
+  transform: (cover: false, alpha: 60%, ..args, it) => if cover {
+    text(utils.update-alpha(text.fill, alpha), it)
+  } else {
+    it
+  },
+  ..args,
+) = (
+  context {
+    // start page and end page
+    let start-page = 1
+    let end-page = calc.inf
+    let current-heading = utils.current-heading(level: level)
+    if current-heading != none {
+      start-page = current-heading.location().page()
+      if level != auto {
+        let next-headings = query(
+          selector(heading.where(level: level)).after(inclusive: false, current-heading.location()),
+        )
+        if next-headings != () {
+          end-page = next-headings.at(0).location().page()
+        }
+      } else {
+        end-page = start-page + 1
+      }
+    }
+    show outline.entry: it => transform(
+      cover: it.element.location().page() < start-page or it.element.location().page() >= end-page,
+      level: level,
+      alpha: alpha,
+      ..args,
+      it,
+    )
+
+    outline(..args)
+  }
+)
+
+
+/// Show a custom progressive outline.
+///
+/// - `self` is the self context.
+///
+/// - `alpha` is the transparency of the other headings. Default is `60%`.
+///
+/// - `level` is the level of the outline. Default is `auto`.
+///
+/// - `numbered` is a boolean array indicating whether the headings should be numbered. Default is `false`.
+///
+/// - `filled` is a boolean array indicating whether the headings should be filled. Default is `false`.
+///
+/// - `paged` is a boolean array indicating whether the headings should be paged. Default is `false`.
+///
+/// - `text-fill` is an array of colors for the text fill of the headings. Default is `none`.
+///
+/// - `text-size` is an array of sizes for the text of the headings. Default is `none`.
+///
+/// - `text-weight` is an array of weights for the text of the headings. Default is `none`.
+///
+/// - `vspace` is an array of vertical spaces above the headings. Default is `none`.
+///
+/// - `title` is the title of the outline. Default is `none`.
+///
+/// - `indent` is an array of indentations for the headings. Default is `(0em, )`.
+///
+/// - `fill` is an array of fills for the headings. Default is `repeat[.]`.
+///
+/// - `short-heading` is a boolean indicating whether the headings should be shortened. Default is `true`.
+///
+/// - `uncover-fn` is a function that takes the body of the heading and returns the body of the heading when it is uncovered. Default is the identity function.
+///
+/// - `..args` are the other arguments passed to the `progressive-outline` and `transform`.
+#let custom-progressive-outline(
+  self: none,
+  alpha: 60%,
+  level: auto,
+  numbered: (false,),
+  filled: (false,),
+  paged: (false,),
+  text-fill: none,
+  text-size: none,
+  text-weight: none,
+  vspace: none,
+  title: none,
+  indent: (0em,),
+  fill: (repeat[.],),
+  short-heading: true,
+  uncover-fn: body => body,
+  ..args,
+) = progressive-outline(
+  alpha: alpha,
+  level: level,
+  transform: (cover: false, alpha: alpha, ..args, it) => {
+    let array-at(arr, idx) = arr.at(idx, default: arr.last())
+    let set-text(level, body) = {
+      set text(fill: (
+        if cover {
+          utils.update-alpha(array-at(text-fill, level - 1), alpha)
+        } else {
+          array-at(text-fill, level - 1)
+        }
+      )) if type(text-fill) == array and text-fill.len() > 0
+      set text(
+        size: array-at(text-size, level - 1),
+      ) if type(text-size) == array and text-size.len() > 0
+      set text(
+        weight: array-at(text-weight, level - 1),
+      ) if type(text-weight) == array and text-weight.len() > 0
+      body
+    }
+    let body = {
+      if type(vspace) == array and vspace.len() > it.level - 1 {
+        v(vspace.at(it.level - 1))
+      }
+      h(range(1, it.level + 1).map(level => array-at(indent, level - 1)).sum())
+      set-text(
+        it.level,
+        {
+          if array-at(numbered, it.level - 1) {
+            numbering(it.element.numbering, ..counter(heading).at(it.element.location()))
+            h(.3em)
+          }
+          link(
+            it.element.location(),
+            {
+              if short-heading {
+                utils.short-heading(self: self, it.element)
+              } else {
+                it.element.body
+              }
+              box(
+                width: 1fr,
+                inset: (x: .2em),
+                if array-at(filled, it.level - 1) {
+                  array-at(fill, level - 1)
+                },
+              )
+              if array-at(paged, it.level - 1) {
+                numbering(
+                  if page.numbering != none {
+                    page.numbering
+                  } else {
+                    "1"
+                  },
+                  ..counter(page).at(it.element.location()),
+                )
+              }
+            },
+          )
+        },
+      )
+    }
+    if cover {
+      body
+    } else {
+      uncover-fn(body)
+    }
+  },
+  title: title,
+  ..args,
+)
