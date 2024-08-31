@@ -31,7 +31,14 @@
       },
     )
   } else if self.store.navigation == "mini-slides" {
-    // (self.methods.d-mini-slides)(self: self)
+    components.mini-slides(
+      self: self,
+      fill: self.colors.primary,
+      alpha: self.store.alpha,
+      display-section: self.store.mini-slides.at("display-section", default: false),
+      display-subsection: self.store.mini-slides.at("display-subsection", default: true),
+      short-heading: self.store.mini-slides.at("short-heading", default: true),
+    )
   }
 }
 
@@ -179,7 +186,7 @@
       ),
       text(
         fill: self.colors.neutral-darkest,
-        outline(title: none, indent: 1em, ..args),
+        outline(title: none, indent: 1em, depth: self.slide-level, ..args),
       ),
     ),
   )
@@ -210,7 +217,7 @@
       ),
       text(
         fill: self.colors.neutral-darkest,
-        components.progressive-outline(alpha: self.store.alpha, title: none, indent: 1em, ..args),
+        components.progressive-outline(alpha: self.store.alpha, title: none, indent: 1em, depth: self.slide-level, ..args),
       ),
     ),
   )
@@ -243,8 +250,8 @@
 #let dewdrop-theme(
   aspect-ratio: "16-9",
   navigation: "sidebar",
-  sidebar: (width: 10em, filled: false, numbered: false, indent: .5em),
-  mini-slides: (height: 4em, x: 2em, section: false, subsection: true),
+  sidebar: (width: 10em, filled: false, numbered: false, indent: .5em, short-heading: true),
+  mini-slides: (height: 4em, x: 2em, display-section: false, display-subsection: true, short-heading: true),
   footer: none,
   footer-right: context utils.slide-counter.display() + " / " + utils.last-slide-number,
   primary: rgb("#0c4842"),
@@ -277,6 +284,12 @@
       new-section-slide-fn: new-section-slide,
     ),
     config-methods(
+        init: (self: none, body) => {
+        show strong: self.methods.alert.with(self: self)
+        show heading: set text(self.colors.primary)
+
+        body
+      },
       alert: utils.alert-with-primary-color,
     ),
     config-colors(

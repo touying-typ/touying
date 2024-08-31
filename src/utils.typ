@@ -498,6 +498,8 @@
 
 /// Adaptive columns layout
 ///
+/// Example: `utils.adaptive-columns(outline())`
+///
 /// - `gutter` is the space between columns.
 ///
 /// - `max-count` is the maximum number of columns.
