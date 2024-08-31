@@ -208,7 +208,7 @@
 /// Example:
 ///
 /// ```typst
-/// #show: default-theme.with(aspect-ratio: "16-9", config-colors(primary: blue))`
+/// #show: metropolis-theme.with(aspect-ratio: "16-9", config-colors(primary: blue))`
 /// ```
 ///
 /// Consider using:

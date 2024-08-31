@@ -1,98 +1,159 @@
 // This theme is from https://github.com/andreasKroepelin/polylux/blob/main/themes/simple.typ
 // Author: Andreas Kröpelin
 
-#import "../slide.typ": s
-#import "../src/utils.typ"
-#import "../src/states.typ"
+#import "../src/exports.typ": *
 
-#let slide(self: none, title: none, footer: auto, ..args) = {
-  if footer != auto {
-    self.simple-footer = footer
-  }
-  (self.methods.touying-slide)(self: self, title: title, setting: body => {
-    if self.auto-heading == true and title != none {
-      heading(level: 2, title)
-    }
-    body
-  }, ..args)
-}
-
-#let centered-slide(self: none, ..args) = {
-  self = utils.empty-page(self, margin: none)
-  (self.methods.touying-slide)(self: self, repeat: none, ..args.named(),
-    align(center + horizon, args.pos().sum(default: []))
+/// Default slide function for the presentation.
+///
+/// - `config` is the configuration of the slide. You can use `config-xxx` to set the configuration of the slide. For more several configurations, you can use `utils.merge-dicts` to merge them.
+///
+/// - `repeat` is the number of subslides. Default is `auto`，which means touying will automatically calculate the number of subslides.
+///
+///   The `repeat` argument is necessary when you use `#slide(repeat: 3, self => [ .. ])` style code to create a slide. The callback-style `uncover` and `only` cannot be detected by touying automatically.
+///
+/// - `setting` is the setting of the slide. You can use it to add some set/show rules for the slide.
+///
+/// - `composer` is the composer of the slide. You can use it to set the layout of the slide.
+///
+///   For example, `#slide(composer: (1fr, 2fr, 1fr))[A][B][C]` to split the slide into three parts. The first and the last parts will take 1/4 of the slide, and the second part will take 1/2 of the slide.
+///
+///   If you pass a non-function value like `(1fr, 2fr, 1fr)`, it will be assumed to be the first argument of the `utils.side-by-side` function.
+///
+///   The `utils.side-by-side` function is a simple wrapper of the `grid` function. It means you can use the `grid.cell(colspan: 2, ..)` to make the cell take 2 columns.
+///
+///   For example, `#slide(composer: 2)[A][B][#grid.cell(colspan: 2)[Footer]] will make the `Footer` cell take 2 columns.
+///
+///   If you want to customize the composer, you can pass a function to the `composer` argument. The function should receive the contents of the slide and return the content of the slide, like `#slide(composer: grid.with(columns: 2))[A][B]`.
+///
+/// - `..bodies` is the contents of the slide. You can call the `slide` function with syntax like `#slide[A][B][C]` to create a slide.
+#let slide(
+  title: none,
+  config: (:),
+  repeat: auto,
+  setting: body => body,
+  composer: auto,
+  ..bodies,
+) = touying-slide-wrapper(self => {
+  let deco-format(it) = text(size: .6em, fill: gray, it)
+  let header(self) = deco-format(
+    components.left-and-right(
+      utils.call-or-display(self, self.store.header),
+      utils.call-or-display(self, self.store.header-right),
+    ),
   )
-}
-
-#let title-slide(self: none, body) = {
-  centered-slide(self: self, body)
-}
-
-#let new-section-slide(self: none, section) = {
-  self = utils.empty-page(self, margin: none)
-  (self.methods.touying-slide)(self: self, repeat: none, section: section, align(center + horizon, heading(level: 1, states.current-section-with-numbering(self)))
+  let footer(self) = deco-format(
+    components.left-and-right(
+      utils.call-or-display(self, self.store.footer),
+      utils.call-or-display(self, self.store.footer-right),
+    ),
   )
-}
+  let self = utils.merge-dicts(
+    self,
+    config-page(
+      header: header,
+      footer: footer,
+    ),
+    config-common(subslide-preamble: self.store.subslide-preamble),
+  )
+  touying-slide(self: self, config: config, repeat: repeat, setting: setting, composer: composer, ..bodies)
+})
 
-#let focus-slide(self: none, background: auto, foreground: white, body) = {
-  self = utils.empty-page(self, margin: none)
-  self.page-args.fill = if background == auto { self.colors.primary } else { background }
+
+/// Centered slide for the presentation.
+#let centered-slide(..args) = touying-slide-wrapper(self => {
+  touying-slide(self: self, ..args.named(), align(center + horizon, args.pos().sum(default: none)))
+})
+
+
+/// Title slide for the presentation.
+#let title-slide(body) = centered-slide(
+  config: config-common(freeze-slide-counter: true),
+  body,
+)
+
+
+/// New section slide for the presentation. You can update it by updating the `new-section-slide-fn` argument for `config-common` function.
+#let new-section-slide(title) = centered-slide(text(1.2em, weight: "bold", utils.display-current-heading(level: 1)))
+
+
+/// Focus on some content.
+///
+/// Example: `#focus-slide[Wake up!]`
+#let focus-slide(background: auto, foreground: white, body) = touying-slide-wrapper(self => {
+  self = utils.merge-dicts(
+    self,
+    config-common(freeze-slide-counter: true),
+    config-page(fill: if background == auto {
+      self.colors.primary
+    } else {
+      background
+    }),
+  )
   set text(fill: foreground, size: 1.5em)
-  centered-slide(self: self, align(center + horizon, body))
-}
+  touying-slide(self: self, align(center + horizon, body))
+})
 
-#let register(
-  self: s,
+
+/// Touying simple theme.
+///
+/// Example:
+///
+/// ```typst
+/// #show: simple-theme.with(aspect-ratio: "16-9", config-colors(primary: blue))`
+/// ```
+///
+/// - `aspect-ratio` is the aspect ratio of the slides. Default is `16-9`.
+#let simple-theme(
   aspect-ratio: "16-9",
-  footer: [],
-    footer-right: context { states.slide-counter.display() + " / " + states.last-slide-number },
+  header: utils.display-current-heading.with(setting: utils.fit-to-width.with(grow: false, 100%)),
+  header-right: self => self.info.logo,
+  footer: none,
+  footer-right: context utils.slide-counter.display() + " / " + utils.last-slide-number,
   background: rgb("#ffffff"),
   foreground: rgb("#000000"),
   primary: aqua.darken(50%),
+  subslide-preamble: block(
+    below: 1.5em,
+    text(1.2em, weight: "bold", utils.display-current-heading(level: 2)),
+  ),
   ..args,
+  body,
 ) = {
-  let deco-format(it) = text(size: .6em, fill: gray, it)
-  // color theme
-  self = (self.methods.colors)(
-    self: self,
-    neutral-light: gray,
-    neutral-lightest: background,
-    neutral-darkest: foreground,
-    primary: primary,
+  set text(fill: foreground, size: 25pt)
+  show footnote.entry: set text(size: .6em)
+
+  show: touying-slides.with(
+    config-page(
+      paper: "presentation-" + aspect-ratio,
+      fill: background,
+      footer-descent: 1em,
+      header-ascent: 1em,
+    ),
+    config-common(
+      slide-fn: slide,
+      new-section-slide-fn: new-section-slide,
+      zero-margin-header: false,
+      zero-margin-footer: false,
+    ),
+    config-methods(
+      alert: utils.alert-with-primary-color,
+    ),
+    config-colors(
+      neutral-light: gray,
+      neutral-lightest: background,
+      neutral-darkest: foreground,
+      primary: primary,
+    ),
+    // save the variables for later use
+    config-store(
+      header: header,
+      header-right: header-right,
+      footer: footer,
+      footer-right: footer-right,
+      subslide-preamble: subslide-preamble,
+    ),
+    ..args,
   )
-  // save the variables for later use
-  self.simple-footer = footer
-  self.simple-footer-right = footer-right
-  self.auto-heading = true
-  // set page
-  let header = self => deco-format(states.current-section-with-numbering(self))
-  let footer(self) = deco-format(self.simple-footer + h(1fr) + self.simple-footer-right)
-  self.page-args += (
-    paper: "presentation-" + aspect-ratio,
-    fill: self.colors.neutral-lightest,
-    header: header,
-    footer: footer,
-    footer-descent: 1em,
-    header-ascent: 1em,
-  )
-  self.full-header = false
-  self.full-footer = false
-  // register methods
-  self.methods.slide = slide
-  self.methods.title-slide = title-slide
-  self.methods.centered-slide = centered-slide
-  self.methods.focus-slide = focus-slide
-  self.methods.new-section-slide = new-section-slide
-  self.methods.touying-new-section-slide = new-section-slide
-  self.methods.init = (self: none, body) => {
-    set heading(outlined: false)
-    set text(fill: foreground, size: 25pt)
-    show footnote.entry: set text(size: .6em)
-    show heading.where(level: 2): set block(below: 1.5em)
-    set outline(target: heading.where(level: 1), title: none, fill: none)
-    show outline.entry: it => it.body
-    show outline: it => block(inset: (x: 1em), it)
-    body
-  }
-  self
+
+  body
 }

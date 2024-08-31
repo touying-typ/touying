@@ -91,7 +91,7 @@
 ///
 /// - datetime-format (string): The format of the datetime.
 ///
-/// - appendix (bool): Is touying in the appendix mode. The last-slide-counter will be frozen in the appendix mode.
+/// - appendix (bool): Is touying in the appendix mode. The last-slide-counter will be frozen in the appendix mode. The default value is `false`.
 ///
 /// - freeze-slide-counter (bool): Whether to freeze the slide counter. The default value is `false`.
 ///
@@ -99,7 +99,7 @@
 ///
 /// - zero-margin-footer (bool): Whether to show the full footer (with negative padding). The default value is `true`.
 ///
-/// - auto-offset-for-heading (bool): Whether to add an offset relative to slide-level for headings.
+/// - auto-offset-for-heading (bool): Whether to add an offset relative to slide-level for headings. The default value is `false`.
 ///
 /// - enable-pdfpc (bool): Whether to add `<pdfpc-file>` label for querying.
 ///
@@ -521,7 +521,7 @@
 #let default-config = utils.merge-dicts(
   config-common(
     handout: false,
-    slide-level: 3,
+    slide-level: 2,
     slide-fn: slide,
     new-section-slide-fn: none,
     new-subsection-slide-fn: none,
@@ -532,7 +532,7 @@
     freeze-slide-counter: false,
     zero-margin-header: true,
     zero-margin-footer: true,
-    auto-offset-for-heading: true,
+    auto-offset-for-heading: false,
     enable-pdfpc: true,
     enable-mark-warning: true,
     reset-page-counter-to-slide-counter: true,
@@ -624,4 +624,5 @@
     fill: rgb("#ffffff"),
     margin: (x: 3em, y: 2.8em),
   ),
+  config-store(),
 )

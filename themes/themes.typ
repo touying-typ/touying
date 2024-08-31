@@ -1,6 +1,6 @@
 #import "default.typ"
+#import "simple.typ"
 #import "metropolis.typ"
-// #import "simple.typ"
 // #import "dewdrop.typ"
 // #import "university.typ"
 // #import "aqua.typ"

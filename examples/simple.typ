@@ -1,11 +1,10 @@
 #import "../lib.typ": *
+#import themes.simple: *
 
-#let s = themes.simple.register(aspect-ratio: "16-9", footer: [Simple slides])
-#let (init, slides) = utils.methods(s)
-#show: init
-
-#let (slide, empty-slide, title-slide, centered-slide, focus-slide) = utils.slides(s)
-#show: slides
+#show: simple-theme.with(
+  aspect-ratio: "16-9",
+  footer: [Simple slides],
+)
 
 #title-slide[
   = Keep it simple!
@@ -20,9 +19,7 @@
 
 == First slide
 
-#slide[
-  #lorem(20)
-]
+#lorem(20)
 
 #focus-slide[
   _Focus!_
@@ -34,10 +31,8 @@
 
 == Dynamic slide
 
-#slide[
-  Did you know that...
+Did you know that...
 
-  #pause
+#pause
 
-  ...you can see the current section at the top of the slide?
-]
+...you can see the current section at the top of the slide?
