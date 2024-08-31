@@ -228,10 +228,10 @@
       outset: 0pt,
       fill: rgb("#CCCCCC"),
       {
-        utils.current-section-title
+        utils.display-current-heading(level: 1, depth: self.slide-level)
         linebreak()
         [ --- ]
-        utils.current-slide-title
+        utils.display-current-heading(level: 2, depth: self.slide-level)
       },
     )
     pad(x: 48pt, utils.current-slide-note)
