@@ -316,7 +316,15 @@
 /// - `setting` is the setting of the heading. Default is `body => body`.
 ///
 /// - `sty` is the style of the heading. If `sty` is a function, it will use the function to style the heading. For example, `sty: current-heading => current-heading.body`.
-#let display-current-heading(self: none, level: auto, numbered: true, hierachical: true, depth: 9999, setting: body => body, ..sty) = (
+#let display-current-heading(
+  self: none,
+  level: auto,
+  numbered: true,
+  hierachical: true,
+  depth: 9999,
+  setting: body => body,
+  ..sty,
+) = (
   context {
     let sty = if sty.pos().len() > 1 {
       sty.pos().at(0)
@@ -345,7 +353,14 @@
 /// - `depth` is the maximum depth of the heading to search. Usually, it should be set as slide-level.
 ///
 /// - `sty` is the style of the heading. If `sty` is a function, it will use the function to style the heading. For example, `sty: current-heading => current-heading.body`.
-#let display-current-short-heading(self: none, level: auto, hierachical: true, depth: 9999, setting: body => body, ..sty) = (
+#let display-current-short-heading(
+  self: none,
+  level: auto,
+  hierachical: true,
+  depth: 9999,
+  setting: body => body,
+  ..sty,
+) = (
   context {
     let sty = if sty.pos().len() > 1 {
       sty.pos().at(0)
@@ -479,6 +494,35 @@
   }
   box(width: mutable-width, body)
 }
+
+
+/// Adaptive columns layout
+///
+/// - `gutter` is the space between columns.
+///
+/// - `max-count` is the maximum number of columns.
+///
+/// - `start` is the content to place before the columns.
+///
+/// - `end` is the content to place after the columns.
+///
+/// - `body` is the content to place in the columns.
+#let adaptive-columns(gutter: 4%, max-count: 3, start: none, end: none, body) = layout(size => {
+  let n = calc.min(
+    calc.ceil(measure(body).height / (size.height - measure(start).height - measure(end).height)),
+    max-count,
+  )
+  if n < 1 {
+    n = 1
+  }
+  start
+  if n == 1 {
+    body
+  } else {
+    columns(n, body)
+  }
+  end
+})
 
 
 /// Fit content to specified height.

@@ -170,13 +170,18 @@
   )
   touying-slide(
     self: self,
-    {
-      text(1.2em, fill: self.colors.primary, weight: "bold", utils.call-or-display(self, self.store.outline-title))
+    utils.adaptive-columns(
+      start: text(
+        1.2em,
+        fill: self.colors.primary,
+        weight: "bold",
+        utils.call-or-display(self, self.store.outline-title),
+      ),
       text(
         fill: self.colors.neutral-darkest,
         outline(title: none, indent: 1em, ..args),
-      )
-    },
+      ),
+    ),
   )
 })
 
@@ -196,13 +201,18 @@
   )
   touying-slide(
     self: self,
-    {
-      text(1.2em, fill: self.colors.primary, weight: "bold", utils.call-or-display(self, self.store.outline-title))
+    utils.adaptive-columns(
+      start: text(
+        1.2em,
+        fill: self.colors.primary,
+        weight: "bold",
+        utils.call-or-display(self, self.store.outline-title),
+      ),
       text(
         fill: self.colors.neutral-darkest,
         components.progressive-outline(alpha: self.store.alpha, title: none, indent: 1em, ..args),
-      )
-    },
+      ),
+    ),
   )
 })
 
@@ -210,8 +220,6 @@
 /// Focus on some content.
 ///
 /// Example: `#focus-slide[Wake up!]`
-///
-/// - `align` is the alignment of the content. Default is `horizon + center`.
 #let focus-slide(body) = touying-slide-wrapper(self => {
   self = utils.merge-dicts(
     self,

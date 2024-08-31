@@ -27,7 +27,6 @@
 ///
 /// - `..bodies` is the contents of the slide. You can call the `slide` function with syntax like `#slide[A][B][C]` to create a slide.
 #let slide(
-  title: none,
   config: (:),
   repeat: auto,
   setting: body => body,
