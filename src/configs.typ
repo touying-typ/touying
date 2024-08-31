@@ -355,12 +355,6 @@
   ..args,
 ) = {
   assert(args.pos().len() == 0, message: "Unexpected positional arguments.")
-  if short-title == auto {
-    short-title = title
-  }
-  if short-subtitle == auto {
-    short-subtitle = subtitle
-  }
   return (
     info: _get-dict-without-default((
       title: title,

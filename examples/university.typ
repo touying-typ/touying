@@ -1,21 +1,21 @@
 #import "../lib.typ": *
+#import themes.university: *
 
-#let s = themes.university.register(aspect-ratio: "16-9")
-#let s = (s.methods.info)(
-  self: s,
-  title: [Title],
-  subtitle: [Subtitle],
-  author: [Authors],
-  date: datetime.today(),
-  institution: [Institution],
+#import "@preview/numbly:0.1.0": numbly
+
+#show: university-theme.with(
+  aspect-ratio: "16-9",
+  config-info(
+    title: [Title],
+    subtitle: [Subtitle],
+    author: [Authors],
+    date: datetime.today(),
+    institution: [Institution],
+    logo: emoji.school,
+  ),
 )
-#let (init, slides, touying-outline, alert) = utils.methods(s)
-#show: init
 
-#show strong: alert
-
-#let (slide, empty-slide, title-slide, focus-slide, matrix-slide) = utils.slides(s)
-#show: slides.with(title-slide: false)
+#set heading(numbering: numbly("{1}.", default: "1.1"))
 
 #title-slide(authors: ([Author A], [Author B]))
 
@@ -23,13 +23,7 @@
 
 == Slide Title
 
-#slide[
-  #lorem(40)
-]
-
-#slide(subtitle: emph[What is the problem?])[
-  #lorem(40)
-]
+#lorem(40)
 
 #focus-slide[
   Another variant with primary color in background...
