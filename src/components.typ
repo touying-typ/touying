@@ -1,5 +1,6 @@
 #import "utils.typ"
 
+#let _typst-builtin-numbering = numbering
 
 #let cell = block.with(width: 100%, height: 100%, above: 0pt, below: 0pt, outset: 0pt, breakable: false)
 
@@ -148,18 +149,20 @@
     // start page and end page
     let start-page = 1
     let end-page = calc.inf
-    let current-heading = utils.current-heading(level: level)
-    if current-heading != none {
-      start-page = current-heading.location().page()
-      if level != auto {
-        let next-headings = query(
-          selector(heading.where(level: level)).after(inclusive: false, current-heading.location()),
-        )
-        if next-headings != () {
-          end-page = next-headings.at(0).location().page()
+    if level != none {
+      let current-heading = utils.current-heading(level: level)
+      if current-heading != none {
+        start-page = current-heading.location().page()
+        if level != auto {
+          let next-headings = query(
+            selector(heading.where(level: level)).after(inclusive: false, current-heading.location()),
+          )
+          if next-headings != () {
+            end-page = next-headings.at(0).location().page()
+          }
+        } else {
+          end-page = start-page + 1
         }
-      } else {
-        end-page = start-page + 1
       }
     }
     show outline.entry: it => transform(
@@ -189,6 +192,8 @@
 ///
 /// - `paged` is a boolean array indicating whether the headings should be paged. Default is `false`.
 ///
+/// - `numbering` is an array of numbering strings for the headings. Default is `()`.
+///
 /// - `text-fill` is an array of colors for the text fill of the headings. Default is `none`.
 ///
 /// - `text-size` is an array of sizes for the text of the headings. Default is `none`.
@@ -215,6 +220,7 @@
   numbered: (false,),
   filled: (false,),
   paged: (false,),
+  numbering: (),
   text-fill: none,
   text-size: none,
   text-weight: none,
@@ -255,8 +261,14 @@
         it.level,
         {
           if array-at(numbered, it.level - 1) {
-            numbering(it.element.numbering, ..counter(heading).at(it.element.location()))
-            h(.3em)
+            let current-numbering = numbering.at(it.level - 1, default: it.element.numbering)
+            if current-numbering != none {
+              _typst-builtin-numbering(
+                current-numbering,
+                ..counter(heading).at(it.element.location()),
+              )
+              h(.3em)
+            }
           }
           link(
             it.element.location(),
@@ -274,7 +286,7 @@
                 },
               )
               if array-at(paged, it.level - 1) {
-                numbering(
+                _typst-builtin-numbering(
                   if page.numbering != none {
                     page.numbering
                   } else {

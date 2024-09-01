@@ -1,5 +1,7 @@
 #import "pdfpc.typ"
 
+#let _typst-builtin-numbering = numbering
+
 /// Add a dictionary to another dictionary recursively
 ///
 /// Example: `add-dicts((a: (b: 1), (a: (c: 2))` returns `(a: (b: 1, c: 2)`
@@ -334,7 +336,10 @@
     } else {
       current-heading => {
         if numbered and current-heading.numbering != none {
-          numbering(current-heading.numbering, ..counter(heading).at(current-heading.location())) + h(.3em)
+          _typst-builtin-numbering(
+            current-heading.numbering,
+            ..counter(heading).at(current-heading.location()),
+          ) + h(.3em)
         }
         current-heading.body
       }
@@ -342,6 +347,27 @@
     let current-heading = current-heading(level: level, hierachical: hierachical, depth: depth)
     if current-heading != none {
       setting(sty(current-heading))
+    }
+  }
+)
+
+
+/// Display the current heading number on the page.
+///
+/// - `level` is the level of the heading. If `level` is `auto`, it will return the last heading on or before the current page. If `level` is a number, it will return the last heading on or before the current page with the same level.
+///
+/// - `numbering` is the numbering of the heading. If `numbering` is `auto`, it will use the numbering of the heading. If `numbering` is a string, it will use the string as the numbering.
+///
+/// - `hierachical` is a boolean value to indicate whether to return the heading hierachically. If `hierachical` is `true`, it will return the last heading according to the hierachical structure. If `hierachical` is `false`, it will return the last heading on or before the current page with the same level.
+///
+/// - `depth` is the maximum depth of the heading to search. Usually, it should be set as slide-level.
+#let display-current-heading-number(level: auto, numbering: auto, hierachical: true, depth: 9999) = (
+  context {
+    let current-heading = current-heading(level: level, hierachical: hierachical, depth: depth)
+    if current-heading != none and numbering == auto and current-heading.numbering != none {
+      _typst-builtin-numbering(current-heading.numbering, ..counter(heading).at(current-heading.location()))
+    } else if current-heading != none and numbering != auto {
+      _typst-builtin-numbering(numbering, ..counter(heading).at(current-heading.location()))
     }
   }
 )

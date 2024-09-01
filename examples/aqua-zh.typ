@@ -1,21 +1,22 @@
 #import "../lib.typ": *
+#import themes.aqua: *
 
-#let s = themes.aqua.register(aspect-ratio: "16-9", lang: "zh")
-#let s = (s.methods.info)(
-  self: s,
-  title: [标题],
-  subtitle: [副标题],
-  author: [作者],
-  date: datetime.today(),
-  institution: [机构],
+#show: aqua-theme.with(
+  aspect-ratio: "16-9",
+  config-info(
+    title: [标题],
+    subtitle: [副标题],
+    author: [作者],
+    date: datetime.today(),
+    institution: [机构],
+  ),
 )
-#let (init, slides, touying-outline, alert) = utils.methods(s)
-#show: init
 
-#show strong: alert
+#set text(lang: "zh")
 
-#let (slide, empty-slide, title-slide, outline-slide, focus-slide) = utils.slides(s)
-#show: slides
+#title-slide()
+
+#outline-slide()
 
 = 第一节
 
@@ -31,10 +32,12 @@
 
 == 总结
 
-#align(center + horizon)[
-  #set text(size: 3em, weight: "bold", s.colors.primary)
+#slide(self => [
+  #align(center + horizon)[
+    #set text(size: 3em, weight: "bold", self.colors.primary)
 
-  THANKS FOR ALL
+    THANKS FOR ALL
 
-  敬请指正！
-]
+    敬请指正！
+  ]
+])
