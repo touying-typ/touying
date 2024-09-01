@@ -92,6 +92,7 @@
   if type(label-name) == label {
     [#it#label-name]
   } else {
+    assert(type(label-name) == str, message: repr(label-name))
     [#it#label(label-name)]
   }
 }
@@ -111,13 +112,13 @@
   let _ = fields.remove(body-name, default: none)
   if named {
     if label != none {
-      return label-it(label, (it.func())(..fields, ..new-body))
+      return label-it((it.func())(..fields, ..new-body), label)
     } else {
       return (it.func())(..fields, ..new-body)
     }
   } else {
     if label != none {
-      return label-it(label, (it.func())(..fields.values(), ..new-body))
+      return label-it((it.func())(..fields.values(), ..new-body), label)
     } else {
       return (it.func())(..fields.values(), ..new-body)
     }

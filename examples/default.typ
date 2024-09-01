@@ -24,7 +24,7 @@
 
 = Outline  <touying:hidden>
 
-#outline(title: none, indent: 1em)
+#utils.adaptive-columns(outline(title: none, indent: 1em))
 
 = Title
 

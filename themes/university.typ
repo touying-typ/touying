@@ -45,8 +45,8 @@
       block(
         inset: (x: .5em),
         components.left-and-right(
-          text(fill: self.colors.primary, weight: "bold", size: 1.2em, self.store.header),
-          text(fill: self.colors.primary.lighten(65%), self.store.header-right),
+          text(fill: self.colors.primary, weight: "bold", size: 1.2em, utils.call-or-display(self, self.store.header)),
+          text(fill: self.colors.primary.lighten(65%), utils.call-or-display(self, self.store.header-right)),
         ),
       ),
     )
@@ -89,7 +89,7 @@
 /// #show: university-theme.with(
 ///   config-info(
 ///     title: [Title],
-///     logo: emoji.city,
+///     logo: emoji.school,
 ///   ),
 /// )
 ///
@@ -114,7 +114,7 @@
   }
   let body = {
     if info.logo != none {
-      align(right, info.logo)
+      align(right, text(fill: self.colors.primary, info.logo))
     }
     align(
       center + horizon,
@@ -256,7 +256,7 @@
   aspect-ratio: "16-9",
   progress-bar: true,
   header: utils.display-current-heading(level: 2),
-  header-right: utils.display-current-heading(level: 1),
+  header-right: self => utils.display-current-heading(level: 1) + h(.3em) + self.info.logo,
   footer-columns: (25%, 1fr, 25%),
   footer-a: self => self.info.author,
   footer-b: self => if self.info.short-title == auto {

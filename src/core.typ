@@ -574,7 +574,7 @@
 /// - `scope` is the scope when we use `eval()` function to evaluate the equation.
 ///
 /// - `body` is the content of the equation. It should be a string, a raw text or a function that receives `self` as an argument and returns a string.
-#let touying-equation(block: true, numbering: none, supplement: auto, scope: (:), body) = utils.label(
+#let touying-equation(block: true, numbering: none, supplement: auto, scope: (:), body) = utils.label-it(
   metadata((
     kind: "touying-equation",
     block: block,
