@@ -497,37 +497,6 @@
 }
 
 
-/// Adaptive columns layout
-///
-/// Example: `utils.adaptive-columns(outline())`
-///
-/// - `gutter` is the space between columns.
-///
-/// - `max-count` is the maximum number of columns.
-///
-/// - `start` is the content to place before the columns.
-///
-/// - `end` is the content to place after the columns.
-///
-/// - `body` is the content to place in the columns.
-#let adaptive-columns(gutter: 4%, max-count: 3, start: none, end: none, body) = layout(size => {
-  let n = calc.min(
-    calc.ceil(measure(body).height / (size.height - measure(start).height - measure(end).height)),
-    max-count,
-  )
-  if n < 1 {
-    n = 1
-  }
-  start
-  if n == 1 {
-    body
-  } else {
-    columns(n, body)
-  }
-  end
-})
-
-
 /// Fit content to specified height.
 ///
 /// Example: `#utils.fit-to-height(1fr)[BIG]`

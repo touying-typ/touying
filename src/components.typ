@@ -4,6 +4,37 @@
 #let cell = block.with(width: 100%, height: 100%, above: 0pt, below: 0pt, outset: 0pt, breakable: false)
 
 
+/// Adaptive columns layout
+///
+/// Example: `components.adaptive-columns(outline())`
+///
+/// - `gutter` is the space between columns.
+///
+/// - `max-count` is the maximum number of columns.
+///
+/// - `start` is the content to place before the columns.
+///
+/// - `end` is the content to place after the columns.
+///
+/// - `body` is the content to place in the columns.
+#let adaptive-columns(gutter: 4%, max-count: 3, start: none, end: none, body) = layout(size => {
+  let n = calc.min(
+    calc.ceil(measure(body).height / (size.height - measure(start).height - measure(end).height)),
+    max-count,
+  )
+  if n < 1 {
+    n = 1
+  }
+  start
+  if n == 1 {
+    body
+  } else {
+    columns(n, body)
+  }
+  end
+})
+
+
 /// Touying progress bar.
 ///
 /// - `primary` is the color of the progress bar.

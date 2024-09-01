@@ -59,9 +59,9 @@
 
 #title-slide()
 
-== Outline  <touying:hidden>
+== Outline <touying:hidden>
 
-#utils.adaptive-columns(outline(title: none, indent: 1em))
+#components.adaptive-columns(outline(title: none, indent: 1em))
 
 = Animation
 
@@ -230,5 +230,7 @@ Fletcher Animation in Touying:
 #show: appendix
 
 = Appendix
+
+== Appendix
 
 Please pay attention to the current slide number.

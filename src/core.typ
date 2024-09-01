@@ -153,6 +153,7 @@
         recaller-map,
       )
       result.push(cont)
+      horizontal-line = false
     }
     // Main logic
     if utils.is-kind(child, "touying-slide-wrapper") {

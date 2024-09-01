@@ -177,7 +177,7 @@
   )
   touying-slide(
     self: self,
-    utils.adaptive-columns(
+    components.adaptive-columns(
       start: text(
         1.2em,
         fill: self.colors.primary,
@@ -208,7 +208,7 @@
   )
   touying-slide(
     self: self,
-    utils.adaptive-columns(
+    components.adaptive-columns(
       start: text(
         1.2em,
         fill: self.colors.primary,
