@@ -22,7 +22,7 @@
 
 #set heading(numbering: numbly("{1}.", default: "1.1"))
 
-= Outline  <touying:hidden>
+= Outline <touying:hidden>
 
 #components.adaptive-columns(outline(title: none, indent: 1em))
 
