@@ -51,6 +51,7 @@
     config-page(
       header: header,
       footer: footer,
+      fill: self.colors.neutral-lightest,
     ),
     config-common(subslide-preamble: self.store.subslide-preamble),
   )
@@ -143,13 +144,9 @@
   ..args,
   body,
 ) = {
-  set text(fill: foreground, size: 25pt)
-  show footnote.entry: set text(size: .6em)
-
   show: touying-slides.with(
     config-page(
       paper: "presentation-" + aspect-ratio,
-      fill: background,
       margin: 2em,
     ),
     config-common(
@@ -160,6 +157,8 @@
     ),
     config-methods(
       init: (self: none, body) => {
+        set text(fill: self.colors.neutral-darkest, size: 25pt)
+        show footnote.entry: set text(size: .6em)
         show strong: self.methods.alert.with(self: self)
         show heading.where(level: self.slide-level + 1): set text(1.4em)
 

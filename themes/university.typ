@@ -116,7 +116,7 @@
   }
   let body = {
     if info.logo != none {
-      align(right, text(fill: self.colors.primary, info.logo))
+      place(right, text(fill: self.colors.primary, info.logo))
     }
     align(
       center + horizon,
