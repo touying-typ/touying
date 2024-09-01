@@ -666,7 +666,8 @@
 
 
 // parse touying equation, and get the repetitions
-#let _parse-touying-equation(self: none, need-cover: true, base: 1, index: 1, eqt) = {
+#let _parse-touying-equation(self: none, need-cover: true, base: 1, index: 1, eqt-metadata) = {
+  let eqt = eqt-metadata.value
   let result-arr = ()
   // repetitions
   let repetitions = base
@@ -724,30 +725,33 @@
     result.push("cover(" + cover-arr.sum() + ")")
     cover-arr = ()
   }
-  result-arr.push(
-    math.equation(
-      block: eqt.block,
-      numbering: eqt.numbering,
-      supplement: eqt.supplement,
-      eval(
-        "$" + result.sum(default: "") + "$",
-        scope: eqt.scope + (
-          cover: (..args) => {
-            let cover = eqt.scope.at("cover", default: cover)
-            if args.pos().len() != 0 {
-              cover(args.pos().first())
-            }
-          },
-        ),
+  let equation = math.equation(
+    block: eqt.block,
+    numbering: eqt.numbering,
+    supplement: eqt.supplement,
+    eval(
+      "$" + result.sum(default: "") + "$",
+      scope: eqt.scope + (
+        cover: (..args) => {
+          let cover = eqt.scope.at("cover", default: cover)
+          if args.pos().len() != 0 {
+            cover(args.pos().first())
+          }
+        },
       ),
     ),
   )
+  if eqt-metadata.has("label") and eqt-metadata.label != <touying-temporary-mark> {
+    equation = utils.label-it(equation, eqt-metadata.label)
+  }
+  result-arr.push(equation)
   max-repetitions = calc.max(max-repetitions, repetitions)
   return (result-arr, max-repetitions)
 }
 
 // parse touying mitex, and get the repetitions
-#let _parse-touying-mitex(self: none, need-cover: true, base: 1, index: 1, eqt) = {
+#let _parse-touying-mitex(self: none, need-cover: true, base: 1, index: 1, eqt-metadata) = {
+  let eqt = eqt-metadata.value
   let result-arr = ()
   // repetitions
   let repetitions = base
@@ -803,14 +807,16 @@
     result.push("\\phantom{" + cover-arr.sum() + "}")
     cover-arr = ()
   }
-  result-arr.push(
-    (eqt.mitex)(
-      block: eqt.block,
-      numbering: eqt.numbering,
-      supplement: eqt.supplement,
-      result.sum(default: ""),
-    ),
+  let equation = (eqt.mitex)(
+    block: eqt.block,
+    numbering: eqt.numbering,
+    supplement: eqt.supplement,
+    result.sum(default: ""),
   )
+  if eqt-metadata.has("label") and eqt-metadata.label != <touying-temporary-mark> {
+    equation = utils.label-it(equation, eqt-metadata.label)
+  }
+  result-arr.push(equation)
   max-repetitions = calc.max(max-repetitions, repetitions)
   return (result-arr, max-repetitions)
 }
@@ -884,6 +890,11 @@
   show-delayed-wrapper: false,
   ..bodies,
 ) = {
+  let labeled(func) = {
+    return not (
+      "repeat" in self and "subslide" in self and "label-only-on-last-subslide" in self and func in self.label-only-on-last-subslide and self.subslide != self.repeat
+    )
+  }
   let bodies = bodies.pos()
   let result-arr = ()
   // repetitions
@@ -940,7 +951,7 @@
             need-cover: repetitions <= index,
             base: repetitions,
             index: index,
-            child.value,
+            child,
           )
           let cont = conts.first()
           if repetitions <= index or not need-cover {
@@ -956,7 +967,7 @@
             need-cover: repetitions <= index,
             base: repetitions,
             index: index,
-            child.value,
+            child,
           )
           let cont = conts.first()
           if repetitions <= index or not need-cover {
@@ -1056,9 +1067,9 @@
         )
         let cont = conts.first()
         if repetitions <= index or not need-cover {
-          result.push(utils.reconstruct(child, cont))
+          result.push(utils.reconstruct(child, labeled: labeled(child.func()), cont))
         } else {
-          cover-arr.push(utils.reconstruct(child, cont))
+          cover-arr.push(utils.reconstruct(child, labeled: labeled(child.func()), cont))
         }
         repetitions = nextrepetitions
       } else if type(child) == content and child.func() in (table, grid, stack) {
@@ -1071,9 +1082,9 @@
           ..child.children,
         )
         if repetitions <= index or not need-cover {
-          result.push(utils.reconstruct-table-like(child, conts))
+          result.push(utils.reconstruct-table-like(child, labeled: labeled(child.func()), conts))
         } else {
-          cover-arr.push(utils.reconstruct-table-like(child, conts))
+          cover-arr.push(utils.reconstruct-table-like(child, labeled: labeled(child.func()), conts))
         }
         repetitions = nextrepetitions
       } else if type(child) == content and child.func() in (
@@ -1101,6 +1112,7 @@
         square,
         table.cell,
         grid.cell,
+        math.equation,
       ) {
         let (conts, nextrepetitions) = _parse-content-into-results-and-repetitions(
           self: self,
@@ -1111,9 +1123,9 @@
         )
         let cont = conts.first()
         if repetitions <= index or not need-cover {
-          result.push(utils.reconstruct(named: true, child, cont))
+          result.push(utils.reconstruct(named: true, labeled: labeled(child.func()), child, cont))
         } else {
-          cover-arr.push(utils.reconstruct(named: true, child, cont))
+          cover-arr.push(utils.reconstruct(named: true, labeled: labeled(child.func()), child, cont))
         }
         repetitions = nextrepetitions
       } else if type(child) == content and child.func() == terms.item {

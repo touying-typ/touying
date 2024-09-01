@@ -101,23 +101,25 @@
 ///
 /// - `body-name` is the property name of the body field
 ///
+/// - `labeled` is a boolean indicating whether the fields should be labeled
+///
 /// - `named` is a boolean indicating whether the fields should be named
 ///
 /// - `it` is the content to reconstruct
 ///
 /// - `new-body` is the new body you want to replace the old body with
-#let reconstruct(body-name: "body", named: false, it, ..new-body) = {
+#let reconstruct(body-name: "body", labeled: true, named: false, it, ..new-body) = {
   let fields = it.fields()
   let label = fields.remove("label", default: none)
   let _ = fields.remove(body-name, default: none)
   if named {
-    if label != none {
+    if label != none and labeled {
       return label-it((it.func())(..fields, ..new-body), label)
     } else {
       return (it.func())(..fields, ..new-body)
     }
   } else {
-    if label != none {
+    if label != none and labeled {
       return label-it((it.func())(..fields.values(), ..new-body), label)
     } else {
       return (it.func())(..fields.values(), ..new-body)
@@ -133,8 +135,8 @@
 /// - `it` is the content to reconstruct
 ///
 /// - `new-children` is the new children you want to replace the old children with
-#let reconstruct-table-like(named: true, it, new-children) = {
-  reconstruct(body-name: "children", named: named, it, ..new-children)
+#let reconstruct-table-like(named: true, labeled: true, it, new-children) = {
+  reconstruct(body-name: "children", named: named, labeled: labeled, it, ..new-children)
 }
 
 

@@ -42,9 +42,7 @@
 
 #show: university-theme.with(
   aspect-ratio: "16-9",
-  // Set the speaker notes configuration, you can show it by pympress
-  // config-common(align-list-marker-with-baseline: right),
-
+  // config-common(handout: true),
   config-info(
     title: [Title],
     subtitle: [Subtitle],
@@ -111,12 +109,12 @@ use #only("2-")[`#only` function] for not reserving space,
 
 == Math Equation Animation
 
-Touying equation with `pause`:
+Equation with `pause`:
 
-#touying-equation(`
+$
   f(x) &= pause x^2 + 2x + 1  \
-        &= pause (x + 1)^2  \
-`)
+       &= pause (x + 1)^2  \
+$
 
 #meanwhile
 
