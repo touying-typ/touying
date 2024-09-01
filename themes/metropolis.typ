@@ -7,6 +7,8 @@
 
 /// Default slide function for the presentation.
 ///
+/// - `title` is the title of the slide. Default is `auto`.
+///
 /// - `config` is the configuration of the slide. You can use `config-xxx` to set the configuration of the slide. For more several configurations, you can use `utils.merge-dicts` to merge them.
 ///
 /// - `repeat` is the number of subslides. Default is `auto`，which means touying will automatically calculate the number of subslides.
@@ -19,9 +21,9 @@
 ///
 ///   For example, `#slide(composer: (1fr, 2fr, 1fr))[A][B][C]` to split the slide into three parts. The first and the last parts will take 1/4 of the slide, and the second part will take 1/2 of the slide.
 ///
-///   If you pass a non-function value like `(1fr, 2fr, 1fr)`, it will be assumed to be the first argument of the `utils.side-by-side` function.
+///   If you pass a non-function value like `(1fr, 2fr, 1fr)`, it will be assumed to be the first argument of the `components.side-by-side` function.
 ///
-///   The `utils.side-by-side` function is a simple wrapper of the `grid` function. It means you can use the `grid.cell(colspan: 2, ..)` to make the cell take 2 columns.
+///   The `components.side-by-side` function is a simple wrapper of the `grid` function. It means you can use the `grid.cell(colspan: 2, ..)` to make the cell take 2 columns.
 ///
 ///   For example, `#slide(composer: 2)[A][B][#grid.cell(colspan: 2)[Footer]] will make the `Footer` cell take 2 columns.
 ///
@@ -29,7 +31,7 @@
 ///
 /// - `..bodies` is the contents of the slide. You can call the `slide` function with syntax like `#slide[A][B][C]` to create a slide.
 #let slide(
-  title: none,
+  title: auto,
   align: auto,
   config: (:),
   repeat: auto,
@@ -49,7 +51,7 @@
     set text(fill: self.colors.neutral-lightest, weight: "medium", size: 1.2em)
     components.left-and-right(
       {
-        if title != none {
+        if title != auto {
           utils.fit-to-width.with(grow: false, 100%, title)
         } else {
           utils.call-or-display(self, self.store.header)
@@ -221,10 +223,37 @@
 /// ```
 ///
 /// - `aspect-ratio` is the aspect ratio of the slides. Default is `16-9`.
+///
+/// - `align` is the alignment of the content. Default is `horizon`.
+///
+/// - `header` is the header of the slide. Default is `utils.display-current-heading(setting: utils.fit-to-width.with(grow: false, 100%))`.
+///
+/// - `header-right` is the right part of the header. Default is `self => self.info.logo`.
+///
+/// - `footer` is the footer of the slide. Default is `none`.
+///
+/// - `footer-right` is the right part of the footer. Default is `context utils.slide-counter.display() + " / " + utils.last-slide-number`.
+///
+/// - `footer-progress` is whether to show the progress bar in the footer. Default is `true`.
+///
+/// ----------------------------------------
+///
+/// The default colors:
+///
+/// ```typ
+/// config-colors(
+///   primary: rgb("#eb811b"),
+///   primary-light: rgb("#d6c6b7"),
+///   secondary: rgb("#23373b"),
+///   neutral-lightest: rgb("#fafafa"),
+///   neutral-dark: rgb("#23373b"),
+///   neutral-darkest: rgb("#23373b"),
+/// )
+/// ```
 #let metropolis-theme(
   aspect-ratio: "16-9",
   align: horizon,
-  header: utils.display-current-heading.with(setting: utils.fit-to-width.with(grow: false, 100%)),
+  header: utils.display-current-heading(setting: utils.fit-to-width.with(grow: false, 100%)),
   header-right: self => self.info.logo,
   footer: none,
   footer-right: context utils.slide-counter.display() + " / " + utils.last-slide-number,

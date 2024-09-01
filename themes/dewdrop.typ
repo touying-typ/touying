@@ -66,9 +66,9 @@
 ///
 ///   For example, `#slide(composer: (1fr, 2fr, 1fr))[A][B][C]` to split the slide into three parts. The first and the last parts will take 1/4 of the slide, and the second part will take 1/2 of the slide.
 ///
-///   If you pass a non-function value like `(1fr, 2fr, 1fr)`, it will be assumed to be the first argument of the `utils.side-by-side` function.
+///   If you pass a non-function value like `(1fr, 2fr, 1fr)`, it will be assumed to be the first argument of the `components.side-by-side` function.
 ///
-///   The `utils.side-by-side` function is a simple wrapper of the `grid` function. It means you can use the `grid.cell(colspan: 2, ..)` to make the cell take 2 columns.
+///   The `components.side-by-side` function is a simple wrapper of the `grid` function. It means you can use the `grid.cell(colspan: 2, ..)` to make the cell take 2 columns.
 ///
 ///   For example, `#slide(composer: 2)[A][B][#grid.cell(colspan: 2)[Footer]] will make the `Footer` cell take 2 columns.
 ///
@@ -247,6 +247,48 @@
 /// ```
 ///
 /// - `aspect-ratio` is the aspect ratio of the slides. Default is `16-9`.
+///
+/// - `navigation` is the navigation of the slides. You can choose from `"sidebar"`, `"mini-slides"`, and `none`. Default is `"sidebar"`.
+///
+/// - `sidebar` is the configuration of the sidebar. You can set the width, filled, numbered, indent, and short-heading of the sidebar. Default is `(width: 10em, filled: false, numbered: false, indent: .5em, short-heading: true)`.
+///   - `width` is the width of the sidebar.
+///   - `filled` is whether the outline in the sidebar is filled.
+///   - `numbered` is whether the outline in the sidebar is numbered.
+///   - `indent` is the indent of the outline in the sidebar.
+///   - `short-heading` is whether the outline in the sidebar is short.
+///
+/// - `mini-slides` is the configuration of the mini-slides. You can set the height, x, display-section, display-subsection, and short-heading of the mini-slides. Default is `(height: 4em, x: 2em, display-section: false, display-subsection: true, short-heading: true)`.
+///   - `height` is the height of the mini-slides.
+///   - `x` is the x of the mini-slides.
+///   - `display-section` is whether the slides of section is displayed in the mini-slides.
+///   - `display-subsection` is whether we add linebreak between subsections.
+///   - `short-heading` is whether the mini-slides is short. Default is `true`.
+///
+/// - `footer` is the footer of the slides. Default is `none`.
+///
+/// - `footer-right` is the right part of the footer. Default is `context utils.slide-counter.display() + " / " + utils.last-slide-number`.
+///
+/// - `primary` is the primary color of the slides. Default is `rgb("#0c4842")`.
+///
+/// - `alpha` is the alpha of transparency. Default is `60%`.
+///
+/// - `outline-title` is the title of the outline. Default is `[Outline]`.
+///
+/// - `subslide-preamble` is the preamble of the subslide. Default is `self => block(text(1.2em, weight: "bold", fill: self.colors.primary, utils.display-current-heading(depth: self.slide-level)))`.
+///
+/// ----------------------------------------
+///
+/// The default colors:
+///
+/// ```typ
+/// config-colors(
+///   neutral-darkest: rgb("#000000"),
+///   neutral-dark: rgb("#202020"),
+///   neutral-light: rgb("#f3f3f3"),
+///   neutral-lightest: rgb("#ffffff"),
+///   primary: rgb("#0c4842"),
+/// )
+/// ```
 #let dewdrop-theme(
   aspect-ratio: "16-9",
   navigation: "sidebar",

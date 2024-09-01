@@ -1,7 +1,5 @@
 #import "../src/exports.typ": *
 
-#let _typst-builtin-align = align
-
 /// Default slide function for the presentation.
 ///
 /// - `config` is the configuration of the slide. You can use `config-xxx` to set the configuration of the slide. For more several configurations, you can use `utils.merge-dicts` to merge them.
@@ -16,9 +14,9 @@
 ///
 ///   For example, `#slide(composer: (1fr, 2fr, 1fr))[A][B][C]` to split the slide into three parts. The first and the last parts will take 1/4 of the slide, and the second part will take 1/2 of the slide.
 ///
-///   If you pass a non-function value like `(1fr, 2fr, 1fr)`, it will be assumed to be the first argument of the `utils.side-by-side` function.
+///   If you pass a non-function value like `(1fr, 2fr, 1fr)`, it will be assumed to be the first argument of the `components.side-by-side` function.
 ///
-///   The `utils.side-by-side` function is a simple wrapper of the `grid` function. It means you can use the `grid.cell(colspan: 2, ..)` to make the cell take 2 columns.
+///   The `components.side-by-side` function is a simple wrapper of the `grid` function. It means you can use the `grid.cell(colspan: 2, ..)` to make the cell take 2 columns.
 ///
 ///   For example, `#slide(composer: 2)[A][B][#grid.cell(colspan: 2)[Footer]] will make the `Footer` cell take 2 columns.
 ///
@@ -26,19 +24,12 @@
 ///
 /// - `..bodies` is the contents of the slide. You can call the `slide` function with syntax like `#slide[A][B][C]` to create a slide.
 #let slide(
-  title: none,
-  align: auto,
   config: (:),
   repeat: auto,
   setting: body => body,
   composer: auto,
   ..bodies,
 ) = touying-slide-wrapper(self => {
-  if align != auto {
-    self.store.align = align
-  }
-  // restore typst builtin align function
-  let align = _typst-builtin-align
   let header(self) = {
     place(
       center + top,
@@ -115,6 +106,9 @@
 })
 
 
+/// Outline slide for the presentation.
+///
+/// - `leading` is the leading of paragraphs in the outline. Default is `50pt`.
 #let outline-slide(leading: 50pt) = touying-slide-wrapper(self => {
   set text(size: 30pt, fill: self.colors.primary)
   set par(leading: leading)
@@ -176,10 +170,8 @@
 ///
 /// - `level` is the level of the heading.
 ///
-/// - `numbered` is whether the heading is numbered.
-///
 /// - `title` is the title of the section. It will be pass by touying automatically.
-#let new-section-slide(level: 1, numbered: true, title) = touying-slide-wrapper(self => {
+#let new-section-slide(level: 1, title) = touying-slide-wrapper(self => {
   let body = {
     stack(
       dir: ttb,
@@ -246,6 +238,23 @@
 /// ```
 ///
 /// - `aspect-ratio` is the aspect ratio of the slides. Default is `16-9`.
+///
+/// - `header` is the header of the slides. Default is `utils.display-current-heading`.
+///
+/// - `footer` is the footer of the slides. Default is `context utils.slide-counter.display()`.
+///
+/// ----------------------------------------
+///
+/// The default colors:
+///
+/// ```typ
+/// config-colors(
+///   primary: rgb("#003F88"),
+///   primary-light: rgb("#2159A5"),
+///   primary-lightest: rgb("#F2F4F8"),
+///   neutral-lightest: rgb("#FFFFFF")
+/// )
+/// ```
 #let aqua-theme(
   aspect-ratio: "16-9",
   header: utils.display-current-heading,

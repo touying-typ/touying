@@ -1056,30 +1056,3 @@
     slide-note-state.update(setting(note))
   }
 }
-
-// SIDE BY SIDE
-
-/// A simple wrapper around `grid` that creates a grid with a single row.
-/// It is useful for creating side-by-side slide.
-///
-/// It is also the default function for composer in the slide function.
-///
-/// Example: `side-by-side[a][b][c]` will display `a`, `b`, and `c` side by side.
-///
-/// - `columns` is the number of columns. Default is `auto`, which means the number of columns is equal to the number of bodies.
-///
-/// - `gutter` is the space between columns. Default is `1em`.
-///
-/// - `..bodies` is the contents to display side by side.
-#let side-by-side(columns: auto, gutter: 1em, ..bodies) = {
-  let bodies = bodies.pos()
-  if bodies.len() == 1 {
-    return bodies.first()
-  }
-  let columns = if columns == auto {
-    (1fr,) * bodies.len()
-  } else {
-    columns
-  }
-  grid(columns: columns, gutter: gutter, ..bodies)
-}

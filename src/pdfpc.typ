@@ -50,6 +50,7 @@
   [#metadata(pdfpc)<pdfpc-file>]
 }
 
+/// Add some speaker notes to the slide for exporting to pdfpc file.
 #let speaker-note(text) = {
   let text = if type(text) == str {
     text
@@ -73,6 +74,42 @@
   #metadata((t: "HiddenSlide")) <pdfpc>
 ]
 
+
+/// Configuration for the pdfpc export. You can export the pdfpc file by shell command `typst query --root . ./example.typ --field value --one "<pdfpc-file>" > ./example.pdfpc`.
+///
+/// Example:
+///
+/// ```typ
+/// #pdfpc.config(
+///   duration-minutes: 30,
+///   start-time: datetime(hour: 14, minute: 10, second: 0),
+///   end-time: datetime(hour: 14, minute: 40, second: 0),
+///   last-minutes: 5,
+///   note-font-size: 12,
+///   disable-markdown: false,
+///   default-transition: (
+///     type: "push",
+///     duration-seconds: 2,
+///     angle: ltr,
+///     alignment: "vertical",
+///     direction: "inward",
+///   ),
+/// )
+/// ```
+///
+/// - `duration-minutes` is the duration of the presentation in minutes.
+///
+/// - `start-time` is the start time of the presentation.
+///
+/// - `end-time` is the end time of the presentation.
+///
+/// - `last-minutes` is the number of minutes to show the last slide.
+///
+/// - `note-font-size` is the font size of the speaker notes.
+///
+/// - `disable-markdown` is a flag to disable markdown in the speaker notes.
+///
+/// - `default-transition` is the default transition for the slides.
 #let config(
   duration-minutes: none,
   start-time: none,

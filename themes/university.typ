@@ -18,9 +18,9 @@
 ///
 ///   For example, `#slide(composer: (1fr, 2fr, 1fr))[A][B][C]` to split the slide into three parts. The first and the last parts will take 1/4 of the slide, and the second part will take 1/2 of the slide.
 ///
-///   If you pass a non-function value like `(1fr, 2fr, 1fr)`, it will be assumed to be the first argument of the `utils.side-by-side` function.
+///   If you pass a non-function value like `(1fr, 2fr, 1fr)`, it will be assumed to be the first argument of the `components.side-by-side` function.
 ///
-///   The `utils.side-by-side` function is a simple wrapper of the `grid` function. It means you can use the `grid.cell(colspan: 2, ..)` to make the cell take 2 columns.
+///   The `components.side-by-side` function is a simple wrapper of the `grid` function. It means you can use the `grid.cell(colspan: 2, ..)` to make the cell take 2 columns.
 ///
 ///   For example, `#slide(composer: 2)[A][B][#grid.cell(colspan: 2)[Footer]] will make the `Footer` cell take 2 columns.
 ///
@@ -95,6 +95,8 @@
 ///
 /// #title-slide(subtitle: [Subtitle])
 /// ```
+///
+/// - `extra` is the extra information of the slide. You can pass the extra information to the `title-slide` function.
 #let title-slide(
   extra: none,
   ..args,
@@ -252,6 +254,34 @@
 /// ```
 ///
 /// - `aspect-ratio` is the aspect ratio of the slides. Default is `16-9`.
+///
+/// - `progress-bar` is whether to show the progress bar. Default is `true`.
+///
+/// - `header` is the header of the slides. Default is `utils.display-current-heading(level: 2)`.
+///
+/// - `header-right` is the right part of the header. Default is `self.info.logo`.
+///
+/// - `footer-columns` is the columns of the footer. Default is `(25%, 1fr, 25%)`.
+///
+/// - `footer-a` is the left part of the footer. Default is `self.info.author`.
+///
+/// - `footer-b` is the middle part of the footer. Default is `self.info.short-title` or `self.info.title`.
+///
+/// - `footer-c` is the right part of the footer. Default is `self => h(1fr) + utils.display-info-date(self) + h(1fr) + context utils.slide-counter.display() + " / " + utils.last-slide-number + h(1fr)`.
+///
+/// ----------------------------------------
+///
+/// The default colors:
+///
+/// ```typ
+/// config-colors(
+///   primary: rgb("#04364A"),
+///   secondary: rgb("#176B87"),
+///   tertiary: rgb("#448C95"),
+///   neutral-lightest: rgb("#ffffff"),
+///   neutral-darkest: rgb("#000000"),
+/// )
+/// ```
 #let university-theme(
   aspect-ratio: "16-9",
   progress-bar: true,

@@ -5,6 +5,34 @@
 #let cell = block.with(width: 100%, height: 100%, above: 0pt, below: 0pt, outset: 0pt, breakable: false)
 
 
+/// SIDE BY SIDE
+///
+/// A simple wrapper around `grid` that creates a grid with a single row.
+/// It is useful for creating side-by-side slide.
+///
+/// It is also the default function for composer in the slide function.
+///
+/// Example: `side-by-side[a][b][c]` will display `a`, `b`, and `c` side by side.
+///
+/// - `columns` is the number of columns. Default is `auto`, which means the number of columns is equal to the number of bodies.
+///
+/// - `gutter` is the space between columns. Default is `1em`.
+///
+/// - `..bodies` is the contents to display side by side.
+#let side-by-side(columns: auto, gutter: 1em, ..bodies) = {
+  let bodies = bodies.pos()
+  if bodies.len() == 1 {
+    return bodies.first()
+  }
+  let columns = if columns == auto {
+    (1fr,) * bodies.len()
+  } else {
+    columns
+  }
+  grid(columns: columns, gutter: gutter, ..bodies)
+}
+
+
 /// Adaptive columns layout
 ///
 /// Example: `components.adaptive-columns(outline())`
@@ -311,7 +339,19 @@
 )
 
 
-
+/// Show mini slides. It is usually used to show the navigation of the presentation in header.
+///
+/// - `self` is the self context, which is used to get the short heading of the headings.
+///
+/// - `fill` is the fill color of the headings. Default is `rgb("000000")`.
+///
+/// - `alpha` is the transparency of the headings. Default is `60%`.
+///
+/// - `display-section` is a boolean indicating whether the sections should be displayed. Default is `false`.
+///
+/// - `display-subsection` is a boolean indicating whether the subsections should be displayed. Default is `true`.
+///
+/// - `short-heading` is a boolean indicating whether the headings should be shortened. Default is `true`.
 #let mini-slides(
   self: none,
   fill: rgb("000000"),

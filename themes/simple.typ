@@ -17,9 +17,9 @@
 ///
 ///   For example, `#slide(composer: (1fr, 2fr, 1fr))[A][B][C]` to split the slide into three parts. The first and the last parts will take 1/4 of the slide, and the second part will take 1/2 of the slide.
 ///
-///   If you pass a non-function value like `(1fr, 2fr, 1fr)`, it will be assumed to be the first argument of the `utils.side-by-side` function.
+///   If you pass a non-function value like `(1fr, 2fr, 1fr)`, it will be assumed to be the first argument of the `components.side-by-side` function.
 ///
-///   The `utils.side-by-side` function is a simple wrapper of the `grid` function. It means you can use the `grid.cell(colspan: 2, ..)` to make the cell take 2 columns.
+///   The `components.side-by-side` function is a simple wrapper of the `grid` function. It means you can use the `grid.cell(colspan: 2, ..)` to make the cell take 2 columns.
 ///
 ///   For example, `#slide(composer: 2)[A][B][#grid.cell(colspan: 2)[Footer]] will make the `Footer` cell take 2 columns.
 ///
@@ -65,6 +65,8 @@
 
 
 /// Title slide for the presentation.
+///
+/// Example: `#title-slide[Hello, World!]`
 #let title-slide(body) = centered-slide(
   config: config-common(freeze-slide-counter: true),
   body,
@@ -102,14 +104,37 @@
 /// ```
 ///
 /// - `aspect-ratio` is the aspect ratio of the slides. Default is `16-9`.
+///
+/// - `header` is the header of the slides. Default is `utils.display-current-heading(setting: utils.fit-to-width.with(grow: false, 100%))`.
+///
+/// - `header-right` is the right part of the header. Default is `self.info.logo`.
+///
+/// - `footer` is the footer of the slides. Default is `none`.
+///
+/// - `footer-right` is the right part of the footer. Default is `context utils.slide-counter.display() + " / " + utils.last-slide-number`.
+///
+/// - `primary` is the primary color of the slides. Default is `aqua.darken(50%)`.
+///
+/// - `subslide-preamble` is the preamble of the subslides. Default is `block(below: 1.5em, text(1.2em, weight: "bold", utils.display-current-heading(level: 2)))`.
+///
+/// ----------------------------------------
+///
+/// The default colors:
+///
+/// ```typ
+/// config-colors(
+///   neutral-light: gray,
+///   neutral-lightest: rgb("#ffffff"),
+///   neutral-darkest: rgb("#000000"),
+///   primary: aqua.darken(50%),
+/// )
+/// ```
 #let simple-theme(
   aspect-ratio: "16-9",
-  header: utils.display-current-heading.with(setting: utils.fit-to-width.with(grow: false, 100%)),
+  header: utils.display-current-heading(setting: utils.fit-to-width.with(grow: false, 100%)),
   header-right: self => self.info.logo,
   footer: none,
   footer-right: context utils.slide-counter.display() + " / " + utils.last-slide-number,
-  background: rgb("#ffffff"),
-  foreground: rgb("#000000"),
   primary: aqua.darken(50%),
   subslide-preamble: block(
     below: 1.5em,
@@ -144,8 +169,8 @@
     ),
     config-colors(
       neutral-light: gray,
-      neutral-lightest: background,
-      neutral-darkest: foreground,
+      neutral-lightest: rgb("#ffffff"),
+      neutral-darkest: rgb("#000000"),
       primary: primary,
     ),
     // save the variables for later use
