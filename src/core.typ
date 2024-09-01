@@ -1,6 +1,7 @@
 #import "utils.typ"
 #import "utils.typ"
 #import "pdfpc.typ"
+#import "components.typ"
 
 /// ------------------------------------------------
 /// Slides
@@ -28,7 +29,7 @@
 )
 
 
-/// Appendix for the presentation. The last-slide-counter will be frozen at the last slide before the appendix.
+/// Appendix for the presentation. The last-slide-counter will be frozen at the last slide before the appendix. It is simple wrapper for `touying-set-config`, just like `#show: touying-set-config.with((appendix: true))`.
 ///
 /// Example: `#show: appendix`
 ///
