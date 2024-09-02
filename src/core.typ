@@ -296,7 +296,7 @@
       // Appendix content
       result.push(
         split-content-into-slides(
-          self: self + child.value.config,
+          self: utils.merge-dicts(self, child.value.config),
           recaller-map: recaller-map,
           new-start: true,
           child.value.body,

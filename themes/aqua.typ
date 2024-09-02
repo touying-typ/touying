@@ -257,7 +257,7 @@
 /// ```
 #let aqua-theme(
   aspect-ratio: "16-9",
-  header: utils.display-current-heading,
+  header: utils.display-current-heading(),
   footer: context utils.slide-counter.display(),
   ..args,
   body,
