@@ -4,3 +4,4 @@
 #import "dewdrop.typ"
 #import "university.typ"
 #import "aqua.typ"
+#import "stargazer.typ"

@@ -1056,3 +1056,23 @@
     slide-note-state.update(setting(note))
   }
 }
+
+
+/// i18n Outline Title
+#let i18n-outline-title = context {
+  let mapping = (
+    ar: "المحتويات",
+    ca: "Índex",
+    cs: "Obsah",
+    da: "Indhold",
+    en: "Outline",
+    es: "Índice",
+    et: "Sisukord",
+    fi: "Sisällys",
+    ja: "目次",
+    ru: "Содержание",
+    zh-TW: "目錄",
+    zh: "目录",
+  )
+  mapping.at(text.lang, default: mapping.en)
+}

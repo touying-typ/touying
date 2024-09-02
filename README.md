@@ -11,7 +11,7 @@ If you like it, consider [giving a star on GitHub](https://github.com/touying-ty
 ![GitHub](https://img.shields.io/github/license/touying-typ/touying)
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/touying-typ/touying)
 ![GitHub Repo stars](https://img.shields.io/github/stars/touying-typ/touying)
-![Themes badge](https://img.shields.io/badge/themes-5-aqua)
+![Themes badge](https://img.shields.io/badge/themes-6-aqua)
 
 ## Document
 
@@ -374,6 +374,7 @@ Thanks to...
 - [@Enivex](https://github.com/Enivex) for the `metropolis` theme
 - [@drupol](https://github.com/drupol) for the `university` theme
 - [@pride7](https://github.com/pride7) for the `aqua` theme
+- [@Coekjan](https://github.com/Coekjan) and [@QuadnucYard](https://github.com/QuadnucYard) for the `stargazer` theme
 - [@ntjess](https://github.com/ntjess) for contributing to `fit-to-height`, `fit-to-width` and `cover-with-rect`
 
 ## Star History

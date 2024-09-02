@@ -167,7 +167,7 @@
 
 
 /// Outline slide for the presentation.
-#let outline-slide(..args) = touying-slide-wrapper(self => {
+#let outline-slide(title: utils.i18n-outline-title, ..args) = touying-slide-wrapper(self => {
   self = utils.merge-dicts(
     self,
     config-page(
@@ -182,7 +182,7 @@
         1.2em,
         fill: self.colors.primary,
         weight: "bold",
-        utils.call-or-display(self, self.store.outline-title),
+        utils.call-or-display(self, title),
       ),
       text(
         fill: self.colors.neutral-darkest,
@@ -272,7 +272,7 @@
 ///
 /// - `alpha` is the alpha of transparency. Default is `60%`.
 ///
-/// - `outline-title` is the title of the outline. Default is `[Outline]`.
+/// - `outline-title` is the title of the outline. Default is `utils.i18n-outline-title`.
 ///
 /// - `subslide-preamble` is the preamble of the subslide. Default is `self => block(text(1.2em, weight: "bold", fill: self.colors.primary, utils.display-current-heading(depth: self.slide-level)))`.
 ///
@@ -298,7 +298,6 @@
   footer-right: context utils.slide-counter.display() + " / " + utils.last-slide-number,
   primary: rgb("#0c4842"),
   alpha: 60%,
-  outline-title: [Outline],
   subslide-preamble: self => block(
     text(1.2em, weight: "bold", fill: self.colors.primary, utils.display-current-heading(depth: self.slide-level)),
   ),
@@ -349,7 +348,6 @@
       footer: footer,
       footer-right: footer-right,
       alpha: alpha,
-      outline-title: outline-title,
       subslide-preamble: subslide-preamble,
     ),
     ..args,

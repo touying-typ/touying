@@ -265,13 +265,18 @@
   transform: (cover: false, alpha: alpha, ..args, it) => {
     let array-at(arr, idx) = arr.at(idx, default: arr.last())
     let set-text(level, body) = {
-      set text(fill: (
-        if cover {
-          utils.update-alpha(array-at(text-fill, level - 1), alpha)
-        } else {
+      set text(fill: {
+        let text-color = if type(text-fill) == array and text-fill.len() > 0 {
           array-at(text-fill, level - 1)
+        } else {
+          text.fill
         }
-      )) if type(text-fill) == array and text-fill.len() > 0
+        if cover {
+          utils.update-alpha(text-color, alpha)
+        } else {
+          text-color
+        }
+      })
       set text(
         size: array-at(text-size, level - 1),
       ) if type(text-size) == array and text-size.len() > 0
@@ -458,4 +463,78 @@
     set text(size: .7em)
     grid(columns: cols.map(_ => auto).intersperse(1fr), ..cols.intersperse([]))
   }
+)
+
+
+
+#let simple-navigation(
+  self: none,
+  short-heading: true,
+  primary: white,
+  secondary: gray,
+  background: black,
+  logo: none,
+) = (
+  context {
+    let body() = {
+      let sections = query(heading.where(level: 1))
+      if sections.len() == 0 {
+        return
+      }
+      let current-page = here().page()
+      set text(size: 0.5em)
+      for (section, next-section) in sections.zip(sections.slice(1) + (none,)) {
+        set text(fill: if section.location().page() <= current-page and (
+          next-section == none or current-page < next-section.location().page()
+        ) {
+          primary
+        } else {
+          secondary
+        })
+        box(inset: 0.5em)[#link(
+            section.location(),
+            if short-heading {
+              utils.short-heading(self: self, section)
+            } else {
+              section.body
+            },
+          )<touying-link>]
+      }
+    }
+    block(
+      fill: background,
+      inset: 0pt,
+      outset: 0pt,
+      grid(
+        align: center + horizon,
+        columns: (1fr, auto),
+        rows: 1.8em,
+        gutter: 0em,
+        cell(
+          fill: background,
+          body(),
+        ),
+        block(fill: background, inset: 4pt, height: 100%, text(fill: primary, logo)),
+      ),
+    )
+  }
+)
+
+
+/// LaTeX-like knob marker for list
+///
+/// Example: `#set list(marker: components.knob-marker(primary: rgb("005bac")))`
+#let knob-marker(primary: rgb("#005bac")) = box(
+  width: 0.5em,
+  place(
+    dy: 0.1em,
+    circle(
+      fill: gradient.radial(
+        primary.lighten(100%),
+        primary.darken(40%),
+        focal-center: (30%, 30%),
+      ),
+      radius: 0.25em,
+    ),
+  ),
 )
