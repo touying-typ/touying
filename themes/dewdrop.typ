@@ -197,8 +197,10 @@
 ///
 /// Example: `config-common(new-section-slide-fn: new-section-slide.with(numbered: false))`
 ///
-/// - `title` is the title of the section. It will be pass by touying automatically.
-#let new-section-slide(..args, title) = touying-slide-wrapper(self => {
+/// - `title` is the title of the slide. Default is `utils.i18n-outline-title`.
+///
+/// - `body` is the contents of the slide.
+#let new-section-slide(title: utils.i18n-outline-title, ..args, body) = touying-slide-wrapper(self => {
   self = utils.merge-dicts(
     self,
     config-page(
@@ -213,7 +215,7 @@
         1.2em,
         fill: self.colors.primary,
         weight: "bold",
-        utils.call-or-display(self, self.store.outline-title),
+        utils.call-or-display(self, title),
       ),
       text(
         fill: self.colors.neutral-darkest,
