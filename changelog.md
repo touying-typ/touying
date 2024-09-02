@@ -72,6 +72,7 @@ For detailed changes to specific themes, you can refer to the `themes` directory
 
 **Other Changes:**
 
+- theme(stargazer): new stargazer theme modified from [Coekjan/touying-buaa](https://github.com/Coekjan/touying-buaa).
 - feat: implemented fake frozen states support, allowing you to use numbering and `#pause` normally. This behavior can be controlled with `enable-frozen-states-and-counters`, `frozen-states`, and `frozen-counters` in `config-common()`.
 - feat: implemented `label-only-on-last-subslide` functionality to prevent non-unique label warnings when working with `@equation` and `@figure` in conjunction with `#pause` animations.
 - feat: added the `touying-recall(<label>)` function to replay a specific slide.

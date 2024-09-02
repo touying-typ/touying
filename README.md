@@ -1,8 +1,8 @@
 # [Touying](https://github.com/touying-typ/touying) ![logo](https://github.com/touying-typ/touying/assets/34951714/2aa394d3-2319-4572-aef7-ed3c14b09846)
 
-[Touying](https://github.com/touying-typ/touying) (投影 in chinese, /tóuyǐng/, meaning projection) is a powerful and efficient package for creating presentation slides in Typst. Partial code is inherited from [Polylux](https://github.com/andreasKroepelin/polylux). Therefore, many concepts and APIs remain consistent with Polylux.
+[Touying](https://github.com/touying-typ/touying) (投影 in chinese, /tóuyǐng/, meaning projection) is a user-friendly, powerful and efficient package for creating presentation slides in Typst. Partial code is inherited from [Polylux](https://github.com/andreasKroepelin/polylux). Therefore, many concepts and APIs remain consistent with Polylux.
 
-Touying provides automatically injected global configurations. Besides, Touying does not rely on `counter` and `locate` to implement `#pause`, resulting in better performance.
+Touying provides automatically injected global configurations, which is convenient for configuring themes. Besides, Touying does not rely on `counter` and `locate` to implement `#pause`, resulting in better performance.
 
 If you like it, consider [giving a star on GitHub](https://github.com/touying-typ/touying). Touying is a community-driven project, feel free to suggest any ideas and contribute.
 
@@ -63,7 +63,7 @@ Hello, Typst!
 
 ![image](https://github.com/touying-typ/touying/assets/34951714/24ca19a3-b27c-4d31-ab75-09c37911e6ac)
 
-3. `touying-equation` Math Equation Animation [document](https://touying-typ.github.io/touying/docs/dynamic/equation)
+3. Math Equation Animation [document](https://touying-typ.github.io/touying/docs/dynamic/equation)
 
 ![image](https://github.com/touying-typ/touying/assets/34951714/8640fe0a-95e4-46ac-b570-c8c79f993de4)
 
@@ -363,7 +363,7 @@ Fletcher Animation in Touying:
 Please pay attention to the current slide number.
 ```
 
-![image](https://github.com/touying-typ/touying/assets/34951714/5ac2b11c-9e77-4389-ade6-682c9fc3e1fb)
+![example](https://github.com/user-attachments/assets/3488f256-a0b3-43d0-a266-009d9d0a7bd3)
 
 
 ## Acknowledgements
