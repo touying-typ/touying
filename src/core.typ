@@ -273,7 +273,7 @@
       let _ = fields.remove("body", default: none)
       fields.offset = 0
       let new-heading = if lbl != none {
-        utils.label-it(heading(..fields, child.body), it.label)
+        utils.label-it(heading(..fields, child.body), child.label)
       } else {
         heading(..fields, child.body)
       }
