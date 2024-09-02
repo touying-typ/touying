@@ -174,13 +174,16 @@
     set align(horizon)
     show: pad.with(20%)
     set text(size: 1.5em, fill: self.colors.primary, weight: "bold")
-    utils.display-current-heading(level: level, numbered: numbered)
-    v(-.5em)
-    block(
-      height: 2pt,
-      width: 100%,
-      spacing: 0pt,
-      components.progress-bar(height: 2pt, self.colors.primary, self.colors.tertiary),
+    stack(
+      dir: ttb,
+      spacing: .65em,
+      utils.display-current-heading(level: level, numbered: numbered),
+      block(
+        height: 2pt,
+        width: 100%,
+        spacing: 0pt,
+        components.progress-bar(height: 2pt, self.colors.primary, self.colors.primary-light),
+      ),
     )
   }
   self = utils.merge-dicts(
