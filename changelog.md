@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.5.1
+
+- Fix somg bugs.
+
+
 ## v0.5.0
 
 This is a significant disruptive version update. Touying has removed many mistakes that resulted from incorrect decisions. We have redesigned numerous features. The goal of this version is to make Touying more user-friendly, more flexible, and more powerful.

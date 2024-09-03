@@ -9,24 +9,6 @@
 #let cetz-canvas = touying-reducer.with(reduce: cetz.canvas, cover: cetz.draw.hide.with(bounds: true))
 #let fletcher-diagram = touying-reducer.with(reduce: fletcher.diagram, cover: fletcher.hide)
 
-// Pdfpc configuration
-// typst query --root . ./example.typ --field value --one "<pdfpc-file>" > ./example.pdfpc
-#pdfpc.config(
-  duration-minutes: 30,
-  start-time: datetime(hour: 14, minute: 10, second: 0),
-  end-time: datetime(hour: 14, minute: 40, second: 0),
-  last-minutes: 5,
-  note-font-size: 12,
-  disable-markdown: false,
-  default-transition: (
-    type: "push",
-    duration-seconds: 2,
-    angle: ltr,
-    alignment: "vertical",
-    direction: "inward",
-  ),
-)
-
 // Theorems configuration by ctheorems
 #show: thmrules.with(qed-symbol: $square$)
 #let theorem = thmbox("theorem", "Theorem", fill: rgb("#eeffee"))
