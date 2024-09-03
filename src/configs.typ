@@ -122,7 +122,7 @@
 ///
 /// - `reset-footnote-number-per-slide` (bool): Whether to reset the footnote number per slide. The default value is `true`.
 ///
-/// - `nontight-list-enum-and-terms` (bool): Whether to make `tight` argument always be `false` for list, enum, and terms. The default value is `true`.
+/// - `nontight-list-enum-and-terms` (bool): Whether to make `tight` argument always be `false` for list, enum, and terms. The default value is `false`.
 ///
 /// - `align-list-marker-with-baseline` (bool): Whether to align the list marker with the baseline. The default value is `false`.
 ///
@@ -213,6 +213,8 @@
     auto-offset-for-heading: auto-offset-for-heading,
     enable-pdfpc: enable-pdfpc,
     enable-mark-warning: enable-mark-warning,
+    reset-page-counter-to-slide-counter: reset-page-counter-to-slide-counter,
+    enable-frozen-states-and-counters: enable-frozen-states-and-counters,
     frozen-states: frozen-states,
     frozen-counters: frozen-counters,
     default-frozen-states: default-frozen-states,
@@ -569,7 +571,7 @@
     show-notes-on-second-screen: none,
     horizontal-line-to-pagebreak: true,
     reset-footnote-number-per-slide: true,
-    nontight-list-enum-and-terms: true,
+    nontight-list-enum-and-terms: false,
     align-list-marker-with-baseline: false,
     scale-list-items: none,
     enable-frozen-states-and-counters: true,
@@ -577,7 +579,7 @@
     default-frozen-states: _default-frozen-states,
     frozen-counters: (),
     default-frozen-counters: _default-frozen-counters,
-    label-only-on-last-subslide: (figure, math.equation),
+    label-only-on-last-subslide: (figure, math.equation, heading),
     preamble: none,
     default-preamble: _default-preamble,
     slide-preamble: none,

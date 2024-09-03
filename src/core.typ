@@ -1114,6 +1114,7 @@
         table.cell,
         grid.cell,
         math.equation,
+        heading,
       ) {
         let (conts, nextrepetitions) = _parse-content-into-results-and-repetitions(
           self: self,
