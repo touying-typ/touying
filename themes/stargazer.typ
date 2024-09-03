@@ -402,6 +402,7 @@
         show strong: self.methods.alert.with(self: self)
         show figure.caption: set text(size: 0.6em)
         show footnote.entry: set text(size: 0.6em)
+        show heading: set text(fill: self.colors.primary)
         show link: it => if type(it.dest) == str {
           set text(fill: self.colors.primary)
           it
@@ -441,7 +442,7 @@
           width: 100%,
           height: 1.8em,
           fill: gradient.linear(self.colors.primary, self.colors.neutral-darkest),
-          place(left + horizon, text(fill: self.colors.neutral-lightest, weight: "bold", size: 1.3em, self.store.title), dx: 1.5em),
+          place(left + horizon, text(fill: self.colors.neutral-lightest, weight: "bold", size: 1.3em, utils.call-or-display(self, self.store.title)), dx: 1.5em),
         )
       },
       footer: self => {

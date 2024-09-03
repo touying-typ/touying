@@ -278,7 +278,7 @@
     config-methods(
       init: (self: none, body) => {
         show strong: self.methods.alert.with(self: self)
-        show heading.where(level: self.slide-level + 1): body => text(fill: self.colors.primary-light)[#body#v(3%)]
+        show heading: set text(fill: self.colors.primary-light)
 
         body
       },

@@ -307,8 +307,6 @@
   ..args,
   body,
 ) = {
-  set text(size: 25pt)
-
   show: touying-slides.with(
     config-page(
       paper: "presentation-" + aspect-ratio,
@@ -321,6 +319,13 @@
       new-section-slide-fn: new-section-slide,
     ),
     config-methods(
+      init: (self: none, body) => {
+        set text(fill: self.colors.neutral-darkest, size: 25pt)
+        show heading: set text(fill: self.colors.primary)
+        show strong: self.methods.alert.with(self: self)
+  
+        body
+      },
       alert: utils.alert-with-primary-color,
     ),
     config-colors(
