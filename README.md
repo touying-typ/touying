@@ -6,7 +6,7 @@ Touying provides automatically injected global configurations, which is convenie
 
 If you like it, consider [giving a star on GitHub](https://github.com/touying-typ/touying). Touying is a community-driven project, feel free to suggest any ideas and contribute.
 
-[![Book badge](https://img.shields.io/badge/docs-book-green)](https://touying-typ.github.io/touying/)
+[![Book badge](https://img.shields.io/badge/docs-book-green)](https://touying-typ.github.io/)
 [![Gallery badge](https://img.shields.io/badge/docs-gallery-orange)](https://github.com/touying-typ/touying/wiki)
 ![GitHub](https://img.shields.io/github/license/touying-typ/touying)
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/touying-typ/touying)
@@ -15,7 +15,7 @@ If you like it, consider [giving a star on GitHub](https://github.com/touying-ty
 
 ## Document
 
-Read [the document](https://touying-typ.github.io/touying/) to learn all about Touying.
+Read [the document](https://touying-typ.github.io/) to learn all about Touying.
 
 This documentation is powered by [Docusaurus](https://docusaurus.io/). We will maintain **English** and **Chinese** versions of the documentation for Touying, and for each major version, we will maintain a documentation copy. This allows you to easily refer to old versions of the Touying documentation and migrate to new versions.
 
@@ -25,7 +25,7 @@ Touying offers [a gallery page](https://github.com/touying-typ/touying/wiki) via
 
 ## Special Features
 
-1. Split slides by headings [document](https://touying-typ.github.io/touying/docs/sections)
+1. Split slides by headings [document](https://touying-typ.github.io/docs/sections)
 
 ```typst
 = Section
@@ -41,7 +41,7 @@ Hello, Touying!
 Hello, Typst!
 ```
 
-2. `#pause` and `#meanwhile` animations [document](https://touying-typ.github.io/touying/docs/dynamic/simple)
+2. `#pause` and `#meanwhile` animations [document](https://touying-typ.github.io/docs/dynamic/simple)
 
 ```typst
 #slide[
@@ -63,11 +63,11 @@ Hello, Typst!
 
 ![image](https://github.com/touying-typ/touying/assets/34951714/24ca19a3-b27c-4d31-ab75-09c37911e6ac)
 
-3. Math Equation Animation [document](https://touying-typ.github.io/touying/docs/dynamic/equation)
+3. Math Equation Animation [document](https://touying-typ.github.io/docs/dynamic/equation)
 
 ![image](https://github.com/touying-typ/touying/assets/34951714/8640fe0a-95e4-46ac-b570-c8c79f993de4)
 
-4. `touying-reducer` Cetz and Fletcher Animations [document](https://touying-typ.github.io/touying/docs/dynamic/other)
+4. `touying-reducer` Cetz and Fletcher Animations [document](https://touying-typ.github.io/docs/dynamic/other)
 
 ![image](https://github.com/touying-typ/touying/assets/34951714/9ba71f54-2a5d-4144-996c-4a42833cc5cc)
 
@@ -75,15 +75,15 @@ Hello, Typst!
 
 ![image](https://github.com/touying-typ/touying/assets/34951714/7b62fcaf-6342-4dba-901b-818c16682529)
 
-6. Dewdrop Theme Navigation Bar [document](https://touying-typ.github.io/touying/docs/themes/dewdrop)
+6. Dewdrop Theme Navigation Bar [document](https://touying-typ.github.io/docs/themes/dewdrop)
 
 ![image](https://github.com/touying-typ/touying/assets/34951714/0426516d-aa3c-4b7a-b7b6-2d5d276fb971)
 
-7. Semi-transparent cover mode [document](https://touying-typ.github.io/touying/docs/dynamic/cover)
+7. Semi-transparent cover mode [document](https://touying-typ.github.io/docs/dynamic/cover)
 
 ![image](https://github.com/touying-typ/touying/assets/34951714/22a9ea66-c8b5-431e-a52c-2c8ca3f18e49)
 
-8. Speaker notes for dual-screen [document](https://touying-typ.github.io/touying/docs/external/pympress)
+8. Speaker notes for dual-screen [document](https://touying-typ.github.io/docs/external/pympress)
 
 ![image](https://github.com/touying-typ/touying/assets/34951714/afbe17cb-46d4-4507-90e8-959c53de95d5)
 
