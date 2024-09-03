@@ -1463,7 +1463,7 @@
   }
   // preamble for the subslides
   let subslide-preamble(self) = {
-    if self.subslide == 1 {
+    if self.handout or self.subslide == 1 {
       slide-preamble(self)
     }
     [#metadata((kind: "touying-new-subslide")) <touying-metadata>]
