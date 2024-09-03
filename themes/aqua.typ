@@ -239,7 +239,7 @@
 ///
 /// - `aspect-ratio` is the aspect ratio of the slides. Default is `16-9`.
 ///
-/// - `header` is the header of the slides. Default is `utils.display-current-heading`.
+/// - `header` is the header of the slides. Default is `self => utils.display-current-heading(depth: self.slide-level)`.
 ///
 /// - `footer` is the footer of the slides. Default is `context utils.slide-counter.display()`.
 ///
@@ -257,7 +257,7 @@
 /// ```
 #let aqua-theme(
   aspect-ratio: "16-9",
-  header: utils.display-current-heading(),
+  header: self => utils.display-current-heading(depth: self.slide-level),
   footer: context utils.slide-counter.display(),
   ..args,
   body,

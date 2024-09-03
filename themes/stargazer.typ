@@ -306,7 +306,7 @@
 ///
 /// - `align` is the alignment of the content. Default is `horizon`.
 ///
-/// - `title` is the title in header of the slide. Default is `utils.display-current-heading()`.
+/// - `title` is the title in header of the slide. Default is `self => utils.display-current-heading(depth: self.slide-level)`.
 ///
 /// - `header-right` is the right part of the header. Default is `self => self.info.logo`.
 ///
@@ -344,7 +344,7 @@
   aspect-ratio: "16-9",
   align: horizon,
   alpha: 20%,
-  title: utils.display-current-heading(),
+  title: self => utils.display-current-heading(depth: self.slide-level),
   header-right: self => self.info.logo,
   progress-bar: true,
   footer-columns: (25%, 25%, 1fr, 5em),

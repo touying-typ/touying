@@ -106,7 +106,7 @@
 ///
 /// - `aspect-ratio` is the aspect ratio of the slides. Default is `16-9`.
 ///
-/// - `header` is the header of the slides. Default is `utils.display-current-heading(setting: utils.fit-to-width.with(grow: false, 100%))`.
+/// - `header` is the header of the slides. Default is `self => utils.display-current-heading(setting: utils.fit-to-width.with(grow: false, 100%), depth: self.slide-level)`.
 ///
 /// - `header-right` is the right part of the header. Default is `self.info.logo`.
 ///
@@ -132,7 +132,7 @@
 /// ```
 #let simple-theme(
   aspect-ratio: "16-9",
-  header: utils.display-current-heading(setting: utils.fit-to-width.with(grow: false, 100%)),
+  header: self => utils.display-current-heading(setting: utils.fit-to-width.with(grow: false, 100%), depth: self.slide-level),
   header-right: self => self.info.logo,
   footer: none,
   footer-right: context utils.slide-counter.display() + " / " + utils.last-slide-number,

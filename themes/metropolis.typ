@@ -230,7 +230,7 @@
 ///
 /// - `align` is the alignment of the content. Default is `horizon`.
 ///
-/// - `header` is the header of the slide. Default is `utils.display-current-heading(setting: utils.fit-to-width.with(grow: false, 100%))`.
+/// - `header` is the header of the slide. Default is `self => utils.display-current-heading(setting: utils.fit-to-width.with(grow: false, 100%), depth: self.slide-level)`.
 ///
 /// - `header-right` is the right part of the header. Default is `self => self.info.logo`.
 ///
@@ -257,7 +257,7 @@
 #let metropolis-theme(
   aspect-ratio: "16-9",
   align: horizon,
-  header: utils.display-current-heading(setting: utils.fit-to-width.with(grow: false, 100%)),
+  header: self => utils.display-current-heading(setting: utils.fit-to-width.with(grow: false, 100%), depth: self.slide-level),
   header-right: self => self.info.logo,
   footer: none,
   footer-right: context utils.slide-counter.display() + " / " + utils.last-slide-number,

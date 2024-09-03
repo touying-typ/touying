@@ -63,7 +63,7 @@ For detailed changes to specific themes, you can refer to the `themes` directory
    - Move the configuration of headers and footers into the `slide` function rather than in the `xxx-theme` function.
    - You can directly use `set` or `show` rules in `xxx-theme` or configure them through `config-methods(init: (self: none, body) => { .. })` to fully utilize the `self` parameter.
 3. For `states.current-section-with-numbering`, you can use `utils.display-current-heading(level: 1)` instead.
-   - If you only need the previous heading regardless of whether it is a section or a subsection, use `utils.display-current-heading()`.
+   - If you only need the previous heading regardless of whether it is a section or a subsection, use `self => utils.display-current-heading(depth: self.slide-level)`.
 4. The `alert` function can be replaced with `config-methods(alert: utils.alert-with-primary-color)`.
 5. The `touying-outline()` function is no longer needed; you can use `components.adaptive-columns(outline())` instead. Consider using `components.progressive-outline()` or `components.custom-progressive-outline()`.
 6. Replace `states.slide-counter.display() + " / " + states.last-slide-number` with `context utils.slide-counter.display() + " / " + utils.last-slide-number`. That is, we no longer use `states` but `utils`.
