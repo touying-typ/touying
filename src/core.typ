@@ -1468,7 +1468,7 @@
       slide-preamble(self)
     }
     [#metadata((kind: "touying-new-subslide")) <touying-metadata>]
-    if self.at("enable-frozen-states-and-counters", default: true) {
+    if self.at("enable-frozen-states-and-counters", default: true) and not self.handout and self.repeat > 1 {
       if self.subslide == 1 {
         // save the states and counters
         context {
