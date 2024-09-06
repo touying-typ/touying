@@ -359,6 +359,12 @@ Thanks to...
 - [@Coekjan](https://github.com/Coekjan) and [@QuadnucYard](https://github.com/QuadnucYard) for the `stargazer` theme
 - [@ntjess](https://github.com/ntjess) for contributing to `fit-to-height`, `fit-to-width` and `cover-with-rect`
 
+## Poster
+
+![poster](poster.png)
+
+[View Code](https://github.com/touying-typ/touying-poster)
+
 ## Star History
 
 <a href="https://star-history.com/#touying-typ/touying&Date">
