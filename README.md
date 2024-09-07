@@ -1,4 +1,4 @@
-# [Touying](https://github.com/touying-typ/touying) ![logo](https://github.com/touying-typ/touying/assets/34951714/2aa394d3-2319-4572-aef7-ed3c14b09846)
+# ![logo](https://github.com/user-attachments/assets/58a91b14-ae1a-49e2-a3e7-5e3a148e2ba5)
 
 [Touying](https://github.com/touying-typ/touying) (投影 in chinese, /tóuyǐng/, meaning projection) is a user-friendly, powerful and efficient package for creating presentation slides in Typst. Partial code is inherited from [Polylux](https://github.com/andreasKroepelin/polylux). Therefore, many concepts and APIs remain consistent with Polylux.
 
@@ -361,7 +361,8 @@ Thanks to...
 
 ## Poster
 
-![poster](poster.png)
+![poster](https://github.com/user-attachments/assets/e1ddb672-8e8f-472d-b364-b8caed1da16b)
+
 
 [View Code](https://github.com/touying-typ/touying-poster)
 
