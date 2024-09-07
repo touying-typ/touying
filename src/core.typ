@@ -1121,7 +1121,8 @@
           need-cover: repetitions <= index,
           base: repetitions,
           index: index,
-          child.body,
+          // Some functions (e.g. square) may have no body
+          child.at("body", default: none),
         )
         let cont = conts.first()
         if repetitions <= index or not need-cover {
