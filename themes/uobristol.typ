@@ -227,7 +227,7 @@
     set align(horizon)
     show outline.entry: it => {
       let mark = if ( marker == auto ) {
-        image("uob-bullet.svg", height: .8em)
+        image.decode(uob-bullet, height: .8em)
       } else if type(marker) == image {
         set image(height: .8em)
         image
