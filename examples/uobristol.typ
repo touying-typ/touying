@@ -20,13 +20,38 @@
 
 #title-slide()
 
-= Outline <touying:hidden>
-
-#outline(title: none, indent: 1em, depth: 1)
+#outline-slide([Outline])
 
 = First Section
 
 A slide without a title but with some *important* information.
+
+=== Heading of level next to the "slide level"
+
+If the "slide level" is 2, the level-2 heading will be renderred as a new slide, and the level-3 heading will be shown as a special heading.
+
+==== Other headings are renderred as normal
+
+Headings of levels greater than $"slide level" + 1$ are shown as normal.
+
+=== Highlight
+
+The `highlight` is changed to show text like #highlight[this].
+
+---
+
+=== Tables
+
+The lines of tables are shown with the primary color.
+
+#table(
+  columns: (1fr, ) * 3,
+  align: center,
+  inset: .5em,
+  table.header[*Column1*][*Column2*][*Column2*],
+  [Content], [Content], [Content],
+  [Content], [Content], [Content],
+)
 
 == A long long long long long long long long long long long long long long long long long long long long long long long long Title
 
