@@ -915,7 +915,6 @@
           max-repetitions = calc.max(max-repetitions, repetitions)
           repetitions = 1
         }
-        continue
       }
     }
     // if it is a function, then call it with self
