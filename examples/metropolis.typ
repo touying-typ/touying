@@ -54,7 +54,7 @@ Meanwhile, #pause we can also use `#meanwhile` to display other content synchron
 
 #speaker-note[
   + This is a speaker note.
-  + You won't see it unless you use `#let s = (s.math.show-notes-on-second-screen)(self: s, right)`
+  + You won't see it unless you use `config-common(show-notes-on-second-screen: right)`
 ]
 
 #show: appendix
