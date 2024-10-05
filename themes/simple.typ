@@ -40,12 +40,15 @@
       utils.call-or-display(self, self.store.header-right),
     ),
   )
-  let footer(self) = deco-format(
-    components.left-and-right(
-      utils.call-or-display(self, self.store.footer),
-      utils.call-or-display(self, self.store.footer-right),
-    ),
-  )
+  let footer(self) = {
+    v(.5em)
+    deco-format(
+      components.left-and-right(
+        utils.call-or-display(self, self.store.footer),
+        utils.call-or-display(self, self.store.footer-right),
+      ),
+    )
+  }
   let self = utils.merge-dicts(
     self,
     config-page(
@@ -132,7 +135,10 @@
 /// ```
 #let simple-theme(
   aspect-ratio: "16-9",
-  header: self => utils.display-current-heading(setting: utils.fit-to-width.with(grow: false, 100%), depth: self.slide-level),
+  header: self => utils.display-current-heading(
+    setting: utils.fit-to-width.with(grow: false, 100%),
+    depth: self.slide-level,
+  ),
   header-right: self => self.info.logo,
   footer: none,
   footer-right: context utils.slide-counter.display() + " / " + utils.last-slide-number,
@@ -148,6 +154,7 @@
     config-page(
       paper: "presentation-" + aspect-ratio,
       margin: 2em,
+      footer-descent: 0em,
     ),
     config-common(
       slide-fn: slide,

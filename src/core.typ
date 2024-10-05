@@ -1259,9 +1259,24 @@
     pad-args.right = -margin.right
   }
   if "rest" in margin {
-    pad-args.rest = -margin.rest
+    pad-args.x = -margin.rest
   }
   it => pad(..pad-args, cell(it))
+}
+
+// get bottom pad for footer
+#let _get-bottom-pad(self) = {
+  assert(
+    self.page.paper == "presentation-16-9" or self.page.paper == "presentation-4-3",
+    message: "The paper of page should be presentation-16-9 or presentation-4-3",
+  )
+  let cell = block.with(width: 100%, height: 100%, above: 0pt, below: 0pt, breakable: false)
+  let page-height = if self.page.paper == "presentation-16-9" {
+    473.56pt
+  } else {
+    595.28pt
+  }
+  it => pad(bottom: page-height, cell(it))
 }
 
 // get page extra args for show-notes-on-second-screen
@@ -1312,6 +1327,19 @@
 #let _get-header-footer(self) = {
   let header = utils.call-or-display(self, self.page.at("header", default: none))
   let footer = utils.call-or-display(self, self.page.at("footer", default: none))
+  // negative padding
+  if self.at("zero-margin-header", default: true) {
+    let negative-pad = _get-negative-pad(self)
+    header = negative-pad(header)
+  }
+  if self.at("zero-margin-footer", default: true) {
+    let negative-pad = _get-negative-pad(self)
+    footer = negative-pad(footer)
+  }
+  if self.at("show-notes-on-second-screen", default: none) == bottom {
+    let bottom-pad = _get-bottom-pad(self)
+    footer = bottom-pad(footer)
+  }
   // speaker note
   if self.show-notes-on-second-screen in (bottom, right) {
     assert(
@@ -1329,27 +1357,27 @@
       595.28pt
     }
     let show-notes = (self.methods.show-notes)(self: self, width: page-width, height: page-height)
+    let margin-left = if type(self.page.margin) != dictionary {
+      self.page.margin
+    } else if "left" in self.page.margin {
+      self.page.margin.left
+    } else if "x" in self.page.margin {
+      self.page.margin.x
+    } else {
+      0pt
+    }
     if self.show-notes-on-second-screen == bottom {
       footer += place(
         left + bottom,
+        dx: - margin-left,
         show-notes,
       )
     } else if self.show-notes-on-second-screen == right {
       footer += place(
         left + bottom,
-        dx: page-width,
+        dx: page-width - margin-left,
         show-notes,
       )
-    }
-  }
-  // negative padding
-  if self.at("zero-margin-header", default: true) or self.at("zero-margin-footer", default: true) {
-    let negative-pad = _get-negative-pad(self)
-    if self.at("zero-margin-header", default: true) {
-      header = negative-pad(header)
-    }
-    if self.at("zero-margin-footer", default: true) {
-      footer = negative-pad(footer)
     }
   }
   (header, footer)
