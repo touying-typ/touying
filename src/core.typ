@@ -918,7 +918,8 @@
           continue
         }
       }
-    }    // if it is a function, then call it with self
+    }
+    // if it is a function, then call it with self
     if type(it) == function {
       // subslide index
       it = it(self)
