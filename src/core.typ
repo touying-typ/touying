@@ -910,14 +910,15 @@
         let kind = it.body.value.at("kind", default: none)
         if kind == "touying-pause" {
           repetitions += 1
+          continue
         } else if kind == "touying-meanwhile" {
           // reset the repetitions
           max-repetitions = calc.max(max-repetitions, repetitions)
           repetitions = 1
+          continue
         }
       }
-    }
-    // if it is a function, then call it with self
+    }    // if it is a function, then call it with self
     if type(it) == function {
       // subslide index
       it = it(self)
