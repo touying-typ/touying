@@ -910,12 +910,13 @@
         let kind = it.body.value.at("kind", default: none)
         if kind == "touying-pause" {
           repetitions += 1
+          continue
         } else if kind == "touying-meanwhile" {
           // reset the repetitions
           max-repetitions = calc.max(max-repetitions, repetitions)
           repetitions = 1
+          continue
         }
-        continue
       }
     }
     // if it is a function, then call it with self
