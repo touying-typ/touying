@@ -137,6 +137,7 @@
   aspect-ratio: "16-9",
   header: self => utils.display-current-heading(
     setting: utils.fit-to-width.with(grow: false, 100%),
+    level: 1,
     depth: self.slide-level,
   ),
   header-right: self => self.info.logo,
