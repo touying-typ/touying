@@ -380,17 +380,20 @@
 ///
 /// - `fn` ((self: none, ..args) => { .. }): The function that will be called.
 ///
-/// - `with-visible-subslides` (bool): Whether the first argument of the function is the visible subslides.
+/// - `max-repetitions` (int): The max repetitions for the slide. It is useful for functions like `uncover`, `only` and `alternatives-match` that need to update the max repetitions for the slide.
 ///
-///   It is useful for functions like `uncover` and `only`.
+///   It is useful for functions like `uncover`, `only` and `alternatives-match` that need to update the max repetitions for the slide.
 ///
-///   Touying will automatically update the max repetitions for the slide if the function is called with visible subslides.
-#let touying-fn-wrapper(fn, with-visible-subslides: false, ..args) = utils.label-it(
+/// - `repetitions` (function): The repetitions for the function. It is useful for functions like `alternatives` with `start: auto`.
+///
+///   It accepts a `(repetitions, args)` and should return a (nextrepetitions, extra-args).
+#let touying-fn-wrapper(fn, max-repetitions: none, repetitions: none, ..args) = utils.label-it(
   metadata((
     kind: "touying-fn-wrapper",
     fn: fn,
     args: args,
-    with-visible-subslides: with-visible-subslides,
+    max-repetitions: max-repetitions,
+    repetitions: repetitions,
   )),
   "touying-temporary-mark",
 )
@@ -443,7 +446,12 @@
 ///
 /// - `uncover-cont` is the content to display when the content is visible in the subslide.
 #let uncover(visible-subslides, uncover-cont) = {
-  touying-fn-wrapper(utils.uncover, with-visible-subslides: true, visible-subslides, uncover-cont)
+  touying-fn-wrapper(
+    utils.uncover,
+    max-repetitions: utils.last-required-subslide(visible-subslides),
+    visible-subslides,
+    uncover-cont,
+  )
 }
 
 
@@ -464,7 +472,12 @@
 ///
 /// - `only-cont` is the content to display when the content is visible in the subslide.
 #let only(visible-subslides, only-cont) = {
-  touying-fn-wrapper(utils.only, with-visible-subslides: true, visible-subslides, only-cont)
+  touying-fn-wrapper(
+    utils.only,
+    max-repetitions: utils.last-required-subslide(visible-subslides),
+    visible-subslides,
+    only-cont,
+  )
 }
 
 
@@ -480,8 +493,18 @@
 /// - `subslides-contents` is a dictionary mapping from subslides to content.
 ///
 /// - `position` is the position of the content. Default is `bottom + left`.
-#let alternatives-match(subslides-contents, position: bottom + left) = {
-  touying-fn-wrapper(utils.alternatives-match, subslides-contents, position: position)
+///
+/// - `stretch` is a boolean indicating whether the content should be stretched to the maximum width and height. Default is `true`.
+///
+///   Important: If you use a zero-length content like context expression, you should set `stretch: false`.
+#let alternatives-match(subslides-contents, position: bottom + left, stretch: true) = {
+  touying-fn-wrapper(
+    utils.alternatives-match,
+    max-repetitions: calc.max(..subslides-contents.pairs().map(kv => utils.last-required-subslide(kv.at(0)))),
+    subslides-contents,
+    position: position,
+    stretch: true,
+  )
 }
 
 
@@ -489,15 +512,40 @@
 ///
 /// Example: `#alternatives[Ann][Bob][Christopher]` will show "Ann" in the first subslide, "Bob" in the second subslide, and "Christopher" in the third subslide.
 ///
-/// - `start` is the starting subslide number. Default is `1`.
+/// - `start` is the starting subslide number. Default is `auto`.
 ///
 /// - `repeat-last` is a boolean indicating whether the last subslide should be repeated. Default is `true`.
+///
+/// - `position` is the position of the content. Default is `bottom + left`.
+///
+/// - `stretch` is a boolean indicating whether the content should be stretched to the maximum width and height. Default is `true`.
+///
+///   Important: If you use a zero-length content like context expression, you should set `stretch: false`.
 #let alternatives(
-  start: 1,
+  start: auto,
   repeat-last: true,
+  position: bottom + left,
+  stretch: true,
   ..args,
 ) = {
-  touying-fn-wrapper(utils.alternatives, start: start, repeat-last: repeat-last, ..args)
+  let extra = if start == auto {
+    (
+      repetitions: (repetitions, args) => (repetitions + args.pos().len() - 1, (start: repetitions)),
+    )
+  } else {
+    (
+      max-repetitions: args => start + args.pos().len() - 1,
+    )
+  }
+  touying-fn-wrapper(
+    utils.alternatives,
+    start: start,
+    repeat-last: repeat-last,
+    position: position,
+    stretch: stretch,
+    ..extra,
+    ..args,
+  )
 }
 
 
@@ -510,14 +558,41 @@
 /// - `end` is the ending subslide number. Default is `none`.
 ///
 /// - `count` is the number of subslides. Default is `none`.
+///
+/// - `position` is the position of the content. Default is `bottom + left`.
+///
+/// - `stretch` is a boolean indicating whether the content should be stretched to the maximum width and height. Default is `true`.
+///
+///   Important: If you use a zero-length content like context expression, you should set `stretch: false`.
 #let alternatives-fn(
   start: 1,
   end: none,
   count: none,
+  position: bottom + left,
+  stretch: true,
   ..kwargs,
   fn,
 ) = {
-  touying-fn-wrapper(utils.alternatives-fn, start: start, end: end, count: count, ..kwargs, fn)
+  let end = if end == none {
+    if count == none {
+      panic("You must specify either end or count.")
+    } else {
+      start + count
+    }
+  } else {
+    end
+  }
+  touying-fn-wrapper(
+    utils.alternatives-fn,
+    max-repetitions: end,
+    start: start,
+    end: end,
+    count: count,
+    position: position,
+    stretch: stretch,
+    ..kwargs,
+    fn,
+  )
 }
 
 
@@ -533,8 +608,22 @@
 /// - `cases` is an array of strings that specify the subslides for each case.
 ///
 /// - `fn` is a function that maps the case to content. The argument `case` is the index of the cases array you input.
-#let alternatives-cases(cases, fn, ..kwargs) = {
-  touying-fn-wrapper(utils.alternatives-cases, cases, fn, ..kwargs)
+///
+/// - `position` is the position of the content. Default is `bottom + left`.
+///
+/// - `stretch` is a boolean indicating whether the content should be stretched to the maximum width and height. Default is `true`.
+///
+///   Important: If you use a zero-length content like context expression, you should set `stretch: false`.
+#let alternatives-cases(cases, fn, position: bottom + left, stretch: true, ..kwargs) = {
+  touying-fn-wrapper(
+    utils.alternatives-cases,
+    max-repetitions: calc.max(..cases.map(utils.last-required-subslide)),
+    cases,
+    fn,
+    position: position,
+    stretch: stretch,
+    ..kwargs,
+  )
 }
 
 
@@ -995,15 +1084,21 @@
           repetitions = nextrepetitions
         } else if kind == "touying-fn-wrapper" {
           // handle touying-fn-wrapper
+          let nextrepetitions = repetitions
+          let extra-args = (:)
+          if child.value.max-repetitions != none {
+            max-repetitions = calc.max(max-repetitions, child.value.max-repetitions)
+          }
+          if child.value.repetitions != none {
+            assert(type(child.value.repetitions) == function, message: "The repetitions argument should be a function.")
+            (nextrepetitions, extra-args) = (child.value.repetitions)(repetitions, child.value.args)
+          }
           if repetitions <= index or not need-cover {
-            result.push((child.value.fn)(self: self, ..child.value.args))
+            result.push((child.value.fn)(self: self, ..child.value.args, ..extra-args))
           } else {
-            cover-arr.push((child.value.fn)(self: self, ..child.value.args))
+            cover-arr.push((child.value.fn)(self: self, ..child.value.args, ..extra-args))
           }
-          if child.value.with-visible-subslides {
-            let visible-subslides = child.value.args.pos().at(0)
-            max-repetitions = calc.max(max-repetitions, utils.last-required-subslide(visible-subslides))
-          }
+          repetitions = nextrepetitions
         } else if kind == "touying-delayed-wrapper" {
           if show-delayed-wrapper {
             if repetitions <= index or not need-cover {
@@ -1117,7 +1212,10 @@
         math.equation,
         heading,
       ) {
-        let (conts, nextrepetitions) = _parse-content-into-results-and-repetitions(
+        let (
+          conts,
+          nextrepetitions,
+        ) = _parse-content-into-results-and-repetitions(
           self: self,
           need-cover: repetitions <= index,
           base: repetitions,
@@ -1370,7 +1468,7 @@
     if self.show-notes-on-second-screen == bottom {
       footer += place(
         left + bottom,
-        dx: - margin-left,
+        dx: -margin-left,
         show-notes,
       )
     } else if self.show-notes-on-second-screen == right {

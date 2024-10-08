@@ -924,7 +924,11 @@
 /// - `subslides-contents` is a dictionary mapping from subslides to content.
 ///
 /// - `position` is the position of the content. Default is `bottom + left`.
-#let alternatives-match(self: none, subslides-contents, position: bottom + left) = {
+///
+/// - `stretch` is a boolean indicating whether the content should be stretched to the maximum width and height. Default is `true`.
+///
+///   Important: If you use a zero-length content like context expression, you should set `stretch: false`.
+#let alternatives-match(self: none, subslides-contents, position: bottom + left, stretch: true) = {
   let subslides-contents = if type(subslides-contents) == dictionary {
     subslides-contents.pairs()
   } else {
@@ -933,20 +937,26 @@
 
   let subslides = subslides-contents.map(it => it.first())
   let contents = subslides-contents.map(it => it.last())
-  context {
-    let sizes = contents.map(c => measure(c))
-    let max-width = calc.max(..sizes.map(sz => sz.width))
-    let max-height = calc.max(..sizes.map(sz => sz.height))
+  if stretch {
+    context {
+      let sizes = contents.map(c => measure(c))
+      let max-width = calc.max(..sizes.map(sz => sz.width))
+      let max-height = calc.max(..sizes.map(sz => sz.height))
+      for (subslides, content) in subslides-contents {
+        only(
+          self: self,
+          subslides,
+          box(
+            width: max-width,
+            height: max-height,
+            align(position, content),
+          ),
+        )
+      }
+    }
+  } else {
     for (subslides, content) in subslides-contents {
-      only(
-        self: self,
-        subslides,
-        box(
-          width: max-width,
-          height: max-height,
-          align(position, content),
-        ),
-      )
+      only(self: self, subslides, content)
     }
   }
 }
@@ -959,6 +969,12 @@
 /// - `start` is the starting subslide number. Default is `1`.
 ///
 /// - `repeat-last` is a boolean indicating whether the last subslide should be repeated. Default is `true`.
+///
+/// - `position` is the position of the content. Default is `bottom + left`.
+///
+/// - `stretch` is a boolean indicating whether the content should be stretched to the maximum width and height. Default is `true`.
+///
+///   Important: If you use a zero-length content like context expression, you should set `stretch: false`.
 #let alternatives(
   self: none,
   start: 1,
@@ -984,6 +1000,12 @@
 /// - `end` is the ending subslide number. Default is `none`.
 ///
 /// - `count` is the number of subslides. Default is `none`.
+///
+/// - `position` is the position of the content. Default is `bottom + left`.
+///
+/// - `stretch` is a boolean indicating whether the content should be stretched to the maximum width and height. Default is `true`.
+///
+///   Important: If you use a zero-length content like context expression, you should set `stretch: false`.
 #let alternatives-fn(
   self: none,
   start: 1,
@@ -1020,6 +1042,12 @@
 /// - `cases` is an array of strings that specify the subslides for each case.
 ///
 /// - `fn` is a function that maps the case to content. The argument `case` is the index of the cases array you input.
+///
+/// - `position` is the position of the content. Default is `bottom + left`.
+///
+/// - `stretch` is a boolean indicating whether the content should be stretched to the maximum width and height. Default is `true`.
+///
+///   Important: If you use a zero-length content like context expression, you should set `stretch: false`.
 #let alternatives-cases(self: none, cases, fn, ..kwargs) = {
   let idcs = range(cases.len())
   let contents = idcs.map(fn)
