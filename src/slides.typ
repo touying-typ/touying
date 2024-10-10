@@ -54,7 +54,11 @@
         magic.align-list-marker-with-baseline(body)
       }
     } else {
-      body
+      if self.at("align-enum-marker-with-baseline", default: false) {
+        magic.align-enum-marker-with-baseline(body)
+      } else {
+        body
+      }
     }
   }
 

@@ -58,9 +58,9 @@
       set text(
         fill: text.fill,
         weight: if type(text.weight) == int {
-          text.weight - 300
+          text.weight - strong.delta
         } else {
-          weight-map.at(text.weight) - 300
+          weight-map.at(text.weight) - strong.delta
         },
       )
       numbering(enum.numbering, it.number) + h(-.1em)
