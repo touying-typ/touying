@@ -48,7 +48,11 @@
 
   show: body => {
     if self.at("align-list-marker-with-baseline", default: false) {
-      magic.align-list-marker-with-baseline(body)
+      if self.at("align-enum-marker-with-baseline", default: false) {
+        magic.align-list-marker-with-baseline(magic.align-enum-marker-with-baseline(body))
+      } else {
+        magic.align-list-marker-with-baseline(body)
+      }
     } else {
       body
     }

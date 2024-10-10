@@ -126,6 +126,8 @@
 ///
 /// - `align-list-marker-with-baseline` (bool): Whether to align the list marker with the baseline. The default value is `false`.
 ///
+/// - `align-enum-marker-with-baseline` (bool): Whether to align the enum marker with the baseline. The default value is `false`. It will only work when the enum item has a number like `1.`.
+///
 /// - `scale-list-items` (none, float): Whether to scale the list items recursively. For example, `scale-list-items: 0.8` will scale the list items by 0.8. The default value is `none`.
 ///
 /// - `enable-frozen-states-and-counters` (bool): Whether to enable the frozen states and counters. It is useful for equations, figures and theorems. The default value is `true`.
@@ -193,6 +195,7 @@
   reset-footnote-number-per-slide: _default,
   nontight-list-enum-and-terms: _default,
   align-list-marker-with-baseline: _default,
+  align-enum-marker-with-baseline: _default,
   scale-list-items: _default,
   ..args,
 ) = {
@@ -233,6 +236,7 @@
     reset-footnote-number-per-slide: reset-footnote-number-per-slide,
     nontight-list-enum-and-terms: nontight-list-enum-and-terms,
     align-list-marker-with-baseline: align-list-marker-with-baseline,
+    align-enum-marker-with-baseline: align-enum-marker-with-baseline,
     scale-list-items: scale-list-items,
   )) + args.named()
 }
@@ -573,6 +577,7 @@
     reset-footnote-number-per-slide: true,
     nontight-list-enum-and-terms: false,
     align-list-marker-with-baseline: false,
+    align-enum-marker-with-baseline: false,
     scale-list-items: none,
     enable-frozen-states-and-counters: true,
     frozen-states: (),
