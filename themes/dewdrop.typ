@@ -37,6 +37,7 @@
       alpha: self.store.alpha,
       display-section: self.store.mini-slides.at("display-section", default: false),
       display-subsection: self.store.mini-slides.at("display-subsection", default: true),
+      linebreaks: self.store.mini-slides.at("linebreaks", default: true),
       short-heading: self.store.mini-slides.at("short-heading", default: true),
     )
   }
@@ -259,11 +260,12 @@
 ///   - `indent` is the indent of the outline in the sidebar.
 ///   - `short-heading` is whether the outline in the sidebar is short.
 ///
-/// - `mini-slides` is the configuration of the mini-slides. You can set the height, x, display-section, display-subsection, and short-heading of the mini-slides. Default is `(height: 4em, x: 2em, display-section: false, display-subsection: true, short-heading: true)`.
+/// - `mini-slides` is the configuration of the mini-slides. You can set the height, x, display-section, display-subsection, and short-heading of the mini-slides. Default is `(height: 4em, x: 2em, display-section: false, display-subsection: true, linebreaks: true, short-heading: true)`.
 ///   - `height` is the height of the mini-slides.
 ///   - `x` is the x of the mini-slides.
 ///   - `display-section` is whether the slides of section is displayed in the mini-slides.
-///   - `display-subsection` is whether we add linebreak between subsections.
+///   - `display-subsection` is whether the slides of subsections is displayed in the mini-slides.
+///   - `linebreaks` is whether or linebreaks are in between links for sections and subsections in the mini-slides.
 ///   - `short-heading` is whether the mini-slides is short. Default is `true`.
 ///
 /// - `footer` is the footer of the slides. Default is `none`.
@@ -295,7 +297,7 @@
   aspect-ratio: "16-9",
   navigation: "sidebar",
   sidebar: (width: 10em, filled: false, numbered: false, indent: .5em, short-heading: true),
-  mini-slides: (height: 4em, x: 2em, display-section: false, display-subsection: true, short-heading: true),
+  mini-slides: (height: 4em, x: 2em, display-section: false, display-subsection: true, linebreaks: true, short-heading: true),
   footer: none,
   footer-right: context utils.slide-counter.display() + " / " + utils.last-slide-number,
   primary: rgb("#0c4842"),

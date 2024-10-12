@@ -355,6 +355,8 @@
 /// - `display-section` is a boolean indicating whether the sections should be displayed. Default is `false`.
 ///
 /// - `display-subsection` is a boolean indicating whether the subsections should be displayed. Default is `true`.
+/// 
+/// - `linebreaks` is a boolean indicating whether or not to insert linebreaks between links for sections and subsections
 ///
 /// - `short-heading` is a boolean indicating whether the headings should be shortened. Default is `true`.
 #let mini-slides(
@@ -363,6 +365,7 @@
   alpha: 60%,
   display-section: false,
   display-subsection: true,
+  linebreaks: true,
   short-heading: true,
 ) = (
   context {
@@ -414,7 +417,7 @@
               }
             }
           }
-          if display-section and display-subsection {
+          if display-section and display-subsection and linebreaks {
             linebreak()
           }
         })
@@ -435,7 +438,7 @@
               }
             }
           }
-          if display-subsection {
+          if display-subsection and linebreaks {
             linebreak()
           }
         })
