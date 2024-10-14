@@ -1,5 +1,6 @@
 #import "pdfpc.typ"
 #import "utils.typ"
+#import "magic.typ"
 #import "core.typ": touying-slide-wrapper, touying-slide, slide
 
 #let _default = metadata((kind: "touying-default"))
@@ -50,6 +51,15 @@
   }
   if self.at("enable-pdfpc", default: true) {
     context pdfpc.pdfpc-file(here())
+  }
+  if self.at("show-bibliography-as-footnote", default: none) != none {
+    let args = self.at("show-bibliography-as-footnote", default: none)
+    let bibliography = if type(args) == dictionary {
+      args.at("bibliography")
+    } else {
+      args
+    }
+    magic.record-bibliography(bibliography)
   }
 }
 
@@ -134,6 +144,10 @@
 ///
 /// - `show-hide-set-list-marker-none` (bool): Whether to set the list marker to none for hide function. The default value is `true`.
 ///
+/// - `show-bibliography-as-footnote` (bool): Whether to show the bibliography as footnote. The default value is `none`.
+///
+///   It receives a bibliography function like `bibliography(title: none, "ref.bib")`, or a dict like `(numbering: "[1]", bibliography: bibliography(title: none, "ref.bib"))`.
+///
 /// - `frozen-states` (array): The frozen states for the frozen states and counters. The default value is `()`.
 ///
 /// - `default-frozen-states` (function): The default frozen states for the frozen states and counters. The default value is state for `ctheorems` package.
@@ -200,6 +214,7 @@
   align-enum-marker-with-baseline: _default,
   scale-list-items: _default,
   show-hide-set-list-marker-none: _default,
+  show-bibliography-as-footnote: _default,
   ..args,
 ) = {
   assert(args.pos().len() == 0, message: "Unexpected positional arguments.")
@@ -242,6 +257,7 @@
     align-enum-marker-with-baseline: align-enum-marker-with-baseline,
     scale-list-items: scale-list-items,
     show-hide-set-list-marker-none: show-hide-set-list-marker-none,
+    show-bibliography-as-footnote: show-bibliography-as-footnote,
   )) + args.named()
 }
 
@@ -584,6 +600,7 @@
     align-enum-marker-with-baseline: false,
     scale-list-items: none,
     show-hide-set-list-marker-none: true,
+    show-bibliography-as-footnote: none,
     enable-frozen-states-and-counters: true,
     frozen-states: (),
     default-frozen-states: _default-frozen-states,

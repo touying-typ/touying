@@ -125,44 +125,51 @@
 #let bibliography-counter = counter("footer-bibliography-counter")
 #let bibliography-state = state("footer-bibliography-state", ())
 #let bibliography-map = state("footer-bibliography-map", (:))
+#let bibliography-visited = state("footer-bibliography-visited", ())
+
+/// Record the bibliography items.
+#let record-bibliography(bibliography) = {
+  show grid: it => {
+    bibliography-state.update(
+      range(it.children.len()).filter(i => calc.rem(i, 2) == 1).map(i => it.children.at(i).body),
+    )
+  }
+  place(hide(bibliography))
+}
 
 /// Display the bibliography as footnote.
 ///
-/// Usage: `#show: magic.bibliography-as-footnote.with(bibliography("ref.bib"))`
-///
-/// Notice: You cannot use the same key twice in the same document, unless you use the escape option like `@key[-]`.
+/// Usage: `#show: magic.bibliography-as-footnote.with(bibliography(title: none, "ref.bib"))`
 ///
 /// - numbering (string): The numbering format of the bibliography in the footnote.
 ///
-/// - escape (content): The escape string which will be used to escape the cite key, in order to avoid the conflict of the same key.
+/// - record (boolean): Record the bibliography items or not. If you set it to false, you must call `#record-bibliography(bibliography)` by yourself.
 ///
 /// - bibliography (bibliography): The bibliography argument. You should use the `bibliography` function to define the bibliography like `bibliography("ref.bib")`.
-#let bibliography-as-footnote(numbering: "[1]", escape: [-], bibliography, body) = {
-  show cite: it => if it.supplement != escape {
-    box({
-      place(hide(it))
-      context {
-        let bibitem = bibliography-state.final().at(bibliography-counter.get().at(0))
-        footnote(numbering: numbering, bibitem)
-        bibliography-map.update(map => {
-          map.insert(str(it.key), bibitem)
-          map
-        })
-      }
-      bibliography-counter.step()
-    })
-  } else {
-    footnote(numbering: numbering, context bibliography-map.final().at(str(it.key)))
+#let bibliography-as-footnote(numbering: "[1]", record: true, bibliography, body) = {
+  show cite: it => context {
+    if it.key not in bibliography-visited.get() {
+      box({
+        place(hide(it))
+        context {
+          let bibitem = bibliography-state.final().at(bibliography-counter.get().at(0))
+          footnote(numbering: numbering, bibitem)
+          bibliography-map.update(map => {
+            map.insert(str(it.key), bibitem)
+            map
+          })
+        }
+        bibliography-counter.step()
+        bibliography-visited.update(visited => visited + (it.key,))
+      })
+    } else {
+      footnote(numbering: numbering, context bibliography-map.final().at(str(it.key)))
+    }
   }
 
   // Record the bibliography items.
-  {
-    show grid: it => {
-      bibliography-state.update(
-        range(it.children.len()).filter(i => calc.rem(i, 2) == 1).map(i => it.children.at(i).body),
-      )
-    }
-    place(hide(bibliography))
+  if record {
+    record-bibliography(bibliography)
   }
 
   body

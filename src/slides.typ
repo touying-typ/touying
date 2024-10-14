@@ -70,6 +70,22 @@
     }
   }
 
+  show: body => {
+    if self.at("show-bibliography-as-footnote", default: none) != none {
+      let args = self.at("show-bibliography-as-footnote", default: none)
+      if type(args) == dictionary {
+        let bibliography = args.at("bibliography")
+        args.remove("bibliography")
+        magic.show-bibliography-as-footnote.with(..args, record: false, bibliography, body)
+      } else {
+        // args is a bibliography like `bibliography(title: none, "ref.bib")`
+        magic.bibliography-as-footnote(args, record: false, body)
+      }
+    } else {
+      body
+    }
+  }
+
   show: init
 
   show: core.split-content-into-slides.with(self: self, is-first-slide: true)
