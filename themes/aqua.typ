@@ -277,7 +277,6 @@
     ),
     config-methods(
       init: (self: none, body) => {
-        show strong: self.methods.alert.with(self: self)
         show heading: set text(fill: self.colors.primary-light)
 
         body

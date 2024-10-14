@@ -97,6 +97,8 @@
 ///
 /// - `new-subsubsubsection-slide` (function): The function to create a new slide for a new subsubsubsection. The default value is `none`.
 ///
+/// - `show-strong-with-alert` (bool): Whether to show strong with alert. The default value is `true`.
+///
 /// - `datetime-format` (auto, string): The format of the datetime. The default value is `auto`.
 ///
 /// - `appendix` (bool): Is touying in the appendix mode. The last-slide-counter will be frozen in the appendix mode. The default value is `false`.
@@ -181,6 +183,7 @@
   new-subsection-slide-fn: _default,
   new-subsubsection-slide-fn: _default,
   new-subsubsubsection-slide-fn: _default,
+  show-strong-with-alert: _default,
   datetime-format: _default,
   appendix: _default,
   freeze-slide-counter: _default,
@@ -226,6 +229,7 @@
     new-subsection-slide-fn: new-subsection-slide-fn,
     new-subsubsection-slide-fn: new-subsubsection-slide-fn,
     new-subsubsubsection-slide-fn: new-subsubsubsection-slide-fn,
+    show-strong-with-alert: show-strong-with-alert,
     datetime-format: datetime-format,
     appendix: appendix,
     freeze-slide-counter: freeze-slide-counter,
@@ -263,8 +267,6 @@
 
 
 #let _default-init(self: none, body) = {
-  show strong: self.methods.alert.with(self: self)
-
   body
 }
 
@@ -305,8 +307,6 @@
 /// The configuration of the methods
 ///
 /// - `init` (function): The function to initialize the presentation. It should be `(self: none, body) => { .. }`.
-///
-///   By default, it shows the strong content with the `alert` function: `show strong: self.methods.alert.with(self: self)`
 ///
 /// - `cover` (function): The function to cover content. The default value is `utils.method-wrapper(hide)` function.
 ///
@@ -581,6 +581,7 @@
     new-subsection-slide-fn: none,
     new-subsubsection-slide-fn: none,
     new-subsubsubsection-slide-fn: none,
+    show-strong-with-alert: true,
     datetime-format: auto,
     appendix: false,
     freeze-slide-counter: false,

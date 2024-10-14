@@ -322,7 +322,6 @@
       init: (self: none, body) => {
         set text(fill: self.colors.neutral-darkest, size: 25pt)
         show heading: set text(fill: self.colors.primary)
-        show strong: self.methods.alert.with(self: self)
   
         body
       },

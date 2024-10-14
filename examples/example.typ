@@ -47,7 +47,7 @@
 
 == Simple Animation
 
-We can use `#pause` to #pause display something later.
+*We* can use `#pause` to #pause display something later.
 
 #pause
 
