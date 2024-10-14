@@ -380,19 +380,19 @@
 ///
 /// - `fn` ((self: none, ..args) => { .. }): The function that will be called.
 ///
-/// - `max-repetitions` (int): The max repetitions for the slide. It is useful for functions like `uncover`, `only` and `alternatives-match` that need to update the max repetitions for the slide.
+/// - `last-subslide` (int): The max repetitions for the slide. It is useful for functions like `uncover`, `only` and `alternatives-match` that need to update the max repetitions for the slide.
 ///
 ///   It is useful for functions like `uncover`, `only` and `alternatives-match` that need to update the max repetitions for the slide.
 ///
 /// - `repetitions` (function): The repetitions for the function. It is useful for functions like `alternatives` with `start: auto`.
 ///
 ///   It accepts a `(repetitions, args)` and should return a (nextrepetitions, extra-args).
-#let touying-fn-wrapper(fn, max-repetitions: none, repetitions: none, ..args) = utils.label-it(
+#let touying-fn-wrapper(fn, last-subslide: none, repetitions: none, ..args) = utils.label-it(
   metadata((
     kind: "touying-fn-wrapper",
     fn: fn,
     args: args,
-    max-repetitions: max-repetitions,
+    last-subslide: last-subslide,
     repetitions: repetitions,
   )),
   "touying-temporary-mark",
@@ -448,7 +448,7 @@
 #let uncover(visible-subslides, uncover-cont) = {
   touying-fn-wrapper(
     utils.uncover,
-    max-repetitions: utils.last-required-subslide(visible-subslides),
+    last-subslide: utils.last-required-subslide(visible-subslides),
     visible-subslides,
     uncover-cont,
   )
@@ -474,7 +474,7 @@
 #let only(visible-subslides, only-cont) = {
   touying-fn-wrapper(
     utils.only,
-    max-repetitions: utils.last-required-subslide(visible-subslides),
+    last-subslide: utils.last-required-subslide(visible-subslides),
     visible-subslides,
     only-cont,
   )
@@ -500,7 +500,7 @@
 #let alternatives-match(subslides-contents, position: bottom + left, stretch: true) = {
   touying-fn-wrapper(
     utils.alternatives-match,
-    max-repetitions: calc.max(..subslides-contents.pairs().map(kv => utils.last-required-subslide(kv.at(0)))),
+    last-subslide: calc.max(..subslides-contents.pairs().map(kv => utils.last-required-subslide(kv.at(0)))),
     subslides-contents,
     position: position,
     stretch: true,
@@ -530,11 +530,11 @@
 ) = {
   let extra = if start == auto {
     (
-      repetitions: (repetitions, args) => (repetitions + args.pos().len() - 1, (start: repetitions)),
+      last-subslide: repetitions => (repetitions + args.pos().len() - 1, (start: repetitions)),
     )
   } else {
     (
-      max-repetitions: args => start + args.pos().len() - 1,
+      last-subslide: start + args.pos().len() - 1,
     )
   }
   touying-fn-wrapper(
@@ -584,7 +584,7 @@
   }
   touying-fn-wrapper(
     utils.alternatives-fn,
-    max-repetitions: end,
+    last-subslide: end,
     start: start,
     end: end,
     count: count,
@@ -617,7 +617,7 @@
 #let alternatives-cases(cases, fn, position: bottom + left, stretch: true, ..kwargs) = {
   touying-fn-wrapper(
     utils.alternatives-cases,
-    max-repetitions: calc.max(..cases.map(utils.last-required-subslide)),
+    last-subslide: calc.max(..cases.map(utils.last-required-subslide)),
     cases,
     fn,
     position: position,
@@ -990,6 +990,8 @@
   // repetitions
   let repetitions = base
   let max-repetitions = repetitions
+  // last-subslide by touying-fn-wrapper
+  let last-subslide = 0
   // get cover function from self
   let cover = self.methods.cover.with(self: self)
   for it in bodies {
@@ -1086,12 +1088,12 @@
           // handle touying-fn-wrapper
           let nextrepetitions = repetitions
           let extra-args = (:)
-          if child.value.max-repetitions != none {
-            max-repetitions = calc.max(max-repetitions, child.value.max-repetitions)
-          }
-          if child.value.repetitions != none {
-            assert(type(child.value.repetitions) == function, message: "The repetitions argument should be a function.")
-            (nextrepetitions, extra-args) = (child.value.repetitions)(repetitions, child.value.args)
+          if child.value.last-subslide != none {
+            if type(child.value.last-subslide) == function {
+              (last-subslide, extra-args) = (child.value.last-subslide)(repetitions)
+            } else {
+              last-subslide = calc.max(last-subslide, child.value.last-subslide)
+            }
           }
           if repetitions <= index or not need-cover {
             result.push((child.value.fn)(self: self, ..child.value.args, ..extra-args))
@@ -1123,7 +1125,7 @@
         result.push(child)
       } else if utils.is-sequence(child) {
         // handle the sequence
-        let (conts, nextrepetitions) = _parse-content-into-results-and-repetitions(
+        let (conts, nextrepetitions, next-last-subslide) = _parse-content-into-results-and-repetitions(
           self: self,
           need-cover: repetitions <= index,
           base: repetitions,
@@ -1137,9 +1139,10 @@
           cover-arr.push(cont)
         }
         repetitions = nextrepetitions
+        last-subslide = calc.max(last-subslide, next-last-subslide)
       } else if utils.is-styled(child) {
         // handle styled
-        let (conts, nextrepetitions) = _parse-content-into-results-and-repetitions(
+        let (conts, nextrepetitions, next-last-subslide) = _parse-content-into-results-and-repetitions(
           self: self,
           need-cover: repetitions <= index,
           base: repetitions,
@@ -1153,9 +1156,10 @@
           cover-arr.push(utils.typst-builtin-styled(cont, child.styles))
         }
         repetitions = nextrepetitions
+        last-subslide = calc.max(last-subslide, next-last-subslide)
       } else if type(child) == content and child.func() in (list.item, enum.item, align, link) {
         // handle the list item
-        let (conts, nextrepetitions) = _parse-content-into-results-and-repetitions(
+        let (conts, nextrepetitions, next-last-subslide) = _parse-content-into-results-and-repetitions(
           self: self,
           need-cover: repetitions <= index,
           base: repetitions,
@@ -1169,9 +1173,10 @@
           cover-arr.push(utils.reconstruct(child, labeled: labeled(child.func()), cont))
         }
         repetitions = nextrepetitions
+        last-subslide = calc.max(last-subslide, next-last-subslide)
       } else if type(child) == content and child.func() in (table, grid, stack) {
         // handle the table-like
-        let (conts, nextrepetitions) = _parse-content-into-results-and-repetitions(
+        let (conts, nextrepetitions, next-last-subslide) = _parse-content-into-results-and-repetitions(
           self: self,
           need-cover: repetitions <= index,
           base: repetitions,
@@ -1184,6 +1189,7 @@
           cover-arr.push(utils.reconstruct-table-like(child, labeled: labeled(child.func()), conts))
         }
         repetitions = nextrepetitions
+        last-subslide = calc.max(last-subslide, next-last-subslide)
       } else if type(child) == content and child.func() in (
         pad,
         figure,
@@ -1215,6 +1221,7 @@
         let (
           conts,
           nextrepetitions,
+          next-last-subslide,
         ) = _parse-content-into-results-and-repetitions(
           self: self,
           need-cover: repetitions <= index,
@@ -1230,9 +1237,10 @@
           cover-arr.push(utils.reconstruct(named: true, labeled: labeled(child.func()), child, cont))
         }
         repetitions = nextrepetitions
+        last-subslide = calc.max(last-subslide, next-last-subslide)
       } else if type(child) == content and child.func() == terms.item {
         // handle the terms item
-        let (conts, nextrepetitions) = _parse-content-into-results-and-repetitions(
+        let (conts, nextrepetitions, next-last-subslide) = _parse-content-into-results-and-repetitions(
           self: self,
           need-cover: repetitions <= index,
           base: repetitions,
@@ -1246,9 +1254,10 @@
           cover-arr.push(terms.item(child.term, cont))
         }
         repetitions = nextrepetitions
+        last-subslide = calc.max(last-subslide, next-last-subslide)
       } else if type(child) == content and child.func() == columns {
         // handle columns
-        let (conts, nextrepetitions) = _parse-content-into-results-and-repetitions(
+        let (conts, nextrepetitions, next-last-subslide) = _parse-content-into-results-and-repetitions(
           self: self,
           need-cover: repetitions <= index,
           base: repetitions,
@@ -1270,9 +1279,10 @@
           cover-arr.push(columns(count, ..args, cont))
         }
         repetitions = nextrepetitions
+        last-subslide = calc.max(last-subslide, next-last-subslide)
       } else if type(child) == content and child.func() == place {
         // handle place
-        let (conts, nextrepetitions) = _parse-content-into-results-and-repetitions(
+        let (conts, nextrepetitions, next-last-subslide) = _parse-content-into-results-and-repetitions(
           self: self,
           need-cover: repetitions <= index,
           base: repetitions,
@@ -1294,9 +1304,10 @@
           cover-arr.push(place(alignment, ..fields, cont))
         }
         repetitions = nextrepetitions
+        last-subslide = calc.max(last-subslide, next-last-subslide)
       } else if type(child) == content and child.func() == rotate {
         // handle rotate
-        let (conts, nextrepetitions) = _parse-content-into-results-and-repetitions(
+        let (conts, nextrepetitions, next-last-subslide) = _parse-content-into-results-and-repetitions(
           self: self,
           need-cover: repetitions <= index,
           base: repetitions,
@@ -1318,6 +1329,7 @@
           cover-arr.push(rotate(angle, ..fields, cont))
         }
         repetitions = nextrepetitions
+        last-subslide = calc.max(last-subslide, next-last-subslide)
       } else {
         if repetitions <= index or not need-cover {
           result.push(child)
@@ -1334,7 +1346,7 @@
     result-arr.push(result.sum(default: []))
   }
   max-repetitions = calc.max(max-repetitions, repetitions)
-  return (result-arr, max-repetitions)
+  return (result-arr, max-repetitions, last-subslide)
 }
 
 // get negative pad for header and footer
@@ -1656,13 +1668,13 @@
   self.subslide = 1
   // for single page slide, get the repetitions
   if repeat == auto {
-    let (_, repetitions) = _parse-content-into-results-and-repetitions(
+    let (_, repetitions, last-subslide) = _parse-content-into-results-and-repetitions(
       self: self,
       base: 1,
       index: 1,
       ..bodies,
     )
-    repeat = repetitions
+    repeat = calc.max(repetitions, last-subslide)
   }
   assert(type(repeat) == int, message: "The repeat should be an integer")
   self.repeat = repeat
@@ -1672,7 +1684,7 @@
 
   if self.handout {
     self.subslide = repeat
-    let (conts, _) = _parse-content-into-results-and-repetitions(
+    let (conts, _, _) = _parse-content-into-results-and-repetitions(
       self: self,
       index: repeat,
       show-delayed-wrapper: true,
@@ -1691,7 +1703,7 @@
       let delayed-args = if i == repeat {
         (show-delayed-wrapper: true)
       }
-      let (conts, _) = _parse-content-into-results-and-repetitions(self: self, index: i, ..delayed-args, ..bodies)
+      let (conts, _, _) = _parse-content-into-results-and-repetitions(self: self, index: i, ..delayed-args, ..bodies)
       let new-header = page-preamble(self) + header
       // update the counter in the first subslide only
       result.push({
