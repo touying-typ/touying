@@ -80,6 +80,12 @@
   }
 }
 
+#let _default-slide-preamble = self => {
+  if self.at("reset-footnote-number-per-slide", default: true) {
+    counter(footnote).update(0)
+  }
+}
+
 
 /// The common configurations of the slides.
 ///
@@ -611,7 +617,7 @@
     preamble: none,
     default-preamble: _default-preamble,
     slide-preamble: none,
-    default-slide-preamble: none,
+    default-slide-preamble: _default-slide-preamble,
     subslide-preamble: none,
     default-subslide-preamble: none,
     page-preamble: none,
