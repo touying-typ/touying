@@ -132,6 +132,8 @@
 ///
 /// - `enable-frozen-states-and-counters` (bool): Whether to enable the frozen states and counters. It is useful for equations, figures and theorems. The default value is `true`.
 ///
+/// - `show-hide-set-list-marker-none` (bool): Whether to set the list marker to none for hide function. The default value is `true`.
+///
 /// - `frozen-states` (array): The frozen states for the frozen states and counters. The default value is `()`.
 ///
 /// - `default-frozen-states` (function): The default frozen states for the frozen states and counters. The default value is state for `ctheorems` package.
@@ -197,6 +199,7 @@
   align-list-marker-with-baseline: _default,
   align-enum-marker-with-baseline: _default,
   scale-list-items: _default,
+  show-hide-set-list-marker-none: _default,
   ..args,
 ) = {
   assert(args.pos().len() == 0, message: "Unexpected positional arguments.")
@@ -238,6 +241,7 @@
     align-list-marker-with-baseline: align-list-marker-with-baseline,
     align-enum-marker-with-baseline: align-enum-marker-with-baseline,
     scale-list-items: scale-list-items,
+    show-hide-set-list-marker-none: show-hide-set-list-marker-none,
   )) + args.named()
 }
 
@@ -579,6 +583,7 @@
     align-list-marker-with-baseline: false,
     align-enum-marker-with-baseline: false,
     scale-list-items: none,
+    show-hide-set-list-marker-none: true,
     enable-frozen-states-and-counters: true,
     frozen-states: (),
     default-frozen-states: _default-frozen-states,

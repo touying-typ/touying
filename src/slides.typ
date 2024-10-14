@@ -62,6 +62,14 @@
       }
   }
 
+  show: body => {
+    if self.at("show-hide-set-list-marker-none", default: true) {
+      magic.show-hide-set-list-marker-none(body)
+    } else {
+      body
+    }
+  }
+
   show: init
 
   show: core.split-content-into-slides.with(self: self, is-first-slide: true)

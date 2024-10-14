@@ -108,6 +108,14 @@
   body
 }
 
+/// Set the list marker to none for hide function.
+///
+/// Usage: `#show: show-hide-set-list-marker-none`
+#let show-hide-set-list-marker-none(body) = {
+  show hide: set list(marker: none)
+  body
+}
+
 
 
 // ---------------------------------------------------------------------
