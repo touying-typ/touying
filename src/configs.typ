@@ -587,7 +587,7 @@
     freeze-slide-counter: false,
     zero-margin-header: true,
     zero-margin-footer: true,
-    auto-offset-for-heading: true,
+    auto-offset-for-heading: false,
     enable-pdfpc: true,
     enable-mark-warning: true,
     reset-page-counter-to-slide-counter: true,

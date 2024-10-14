@@ -167,7 +167,7 @@
       init: (self: none, body) => {
         set text(fill: self.colors.neutral-darkest, size: 25pt)
         show footnote.entry: set text(size: .6em)
-        show heading.where(level: self.slide-level + 1): set text(1.4em)
+        show heading.where(level: 1): set text(1.4em)
 
         body
       },
