@@ -38,37 +38,33 @@
 ///
 /// Usage: `#show: align-enum-marker-with-baseline`
 #let align-enum-marker-with-baseline(body) = {
+  let counting-symbols = "1aAiI一壹あいアイא가ㄱ*"
+  let consume-regex = regex("[^" + counting-symbols + "]*[" + counting-symbols + "][^" + counting-symbols + "]*")
+
   show enum.item: it => {
-    if not it.has("number") or it.number == none or enum.full == true {
-      // If the enum item does not have a number, or the number is none, or the enum is full
+    if it.number == none {
       return it
     }
-    let weight-map = (
-      thin: 100,
-      extralight: 200,
-      light: 300,
-      regular: 400,
-      medium: 500,
-      semibold: 600,
-      bold: 700,
-      extrabold: 800,
-      black: 900,
-    )
-    let current-marker = {
-      set text(
-        fill: text.fill,
-        weight: if type(text.weight) == int {
-          text.weight - strong.delta
-        } else {
-          weight-map.at(text.weight) - strong.delta
-        },
-      )
-      numbering(enum.numbering, it.number) + h(-.1em)
+    let new-numbering = if type(enum.numbering) == function or enum.full {
+      numbering.with(enum.numbering, it.number)
+    } else {
+      enum.numbering.trim(consume-regex, at: start, repeat: false)
     }
-    let hanging-indent = measure(current-marker).width + .6em + .3pt
-    set terms(hanging-indent: hanging-indent)
-    terms.item(current-marker, it.body)
+    let current-number = numbering(enum.numbering, it.number)
+    set terms(hanging-indent: 1.2em)
+    terms.item(
+      strong(delta: -strong.delta, numbering(enum.numbering, it.number)),
+      {
+        if new-numbering != "" {
+          set enum(numbering: new-numbering)
+          it.body
+        } else {
+          it.body
+        }
+      },
+    )
   }
+
   body
 }
 
