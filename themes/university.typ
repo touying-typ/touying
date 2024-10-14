@@ -168,9 +168,9 @@
 ///
 /// - `numbered` is whether the heading is numbered.
 ///
-/// - `title` is the title of the section. It will be pass by touying automatically.
-#let new-section-slide(level: 1, numbered: true, title) = touying-slide-wrapper(self => {
-  let body = {
+/// - `body` is the body of the section. It will be pass by touying automatically.
+#let new-section-slide(level: 1, numbered: true, body) = touying-slide-wrapper(self => {
+  let slide-body = {
     set align(horizon)
     show: pad.with(20%)
     set text(size: 1.5em, fill: self.colors.primary, weight: "bold")
@@ -185,12 +185,13 @@
         components.progress-bar(height: 2pt, self.colors.primary, self.colors.primary-light),
       ),
     )
+    body
   }
   self = utils.merge-dicts(
     self,
     config-page(fill: self.colors.neutral-lightest),
   )
-  touying-slide(self: self, body)
+  touying-slide(self: self, slide-body)
 })
 
 

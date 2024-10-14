@@ -95,13 +95,21 @@
 ///
 /// - `slide-fn` (function): The function to create a new slide.
 ///
-/// - `new-section-slide` (function): The function to create a new slide for a new section. The default value is `none`.
+/// - `new-section-slide-fn` (function): The function to create a new slide for a new section. The default value is `none`.
 ///
-/// - `new-subsection-slide` (function): The function to create a new slide for a new subsection. The default value is `none`.
+/// - `new-subsection-slide-fn` (function): The function to create a new slide for a new subsection. The default value is `none`.
 ///
-/// - `new-subsubsection-slide` (function): The function to create a new slide for a new subsubsection. The default value is `none`.
+/// - `new-subsubsection-slide-fn` (function): The function to create a new slide for a new subsubsection. The default value is `none`.
 ///
-/// - `new-subsubsubsection-slide` (function): The function to create a new slide for a new subsubsubsection. The default value is `none`.
+/// - `new-subsubsubsection-slide-fn` (function): The function to create a new slide for a new subsubsubsection. The default value is `none`.
+///
+/// - `receive-body-for-new-section-slide-fn` (bool): Whether to receive the body for the new section slide function. The default value is `true`.
+///
+/// - `receive-body-for-new-subsection-slide-fn` (bool): Whether to receive the body for the new subsection slide function. The default value is `true`.
+///
+/// - `receive-body-for-new-subsubsection-slide-fn` (bool): Whether to receive the body for the new subsubsection slide function. The default value is `true`.
+///
+/// - `receive-body-for-new-subsubsubsection-slide-fn` (bool): Whether to receive the body for the new subsubsubsection slide function. The default value is `true`.
 ///
 /// - `show-strong-with-alert` (bool): Whether to show strong with alert. The default value is `true`.
 ///
@@ -189,6 +197,10 @@
   new-subsection-slide-fn: _default,
   new-subsubsection-slide-fn: _default,
   new-subsubsubsection-slide-fn: _default,
+  receive-body-for-new-section-slide-fn: _default,
+  receive-body-for-new-subsection-slide-fn: _default,
+  receive-body-for-new-subsubsection-slide-fn: _default,
+  receive-body-for-new-subsubsubsection-slide-fn: _default,
   show-strong-with-alert: _default,
   datetime-format: _default,
   appendix: _default,
@@ -235,6 +247,10 @@
     new-subsection-slide-fn: new-subsection-slide-fn,
     new-subsubsection-slide-fn: new-subsubsection-slide-fn,
     new-subsubsubsection-slide-fn: new-subsubsubsection-slide-fn,
+    receive-body-for-new-section-slide-fn: receive-body-for-new-section-slide-fn,
+    receive-body-for-new-subsection-slide-fn: receive-body-for-new-subsection-slide-fn,
+    receive-body-for-new-subsubsection-slide-fn: receive-body-for-new-subsubsection-slide-fn,
+    receive-body-for-new-subsubsubsection-slide-fn: receive-body-for-new-subsubsubsection-slide-fn,
     show-strong-with-alert: show-strong-with-alert,
     datetime-format: datetime-format,
     appendix: appendix,
@@ -587,6 +603,10 @@
     new-subsection-slide-fn: none,
     new-subsubsection-slide-fn: none,
     new-subsubsubsection-slide-fn: none,
+    receive-body-for-new-section-slide-fn: true,
+    receive-body-for-new-subsection-slide-fn: true,
+    receive-body-for-new-subsubsection-slide-fn: true,
+    receive-body-for-new-subsubsubsection-slide-fn: true,
     show-strong-with-alert: true,
     datetime-format: auto,
     appendix: false,

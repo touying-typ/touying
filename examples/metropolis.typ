@@ -26,6 +26,8 @@
 
 = First Section
 
+---
+
 A slide without a title but with some *important* information.
 
 == A long long long long long long long long long long long long long long long long long long long long long long long long Title
@@ -60,5 +62,7 @@ Meanwhile, #pause we can also use `#meanwhile` to display other content synchron
 #show: appendix
 
 = Appendix
+
+---
 
 Please pay attention to the current slide number.

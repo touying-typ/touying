@@ -23,8 +23,6 @@
 
 == Slide Title
 
-=== sdfsdfdsf
-
 #lorem(40)
 
 #focus-slide[

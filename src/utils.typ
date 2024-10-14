@@ -327,7 +327,7 @@
   level: auto,
   hierachical: true,
   depth: 9999,
-  style: (setting: body => body, numbered: false, current-heading) => setting({
+  style: (setting: body => body, numbered: true, current-heading) => setting({
     if numbered and current-heading.numbering != none {
       _typst-builtin-numbering(
         current-heading.numbering,

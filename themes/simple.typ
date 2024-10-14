@@ -78,7 +78,11 @@
 
 
 /// New section slide for the presentation. You can update it by updating the `new-section-slide-fn` argument for `config-common` function.
-#let new-section-slide(title) = centered-slide(text(1.2em, weight: "bold", utils.display-current-heading(level: 1)))
+#let new-section-slide(body) = centered-slide([
+  #text(1.2em, weight: "bold", utils.display-current-heading(level: 1))
+
+  #body
+])
 
 
 /// Focus on some content.

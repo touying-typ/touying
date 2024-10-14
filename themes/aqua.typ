@@ -170,9 +170,9 @@
 ///
 /// - `level` is the level of the heading.
 ///
-/// - `title` is the title of the section. It will be pass by touying automatically.
-#let new-section-slide(level: 1, title) = touying-slide-wrapper(self => {
-  let body = {
+/// - `body` is the body of the section. It will be pass by touying automatically.
+#let new-section-slide(level: 1, body) = touying-slide-wrapper(self => {
+  let slide-body = {
     stack(
       dir: ttb,
       spacing: 12%,
@@ -194,6 +194,7 @@
         ),
       ),
     )
+    body
   }
   self = utils.merge-dicts(
     self,
@@ -202,7 +203,7 @@
       background: utils.call-or-display(self, self.store.background),
     ),
   )
-  touying-slide(self: self, body)
+  touying-slide(self: self, slide-body)
 })
 
 

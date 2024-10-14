@@ -212,10 +212,10 @@
             vspace: (.4em,),
             numbered: (numbered,),
             depth: 1,
-            ..args,
+            ..args.named(),
           ),
         ),
-      ),
+      ) + args.pos().sum(default: none),
     ),
   )
 })
@@ -231,14 +231,14 @@
 ///
 /// - `numbered` is whether the heading is numbered. The default is `true`.
 ///
-/// - `body` is the title of the section. It will be pass by touying automatically.
+/// - `body` is the body of the section. It will be pass by touying automatically.
 #let new-section-slide(
   title: utils.i18n-outline-title,
   level: 1,
   numbered: true,
   ..args,
   body,
-) = outline-slide(title: title, level: level, numbered: numbered, ..args)
+) = outline-slide(title: title, level: level, numbered: numbered, ..args, body)
 
 
 

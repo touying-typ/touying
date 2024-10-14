@@ -57,10 +57,57 @@
   "touying-temporary-mark",
 )
 
+#let _get-last-heading-depth(current-headings) = {
+  if current-headings != () {
+    current-headings.at(-1).depth
+  } else {
+    0
+  }
+}
+
+#let _get-last-heading-label(current-headings) = {
+  if current-headings != () {
+    if current-headings.at(-1).has("label") {
+      str(current-headings.at(-1).label)
+    }
+  }
+}
+
+#let _get-slide-fn(self, default: auto) = {
+  let last-heading-depth = _get-last-heading-depth(self.headings)
+  let last-heading-label = _get-last-heading-label(self.headings)
+  if last-heading-label in ("touying:hidden", "touying:skip") {
+    return if default == auto {
+      self.slide-fn
+    } else {
+      default
+    }
+  }
+  if last-heading-depth == 1 and self.new-section-slide-fn != none {
+    self.new-section-slide-fn
+  } else if last-heading-depth == 2 and self.new-subsection-slide-fn != none {
+    self.new-subsection-slide-fn
+  } else if last-heading-depth == 3 and self.new-subsubsection-slide-fn != none {
+    self.new-subsubsection-slide-fn
+  } else if last-heading-depth == 4 and self.new-subsubsubsection-slide-fn != none {
+    self.new-subsubsubsection-slide-fn
+  } else {
+    if default == auto {
+      self.slide-fn
+    } else {
+      default
+    }
+  }
+}
 
 /// Call touying slide function
 #let _call-slide-fn(self, fn, body) = {
-  let slide-wrapper = fn(body)
+  let slide-fn = if fn == auto {
+    _get-slide-fn(self)
+  } else {
+    fn
+  }
+  let slide-wrapper = slide-fn(body)
   assert(
     utils.is-kind(slide-wrapper, "touying-slide-wrapper"),
     message: "you must use `touying-slide-wrapper` in your slide function",
@@ -76,7 +123,7 @@
   assert("slide-level" in self and type(self.slide-level) == int, message: "`self.slide-level` must be an integer")
   assert("slide-fn" in self and type(self.slide-fn) == function, message: "`self.slide-fn` must be a function")
   let slide-level = self.slide-level
-  let slide-fn = self.slide-fn
+  let slide-fn = auto
   let new-section-slide-fn = self.at("new-section-slide-fn", default: none)
   let new-subsection-slide-fn = self.at("new-subsection-slide-fn", default: none)
   let new-subsubsection-slide-fn = self.at("new-subsubsection-slide-fn", default: none)
@@ -96,27 +143,13 @@
     }
   }
   children = children.map(sequence-to-array).flatten()
-  let get-last-heading-depth(current-headings) = {
-    if current-headings != () {
-      current-headings.at(-1).depth
-    } else {
-      0
-    }
-  }
-  let get-last-heading-label(current-headings) = {
-    if current-headings != () {
-      if current-headings.at(-1).has("label") {
-        str(current-headings.at(-1).label)
-      }
-    }
-  }
   let call-slide-fn-and-reset(self, already-slide-wrapper: false, slide-fn, current-slide-cont, recaller-map) = {
     let cont = if already-slide-wrapper {
       slide-fn(self)
     } else {
       _call-slide-fn(self, slide-fn, current-slide-cont)
     }
-    let last-heading-label = get-last-heading-label(self.headings)
+    let last-heading-label = _get-last-heading-label(self.headings)
     if last-heading-label != none {
       recaller-map.insert(last-heading-label, cont)
     }
@@ -210,9 +243,12 @@
     } else if horizontal-line-to-pagebreak and horizontal-line and child in ([–], [-]) {
       continue
     } else if utils.is-heading(child, depth: slide-level) {
-      let last-heading-depth = get-last-heading-depth(current-headings)
+      let last-heading-depth = _get-last-heading-depth(current-headings)
       current-slide = utils.trim(current-slide)
-      if child.depth <= last-heading-depth or current-slide != () or (
+      if _get-slide-fn(
+        self + (headings: current-headings),
+        default: none,
+      ) != none or child.depth <= last-heading-depth or current-slide != () or (
         child.depth == 1 and new-section-slide-fn != none
       ) or (child.depth == 2 and new-subsection-slide-fn != none) or (
         child.depth == 3 and new-subsubsection-slide-fn != none
@@ -232,36 +268,36 @@
       current-headings.push(child)
       new-start = true
 
-      if not child.has("label") or str(child.label) != "touying:hidden" {
-        if child.depth == 1 and new-section-slide-fn != none {
+      if not child.has("label") or str(child.label) not in ("touying:hidden", "touying:skip") {
+        if child.depth == 1 and new-section-slide-fn != none and not self.receive-body-for-new-section-slide-fn {
           (cont, recaller-map, current-headings, current-slide, new-start, is-first-slide) = call-slide-fn-and-reset(
             self + (headings: current-headings, is-first-slide: is-first-slide),
             new-section-slide-fn,
-            child.body,
+            none,
             recaller-map,
           )
           result.push(cont)
-        } else if child.depth == 2 and new-subsection-slide-fn != none {
+        } else if child.depth == 2 and new-subsection-slide-fn != none and not self.receive-body-for-new-subsection-slide-fn {
           (cont, recaller-map, current-headings, current-slide, new-start, is-first-slide) = call-slide-fn-and-reset(
             self + (headings: current-headings, is-first-slide: is-first-slide),
             new-subsection-slide-fn,
-            child.body,
+            none,
             recaller-map,
           )
           result.push(cont)
-        } else if child.depth == 3 and new-subsubsection-slide-fn != none {
+        } else if child.depth == 3 and new-subsubsection-slide-fn != none and not self.receive-body-for-new-subsubsection-slide-fn {
           (cont, recaller-map, current-headings, current-slide, new-start, is-first-slide) = call-slide-fn-and-reset(
             self + (headings: current-headings, is-first-slide: is-first-slide),
             new-subsubsection-slide-fn,
-            child.body,
+            none,
             recaller-map,
           )
           result.push(cont)
-        } else if child.depth == 4 and new-subsubsubsection-slide-fn != none {
+        } else if child.depth == 4 and new-subsubsubsection-slide-fn != none and not self.receive-body-for-new-subsubsubsection-slide-fn {
           (cont, recaller-map, current-headings, current-slide, new-start, is-first-slide) = call-slide-fn-and-reset(
             self + (headings: current-headings, is-first-slide: is-first-slide),
             new-subsubsubsection-slide-fn,
-            child.body,
+            none,
             recaller-map,
           )
           result.push(cont)
