@@ -220,7 +220,13 @@
       ),
       text(
         fill: self.colors.neutral-darkest,
-        components.progressive-outline(alpha: self.store.alpha, title: none, indent: 1em, depth: self.slide-level, ..args),
+        components.progressive-outline(
+          alpha: self.store.alpha,
+          title: none,
+          indent: 1em,
+          depth: self.slide-level,
+          ..args,
+        ),
       ),
     ),
   )
@@ -296,8 +302,21 @@
 #let dewdrop-theme(
   aspect-ratio: "16-9",
   navigation: "sidebar",
-  sidebar: (width: 10em, filled: false, numbered: false, indent: .5em, short-heading: true),
-  mini-slides: (height: 4em, x: 2em, display-section: false, display-subsection: true, linebreaks: true, short-heading: true),
+  sidebar: (
+    width: 10em,
+    filled: false,
+    numbered: false,
+    indent: .5em,
+    short-heading: true,
+  ),
+  mini-slides: (
+    height: 4em,
+    x: 2em,
+    display-section: false,
+    display-subsection: true,
+    linebreaks: true,
+    short-heading: true,
+  ),
   footer: none,
   footer-right: context utils.slide-counter.display() + " / " + utils.last-slide-number,
   primary: rgb("#0c4842"),
@@ -308,6 +327,14 @@
   ..args,
   body,
 ) = {
+  sidebar = utils.merge-dicts(
+    (width: 10em, filled: false, numbered: false, indent: .5em, short-heading: true),
+    sidebar,
+  )
+  mini-slides = utils.merge-dicts(
+    (height: 4em, x: 2em, display-section: false, display-subsection: true, linebreaks: true, short-heading: true),
+    mini-slides,
+  )
   set text(size: 20pt)
   set par(justify: true)
 
