@@ -320,33 +320,32 @@
 ///
 /// - `setting` is the setting of the heading. Default is `body => body`.
 ///
-/// - `sty` is the style of the heading. If `sty` is a function, it will use the function to style the heading. For example, `sty: current-heading => current-heading.body`.
+/// - `display-heading` is the style of the heading. If `display-heading` is a function, it will use the function to style the heading.
+///   For example, `display-heading: current-heading => current-heading.body`.
 #let display-current-heading(
   self: none,
   level: auto,
-  numbered: true,
   hierachical: true,
   depth: 9999,
-  setting: body => body,
-  ..sty,
+  display-heading: (setting: body => body, numbered: false, current-heading) => setting({
+    if numbered and current-heading.numbering != none {
+      _typst-builtin-numbering(
+        current-heading.numbering,
+        ..counter(heading).at(current-heading.location()),
+      ) + h(.3em)
+    }
+    current-heading.body
+  }),
+  ..setting-args,
 ) = (
   context {
-    let sty = if sty.pos().len() > 1 {
-      sty.pos().at(0)
-    } else {
-      current-heading => {
-        if numbered and current-heading.numbering != none {
-          _typst-builtin-numbering(
-            current-heading.numbering,
-            ..counter(heading).at(current-heading.location()),
-          ) + h(.3em)
-        }
-        current-heading.body
-      }
-    }
     let current-heading = current-heading(level: level, hierachical: hierachical, depth: depth)
     if current-heading != none {
-      setting(sty(current-heading))
+      if display-heading == none {
+        current-heading
+      } else {
+        display-heading(..setting-args, current-heading)
+      }
     }
   }
 )
