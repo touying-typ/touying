@@ -320,14 +320,14 @@
 ///
 /// - `setting` is the setting of the heading. Default is `body => body`.
 ///
-/// - `display-heading` is the style of the heading. If `display-heading` is a function, it will use the function to style the heading.
-///   For example, `display-heading: current-heading => current-heading.body`.
+/// - `style` is the style of the heading. If `style` is a function, it will use the function to style the heading.
+///   For example, `style: current-heading => current-heading.body`.
 #let display-current-heading(
   self: none,
   level: auto,
   hierachical: true,
   depth: 9999,
-  display-heading: (setting: body => body, numbered: false, current-heading) => setting({
+  style: (setting: body => body, numbered: false, current-heading) => setting({
     if numbered and current-heading.numbering != none {
       _typst-builtin-numbering(
         current-heading.numbering,
@@ -341,10 +341,10 @@
   context {
     let current-heading = current-heading(level: level, hierachical: hierachical, depth: depth)
     if current-heading != none {
-      if display-heading == none {
+      if style == none {
         current-heading
       } else {
-        display-heading(..setting-args, current-heading)
+        style(..setting-args, current-heading)
       }
     }
   }
