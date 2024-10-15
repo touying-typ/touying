@@ -37,15 +37,15 @@
 ///
 /// Example: `components.adaptive-columns(outline())`
 ///
-/// - `gutter` is the space between columns.
+/// - gutter (length): The space between columns.
 ///
-/// - `max-count` is the maximum number of columns.
+/// - max-count (int): The maximum number of columns.
 ///
-/// - `start` is the content to place before the columns.
+/// - start (content): The content to place before the columns.
 ///
-/// - `end` is the content to place after the columns.
+/// - end (content): The content to place after the columns.
 ///
-/// - `body` is the content to place in the columns.
+/// - body (content): The content to place in the columns.
 #let adaptive-columns(gutter: 4%, max-count: 3, start: none, end: none, body) = layout(size => {
   let n = calc.min(
     calc.ceil(measure(body).height / (size.height - measure(start).height - measure(end).height)),
@@ -355,7 +355,7 @@
 /// - `display-section` is a boolean indicating whether the sections should be displayed. Default is `false`.
 ///
 /// - `display-subsection` is a boolean indicating whether the subsections should be displayed. Default is `true`.
-/// 
+///
 /// - `linebreaks` is a boolean indicating whether or not to insert linebreaks between links for sections and subsections
 ///
 /// - `short-heading` is a boolean indicating whether the headings should be shortened. Default is `true`.
