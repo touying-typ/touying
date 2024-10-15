@@ -192,7 +192,7 @@
     // Main logic
     if utils.is-kind(child, "touying-slide-wrapper") {
       current-slide = utils.trim(current-slide)
-      if current-slide != () {
+      if current-slide != () or _get-slide-fn(self + (headings: current-headings), default: none) != none {
         (cont, recaller-map, current-headings, current-slide, new-start, is-first-slide) = call-slide-fn-and-reset(
           self + (headings: current-headings, is-first-slide: is-first-slide),
           slide-fn,

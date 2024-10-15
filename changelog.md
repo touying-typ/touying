@@ -1,6 +1,34 @@
 # Changelog
 
-## v0.5.1
+## v0.5.3
+
+### Features
+
+- feat: add `stretch` parameter for `#alternatives[]` function class. This allows us to handle cases where the internal element is a context expression.
+- feat: add `config-common(align-enum-marker-with-baseline: true)` for aligning the enum marker with the baseline.
+- feat: add `linebreaks` option to `components.mini-slides`. https://github.com/touying-typ/touying/pull/96
+- feat: add `<touying:skip>` label to skip a new-section-slide.
+- feat: add `config-common(show-hide-set-list-marker-none: true)` to make the markers of `list` and `enum` invisible after `#pause`.
+- feat: add `config-common(bibliography-as-footnote: bibliography(title: none, "ref.bib"))` to display the bibliography in footnotes.
+- refactor: add `config-common(show-strong-with-alert: true)` configuration to display strong text with an alert. (small breaking change for some themes)
+- refactor: refactor `display-current-heading` for preserving heading style in title and subtitle. https://github.com/touying-typ/touying/issues/71
+- refactor: make `new-section-slide-fn` function class can receive `body` parameter. We can use `receive-body-for-new-section-slide-fn` to control it. **(Breaking change)**
+  - For example, you can add `#speaker-note[]` for a new section slide, like `= Section Title \ #speaker-note[]`.
+  - If you don't want to append content to the body of the new section slide, you can use `---` after the section title.
+
+### Fixes
+
+- fix outdated documentation.
+- fix bug of `enable-frozen-states-and-counters` in handout mode.
+- fix unusable `square()` function. https://github.com/touying-typ/touying/issues/73
+- fix hidden footer for `show-notes-on-second-screen: bottom`. https://github.com/touying-typ/touying/issues/89
+- fix metadata element in table cells. https://github.com/touying-typ/touying/issues/77 https://github.com/touying-typ/touying/issues/95
+- fix `auto-offset-for-heading` to `false` by default.
+- fix uncover/only hides more content than it should. https://github.com/touying-typ/touying/issues/85
+- theme(simple): fix wrong title and subtitle. https://github.com/touying-typ/touying/issues/70
+
+
+## v0.5.1 & v0.5.2
 
 - Fix somg bugs.
 

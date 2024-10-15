@@ -1,8 +1,8 @@
 # ![logo](https://github.com/user-attachments/assets/58a91b14-ae1a-49e2-a3e7-5e3a148e2ba5)
 
-[Touying](https://github.com/touying-typ/touying) (投影 in chinese, /tóuyǐng/, meaning projection) is a user-friendly, powerful and efficient package for creating presentation slides in Typst. Partial code is inherited from [Polylux](https://github.com/andreasKroepelin/polylux). Therefore, many concepts and APIs remain consistent with Polylux.
+[Touying](https://github.com/touying-typ/touying) (投影 in chinese, /tóuyǐng/, meaning projection) is a user-friendly, powerful and efficient package for creating presentation slides in Typst. Partial code is inherited from [Polylux](https://github.com/andreasKroepelin/polylux). Therefore, some concepts and APIs remain consistent with Polylux.
 
-Touying provides automatically injected global configurations, which is convenient for configuring themes. Besides, Touying does not rely on `counter` and `locate` to implement `#pause`, resulting in better performance.
+Touying provides automatically injected global configurations, which is convenient for configuring themes. Besides, Touying does not rely on `counter` and `context` to implement `#pause`, resulting in better performance.
 
 If you like it, consider [giving a star on GitHub](https://github.com/touying-typ/touying). Touying is a community-driven project, feel free to suggest any ideas and contribute.
 
@@ -17,7 +17,9 @@ If you like it, consider [giving a star on GitHub](https://github.com/touying-ty
 
 Read [the document](https://touying-typ.github.io/) to learn all about Touying.
 
-This documentation is powered by [Docusaurus](https://docusaurus.io/). We will maintain **English** and **Chinese** versions of the documentation for Touying, and for each major version, we will maintain a documentation copy. This allows you to easily refer to old versions of the Touying documentation and migrate to new versions.
+We will maintain **English** and **Chinese** versions of the documentation for Touying, and for each major version, we will maintain a documentation copy. This allows you to easily refer to old versions of the Touying documentation and migrate to new versions.
+
+**Note that the documentation may be outdated, and you can also use Tinymist to view Touying's annotated documentation by hovering over the code.**
 
 ## Gallery
 
@@ -99,7 +101,7 @@ Before you begin, make sure you have installed the Typst environment. If not, yo
 To use Touying, you only need to include the following code in your document:
 
 ```typst
-#import "@preview/touying:0.5.2": *
+#import "@preview/touying:0.5.3": *
 #import themes.simple: *
 
 #show: simple-theme.with(aspect-ratio: "16-9")
@@ -127,7 +129,7 @@ It's simple. Congratulations on creating your first Touying slide! 🎉
 In fact, Touying provides various styles for writing slides. For example, the above example uses first-level and second-level titles to create new slides. However, you can also use the `#slide[..]` format to access more powerful features provided by Touying.
 
 ```typst
-#import "@preview/touying:0.5.2": *
+#import "@preview/touying:0.5.3": *
 #import themes.university: *
 #import "@preview/cetz:0.2.2"
 #import "@preview/fletcher:0.5.1" as fletcher: node, edge
