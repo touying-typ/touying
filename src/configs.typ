@@ -89,106 +89,101 @@
 
 /// The common configurations of the slides.
 ///
-/// - `handout` (bool): Whether to enable the handout mode. It retains only the last subslide of each slide in handout mode. The default value is `false`.
+/// - handout (boolean): Whether to enable the handout mode. It retains only the last subslide of each slide in handout mode. Default is `false`.
 ///
-/// - `slide-level` (int): The level of the slides. The default value is `2`, which means the level 1 and 2 headings will be treated as slides.
+/// - slide-level (int): The level of the slides. Default is `2`, which means the level 1 and 2 headings will be treated as slides.
 ///
-/// - `slide-fn` (function): The function to create a new slide.
+/// - slide-fn (function): The function to create a new slide.
 ///
-/// - `new-section-slide-fn` (function): The function to create a new slide for a new section. The default value is `none`.
+/// - new-section-slide-fn (function): The function to create a new slide for a new section. Default is `none`.
 ///
-/// - `new-subsection-slide-fn` (function): The function to create a new slide for a new subsection. The default value is `none`.
+/// - new-subsection-slide-fn (function): The function to create a new slide for a new subsection. Default is `none`.
 ///
-/// - `new-subsubsection-slide-fn` (function): The function to create a new slide for a new subsubsection. The default value is `none`.
+/// - new-subsubsection-slide-fn (function): The function to create a new slide for a new subsubsection. Default is `none`.
 ///
-/// - `new-subsubsubsection-slide-fn` (function): The function to create a new slide for a new subsubsubsection. The default value is `none`.
+/// - new-subsubsubsection-slide-fn (function): The function to create a new slide for a new subsubsubsection. Default is `none`.
 ///
-/// - `receive-body-for-new-section-slide-fn` (bool): Whether to receive the body for the new section slide function. The default value is `true`.
+/// - receive-body-for-new-section-slide-fn (boolean): Whether to receive the body for the new section slide function. Default is `true`.
 ///
-/// - `receive-body-for-new-subsection-slide-fn` (bool): Whether to receive the body for the new subsection slide function. The default value is `true`.
+/// - receive-body-for-new-subsection-slide-fn (boolean): Whether to receive the body for the new subsection slide function. Default is `true`.
 ///
-/// - `receive-body-for-new-subsubsection-slide-fn` (bool): Whether to receive the body for the new subsubsection slide function. The default value is `true`.
+/// - receive-body-for-new-subsubsection-slide-fn (boolean): Whether to receive the body for the new subsubsection slide function. Default is `true`.
 ///
-/// - `receive-body-for-new-subsubsubsection-slide-fn` (bool): Whether to receive the body for the new subsubsubsection slide function. The default value is `true`.
+/// - receive-body-for-new-subsubsubsection-slide-fn (boolean): Whether to receive the body for the new subsubsubsection slide function. Default is `true`.
 ///
-/// - `show-strong-with-alert` (bool): Whether to show strong with alert. The default value is `true`.
+/// - show-strong-with-alert (boolean): Whether to show strong with alert. Default is `true`.
 ///
-/// - `datetime-format` (auto, string): The format of the datetime. The default value is `auto`.
+/// - datetime-format (auto, string): The format of the datetime. Default is `auto`.
 ///
-/// - `appendix` (bool): Is touying in the appendix mode. The last-slide-counter will be frozen in the appendix mode. The default value is `false`.
+/// - appendix (boolean): Is touying in the appendix mode. The last-slide-counter will be frozen in the appendix mode. Default is `false`.
 ///
-/// - `freeze-slide-counter` (bool): Whether to freeze the slide counter. The default value is `false`.
+/// - freeze-slide-counter (boolean): Whether to freeze the slide counter. Default is `false`.
 ///
-/// - `zero-margin-header` (bool): Whether to show the full header (with negative padding). The default value is `true`.
+/// - zero-margin-header (boolean): Whether to show the full header (with negative padding). Default is `true`.
 ///
-/// - `zero-margin-footer` (bool): Whether to show the full footer (with negative padding). The default value is `true`.
+/// - zero-margin-footer (boolean): Whether to show the full footer (with negative padding). Default is `true`.
 ///
-/// - `auto-offset-for-heading` (bool): Whether to add an offset relative to slide-level for headings. The default value is `true`.
+/// - auto-offset-for-heading (boolean): Whether to add an offset relative to slide-level for headings. Default is `true`.
 ///
-/// - `enable-pdfpc` (bool): Whether to add `<pdfpc-file>` label for querying. The default value is `true`.
+/// - enable-pdfpc (boolean): Whether to add `<pdfpc-file>` label for querying. Default is `true`.
 ///
 ///   You can export the .pdfpc file directly using: `typst query --root . ./example.typ --field value --one "<pdfpc-file>" > ./example.pdfpc`
 ///
-/// - `enable-mark-warning` (bool): Whether to enable the mark warning. The default value is `true`.
+/// - enable-mark-warning (boolean): Whether to enable the mark warning. Default is `true`.
 ///
-/// - `reset-page-counter-to-slide-counter` (bool): Whether to reset the page counter to the slide counter. The default value is `true`.
+/// - reset-page-counter-to-slide-counter (boolean): Whether to reset the page counter to the slide counter. Default is `true`.
 ///
-/// ------------------------------------------------------------
-/// The following configurations are some black magics for better slides writing,
-/// maybe will be deprecated in the future.
-/// ------------------------------------------------------------
+/// - show-notes-on-second-screen (none, alignment): Whether to show the speaker notes on the second screen. Default is `none`.
 ///
-/// - `show-notes-on-second-screen` (none, alignment): Whether to show the speaker notes on the second screen. The default value is `none`.
+///   Currently, the alignment can be `none`, `bottom`, and `right`.
 ///
-///   Currently, the alignment can be `none`, `bottom` and `right`.
-///
-/// - `horizontal-line-to-pagebreak` (bool): Whether to convert horizontal lines to page breaks. The default value is `true`.
+/// - horizontal-line-to-pagebreak (boolean): Whether to convert horizontal lines to page breaks. Default is `true`.
 ///
 ///   You can use markdown-like syntax `---` to divide slides.
 ///
-/// - `reset-footnote-number-per-slide` (bool): Whether to reset the footnote number per slide. The default value is `true`.
+/// - reset-footnote-number-per-slide (boolean): Whether to reset the footnote number per slide. Default is `true`.
 ///
-/// - `nontight-list-enum-and-terms` (bool): Whether to make `tight` argument always be `false` for list, enum, and terms. The default value is `false`.
+/// - nontight-list-enum-and-terms (boolean): Whether to make `tight` argument always be `false` for list, enum, and terms. Default is `false`.
 ///
-/// - `align-list-marker-with-baseline` (bool): Whether to align the list marker with the baseline. The default value is `false`.
+/// - align-list-marker-with-baseline (boolean): Whether to align the list marker with the baseline. Default is `false`.
 ///
-/// - `align-enum-marker-with-baseline` (bool): Whether to align the enum marker with the baseline. The default value is `false`. It will only work when the enum item has a number like `1.`.
+/// - align-enum-marker-with-baseline (boolean): Whether to align the enum marker with the baseline. Default is `false`. It will only work when the enum item has a number like `1.`.
 ///
-/// - `scale-list-items` (none, float): Whether to scale the list items recursively. For example, `scale-list-items: 0.8` will scale the list items by 0.8. The default value is `none`.
+/// - scale-list-items (none, float): Whether to scale the list items recursively. For example, `scale-list-items: 0.8` will scale the list items by 0.8. Default is `none`.
 ///
-/// - `enable-frozen-states-and-counters` (bool): Whether to enable the frozen states and counters. It is useful for equations, figures and theorems. The default value is `true`.
+/// - enable-frozen-states-and-counters (boolean): Whether to enable the frozen states and counters. It is useful for equations, figures, and theorems. Default is `true`.
 ///
-/// - `show-hide-set-list-marker-none` (bool): Whether to set the list marker to none for hide function. The default value is `true`.
+/// - show-hide-set-list-marker-none (boolean): Whether to set the list marker to none for hide function. Default is `true`.
 ///
-/// - `show-bibliography-as-footnote` (bool): Whether to show the bibliography as footnote. The default value is `none`.
+/// - show-bibliography-as-footnote (boolean): Whether to show the bibliography as footnote. Default is `none`.
 ///
 ///   It receives a bibliography function like `bibliography(title: none, "ref.bib")`, or a dict like `(numbering: "[1]", bibliography: bibliography(title: none, "ref.bib"))`.
 ///
-/// - `frozen-states` (array): The frozen states for the frozen states and counters. The default value is `()`.
+/// - frozen-states (array): The frozen states for the frozen states and counters. Default is `()`.
 ///
-/// - `default-frozen-states` (function): The default frozen states for the frozen states and counters. The default value is state for `ctheorems` package.
+/// - default-frozen-states (function): The default frozen states for the frozen states and counters. Default is state for `ctheorems` package.
 ///
-/// - `frozen-counters` (array): The frozen counters for the frozen states and counters. You can pass some counters like `(counter(math.equation),)`. The default value is `()`.
+/// - frozen-counters (array): The frozen counters for the frozen states and counters. You can pass some counters like `(counter(math.equation),)`. Default is `()`.
 ///
-/// - `default-frozen-counters` (array): The default frozen counters for the frozen states and counters. The default value is `(counter(math.equation), counter(figure.where(kind: table)), counter(figure.where(kind: image))`.
+/// - default-frozen-counters (array): The default frozen counters for the frozen states and counters. The default value is `(counter(math.equation), counter(figure.where(kind: table)), counter(figure.where(kind: image)))`.
 ///
-/// - `label-only-on-last-subslide` (array): We only label some contents in the last subslide, which is useful for ref equations, figures, and theorems with multiple subslides. The default value is `(figure, math.equation)`.
+/// - label-only-on-last-subslide (array): We only label some contents in the last subslide, which is useful for ref equations, figures, and theorems with multiple subslides. Default is `(figure, math.equation)`.
 ///
-/// - `preamble` (function): The function to run before each slide. The default value is `none`.
+/// - preamble (function): The function to run before each slide. Default is `none`.
 ///
-/// - `default-preamble` (function): The default preamble for each slide. The default value is a function to check the mark warning and add pdfpc file.
+/// - default-preamble (function): The default preamble for each slide. Default is a function to check the mark warning and add pdfpc file.
 ///
-/// - `slide-preamble` (function): The function to run before each slide. The default value is `none`.
+/// - slide-preamble (function): The function to run before each slide. Default is `none`.
 ///
-/// - `default-slide-preamble` (function): The default preamble for each slide. The default value is `none`.
+/// - default-slide-preamble (function): The default preamble for each slide. Default is `none`.
 ///
-/// - `subslide-preamble` (function): The function to run before each subslide. The default value is `none`.
+/// - subslide-preamble (function): The function to run before each subslide. Default is `none`.
 ///
-/// - `default-subslide-preamble` (function): The default preamble for each subslide. The default value is `none`.
+/// - default-subslide-preamble (function): The default preamble for each subslide. Default is `none`.
 ///
-/// - `page-preamble` (function): The function to run before each page. The default value is `none`.
+/// - page-preamble (function): The function to run before each page. Default is `none`.
 ///
-/// - `default-page-preamble` (function): The default preamble for each page. The default value is a function to reset the footnote number per slide and reset the page counter to the slide counter.
+/// - default-page-preamble (function): The default preamble for each page. Default is a function to reset the footnote number per slide and reset the page counter to the slide counter.
 #let config-common(
   handout: _default,
   slide-level: _default,
@@ -326,31 +321,31 @@
   lbl.replace(regex("^[^:]*:"), "").replace("_", " ").replace("-", " "),
 )
 
-/// The configuration of the methods
+/// The configuration of the methods.
 ///
-/// - `init` (function): The function to initialize the presentation. It should be `(self: none, body) => { .. }`.
+/// - init (function): The function to initialize the presentation. It should be `(self: none, body) => { .. }`.
 ///
-/// - `cover` (function): The function to cover content. The default value is `utils.method-wrapper(hide)` function.
+/// - cover (function): The function to cover content. The default value is `utils.method-wrapper(hide)` function.
 ///
 ///   You can configure it with `cover: utils.semi-transparent-cover` to use the semi-transparent cover.
 ///
-/// - `uncover` (function): The function to uncover content. The default value is `utils.uncover` function.
+/// - uncover (function): The function to uncover content. The default value is `utils.uncover` function.
 ///
-/// - `only` (function): The function to show only the content. The default value is `utils.only` function.
+/// - only (function): The function to show only the content. The default value is `utils.only` function.
 ///
-/// - `alternatives-match` (function): The function to match alternatives. The default value is `utils.alternatives-match` function.
+/// - alternatives-match (function): The function to match alternatives. The default value is `utils.alternatives-match` function.
 ///
-/// - `alternatives` (function): The function to show alternatives. The default value is `utils.alternatives` function.
+/// - alternatives (function): The function to show alternatives. The default value is `utils.alternatives` function.
 ///
-/// - `alternatives-fn` (function): The function to show alternatives with a function. The default value is `utils.alternatives-fn` function.
+/// - alternatives-fn (function): The function to show alternatives with a function. The default value is `utils.alternatives-fn` function.
 ///
-/// - `alternatives-cases` (function): The function to show alternatives with cases. The default value is `utils.alternatives-cases` function.
+/// - alternatives-cases (function): The function to show alternatives with cases. The default value is `utils.alternatives-cases` function.
 ///
-/// - `alert` (function): The function to alert the content. The default value is `utils.method-wrapper(text.with(weight: "bold"))` function.
+/// - alert (function): The function to alert the content. The default value is `utils.method-wrapper(text.with(weight: "bold"))` function.
 ///
-/// - `show-notes` (function): The function to show notes on second screen. It should be `(self: none, width: 0pt, height: 0pt) => { .. }` with core code `utils.current-slide-note` and `utils.slide-note-state.update(none)`.
+/// - show-notes (function): The function to show notes on second screen. It should be `(self: none, width: 0pt, height: 0pt) => { .. }` with core code `utils.current-slide-note` and `utils.slide-note-state.update(none)`.
 ///
-/// - `convert-label-to-short-heading` (function): The function to convert label to short heading. It is useful for the short heading for heading with label. It will be used in function with `short-heading`.
+/// - convert-label-to-short-heading (function): The function to convert label to short heading. It is useful for the short heading for heading with label. It will be used in function with `short-heading`.
 ///
 ///   The default value is `utils.titlecase(lbl.replace(regex("^[^:]*:"), "").replace("_", " ").replace("-", " "))`.
 ///
@@ -395,7 +390,9 @@
 
 /// The configuration of important information of the presentation.
 ///
-/// #example(```
+/// Example:
+///
+/// ```typst
 /// config-info(
 ///   title: "Title",
 ///   subtitle: "Subtitle",
@@ -403,7 +400,7 @@
 ///   date: datetime.today(),
 ///   institution: "Institution",
 /// )
-/// ```)
+/// ```
 ///
 /// - title (content): The title of the presentation, which will be displayed in the title slide.
 /// - short-title (content, auto): The short title of the presentation, which will be displayed in the footer of the slides usally.
@@ -454,7 +451,9 @@
 
 /// The configuration of the colors used in the theme.
 ///
-/// #example(```
+/// Example:
+///
+/// ```typst
 /// config-colors(
 ///   primary: rgb("#04364A"),
 ///   secondary: rgb("#176B87"),
@@ -462,7 +461,7 @@
 ///   neutral: rgb("#303030"),
 ///   neutral-darkest: rgb("#000000"),
 /// )
-/// ```)
+/// ```
 ///
 /// IMPORTANT: The colors should be defined in the *RGB* format at most cases.
 ///
@@ -538,7 +537,9 @@
 ///
 /// It is equivalent to the `#set page()` rule in Touying.
 ///
-/// #example(```
+/// Example:
+///
+/// ```typst
 /// config-page(
 ///   paper: "presentation-16-9",
 ///   header: none,
@@ -546,7 +547,7 @@
 ///   fill: rgb("#ffffff"),
 ///   margin: (x: 3em, y: 2.8em),
 /// )
-/// ```)
+/// ```
 ///
 /// - paper (string): A standard paper size to set width and height. The default value is "presentation-16-9".
 ///

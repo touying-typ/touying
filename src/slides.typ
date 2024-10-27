@@ -5,7 +5,9 @@
 
 /// Touying slides function.
 ///
-/// #example(```
+/// Example:
+///
+/// ```typst
 /// #show: touying-slides.with(
 ///   config-page(paper: "presentation-" + aspect-ratio),
 ///   config-common(
@@ -13,11 +15,11 @@
 ///   ),
 ///   ..args,
 /// )
-/// ```)
+/// ```
 ///
-/// `..args` is the configurations of the slides. For example, you can use `config-page(paper: "presentation-16-9")` to set the aspect ratio of the slides.
+/// - args (arguments): The configurations of the slides. For example, you can use `config-page(paper: "presentation-16-9")` to set the aspect ratio of the slides.
 ///
-/// `body` is the contents of the slides.
+/// - body (content): The contents of the slides.
 #let touying-slides(..args, body) = {
   // get the default config
   let args = (configs.default-config,) + args.pos()

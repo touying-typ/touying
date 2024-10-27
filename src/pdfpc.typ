@@ -97,19 +97,19 @@
 /// )
 /// ```
 ///
-/// - `duration-minutes` is the duration of the presentation in minutes.
+/// - duration-minutes (int): The duration of the presentation in minutes.
 ///
-/// - `start-time` is the start time of the presentation.
+/// - start-time (datetime): The start time of the presentation.
 ///
-/// - `end-time` is the end time of the presentation.
+/// - end-time (datetime): The end time of the presentation.
 ///
-/// - `last-minutes` is the number of minutes to show the last slide.
+/// - last-minutes (int): The number of minutes to show the last slide.
 ///
-/// - `note-font-size` is the font size of the speaker notes.
+/// - note-font-size (float): The font size of the speaker notes.
 ///
-/// - `disable-markdown` is a flag to disable markdown in the speaker notes.
+/// - disable-markdown (bool): A flag to disable markdown in the speaker notes.
 ///
-/// - `default-transition` is the default transition for the slides.
+/// - default-transition (string): The default transition for the slides.
 #let config(
   duration-minutes: none,
   start-time: none,

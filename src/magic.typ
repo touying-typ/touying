@@ -72,7 +72,7 @@
 ///
 /// Usage: `#show: scale-list-items.with(scale: .75)`
 ///
-/// - `scale` (number): The ratio of the font size of the current level to the font size of the upper level.
+/// - scale (int, float): The ratio of the font size of the current level to the font size of the upper level.
 #let scale-list-items(
   scale: .75,
   body,
