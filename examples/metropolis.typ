@@ -36,7 +36,7 @@ A slide without a title but with some *important* information.
 
 A slide with equation:
 
-$ x_(n+1) = (x_n + a/x_n) / 2 $
+$ x_(n+1) = (x_n + a / x_n) / 2 $
 
 #lorem(200)
 

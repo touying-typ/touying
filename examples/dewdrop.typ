@@ -26,7 +26,7 @@
 
 == Subsection A.1
 
-$ x_(n+1) = (x_n + a/x_n) / 2 $
+$ x_(n+1) = (x_n + a / x_n) / 2 $
 
 == Subsection A.2
 

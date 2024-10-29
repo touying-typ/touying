@@ -1558,7 +1558,7 @@
 /// - config (dictionary): The configuration of the slide. You can use `config-xxx` to set the configuration of the slide. For more configurations, you can use `utils.merge-dicts` to merge them.
 ///
 /// - repeat (auto): The number of subslides. Default is `auto`, which means touying will automatically calculate the number of subslides.
-/// 
+///
 ///   The `repeat` argument is necessary when you use `#slide(repeat: 3, self => [ .. ])` style code to create a slide. The callback-style `uncover` and `only` cannot be detected by touying automatically.
 ///
 /// - setting (function): The setting of the slide. You can use it to add some set/show rules for the slide.

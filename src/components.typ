@@ -81,9 +81,9 @@
 
 
 /// Left and right.
-/// 
+///
 /// - left (content): The content of the left part.
-/// 
+///
 /// - right (content): The content of the right part.
 #let left-and-right(left, right) = grid(
   columns: (auto, 1fr, auto),
@@ -153,15 +153,15 @@
 
 
 /// Show progressive outline. It will make other sections except the current section to be semi-transparent.
-/// 
+///
 /// - alpha (ratio): The transparency of the other sections. Default is `60%`.
-/// 
+///
 /// - level (int): The level of the outline. Default is `1`.
-/// 
+///
 /// - transform (function): The transformation applied to the text of the outline. It should take the following arguments:
-/// 
+///
 /// - cover (boolean): Indicates whether the current entry should be covered.
-/// 
+///
 /// - args (content): The other arguments passed to the `progressive-outline`.
 #let progressive-outline(
   alpha: 60%,
@@ -209,37 +209,37 @@
 /// Custom progressive outline function.
 ///
 /// - self (none): The self context.
-/// 
+///
 /// - alpha (ratio): The transparency of the other headings. Default is `60%`.
-/// 
+///
 /// - level (auto): The level of the outline. Default is `auto`.
-/// 
+///
 /// - numbered (array): Indicates whether the headings should be numbered. Default is `(false,)`.
-/// 
+///
 /// - filled (array): Indicates whether the headings should be filled. Default is `(false,)`.
-/// 
+///
 /// - paged (array): Indicates whether the headings should be paged. Default is `(false,)`.
-/// 
+///
 /// - numbering (array): An array of numbering strings for the headings. Default is `()`.
-/// 
+///
 /// - text-fill (array, none): An array of colors for the text fill of the headings. Default is `none`.
-/// 
+///
 /// - text-size (array, none): An array of sizes for the text of the headings. Default is `none`.
-/// 
+///
 /// - text-weight (array, none): An array of weights for the text of the headings. Default is `none`.
-/// 
+///
 /// - vspace (array, none): An array of vertical spaces above the headings. Default is `none`.
-/// 
+///
 /// - title (string, none): The title of the outline. Default is `none`.
-/// 
+///
 /// - indent (array): An array of indentations for the headings. Default is `(0em,)`.
-/// 
+///
 /// - fill (array): An array of fills for the headings. Default is `(repeat[.],)`.
-/// 
+///
 /// - short-heading (boolean): Indicates whether the headings should be shortened. Default is `true`.
-/// 
+///
 /// - uncover-fn (function): A function that takes the body of the heading and returns the body of the heading when it is uncovered. Default is the identity function.
-/// 
+///
 /// - args (content): The other arguments passed to the `progressive-outline` and `transform`.
 #let custom-progressive-outline(
   self: none,
@@ -345,19 +345,19 @@
 
 
 /// Show mini slides. It is usually used to show the navigation of the presentation in header.
-/// 
+///
 /// - self (none): The self context, which is used to get the short heading of the headings.
-/// 
+///
 /// - fill (color): The fill color of the headings. Default is `rgb("000000")`.
-/// 
+///
 /// - alpha (ratio): The transparency of the headings. Default is `60%`.
-/// 
+///
 /// - display-section (boolean): Indicates whether the sections should be displayed. Default is `false`.
-/// 
+///
 /// - display-subsection (boolean): Indicates whether the subsections should be displayed. Default is `true`.
-/// 
+///
 /// - linebreaks (boolean): Indicates whether or not to insert linebreaks between links for sections and subsections.
-/// 
+///
 /// - short-heading (boolean): Indicates whether the headings should be shortened. Default is `true`.
 #let mini-slides(
   self: none,

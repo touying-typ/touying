@@ -162,9 +162,9 @@
 /// Example: `config-common(new-section-slide-fn: new-section-slide.with(numbered: false))`
 ///
 /// - level (int): The level of the heading.
-/// 
+///
 /// - numbered (boolean): Indicates whether the heading is numbered.
-/// 
+///
 /// - body (auto): The body of the section. It will be passed by touying automatically.
 #let new-section-slide(level: 1, numbered: true, body) = touying-slide-wrapper(self => {
   let slide-body = {
@@ -256,7 +256,10 @@
 #let metropolis-theme(
   aspect-ratio: "16-9",
   align: horizon,
-  header: self => utils.display-current-heading(setting: utils.fit-to-width.with(grow: false, 100%), depth: self.slide-level),
+  header: self => utils.display-current-heading(
+    setting: utils.fit-to-width.with(grow: false, 100%),
+    depth: self.slide-level,
+  ),
   header-right: self => self.info.logo,
   footer: none,
   footer-right: context utils.slide-counter.display() + " / " + utils.last-slide-number,

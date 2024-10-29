@@ -88,7 +88,7 @@
 /// Example: `label-it("key", [a])` is equivalent to `[a <key>]`
 ///
 /// - it (content): The content to label.
-/// 
+///
 /// - label-name (string, label): The name of the label, or a label.
 #let label-it(it, label-name) = {
   if type(label-name) == label {
@@ -100,15 +100,15 @@
 }
 
 /// Reconstruct a content with a new body.
-/// 
+///
 /// - body-name (string): The property name of the body field.
-/// 
+///
 /// - labeled (boolean): Indicates whether the fields should be labeled.
-/// 
+///
 /// - named (boolean): Indicates whether the fields should be named.
-/// 
+///
 /// - it (content): The content to reconstruct.
-/// 
+///
 /// - new-body (content): The new body you want to replace the old body with.
 #let reconstruct(body-name: "body", labeled: true, named: false, it, ..new-body) = {
   let fields = it.fields()
@@ -163,9 +163,9 @@
 
 
 /// Reconstruct a styled content with a new body.
-/// 
+///
 /// - it (content): The content to reconstruct.
-/// 
+///
 /// - new-child (content): The new child you want to replace the old body with.
 #let reconstruct-styled(it, new-child) = {
   typst-builtin-styled(new-child, it.styles)
@@ -275,11 +275,11 @@
 
 
 /// Get the current heading on or before the current page.
-/// 
+///
 /// - level (int, auto): The level of the heading. If `level` is `auto`, it will return the last heading on or before the current page. If `level` is a number, it will return the last heading on or before the current page with the same level.
-/// 
+///
 /// - hierachical (boolean): A value to indicate whether to return the heading hierarchically. If `hierachical` is `true`, it will return the last heading according to the hierarchical structure. If `hierachical` is `false`, it will return the last heading on or before the current page with the same level.
-/// 
+///
 /// - depth (int): The maximum depth of the heading to search. Usually, it should be set as slide-level.
 #let current-heading(level: auto, hierachical: true, depth: 9999) = {
   let current-page = here().page()
@@ -309,17 +309,17 @@
 
 
 /// Display the current heading on the page.
-/// 
+///
 /// - level (int, auto): The level of the heading. If `level` is `auto`, it will return the last heading on or before the current page. If `level` is a number, it will return the last heading on or before the current page with the same level.
-/// 
+///
 /// - numbered (boolean): A value to indicate whether to display the numbering of the heading. Default is `true`.
-/// 
+///
 /// - hierachical (boolean): A value to indicate whether to return the heading hierarchically. If `hierachical` is `true`, it will return the last heading according to the hierarchical structure. If `hierachical` is `false`, it will return the last heading on or before the current page with the same level.
-/// 
+///
 /// - depth (int): The maximum depth of the heading to search. Usually, it should be set as slide-level.
-/// 
+///
 /// - setting (function): The setting of the heading. Default is `body => body`.
-/// 
+///
 /// - style (function): The style of the heading. If `style` is a function, it will use the function to style the heading. For example, `style: current-heading => current-heading.body`.
 #let display-current-heading(
   self: none,
@@ -351,13 +351,13 @@
 
 
 /// Display the current heading number on the page.
-/// 
+///
 /// - level (int, auto): The level of the heading. If `level` is `auto`, it will return the last heading on or before the current page. If `level` is a number, it will return the last heading on or before the current page with the same level.
-/// 
+///
 /// - numbering (string, auto): The numbering of the heading. If `numbering` is `auto`, it will use the numbering of the heading. If `numbering` is a string, it will use the string as the numbering.
-/// 
+///
 /// - hierachical (boolean): A value to indicate whether to return the heading hierarchically. If `hierachical` is `true`, it will return the last heading according to the hierarchical structure. If `hierachical` is `false`, it will return the last heading on or before the current page with the same level.
-/// 
+///
 /// - depth (int): The maximum depth of the heading to search. Usually, it should be set as slide-level.
 #let display-current-heading-number(level: auto, numbering: auto, hierachical: true, depth: 9999) = (
   context {
@@ -372,13 +372,13 @@
 
 
 /// Display the current short heading on the page.
-/// 
+///
 /// - level (int, auto): The level of the heading. If `level` is `auto`, it will return the last heading on or before the current page. If `level` is a number, it will return the last heading on or before the current page with the same level.
-/// 
+///
 /// - hierachical (boolean): A value to indicate whether to return the heading hierarchically. If `hierachical` is `true`, it will return the last heading according to the hierarchical structure. If `hierachical` is `false`, it will return the last heading on or before the current page with the same level.
-/// 
+///
 /// - depth (int): The maximum depth of the heading to search. Usually, it should be set as slide-level.
-/// 
+///
 /// - sty (function): The style of the heading. If `sty` is a function, it will use the function to style the heading. For example, `sty: current-heading => current-heading.body`.
 #let display-current-short-heading(
   self: none,
@@ -419,9 +419,9 @@
 /// [typst-examples-book](https://sitandr.github.io/typst-examples-book/book/typstonomicon/extract_markup_text.html).
 ///
 /// - it (content): The content to convert.
-/// 
+///
 /// - mode (string): The mode of the markup text, either `typ` or `md`.
-/// 
+///
 /// - indent (int): The number of spaces to indent. Default is `0`.
 #let markup-text(it, mode: "typ", indent: 0) = {
   assert(mode == "typ" or mode == "md", message: "mode must be 'typ' or 'md'")
@@ -528,15 +528,15 @@
 /// Example: `#utils.fit-to-height(1fr)[BIG]`
 ///
 /// - width (length, fraction, relative): Will determine the width of the content after scaling. So, if you want the scaled content to fill half of the slide width, you can use `width: 50%`.
-/// 
+///
 /// - prescale-width (length, fraction, relative): Allows you to make Typst's layout assume that the given content is to be laid out in a container of a certain width before scaling. For example, you can use `prescale-width: 200%` assuming the slide's width is twice the original.
-/// 
+///
 /// - grow (boolean): Indicates whether the content should be scaled up if it is smaller than the available height. Default is `true`.
-/// 
+///
 /// - shrink (boolean): Indicates whether the content should be scaled down if it is larger than the available height. Default is `true`.
-/// 
+///
 /// - height (length): The height to fit the content to.
-/// 
+///
 /// - body (content): The content to fit.
 #let fit-to-height(
   width: none,
@@ -631,11 +631,11 @@
 /// Example: `#utils.fit-to-width(1fr)[BIG]`
 ///
 /// - grow (boolean): Indicates whether the content should be scaled up if it is smaller than the available width. Default is `true`.
-/// 
+///
 /// - shrink (boolean): Indicates whether the content should be scaled down if it is larger than the available width. Default is `true`.
-/// 
+///
 /// - width (length, fraction, relative): The width to fit the content to.
-/// 
+///
 /// - body (content): The content to fit.
 #let fit-to-width(grow: true, shrink: true, width, content) = {
   layout(layout-size => {
@@ -666,11 +666,11 @@
 /// Example: `#utils.cover-with-rect(fill: "red")[Hidden]`
 ///
 /// - cover-args (args): The arguments to pass to the rectangle.
-/// 
+///
 /// - fill (color): The color to fill the rectangle with.
-/// 
+///
 /// - inline (boolean): Indicates whether the content should be displayed inline. Default is `true`.
-/// 
+///
 /// - body (content): The content to cover.
 #let cover-with-rect(..cover-args, fill: auto, inline: true, body) = {
   if fill == auto {
@@ -721,9 +721,9 @@
 /// Example: `update-alpha(rgb("#ff0000"), 0.5)` returns `rgb(255, 0, 0, 0.5)`
 ///
 /// - constructor (function): The color constructor to use. Default is `rgb`.
-/// 
+///
 /// - color (color): The color to update.
-/// 
+///
 /// - alpha (float): The new alpha value.
 #let update-alpha(constructor: rgb, color, alpha) = constructor(..color.components(alpha: true).slice(0, -1), alpha)
 
@@ -795,7 +795,7 @@
 /// Example: `check-visible(3, "2-")` returns `true`
 ///
 /// - idx (int): The index of the slide.
-/// 
+///
 /// - visible-subslides (int, array): A single integer or an array of integers.
 ///    or a string that specifies the visible subslides
 ///
@@ -865,16 +865,16 @@
 /// Example: `uncover("2-")[abc]` will display `[abc]` if the current slide is 2 or later
 ///
 /// - visible-subslides (int, array, string): A single integer, an array of integers, or a string that specifies the visible subslides.
-/// 
+///
 ///   Read [polylux book](https://polylux.dev/book/dynamic/complex.html).
-/// 
+///
 ///   The simplest extension is to use an array, such as `(1, 2, 4)`, indicating that
 ///   slides 1, 2, and 4 are visible. This is equivalent to the string `"1, 2, 4"`.
-/// 
+///
 ///   You can also use more convenient and complex strings to specify visible slides.
-/// 
+///
 ///   For example, `"-2, 4, 6-8, 10-"` means slides 1, 2, 4, 6, 7, 8, 10, and slides after 10 are visible.
-/// 
+///
 /// - uncover-cont (content): The content to display when the content is visible in the subslide.
 #let uncover(self: none, visible-subslides, uncover-cont) = {
   let cover = self.methods.cover.with(self: self)
@@ -890,16 +890,16 @@
 /// Don't reserve space when hidden, content is completely not existing there.
 ///
 /// - visible-subslides (int, array, string): A single integer, an array of integers, or a string that specifies the visible subslides.
-/// 
+///
 ///   Read [polylux book](https://polylux.dev/book/dynamic/complex.html).
-/// 
+///
 ///   The simplest extension is to use an array, such as `(1, 2, 4)`, indicating that
 ///   slides 1, 2, and 4 are visible. This is equivalent to the string `"1, 2, 4"`.
-/// 
+///
 ///   You can also use more convenient and complex strings to specify visible slides.
-/// 
+///
 ///   For example, `"-2, 4, 6-8, 10-"` means slides 1, 2, 4, 6, 7, 8, 10, and slides after 10 are visible.
-/// 
+///
 /// - only-cont (content): The content to display when the content is visible in the subslide.
 #let only(self: none, visible-subslides, only-cont) = {
   if check-visible(self.subslide, visible-subslides) {
@@ -920,11 +920,11 @@
 /// ```
 ///
 /// - subslides-contents (dictionary): A dictionary mapping from subslides to content.
-/// 
+///
 /// - position (string): The position of the content. Default is `bottom + left`.
-/// 
+///
 /// - stretch (boolean): A boolean indicating whether the content should be stretched to the maximum width and height. Default is `true`.
-/// 
+///
 ///   Important: If you use a zero-length content like a context expression, you should set `stretch: false`.
 #let alternatives-match(self: none, subslides-contents, position: bottom + left, stretch: true) = {
   let subslides-contents = if type(subslides-contents) == dictionary {
@@ -965,13 +965,13 @@
 /// Example: `#alternatives[Ann][Bob][Christopher]` will show "Ann" in the first subslide, "Bob" in the second subslide, and "Christopher" in the third subslide.
 ///
 /// - start (int): The starting subslide number. Default is `1`.
-/// 
+///
 /// - repeat-last (boolean): A boolean indicating whether the last subslide should be repeated. Default is `true`.
-/// 
+///
 /// - position (string): The position of the content. Default is `bottom + left`.
-/// 
+///
 /// - stretch (boolean): A boolean indicating whether the content should be stretched to the maximum width and height. Default is `true`.
-/// 
+///
 ///   Important: If you use a zero-length content like a context expression, you should set `stretch: false`.
 #let alternatives(
   self: none,
@@ -990,19 +990,19 @@
 
 
 /// You can have very fine-grained control over the content depending on the current subslide by using #alternatives-fn. It accepts a function (hence the name) that maps the current subslide index to some content.
-/// 
+///
 /// Example: `#alternatives-fn(start: 2, count: 7, subslide => { numbering("(i)", subslide) })`
-/// 
+///
 /// - start (int): The starting subslide number. Default is `1`.
-/// 
+///
 /// - end (int, none): The ending subslide number. Default is `none`.
-/// 
+///
 /// - count (int, none): The number of subslides. Default is `none`.
-/// 
+///
 /// - position (string): The position of the content. Default is `bottom + left`.
-/// 
+///
 /// - stretch (boolean): A boolean indicating whether the content should be stretched to the maximum width and height. Default is `true`.
-/// 
+///
 ///   Important: If you use a zero-length content like a context expression, you should set `stretch: false`.
 #let alternatives-fn(
   self: none,
@@ -1040,13 +1040,13 @@
 /// ```
 ///
 /// - cases (array): An array of strings that specify the subslides for each case.
-/// 
+///
 /// - fn (function): A function that maps the case to content. The argument `case` is the index of the cases array you input.
-/// 
+///
 /// - position (string): The position of the content. Default is `bottom + left`.
-/// 
+///
 /// - stretch (boolean): A boolean indicating whether the content should be stretched to the maximum width and height. Default is `true`.
-/// 
+///
 ///   Important: If you use a zero-length content like a context expression, you should set `stretch: false`.
 #let alternatives-cases(self: none, cases, fn, ..kwargs) = {
   let idcs = range(cases.len())
@@ -1060,11 +1060,11 @@
 /// Example: `#speaker-note[This is a speaker note]`
 ///
 /// - self (content): The current context.
-/// 
+///
 /// - mode (string): The mode of the markup text, either `typ` or `md`. Default is `typ`.
-/// 
+///
 /// - setting (function): A function that takes the note as input and returns a processed note.
-/// 
+///
 /// - note (content): The content of the speaker note.
 #let speaker-note(self: none, mode: "typ", setting: it => it, note) = {
   if self.at("enable-pdfpc", default: true) {

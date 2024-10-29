@@ -163,9 +163,9 @@
 /// Example: `config-common(new-section-slide-fn: new-section-slide.with(numbered: false))`
 ///
 /// - level (int, none): is the level of the heading.
-/// 
+///
 /// - numbered (boolean): is whether the heading is numbered.
-/// 
+///
 /// - body (auto): is the body of the section. This will be passed automatically by Touying.
 #let new-section-slide(level: 1, numbered: true, body) = touying-slide-wrapper(self => {
   let slide-body = {
@@ -319,7 +319,7 @@
       init: (self: none, body) => {
         set text(fill: self.colors.neutral-darkest, size: 25pt)
         show heading: set text(fill: self.colors.primary)
-  
+
         body
       },
       alert: utils.alert-with-primary-color,

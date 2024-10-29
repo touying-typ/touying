@@ -167,15 +167,12 @@
     }
 
     let transition-str = (
-      default-transition.at("type", default: "replace")
-      + ":" +
-      str(default-transition.at("duration-seconds", default: 1))
-      + ":" +
-      dir-to-angle(default-transition.at("angle", default: rtl))
-      + ":" +
-      default-transition.at("alignment", default: "horizontal")
-      + ":" +
-      default-transition.at("direction", default: "outward")
+      default-transition.at("type", default: "replace") + ":" + str(
+        default-transition.at("duration-seconds", default: 1),
+      ) + ":" + dir-to-angle(default-transition.at("angle", default: rtl)) + ":" + default-transition.at(
+        "alignment",
+        default: "horizontal",
+      ) + ":" + default-transition.at("direction", default: "outward")
     )
 
     [ #metadata((t: "DefaultTransition", v: transition-str)) <pdfpc> ]

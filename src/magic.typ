@@ -143,25 +143,27 @@
 ///
 /// - bibliography (bibliography): The bibliography argument. You should use the `bibliography` function to define the bibliography like `bibliography("ref.bib")`.
 #let bibliography-as-footnote(numbering: "[1]", record: true, bibliography, body) = {
-  show cite: it => context {
-    if it.key not in bibliography-visited.get() {
-      box({
-        place(hide(it))
-        context {
-          let bibitem = bibliography-state.final().at(bibliography-counter.get().at(0))
-          footnote(numbering: numbering, bibitem)
-          bibliography-map.update(map => {
-            map.insert(str(it.key), bibitem)
-            map
-          })
-        }
-        bibliography-counter.step()
-        bibliography-visited.update(visited => visited + (it.key,))
-      })
-    } else {
-      footnote(numbering: numbering, context bibliography-map.final().at(str(it.key)))
+  show cite: it => (
+    context {
+      if it.key not in bibliography-visited.get() {
+        box({
+          place(hide(it))
+          context {
+            let bibitem = bibliography-state.final().at(bibliography-counter.get().at(0))
+            footnote(numbering: numbering, bibitem)
+            bibliography-map.update(map => {
+              map.insert(str(it.key), bibitem)
+              map
+            })
+          }
+          bibliography-counter.step()
+          bibliography-visited.update(visited => visited + (it.key,))
+        })
+      } else {
+        footnote(numbering: numbering, context bibliography-map.final().at(str(it.key)))
+      }
     }
-  }
+  )
 
   // Record the bibliography items.
   if record {

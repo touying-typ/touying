@@ -50,13 +50,13 @@
 /// - config (dictionary): The configuration of the slide. You can use `config-xxx` to set the configuration of the slide. For more several configurations, you can use `utils.merge-dicts` to merge them.
 ///
 /// - repeat (auto): The number of subslides. Default is `auto`, which means touying will automatically calculate the number of subslides.
-/// 
+///
 ///   The `repeat` argument is necessary when you use `#slide(repeat: 3, self => [ .. ])` style code to create a slide. The callback-style `uncover` and `only` cannot be detected by touying automatically.
 ///
 /// - setting (dictionary): The setting of the slide. You can use it to add some set/show rules for the slide.
 ///
 /// - composer (function): The composer of the slide. You can use it to set the layout of the slide.
-/// 
+///
 ///   For example, `#slide(composer: (1fr, 2fr, 1fr))[A][B][C]` to split the slide into three parts. The first and the last parts will take 1/4 of the slide, and the second part will take 1/2 of the slide.
 ///
 ///   If you pass a non-function value like `(1fr, 2fr, 1fr)`, it will be assumed to be the first argument of the `components.side-by-side` function.
