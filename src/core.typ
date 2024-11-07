@@ -7,6 +7,7 @@
 /// Slides
 /// ------------------------------------------------
 
+/// -> content
 #let _delayed-wrapper(body) = utils.label-it(
   metadata((kind: "touying-delayed-wrapper", body: body)),
   "touying-temporary-mark",
@@ -19,6 +20,8 @@
 /// - config (dictionary): The new configurations for the presentation.
 ///
 /// - body (content): The content of the slide.
+///
+/// -> content
 #let touying-set-config(config, body) = utils.label-it(
   metadata((
     kind: "touying-set-config",
@@ -34,17 +37,31 @@
 /// Example: `#show: appendix`
 ///
 /// - body (content): The content of the appendix.
+///
+/// -> content
 #let appendix(body) = touying-set-config(
   (appendix: true),
   body,
 )
 
 
-/// Recall a slide by its label
+/// Recall a slide by its label.
 ///
-/// Example: `#touying-recall(<recall>)` or `#touying-recall("recall")`
+/// == Example
+///
+/// #example(```typ
+/// // #touying-recall(<recall>)
+/// ```)
+///
+/// == Example
+///
+/// #example(```typ
+/// // #touying-recall("recall")
+/// ```)
 ///
 /// - lbl (string): The label of the slide to recall
+///
+/// -> content
 #let touying-recall(lbl) = utils.label-it(
   metadata((
     kind: "touying-slide-recaller",
@@ -117,6 +134,8 @@
 
 
 /// Use headings to split a content block into slides
+///
+/// -> content
 #let split-content-into-slides(self: none, recaller-map: (:), new-start: true, is-first-slide: false, body) = {
   // Extract arguments
   assert(type(self) == dictionary, message: "`self` must be a dictionary")
@@ -423,6 +442,8 @@
 /// - repetitions (function): The repetitions for the function. It is useful for functions like `alternatives` with `start: auto`.
 ///
 ///   It accepts a `(repetitions, args)` and should return a (nextrepetitions, extra-args).
+///
+/// -> content
 #let touying-fn-wrapper(fn, last-subslide: none, repetitions: none, ..args) = utils.label-it(
   metadata((
     kind: "touying-fn-wrapper",
@@ -447,6 +468,8 @@
 /// ```
 ///
 /// - fn (function): The function that will be called with an argument `self` like `self => { .. }`.
+///
+/// -> content
 #let touying-slide-wrapper(fn) = utils.label-it(
   metadata((
     kind: "touying-slide-wrapper",
@@ -481,6 +504,8 @@
 ///    For example, "-2, 4, 6-8, 10-" means slides 1, 2, 4, 6, 7, 8, 10, and slides after 10 are visible.
 ///
 /// - uncover-cont (content): The content to display when the content is visible in the subslide.
+///
+/// -> content
 #let uncover(visible-subslides, uncover-cont) = {
   touying-fn-wrapper(
     utils.uncover,
@@ -507,6 +532,8 @@
 ///    For example, "-2, 4, 6-8, 10-" means slides 1, 2, 4, 6, 7, 8, 10, and slides after 10 are visible.
 ///
 /// - only-cont (content): The content to display when the content is visible in the subslide.
+///
+/// -> content
 #let only(visible-subslides, only-cont) = {
   touying-fn-wrapper(
     utils.only,
@@ -535,6 +562,8 @@
 /// - stretch (boolean): A boolean indicating whether the content should be stretched to the maximum width and height. Default is `true`.
 ///
 ///   Important: If you use a zero-length content like context expression, you should set `stretch: false`.
+///
+/// -> content
 #let alternatives-match(subslides-contents, position: bottom + left, stretch: true) = {
   touying-fn-wrapper(
     utils.alternatives-match,
@@ -559,6 +588,8 @@
 /// - stretch (boolean): A boolean indicating whether the content should be stretched to the maximum width and height. Default is `true`.
 ///
 ///   Important: If you use a zero-length content like context expression, you should set `stretch: false`.
+///
+/// -> content
 #let alternatives(
   start: auto,
   repeat-last: true,
@@ -602,6 +633,8 @@
 /// - stretch (boolean): A boolean indicating whether the content should be stretched to the maximum width and height. Default is `true`.
 ///
 ///   Important: If you use a zero-length content like context expression, you should set `stretch: false`.
+///
+/// -> content
 #let alternatives-fn(
   start: 1,
   end: none,
@@ -654,6 +687,8 @@
 /// - stretch (boolean): A boolean indicating whether the content should be stretched to the maximum width and height. Default is `true`.
 ///
 ///   Important: If you use a zero-length content like context expression, you should set `stretch: false`.
+///
+/// -> content
 #let alternatives-cases(cases, fn, position: bottom + left, stretch: true, ..kwargs) = {
   touying-fn-wrapper(
     utils.alternatives-cases,
@@ -669,7 +704,11 @@
 
 /// Speaker notes are a way to add additional information to your slides that is not visible to the audience. This can be useful for providing additional context or reminders to yourself.
 ///
-/// Example: `#speaker-note[This is a speaker note]`
+/// == Example
+///
+/// #example(```typ
+/// #speaker-note[This is a speaker note]
+/// ```)
 ///
 /// - self (none): The current context.
 ///
@@ -678,12 +717,16 @@
 /// - setting (function): A function that takes the note as input and returns a processed note.
 ///
 /// - note (content): The content of the speaker note.
+///
+/// -> content
 #let speaker-note(mode: "typ", setting: it => it, note) = {
   touying-fn-wrapper(utils.speaker-note, mode: mode, setting: setting, note)
 }
 
 
 /// Alert is a way to display a message to the audience. It can be used to draw attention to important information or to provide instructions.
+///
+/// -> content
 #let alert(body) = touying-fn-wrapper(utils.alert, body)
 
 
@@ -707,6 +750,8 @@
 /// - scope (dictionary): The scope when we use `eval()` function to evaluate the equation.
 ///
 /// - body (string, content, function): The content of the equation. It should be a string, a raw text, or a function that receives `self` as an argument and returns a string.
+///
+/// -> content
 #let touying-equation(block: true, numbering: none, supplement: auto, scope: (:), body) = utils.label-it(
   metadata((
     kind: "touying-equation",
@@ -751,6 +796,8 @@
 /// - supplement (string): The supplement of the equation. Default is `auto`.
 ///
 /// - body (string, content, function): The content of the equation. It should be a string, a raw text, or a function that receives `self` as an argument and returns a string.
+///
+/// -> content
 #let touying-mitex(block: true, numbering: none, supplement: auto, mitex, body) = utils.label(
   metadata((
     kind: "touying-mitex",
@@ -787,6 +834,8 @@
 /// - cover (function): The cover function that will be called when some content is hidden. It is usually a function that receives the argument of the content that will be hidden. Just like the `cetz.draw.hide` or `fletcher.hide` function.
 ///
 /// - args (array): The arguments of the reducer function.
+///
+/// -> content
 #let touying-reducer(reduce: arr => arr.sum(), cover: arr => none, ..args) = utils.label-it(
   metadata((
     kind: "touying-reducer",
@@ -1576,6 +1625,8 @@
 ///   If you want to customize the composer, you can pass a function to the `composer` argument. The function should receive the contents of the slide and return the content of the slide, like `#slide(composer: grid.with(columns: 2))[A][B]`.
 ///
 /// - bodies (array): The contents of the slide. You can call the `slide` function with syntax like `#slide[A][B][C]` to create a slide.
+///
+/// -> content
 #let touying-slide(
   self: none,
   config: (:),
@@ -1784,6 +1835,8 @@
 ///   If you want to customize the composer, you can pass a function to the `composer` argument. The function should receive the contents of the slide and return the content of the slide, like `#slide(composer: grid.with(columns: 2))[A][B]`.
 ///
 /// - bodies (array): The contents of the slide. You can call the `slide` function with syntax like `#slide[A][B][C]` to create a slide.
+///
+/// -> content
 #let slide(
   config: (:),
   repeat: auto,
@@ -1818,6 +1871,8 @@
 ///   If you want to customize the composer, you can pass a function to the `composer` argument. The function should receive the contents of the slide and return the content of the slide, like `#slide(composer: grid.with(columns: 2))[A][B]`.
 ///
 /// - bodies (array): The contents of the slide. You can call the `slide` function with syntax like `#slide[A][B][C]` to create a slide.
+///
+/// -> content
 #let empty-slide(
   config: (:),
   repeat: auto,

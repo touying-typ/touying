@@ -19,6 +19,8 @@
 /// - gutter (length): The space between columns. Default is `1em`.
 ///
 /// - bodies (content): The contents to display side by side.
+///
+/// -> content
 #let side-by-side(columns: auto, gutter: 1em, ..bodies) = {
   let bodies = bodies.pos()
   if bodies.len() == 1 {
@@ -46,6 +48,8 @@
 /// - end (content): The content to place after the columns.
 ///
 /// - body (content): The content to place in the columns.
+///
+/// -> content
 #let adaptive-columns(gutter: 4%, max-count: 3, start: none, end: none, body) = layout(size => {
   let n = calc.min(
     calc.ceil(measure(body).height / (size.height - measure(start).height - measure(end).height)),
@@ -71,6 +75,8 @@
 /// - secondary (color): The color of the background of the progress bar.
 ///
 /// - height (length): The height of the progress bar, optional. Default is `2pt`.
+///
+/// -> content
 #let progress-bar(height: 2pt, primary, secondary) = utils.touying-progress(ratio => {
   grid(
     columns: (ratio * 100%, 1fr),
@@ -85,6 +91,8 @@
 /// - left (content): The content of the left part.
 ///
 /// - right (content): The content of the right part.
+///
+/// -> content
 #let left-and-right(left, right) = grid(
   columns: (auto, 1fr, auto),
   left, none, right,
@@ -102,6 +110,8 @@
 /// - Check that there are enough rows and columns to fit in all the content blocks.
 ///
 /// That means that `#checkerboard[...][...]` stacks horizontally and `#checkerboard(columns: 1)[...][...]` stacks vertically.
+///
+/// -> content
 #let checkerboard(columns: none, rows: none, ..bodies) = {
   let bodies = bodies.pos()
   let columns = if type(columns) == int {
@@ -163,6 +173,8 @@
 /// - cover (boolean): Indicates whether the current entry should be covered.
 ///
 /// - args (content): The other arguments passed to the `progressive-outline`.
+///
+/// -> content
 #let progressive-outline(
   alpha: 60%,
   level: 1,
@@ -241,6 +253,8 @@
 /// - uncover-fn (function): A function that takes the body of the heading and returns the body of the heading when it is uncovered. Default is the identity function.
 ///
 /// - args (content): The other arguments passed to the `progressive-outline` and `transform`.
+///
+/// -> content
 #let custom-progressive-outline(
   self: none,
   alpha: 60%,
@@ -359,6 +373,8 @@
 /// - linebreaks (boolean): Indicates whether or not to insert linebreaks between links for sections and subsections.
 ///
 /// - short-heading (boolean): Indicates whether the headings should be shortened. Default is `true`.
+///
+/// -> content
 #let mini-slides(
   self: none,
   fill: rgb("000000"),
@@ -482,6 +498,8 @@
 /// - background (color): The background color of the navigation. Default is `black`.
 ///
 /// - logo (none): The logo of the navigation. Default is `none`.
+///
+/// -> content
 #let simple-navigation(
   self: none,
   short-heading: true,
@@ -541,6 +559,8 @@
 /// Example: `#set list(marker: components.knob-marker(primary: rgb("005bac")))`
 ///
 /// - primary (color): The color of the marker.
+///
+/// -> content
 #let knob-marker(primary: rgb("#005bac")) = box(
   width: 0.5em,
   place(

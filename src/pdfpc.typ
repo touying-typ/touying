@@ -1,6 +1,9 @@
 // Attribution: This file is based on the code from https://github.com/andreasKroepelin/polylux/blob/main/utils/pdfpc.typ
 // Author: Andreas Kröpelin
 
+/// Generate a pdfpc file for the presentation.
+///
+/// -> content
 #let pdfpc-file(loc) = {
   let arr = query(<pdfpc>).map(it => it.value)
   let (config, ..slides) = arr.split((t: "NewSlide"))
@@ -51,6 +54,8 @@
 }
 
 /// Add some speaker notes to the slide for exporting to pdfpc file.
+///
+/// -> content
 #let speaker-note(text) = {
   let text = if type(text) == str {
     text
@@ -110,6 +115,8 @@
 /// - disable-markdown (bool): A flag to disable markdown in the speaker notes.
 ///
 /// - default-transition (string): The default transition for the slides.
+///
+/// -> content
 #let config(
   duration-minutes: none,
   start-time: none,

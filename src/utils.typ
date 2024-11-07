@@ -5,6 +5,8 @@
 /// Add a dictionary to another dictionary recursively
 ///
 /// Example: `add-dicts((a: (b: 1), (a: (c: 2))` returns `(a: (b: 1, c: 2)`
+///
+/// -> dictionary
 #let add-dicts(dict-a, dict-b) = {
   let res = dict-a
   for key in dict-b.keys() {
@@ -21,6 +23,8 @@
 /// Merge some dictionaries recursively
 ///
 /// Example: `merge-dicts((a: (b: 1)), (a: (c: 2)))` returns `(a: (b: 1, c: 2))`
+///
+/// -> dictionary
 #let merge-dicts(init-dict, ..dicts) = {
   assert(dicts.named().len() == 0, message: "You must provide dictionaries as positional arguments")
   let res = init-dict
@@ -40,6 +44,8 @@
 /// Get the progress of the current slide.
 ///
 /// - callback (function): The callback function `ratio => { .. }` to get the progress of the current slide. The `ratio` is a float number between 0 and 1.
+///
+/// -> content
 #let touying-progress(callback) = (
   context {
     if last-slide-counter.final().first() == 0 {
@@ -69,7 +75,13 @@
 ///
 /// Example: `trim(([], [ ], parbreak(), linebreak(), [a], [ ], [b], [c], linebreak(), parbreak(), [ ], [ ]))` returns `([a], [ ], [b], [c])`
 ///
+/// #let arr = `array(content)`
+///
+/// - arr (arr): The array of content to trim
+///
 /// - empty-contents (array): An array of content that is considered empty
+///
+/// -> content
 #let trim(arr, empty-contents: ([], [ ], parbreak(), linebreak())) = {
   let i = 0
   let j = arr.len() - 1
@@ -90,6 +102,8 @@
 /// - it (content): The content to label.
 ///
 /// - label-name (string, label): The name of the label, or a label.
+///
+/// -> content
 #let label-it(it, label-name) = {
   if type(label-name) == label {
     [#it#label-name]
@@ -110,6 +124,8 @@
 /// - it (content): The content to reconstruct.
 ///
 /// - new-body (content): The new body you want to replace the old body with.
+///
+/// -> content
 #let reconstruct(body-name: "body", labeled: true, named: false, it, ..new-body) = {
   let fields = it.fields()
   let label = fields.remove("label", default: none)
@@ -137,6 +153,8 @@
 /// - `it` is the content to reconstruct
 ///
 /// - `new-children` is the new children you want to replace the old children with
+///
+/// -> content
 #let reconstruct-table-like(named: true, labeled: true, it, new-children) = {
   reconstruct(body-name: "children", named: named, labeled: labeled, it, ..new-children)
 }
@@ -147,6 +165,8 @@
 /// Determine if a content is a sequence.
 ///
 /// Example: `is-sequence([a])` returns `true`
+///
+/// -> bool
 #let is-sequence(it) = {
   type(it) == content and it.func() == typst-builtin-sequence
 }
@@ -157,6 +177,8 @@
 /// Determine if a content is styled.
 ///
 /// Example: `is-styled(text(fill: red)[Red])` returns `true`
+///
+/// -> bool
 #let is-styled(it) = {
   type(it) == content and it.func() == typst-builtin-styled
 }
@@ -167,6 +189,8 @@
 /// - it (content): The content to reconstruct.
 ///
 /// - new-child (content): The new child you want to replace the old body with.
+///
+/// -> content
 #let reconstruct-styled(it, new-child) = {
   typst-builtin-styled(new-child, it.styles)
 }
@@ -175,24 +199,32 @@
 /// Determine if a content is a metadata.
 ///
 /// Example: `is-metadata(metadata((a: 1)))` returns `true`
+///
+/// -> bool
 #let is-metadata(it) = {
   type(it) == content and it.func() == metadata
 }
 
 
 /// Determine if a content is a metadata with a specific kind.
+///
+/// -> bool
 #let is-kind(it, kind) = {
   is-metadata(it) and type(it.value) == dictionary and it.value.at("kind", default: none) == kind
 }
 
 
 /// Determine if a content is a heading in a specific depth.
+///
+/// -> bool
 #let is-heading(it, depth: 9999) = {
   type(it) == content and it.func() == heading and it.depth <= depth
 }
 
 
 /// Call a `self => {..}` function and return the result, or just return the content.
+///
+/// -> content
 #let call-or-display(self, it) = {
   if type(it) == function {
     it = it(self)
@@ -211,6 +243,8 @@
 /// `methods` function is used to get all methods in dictionary object.
 ///
 /// Example: `#let (uncover, only) = utils.methods(self)` to get `uncover` and `only` methods.
+///
+/// -> dictionary
 #let methods(self) = {
   assert(type(self) == dictionary, message: "self must be a dictionary")
   assert("methods" in self and type(self.methods) == dictionary, message: "self.methods must be a dictionary")
@@ -230,6 +264,10 @@
 
 
 /// Capitalize a string
+///
+/// - s (str): The string to convert.
+///
+/// -> str
 #let capitalize(s) = {
   assert(type(s) == str, message: "s must be a string")
   if s.len() == 0 {
@@ -241,6 +279,10 @@
 
 
 /// Convert a string into title case
+///
+/// - s (str): The string to convert.
+///
+/// -> str
 #let titlecase(s) = {
   assert(type(s) == str, message: "s must be a string")
   if s.len() == 0 {
@@ -252,7 +294,9 @@
 
 /// Convert a heading with label to short form
 ///
-/// - it (string): The heading.
+/// - it (str): The heading.
+///
+/// -> str
 #let short-heading(self: none, it) = {
   if it == none {
     return
@@ -281,6 +325,8 @@
 /// - hierachical (boolean): A value to indicate whether to return the heading hierarchically. If `hierachical` is `true`, it will return the last heading according to the hierarchical structure. If `hierachical` is `false`, it will return the last heading on or before the current page with the same level.
 ///
 /// - depth (int): The maximum depth of the heading to search. Usually, it should be set as slide-level.
+///
+/// -> content
 #let current-heading(level: auto, hierachical: true, depth: 9999) = {
   let current-page = here().page()
   if not hierachical and level != auto {
@@ -321,6 +367,8 @@
 /// - setting (function): The setting of the heading. Default is `body => body`.
 ///
 /// - style (function): The style of the heading. If `style` is a function, it will use the function to style the heading. For example, `style: current-heading => current-heading.body`.
+///
+/// -> content
 #let display-current-heading(
   self: none,
   level: auto,
@@ -359,6 +407,8 @@
 /// - hierachical (boolean): A value to indicate whether to return the heading hierarchically. If `hierachical` is `true`, it will return the last heading according to the hierarchical structure. If `hierachical` is `false`, it will return the last heading on or before the current page with the same level.
 ///
 /// - depth (int): The maximum depth of the heading to search. Usually, it should be set as slide-level.
+///
+/// -> content
 #let display-current-heading-number(level: auto, numbering: auto, hierachical: true, depth: 9999) = (
   context {
     let current-heading = current-heading(level: level, hierachical: hierachical, depth: depth)
@@ -380,6 +430,8 @@
 /// - depth (int): The maximum depth of the heading to search. Usually, it should be set as slide-level.
 ///
 /// - sty (function): The style of the heading. If `sty` is a function, it will use the function to style the heading. For example, `sty: current-heading => current-heading.body`.
+///
+/// -> content
 #let display-current-short-heading(
   self: none,
   level: auto,
@@ -405,6 +457,8 @@
 
 
 /// Display the date of `self.info.date` with `self.datetime-format` format.
+///
+/// -> str
 #let display-info-date(self) = {
   assert("info" in self, message: "self must have an info field")
   if type(self.info.date) == datetime {
@@ -418,11 +472,15 @@
 /// Convert content to markup text, partly from
 /// [typst-examples-book](https://sitandr.github.io/typst-examples-book/book/typstonomicon/extract_markup_text.html).
 ///
-/// - it (content): The content to convert.
+/// #let mode = `str or "typ" or "md"`
 ///
-/// - mode (string): The mode of the markup text, either `typ` or `md`.
+/// - it (content, str): The content to convert.
+///
+/// - mode (str, mode): The mode of the markup text, either `typ` or `md`.
 ///
 /// - indent (int): The number of spaces to indent. Default is `0`.
+///
+/// -> str
 #let markup-text(it, mode: "typ", indent: 0) = {
   assert(mode == "typ" or mode == "md", message: "mode must be 'typ' or 'md'")
   let indent-markup-text = markup-text.with(mode: mode, indent: indent + 2)
@@ -538,6 +596,8 @@
 /// - height (length): The height to fit the content to.
 ///
 /// - body (content): The content to fit.
+///
+/// -> content
 #let fit-to-height(
   width: none,
   prescale-width: none,
@@ -637,6 +697,8 @@
 /// - width (length, fraction, relative): The width to fit the content to.
 ///
 /// - body (content): The content to fit.
+///
+/// -> content
 #let fit-to-width(grow: true, shrink: true, width, content) = {
   layout(layout-size => {
     let content-size = measure(content)
@@ -672,6 +734,8 @@
 /// - inline (boolean): Indicates whether the content should be displayed inline. Default is `true`.
 ///
 /// - body (content): The content to cover.
+///
+/// -> content
 #let cover-with-rect(..cover-args, fill: auto, inline: true, body) = {
   if fill == auto {
     panic("`auto` fill value is not supported until typst provides utilities to" + " retrieve the current page background")
@@ -725,6 +789,8 @@
 /// - color (color): The color to update.
 ///
 /// - alpha (float): The new alpha value.
+///
+/// -> color
 #let update-alpha(constructor: rgb, color, alpha) = constructor(..color.components(alpha: true).slice(0, -1), alpha)
 
 
@@ -746,10 +812,14 @@
 /// Alert content with a primary color.
 ///
 /// Example: `config-methods(alert: utils.alert-with-primary-color)`
+///
+/// -> content
 #let alert-with-primary-color(self: none, body) = text(fill: self.colors.primary, body)
 
 
 /// Alert content.
+///
+/// -> content
 #let alert(self: none, body) = (self.methods.alert)(self: self, body)
 
 
@@ -807,6 +877,8 @@
 ///    You can also use more convenient and complex strings to specify visible slides.
 ///
 ///    For example, "-2, 4, 6-8, 10-" means slides 1, 2, 4, 6, 7, 8, 10, and slides after 10 are visible.
+///
+/// -> bool
 #let check-visible(idx, visible-subslides) = {
   if type(visible-subslides) == int {
     idx == visible-subslides
@@ -876,6 +948,8 @@
 ///   For example, `"-2, 4, 6-8, 10-"` means slides 1, 2, 4, 6, 7, 8, 10, and slides after 10 are visible.
 ///
 /// - uncover-cont (content): The content to display when the content is visible in the subslide.
+///
+/// -> content
 #let uncover(self: none, visible-subslides, uncover-cont) = {
   let cover = self.methods.cover.with(self: self)
   if check-visible(self.subslide, visible-subslides) {
@@ -901,6 +975,8 @@
 ///   For example, `"-2, 4, 6-8, 10-"` means slides 1, 2, 4, 6, 7, 8, 10, and slides after 10 are visible.
 ///
 /// - only-cont (content): The content to display when the content is visible in the subslide.
+///
+/// -> content
 #let only(self: none, visible-subslides, only-cont) = {
   if check-visible(self.subslide, visible-subslides) {
     only-cont
@@ -921,11 +997,13 @@
 ///
 /// - subslides-contents (dictionary): A dictionary mapping from subslides to content.
 ///
-/// - position (string): The position of the content. Default is `bottom + left`.
+/// - position (alignment): The position of the content. Default is `bottom + left`.
 ///
 /// - stretch (boolean): A boolean indicating whether the content should be stretched to the maximum width and height. Default is `true`.
 ///
 ///   Important: If you use a zero-length content like a context expression, you should set `stretch: false`.
+///
+/// -> content
 #let alternatives-match(self: none, subslides-contents, position: bottom + left, stretch: true) = {
   let subslides-contents = if type(subslides-contents) == dictionary {
     subslides-contents.pairs()
@@ -973,6 +1051,8 @@
 /// - stretch (boolean): A boolean indicating whether the content should be stretched to the maximum width and height. Default is `true`.
 ///
 ///   Important: If you use a zero-length content like a context expression, you should set `stretch: false`.
+///
+/// -> content
 #let alternatives(
   self: none,
   start: 1,
@@ -1004,6 +1084,8 @@
 /// - stretch (boolean): A boolean indicating whether the content should be stretched to the maximum width and height. Default is `true`.
 ///
 ///   Important: If you use a zero-length content like a context expression, you should set `stretch: false`.
+///
+/// -> content
 #let alternatives-fn(
   self: none,
   start: 1,
@@ -1048,6 +1130,8 @@
 /// - stretch (boolean): A boolean indicating whether the content should be stretched to the maximum width and height. Default is `true`.
 ///
 ///   Important: If you use a zero-length content like a context expression, you should set `stretch: false`.
+///
+/// -> content
 #let alternatives-cases(self: none, cases, fn, ..kwargs) = {
   let idcs = range(cases.len())
   let contents = idcs.map(fn)
@@ -1066,6 +1150,8 @@
 /// - setting (function): A function that takes the note as input and returns a processed note.
 ///
 /// - note (content): The content of the speaker note.
+///
+/// -> content
 #let speaker-note(self: none, mode: "typ", setting: it => it, note) = {
   if self.at("enable-pdfpc", default: true) {
     let raw-text = if type(note) == content and note.has("text") {
@@ -1087,6 +1173,8 @@
 
 
 /// i18n Outline Title
+///
+/// -> content
 #let i18n-outline-title = context {
   let mapping = (
     ar: "المحتويات",

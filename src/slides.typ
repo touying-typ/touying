@@ -20,6 +20,8 @@
 /// - args (arguments): The configurations of the slides. For example, you can use `config-page(paper: "presentation-16-9")` to set the aspect ratio of the slides.
 ///
 /// - body (content): The contents of the slides.
+///
+/// -> content
 #let touying-slides(..args, body) = {
   // get the default config
   let args = (configs.default-config,) + args.pos()
