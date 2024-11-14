@@ -110,7 +110,7 @@
 #let show-hide-set-list-marker-none(body) = {
   show hide: it => {
     set list(marker: none)
-    set enum(numbering: n => [])
+    set enum(numbering: n => none)
 
     it
   }
