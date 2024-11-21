@@ -75,6 +75,7 @@
   grid(
     columns: (ratio * 100%, 1fr),
     rows: height,
+    gutter: 0pt,
     cell(fill: primary), cell(fill: secondary),
   )
 })
@@ -355,7 +356,7 @@
 /// - `display-section` is a boolean indicating whether the sections should be displayed. Default is `false`.
 ///
 /// - `display-subsection` is a boolean indicating whether the subsections should be displayed. Default is `true`.
-/// 
+///
 /// - `linebreaks` is a boolean indicating whether or not to insert linebreaks between links for sections and subsections
 ///
 /// - `short-heading` is a boolean indicating whether the headings should be shortened. Default is `true`.
