@@ -1650,14 +1650,16 @@
     }
     [#metadata((kind: "touying-new-subslide")) <touying-metadata>]
     if self.at("enable-frozen-states-and-counters", default: true) and not self.handout and self.repeat > 1 {
-      let loc-new-slide = query(selector(<touying-metadata>).before(here()))
-        .filter(it => it.value.kind == "touying-new-slide")
-        .last()
-        .location()
-      _rewind-states(self.frozen-states, loc-new-slide)
-      _rewind-states(self.default-frozen-states, loc-new-slide)
-      _rewind-states(self.frozen-counters, loc-new-slide)
-      _rewind-states(self.default-frozen-counters, loc-new-slide)
+      context {
+        let loc-new-slide = query(selector(<touying-metadata>).before(here()))
+          .filter(it => it.value.kind == "touying-new-slide")
+          .last()
+          .location()
+        _rewind-states(self.frozen-states, loc-new-slide)
+        _rewind-states(self.default-frozen-states, loc-new-slide)
+        _rewind-states(self.frozen-counters, loc-new-slide)
+        _rewind-states(self.default-frozen-counters, loc-new-slide)
+      }
     }
     utils.call-or-display(self, self.at("subslide-preamble", default: none))
     utils.call-or-display(self, self.at("default-subslide-preamble", default: none))
