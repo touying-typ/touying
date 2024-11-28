@@ -55,6 +55,9 @@
 #let slide-note-state = state("touying-slide-note-state", none)
 #let current-slide-note = context slide-note-state.get()
 
+// state to store the location of the newslide for handling frozen states
+#let loc-prior-newslide = state("touying-loc-prior-newslide", none)
+
 
 /// Remove leading and trailing empty elements from an array of content
 ///
