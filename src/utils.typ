@@ -55,15 +55,6 @@
 #let slide-note-state = state("touying-slide-note-state", none)
 #let current-slide-note = context slide-note-state.get()
 
-// -------------------------------------
-// Saved states and counters
-// -------------------------------------
-
-#let saved-frozen-states = state("touying-saved-frozen-states", ())
-#let saved-default-frozen-states = state("touying-saved-default-frozen-states", ())
-#let saved-frozen-counters = state("touying-saved-frozen-counters", ())
-#let saved-default-frozen-counters = state("touying-saved-default-frozen-counters", ())
-
 
 /// Remove leading and trailing empty elements from an array of content
 ///
