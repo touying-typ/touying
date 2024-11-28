@@ -1719,7 +1719,6 @@
   let page-extra-args = _get-page-extra-args(self)
 
   if self.handout {
-    self.subslide = repeat
     let (conts, _, _) = _parse-content-into-results-and-repetitions(
       self: self,
       index: repeat,
