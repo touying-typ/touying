@@ -1,8 +1,8 @@
 #import "../lib.typ": *
 #import themes.university: *
-#import "@preview/cetz:0.2.2"
-#import "@preview/fletcher:0.5.1" as fletcher: node, edge
-#import "@preview/ctheorems:1.1.2": *
+#import "@preview/cetz:0.3.1"
+#import "@preview/fletcher:0.5.2" as fletcher: node, edge
+#import "@preview/ctheorems:1.1.3": *
 #import "@preview/numbly:0.1.0": numbly
 
 // cetz and fletcher bindings for touying
