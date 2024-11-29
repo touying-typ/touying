@@ -7,6 +7,7 @@
 /// Slides
 /// ------------------------------------------------
 
+/// -> content
 #let _delayed-wrapper(body) = utils.label-it(
   metadata((kind: "touying-delayed-wrapper", body: body)),
   "touying-temporary-mark",
@@ -16,9 +17,11 @@
 ///
 /// Example: `#let appendix(body) = touying-set-config((appendix: true), body)` and you can use `#show: appendix` to set the appendix for the presentation.
 ///
-/// - `config` (dict): The new configurations for the presentation.
+/// - config (dictionary): The new configurations for the presentation.
 ///
-/// - `body` (content): The content of the slide.
+/// - body (content): The content of the slide.
+///
+/// -> content
 #let touying-set-config(config, body) = utils.label-it(
   metadata((
     kind: "touying-set-config",
@@ -33,18 +36,32 @@
 ///
 /// Example: `#show: appendix`
 ///
-/// - `body` (content): The content of the appendix.
+/// - body (content): The content of the appendix.
+///
+/// -> content
 #let appendix(body) = touying-set-config(
   (appendix: true),
   body,
 )
 
 
-/// Recall a slide by its label
+/// Recall a slide by its label.
 ///
-/// Example: `#touying-recall(<recall>)` or `#touying-recall("recall")`
+/// == Example
 ///
-/// - `lbl` (str): The label of the slide to recall
+/// #example(```typ
+/// // #touying-recall(<recall>)
+/// ```)
+///
+/// == Example
+///
+/// #example(```typ
+/// // #touying-recall("recall")
+/// ```)
+///
+/// - lbl (string): The label of the slide to recall
+///
+/// -> content
 #let touying-recall(lbl) = utils.label-it(
   metadata((
     kind: "touying-slide-recaller",
@@ -117,6 +134,8 @@
 
 
 /// Use headings to split a content block into slides
+///
+/// -> content
 #let split-content-into-slides(self: none, recaller-map: (:), new-start: true, is-first-slide: false, body) = {
   // Extract arguments
   assert(type(self) == dictionary, message: "`self` must be a dictionary")
@@ -414,15 +433,17 @@
 ///
 /// Example: `#let alternatives = touying-fn-wrapper.with(utils.alternatives)`
 ///
-/// - `fn` ((self: none, ..args) => { .. }): The function that will be called.
+/// - fn (function): The function that will be called like `(self: none, ..args) => { .. }`.
 ///
-/// - `last-subslide` (int): The max repetitions for the slide. It is useful for functions like `uncover`, `only` and `alternatives-match` that need to update the max repetitions for the slide.
+/// - last-subslide (int): The max repetitions for the slide. It is useful for functions like `uncover`, `only` and `alternatives-match` that need to update the max repetitions for the slide.
 ///
 ///   It is useful for functions like `uncover`, `only` and `alternatives-match` that need to update the max repetitions for the slide.
 ///
-/// - `repetitions` (function): The repetitions for the function. It is useful for functions like `alternatives` with `start: auto`.
+/// - repetitions (function): The repetitions for the function. It is useful for functions like `alternatives` with `start: auto`.
 ///
 ///   It accepts a `(repetitions, args)` and should return a (nextrepetitions, extra-args).
+///
+/// -> content
 #let touying-fn-wrapper(fn, last-subslide: none, repetitions: none, ..args) = utils.label-it(
   metadata((
     kind: "touying-fn-wrapper",
@@ -446,7 +467,9 @@
 /// })
 /// ```
 ///
-/// - `fn` (self => { .. }): The function that will be called with an argument `self`.
+/// - fn (function): The function that will be called with an argument `self` like `self => { .. }`.
+///
+/// -> content
 #let touying-slide-wrapper(fn) = utils.label-it(
   metadata((
     kind: "touying-slide-wrapper",
@@ -468,7 +491,7 @@
 ///
 /// Example: `uncover("2-")[abc]` will display `[abc]` if the current slide is 2 or later
 ///
-/// - `visible-subslides` is a single integer, an array of integers,
+/// - visible-subslides (int, array, string): `visible-subslides` is a single integer, an array of integers,
 ///    or a string that specifies the visible subslides
 ///
 ///    Read [polylux book](https://polylux.dev/book/dynamic/complex.html)
@@ -480,7 +503,9 @@
 ///
 ///    For example, "-2, 4, 6-8, 10-" means slides 1, 2, 4, 6, 7, 8, 10, and slides after 10 are visible.
 ///
-/// - `uncover-cont` is the content to display when the content is visible in the subslide.
+/// - uncover-cont (content): The content to display when the content is visible in the subslide.
+///
+/// -> content
 #let uncover(visible-subslides, uncover-cont) = {
   touying-fn-wrapper(
     utils.uncover,
@@ -494,7 +519,7 @@
 /// Display content in some subslides only.
 /// Don't reserve space when hidden, content is completely not existing there.
 ///
-/// - `visible-subslides` is a single integer, an array of integers,
+/// - visible-subslides (int, array, string): `visible-subslides` is a single integer, an array of integers,
 ///    or a string that specifies the visible subslides
 ///
 ///    Read [polylux book](https://polylux.dev/book/dynamic/complex.html)
@@ -506,7 +531,9 @@
 ///
 ///    For example, "-2, 4, 6-8, 10-" means slides 1, 2, 4, 6, 7, 8, 10, and slides after 10 are visible.
 ///
-/// - `only-cont` is the content to display when the content is visible in the subslide.
+/// - only-cont (content): The content to display when the content is visible in the subslide.
+///
+/// -> content
 #let only(visible-subslides, only-cont) = {
   touying-fn-wrapper(
     utils.only,
@@ -519,20 +546,24 @@
 
 /// `#alternatives` has a couple of "cousins" that might be more convenient in some situations. The first one is `#alternatives-match` that has a name inspired by match-statements in many functional programming languages. The idea is that you give it a dictionary mapping from subslides to content:
 ///
-/// #example(```
+/// Example:
+///
+/// ```typst
 /// #alternatives-match((
 ///   "1, 3-5": [this text has the majority],
 ///   "2, 6": [this is shown less often]
 /// ))
-/// ```)
+/// ```
 ///
-/// - `subslides-contents` is a dictionary mapping from subslides to content.
+/// - subslides-contents (dictionary): A dictionary mapping from subslides to content.
 ///
-/// - `position` is the position of the content. Default is `bottom + left`.
+/// - position (string): The position of the content. Default is `bottom + left`.
 ///
-/// - `stretch` is a boolean indicating whether the content should be stretched to the maximum width and height. Default is `true`.
+/// - stretch (boolean): A boolean indicating whether the content should be stretched to the maximum width and height. Default is `true`.
 ///
 ///   Important: If you use a zero-length content like context expression, you should set `stretch: false`.
+///
+/// -> content
 #let alternatives-match(subslides-contents, position: bottom + left, stretch: true) = {
   touying-fn-wrapper(
     utils.alternatives-match,
@@ -548,15 +579,17 @@
 ///
 /// Example: `#alternatives[Ann][Bob][Christopher]` will show "Ann" in the first subslide, "Bob" in the second subslide, and "Christopher" in the third subslide.
 ///
-/// - `start` is the starting subslide number. Default is `auto`.
+/// - start (int): The starting subslide number. Default is `auto`.
 ///
-/// - `repeat-last` is a boolean indicating whether the last subslide should be repeated. Default is `true`.
+/// - repeat-last (boolean): A boolean indicating whether the last subslide should be repeated. Default is `true`.
 ///
-/// - `position` is the position of the content. Default is `bottom + left`.
+/// - position (string): The position of the content. Default is `bottom + left`.
 ///
-/// - `stretch` is a boolean indicating whether the content should be stretched to the maximum width and height. Default is `true`.
+/// - stretch (boolean): A boolean indicating whether the content should be stretched to the maximum width and height. Default is `true`.
 ///
 ///   Important: If you use a zero-length content like context expression, you should set `stretch: false`.
+///
+/// -> content
 #let alternatives(
   start: auto,
   repeat-last: true,
@@ -589,17 +622,19 @@
 ///
 /// Example: `#alternatives-fn(start: 2, count: 7, subslide => { numbering("(i)", subslide) })`
 ///
-/// - `start` is the starting subslide number. Default is `1`.
+/// - start (int): The starting subslide number. Default is `1`.
 ///
-/// - `end` is the ending subslide number. Default is `none`.
+/// - end (none, int): The ending subslide number. Default is `none`.
 ///
-/// - `count` is the number of subslides. Default is `none`.
+/// - count (none, int): The number of subslides. Default is `none`.
 ///
-/// - `position` is the position of the content. Default is `bottom + left`.
+/// - position (string): The position of the content. Default is `bottom + left`.
 ///
-/// - `stretch` is a boolean indicating whether the content should be stretched to the maximum width and height. Default is `true`.
+/// - stretch (boolean): A boolean indicating whether the content should be stretched to the maximum width and height. Default is `true`.
 ///
 ///   Important: If you use a zero-length content like context expression, you should set `stretch: false`.
+///
+/// -> content
 #let alternatives-fn(
   start: 1,
   end: none,
@@ -634,22 +669,26 @@
 
 /// You can use this function if you want to have one piece of content that changes only slightly depending of what "case" of subslides you are in.
 ///
-/// #example(```
+/// Example:
+///
+/// ```typst
 /// #alternatives-cases(("1, 3", "2"), case => [
 ///   #set text(fill: teal) if case == 1
 ///   Some text
 /// ])
-/// ```)
+/// ```
 ///
-/// - `cases` is an array of strings that specify the subslides for each case.
+/// - cases (array): An array of strings that specify the subslides for each case.
 ///
-/// - `fn` is a function that maps the case to content. The argument `case` is the index of the cases array you input.
+/// - fn (function): A function that maps the case to content. The argument `case` is the index of the cases array you input.
 ///
-/// - `position` is the position of the content. Default is `bottom + left`.
+/// - position (string): The position of the content. Default is `bottom + left`.
 ///
-/// - `stretch` is a boolean indicating whether the content should be stretched to the maximum width and height. Default is `true`.
+/// - stretch (boolean): A boolean indicating whether the content should be stretched to the maximum width and height. Default is `true`.
 ///
 ///   Important: If you use a zero-length content like context expression, you should set `stretch: false`.
+///
+/// -> content
 #let alternatives-cases(cases, fn, position: bottom + left, stretch: true, ..kwargs) = {
   touying-fn-wrapper(
     utils.alternatives-cases,
@@ -665,42 +704,54 @@
 
 /// Speaker notes are a way to add additional information to your slides that is not visible to the audience. This can be useful for providing additional context or reminders to yourself.
 ///
-/// Example: `#speaker-note[This is a speaker note]`
+/// == Example
 ///
-/// - `self` is the current context.
+/// #example(```typ
+/// #speaker-note[This is a speaker note]
+/// ```)
 ///
-/// - `mode` is the mode of the markup text, either `typ` or `md`. Default is `typ`.
+/// - self (none): The current context.
 ///
-/// - `setting` is a function that takes the note as input and returns a processed note.
+/// - mode (string): The mode of the markup text, either `typ` or `md`. Default is `typ`.
 ///
-/// - `note` is the content of the speaker note.
+/// - setting (function): A function that takes the note as input and returns a processed note.
+///
+/// - note (content): The content of the speaker note.
+///
+/// -> content
 #let speaker-note(mode: "typ", setting: it => it, note) = {
   touying-fn-wrapper(utils.speaker-note, mode: mode, setting: setting, note)
 }
 
 
 /// Alert is a way to display a message to the audience. It can be used to draw attention to important information or to provide instructions.
+///
+/// -> content
 #let alert(body) = touying-fn-wrapper(utils.alert, body)
 
 
 /// Touying also provides a unique and highly useful feature—math equation animations, allowing you to conveniently use pause and meanwhile within math equations.
 ///
-/// #example(```
+/// Example:
+///
+/// ```typst
 /// #touying-equation(`
 ///   f(x) &= pause x^2 + 2x + 1  \
 ///         &= pause (x + 1)^2  \
 /// `)
-/// ```)
+/// ```
 ///
-/// - `block` is a boolean indicating whether the equation is a block. Default is `true`.
+/// - block (boolean): A boolean indicating whether the equation is a block. Default is `true`.
 ///
-/// - `numbering` is the numbering of the equation. Default is `none`.
+/// - numbering (none, string): The numbering of the equation. Default is `none`.
 ///
-/// - `supplement` is the supplement of the equation. Default is `auto`.
+/// - supplement (string): The supplement of the equation. Default is `auto`.
 ///
-/// - `scope` is the scope when we use `eval()` function to evaluate the equation.
+/// - scope (dictionary): The scope when we use `eval()` function to evaluate the equation.
 ///
-/// - `body` is the content of the equation. It should be a string, a raw text or a function that receives `self` as an argument and returns a string.
+/// - body (string, content, function): The content of the equation. It should be a string, a raw text, or a function that receives `self` as an argument and returns a string.
+///
+/// -> content
 #let touying-equation(block: true, numbering: none, supplement: auto, scope: (:), body) = utils.label-it(
   metadata((
     kind: "touying-equation",
@@ -727,22 +778,26 @@
 /// Touying can integrate with `mitex` to display math equations.
 /// You can use `#touying-mitex` to display math equations with pause and meanwhile.
 ///
-/// #example(```
+/// Example:
+///
+/// ```typst
 /// #touying-mitex(mitex, `
 ///   f(x) &= \pause x^2 + 2x + 1  \\
 ///       &= \pause (x + 1)^2  \\
 /// `)
-/// ```)
+/// ```
 ///
-/// - `mitex` is the mitex function. You can import it by code like `#import "@preview/mitex:0.2.3": mitex`
+/// - mitex (function): The mitex function. You can import it by code like `#import "@preview/mitex:0.2.3": mitex`.
 ///
-/// - `block` is a boolean indicating whether the equation is a block. Default is `true`.
+/// - block (boolean): A boolean indicating whether the equation is a block. Default is `true`.
 ///
-/// - `numbering` is the numbering of the equation. Default is `none`.
+/// - numbering (none, string): The numbering of the equation. Default is `none`.
 ///
-/// - `supplement` is the supplement of the equation. Default is `auto`.
+/// - supplement (string): The supplement of the equation. Default is `auto`.
 ///
-/// - `body` is the content of the equation. It should be a string, a raw text or a function that receives `self` as an argument and returns a string.
+/// - body (string, content, function): The content of the equation. It should be a string, a raw text, or a function that receives `self` as an argument and returns a string.
+///
+/// -> content
 #let touying-mitex(block: true, numbering: none, supplement: auto, mitex, body) = utils.label(
   metadata((
     kind: "touying-mitex",
@@ -774,11 +829,13 @@
 ///
 /// Fletcher: `#let fletcher-diagram = touying-reducer.with(reduce: fletcher.diagram, cover: fletcher.hide)`
 ///
-/// - `reduce` is the reduce function that will be called. It is usually a function that receives an array of content and returns a content it painted. Just like the `cetz.canvas` or `fletcher.diagram` function.
+/// - reduce (function): The reduce function that will be called. It is usually a function that receives an array of content and returns the content it painted. Just like the `cetz.canvas` or `fletcher.diagram` function.
 ///
-/// - `cover` is the cover function that will be called when some content is hidden. It is usually a function that receives an the argument of the content that will be hidden. Just like the `cetz.draw.hide` or `fletcher.hide` function.
+/// - cover (function): The cover function that will be called when some content is hidden. It is usually a function that receives the argument of the content that will be hidden. Just like the `cetz.draw.hide` or `fletcher.hide` function.
 ///
-/// - `..args` is the arguments of the reducer function.
+/// - args (array): The arguments of the reducer function.
+///
+/// -> content
 #let touying-reducer(reduce: arr => arr.sum(), cover: arr => none, ..args) = utils.label-it(
   metadata((
     kind: "touying-reducer",
@@ -1547,27 +1604,29 @@
 /// })
 /// ```
 ///
-/// - `config` is the configuration of the slide. You can use `config-xxx` to set the configuration of the slide. For more several configurations, you can use `utils.merge-dicts` to merge them.
+/// - config (dictionary): The configuration of the slide. You can use `config-xxx` to set the configuration of the slide. For more configurations, you can use `utils.merge-dicts` to merge them.
 ///
-/// - `repeat` is the number of subslides. Default is `auto`，which means touying will automatically calculate the number of subslides.
+/// - repeat (auto): The number of subslides. Default is `auto`, which means touying will automatically calculate the number of subslides.
 ///
 ///   The `repeat` argument is necessary when you use `#slide(repeat: 3, self => [ .. ])` style code to create a slide. The callback-style `uncover` and `only` cannot be detected by touying automatically.
 ///
-/// - `setting` is the setting of the slide. You can use it to add some set/show rules for the slide.
+/// - setting (function): The setting of the slide. You can use it to add some set/show rules for the slide.
 ///
-/// - `composer` is the composer of the slide. You can use it to set the layout of the slide.
+/// - composer (function | array): The composer of the slide. You can use it to set the layout of the slide.
 ///
-///   For example, `#slide(composer: (1fr, 2fr, 1fr))[A][B][C]` to split the slide into three parts. The first and the last parts will take 1/4 of the slide, and the second part will take 1/2 of the slide.
+///   For example, `#slide(composer: (1fr, 2fr, 1fr))[A][B][C]` to split the slide into three parts. The first and last parts will take 1/4 of the slide, and the second part will take 1/2 of the slide.
 ///
 ///   If you pass a non-function value like `(1fr, 2fr, 1fr)`, it will be assumed to be the first argument of the `components.side-by-side` function.
 ///
 ///   The `components.side-by-side` function is a simple wrapper of the `grid` function. It means you can use the `grid.cell(colspan: 2, ..)` to make the cell take 2 columns.
 ///
-///   For example, `#slide(composer: 2)[A][B][#grid.cell(colspan: 2)[Footer]] will make the `Footer` cell take 2 columns.
+///   For example, `#slide(composer: 2)[A][B][#grid.cell(colspan: 2)[Footer]]` will make the `Footer` cell take 2 columns.
 ///
 ///   If you want to customize the composer, you can pass a function to the `composer` argument. The function should receive the contents of the slide and return the content of the slide, like `#slide(composer: grid.with(columns: 2))[A][B]`.
 ///
-/// - `..bodies` is the contents of the slide. You can call the `slide` function with syntax like `#slide[A][B][C]` to create a slide.
+/// - bodies (array): The contents of the slide. You can call the `slide` function with syntax like `#slide[A][B][C]` to create a slide.
+///
+/// -> content
 #let touying-slide(
   self: none,
   config: (:),
@@ -1755,27 +1814,29 @@
 
 /// Touying slide function.
 ///
-/// - `config` is the configuration of the slide. You can use `config-xxx` to set the configuration of the slide. For more several configurations, you can use `utils.merge-dicts` to merge them.
+/// - config (dict): The configuration of the slide. You can use `config-xxx` to set the configuration of the slide. For more configurations, you can use `utils.merge-dicts` to merge them.
 ///
-/// - `repeat` is the number of subslides. Default is `auto`，which means touying will automatically calculate the number of subslides.
+/// - repeat (auto): The number of subslides. Default is `auto`, which means touying will automatically calculate the number of subslides.
 ///
 ///   The `repeat` argument is necessary when you use `#slide(repeat: 3, self => [ .. ])` style code to create a slide. The callback-style `uncover` and `only` cannot be detected by touying automatically.
 ///
-/// - `setting` is the setting of the slide. You can use it to add some set/show rules for the slide.
+/// - setting (function): The setting of the slide. You can use it to add some set/show rules for the slide.
 ///
-/// - `composer` is the composer of the slide. You can use it to set the layout of the slide.
+/// - composer (function | array): The composer of the slide. You can use it to set the layout of the slide.
 ///
-///   For example, `#slide(composer: (1fr, 2fr, 1fr))[A][B][C]` to split the slide into three parts. The first and the last parts will take 1/4 of the slide, and the second part will take 1/2 of the slide.
+///   For example, `#slide(composer: (1fr, 2fr, 1fr))[A][B][C]` to split the slide into three parts. The first and last parts will take 1/4 of the slide, and the second part will take 1/2 of the slide.
 ///
 ///   If you pass a non-function value like `(1fr, 2fr, 1fr)`, it will be assumed to be the first argument of the `components.side-by-side` function.
 ///
 ///   The `components.side-by-side` function is a simple wrapper of the `grid` function. It means you can use the `grid.cell(colspan: 2, ..)` to make the cell take 2 columns.
 ///
-///   For example, `#slide(composer: 2)[A][B][#grid.cell(colspan: 2)[Footer]] will make the `Footer` cell take 2 columns.
+///   For example, `#slide(composer: 2)[A][B][#grid.cell(colspan: 2)[Footer]]` will make the `Footer` cell take 2 columns.
 ///
 ///   If you want to customize the composer, you can pass a function to the `composer` argument. The function should receive the contents of the slide and return the content of the slide, like `#slide(composer: grid.with(columns: 2))[A][B]`.
 ///
-/// - `..bodies` is the contents of the slide. You can call the `slide` function with syntax like `#slide[A][B][C]` to create a slide.
+/// - bodies (array): The contents of the slide. You can call the `slide` function with syntax like `#slide[A][B][C]` to create a slide.
+///
+/// -> content
 #let slide(
   config: (:),
   repeat: auto,
@@ -1789,27 +1850,29 @@
 
 /// Touying empty slide function.
 ///
-/// - `config` is the configuration of the slide. You can use `config-xxx` to set the configuration of the slide. For more several configurations, you can use `utils.merge-dicts` to merge them.
+/// - config (dict): The configuration of the slide. You can use `config-xxx` to set the configuration of the slide. For more configurations, you can use `utils.merge-dicts` to merge them.
 ///
-/// - `repeat` is the number of subslides. Default is `auto`，which means touying will automatically calculate the number of subslides.
+/// - repeat (auto): The number of subslides. Default is `auto`, which means touying will automatically calculate the number of subslides.
 ///
 ///   The `repeat` argument is necessary when you use `#slide(repeat: 3, self => [ .. ])` style code to create a slide. The callback-style `uncover` and `only` cannot be detected by touying automatically.
 ///
-/// - `setting` is the setting of the slide. You can use it to add some set/show rules for the slide.
+/// - setting (function): The setting of the slide. You can use it to add some set/show rules for the slide.
 ///
-/// - `composer` is the composer of the slide. You can use it to set the layout of the slide.
+/// - composer (function | array): The composer of the slide. You can use it to set the layout of the slide.
 ///
-///   For example, `#slide(composer: (1fr, 2fr, 1fr))[A][B][C]` to split the slide into three parts. The first and the last parts will take 1/4 of the slide, and the second part will take 1/2 of the slide.
+///   For example, `#slide(composer: (1fr, 2fr, 1fr))[A][B][C]` to split the slide into three parts. The first and last parts will take 1/4 of the slide, and the second part will take 1/2 of the slide.
 ///
 ///   If you pass a non-function value like `(1fr, 2fr, 1fr)`, it will be assumed to be the first argument of the `components.side-by-side` function.
 ///
 ///   The `components.side-by-side` function is a simple wrapper of the `grid` function. It means you can use the `grid.cell(colspan: 2, ..)` to make the cell take 2 columns.
 ///
-///   For example, `#slide(composer: 2)[A][B][#grid.cell(colspan: 2)[Footer]] will make the `Footer` cell take 2 columns.
+///   For example, `#slide(composer: 2)[A][B][#grid.cell(colspan: 2)[Footer]]` will make the `Footer` cell take 2 columns.
 ///
 ///   If you want to customize the composer, you can pass a function to the `composer` argument. The function should receive the contents of the slide and return the content of the slide, like `#slide(composer: grid.with(columns: 2))[A][B]`.
 ///
-/// - `..bodies` is the contents of the slide. You can call the `slide` function with syntax like `#slide[A][B][C]` to create a slide.
+/// - bodies (array): The contents of the slide. You can call the `slide` function with syntax like `#slide[A][B][C]` to create a slide.
+///
+/// -> content
 #let empty-slide(
   config: (:),
   repeat: auto,

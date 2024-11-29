@@ -37,25 +37,25 @@
 
 /// Theorem block for the presentation.
 ///
-/// - `title` is the title of the theorem. Default is `none`.
+/// - title (string): The title of the theorem. Default is `none`.
 ///
-/// - `it` is the content of the theorem.
+/// - it (content): The content of the theorem.
 #let tblock(title: none, it) = touying-fn-wrapper(_tblock.with(title: title, it))
 
 
 /// Default slide function for the presentation.
 ///
-/// - `title` is the title of the slide. Default is `auto`.
+/// - title (string): The title of the slide. Default is `auto`.
 ///
-/// - `config` is the configuration of the slide. You can use `config-xxx` to set the configuration of the slide. For more several configurations, you can use `utils.merge-dicts` to merge them.
+/// - config (dictionary): The configuration of the slide. You can use `config-xxx` to set the configuration of the slide. For more several configurations, you can use `utils.merge-dicts` to merge them.
 ///
-/// - `repeat` is the number of subslides. Default is `auto`，which means touying will automatically calculate the number of subslides.
+/// - repeat (auto): The number of subslides. Default is `auto`, which means touying will automatically calculate the number of subslides.
 ///
 ///   The `repeat` argument is necessary when you use `#slide(repeat: 3, self => [ .. ])` style code to create a slide. The callback-style `uncover` and `only` cannot be detected by touying automatically.
 ///
-/// - `setting` is the setting of the slide. You can use it to add some set/show rules for the slide.
+/// - setting (dictionary): The setting of the slide. You can use it to add some set/show rules for the slide.
 ///
-/// - `composer` is the composer of the slide. You can use it to set the layout of the slide.
+/// - composer (function): The composer of the slide. You can use it to set the layout of the slide.
 ///
 ///   For example, `#slide(composer: (1fr, 2fr, 1fr))[A][B][C]` to split the slide into three parts. The first and the last parts will take 1/4 of the slide, and the second part will take 1/2 of the slide.
 ///
@@ -67,7 +67,7 @@
 ///
 ///   If you want to customize the composer, you can pass a function to the `composer` argument. The function should receive the contents of the slide and return the content of the slide, like `#slide(composer: grid.with(columns: 2))[A][B]`.
 ///
-/// - `..bodies` is the contents of the slide. You can call the `slide` function with syntax like `#slide[A][B][C]` to create a slide.
+/// - bodies (content): The contents of the slide. You can call the `slide` function with syntax like `#slide[A][B][C]` to create a slide.
 #let slide(
   title: auto,
   header: auto,
@@ -181,11 +181,11 @@
 
 /// Outline slide for the presentation.
 ///
-/// - `title` is the title of the outline. Default is `utils.i18n-outline-title`.
+/// - title (string): is the title of the outline. Default is `utils.i18n-outline-title`.
 ///
-/// - `level` is the level of the outline. Default is `none`.
+/// - level (int, none): is the level of the outline. Default is `none`.
 ///
-/// - `numbered` is whether the outline is numbered. Default is `true`.
+/// - numbered (boolean): is whether the outline is numbered. Default is `true`.
 #let outline-slide(
   title: utils.i18n-outline-title,
   numbered: true,
@@ -225,13 +225,13 @@
 ///
 /// Example: `config-common(new-section-slide-fn: new-section-slide.with(numbered: false))`
 ///
-/// - `title` is the title of the section. The default is `utils.i18n-outline-title`.
+/// - title (content, function): is the title of the section. The default is `utils.i18n-outline-title`.
 ///
-/// - `level` is the level of the heading. The default is `1`.
+/// - level (int): is the level of the heading. The default is `1`.
 ///
-/// - `numbered` is whether the heading is numbered. The default is `true`.
+/// - numbered (boolean): is whether the heading is numbered. The default is `true`.
 ///
-/// - `body` is the body of the section. It will be pass by touying automatically.
+/// - body (none): is the body of the section. It will be passed by touying automatically.
 #let new-section-slide(
   title: utils.i18n-outline-title,
   level: 1,
@@ -246,7 +246,7 @@
 ///
 /// Example: `#focus-slide[Wake up!]`
 ///
-/// - `align` is the alignment of the content. Default is `horizon + center`.
+/// - align (alignment): is the alignment of the content. The default is `horizon + center`.
 #let focus-slide(align: horizon + center, body) = touying-slide-wrapper(self => {
   self = utils.merge-dicts(
     self,
@@ -265,9 +265,9 @@
 
 /// End slide for the presentation.
 ///
-/// - `title` is the title of the slide. Default is `none`.
+/// - title (string): is the title of the slide. The default is `none`.
 ///
-/// - `body` is the content of the slide.
+/// - body (array): is the content of the slide.
 #let ending-slide(title: none, body) = touying-slide-wrapper(self => {
   let content = {
     set align(center + horizon)
@@ -301,36 +301,10 @@
 /// #set strong(delta: 100)
 /// #set par(justify: true)
 /// ```
-///
-/// - `aspect-ratio` is the aspect ratio of the slides. Default is `16-9`.
-///
-/// - `align` is the alignment of the content. Default is `horizon`.
-///
-/// - `title` is the title in header of the slide. Default is `self => utils.display-current-heading(depth: self.slide-level)`.
-///
-/// - `header-right` is the right part of the header. Default is `self => self.info.logo`.
-///
-/// - `footer` is the footer of the slide. Default is `none`.
-///
-/// - `footer-right` is the right part of the footer. Default is `context utils.slide-counter.display() + " / " + utils.last-slide-number`.
-///
-/// - `progress-bar` is whether to show the progress bar in the footer. Default is `true`.
-///
-/// - `footer-columns` is the columns of the footer. Default is `(25%, 25%, 1fr, 5em)`.
-///
-/// - `footer-a` is the left part of the footer. Default is `self => self.info.author`.
-///
-/// - `footer-b` is the second left part of the footer. Default is `self => utils.display-info-date(self)`.
-///
-/// - `footer-c` is the second right part of the footer. Default is `self => if self.info.short-title == auto { self.info.title } else { self.info.short-title }`.
-///
-/// - `footer-d` is the right part of the footer. Default is `context utils.slide-counter.display() + " / " + utils.last-slide-number`.
-///
-/// ----------------------------------------
-///
 /// The default colors:
 ///
-/// ```typ
+///
+/// ```typst
 /// config-colors(
 ///   primary: rgb("#005bac"),
 ///   primary-dark: rgb("#004078"),
@@ -340,6 +314,30 @@
 ///   neutral-darkest: rgb("#000000"),
 /// )
 /// ```
+///
+/// - aspect-ratio (string): is the aspect ratio of the slides. The default is `16-9`.
+///
+/// - align (alignment): is the alignment of the content. The default is `horizon`.
+///
+/// - title (content, function): is the title in the header of the slide. The default is `self => utils.display-current-heading(depth: self.slide-level)`.
+///
+/// - header-right (content, function): is the right part of the header. The default is `self => self.info.logo`.
+///
+/// - footer (content, function): is the footer of the slide. The default is `none`.
+///
+/// - footer-right (content, function): is the right part of the footer. The default is `context utils.slide-counter.display() + " / " + utils.last-slide-number`.
+///
+/// - progress-bar (boolean): is whether to show the progress bar in the footer. The default is `true`.
+///
+/// - footer-columns (array): is the columns of the footer. The default is `(25%, 25%, 1fr, 5em)`.
+///
+/// - footer-a (content, function): is the left part of the footer. The default is `self => self.info.author`.
+///
+/// - footer-b (content, function): is the second left part of the footer. The default is `self => utils.display-info-date(self)`.
+///
+/// - footer-c (content, function): is the second right part of the footer. The default is `self => if self.info.short-title == auto { self.info.title } else { self.info.short-title }`.
+///
+/// - footer-d (content, function): is the right part of the footer. The default is `context utils.slide-counter.display() + " / " + utils.last-slide-number`.
 #let stargazer-theme(
   aspect-ratio: "16-9",
   align: horizon,

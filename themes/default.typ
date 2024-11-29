@@ -2,15 +2,15 @@
 
 /// Touying slide function.
 ///
-/// - `config` is the configuration of the slide. You can use `config-xxx` to set the configuration of the slide. For more several configurations, you can use `utils.merge-dicts` to merge them.
+/// - config (dictionary): The configuration of the slide. You can use `config-xxx` to set the configuration of the slide. For more several configurations, you can use `utils.merge-dicts` to merge them.
 ///
-/// - `repeat` is the number of subslides. Default is `auto`，which means touying will automatically calculate the number of subslides.
+/// - repeat (int, auto): The number of subslides. Default is `auto`, which means touying will automatically calculate the number of subslides.
 ///
 ///   The `repeat` argument is necessary when you use `#slide(repeat: 3, self => [ .. ])` style code to create a slide. The callback-style `uncover` and `only` cannot be detected by touying automatically.
 ///
-/// - `setting` is the setting of the slide. You can use it to add some set/show rules for the slide.
+/// - setting (function): The setting of the slide. You can use it to add some set/show rules for the slide.
 ///
-/// - `composer` is the composer of the slide. You can use it to set the layout of the slide.
+/// - composer (function): The composer of the slide. You can use it to set the layout of the slide.
 ///
 ///   For example, `#slide(composer: (1fr, 2fr, 1fr))[A][B][C]` to split the slide into three parts. The first and the last parts will take 1/4 of the slide, and the second part will take 1/2 of the slide.
 ///
@@ -22,7 +22,7 @@
 ///
 ///   If you want to customize the composer, you can pass a function to the `composer` argument. The function should receive the contents of the slide and return the content of the slide, like `#slide(composer: grid.with(columns: 2))[A][B]`.
 ///
-/// - `..bodies` is the contents of the slide. You can call the `slide` function with syntax like `#slide[A][B][C]` to create a slide.
+/// - bodies (content): The contents of the slide. You can call the `slide` function with syntax like `#slide[A][B][C]` to create a slide.
 #let slide(
   config: (:),
   repeat: auto,
@@ -42,7 +42,7 @@
 /// #show: default-theme.with(aspect-ratio: "16-9", config-colors(primary: blue))`
 /// ```
 ///
-/// - `aspect-ratio` is the aspect ratio of the slides. Default is `16-9`.
+/// - aspect-ratio (string): The aspect ratio of the slides. Default is `16-9`.
 #let default-theme(
   aspect-ratio: "16-9",
   ..args,
@@ -52,9 +52,7 @@
 
   show: touying-slides.with(
     config-page(paper: "presentation-" + aspect-ratio),
-    config-common(
-      slide-fn: slide,
-    ),
+    config-common(slide-fn: slide),
     ..args,
   )
 

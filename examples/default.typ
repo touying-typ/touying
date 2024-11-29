@@ -9,12 +9,8 @@
     slide-level: 3,
     zero-margin-header: false,
   ),
-  config-colors(
-    primary: blue,
-  ),
-  config-methods(
-    alert: utils.alert-with-primary-color,
-  ),
+  config-colors(primary: blue),
+  config-methods(alert: utils.alert-with-primary-color),
   config-page(
     header: text(gray, utils.display-current-short-heading(level: 2)),
   ),

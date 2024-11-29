@@ -1,6 +1,9 @@
 // Attribution: This file is based on the code from https://github.com/andreasKroepelin/polylux/blob/main/utils/pdfpc.typ
 // Author: Andreas Kröpelin
 
+/// Generate a pdfpc file for the presentation.
+///
+/// -> content
 #let pdfpc-file(loc) = {
   let arr = query(<pdfpc>).map(it => it.value)
   let (config, ..slides) = arr.split((t: "NewSlide"))
@@ -51,6 +54,8 @@
 }
 
 /// Add some speaker notes to the slide for exporting to pdfpc file.
+///
+/// -> content
 #let speaker-note(text) = {
   let text = if type(text) == str {
     text
@@ -97,19 +102,21 @@
 /// )
 /// ```
 ///
-/// - `duration-minutes` is the duration of the presentation in minutes.
+/// - duration-minutes (int): The duration of the presentation in minutes.
 ///
-/// - `start-time` is the start time of the presentation.
+/// - start-time (datetime): The start time of the presentation.
 ///
-/// - `end-time` is the end time of the presentation.
+/// - end-time (datetime): The end time of the presentation.
 ///
-/// - `last-minutes` is the number of minutes to show the last slide.
+/// - last-minutes (int): The number of minutes to show the last slide.
 ///
-/// - `note-font-size` is the font size of the speaker notes.
+/// - note-font-size (float): The font size of the speaker notes.
 ///
-/// - `disable-markdown` is a flag to disable markdown in the speaker notes.
+/// - disable-markdown (bool): A flag to disable markdown in the speaker notes.
 ///
-/// - `default-transition` is the default transition for the slides.
+/// - default-transition (string): The default transition for the slides.
+///
+/// -> content
 #let config(
   duration-minutes: none,
   start-time: none,
@@ -167,15 +174,12 @@
     }
 
     let transition-str = (
-      default-transition.at("type", default: "replace")
-      + ":" +
-      str(default-transition.at("duration-seconds", default: 1))
-      + ":" +
-      dir-to-angle(default-transition.at("angle", default: rtl))
-      + ":" +
-      default-transition.at("alignment", default: "horizontal")
-      + ":" +
-      default-transition.at("direction", default: "outward")
+      default-transition.at("type", default: "replace") + ":" + str(
+        default-transition.at("duration-seconds", default: 1),
+      ) + ":" + dir-to-angle(default-transition.at("angle", default: rtl)) + ":" + default-transition.at(
+        "alignment",
+        default: "horizontal",
+      ) + ":" + default-transition.at("direction", default: "outward")
     )
 
     [ #metadata((t: "DefaultTransition", v: transition-str)) <pdfpc> ]

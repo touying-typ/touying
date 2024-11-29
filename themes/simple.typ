@@ -5,15 +5,15 @@
 
 /// Default slide function for the presentation.
 ///
-/// - `config` is the configuration of the slide. You can use `config-xxx` to set the configuration of the slide. For more several configurations, you can use `utils.merge-dicts` to merge them.
+/// - config (dictionary): The configuration of the slide. You can use `config-xxx` to set the configuration of the slide. For more several configurations, you can use `utils.merge-dicts` to merge them.
 ///
-/// - `repeat` is the number of subslides. Default is `auto`，which means touying will automatically calculate the number of subslides.
+/// - repeat (int, auto): The number of subslides. Default is `auto`, which means touying will automatically calculate the number of subslides.
 ///
-///   The `repeat` argument is necessary when you use `#slide(repeat: 3, self => [ .. ])` style code to create a slide. The callback-style `uncover` and `only` cannot be detected by touying automatically.
+////   The `repeat` argument is necessary when you use `#slide(repeat: 3, self => [ .. ])` style code to create a slide. The callback-style `uncover` and `only` cannot be detected by touying automatically.
 ///
-/// - `setting` is the setting of the slide. You can use it to add some set/show rules for the slide.
+/// - setting (function): The setting of the slide. You can use it to add some set/show rules for the slide.
 ///
-/// - `composer` is the composer of the slide. You can use it to set the layout of the slide.
+/// - composer (function): The composer of the slide. You can use it to set the layout of the slide.
 ///
 ///   For example, `#slide(composer: (1fr, 2fr, 1fr))[A][B][C]` to split the slide into three parts. The first and the last parts will take 1/4 of the slide, and the second part will take 1/2 of the slide.
 ///
@@ -25,7 +25,7 @@
 ///
 ///   If you want to customize the composer, you can pass a function to the `composer` argument. The function should receive the contents of the slide and return the content of the slide, like `#slide(composer: grid.with(columns: 2))[A][B]`.
 ///
-/// - `..bodies` is the contents of the slide. You can call the `slide` function with syntax like `#slide[A][B][C]` to create a slide.
+/// - bodies (array): The contents of the slide. You can call the `slide` function with syntax like `#slide[A][B][C]` to create a slide.
 #let slide(
   config: (:),
   repeat: auto,
@@ -111,25 +111,9 @@
 /// #show: simple-theme.with(aspect-ratio: "16-9", config-colors(primary: blue))`
 /// ```
 ///
-/// - `aspect-ratio` is the aspect ratio of the slides. Default is `16-9`.
-///
-/// - `header` is the header of the slides. Default is `self => utils.display-current-heading(setting: utils.fit-to-width.with(grow: false, 100%), depth: self.slide-level)`.
-///
-/// - `header-right` is the right part of the header. Default is `self.info.logo`.
-///
-/// - `footer` is the footer of the slides. Default is `none`.
-///
-/// - `footer-right` is the right part of the footer. Default is `context utils.slide-counter.display() + " / " + utils.last-slide-number`.
-///
-/// - `primary` is the primary color of the slides. Default is `aqua.darken(50%)`.
-///
-/// - `subslide-preamble` is the preamble of the subslides. Default is `block(below: 1.5em, text(1.2em, weight: "bold", utils.display-current-heading(level: 2)))`.
-///
-/// ----------------------------------------
-///
 /// The default colors:
 ///
-/// ```typ
+/// ```typst
 /// config-colors(
 ///   neutral-light: gray,
 ///   neutral-lightest: rgb("#ffffff"),
@@ -137,6 +121,20 @@
 ///   primary: aqua.darken(50%),
 /// )
 /// ```
+///
+/// - aspect-ratio (string): The aspect ratio of the slides. Default is `16-9`.
+///
+/// - header (function): The header of the slides. Default is `self => utils.display-current-heading(setting: utils.fit-to-width.with(grow: false, 100%), depth: self.slide-level)`.
+///
+/// - header-right (content): The right part of the header. Default is `self.info.logo`.
+///
+/// - footer (content): The footer of the slides. Default is `none`.
+///
+/// - footer-right (content): The right part of the footer. Default is `context utils.slide-counter.display() + " / " + utils.last-slide-number`.
+///
+/// - primary (color): The primary color of the slides. Default is `aqua.darken(50%)`.
+///
+/// - subslide-preamble (content): The preamble of the subslides. Default is `block(below: 1.5em, text(1.2em, weight: "bold", utils.display-current-heading(level: 2)))`.
 #let simple-theme(
   aspect-ratio: "16-9",
   header: self => utils.display-current-heading(

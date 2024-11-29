@@ -14,11 +14,13 @@
 ///
 /// Example: `side-by-side[a][b][c]` will display `a`, `b`, and `c` side by side.
 ///
-/// - `columns` is the number of columns. Default is `auto`, which means the number of columns is equal to the number of bodies.
+/// - columns (auto): The number of columns. Default is `auto`, which means the number of columns is equal to the number of bodies.
 ///
-/// - `gutter` is the space between columns. Default is `1em`.
+/// - gutter (length): The space between columns. Default is `1em`.
 ///
-/// - `..bodies` is the contents to display side by side.
+/// - bodies (content): The contents to display side by side.
+///
+/// -> content
 #let side-by-side(columns: auto, gutter: 1em, ..bodies) = {
   let bodies = bodies.pos()
   if bodies.len() == 1 {
@@ -37,15 +39,17 @@
 ///
 /// Example: `components.adaptive-columns(outline())`
 ///
-/// - `gutter` is the space between columns.
+/// - gutter (length): The space between columns.
 ///
-/// - `max-count` is the maximum number of columns.
+/// - max-count (int): The maximum number of columns.
 ///
-/// - `start` is the content to place before the columns.
+/// - start (content): The content to place before the columns.
 ///
-/// - `end` is the content to place after the columns.
+/// - end (content): The content to place after the columns.
 ///
-/// - `body` is the content to place in the columns.
+/// - body (content): The content to place in the columns.
+///
+/// -> content
 #let adaptive-columns(gutter: 4%, max-count: 3, start: none, end: none, body) = layout(size => {
   let n = calc.min(
     calc.ceil(measure(body).height / (size.height - measure(start).height - measure(end).height)),
@@ -66,11 +70,13 @@
 
 /// Touying progress bar.
 ///
-/// - `primary` is the color of the progress bar.
+/// - primary (color): The color of the progress bar.
 ///
-/// - `secondary` is the color of the background of the progress bar.
+/// - secondary (color): The color of the background of the progress bar.
 ///
-/// - `height` is the height of the progress bar, optional. Default is `2pt`.
+/// - height (length): The height of the progress bar, optional. Default is `2pt`.
+///
+/// -> content
 #let progress-bar(height: 2pt, primary, secondary) = utils.touying-progress(ratio => {
   grid(
     columns: (ratio * 100%, 1fr),
@@ -83,9 +89,11 @@
 
 /// Left and right.
 ///
-/// - `left` is the content of the left part.
+/// - left (content): The content of the left part.
 ///
-/// - `right` is the content of the right part.
+/// - right (content): The content of the right part.
+///
+/// -> content
 #let left-and-right(left, right) = grid(
   columns: (auto, 1fr, auto),
   left, none, right,
@@ -103,6 +111,8 @@
 /// - Check that there are enough rows and columns to fit in all the content blocks.
 ///
 /// That means that `#checkerboard[...][...]` stacks horizontally and `#checkerboard(columns: 1)[...][...]` stacks vertically.
+///
+/// -> content
 #let checkerboard(columns: none, rows: none, ..bodies) = {
   let bodies = bodies.pos()
   let columns = if type(columns) == int {
@@ -155,15 +165,17 @@
 
 /// Show progressive outline. It will make other sections except the current section to be semi-transparent.
 ///
-/// - `alpha` is the transparency of the other sections. Default is `60%`.
+/// - alpha (ratio): The transparency of the other sections. Default is `60%`.
 ///
-/// - `level` is the level of the outline. Default is `1`.
+/// - level (int): The level of the outline. Default is `1`.
 ///
-/// - `transform` is the transformation applied to the text of the outline. It should take the following arguments:
+/// - transform (function): The transformation applied to the text of the outline. It should take the following arguments:
 ///
-///   - `cover` is a boolean indicating whether the current entry should be covered.
+/// - cover (boolean): Indicates whether the current entry should be covered.
 ///
-///   - `..args` are the other arguments passed to the `progressive-outline`.
+/// - args (content): The other arguments passed to the `progressive-outline`.
+///
+/// -> content
 #let progressive-outline(
   alpha: 60%,
   level: 1,
@@ -207,41 +219,43 @@
 )
 
 
-/// Show a custom progressive outline.
+/// Custom progressive outline function.
 ///
-/// - `self` is the self context.
+/// - self (none): The self context.
 ///
-/// - `alpha` is the transparency of the other headings. Default is `60%`.
+/// - alpha (ratio): The transparency of the other headings. Default is `60%`.
 ///
-/// - `level` is the level of the outline. Default is `auto`.
+/// - level (auto): The level of the outline. Default is `auto`.
 ///
-/// - `numbered` is a boolean array indicating whether the headings should be numbered. Default is `false`.
+/// - numbered (array): Indicates whether the headings should be numbered. Default is `(false,)`.
 ///
-/// - `filled` is a boolean array indicating whether the headings should be filled. Default is `false`.
+/// - filled (array): Indicates whether the headings should be filled. Default is `(false,)`.
 ///
-/// - `paged` is a boolean array indicating whether the headings should be paged. Default is `false`.
+/// - paged (array): Indicates whether the headings should be paged. Default is `(false,)`.
 ///
-/// - `numbering` is an array of numbering strings for the headings. Default is `()`.
+/// - numbering (array): An array of numbering strings for the headings. Default is `()`.
 ///
-/// - `text-fill` is an array of colors for the text fill of the headings. Default is `none`.
+/// - text-fill (array, none): An array of colors for the text fill of the headings. Default is `none`.
 ///
-/// - `text-size` is an array of sizes for the text of the headings. Default is `none`.
+/// - text-size (array, none): An array of sizes for the text of the headings. Default is `none`.
 ///
-/// - `text-weight` is an array of weights for the text of the headings. Default is `none`.
+/// - text-weight (array, none): An array of weights for the text of the headings. Default is `none`.
 ///
-/// - `vspace` is an array of vertical spaces above the headings. Default is `none`.
+/// - vspace (array, none): An array of vertical spaces above the headings. Default is `none`.
 ///
-/// - `title` is the title of the outline. Default is `none`.
+/// - title (string, none): The title of the outline. Default is `none`.
 ///
-/// - `indent` is an array of indentations for the headings. Default is `(0em, )`.
+/// - indent (array): An array of indentations for the headings. Default is `(0em,)`.
 ///
-/// - `fill` is an array of fills for the headings. Default is `repeat[.]`.
+/// - fill (array): An array of fills for the headings. Default is `(repeat[.],)`.
 ///
-/// - `short-heading` is a boolean indicating whether the headings should be shortened. Default is `true`.
+/// - short-heading (boolean): Indicates whether the headings should be shortened. Default is `true`.
 ///
-/// - `uncover-fn` is a function that takes the body of the heading and returns the body of the heading when it is uncovered. Default is the identity function.
+/// - uncover-fn (function): A function that takes the body of the heading and returns the body of the heading when it is uncovered. Default is the identity function.
 ///
-/// - `..args` are the other arguments passed to the `progressive-outline` and `transform`.
+/// - args (content): The other arguments passed to the `progressive-outline` and `transform`.
+///
+/// -> content
 #let custom-progressive-outline(
   self: none,
   alpha: 60%,
@@ -347,19 +361,23 @@
 
 /// Show mini slides. It is usually used to show the navigation of the presentation in header.
 ///
-/// - `self` is the self context, which is used to get the short heading of the headings.
+/// - self (none): The self context, which is used to get the short heading of the headings.
 ///
-/// - `fill` is the fill color of the headings. Default is `rgb("000000")`.
+/// - fill (color): The fill color of the headings. Default is `rgb("000000")`.
 ///
-/// - `alpha` is the transparency of the headings. Default is `60%`.
+/// - alpha (ratio): The transparency of the headings. Default is `60%`.
 ///
-/// - `display-section` is a boolean indicating whether the sections should be displayed. Default is `false`.
+/// - display-section (boolean): Indicates whether the sections should be displayed. Default is `false`.
 ///
-/// - `display-subsection` is a boolean indicating whether the subsections should be displayed. Default is `true`.
+/// - display-subsection (boolean): Indicates whether the subsections should be displayed. Default is `true`.
 ///
-/// - `linebreaks` is a boolean indicating whether or not to insert linebreaks between links for sections and subsections
+/// - linebreaks (boolean): Indicates whether or not to insert linebreaks between links for sections and subsections.
 ///
-/// - `short-heading` is a boolean indicating whether the headings should be shortened. Default is `true`.
+/// - display-subsection (boolean): Indicates whether the subsections should be displayed. Default is `true`.
+///
+/// - short-heading (boolean): Indicates whether the headings should be shortened. Default is `true`.
+///
+/// -> content
 #let mini-slides(
   self: none,
   fill: rgb("000000"),
@@ -470,7 +488,21 @@
 )
 
 
-
+/// Simple navigation.
+///
+/// - self (none): The self context, which is used to get the short heading of the headings.
+///
+/// - short-heading (boolean): Indicates whether the headings should be shortened. Default is `true`.
+///
+/// - primary (color): The color of the current section. Default is `white`.
+///
+/// - secondary (color): The color of the other sections. Default is `gray`.
+///
+/// - background (color): The background color of the navigation. Default is `black`.
+///
+/// - logo (none): The logo of the navigation. Default is `none`.
+///
+/// -> content
 #let simple-navigation(
   self: none,
   short-heading: true,
@@ -528,6 +560,10 @@
 /// LaTeX-like knob marker for list
 ///
 /// Example: `#set list(marker: components.knob-marker(primary: rgb("005bac")))`
+///
+/// - primary (color): The color of the marker.
+///
+/// -> content
 #let knob-marker(primary: rgb("#005bac")) = box(
   width: 0.5em,
   place(

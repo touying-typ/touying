@@ -6,15 +6,13 @@
 
 /// Default slide function for the presentation.
 ///
-/// - `config` is the configuration of the slide. You can use `config-xxx` to set the configuration of the slide. For more several configurations, you can use `utils.merge-dicts` to merge them.
+/// - config (dictionary): is the configuration of the slide. Use `config-xxx` to set individual configurations for the slide. To apply multiple configurations, use `utils.merge-dicts` to combine them.
 ///
-/// - `repeat` is the number of subslides. Default is `auto`，which means touying will automatically calculate the number of subslides.
+/// - repeat (int, auto): is the number of subslides. The default is `auto`, allowing touying to automatically calculate the number of subslides. The `repeat` argument is required when using `#slide(repeat: 3, self => [ .. ])` style code to create a slide, as touying cannot automatically detect callback-style `uncover` and `only`.
 ///
-///   The `repeat` argument is necessary when you use `#slide(repeat: 3, self => [ .. ])` style code to create a slide. The callback-style `uncover` and `only` cannot be detected by touying automatically.
+/// - setting (dictionary): is the setting of the slide, which can be used to apply set/show rules for the slide.
 ///
-/// - `setting` is the setting of the slide. You can use it to add some set/show rules for the slide.
-///
-/// - `composer` is the composer of the slide. You can use it to set the layout of the slide.
+/// - composer (array, function): is the layout composer of the slide, allowing you to define the slide layout.
 ///
 ///   For example, `#slide(composer: (1fr, 2fr, 1fr))[A][B][C]` to split the slide into three parts. The first and the last parts will take 1/4 of the slide, and the second part will take 1/2 of the slide.
 ///
@@ -26,7 +24,7 @@
 ///
 ///   If you want to customize the composer, you can pass a function to the `composer` argument. The function should receive the contents of the slide and return the content of the slide, like `#slide(composer: grid.with(columns: 2))[A][B]`.
 ///
-/// - `..bodies` is the contents of the slide. You can call the `slide` function with syntax like `#slide[A][B][C]` to create a slide.
+/// - bodies (arguments): is the contents of the slide. You can call the `slide` function with syntax like `#slide[A][B][C]` to create a slide.
 #let slide(
   config: (:),
   repeat: auto,
@@ -96,7 +94,7 @@
 /// #title-slide(subtitle: [Subtitle])
 /// ```
 ///
-/// - `extra` is the extra information of the slide. You can pass the extra information to the `title-slide` function.
+/// - extra (string, none): is the extra information for the slide. This can be passed to the `title-slide` function to display additional information on the title slide.
 #let title-slide(
   extra: none,
   ..args,
@@ -164,11 +162,11 @@
 ///
 /// Example: `config-common(new-section-slide-fn: new-section-slide.with(numbered: false))`
 ///
-/// - `level` is the level of the heading.
+/// - level (int, none): is the level of the heading.
 ///
-/// - `numbered` is whether the heading is numbered.
+/// - numbered (boolean): is whether the heading is numbered.
 ///
-/// - `body` is the body of the section. It will be pass by touying automatically.
+/// - body (auto): is the body of the section. This will be passed automatically by Touying.
 #let new-section-slide(level: 1, numbered: true, body) = touying-slide-wrapper(self => {
   let slide-body = {
     set align(horizon)
@@ -199,9 +197,9 @@
 ///
 /// Example: `#focus-slide[Wake up!]`
 ///
-/// - `background-color` is the background color of the slide. Default is the primary color.
+/// - background-color (color, none): is the background color of the slide. Default is the primary color.
 ///
-/// - `background-img` is the background image of the slide. Default is none.
+/// - background-img (string, none): is the background image of the slide. Default is none.
 #let focus-slide(background-color: none, background-img: none, body) = touying-slide-wrapper(self => {
   let background-color = if background-img == none and background-color == none {
     rgb(self.colors.primary)
@@ -257,24 +255,6 @@
 /// #show: university-theme.with(aspect-ratio: "16-9", config-colors(primary: blue))`
 /// ```
 ///
-/// - `aspect-ratio` is the aspect ratio of the slides. Default is `16-9`.
-///
-/// - `progress-bar` is whether to show the progress bar. Default is `true`.
-///
-/// - `header` is the header of the slides. Default is `utils.display-current-heading(level: 2)`.
-///
-/// - `header-right` is the right part of the header. Default is `self.info.logo`.
-///
-/// - `footer-columns` is the columns of the footer. Default is `(25%, 1fr, 25%)`.
-///
-/// - `footer-a` is the left part of the footer. Default is `self.info.author`.
-///
-/// - `footer-b` is the middle part of the footer. Default is `self.info.short-title` or `self.info.title`.
-///
-/// - `footer-c` is the right part of the footer. Default is `self => h(1fr) + utils.display-info-date(self) + h(1fr) + context utils.slide-counter.display() + " / " + utils.last-slide-number + h(1fr)`.
-///
-/// ----------------------------------------
-///
 /// The default colors:
 ///
 /// ```typ
@@ -286,6 +266,22 @@
 ///   neutral-darkest: rgb("#000000"),
 /// )
 /// ```
+///
+/// - aspect-ratio (string): is the aspect ratio of the slides. Default is `16-9`.
+///
+/// - progress-bar (boolean): is whether to show the progress bar. Default is `true`.
+///
+/// - header (content, function): is the header of the slides. Default is `utils.display-current-heading(level: 2)`.
+///
+/// - header-right (content, function): is the right part of the header. Default is `self.info.logo`.
+///
+/// - footer-columns (tuple): is the columns of the footer. Default is `(25%, 1fr, 25%)`.
+///
+/// - footer-a (content, function): is the left part of the footer. Default is `self.info.author`.
+///
+/// - footer-b (content, function): is the middle part of the footer. Default is `self.info.short-title` or `self.info.title`.
+///
+/// - footer-c (content, function): is the right part of the footer. Default is `self => h(1fr) + utils.display-info-date(self) + h(1fr) + context utils.slide-counter.display() + " / " + utils.last-slide-number + h(1fr)`.
 #let university-theme(
   aspect-ratio: "16-9",
   progress-bar: true,
@@ -323,7 +319,7 @@
       init: (self: none, body) => {
         set text(fill: self.colors.neutral-darkest, size: 25pt)
         show heading: set text(fill: self.colors.primary)
-  
+
         body
       },
       alert: utils.alert-with-primary-color,

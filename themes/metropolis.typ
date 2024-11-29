@@ -7,17 +7,17 @@
 
 /// Default slide function for the presentation.
 ///
-/// - `title` is the title of the slide. Default is `auto`.
+/// - title (string): The title of the slide. Default is `auto`.
 ///
-/// - `config` is the configuration of the slide. You can use `config-xxx` to set the configuration of the slide. For more several configurations, you can use `utils.merge-dicts` to merge them.
+/// - config (dictionary): The configuration of the slide. You can use `config-xxx` to set the configuration of the slide. For several configurations, you can use `utils.merge-dicts` to merge them.
 ///
-/// - `repeat` is the number of subslides. Default is `auto`，which means touying will automatically calculate the number of subslides.
+/// - repeat (int, string): The number of subslides. Default is `auto`, which means touying will automatically calculate the number of subslides.
 ///
 ///   The `repeat` argument is necessary when you use `#slide(repeat: 3, self => [ .. ])` style code to create a slide. The callback-style `uncover` and `only` cannot be detected by touying automatically.
 ///
-/// - `setting` is the setting of the slide. You can use it to add some set/show rules for the slide.
+/// - setting (function): The setting of the slide. You can use it to add some set/show rules for the slide.
 ///
-/// - `composer` is the composer of the slide. You can use it to set the layout of the slide.
+/// - composer (function, array): The composer of the slide. You can use it to set the layout of the slide.
 ///
 ///   For example, `#slide(composer: (1fr, 2fr, 1fr))[A][B][C]` to split the slide into three parts. The first and the last parts will take 1/4 of the slide, and the second part will take 1/2 of the slide.
 ///
@@ -29,7 +29,7 @@
 ///
 ///   If you want to customize the composer, you can pass a function to the `composer` argument. The function should receive the contents of the slide and return the content of the slide, like `#slide(composer: grid.with(columns: 2))[A][B]`.
 ///
-/// - `..bodies` is the contents of the slide. You can call the `slide` function with syntax like `#slide[A][B][C]` to create a slide.
+/// - bodies (array): The contents of the slide. You can call the `slide` function with syntax like `#slide[A][B][C]` to create a slide.
 #let slide(
   title: auto,
   align: auto,
@@ -107,7 +107,7 @@
 /// #title-slide(subtitle: [Subtitle], extra: [Extra information])
 /// ```
 ///
-/// - `extra` is the extra information you want to display on the title slide.
+/// - extra (string, none): The extra information you want to display on the title slide.
 #let title-slide(
   extra: none,
   ..args,
@@ -161,11 +161,11 @@
 ///
 /// Example: `config-common(new-section-slide-fn: new-section-slide.with(numbered: false))`
 ///
-/// - `level` is the level of the heading.
+/// - level (int): The level of the heading.
 ///
-/// - `numbered` is whether the heading is numbered.
+/// - numbered (boolean): Indicates whether the heading is numbered.
 ///
-/// - `body` is the body of the section. It will be pass by touying automatically.
+/// - body (auto): The body of the section. It will be passed by touying automatically.
 #let new-section-slide(level: 1, numbered: true, body) = touying-slide-wrapper(self => {
   let slide-body = {
     set align(horizon)
@@ -196,7 +196,7 @@
 ///
 /// Example: `#focus-slide[Wake up!]`
 ///
-/// - `align` is the alignment of the content. Default is `horizon + center`.
+/// - align (alignment): The alignment of the content. Default is `horizon + center`.
 #let focus-slide(align: horizon + center, body) = touying-slide-wrapper(self => {
   let _align = align
   let align = _typst-builtin-align
@@ -227,22 +227,6 @@
 /// #set par(justify: true)
 /// ```
 ///
-/// - `aspect-ratio` is the aspect ratio of the slides. Default is `16-9`.
-///
-/// - `align` is the alignment of the content. Default is `horizon`.
-///
-/// - `header` is the header of the slide. Default is `self => utils.display-current-heading(setting: utils.fit-to-width.with(grow: false, 100%), depth: self.slide-level)`.
-///
-/// - `header-right` is the right part of the header. Default is `self => self.info.logo`.
-///
-/// - `footer` is the footer of the slide. Default is `none`.
-///
-/// - `footer-right` is the right part of the footer. Default is `context utils.slide-counter.display() + " / " + utils.last-slide-number`.
-///
-/// - `footer-progress` is whether to show the progress bar in the footer. Default is `true`.
-///
-/// ----------------------------------------
-///
 /// The default colors:
 ///
 /// ```typ
@@ -255,10 +239,27 @@
 ///   neutral-darkest: rgb("#23373b"),
 /// )
 /// ```
+///
+/// - aspect-ratio (string): The aspect ratio of the slides. Default is `16-9`.
+///
+/// - align (alignment): The alignment of the content. Default is `horizon`.
+///
+/// - header (content, function): The header of the slide. Default is `self => utils.display-current-heading(setting: utils.fit-to-width.with(grow: false, 100%), depth: self.slide-level)`.
+///
+/// - header-right (content, function): The right part of the header. Default is `self => self.info.logo`.
+///
+/// - footer (content, function): The footer of the slide. Default is `none`.
+///
+/// - footer-right (content, function): The right part of the footer. Default is `context utils.slide-counter.display() + " / " + utils.last-slide-number`.
+///
+/// - footer-progress (boolean): Whether to show the progress bar in the footer. Default is `true`.
 #let metropolis-theme(
   aspect-ratio: "16-9",
   align: horizon,
-  header: self => utils.display-current-heading(setting: utils.fit-to-width.with(grow: false, 100%), depth: self.slide-level),
+  header: self => utils.display-current-heading(
+    setting: utils.fit-to-width.with(grow: false, 100%),
+    depth: self.slide-level,
+  ),
   header-right: self => self.info.logo,
   footer: none,
   footer-right: context utils.slide-counter.display() + " / " + utils.last-slide-number,

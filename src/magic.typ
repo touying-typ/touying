@@ -6,6 +6,8 @@
 /// Align the list marker with the baseline of the first line of the list item.
 ///
 /// Usage: `#show: align-list-marker-with-baseline`
+///
+/// -> content
 #let align-list-marker-with-baseline(body) = {
   show list.item: it => {
     let current-marker = {
@@ -37,6 +39,8 @@
 /// Align the enum marker with the baseline of the first line of the enum item. It will only work when the enum item has a number like `1.`.
 ///
 /// Usage: `#show: align-enum-marker-with-baseline`
+///
+/// -> content
 #let align-enum-marker-with-baseline(body) = {
   let counting-symbols = "1aAiI一壹あいアイא가ㄱ*"
   let consume-regex = regex("[^" + counting-symbols + "]*[" + counting-symbols + "][^" + counting-symbols + "]*")
@@ -72,7 +76,9 @@
 ///
 /// Usage: `#show: scale-list-items.with(scale: .75)`
 ///
-/// - `scale` (number): The ratio of the font size of the current level to the font size of the upper level.
+/// - scale (int, float): The ratio of the font size of the current level to the font size of the upper level.
+///
+/// -> content
 #let scale-list-items(
   scale: .75,
   body,
@@ -87,6 +93,8 @@
 /// Make the list, enum, or terms nontight by default.
 ///
 /// Usage: `#show list: nontight(list)`
+///
+/// -> content
 #let nontight(lst) = {
   let fields = lst.fields()
   fields.remove("children")
@@ -97,6 +105,8 @@
 /// Make the list, enum, and terms nontight by default.
 ///
 /// Usage: `#show: nontight-list-enum-and-terms`
+///
+/// -> content
 #let nontight-list-enum-and-terms(body) = {
   show list.where(tight: true): nontight
   show enum.where(tight: true): nontight
@@ -107,6 +117,8 @@
 /// Set the list marker to none for hide function.
 ///
 /// Usage: `#show: show-hide-set-list-marker-none`
+///
+/// -> content
 #let show-hide-set-list-marker-none(body) = {
   show hide: it => {
     set list(marker: none)
@@ -129,6 +141,8 @@
 #let bibliography-visited = state("footer-bibliography-visited", ())
 
 /// Record the bibliography items.
+///
+/// -> content
 #let record-bibliography(bibliography) = {
   show grid: it => {
     bibliography-state.update(
@@ -147,26 +161,30 @@
 /// - record (boolean): Record the bibliography items or not. If you set it to false, you must call `#record-bibliography(bibliography)` by yourself.
 ///
 /// - bibliography (bibliography): The bibliography argument. You should use the `bibliography` function to define the bibliography like `bibliography("ref.bib")`.
+///
+/// -> content
 #let bibliography-as-footnote(numbering: "[1]", record: true, bibliography, body) = {
-  show cite: it => context {
-    if it.key not in bibliography-visited.get() {
-      box({
-        place(hide(it))
-        context {
-          let bibitem = bibliography-state.final().at(bibliography-counter.get().at(0))
-          footnote(numbering: numbering, bibitem)
-          bibliography-map.update(map => {
-            map.insert(str(it.key), bibitem)
-            map
-          })
-        }
-        bibliography-counter.step()
-        bibliography-visited.update(visited => visited + (it.key,))
-      })
-    } else {
-      footnote(numbering: numbering, context bibliography-map.final().at(str(it.key)))
+  show cite: it => (
+    context {
+      if it.key not in bibliography-visited.get() {
+        box({
+          place(hide(it))
+          context {
+            let bibitem = bibliography-state.final().at(bibliography-counter.get().at(0))
+            footnote(numbering: numbering, bibitem)
+            bibliography-map.update(map => {
+              map.insert(str(it.key), bibitem)
+              map
+            })
+          }
+          bibliography-counter.step()
+          bibliography-visited.update(visited => visited + (it.key,))
+        })
+      } else {
+        footnote(numbering: numbering, context bibliography-map.final().at(str(it.key)))
+      }
     }
-  }
+  )
 
   // Record the bibliography items.
   if record {
@@ -181,6 +199,8 @@
 /// You can avoid `multiple bibliographies are not yet supported` error by using this function.
 ///
 /// Usage: `#magic.bibliography()`
+///
+/// -> content
 #let bibliography(title: auto) = {
   context {
     let title = title

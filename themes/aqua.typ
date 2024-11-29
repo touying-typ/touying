@@ -2,15 +2,15 @@
 
 /// Default slide function for the presentation.
 ///
-/// - `config` is the configuration of the slide. You can use `config-xxx` to set the configuration of the slide. For more several configurations, you can use `utils.merge-dicts` to merge them.
+/// - config (dictionary): The configuration of the slide. You can use `config-xxx` to set the configuration of the slide. For more configurations, you can use `utils.merge-dicts` to merge them.
 ///
-/// - `repeat` is the number of subslides. Default is `auto`，which means touying will automatically calculate the number of subslides.
+/// - repeat (int, auto): The number of subslides. Default is `auto`, which means touying will automatically calculate the number of subslides.
 ///
 ///   The `repeat` argument is necessary when you use `#slide(repeat: 3, self => [ .. ])` style code to create a slide. The callback-style `uncover` and `only` cannot be detected by touying automatically.
 ///
-/// - `setting` is the setting of the slide. You can use it to add some set/show rules for the slide.
+/// - setting (function): The setting of the slide. You can use it to add some set/show rules for the slide.
 ///
-/// - `composer` is the composer of the slide. You can use it to set the layout of the slide.
+/// - composer (function, array): The composer of the slide. You can use it to set the layout of the slide.
 ///
 ///   For example, `#slide(composer: (1fr, 2fr, 1fr))[A][B][C]` to split the slide into three parts. The first and the last parts will take 1/4 of the slide, and the second part will take 1/2 of the slide.
 ///
@@ -22,7 +22,7 @@
 ///
 ///   If you want to customize the composer, you can pass a function to the `composer` argument. The function should receive the contents of the slide and return the content of the slide, like `#slide(composer: grid.with(columns: 2))[A][B]`.
 ///
-/// - `..bodies` is the contents of the slide. You can call the `slide` function with syntax like `#slide[A][B][C]` to create a slide.
+/// - bodies (content): The contents of the slide. You can call the `slide` function with syntax like `#slide[A][B][C]` to create a slide.
 #let slide(
   config: (:),
   repeat: auto,
@@ -108,7 +108,7 @@
 
 /// Outline slide for the presentation.
 ///
-/// - `leading` is the leading of paragraphs in the outline. Default is `50pt`.
+/// - leading (length): The leading of paragraphs in the outline. Default is `50pt`.
 #let outline-slide(leading: 50pt) = touying-slide-wrapper(self => {
   set text(size: 30pt, fill: self.colors.primary)
   set par(leading: leading)
@@ -168,9 +168,9 @@
 ///
 /// Example: `config-common(new-section-slide-fn: new-section-slide.with(numbered: false))`
 ///
-/// - `level` is the level of the heading.
+/// - level (int): The level of the heading.
 ///
-/// - `body` is the body of the section. It will be pass by touying automatically.
+/// - body (content): The body of the section. It will be passed by touying automatically.
 #let new-section-slide(level: 1, body) = touying-slide-wrapper(self => {
   let slide-body = {
     stack(
@@ -238,17 +238,9 @@
 /// #set par(justify: true)
 /// ```
 ///
-/// - `aspect-ratio` is the aspect ratio of the slides. Default is `16-9`.
-///
-/// - `header` is the header of the slides. Default is `self => utils.display-current-heading(depth: self.slide-level)`.
-///
-/// - `footer` is the footer of the slides. Default is `context utils.slide-counter.display()`.
-///
-/// ----------------------------------------
-///
 /// The default colors:
 ///
-/// ```typ
+/// ```typst
 /// config-colors(
 ///   primary: rgb("#003F88"),
 ///   primary-light: rgb("#2159A5"),
@@ -256,6 +248,12 @@
 ///   neutral-lightest: rgb("#FFFFFF")
 /// )
 /// ```
+///
+/// - aspect-ratio (ratio): The aspect ratio of the slides. Default is `16-9`.
+///
+/// - header (content): The header of the slides. Default is `self => utils.display-current-heading(depth: self.slide-level)`.
+///
+/// - footer (content): The footer of the slides. Default is `context utils.slide-counter.display()`.
 #let aqua-theme(
   aspect-ratio: "16-9",
   header: self => utils.display-current-heading(depth: self.slide-level),
