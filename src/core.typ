@@ -1587,6 +1587,11 @@
   (header, footer)
 }
 
+#let _rewind-states(states, location) = {
+  for s in states {
+    s.update(s.at(selector(location)))
+  }
+}
 
 /// Touying slide function, the core function of touying. It usually is used to create a slide with animation effects and works with `touying-slide-wrapper` function.
 ///
@@ -1705,36 +1710,16 @@
     [#metadata((kind: "touying-new-subslide")) <touying-metadata>]
     if self.at("enable-frozen-states-and-counters", default: true) and not self.handout and self.repeat > 1 {
       if self.subslide == 1 {
-        // save the states and counters
         context {
-          utils.saved-frozen-states.update(self.frozen-states.map(s => s.get()))
-          utils.saved-default-frozen-states.update(self.default-frozen-states.map(s => s.get()))
-          utils.saved-frozen-counters.update(self.frozen-counters.map(s => s.get()))
-          utils.saved-default-frozen-counters.update(self.default-frozen-counters.map(s => s.get()))
+          utils.loc-prior-newslide.update(here())
         }
       } else {
-        // restore the states and counters
         context {
-          self
-            .frozen-states
-            .zip(utils.saved-frozen-states.get())
-            .map(pair => pair.at(0).update(pair.at(1)))
-            .sum(default: none)
-          self
-            .default-frozen-states
-            .zip(utils.saved-default-frozen-states.get())
-            .map(pair => pair.at(0).update(pair.at(1)))
-            .sum(default: none)
-          self
-            .frozen-counters
-            .zip(utils.saved-frozen-counters.get())
-            .map(pair => pair.at(0).update(pair.at(1)))
-            .sum(default: none)
-          self
-            .default-frozen-counters
-            .zip(utils.saved-default-frozen-counters.get())
-            .map(pair => pair.at(0).update(pair.at(1)))
-            .sum(default: none)
+          let loc-prior-newslide = utils.loc-prior-newslide.get()
+          _rewind-states(self.frozen-states, loc-prior-newslide)
+          _rewind-states(self.default-frozen-states, loc-prior-newslide)
+          _rewind-states(self.frozen-counters, loc-prior-newslide)
+          _rewind-states(self.default-frozen-counters, loc-prior-newslide)
         }
       }
     }
@@ -1791,7 +1776,6 @@
   } else {
     // render all the subslides
     let result = ()
-    let current = 1
     for i in range(1, repeat + 1) {
       self.subslide = i
       let (header, footer) = _get-header-footer(self)
