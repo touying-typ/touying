@@ -33,6 +33,7 @@
 )
 
 #let _default-frozen-counters = (
+  counter(heading),
   counter(math.equation),
   counter(figure.where(kind: table)),
   counter(figure.where(kind: image)),
