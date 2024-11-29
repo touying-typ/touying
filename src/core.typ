@@ -1687,7 +1687,7 @@
     [#metadata((kind: "touying-new-page")) <touying-metadata>]
     // 1. slide counter part
     //    if freeze-slide-counter is false, then update the slide-counter
-    if self.subslide == 1 {
+    if self.handout or self.subslide == 1 {
       if not self.at("freeze-slide-counter", default: false) {
         utils.slide-counter.step()
         //  if appendix is false, then update the last-slide-counter
@@ -1719,6 +1719,7 @@
   let page-extra-args = _get-page-extra-args(self)
 
   if self.handout {
+    self.subslide = repeat
     let (conts, _, _) = _parse-content-into-results-and-repetitions(
       self: self,
       index: repeat,
