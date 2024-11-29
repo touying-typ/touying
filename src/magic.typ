@@ -120,7 +120,12 @@
 ///
 /// -> content
 #let show-hide-set-list-marker-none(body) = {
-  show hide: set list(marker: none)
+  show hide: it => {
+    set list(marker: none)
+    set enum(numbering: n => none)
+
+    it
+  }
   body
 }
 

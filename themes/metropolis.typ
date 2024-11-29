@@ -130,7 +130,7 @@
           },
           text(2em, utils.call-or-display(self, info.logo)),
         )
-        line(length: 100%, stroke: .05em + self.colors.primary-light)
+        line(length: 100%, stroke: .05em + self.colors.primary)
         set text(size: .8em)
         if info.author != none {
           block(spacing: 1em, info.author)
