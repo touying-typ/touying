@@ -1731,7 +1731,7 @@
     [#metadata((kind: "touying-new-page")) <touying-metadata>]
     // 1. slide counter part
     //    if freeze-slide-counter is false, then update the slide-counter
-    if self.subslide == 1 {
+    if self.handout or self.subslide == 1 {
       if not self.at("freeze-slide-counter", default: false) {
         utils.slide-counter.step()
         //  if appendix is false, then update the last-slide-counter
