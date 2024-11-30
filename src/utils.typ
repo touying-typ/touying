@@ -822,7 +822,6 @@
         return true
       }
     }
-    return false
   }
   return false
 }
@@ -835,10 +834,12 @@
         inner(child)
       }
     } else if _contains-text(it) {
+      // if `it` contains a text, update the color.
       show it.func(): set text(fill: color)
       it
     } else {
-      // use `hide` as a fallback
+      // use `hide` as a fallback, so figures, images, tables... will be completely hidden.
+      // we may use the cover-with-rect instead.
       hide(it)
     }
   }
