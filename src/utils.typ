@@ -803,6 +803,51 @@
 }
 
 
+#let _contains-text(it) = {
+  if type(it) != content {
+    return false
+  }
+  if it.func() == text {
+    return true
+  }
+  if it.has("body") {
+    return _contains-text(it.body)
+  }
+  if it.has("base") {
+    return _contains-text(it.base)
+  }
+  if it.has("children") {
+    for child in it.children {
+      if _contains-text(child) {
+        return true
+      }
+    }
+    return false
+  }
+  return false
+}
+
+#let make-color-cover-with(color) = {
+  let inner(it) = {
+    if is-sequence(it) {
+      // recursively hides contents
+      for child in it.children {
+        inner(child)
+      }
+    } else if _contains-text(it) {
+      show it.func(): set text(fill: color)
+      it
+    } else {
+      // use `hide` as a fallback
+      hide(it)
+    }
+  }
+  return inner
+}
+
+#let color-changing-cover(color: gray) = method-wrapper(make-color-cover-with(color))
+
+
 /// Alert content with a primary color.
 ///
 /// Example: `config-methods(alert: utils.alert-with-primary-color)`
