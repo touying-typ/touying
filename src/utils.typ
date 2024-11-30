@@ -826,7 +826,7 @@
   return false
 }
 
-#let make-color-cover-with(color) = {
+#let make-color-cover-with(color, fallback-hide) = {
   let inner(it) = {
     if is-sequence(it) {
       // recursively hides contents
@@ -838,15 +838,21 @@
       show it.func(): set text(fill: color)
       it
     } else {
-      // use `hide` as a fallback, so figures, images, tables... will be completely hidden.
-      // we may use the cover-with-rect instead.
-      hide(it)
+      if fallback-hide {
+        // use `hide` as a fallback, so figures, images, tables... will be completely hidden.
+        // we may use the cover-with-rect instead.
+        hide(it)
+      } else {
+        it
+      }
     }
   }
   return inner
 }
 
-#let color-changing-cover(color: gray) = method-wrapper(make-color-cover-with(color))
+#let color-changing-cover(color: gray, fallback-hide: true) = method-wrapper(
+  make-color-cover-with(color, fallback-hide),
+)
 
 
 /// Alert content with a primary color.
