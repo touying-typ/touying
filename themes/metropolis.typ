@@ -52,7 +52,7 @@
     components.left-and-right(
       {
         if title != auto {
-          utils.fit-to-width.with(grow: false, 100%, title)
+          utils.fit-to-width(grow: false, 100%, title)
         } else {
           utils.call-or-display(self, self.store.header)
         }
