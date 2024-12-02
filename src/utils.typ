@@ -827,11 +827,11 @@
 }
 
 #let make-color-cover-with(color, fallback-hide) = {
-  let inner(it) = {
+  let change-color(it) = {
     if is-sequence(it) {
       // recursively hides contents
       for child in it.children {
-        inner(child)
+        change-color(child)
       }
     } else if _contains-text(it) {
       // if `it` contains a text, update the color.
@@ -847,7 +847,7 @@
       }
     }
   }
-  return inner
+  return change-color
 }
 
 #let color-changing-cover(color: gray, fallback-hide: true) = method-wrapper(
