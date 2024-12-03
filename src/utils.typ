@@ -816,6 +816,9 @@
   if it.has("base") {
     return _contains-text(it.base)
   }
+  if it.has("child") {
+    return _contains-text(it.child)
+  }
   if it.has("children") {
     for child in it.children {
       if _contains-text(child) {
