@@ -802,7 +802,7 @@
   )
 }
 
-
+// recursively checks if `it` has a text in it
 #let _contains-text(it) = {
   if type(it) != content {
     return false
@@ -826,33 +826,17 @@
   return false
 }
 
-#let make-color-cover-with(color, fallback-hide) = {
-  let change-color(it) = {
-    if is-sequence(it) {
-      // recursively hides contents
-      for child in it.children {
-        change-color(child)
-      }
-    } else if _contains-text(it) {
-      // if `it` contains a text, update the color.
-      show it.func(): set text(fill: color)
-      it
-    } else {
-      if fallback-hide {
-        // use `hide` as a fallback, so figures, images, tables... will be completely hidden.
-        // we may use the cover-with-rect instead.
-        hide(it)
-      } else {
-        it
-      }
-    }
+#let color-changing-cover(self: none, color: gray, fallback-hide: true, it) = {
+  if _contains-text(it) {
+    set text(color)
+    show text: set text(color)
+    it
+  } else if fallback-hide {
+    hide(it)
+  } else {
+    it
   }
-  return change-color
 }
-
-#let color-changing-cover(color: gray, fallback-hide: true) = method-wrapper(
-  make-color-cover-with(color, fallback-hide),
-)
 
 
 /// Alert content with a primary color.
