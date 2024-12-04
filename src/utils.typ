@@ -577,7 +577,7 @@
 
 /// Fit content to specified height.
 ///
-/// Example: `#utils.fit-to-height(1fr)[BIG]`
+/// Example: `#utils.fit-to-height(100%)[BIG]`
 ///
 /// - width (length, fraction, relative): Will determine the width of the content after scaling. So, if you want the scaled content to fill half of the slide width, you can use `width: 50%`.
 ///
@@ -646,7 +646,7 @@
 
 /// Fit content to specified width.
 ///
-/// Example: `#utils.fit-to-width(1fr)[BIG]`
+/// Example: `#utils.fit-to-width(100%)[BIG]`
 ///
 /// - grow (boolean): Indicates whether the content should be scaled up if it is smaller than the available width. Default is `true`.
 ///
