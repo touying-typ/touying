@@ -841,6 +841,17 @@
   }
 }
 
+#let alpha-changing-cover(self: none, ratio: 80%, fallback-hide: true, it) = context {
+  if _contains-text(it) {
+    set text(text.fill.transparentize(ratio))
+    show text: set text(text.fill.transparentize(ratio))
+    it
+  } else if fallback-hide {
+    hide(it)
+  } else {
+    it
+  }
+}
 
 /// Alert content with a primary color.
 ///
