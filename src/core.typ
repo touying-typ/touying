@@ -1666,38 +1666,35 @@
     [#metadata((kind: "touying-new-slide")) <touying-metadata>]
     // add headings for the first subslide
     if self.at("headings", default: ()) != () {
-      place(
-        hide({
-          set heading(offset: 0)
-          let headings = self.at("headings", default: ()).map(it => if it.has("label") {
-            if str(it.label) in ("touying:hidden", "touying:unnumbered", "touying:unoutlined", "touying:unbookmarked") {
-              let fields = it.fields()
-              let _ = fields.remove("label", default: none)
-              let _ = fields.remove("body", default: none)
-              if str(it.label) == "touying:hidden" {
-                fields.numbering = none
-                fields.outlined = false
-                fields.bookmarked = false
-              }
-              if str(it.label) == "touying:unnumbered" {
-                fields.numbering = none
-              }
-              if str(it.label) == "touying:unoutlined" {
-                fields.outlined = false
-              }
-              if str(it.label) == "touying:unbookmarked" {
-                fields.bookmarked = false
-              }
-              utils.label-it(heading(..fields, it.body), it.label)
-            } else {
-              it
-            }
-          } else {
-            it
-          })
-          headings.sum(default: none)
-        }),
-      )
+      set heading(offset: 0)
+      show heading: none
+      let headings = self.at("headings", default: ()).map(it => if it.has("label") {
+        if str(it.label) in ("touying:hidden", "touying:unnumbered", "touying:unoutlined", "touying:unbookmarked") {
+          let fields = it.fields()
+          let _ = fields.remove("label", default: none)
+          let _ = fields.remove("body", default: none)
+          if str(it.label) == "touying:hidden" {
+            fields.numbering = none
+            fields.outlined = false
+            fields.bookmarked = false
+          }
+          if str(it.label) == "touying:unnumbered" {
+            fields.numbering = none
+          }
+          if str(it.label) == "touying:unoutlined" {
+            fields.outlined = false
+          }
+          if str(it.label) == "touying:unbookmarked" {
+            fields.bookmarked = false
+          }
+          utils.label-it(heading(..fields, it.body), it.label)
+        } else {
+          it
+        }
+      } else {
+        it
+      })
+      headings.sum(default: none)
     }
     utils.call-or-display(self, self.at("slide-preamble", default: none))
     utils.call-or-display(self, self.at("default-slide-preamble", default: none))
