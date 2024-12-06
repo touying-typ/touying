@@ -174,7 +174,7 @@
     stack(
       dir: ttb,
       spacing: 1em,
-      utils.display-current-heading(level: level, numbered: numbered),
+      text(self.colors.neutral-darkest, utils.display-current-heading(level: level, numbered: numbered)),
       block(
         height: 2pt,
         width: 100%,
@@ -182,7 +182,7 @@
         components.progress-bar(height: 2pt, self.colors.primary, self.colors.primary-light),
       ),
     )
-    body
+    text(self.colors.neutral-dark, body)
   }
   self = utils.merge-dicts(
     self,
