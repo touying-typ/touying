@@ -820,8 +820,8 @@
     return _contains-text(it.child, transparentize-table)
   }
   if it.has("children") {
-    if it.func() == table and transparentize-table {
-      return true
+    if it.func() == table {
+      return transparentize-table
     }
     for child in it.children {
       if _contains-text(child, transparentize-table) {
