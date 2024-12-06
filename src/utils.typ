@@ -841,10 +841,12 @@
   }
 }
 
-#let alpha-changing-cover(self: none, ratio: 80%, fallback-hide: true, it) = context {
+#let alpha-changing-cover(self: none, ratio: 75%, fallback-hide: true, it) = context {
   if _contains-text(it) {
     set text(text.fill.transparentize(ratio))
-    show text: set text(text.fill.transparentize(ratio))
+    show text: it => context {
+      text(update-alpha(text.fill, 100% - ratio), it)
+    }
     it
   } else if fallback-hide {
     hide(it)
