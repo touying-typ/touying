@@ -803,7 +803,7 @@
 }
 
 // recursively checks if `it` has a text in it
-#let _contains-text(it) = {
+#let _contains-text(it, transparentize-table) = {
   if type(it) != content {
     return false
   }
@@ -811,17 +811,20 @@
     return true
   }
   if it.has("body") {
-    return _contains-text(it.body)
+    return _contains-text(it.body, transparentize-table)
   }
   if it.has("base") {
-    return _contains-text(it.base)
+    return _contains-text(it.base, transparentize-table)
   }
   if it.has("child") {
-    return _contains-text(it.child)
+    return _contains-text(it.child, transparentize-table)
   }
   if it.has("children") {
+    if it.func() == table and transparentize-table {
+      return true
+    }
     for child in it.children {
-      if _contains-text(child) {
+      if _contains-text(child, transparentize-table) {
         return true
       }
     }
@@ -829,8 +832,14 @@
   return false
 }
 
-#let color-changing-cover(self: none, color: gray, fallback-hide: true, it) = {
-  if _contains-text(it) {
+#let color-changing-cover(
+  self: none,
+  color: gray,
+  fallback-hide: true,
+  transparentize-table: false,
+  it,
+) = {
+  if _contains-text(it, transparentize-table) {
     set text(color)
     show text: set text(color)
     it
@@ -841,8 +850,14 @@
   }
 }
 
-#let alpha-changing-cover(self: none, ratio: 75%, fallback-hide: true, it) = context {
-  if _contains-text(it) {
+#let alpha-changing-cover(
+  self: none,
+  ratio: 75%,
+  fallback-hide: true,
+  transparentize-table: false,
+  it,
+) = context {
+  if _contains-text(it, transparentize-table) {
     set text(text.fill.transparentize(ratio))
     show text: it => context {
       text(update-alpha(text.fill, 100% - ratio), it)
