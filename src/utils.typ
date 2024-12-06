@@ -785,7 +785,7 @@
 /// - alpha (float): The new alpha value.
 ///
 /// -> color
-#let update-alpha(constructor: rgb, color, alpha) = constructor(..color.components(alpha: true).slice(0, -1), alpha)
+#let update-alpha(color, alpha) = color.opacify(100%).transparentize(100% - alpha)
 
 
 /// Cover content with a transparent rectangle.
@@ -852,15 +852,15 @@
 
 #let alpha-changing-cover(
   self: none,
-  ratio: 75%,
+  alpha: 25%,
   fallback-hide: true,
   transparentize-table: false,
   it,
 ) = context {
   if _contains-text(it, transparentize-table) {
-    set text(text.fill.transparentize(ratio))
+    set text(text.fill.transparentize(100% - alpha))
     show text: it => context {
-      text(update-alpha(text.fill, 100% - ratio), it)
+      text(update-alpha(text.fill, alpha), it)
     }
     it
   } else if fallback-hide {
