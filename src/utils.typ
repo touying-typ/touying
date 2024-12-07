@@ -746,7 +746,7 @@
 /// - alpha (float): The new alpha value.
 ///
 /// -> color
-#let update-alpha(constructor: rgb, color, alpha) = constructor(..color.components(alpha: true).slice(0, -1), alpha)
+#let update-alpha(color, alpha) = color.opacify(100%).transparentize(100% - alpha)
 
 
 /// Cover content with a transparent rectangle.
@@ -763,6 +763,73 @@
   )
 }
 
+// recursively checks if `it` has a text in it
+#let _contains-text(it, transparentize-table) = {
+  if type(it) != content {
+    return false
+  }
+  if it.func() == text {
+    return true
+  }
+  if it.has("body") {
+    return _contains-text(it.body, transparentize-table)
+  }
+  if it.has("base") {
+    return _contains-text(it.base, transparentize-table)
+  }
+  if it.has("child") {
+    return _contains-text(it.child, transparentize-table)
+  }
+  if it.has("children") {
+    if it.func() == table {
+      return transparentize-table
+    }
+    for child in it.children {
+      if _contains-text(child, transparentize-table) {
+        return true
+      }
+    }
+  }
+  return false
+}
+
+#let color-changing-cover(
+  self: none,
+  color: gray,
+  fallback-hide: true,
+  transparentize-table: false,
+  it,
+) = {
+  if _contains-text(it, transparentize-table) {
+    set text(color)
+    show text: set text(color)
+    it
+  } else if fallback-hide {
+    hide(it)
+  } else {
+    it
+  }
+}
+
+#let alpha-changing-cover(
+  self: none,
+  alpha: 25%,
+  fallback-hide: true,
+  transparentize-table: false,
+  it,
+) = context {
+  if _contains-text(it, transparentize-table) {
+    set text(text.fill.transparentize(100% - alpha))
+    show text: it => context {
+      text(update-alpha(text.fill, alpha), it)
+    }
+    it
+  } else if fallback-hide {
+    hide(it)
+  } else {
+    it
+  }
+}
 
 /// Alert content with a primary color.
 ///
