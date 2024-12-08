@@ -1,6 +1,7 @@
 #import "core.typ": (
   pause,
   meanwhile,
+  effect,
   uncover,
   only,
   alternatives-match,

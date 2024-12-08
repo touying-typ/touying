@@ -487,6 +487,47 @@
 #let meanwhile = [#metadata((kind: "touying-meanwhile"))<touying-temporary-mark>]
 
 
+/// Take effect in some subslides.
+/// 
+/// Example: `#effect(text.with(fill: red), "2-")[Something]` will display `[Something]` if the current slide is 2 or later.
+/// 
+/// You can also add an abbreviation by using `#let effect-red = effect.with(text.with(fill: red))` for your own effects.
+/// 
+/// - visible-subslides (int, array, string): `visible-subslides` is a single integer, an array of integers,
+///    or a string that specifies the visible subslides
+///
+///    Read [polylux book](https://polylux.dev/book/dynamic/complex.html)
+///
+///    The simplest extension is to use an array, such as `(1, 2, 4)` indicating that
+///    slides 1, 2, and 4 are visible. This is equivalent to the string `"1, 2, 4"`.
+///
+///    You can also use more convenient and complex strings to specify visible slides.
+///
+///    For example, "-2, 4, 6-8, 10-" means slides 1, 2, 4, 6, 7, 8, 10, and slides after 10 are visible.
+/// 
+/// - fn (function): The function that will be called in the subslide.
+///      Or you can use a method function like `(self: none) => { .. }`.
+///
+/// - cont (content): The content to display when the content is visible in the subslide.
+///
+/// - is-method (boolean): A boolean indicating whether the function is a method function. Default is `false`. 
+#let effect(visible-subslides, fn, cont, is-method: false) = {
+  touying-fn-wrapper(
+    if is-method {
+      fn
+    } else {
+      (self: none, cont) => if utils.check-visible(self.subslide, visible-subslides) {
+        fn(cont)
+      } else {
+        cont
+      }
+    },
+    last-subslide: utils.last-required-subslide(visible-subslides),
+    cont,
+  )
+}
+
+
 /// Uncover content in some subslides. Reserved space when hidden (like `#hide()`).
 ///
 /// Example: `uncover("2-")[abc]` will display `[abc]` if the current slide is 2 or later
