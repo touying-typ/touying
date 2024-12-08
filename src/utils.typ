@@ -793,6 +793,15 @@
   return false
 }
 
+/// Cover content with a text-color-changing mechanism.
+/// 
+/// Example: `config-methods(cover: utils.color-changing-cover.with(color: gray))`
+/// 
+/// - color (color): The color to change to. Default is `gray`.
+/// 
+/// - fallback-hide (boolean): Indicates whether the content should be hidden if it does not contain text. Default is `true`.
+/// 
+/// - transparentize-table (boolean): Indicates whether the content should be transparentized if it is a table. Default is `false`.
 #let color-changing-cover(
   self: none,
   color: gray,
@@ -811,6 +820,15 @@
   }
 }
 
+/// Cover content with an alpha-changing mechanism.
+/// 
+/// Example: `config-methods(cover: utils.alpha-changing-cover.with(alpha: 25%))`
+/// 
+/// - alpha (percentage): The alpha value to change to. Default is `25%`.
+/// 
+/// - fallback-hide (boolean): Indicates whether the content should be hidden if it does not contain text. Default is `true`.
+/// 
+/// - transparentize-table (boolean): Indicates whether the content should be transparentized if it is a table. Default is `false`.
 #let alpha-changing-cover(
   self: none,
   alpha: 25%,
