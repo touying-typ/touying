@@ -11,7 +11,7 @@
 /// Split slides by headings #link("https://touying-typ.github.io/docs/sections")[document]
 ///
 /// #example(```
-/// #import "@preview/touying:0.5.3": *
+/// #import "@preview/touying:0.5.4": *
 /// #import themes.dewdrop: *
 ///
 /// >>> #let is-dark = sys.inputs.at("x-color-theme", default: none) == "dark";

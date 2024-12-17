@@ -1,5 +1,36 @@
 # Changelog
 
+## v0.5.4
+
+### Features
+
+- docs: improve param documentation and we have better hints for tinymist https://github.com/touying-typ/touying/pull/98
+- feat: fake frozon states support for `heading` https://github.com/touying-typ/touying/pull/124
+- feat: add alpha-changing-cover and color-changing-cover https://github.com/touying-typ/touying/pull/129
+- feat: add effect function https://github.com/touying-typ/touying/issues/111
+  - Example: `#effect(text.with(fill: red), "2-")[Something]` will display `[Something]` if the current slide is 2 or later.
+- feat: add argument `config: (..)` for `xxx-slide` functions
+- feat: add `align` argument for university theme
+
+### Fixes
+
+- fix: also hide enum numbers with show-hide-set-list-marker-none https://github.com/touying-typ/touying/pull/114
+- fix: fixed progress bar not to break apart when global figure gutter is set nonzero https://github.com/touying-typ/touying/pull/120
+- fix: fixed frozen-counters bug with multiple #pause commands https://github.com/touying-typ/touying/pull/124
+- fix: fixed incorrect page num when draft is true https://github.com/touying-typ/touying/pull/125
+- fix: fix behaviors of fit-to-height and fit-to-width partially https://github.com/touying-typ/touying/pull/131
+- fix: duplicated footnotes in headings https://github.com/touying-typ/touying/pull/132
+- fix: do not hardcode page sizes https://github.com/touying-typ/touying/pull/134
+- fix: add default numbering for page https://github.com/touying-typ/touying/issues/100
+- refactor: move show-strong-with-alert to per-slide level https://github.com/touying-typ/touying/issues/123
+- refactor: remove unnecessary `config-page(fill: ...)`
+- theme(metropolis): fix color of title page and fix https://github.com/touying-typ/touying/issues/103
+- theme(metropolis): fixed metropolis slide's header to return content if title is specified https://github.com/touying-typ/touying/pull/126
+- theme(metropolis): respect colors dict in metropolis theme https://github.com/touying-typ/touying/pull/133
+
+Thanks for the contributions from [@enklht](https://github.com/enklht).
+
+
 ## v0.5.3
 
 ### Features
