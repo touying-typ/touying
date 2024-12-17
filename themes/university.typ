@@ -30,10 +30,14 @@
   repeat: auto,
   setting: body => body,
   composer: auto,
+  align: auto,
   ..bodies,
 ) = touying-slide-wrapper(self => {
+  if align != auto {
+    self.store.align = align
+  }
   let header(self) = {
-    set align(top)
+    set std.align(top)
     grid(
       rows: (auto, auto),
       row-gutter: 3mm,
@@ -50,13 +54,13 @@
     )
   }
   let footer(self) = {
-    set align(center + bottom)
+    set std.align(center + bottom)
     set text(size: .4em)
     {
       let cell(..args, it) = components.cell(
         ..args,
         inset: 1mm,
-        align(horizon, text(fill: white, it)),
+        std.align(horizon, text(fill: white, it)),
       )
       show: block.with(width: 100%, height: auto)
       grid(
@@ -75,7 +79,12 @@
       footer: footer,
     ),
   )
-  touying-slide(self: self, config: config, repeat: repeat, setting: setting, composer: composer, ..bodies)
+  let new-setting = body => {
+    show: std.align.with(self.store.align)
+    show: setting
+    body
+  }
+  touying-slide(self: self, config: config, repeat: repeat, setting: new-setting, composer: composer, ..bodies)
 })
 
 
@@ -124,7 +133,7 @@
     if info.logo != none {
       place(right, text(fill: self.colors.primary, info.logo))
     }
-    align(
+    std.align(
       center + horizon,
       {
         block(
@@ -174,7 +183,7 @@
 /// - body (auto): is the body of the section. This will be passed automatically by Touying.
 #let new-section-slide(config: (:), level: 1, numbered: true, body) = touying-slide-wrapper(self => {
   let slide-body = {
-    set align(horizon)
+    set std.align(horizon)
     show: pad.with(20%)
     set text(size: 1.5em, fill: self.colors.primary, weight: "bold")
     stack(
@@ -225,7 +234,7 @@
     config-page(margin: 1em, ..args),
   )
   set text(fill: self.colors.neutral-lightest, weight: "bold", size: 2em)
-  touying-slide(self: self, align(horizon, body))
+  touying-slide(self: self, std.align(horizon, body))
 })
 
 
@@ -273,6 +282,8 @@
 /// ```
 ///
 /// - aspect-ratio (string): is the aspect ratio of the slides. Default is `16-9`.
+/// 
+/// - align (alignment): is the alignment of the slides. Default is `top`.
 ///
 /// - progress-bar (boolean): is whether to show the progress bar. Default is `true`.
 ///
@@ -289,6 +300,7 @@
 /// - footer-c (content, function): is the right part of the footer. Default is `self => h(1fr) + utils.display-info-date(self) + h(1fr) + context utils.slide-counter.display() + " / " + utils.last-slide-number + h(1fr)`.
 #let university-theme(
   aspect-ratio: "16-9",
+  align: top,
   progress-bar: true,
   header: utils.display-current-heading(level: 2),
   header-right: self => utils.display-current-heading(level: 1) + h(.3em) + self.info.logo,
@@ -338,6 +350,7 @@
     ),
     // save the variables for later use
     config-store(
+      align: align,
       progress-bar: progress-bar,
       header: header,
       header-right: header-right,

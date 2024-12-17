@@ -1,7 +1,7 @@
 #import "../lib.typ": *
 #import themes.university: *
 #import "@preview/cetz:0.3.1"
-#import "@preview/fletcher:0.5.2" as fletcher: node, edge
+#import "@preview/fletcher:0.5.3" as fletcher: node, edge
 #import "@preview/ctheorems:1.1.3": *
 #import "@preview/numbly:0.1.0": numbly
 
@@ -24,6 +24,7 @@
 
 #show: university-theme.with(
   aspect-ratio: "16-9",
+  // align: horizon,
   // config-common(handout: true),
   config-info(
     title: [Title],

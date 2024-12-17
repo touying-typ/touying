@@ -4,8 +4,6 @@
 
 #import "../src/exports.typ": *
 
-#let _typst-builtin-align = align
-
 #let _tblock(self: none, title: none, it) = {
   grid(
     columns: 1,
@@ -82,8 +80,6 @@
   if align != auto {
     self.store.align = align
   }
-  // restore typst builtin align function
-  let align = _typst-builtin-align
   if title != auto {
     self.store.title = title
   }
@@ -94,7 +90,7 @@
     self.store.footer = footer
   }
   let new-setting = body => {
-    show: align.with(self.store.align)
+    show: std.align.with(self.store.align)
     show: setting
     body
   }
@@ -138,7 +134,7 @@
     }
   }
   let body = {
-    show: align.with(center + horizon)
+    show: std.align.with(center + horizon)
     block(
       fill: self.colors.primary,
       inset: 1.5em,
@@ -196,7 +192,7 @@
   touying-slide(
     self: self,
     config: config,
-    align(
+    std.align(
       self.store.align,
       components.adaptive-columns(
         text(
@@ -261,7 +257,7 @@
     ),
   )
   set text(fill: self.colors.neutral-lightest, weight: "bold", size: 1.5em)
-  touying-slide(self: self, config: config, _typst-builtin-align(align, body))
+  touying-slide(self: self, config: config, std.align(align, body))
 })
 
 
@@ -274,7 +270,7 @@
 /// - body (array): is the content of the slide.
 #let ending-slide(config: (:), title: none, body) = touying-slide-wrapper(self => {
   let content = {
-    set align(center + horizon)
+    set std.align(center + horizon)
     if title != none {
       block(
         fill: self.colors.tertiary,
@@ -362,7 +358,7 @@
   body,
 ) = {
   let header(self) = {
-    set _typst-builtin-align(top)
+    set std.align(top)
     grid(
       rows: (auto, auto),
       utils.call-or-display(self, self.store.navigation),
@@ -371,7 +367,7 @@
   }
   let footer(self) = {
     set text(size: .5em)
-    set _typst-builtin-align(center + bottom)
+    set std.align(center + bottom)
     grid(
       rows: (auto, auto),
       utils.call-or-display(self, self.store.footer),
@@ -454,7 +450,7 @@
           outset: 0mm,
           fill: fill,
           stroke: none,
-          _typst-builtin-align(horizon, text(fill: self.colors.neutral-lightest, it)),
+          std.align(horizon, text(fill: self.colors.neutral-lightest, it)),
         )
         grid(
           columns: self.store.footer-columns,

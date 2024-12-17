@@ -3,8 +3,6 @@
 
 #import "../src/exports.typ": *
 
-#let _typst-builtin-align = align
-
 /// Default slide function for the presentation.
 ///
 /// - title (string): The title of the slide. Default is `auto`.
@@ -42,12 +40,10 @@
   if align != auto {
     self.store.align = align
   }
-  // restore typst builtin align function
-  let align = _typst-builtin-align
   let header(self) = {
-    set align(top)
+    set std.align(top)
     show: components.cell.with(fill: self.colors.secondary, inset: 1em)
-    set align(horizon)
+    set std.align(horizon)
     set text(fill: self.colors.neutral-lightest, weight: "medium", size: 1.2em)
     components.left-and-right(
       {
@@ -61,7 +57,7 @@
     )
   }
   let footer(self) = {
-    set align(bottom)
+    set std.align(bottom)
     set text(size: 0.8em)
     pad(
       .5em,
@@ -83,7 +79,7 @@
     ),
   )
   let new-setting = body => {
-    show: align.with(self.store.align)
+    show: std.align.with(self.store.align)
     set text(fill: self.colors.neutral-darkest)
     show: setting
     body
@@ -124,7 +120,7 @@
   let info = self.info + args.named()
   let body = {
     set text(fill: self.colors.neutral-darkest)
-    set align(horizon)
+    set std.align(horizon)
     block(
       width: 100%,
       inset: 2em,
@@ -174,7 +170,7 @@
 /// - body (auto): The body of the section. It will be passed by touying automatically.
 #let new-section-slide(config: (:), level: 1, numbered: true, body) = touying-slide-wrapper(self => {
   let slide-body = {
-    set align(horizon)
+    set std.align(horizon)
     show: pad.with(20%)
     set text(size: 1.5em)
     stack(
@@ -206,15 +202,13 @@
 ///
 /// - align (alignment): The alignment of the content. Default is `horizon + center`.
 #let focus-slide(config: (:), align: horizon + center, body) = touying-slide-wrapper(self => {
-  let _align = align
-  let align = _typst-builtin-align
   self = utils.merge-dicts(
     self,
     config-common(freeze-slide-counter: true),
     config-page(fill: self.colors.neutral-dark, margin: 2em),
   )
   set text(fill: self.colors.neutral-lightest, size: 1.5em)
-  touying-slide(self: self, config: config, align(_align, body))
+  touying-slide(self: self, config: config, std.align(align, body))
 })
 
 
