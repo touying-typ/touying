@@ -35,15 +35,6 @@
   }
 
   show: body => {
-    if self.at("show-strong-with-alert", default: true) {
-      show strong: self.methods.alert.with(self: self)
-      body
-    } else {
-      body
-    }
-  }
-
-  show: body => {
     if self.at("scale-list-items", default: none) != none {
       magic.scale-list-items(scale: self.at("scale-list-items", default: none), body)
     } else {
