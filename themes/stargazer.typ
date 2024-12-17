@@ -93,13 +93,8 @@
   if footer != auto {
     self.store.footer = footer
   }
-  let self = utils.merge-dicts(
-    self,
-    config-page(fill: self.colors.neutral-lightest),
-  )
   let new-setting = body => {
     show: align.with(self.store.align)
-    set text(fill: self.colors.neutral-darkest)
     show: setting
     body
   }
@@ -127,7 +122,6 @@
   self = utils.merge-dicts(
     self,
     config,
-    config-page(fill: self.colors.neutral-lightest),
   )
   self.store.title = none
   let info = self.info + args.named()
@@ -199,10 +193,6 @@
   ..args,
 ) = touying-slide-wrapper(self => {
   self.store.title = title
-  self = utils.merge-dicts(
-    self,
-    config-page(fill: self.colors.neutral-lightest),
-  )
   touying-slide(
     self: self,
     config: config,

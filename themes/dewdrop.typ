@@ -86,16 +86,11 @@
   let self = utils.merge-dicts(
     self,
     config-page(
-      fill: self.colors.neutral-lightest,
       header: dewdrop-header,
       footer: dewdrop-footer,
     ),
     config-common(subslide-preamble: self.store.subslide-preamble),
   )
-  let new-setting(body) = {
-    set text(fill: self.colors.neutral-darkest)
-    setting(body)
-  }
   touying-slide(self: self, config: config, repeat: repeat, setting: setting, composer: composer, ..bodies)
 })
 
@@ -127,7 +122,7 @@
     self,
     config,
     config-common(freeze-slide-counter: true),
-    config-page(fill: self.colors.neutral-lightest, margin: 0em),
+    config-page(margin: 0em),
   )
   let info = self.info + args.named()
   let body = {
@@ -180,7 +175,6 @@
   self = utils.merge-dicts(
     self,
     config-page(
-      fill: self.colors.neutral-lightest,
       footer: dewdrop-footer,
     ),
   )
@@ -216,7 +210,6 @@
   self = utils.merge-dicts(
     self,
     config-page(
-      fill: self.colors.neutral-lightest,
       footer: dewdrop-footer,
     ),
   )

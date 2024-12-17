@@ -54,7 +54,6 @@
     config-page(
       header: header,
       footer: footer,
-      fill: self.colors.neutral-lightest,
     ),
     config-common(subslide-preamble: self.store.subslide-preamble),
   )
@@ -179,7 +178,7 @@
     ),
     config-methods(
       init: (self: none, body) => {
-        set text(fill: self.colors.neutral-darkest, size: 25pt)
+        set text(size: 25pt)
         show footnote.entry: set text(size: .6em)
         show heading.where(level: 1): set text(1.4em)
 

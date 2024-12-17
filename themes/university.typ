@@ -106,7 +106,6 @@
     self,
     config,
     config-common(freeze-slide-counter: true),
-    config-page(fill: self.colors.neutral-lightest),
   )
   let info = self.info + args.named()
   info.authors = {
@@ -191,10 +190,6 @@
     )
     body
   }
-  self = utils.merge-dicts(
-    self,
-    config-page(fill: self.colors.neutral-lightest),
-  )
   touying-slide(self: self, config: config, slide-body)
 })
 
@@ -327,7 +322,7 @@
     ),
     config-methods(
       init: (self: none, body) => {
-        set text(fill: self.colors.neutral-darkest, size: 25pt)
+        set text(size: 25pt)
         show heading: set text(fill: self.colors.primary)
 
         body

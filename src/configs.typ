@@ -707,7 +707,6 @@
     paper: "presentation-16-9",
     header: none,
     footer: none,
-    fill: rgb("#ffffff"),
     margin: (x: 3em, y: 2.8em),
   ),
   config-store(),

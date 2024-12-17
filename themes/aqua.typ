@@ -50,7 +50,6 @@
   let self = utils.merge-dicts(
     self,
     config-page(
-      fill: self.colors.neutral-lightest,
       header: header,
       footer: footer,
     ),

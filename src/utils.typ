@@ -756,7 +756,7 @@
   cover-with-rect(
     fill: update-alpha(
       constructor: constructor,
-      self.page.fill,
+      self.page.get("fill", default: rgb("#ffffff")),
       alpha,
     ),
     body,
