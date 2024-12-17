@@ -72,7 +72,19 @@
 ///
 /// #title-slide(subtitle: [Subtitle], extra: [Extra information])
 /// ```
-#let title-slide(..args) = touying-slide-wrapper(self => {
+/// 
+/// - config (dictionary): The configuration of the slide. You can use `config-xxx` to set the configuration of the slide. For more configurations, you can use `utils.merge-dicts` to merge them.
+/// ```
+#let title-slide(config: (:), ..args) = touying-slide-wrapper(self => {
+  self = utils.merge-dicts(
+    self,
+    config,
+    config-common(freeze-slide-counter: true),
+    config-page(
+      background: utils.call-or-display(self, self.store.background),
+      margin: (x: 0em, top: 30%, bottom: 0%),
+    ),
+  )
   let info = self.info + args.named()
   let body = {
     set align(center)
@@ -94,22 +106,16 @@
       },
     )
   }
-  self = utils.merge-dicts(
-    self,
-    config-common(freeze-slide-counter: true),
-    config-page(
-      background: utils.call-or-display(self, self.store.background),
-      margin: (x: 0em, top: 30%, bottom: 0%),
-    ),
-  )
   touying-slide(self: self, body)
 })
 
 
 /// Outline slide for the presentation.
+/// 
+/// - config (dictionary): The configuration of the slide. You can use `config-xxx` to set the configuration of the slide. For more configurations, you can use `utils.merge-dicts` to merge them.
 ///
 /// - leading (length): The leading of paragraphs in the outline. Default is `50pt`.
-#let outline-slide(leading: 50pt) = touying-slide-wrapper(self => {
+#let outline-slide(config: (:), leading: 50pt) = touying-slide-wrapper(self => {
   set text(size: 30pt, fill: self.colors.primary)
   set par(leading: leading)
 
@@ -160,7 +166,7 @@
       margin: 0em,
     ),
   )
-  touying-slide(self: self, body)
+  touying-slide(self: self, config: config, body)
 })
 
 
@@ -168,10 +174,12 @@
 ///
 /// Example: `config-common(new-section-slide-fn: new-section-slide.with(numbered: false))`
 ///
+/// - config (dictionary): The configuration of the slide. You can use `config-xxx` to set the configuration of the slide. For more configurations, you can use `utils.merge-dicts` to merge them.
+/// 
 /// - level (int): The level of the heading.
 ///
 /// - body (content): The body of the section. It will be passed by touying automatically.
-#let new-section-slide(level: 1, body) = touying-slide-wrapper(self => {
+#let new-section-slide(config: (:), level: 1, body) = touying-slide-wrapper(self => {
   let slide-body = {
     stack(
       dir: ttb,
@@ -203,21 +211,23 @@
       background: utils.call-or-display(self, self.store.background),
     ),
   )
-  touying-slide(self: self, slide-body)
+  touying-slide(self: self, config: config, slide-body)
 })
 
 
 /// Focus on some content.
 ///
 /// Example: `#focus-slide[Wake up!]`
-#let focus-slide(body) = touying-slide-wrapper(self => {
+/// 
+/// - config (dictionary): The configuration of the slide. You can use `config-xxx` to set the configuration of the slide. For more configurations, you can use `utils.merge-dicts` to merge them.
+#let focus-slide(config: (:), body) = touying-slide-wrapper(self => {
   self = utils.merge-dicts(
     self,
     config-common(freeze-slide-counter: true),
     config-page(fill: self.colors.primary, margin: 2em),
   )
   set text(fill: self.colors.neutral-lightest, size: 2em, weight: "bold")
-  touying-slide(self: self, align(horizon + center, body))
+  touying-slide(self: self, config: config, align(horizon + center, body))
 })
 
 

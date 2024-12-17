@@ -121,7 +121,14 @@
 ///
 /// #title-slide(subtitle: [Subtitle])
 /// ```
-#let title-slide(..args) = touying-slide-wrapper(self => {
+/// 
+/// - config (dictionary): The configuration of the slide. You can use `config-xxx` to set the configuration of the slide. For more several configurations, you can use `utils.merge-dicts` to merge them.
+#let title-slide(config: (:), ..args) = touying-slide-wrapper(self => {
+  self = utils.merge-dicts(
+    self,
+    config,
+    config-page(fill: self.colors.neutral-lightest),
+  )
   self.store.title = none
   let info = self.info + args.named()
   info.authors = {
@@ -170,16 +177,14 @@
       text(size: 1.0em, utils.display-info-date(self))
     }
   }
-  self = utils.merge-dicts(
-    self,
-    config-page(fill: self.colors.neutral-lightest),
-  )
   touying-slide(self: self, body)
 })
 
 
 
 /// Outline slide for the presentation.
+/// 
+/// - config (dictionary): is the configuration of the slide. You can use `config-xxx` to set the configuration of the slide. For more several configurations, you can use `utils.merge-dicts` to merge them.
 ///
 /// - title (string): is the title of the outline. Default is `utils.i18n-outline-title`.
 ///
@@ -187,6 +192,7 @@
 ///
 /// - numbered (boolean): is whether the outline is numbered. Default is `true`.
 #let outline-slide(
+  config: (:),
   title: utils.i18n-outline-title,
   numbered: true,
   level: none,
@@ -199,6 +205,7 @@
   )
   touying-slide(
     self: self,
+    config: config,
     align(
       self.store.align,
       components.adaptive-columns(
@@ -224,6 +231,8 @@
 /// New section slide for the presentation. You can update it by updating the `new-section-slide-fn` argument for `config-common` function.
 ///
 /// Example: `config-common(new-section-slide-fn: new-section-slide.with(numbered: false))`
+/// 
+/// - config (dictionary): is the configuration of the slide. You can use `config-xxx` to set the configuration of the slide. For more several configurations, you can use `utils.merge-dicts` to merge them.
 ///
 /// - title (content, function): is the title of the section. The default is `utils.i18n-outline-title`.
 ///
@@ -233,21 +242,24 @@
 ///
 /// - body (none): is the body of the section. It will be passed by touying automatically.
 #let new-section-slide(
+  config: (:),
   title: utils.i18n-outline-title,
   level: 1,
   numbered: true,
   ..args,
   body,
-) = outline-slide(title: title, level: level, numbered: numbered, ..args, body)
+) = outline-slide(config: config, title: title, level: level, numbered: numbered, ..args, body)
 
 
 
 /// Focus on some content.
 ///
 /// Example: `#focus-slide[Wake up!]`
+/// 
+/// - config (dictionary): is the configuration of the slide. You can use `config-xxx` to set the configuration of the slide. For more several configurations, you can use `utils.merge-dicts` to merge them.
 ///
 /// - align (alignment): is the alignment of the content. The default is `horizon + center`.
-#let focus-slide(align: horizon + center, body) = touying-slide-wrapper(self => {
+#let focus-slide(config: (:), align: horizon + center, body) = touying-slide-wrapper(self => {
   self = utils.merge-dicts(
     self,
     config-common(freeze-slide-counter: true),
@@ -259,16 +271,18 @@
     ),
   )
   set text(fill: self.colors.neutral-lightest, weight: "bold", size: 1.5em)
-  touying-slide(self: self, _typst-builtin-align(align, body))
+  touying-slide(self: self, config: config, _typst-builtin-align(align, body))
 })
 
 
 /// End slide for the presentation.
 ///
+/// - config (dictionary): is the configuration of the slide. You can use `config-xxx` to set the configuration of the slide. For more several configurations, you can use `utils.merge-dicts` to merge them.
+/// 
 /// - title (string): is the title of the slide. The default is `none`.
 ///
 /// - body (array): is the content of the slide.
-#let ending-slide(title: none, body) = touying-slide-wrapper(self => {
+#let ending-slide(config: (:), title: none, body) = touying-slide-wrapper(self => {
   let content = {
     set align(center + horizon)
     if title != none {
@@ -281,7 +295,7 @@
     }
     body
   }
-  touying-slide(self: self, content)
+  touying-slide(self: self, config: config, content)
 })
 
 

@@ -93,12 +93,21 @@
 ///
 /// #title-slide(subtitle: [Subtitle])
 /// ```
+/// 
+/// - config (dictionary): is the configuration of the slide. Use `config-xxx` to set individual configurations for the slide. To apply multiple configurations, use `utils.merge-dicts` to combine them.
 ///
 /// - extra (string, none): is the extra information for the slide. This can be passed to the `title-slide` function to display additional information on the title slide.
 #let title-slide(
+  config: (:),
   extra: none,
   ..args,
 ) = touying-slide-wrapper(self => {
+  self = utils.merge-dicts(
+    self,
+    config,
+    config-common(freeze-slide-counter: true),
+    config-page(fill: self.colors.neutral-lightest),
+  )
   let info = self.info + args.named()
   info.authors = {
     let authors = if "authors" in info {
@@ -149,11 +158,6 @@
       },
     )
   }
-  self = utils.merge-dicts(
-    self,
-    config-common(freeze-slide-counter: true),
-    config-page(fill: self.colors.neutral-lightest),
-  )
   touying-slide(self: self, body)
 })
 
@@ -162,12 +166,14 @@
 ///
 /// Example: `config-common(new-section-slide-fn: new-section-slide.with(numbered: false))`
 ///
+/// - config (dictionary): is the configuration of the slide. Use `config-xxx` to set individual configurations for the slide. To apply multiple configurations, use `utils.merge-dicts` to combine them.
+/// 
 /// - level (int, none): is the level of the heading.
 ///
 /// - numbered (boolean): is whether the heading is numbered.
 ///
 /// - body (auto): is the body of the section. This will be passed automatically by Touying.
-#let new-section-slide(level: 1, numbered: true, body) = touying-slide-wrapper(self => {
+#let new-section-slide(config: (:), level: 1, numbered: true, body) = touying-slide-wrapper(self => {
   let slide-body = {
     set align(horizon)
     show: pad.with(20%)
@@ -189,18 +195,20 @@
     self,
     config-page(fill: self.colors.neutral-lightest),
   )
-  touying-slide(self: self, slide-body)
+  touying-slide(self: self, config: config, slide-body)
 })
 
 
 /// Focus on some content.
 ///
 /// Example: `#focus-slide[Wake up!]`
+/// 
+/// - config (dictionary): is the configuration of the slide. Use `config-xxx` to set individual configurations for the slide. To apply multiple configurations, use `utils.merge-dicts` to combine them.
 ///
 /// - background-color (color, none): is the background color of the slide. Default is the primary color.
 ///
 /// - background-img (string, none): is the background image of the slide. Default is none.
-#let focus-slide(background-color: none, background-img: none, body) = touying-slide-wrapper(self => {
+#let focus-slide(config: (:), background-color: none, background-img: none, body) = touying-slide-wrapper(self => {
   let background-color = if background-img == none and background-color == none {
     rgb(self.colors.primary)
   } else {
@@ -237,13 +245,15 @@
 /// - Check that there are enough rows and columns to fit in all the content blocks.
 ///
 /// That means that `#matrix-slide[...][...]` stacks horizontally and `#matrix-slide(columns: 1)[...][...]` stacks vertically.
-#let matrix-slide(columns: none, rows: none, ..bodies) = touying-slide-wrapper(self => {
+/// 
+/// - config (dictionary): is the configuration of the slide. Use `config-xxx` to set individual configurations for the slide. To apply multiple configurations, use `utils.merge-dicts` to combine them.
+#let matrix-slide(config: (:), columns: none, rows: none, ..bodies) = touying-slide-wrapper(self => {
   self = utils.merge-dicts(
     self,
     config-common(freeze-slide-counter: true),
     config-page(margin: 0em),
   )
-  touying-slide(self: self, composer: components.checkerboard.with(columns: columns, rows: rows), ..bodies)
+  touying-slide(self: self, config: config, composer: components.checkerboard.with(columns: columns, rows: rows), ..bodies)
 })
 
 

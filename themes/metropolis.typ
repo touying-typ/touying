@@ -106,12 +106,21 @@
 ///
 /// #title-slide(subtitle: [Subtitle], extra: [Extra information])
 /// ```
+/// 
+/// - config (dictionary): The configuration of the slide. You can use `config-xxx` to set the configuration of the slide. For several configurations, you can use `utils.merge-dicts` to merge them.
 ///
 /// - extra (string, none): The extra information you want to display on the title slide.
 #let title-slide(
+  config: (:),
   extra: none,
   ..args,
 ) = touying-slide-wrapper(self => {
+  self = utils.merge-dicts(
+    self,
+    config,
+    config-common(freeze-slide-counter: true),
+    config-page(fill: self.colors.neutral-lightest),
+  )
   let info = self.info + args.named()
   let body = {
     set text(fill: self.colors.neutral-darkest)
@@ -148,11 +157,6 @@
       },
     )
   }
-  self = utils.merge-dicts(
-    self,
-    config-common(freeze-slide-counter: true),
-    config-page(fill: self.colors.neutral-lightest),
-  )
   touying-slide(self: self, body)
 })
 
@@ -160,13 +164,15 @@
 /// New section slide for the presentation. You can update it by updating the `new-section-slide-fn` argument for `config-common` function.
 ///
 /// Example: `config-common(new-section-slide-fn: new-section-slide.with(numbered: false))`
+/// 
+/// - config (dictionary): The configuration of the slide. You can use `config-xxx` to set the configuration of the slide. For several configurations, you can use `utils.merge-dicts` to merge them.
 ///
 /// - level (int): The level of the heading.
 ///
 /// - numbered (boolean): Indicates whether the heading is numbered.
 ///
 /// - body (auto): The body of the section. It will be passed by touying automatically.
-#let new-section-slide(level: 1, numbered: true, body) = touying-slide-wrapper(self => {
+#let new-section-slide(config: (:), level: 1, numbered: true, body) = touying-slide-wrapper(self => {
   let slide-body = {
     set align(horizon)
     show: pad.with(20%)
@@ -188,16 +194,18 @@
     self,
     config-page(fill: self.colors.neutral-lightest),
   )
-  touying-slide(self: self, slide-body)
+  touying-slide(self: self, config: config, slide-body)
 })
 
 
 /// Focus on some content.
 ///
 /// Example: `#focus-slide[Wake up!]`
+/// 
+/// - config (dictionary): The configuration of the slide. You can use `config-xxx` to set the configuration of the slide. For several configurations, you can use `utils.merge-dicts` to merge them.
 ///
 /// - align (alignment): The alignment of the content. Default is `horizon + center`.
-#let focus-slide(align: horizon + center, body) = touying-slide-wrapper(self => {
+#let focus-slide(config: (:), align: horizon + center, body) = touying-slide-wrapper(self => {
   let _align = align
   let align = _typst-builtin-align
   self = utils.merge-dicts(
@@ -206,7 +214,7 @@
     config-page(fill: self.colors.neutral-dark, margin: 2em),
   )
   set text(fill: self.colors.neutral-lightest, size: 1.5em)
-  touying-slide(self: self, align(_align, body))
+  touying-slide(self: self, config: config, align(_align, body))
 })
 
 
