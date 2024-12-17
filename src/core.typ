@@ -1517,9 +1517,9 @@
   )
   let cell = block.with(width: 100%, height: 100%, above: 0pt, below: 0pt, breakable: false)
   let page-height = if self.page.paper == "presentation-16-9" {
-    473.56pt
+    self.page.at("height", default: 473.56pt)
   } else {
-    595.28pt
+    self.page.at("height", default: 595.28pt)
   }
   it => pad(bottom: page-height, cell(it))
 }
@@ -1533,14 +1533,14 @@
       message: "The paper of page should be presentation-16-9 or presentation-4-3",
     )
     let page-width = if self.page.paper == "presentation-16-9" {
-      841.89pt
+      self.page.at("width", default: 841.89pt)
     } else {
-      793.7pt
+      self.page.at("width", default: 793.7pt)
     }
     let page-height = if self.page.paper == "presentation-16-9" {
-      473.56pt
+      self.page.at("height", default: 473.56pt)
     } else {
-      595.28pt
+      self.page.at("height", default: 595.28pt)
     }
     if type(margin) != dictionary and type(margin) != length and type(margin) != relative {
       return (:)
@@ -1592,14 +1592,14 @@
       message: "The paper of page should be presentation-16-9 or presentation-4-3",
     )
     let page-width = if self.page.paper == "presentation-16-9" {
-      841.89pt
+      self.page.at("width", default: 841.89pt)
     } else {
-      793.7pt
+      self.page.at("width", default: 793.7pt)
     }
     let page-height = if self.page.paper == "presentation-16-9" {
-      473.56pt
+      self.page.at("height", default: 473.56pt)
     } else {
-      595.28pt
+      self.page.at("height", default: 595.28pt)
     }
     let show-notes = (self.methods.show-notes)(self: self, width: page-width, height: page-height)
     let margin-left = if type(self.page.margin) != dictionary {
