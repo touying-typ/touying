@@ -572,6 +572,8 @@
 ///     - x: The horizontal margins.
 ///     - y: The vertical margins.
 ///     - rest: The margins on all sides except those for which the dictionary explicitly sets a size.
+/// 
+/// - numbering (string, function): The numbering style of the page. The default value is `"1"`.
 ///
 ///   The values for left and right are mutually exclusive with the values for inside and outside.
 #let config-page(
@@ -580,6 +582,7 @@
   footer: _default,
   fill: _default,
   margin: _default,
+  numbering: _default,
   ..args,
 ) = {
   assert(args.pos().len() == 0, message: "Unexpected positional arguments.")
@@ -590,6 +593,7 @@
       footer: footer,
       fill: fill,
       margin: margin,
+      numbering: numbering,
     )) + args.named(),
   )
 }
@@ -708,6 +712,7 @@
     header: none,
     footer: none,
     margin: (x: 3em, y: 2.8em),
+    numbering: "1",
   ),
   config-store(),
 )
