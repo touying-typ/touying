@@ -1000,7 +1000,7 @@
   if is-method {
       fn
   } else {
-    (self: none, cont) => if utils.check-visible(self.subslide, visible-subslides) {
+    if check-visible(self.subslide, visible-subslides) {
       fn(cont)
     } else {
       cont

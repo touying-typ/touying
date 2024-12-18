@@ -515,6 +515,7 @@
   touying-fn-wrapper(
     utils.effect,
     last-subslide: utils.last-required-subslide(visible-subslides),
+    fn,
     visible-subslides,
     is-method: is-method,
     cont,
