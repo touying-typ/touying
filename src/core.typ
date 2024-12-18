@@ -516,7 +516,7 @@
     utils.effect,
     last-subslide: utils.last-required-subslide(visible-subslides),
     visible-subslides,
-    is-method,
+    is-method: is-method,
     cont,
   )
 }
