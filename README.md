@@ -101,7 +101,7 @@ Before you begin, make sure you have installed the Typst environment. If not, yo
 To use Touying, you only need to include the following code in your document:
 
 ```typst
-#import "@preview/touying:0.5.4": *
+#import "@preview/touying:0.5.5": *
 #import themes.simple: *
 
 #show: simple-theme.with(aspect-ratio: "16-9")
@@ -129,7 +129,7 @@ It's simple. Congratulations on creating your first Touying slide! 🎉
 In fact, Touying provides various styles for writing slides. For example, the above example uses first-level and second-level titles to create new slides. However, you can also use the `#slide[..]` format to access more powerful features provided by Touying.
 
 ```typst
-#import "@preview/touying:0.5.4": *
+#import "@preview/touying:0.5.5": *
 #import themes.university: *
 #import "@preview/cetz:0.3.1"
 #import "@preview/fletcher:0.5.3" as fletcher: node, edge

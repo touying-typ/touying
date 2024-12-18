@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.5.4
+## v0.5.4 & v0.5.5
 
 ### Features
 
@@ -27,6 +27,7 @@
 - theme(metropolis): fix color of title page and fix https://github.com/touying-typ/touying/issues/103
 - theme(metropolis): fixed metropolis slide's header to return content if title is specified https://github.com/touying-typ/touying/pull/126
 - theme(metropolis): respect colors dict in metropolis theme https://github.com/touying-typ/touying/pull/133
+- fix: fix bug of `#effect` function
 
 Thanks for the contributions from [@enklht](https://github.com/enklht).
 
