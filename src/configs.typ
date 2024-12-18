@@ -333,6 +333,8 @@
 /// - uncover (function): The function to uncover content. The default value is `utils.uncover` function.
 ///
 /// - only (function): The function to show only the content. The default value is `utils.only` function.
+/// 
+/// - effect (function): The function to add effect to the content. The default value is `utils.effect`.
 ///
 /// - alternatives-match (function): The function to match alternatives. The default value is `utils.alternatives-match` function.
 ///
@@ -358,6 +360,7 @@
   // dynamic control
   uncover: _default,
   only: _default,
+  effect: _default,
   alternatives-match: _default,
   alternatives: _default,
   alternatives-fn: _default,
@@ -377,6 +380,7 @@
       cover: cover,
       uncover: uncover,
       only: only,
+      effect: effect,
       alternatives-match: alternatives-match,
       alternatives: alternatives,
       alternatives-fn: alternatives-fn,
@@ -656,6 +660,7 @@
     // dynamic control
     uncover: utils.uncover,
     only: utils.only,
+    effect: utils.effect,
     alternatives-match: utils.alternatives-match,
     alternatives: utils.alternatives,
     alternatives-fn: utils.alternatives-fn,

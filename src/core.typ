@@ -511,7 +511,7 @@
 /// - cont (content): The content to display when the content is visible in the subslide.
 ///
 /// - is-method (boolean): A boolean indicating whether the function is a method function. Default is `false`. 
-#let effect(visible-subslides, fn, cont, is-method: false) = {
+#let effect(fn, visible-subslides, cont, is-method: false) = {
   touying-fn-wrapper(
     if is-method {
       fn
