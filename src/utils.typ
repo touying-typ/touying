@@ -794,13 +794,13 @@
 }
 
 /// Cover content with a text-color-changing mechanism.
-/// 
+///
 /// Example: `config-methods(cover: utils.color-changing-cover.with(color: gray))`
-/// 
+///
 /// - color (color): The color to change to. Default is `gray`.
-/// 
+///
 /// - fallback-hide (boolean): Indicates whether the content should be hidden if it does not contain text. Default is `true`.
-/// 
+///
 /// - transparentize-table (boolean): Indicates whether the content should be transparentized if it is a table. Default is `false`.
 #let color-changing-cover(
   self: none,
@@ -821,13 +821,13 @@
 }
 
 /// Cover content with an alpha-changing mechanism.
-/// 
+///
 /// Example: `config-methods(cover: utils.alpha-changing-cover.with(alpha: 25%))`
-/// 
+///
 /// - alpha (percentage): The alpha value to change to. Default is `25%`.
-/// 
+///
 /// - fallback-hide (boolean): Indicates whether the content should be hidden if it does not contain text. Default is `true`.
-/// 
+///
 /// - transparentize-table (boolean): Indicates whether the content should be transparentized if it is a table. Default is `false`.
 #let alpha-changing-cover(
   self: none,
@@ -973,11 +973,14 @@
 }
 
 /// Take effect in some subslides.
-/// 
+///
 /// Example: `#effect(text.with(fill: red), "2-")[Something]` will display `[Something]` if the current slide is 2 or later.
-/// 
+///
 /// You can also add an abbreviation by using `#let effect-red = effect.with(text.with(fill: red))` for your own effects.
-/// 
+///
+/// - fn (function): The function that will be called in the subslide.
+///      Or you can use a method function like `(self: none) => { .. }`.
+///
 /// - visible-subslides (int, array, string): `visible-subslides` is a single integer, an array of integers,
 ///    or a string that specifies the visible subslides
 ///
@@ -989,18 +992,19 @@
 ///    You can also use more convenient and complex strings to specify visible slides.
 ///
 ///    For example, "-2, 4, 6-8, 10-" means slides 1, 2, 4, 6, 7, 8, 10, and slides after 10 are visible.
-/// 
-/// - fn (function): The function that will be called in the subslide.
-///      Or you can use a method function like `(self: none) => { .. }`.
 ///
 /// - cont (content): The content to display when the content is visible in the subslide.
 ///
-/// - is-method (boolean): A boolean indicating whether the function is a method function. Default is `false`. 
-#let effect(self: none, fn, visible-subslides, cont) = {
-  if check-visible(self.subslide, visible-subslides) {
-    fn(cont)
+/// - is-method (boolean): A boolean indicating whether the function is a method function. Default is `false`.
+#let effect(self: none, fn, visible-subslides, cont, is-method: false) = {
+  if is-method {
+      fn
   } else {
-    cont
+    if check-visible(self.subslide, visible-subslides) {
+      fn(cont)
+    } else {
+      cont
+    }
   }
 }
 
