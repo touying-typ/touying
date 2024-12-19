@@ -752,11 +752,10 @@
 /// Cover content with a transparent rectangle.
 ///
 /// Example: `config-methods(cover: utils.semi-transparent-cover)`
-#let semi-transparent-cover(self: none, constructor: rgb, alpha: 85%, body) = {
+#let semi-transparent-cover(self: none, alpha: 85%, body) = {
   cover-with-rect(
     fill: update-alpha(
-      constructor: constructor,
-      self.page.get("fill", default: rgb("#ffffff")),
+      self.page.at("fill", default: rgb("#ffffff")),
       alpha,
     ),
     body,
