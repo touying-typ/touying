@@ -131,9 +131,9 @@
   }
 
   let _time-config(time, msg-name, tag-name) = {
-    let time = if type(time) == "datetime" {
+    let time = if type(time) == datetime {
       time.display("[hour padding:zero repr:24]:[minute padding:zero]")
-    } else if type(time) == "string" {
+    } else if type(time) == str {
       time
     } else {
       panic(msg-name + " must be either a datetime or a string in the HH:MM format.")
