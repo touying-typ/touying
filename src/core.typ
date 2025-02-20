@@ -197,7 +197,7 @@
   for child in children {
     // Handle horizontal-line
     // split content when we have a horizontal line
-    if horizontal-line-to-pagebreak and horizontal-line and child not in ([—], [–], [-]) {
+    if horizontal-line-to-pagebreak and horizontal-line and child not in ([—], [---], [–], [--], [-]) {
       current-slide = utils.trim(current-slide)
       (cont, recaller-map, current-headings, current-slide, new-start, is-first-slide) = call-slide-fn-and-reset(
         self + (headings: current-headings, is-first-slide: is-first-slide),
@@ -256,10 +256,10 @@
         recaller-map,
       )
       result.push(cont)
-    } else if horizontal-line-to-pagebreak and child == [—] {
+    } else if horizontal-line-to-pagebreak and child in ([—], [---]) {
       horizontal-line = true
       continue
-    } else if horizontal-line-to-pagebreak and horizontal-line and child in ([–], [-]) {
+    } else if horizontal-line-to-pagebreak and horizontal-line and child in ([–], [--], [-]) {
       continue
     } else if utils.is-heading(child, depth: slide-level) {
       let last-heading-depth = _get-last-heading-depth(current-headings)
