@@ -370,10 +370,13 @@
   depth: 9999,
   style: (setting: body => body, numbered: true, current-heading) => setting({
     if numbered and current-heading.numbering != none {
-      _typst-builtin-numbering(
-        current-heading.numbering,
-        ..counter(heading).at(current-heading.location()),
-      ) + h(.3em)
+      (
+        _typst-builtin-numbering(
+          current-heading.numbering,
+          ..counter(heading).at(current-heading.location()),
+        )
+          + h(.3em)
+      )
     }
     current-heading.body
   }),
@@ -423,7 +426,7 @@
 ///
 /// - depth (int): The maximum depth of the heading to search. Usually, it should be set as slide-level.
 ///
-/// - sty (function): The style of the heading. If `sty` is a function, it will use the function to style the heading. For example, `sty: current-heading => current-heading.body`.
+/// - style (function): The style of the heading. If `style` is a function, it will use the function to style the heading. For example, `style: (self: none, current-heading) => utils.short-heading(self: self, current-heading)`.
 ///
 /// -> content
 #let display-current-short-heading(
@@ -432,19 +435,17 @@
   hierachical: true,
   depth: 9999,
   setting: body => body,
-  ..sty,
+  style: (self: none, current-heading) => short-heading(self: self, current-heading),
+  ..setting-args,
 ) = (
   context {
-    let sty = if sty.pos().len() > 1 {
-      sty.pos().at(0)
-    } else {
-      current-heading => {
-        short-heading(self: self, current-heading)
-      }
-    }
     let current-heading = current-heading(level: level, hierachical: hierachical, depth: depth)
     if current-heading != none {
-      setting(sty(current-heading))
+      if style == none {
+        current-heading
+      } else {
+        style(self: self, ..setting-args, current-heading)
+      }
     }
   }
 )
@@ -484,11 +485,16 @@
   } else if type(it) == content {
     if it.func() == raw {
       if it.block {
-        "\n" + indent * " " + "```" + it.lang + it
-          .text
-          .split("\n")
-          .map(l => "\n" + indent * " " + l)
-          .sum(default: "") + "\n" + indent * " " + "```"
+        (
+          "\n"
+            + indent * " "
+            + "```"
+            + it.lang
+            + it.text.split("\n").map(l => "\n" + indent * " " + l).sum(default: "")
+            + "\n"
+            + indent * " "
+            + "```"
+        )
       } else {
         "`" + it.text + "`"
       }
@@ -693,7 +699,9 @@
 /// -> content
 #let cover-with-rect(..cover-args, fill: auto, inline: true, body) = {
   if fill == auto {
-    panic("`auto` fill value is not supported until typst provides utilities to" + " retrieve the current page background")
+    panic(
+      "`auto` fill value is not supported until typst provides utilities to" + " retrieve the current page background",
+    )
   }
   if type(fill) == str {
     fill = rgb(fill)
@@ -997,7 +1005,7 @@
 /// - is-method (boolean): A boolean indicating whether the function is a method function. Default is `false`.
 #let effect(self: none, fn, visible-subslides, cont, is-method: false) = {
   if is-method {
-      fn
+    fn
   } else {
     if check-visible(self.subslide, visible-subslides) {
       fn(cont)
