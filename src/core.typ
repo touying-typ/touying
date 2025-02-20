@@ -595,18 +595,18 @@
 ///
 /// - position (string): The position of the content. Default is `bottom + left`.
 ///
-/// - stretch (boolean): A boolean indicating whether the content should be stretched to the maximum width and height. Default is `true`.
+/// - stretch (boolean): A boolean indicating whether the content should be stretched to the maximum width and height. Default is `false`.
 ///
 ///   Important: If you use a zero-length content like context expression, you should set `stretch: false`.
 ///
 /// -> content
-#let alternatives-match(subslides-contents, position: bottom + left, stretch: true) = {
+#let alternatives-match(subslides-contents, position: bottom + left, stretch: false) = {
   touying-fn-wrapper(
     utils.alternatives-match,
     last-subslide: calc.max(..subslides-contents.pairs().map(kv => utils.last-required-subslide(kv.at(0)))),
     subslides-contents,
     position: position,
-    stretch: true,
+    stretch: false,
   )
 }
 
@@ -621,7 +621,7 @@
 ///
 /// - position (string): The position of the content. Default is `bottom + left`.
 ///
-/// - stretch (boolean): A boolean indicating whether the content should be stretched to the maximum width and height. Default is `true`.
+/// - stretch (boolean): A boolean indicating whether the content should be stretched to the maximum width and height. Default is `false`.
 ///
 ///   Important: If you use a zero-length content like context expression, you should set `stretch: false`.
 ///
@@ -630,7 +630,7 @@
   start: auto,
   repeat-last: true,
   position: bottom + left,
-  stretch: true,
+  stretch: false,
   ..args,
 ) = {
   let extra = if start == auto {
@@ -666,7 +666,7 @@
 ///
 /// - position (string): The position of the content. Default is `bottom + left`.
 ///
-/// - stretch (boolean): A boolean indicating whether the content should be stretched to the maximum width and height. Default is `true`.
+/// - stretch (boolean): A boolean indicating whether the content should be stretched to the maximum width and height. Default is `false`.
 ///
 ///   Important: If you use a zero-length content like context expression, you should set `stretch: false`.
 ///
@@ -676,7 +676,7 @@
   end: none,
   count: none,
   position: bottom + left,
-  stretch: true,
+  stretch: false,
   ..kwargs,
   fn,
 ) = {
@@ -720,12 +720,12 @@
 ///
 /// - position (string): The position of the content. Default is `bottom + left`.
 ///
-/// - stretch (boolean): A boolean indicating whether the content should be stretched to the maximum width and height. Default is `true`.
+/// - stretch (boolean): A boolean indicating whether the content should be stretched to the maximum width and height. Default is `false`.
 ///
 ///   Important: If you use a zero-length content like context expression, you should set `stretch: false`.
 ///
 /// -> content
-#let alternatives-cases(cases, fn, position: bottom + left, stretch: true, ..kwargs) = {
+#let alternatives-cases(cases, fn, position: bottom + left, stretch: false, ..kwargs) = {
   touying-fn-wrapper(
     utils.alternatives-cases,
     last-subslide: calc.max(..cases.map(utils.last-required-subslide)),

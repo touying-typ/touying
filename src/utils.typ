@@ -1074,12 +1074,12 @@
 ///
 /// - position (alignment): The position of the content. Default is `bottom + left`.
 ///
-/// - stretch (boolean): A boolean indicating whether the content should be stretched to the maximum width and height. Default is `true`.
+/// - stretch (boolean): A boolean indicating whether the content should be stretched to the maximum width and height. Default is `false`.
 ///
 ///   Important: If you use a zero-length content like a context expression, you should set `stretch: false`.
 ///
 /// -> content
-#let alternatives-match(self: none, subslides-contents, position: bottom + left, stretch: true) = {
+#let alternatives-match(self: none, subslides-contents, position: bottom + left, stretch: false) = {
   let subslides-contents = if type(subslides-contents) == dictionary {
     subslides-contents.pairs()
   } else {
@@ -1123,7 +1123,7 @@
 ///
 /// - position (string): The position of the content. Default is `bottom + left`.
 ///
-/// - stretch (boolean): A boolean indicating whether the content should be stretched to the maximum width and height. Default is `true`.
+/// - stretch (boolean): A boolean indicating whether the content should be stretched to the maximum width and height. Default is `false`.
 ///
 ///   Important: If you use a zero-length content like a context expression, you should set `stretch: false`.
 ///
@@ -1156,7 +1156,7 @@
 ///
 /// - position (string): The position of the content. Default is `bottom + left`.
 ///
-/// - stretch (boolean): A boolean indicating whether the content should be stretched to the maximum width and height. Default is `true`.
+/// - stretch (boolean): A boolean indicating whether the content should be stretched to the maximum width and height. Default is `false`.
 ///
 ///   Important: If you use a zero-length content like a context expression, you should set `stretch: false`.
 ///
@@ -1202,7 +1202,7 @@
 ///
 /// - position (string): The position of the content. Default is `bottom + left`.
 ///
-/// - stretch (boolean): A boolean indicating whether the content should be stretched to the maximum width and height. Default is `true`.
+/// - stretch (boolean): A boolean indicating whether the content should be stretched to the maximum width and height. Default is `false`.
 ///
 ///   Important: If you use a zero-length content like a context expression, you should set `stretch: false`.
 ///
