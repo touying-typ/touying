@@ -27,6 +27,17 @@
   let args = (configs.default-config,) + args.pos()
   let self = utils.merge-dicts(..args)
 
+  // set the document
+  set document(
+    ..(if type(self.info.title) in (str, content) { (title: self.info.title) } else { }),
+    ..(
+      if type(self.info.author) in (str, array) { (author: self.info.author) } else if (
+        type(self.info.author) == content
+      ) { (author: utils.markup-text(self.info.author)) } else { }
+    ),
+    ..(if type(self.info.date) in (datetime,) { (date: self.info.date) } else { }),
+  )
+
   // get the init function
   let init = if "init" in self.methods and type(self.methods.init) == function {
     self.methods.init.with(self: self)
