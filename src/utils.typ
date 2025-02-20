@@ -361,6 +361,8 @@
 /// - setting (function): The setting of the heading. Default is `body => body`.
 ///
 /// - style (function): The style of the heading. If `style` is a function, it will use the function to style the heading. For example, `style: current-heading => current-heading.body`.
+/// 
+///   If you set it to `style: auto`, it will could be controlled by `show heading` rule.
 ///
 /// -> content
 #let display-current-heading(
@@ -387,6 +389,15 @@
     if current-heading != none {
       if style == none {
         current-heading
+      } else if style == auto {
+        let current-level = current-heading.level
+        if current-level == 1 {
+          text(.715em, current-heading)
+        } else if current-level == 2 {
+          text(.835em, current-heading)
+        } else {
+          current-heading
+        }
       } else {
         style(..setting-args, current-heading)
       }

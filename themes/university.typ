@@ -302,8 +302,8 @@
   aspect-ratio: "16-9",
   align: top,
   progress-bar: true,
-  header: utils.display-current-heading(level: 2),
-  header-right: self => utils.display-current-heading(level: 1) + h(.3em) + self.info.logo,
+  header: utils.display-current-heading(level: 2, style: auto),
+  header-right: self => box(utils.display-current-heading(level: 1)) + h(.3em) + self.info.logo,
   footer-columns: (25%, 1fr, 25%),
   footer-a: self => self.info.author,
   footer-b: self => if self.info.short-title == auto {
@@ -335,7 +335,8 @@
     config-methods(
       init: (self: none, body) => {
         set text(size: 25pt)
-        show heading: set text(fill: self.colors.primary)
+        show heading.where(level: 3): set text(fill: self.colors.primary)
+        show heading.where(level: 4): set text(fill: self.colors.primary)
 
         body
       },

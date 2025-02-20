@@ -327,7 +327,7 @@
   primary: rgb("#0c4842"),
   alpha: 60%,
   subslide-preamble: self => block(
-    text(1.2em, weight: "bold", fill: self.colors.primary, utils.display-current-heading(depth: self.slide-level)),
+    text(1.2em, weight: "bold", fill: self.colors.primary, utils.display-current-heading(depth: self.slide-level, style: auto)),
   ),
   ..args,
   body,

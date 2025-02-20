@@ -176,7 +176,7 @@
     stack(
       dir: ttb,
       spacing: 1em,
-      text(self.colors.neutral-darkest, utils.display-current-heading(level: level, numbered: numbered)),
+      text(self.colors.neutral-darkest, utils.display-current-heading(level: level, numbered: numbered, style: auto)),
       block(
         height: 2pt,
         width: 100%,
