@@ -1,5 +1,25 @@
 # Changelog
 
+## v0.6.0
+
+It's not a big update, but it's the first touying release since typst 0.13 was released.
+
+### Features
+
+- feat: add auto style for display-current-heading.
+  - For users, you can use `show heading: set text(blue)` to change color for heading in some themes like `dewdrop`.
+  - For theme creator, you can use syntax like `utils.display-current-heading(level: 1, style: auto)` to achieve the same result. 
+- feat: apply config-info information to `set document`.
+- feat: set `stretch: false` by default for `alternatives` functions. This is **a minor breaking change**, but I think it would be more intuitive: no auto empty space.
+
+### Fixes
+
+- fix: fix error with uncover using semi-transparent-cover
+- fix: fix type string comparison https://github.com/touying-typ/touying/pull/153
+- fix: fix horizontal-line bug in typst 0.13.0
+- refactor: fix display-current-short-heading
+
+
 ## v0.5.4 & v0.5.5
 
 ### Features
