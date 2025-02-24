@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.6.1
+
+Added support for the [theorion](https://github.com/OrangeX4/typst-theorion) package, and used it as the default math theorem environment.
+
 ## v0.6.0
 
 It's not a big update, but it's the first touying release since typst 0.13 was released.

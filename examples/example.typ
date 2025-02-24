@@ -2,30 +2,20 @@
 #import themes.university: *
 #import "@preview/cetz:0.3.2"
 #import "@preview/fletcher:0.5.4" as fletcher: node, edge
-#import "@preview/ctheorems:1.1.3": *
 #import "@preview/numbly:0.1.0": numbly
+#import "@preview/theorion:0.2.0": *
+#import cosmos.clouds: *
+#show: show-theorion
 
 // cetz and fletcher bindings for touying
 #let cetz-canvas = touying-reducer.with(reduce: cetz.canvas, cover: cetz.draw.hide.with(bounds: true))
 #let fletcher-diagram = touying-reducer.with(reduce: fletcher.diagram, cover: fletcher.hide)
 
-// Theorems configuration by ctheorems
-#show: thmrules.with(qed-symbol: $square$)
-#let theorem = thmbox("theorem", "Theorem", fill: rgb("#eeffee"))
-#let corollary = thmplain(
-  "corollary",
-  "Corollary",
-  base: "theorem",
-  titlefmt: strong,
-)
-#let definition = thmbox("definition", "Definition", inset: (x: 1.2em, top: 1em))
-#let example = thmplain("example", "Example").with(numbering: none)
-#let proof = thmproof("proof", "Proof")
-
 #show: university-theme.with(
   aspect-ratio: "16-9",
   // align: horizon,
   // config-common(handout: true),
+  config-common(frozen-counters: (theorem-counter,)),  // freeze theorem counter for animation
   config-info(
     title: [Title],
     subtitle: [Subtitle],
@@ -166,9 +156,10 @@ Fletcher Animation in Touying:
   @cor_largest_prime shows that this list is not exhaustive!
 ]
 
-#theorem("Euclid")[
+#theorem(title: "Euclid")[
   There are infinitely many primes.
 ]
+#pagebreak(weak: true)
 #proof[
   Suppose to the contrary that $p_1, p_2, dots, p_n$ is a finite enumeration
   of all primes. Set $P = p_1 p_2 dots p_n$. Since $P + 1$ is not in our list,
@@ -190,7 +181,7 @@ Fletcher Animation in Touying:
 
 #proof[
   For any $n > 2$, consider $
-    n! + 2, quad n! + 3, quad ..., quad n! + n #qedhere
+    n! + 2, quad n! + 3, quad ..., quad n! + n
   $
 ]
 

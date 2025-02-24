@@ -246,7 +246,7 @@
       assert(lbl in recaller-map, message: "label not found in the recaller map for slides")
       // recall the slide
       result.push(recaller-map.at(lbl))
-    } else if child == pagebreak() {
+    } else if child in (pagebreak(), pagebreak(weak: true)) {
       // split content when we have a pagebreak
       current-slide = utils.trim(current-slide)
       (cont, recaller-map, current-headings, current-slide, new-start, is-first-slide) = call-slide-fn-and-reset(
@@ -1625,7 +1625,11 @@
 
 #let _rewind-states(states, location) = {
   for s in states {
-    s.update(s.at(selector(location)))
+    if type(s) == dictionary {
+      (s.update)((s.at)(selector(location)))
+    } else {
+      s.update(s.at(selector(location)))
+    }
   }
 }
 

@@ -1,6 +1,6 @@
 [package]
 name = "touying"
-version = "0.6.0"
+version = "0.6.1"
 entrypoint = "lib.typ"
 authors = ["OrangeX4", "enklht", "Andreas Kröpelin", "ntjess", "Enivex", "Pol Dellaiera", "pride7", "Coekjan"]
 license = "MIT"
