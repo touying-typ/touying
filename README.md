@@ -135,7 +135,7 @@ In fact, Touying provides various styles for writing slides. For example, the ab
 #import "@preview/cetz:0.3.2"
 #import "@preview/fletcher:0.5.4" as fletcher: node, edge
 #import "@preview/numbly:0.1.0": numbly
-#import "@preview/theorion:0.2.0": *
+#import "@preview/theorion:0.3.0": *
 #import cosmos.clouds: *
 #show: show-theorion
 
