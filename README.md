@@ -313,7 +313,7 @@ Fletcher Animation in Touying:
 
 #proof[
   For any $n > 2$, consider $
-    n! + 2, quad n! + 3, quad ..., quad n! + n #qedhere
+    n! + 2, quad n! + 3, quad ..., quad n! + n
   $
 ]
 
