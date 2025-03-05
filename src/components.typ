@@ -111,9 +111,15 @@
 /// - Check that there are enough rows and columns to fit in all the content blocks.
 ///
 /// That means that `#checkerboard[...][...]` stacks horizontally and `#checkerboard(columns: 1)[...][...]` stacks vertically.
+/// 
+/// - alignment (alignment): The alignment of the contents of each checkerboard cell (default: center + horizon)
+/// 
+/// - primary (color): The background color of odd cells (default: white)
+/// 
+/// - secondary (color): The background color of even cells (default: silver)
 ///
 /// -> content
-#let checkerboard(columns: none, rows: none, alignment: center + horizon, color1: white, color2: silver, ..bodies) = {
+#let checkerboard(columns: none, rows: none, alignment: center + horizon, primary: white, secondary: silver, ..bodies) = {
   let bodies = bodies.pos()
   let columns = if type(columns) == int {
     (1fr,) * columns
@@ -147,9 +153,9 @@
     let (idx, body) = idx-body
     let (row, col) = cart-idx(idx)
     let color = if calc.even(row + col) {
-      color1
+      primary
     } else {
-      color2
+      secondary
     }
     set align(alignment)
     rect(inset: .5em, width: 100%, height: 100%, fill: color, body)
