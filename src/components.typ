@@ -113,7 +113,7 @@
 /// That means that `#checkerboard[...][...]` stacks horizontally and `#checkerboard(columns: 1)[...][...]` stacks vertically.
 ///
 /// -> content
-#let checkerboard(columns: none, rows: none, ..bodies) = {
+#let checkerboard(columns: none, rows: none, alignment: center + horizon, color1: white, color2: silver, ..bodies) = {
   let bodies = bodies.pos()
   let columns = if type(columns) == int {
     (1fr,) * columns
@@ -147,11 +147,11 @@
     let (idx, body) = idx-body
     let (row, col) = cart-idx(idx)
     let color = if calc.even(row + col) {
-      white
+      color1
     } else {
-      silver
+      color2
     }
-    set align(center + horizon)
+    set align(alignment)
     rect(inset: .5em, width: 100%, height: 100%, fill: color, body)
   }
   let body = grid(
