@@ -112,11 +112,11 @@
 ///
 /// That means that `#checkerboard[...][...]` stacks horizontally and `#checkerboard(columns: 1)[...][...]` stacks vertically.
 /// 
-/// - alignment (alignment): The alignment of the contents of each checkerboard cell (default: center + horizon)
+/// - alignment (alignment): The alignment applied to the contents of each checkerboard cell. Default is `center + horizon`.
 /// 
-/// - primary (color): The background color of odd cells (default: white)
+/// - primary (color): The background color of odd cells. Default is `white`.
 /// 
-/// - secondary (color): The background color of even cells (default: silver)
+/// - secondary (color): The background color of even cells. Default is `silver`.
 ///
 /// -> content
 #let checkerboard(columns: none, rows: none, alignment: center + horizon, primary: white, secondary: silver, ..bodies) = {
