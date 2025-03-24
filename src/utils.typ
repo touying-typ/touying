@@ -361,7 +361,7 @@
 /// - setting (function): The setting of the heading. Default is `body => body`.
 ///
 /// - style (function): The style of the heading. If `style` is a function, it will use the function to style the heading. For example, `style: current-heading => current-heading.body`.
-/// 
+///
 ///   If you set it to `style: auto`, it will could be controlled by `show heading` rule.
 ///
 /// -> content
@@ -786,14 +786,11 @@
   if type(it) != content {
     return false
   }
-  if it.func() == text {
+  if it.func() in (text, math.equation) {
     return true
   }
   if it.has("body") {
     return _contains-text(it.body, transparentize-table)
-  }
-  if it.has("base") {
-    return _contains-text(it.base, transparentize-table)
   }
   if it.has("child") {
     return _contains-text(it.child, transparentize-table)
@@ -827,16 +824,14 @@
   transparentize-table: false,
   it,
 ) = {
-  if _contains-text(it, transparentize-table) {
-    set text(color)
-    show text: set text(color)
-    it
-  } else if fallback-hide {
+  show regex(".+"): set text(color)
+  if not _contains-text(it, transparentize-table) {
     hide(it)
   } else {
     it
   }
 }
+
 
 /// Cover content with an alpha-changing mechanism.
 ///
@@ -854,18 +849,16 @@
   transparentize-table: false,
   it,
 ) = context {
-  if _contains-text(it, transparentize-table) {
-    set text(text.fill.transparentize(100% - alpha))
-    show text: it => context {
-      text(update-alpha(text.fill, alpha), it)
-    }
-    it
-  } else if fallback-hide {
+  show regex(".+"): it => context {
+    text(update-alpha(text.fill, alpha), it)
+  }
+  if not _contains-text(it, transparentize-table) {
     hide(it)
   } else {
     it
   }
 }
+
 
 /// Alert content with a primary color.
 ///
