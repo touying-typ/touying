@@ -438,7 +438,7 @@
               if slide.location().page() <= current-page and current-page < next-slide-page {
                 [#link(slide.location(), sym.circle.filled)<touying-link>]
               } else {
-                [#link(slide.location(), sym.circle)<touying-link>]
+                [#link(slide.location(), sym.circle.small)<touying-link>]
               }
             }
           }
@@ -459,7 +459,7 @@
               if slide.location().page() <= current-page and current-page < next-slide-page {
                 [#link(slide.location(), sym.circle.filled)<touying-link>]
               } else {
-                [#link(slide.location(), sym.circle)<touying-link>]
+                [#link(slide.location(), sym.circle.small)<touying-link>]
               }
             }
           }
