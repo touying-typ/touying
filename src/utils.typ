@@ -920,7 +920,7 @@
 /// - visible-subslides (int, array): A single integer or an array of integers.
 ///    or a string that specifies the visible subslides
 ///
-///    Read [polylux book](https://polylux.dev/book/dynamic/complex.html)
+///    Read #link("https://polylux.dev/book/dynamic/complex.html", "polylux book")
 ///
 ///    The simplest extension is to use an array, such as `(1, 2, 4)` indicating that
 ///    slides 1, 2, and 4 are visible. This is equivalent to the string `"1, 2, 4"`.
@@ -995,7 +995,7 @@
 /// - visible-subslides (int, array, string): `visible-subslides` is a single integer, an array of integers,
 ///    or a string that specifies the visible subslides
 ///
-///    Read [polylux book](https://polylux.dev/book/dynamic/complex.html)
+///    Read #link("https://polylux.dev/book/dynamic/complex.html", "polylux book")
 ///
 ///    The simplest extension is to use an array, such as `(1, 2, 4)` indicating that
 ///    slides 1, 2, and 4 are visible. This is equivalent to the string `"1, 2, 4"`.
@@ -1025,7 +1025,7 @@
 ///
 /// - visible-subslides (int, array, string): A single integer, an array of integers, or a string that specifies the visible subslides.
 ///
-///   Read [polylux book](https://polylux.dev/book/dynamic/complex.html).
+///   Read #link("https://polylux.dev/book/dynamic/complex.html", "polylux book").
 ///
 ///   The simplest extension is to use an array, such as `(1, 2, 4)`, indicating that
 ///   slides 1, 2, and 4 are visible. This is equivalent to the string `"1, 2, 4"`.
@@ -1052,7 +1052,7 @@
 ///
 /// - visible-subslides (int, array, string): A single integer, an array of integers, or a string that specifies the visible subslides.
 ///
-///   Read [polylux book](https://polylux.dev/book/dynamic/complex.html).
+///   Read #link("https://polylux.dev/book/dynamic/complex.html", "polylux book").
 ///
 ///   The simplest extension is to use an array, such as `(1, 2, 4)`, indicating that
 ///   slides 1, 2, and 4 are visible. This is equivalent to the string `"1, 2, 4"`.

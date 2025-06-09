@@ -49,15 +49,9 @@
 ///
 /// == Example
 ///
-/// #example(```typ
-/// // #touying-recall(<recall>)
-/// ```)
-///
-/// == Example
-///
-/// #example(```typ
-/// // #touying-recall("recall")
-/// ```)
+/// ```typ
+/// #touying-recall("recall")
+/// ```
 ///
 /// - lbl (string): The label of the slide to recall
 ///
@@ -499,7 +493,7 @@
 /// - visible-subslides (int, array, string): `visible-subslides` is a single integer, an array of integers,
 ///    or a string that specifies the visible subslides
 ///
-///    Read [polylux book](https://polylux.dev/book/dynamic/complex.html)
+///    Read #link("https://polylux.dev/book/dynamic/complex.html", "polylux book")
 ///
 ///    The simplest extension is to use an array, such as `(1, 2, 4)` indicating that
 ///    slides 1, 2, and 4 are visible. This is equivalent to the string `"1, 2, 4"`.
@@ -530,7 +524,7 @@
 /// - visible-subslides (int, array, string): `visible-subslides` is a single integer, an array of integers,
 ///    or a string that specifies the visible subslides
 ///
-///    Read [polylux book](https://polylux.dev/book/dynamic/complex.html)
+///    Read #link("https://polylux.dev/book/dynamic/complex.html", "polylux book")
 ///
 ///    The simplest extension is to use an array, such as `(1, 2, 4)` indicating that
 ///    slides 1, 2, and 4 are visible. This is equivalent to the string `"1, 2, 4"`.
@@ -558,7 +552,7 @@
 /// - visible-subslides (int, array, string): `visible-subslides` is a single integer, an array of integers,
 ///    or a string that specifies the visible subslides
 ///
-///    Read [polylux book](https://polylux.dev/book/dynamic/complex.html)
+///    Read #link("https://polylux.dev/book/dynamic/complex.html", "polylux book")
 ///
 ///    The simplest extension is to use an array, such as `(1, 2, 4)` indicating that
 ///    slides 1, 2, and 4 are visible. This is equivalent to the string `"1, 2, 4"`.
@@ -654,7 +648,7 @@
 }
 
 
-/// You can have very fine-grained control over the content depending on the current subslide by using #alternatives-fn. It accepts a function (hence the name) that maps the current subslide index to some content.
+/// You can have very fine-grained control over the content depending on the current subslide by using `#alternatives-fn`. It accepts a function (hence the name) that maps the current subslide index to some content.
 ///
 /// Example: `#alternatives-fn(start: 2, count: 7, subslide => { numbering("(i)", subslide) })`
 ///
@@ -742,9 +736,9 @@
 ///
 /// == Example
 ///
-/// #example(```typ
+/// ```typ
 /// #speaker-note[This is a speaker note]
-/// ```)
+/// ```
 ///
 /// - self (none): The current context.
 ///
