@@ -1,4 +1,4 @@
-#import "../lib.typ": *
+#import "/lib.typ": *
 #import themes.aqua: *
 
 #show: aqua-theme.with(

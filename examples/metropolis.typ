@@ -1,4 +1,4 @@
-#import "../lib.typ": *
+#import "/lib.typ": *
 #import themes.metropolis: *
 
 #import "@preview/numbly:0.1.0": numbly
