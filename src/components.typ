@@ -22,6 +22,7 @@
 ///
 /// -> content
 #let side-by-side(columns: auto, gutter: 1em, ..bodies) = {
+  let args = bodies.named()
   let bodies = bodies.pos()
   if bodies.len() == 1 {
     return bodies.first()
@@ -31,7 +32,7 @@
   } else {
     columns
   }
-  grid(columns: columns, gutter: gutter, ..bodies)
+  grid(columns: columns, gutter: gutter, ..args, ..bodies)
 }
 
 
