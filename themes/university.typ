@@ -129,6 +129,13 @@
       (authors,)
     }
   }
+
+  let authors-per-row = if "authors-per-row" in info {
+    info.authors-per-row
+  } else {
+    3
+  }
+
   let body = {
     if info.logo != none {
       place(right, text(fill: self.colors.primary, info.logo))
@@ -149,7 +156,7 @@
         )
         set text(size: .8em)
         grid(
-          columns: (1fr,) * calc.min(info.authors.len(), 3),
+          columns: (1fr,) * calc.min(info.authors.len(), authors-per-row),
           column-gutter: 1em,
           row-gutter: 1em,
           ..info.authors.map(author => text(fill: self.colors.neutral-darkest, author))
