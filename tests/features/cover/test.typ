@@ -19,19 +19,9 @@ This content appears with semi-transparent cover effect.
 
 More content with the same effect.
 
-== Opaque Cover
-
-#show: touying-set-config.with(config-methods(cover: utils.opaque-cover))
-
-First item.
-
-#pause
-
-Second item appears while first is covered with opaque effect.
-
 == Default Cover Behavior
 
-#show: touying-set-config.with(config-methods(cover: utils.hide))
+#show: touying-set-config.with(config-methods(cover: utils.method-wrapper(hide)))
 
 Content that gets hidden completely when covered.
 
