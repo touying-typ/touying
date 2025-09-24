@@ -1,11 +1,7 @@
 name: Test
 on:
   push:
-    # ensures this is not run for PRs too
-    branches: [ main ]
   pull_request:
-    # optional but a good default
-    branches: [ main ]
 
 jobs:
   tests:
