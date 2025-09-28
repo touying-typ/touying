@@ -58,3 +58,12 @@ use #only("2-")[`#only` function] for not reserving space,
   #alternatives[chocolate][strawberry][vanilla]
   ice cream.
 ])
+
+#slide(repeat: 3, self => [
+  #let (uncover, only, alternatives) = utils.methods(self)
+
+  #alternatives(stretch: true, position: center)[Ann][Bob][Christopher]
+  likes
+  #alternatives(stretch: true, position: center)[chocolate][strawberry][vanilla]
+  ice cream.
+])

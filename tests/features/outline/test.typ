@@ -16,7 +16,7 @@
 
 Content of first subsection.
 
-== Second Subsection  
+== Second Subsection
 
 Content of second subsection.
 

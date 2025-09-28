@@ -1,8 +1,8 @@
 #import "/lib.typ": *
-#import themes.default: *
+#import themes.simple: *
 #import "@preview/numbly:0.1.0": numbly
 
-#show: default-theme.with(
+#show: simple-theme.with(
   config-common(slide-level: 3),
 )
 
@@ -55,6 +55,8 @@ This creates another slide since slide-level is now 2.
 #show: touying-set-config.with(config-common(slide-level: 1))
 
 = Level 1 Creates Slides Now
+
+---
 
 With slide-level set to 1, only level 1 headings create new slides.
 

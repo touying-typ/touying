@@ -30,10 +30,10 @@ Now the header should be blue and bold, showing the main section.
 == Custom Footer Content
 
 #show: touying-set-config.with(config-page(
-  footer: [Page #context utils.slide-counter.display() | Custom Footer | Today: #datetime.today().display()],
+  footer: [Page #context utils.slide-counter.display() | Custom Footer],
 ))
 
-This slide has a custom footer with page number and date.
+This slide has a custom footer with page number.
 
 == No Header or Footer
 

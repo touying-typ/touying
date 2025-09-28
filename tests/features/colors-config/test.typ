@@ -14,10 +14,12 @@ This theme uses red as the primary color.
 
 #alert[This is an alert with the primary color.]
 
+// TODO: fix styled bugs
 Regular text and #text(fill: red)[red colored text].
 
 == Different Color Scheme
 
+// TODO: fix touying-set-config bug
 #show: touying-set-config.with(config-colors(
   primary: blue,
   secondary: green,

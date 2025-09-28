@@ -78,8 +78,6 @@ By factorizing, we can obtain this result.
 
 == CeTZ Animation
 
-CeTZ Animation in Touying:
-
 #cetz-canvas({
   import cetz.draw: *
 
@@ -96,10 +94,35 @@ CeTZ Animation in Touying:
   line((0, 0), (2.5, 2.5), name: "line")
 })
 
+== only and uncover in Cetz
+
+#slide(repeat: 3, self => [
+  #let (uncover, only) = utils.methods(self)
+
+  Cetz in Touying in subslide #self.subslide:
+
+  #cetz.canvas({
+    import cetz.draw: *
+    let self = utils.merge-dicts(
+      self,
+      config-methods(cover: utils.method-wrapper(hide.with(bounds: true))),
+    )
+    let (uncover,) = utils.methods(self)
+    
+    rect((0,0), (5,5))
+
+    uncover("2-3", {
+      rect((0,0), (1,1))
+      rect((1,1), (2,2))
+      rect((2,2), (3,3))
+    })
+
+    only(3, line((0,0), (2.5, 2.5), name: "line"))
+  })
+])
+
 
 == Fletcher Animation
-
-Fletcher Animation in Touying:
 
 #fletcher-diagram(
   node-stroke: .1em,

@@ -1,9 +1,12 @@
 #import "/lib.typ": *
-#import themes.simple: *
+#import themes.university: *
 #import "@preview/theorion:0.4.0": *
+#import cosmos.clouds: *
 #show: show-theorion
 
-#show: simple-theme
+#show: university-theme.with(
+  config-common(frozen-counters: (theorem-counter,)), // freeze theorem counter for animation
+)
 
 = Theorems
 
@@ -13,6 +16,9 @@
   A natural number is called a #highlight[_prime number_] if it is greater
   than 1 and cannot be written as the product of two smaller natural numbers.
 ]
+
+#pause
+
 #example[
   The numbers $2$, $3$, and $17$ are prime.
   @cor_largest_prime shows that this list is not exhaustive!
@@ -42,7 +48,5 @@
 ]
 
 #proof[
-  For any $n > 2$, consider $
-    n! + 2, quad n! + 3, quad ..., quad n! + n
-  $
+  For any $n > 2$, consider $ n! + 2, quad n! + 3, quad ..., quad n! + n $
 ]
