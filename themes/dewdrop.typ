@@ -23,7 +23,9 @@
           text-size: (1em, .9em),
           vspace: (-.2em,),
           indent: (0em, self.store.sidebar.at("indent", default: .5em)),
-          fill: (self.store.sidebar.at("fill", default: _typst-builtin-repeat[.]),),
+          fill: (
+            self.store.sidebar.at("fill", default: _typst-builtin-repeat[.]),
+          ),
           filled: (self.store.sidebar.at("filled", default: false),),
           paged: (self.store.sidebar.at("paged", default: false),),
           short-heading: self.store.sidebar.at("short-heading", default: true),
@@ -35,8 +37,14 @@
       self: self,
       fill: self.colors.primary,
       alpha: self.store.alpha,
-      display-section: self.store.mini-slides.at("display-section", default: false),
-      display-subsection: self.store.mini-slides.at("display-subsection", default: true),
+      display-section: self.store.mini-slides.at(
+        "display-section",
+        default: false,
+      ),
+      display-subsection: self.store.mini-slides.at(
+        "display-subsection",
+        default: true,
+      ),
       linebreaks: self.store.mini-slides.at("linebreaks", default: true),
       short-heading: self.store.mini-slides.at("short-heading", default: true),
     )
@@ -48,8 +56,14 @@
   set text(size: 0.8em)
   show: pad.with(.5em)
   components.left-and-right(
-    text(fill: self.colors.neutral-darkest.lighten(40%), utils.call-or-display(self, self.store.footer)),
-    text(fill: self.colors.neutral-darkest.lighten(20%), utils.call-or-display(self, self.store.footer-right)),
+    text(fill: self.colors.neutral-darkest.lighten(40%), utils.call-or-display(
+      self,
+      self.store.footer,
+    )),
+    text(fill: self.colors.neutral-darkest.lighten(20%), utils.call-or-display(
+      self,
+      self.store.footer-right,
+    )),
   )
 }
 
@@ -91,7 +105,14 @@
     ),
     config-common(subslide-preamble: self.store.subslide-preamble),
   )
-  touying-slide(self: self, config: config, repeat: repeat, setting: setting, composer: composer, ..bodies)
+  touying-slide(
+    self: self,
+    config: config,
+    repeat: repeat,
+    setting: setting,
+    composer: composer,
+    ..bodies,
+  )
 })
 
 
@@ -111,7 +132,7 @@
 /// ```
 ///
 /// - config (dictionary): The configuration of the slide. You can use `config-xxx` to set the configuration of the slide. For more several configurations, you can use `utils.merge-dicts` to merge them.
-/// 
+///
 /// - extra (string, none): The extra information you want to display on the title slide.
 #let title-slide(
   config: (:),
@@ -137,12 +158,16 @@
           inset: 1em,
           width: 100%,
           radius: 0.2em,
-          text(size: 1.3em, fill: self.colors.primary, text(weight: "medium", info.title)) + (
-            if info.subtitle != none {
-              linebreak()
-              text(size: 0.9em, fill: self.colors.primary, info.subtitle)
-            }
-          ),
+          text(size: 1.3em, fill: self.colors.primary, text(
+            weight: "medium",
+            info.title,
+          ))
+            + (
+              if info.subtitle != none {
+                linebreak()
+                text(size: 0.9em, fill: self.colors.primary, info.subtitle)
+              }
+            ),
         )
         set text(size: .8em)
         if info.author != none {
@@ -167,11 +192,15 @@
 
 
 /// Outline slide for the presentation.
-/// 
+///
 /// - config (dictionary): The configuration of the slide. You can use `config-xxx` to set the configuration of the slide. For more several configurations, you can use `utils.merge-dicts` to merge them.
-/// 
+///
 /// - title (string): The title of the slide. Default is `utils.i18n-outline-title`.
-#let outline-slide(config: (:), title: utils.i18n-outline-title, ..args) = touying-slide-wrapper(self => {
+#let outline-slide(
+  config: (:),
+  title: utils.i18n-outline-title,
+  ..args,
+) = touying-slide-wrapper(self => {
   self = utils.merge-dicts(
     self,
     config-page(
@@ -200,13 +229,18 @@
 /// New section slide for the presentation. You can update it by updating the `new-section-slide-fn` argument for `config-common` function.
 ///
 /// Example: `config-common(new-section-slide-fn: new-section-slide.with(numbered: false))`
-/// 
+///
 /// - config (dictionary): The configuration of the slide. You can use `config-xxx` to set the configuration of the slide. For more several configurations, you can use `utils.merge-dicts` to merge them.
 ///
 /// - title (string): The title of the slide. Default is `utils.i18n-outline-title`.
 ///
 /// - body (array): The contents of the slide.
-#let new-section-slide(config: (:), title: utils.i18n-outline-title, ..args, body) = touying-slide-wrapper(self => {
+#let new-section-slide(
+  config: (:),
+  title: utils.i18n-outline-title,
+  ..args,
+  body,
+) = touying-slide-wrapper(self => {
   self = utils.merge-dicts(
     self,
     config-page(
@@ -241,7 +275,7 @@
 /// Focus on some content.
 ///
 /// Example: `#focus-slide[Wake up!]`
-/// 
+///
 /// - config (dictionary): The configuration of the slide. You can use `config-xxx` to set the configuration of the slide. For more several configurations, you can use `utils.merge-dicts` to merge them.
 #let focus-slide(config: (:), body) = touying-slide-wrapper(self => {
   self = utils.merge-dicts(
@@ -323,21 +357,41 @@
     short-heading: true,
   ),
   footer: none,
-  footer-right: context utils.slide-counter.display() + " / " + utils.last-slide-number,
+  footer-right: context utils.slide-counter.display()
+    + " / "
+    + utils.last-slide-number,
   primary: rgb("#0c4842"),
   alpha: 60%,
   subslide-preamble: self => block(
-    text(1.2em, weight: "bold", fill: self.colors.primary, utils.display-current-heading(depth: self.slide-level, style: auto)),
+    text(
+      1.2em,
+      weight: "bold",
+      fill: self.colors.primary,
+      utils.display-current-heading(depth: self.slide-level, style: auto),
+    ),
   ),
   ..args,
   body,
 ) = {
   sidebar = utils.merge-dicts(
-    (width: 10em, filled: false, numbered: false, indent: .5em, short-heading: true),
+    (
+      width: 10em,
+      filled: false,
+      numbered: false,
+      indent: .5em,
+      short-heading: true,
+    ),
     sidebar,
   )
   mini-slides = utils.merge-dicts(
-    (height: 4em, x: 2em, display-section: false, display-subsection: true, linebreaks: true, short-heading: true),
+    (
+      height: 4em,
+      x: 2em,
+      display-section: false,
+      display-subsection: true,
+      linebreaks: true,
+      short-heading: true,
+    ),
     mini-slides,
   )
   set text(size: 20pt)
@@ -361,7 +415,7 @@
       new-section-slide-fn: new-section-slide,
     ),
     config-methods(
-        init: (self: none, body) => {
+      init: (self: none, body) => {
         show heading: set text(self.colors.primary)
 
         body

@@ -57,22 +57,32 @@
     ),
     config-common(subslide-preamble: self.store.subslide-preamble),
   )
-  touying-slide(self: self, config: config, repeat: repeat, setting: setting, composer: composer, ..bodies)
+  touying-slide(
+    self: self,
+    config: config,
+    repeat: repeat,
+    setting: setting,
+    composer: composer,
+    ..bodies,
+  )
 })
 
 
 /// Centered slide for the presentation.
-/// 
+///
 /// - config (dictionary): The configuration of the slide. You can use `config-xxx` to set the configuration of the slide. For more several configurations, you can use `utils.merge-dicts` to merge them.
 #let centered-slide(config: (:), ..args) = touying-slide-wrapper(self => {
-  touying-slide(self: self, ..args.named(), config: config, align(center + horizon, args.pos().sum(default: none)))
+  touying-slide(self: self, ..args.named(), config: config, align(
+    center + horizon,
+    args.pos().sum(default: none),
+  ))
 })
 
 
 /// Title slide for the presentation.
 ///
 /// Example: `#title-slide[Hello, World!]`
-/// 
+///
 /// - config (dictionary): The configuration of the slide. You can use `config-xxx` to set the configuration of the slide. For more several configurations, you can use `utils.merge-dicts` to merge them.
 #let title-slide(config: (:), body) = centered-slide(
   config: utils.merge-dicts(config, config-common(freeze-slide-counter: true)),
@@ -81,7 +91,7 @@
 
 
 /// New section slide for the presentation. You can update it by updating the `new-section-slide-fn` argument for `config-common` function.
-/// 
+///
 /// - config (dictionary): The configuration of the slide. You can use `config-xxx` to set the configuration of the slide. For more several configurations, you can use `utils.merge-dicts` to merge them.
 #let new-section-slide(config: (:), body) = centered-slide(config: config, [
   #text(1.2em, weight: "bold", utils.display-current-heading(level: 1))
@@ -93,13 +103,18 @@
 /// Focus on some content.
 ///
 /// Example: `#focus-slide[Wake up!]`
-/// 
+///
 /// - config (dictionary): The configuration of the slide. You can use `config-xxx` to set the configuration of the slide. For more several configurations, you can use `utils.merge-dicts` to merge them.
-/// 
+///
 /// - background (color, auto): The background color of the slide. Default is `auto`, which means the primary color of the slides.
-/// 
+///
 /// - foreground (color): The foreground color of the slide. Default is `white`.
-#let focus-slide(config: (:), background: auto, foreground: white, body) = touying-slide-wrapper(self => {
+#let focus-slide(
+  config: (:),
+  background: auto,
+  foreground: white,
+  body,
+) = touying-slide-wrapper(self => {
   self = utils.merge-dicts(
     self,
     config-common(freeze-slide-counter: true),
@@ -155,7 +170,9 @@
   ),
   header-right: self => self.info.logo,
   footer: none,
-  footer-right: context utils.slide-counter.display() + " / " + utils.last-slide-number,
+  footer-right: context utils.slide-counter.display()
+    + " / "
+    + utils.last-slide-number,
   primary: aqua.darken(50%),
   subslide-preamble: block(
     below: 1.5em,

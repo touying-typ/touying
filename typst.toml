@@ -10,3 +10,6 @@ keywords = ["presentation", "pre", "slide", "slides", "lecture", "touying", "bea
 categories = ["presentation"]
 exclude = ["examples"]
 compiler = "0.12.0"
+
+[tool.tytanic]
+default.ppi = 72

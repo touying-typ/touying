@@ -1,7 +1,7 @@
 #import "pdfpc.typ"
 #import "utils.typ"
 #import "magic.typ"
-#import "core.typ": touying-slide-wrapper, touying-slide, slide
+#import "core.typ": slide, touying-slide, touying-slide-wrapper
 
 #let _default = metadata((kind: "touying-default"))
 
@@ -24,12 +24,10 @@
 
 #let _default-frozen-states = (
   // ctheorems state
-  state("thm",
-    (
-      "counters": ("heading": ()),
-      "latest": ()
-    )
-  ),
+  state("thm", (
+    "counters": ("heading": ()),
+    "latest": (),
+  )),
 )
 
 #let _default-frozen-counters = (
@@ -46,7 +44,13 @@
       if marks.len() > 0 {
         let page-num = marks.at(0).location().page()
         let kind = marks.at(0).value.kind
-        panic("Unsupported mark `" + kind + "` at page " + str(page-num) + ". You can't use it inside some functions like `context`. You may want to use the callback-style `uncover` function instead.")
+        panic(
+          "Unsupported mark `"
+            + kind
+            + "` at page "
+            + str(page-num)
+            + ". You can't use it inside some functions like `context`. You may want to use the callback-style `uncover` function instead.",
+        )
       }
     }
   }
@@ -76,7 +80,10 @@
       #metadata((t: "NewSlide")) <pdfpc>
       #metadata((t: "Idx", v: here().page() - 1)) <pdfpc>
       #metadata((t: "Overlay", v: self.subslide - 1)) <pdfpc>
-      #metadata((t: "LogicalSlide", v: utils.slide-counter.get().first())) <pdfpc>
+      #metadata((
+        t: "LogicalSlide",
+        v: utils.slide-counter.get().first(),
+      )) <pdfpc>
     ]
   }
 }
@@ -235,52 +242,55 @@
   ..args,
 ) = {
   assert(args.pos().len() == 0, message: "Unexpected positional arguments.")
-  return _get-dict-without-default((
-    handout: handout,
-    slide-level: slide-level,
-    slide-fn: slide-fn,
-    new-section-slide-fn: new-section-slide-fn,
-    new-subsection-slide-fn: new-subsection-slide-fn,
-    new-subsubsection-slide-fn: new-subsubsection-slide-fn,
-    new-subsubsubsection-slide-fn: new-subsubsubsection-slide-fn,
-    receive-body-for-new-section-slide-fn: receive-body-for-new-section-slide-fn,
-    receive-body-for-new-subsection-slide-fn: receive-body-for-new-subsection-slide-fn,
-    receive-body-for-new-subsubsection-slide-fn: receive-body-for-new-subsubsection-slide-fn,
-    receive-body-for-new-subsubsubsection-slide-fn: receive-body-for-new-subsubsubsection-slide-fn,
-    show-strong-with-alert: show-strong-with-alert,
-    datetime-format: datetime-format,
-    appendix: appendix,
-    freeze-slide-counter: freeze-slide-counter,
-    zero-margin-header: zero-margin-header,
-    zero-margin-footer: zero-margin-footer,
-    auto-offset-for-heading: auto-offset-for-heading,
-    enable-pdfpc: enable-pdfpc,
-    enable-mark-warning: enable-mark-warning,
-    reset-page-counter-to-slide-counter: reset-page-counter-to-slide-counter,
-    enable-frozen-states-and-counters: enable-frozen-states-and-counters,
-    frozen-states: frozen-states,
-    frozen-counters: frozen-counters,
-    default-frozen-states: default-frozen-states,
-    default-frozen-counters: default-frozen-counters,
-    label-only-on-last-subslide: label-only-on-last-subslide,
-    preamble: preamble,
-    default-preamble: default-preamble,
-    slide-preamble: slide-preamble,
-    default-slide-preamble: default-slide-preamble,
-    subslide-preamble: subslide-preamble,
-    default-subslide-preamble: default-subslide-preamble,
-    page-preamble: page-preamble,
-    default-page-preamble: default-page-preamble,
-    show-notes-on-second-screen: show-notes-on-second-screen,
-    horizontal-line-to-pagebreak: horizontal-line-to-pagebreak,
-    reset-footnote-number-per-slide: reset-footnote-number-per-slide,
-    nontight-list-enum-and-terms: nontight-list-enum-and-terms,
-    align-list-marker-with-baseline: align-list-marker-with-baseline,
-    align-enum-marker-with-baseline: align-enum-marker-with-baseline,
-    scale-list-items: scale-list-items,
-    show-hide-set-list-marker-none: show-hide-set-list-marker-none,
-    show-bibliography-as-footnote: show-bibliography-as-footnote,
-  )) + args.named()
+  return (
+    _get-dict-without-default((
+      handout: handout,
+      slide-level: slide-level,
+      slide-fn: slide-fn,
+      new-section-slide-fn: new-section-slide-fn,
+      new-subsection-slide-fn: new-subsection-slide-fn,
+      new-subsubsection-slide-fn: new-subsubsection-slide-fn,
+      new-subsubsubsection-slide-fn: new-subsubsubsection-slide-fn,
+      receive-body-for-new-section-slide-fn: receive-body-for-new-section-slide-fn,
+      receive-body-for-new-subsection-slide-fn: receive-body-for-new-subsection-slide-fn,
+      receive-body-for-new-subsubsection-slide-fn: receive-body-for-new-subsubsection-slide-fn,
+      receive-body-for-new-subsubsubsection-slide-fn: receive-body-for-new-subsubsubsection-slide-fn,
+      show-strong-with-alert: show-strong-with-alert,
+      datetime-format: datetime-format,
+      appendix: appendix,
+      freeze-slide-counter: freeze-slide-counter,
+      zero-margin-header: zero-margin-header,
+      zero-margin-footer: zero-margin-footer,
+      auto-offset-for-heading: auto-offset-for-heading,
+      enable-pdfpc: enable-pdfpc,
+      enable-mark-warning: enable-mark-warning,
+      reset-page-counter-to-slide-counter: reset-page-counter-to-slide-counter,
+      enable-frozen-states-and-counters: enable-frozen-states-and-counters,
+      frozen-states: frozen-states,
+      frozen-counters: frozen-counters,
+      default-frozen-states: default-frozen-states,
+      default-frozen-counters: default-frozen-counters,
+      label-only-on-last-subslide: label-only-on-last-subslide,
+      preamble: preamble,
+      default-preamble: default-preamble,
+      slide-preamble: slide-preamble,
+      default-slide-preamble: default-slide-preamble,
+      subslide-preamble: subslide-preamble,
+      default-subslide-preamble: default-subslide-preamble,
+      page-preamble: page-preamble,
+      default-page-preamble: default-page-preamble,
+      show-notes-on-second-screen: show-notes-on-second-screen,
+      horizontal-line-to-pagebreak: horizontal-line-to-pagebreak,
+      reset-footnote-number-per-slide: reset-footnote-number-per-slide,
+      nontight-list-enum-and-terms: nontight-list-enum-and-terms,
+      align-list-marker-with-baseline: align-list-marker-with-baseline,
+      align-enum-marker-with-baseline: align-enum-marker-with-baseline,
+      scale-list-items: scale-list-items,
+      show-hide-set-list-marker-none: show-hide-set-list-marker-none,
+      show-bibliography-as-footnote: show-bibliography-as-footnote,
+    ))
+      + args.named()
+  )
 }
 
 
@@ -333,7 +343,7 @@
 /// - uncover (function): The function to uncover content. The default value is `utils.uncover` function.
 ///
 /// - only (function): The function to show only the content. The default value is `utils.only` function.
-/// 
+///
 /// - effect (function): The function to add effect to the content. The default value is `utils.effect`.
 ///
 /// - alternatives-match (function): The function to match alternatives. The default value is `utils.alternatives-match` function.
@@ -388,7 +398,8 @@
       alert: alert,
       show-notes: show-notes,
       convert-label-to-short-heading: convert-label-to-short-heading,
-    )) + args.named(),
+    ))
+      + args.named(),
   )
 }
 
@@ -449,7 +460,8 @@
       date: date,
       institution: institution,
       logo: logo,
-    )) + args.named(),
+    ))
+      + args.named(),
   )
 }
 
@@ -534,7 +546,8 @@
       tertiary-dark: tertiary-dark,
       tertiary-darker: tertiary-darker,
       tertiary-darkest: tertiary-darkest,
-    )) + args.named(),
+    ))
+      + args.named(),
   )
 }
 
@@ -576,7 +589,7 @@
 ///     - x: The horizontal margins.
 ///     - y: The vertical margins.
 ///     - rest: The margins on all sides except those for which the dictionary explicitly sets a size.
-/// 
+///
 /// - numbering (string, function): The numbering style of the page. The default value is `"1"`.
 ///
 ///   The values for left and right are mutually exclusive with the values for inside and outside.
@@ -598,7 +611,8 @@
       fill: fill,
       margin: margin,
       numbering: numbering,
-    )) + args.named(),
+    ))
+      + args.named(),
   )
 }
 

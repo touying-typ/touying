@@ -30,7 +30,9 @@
 
 #speaker-note[Recall]
 
-#show: touying-set-config.with(config-methods(cover: utils.semi-transparent-cover))
+#show: touying-set-config.with(config-methods(
+  cover: utils.semi-transparent-cover,
+))
 
 == Animation
 

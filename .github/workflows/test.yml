@@ -1,0 +1,57 @@
+name: Test
+on:
+  push:
+  pull_request:
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install cargo-binstall
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-binstall
+
+      - name: Install tytanic
+        run: cargo binstall tytanic@0.2.2 -y
+
+      - name: Setup typst
+        uses: typst-community/setup-typst@v4
+        with:
+          version: "v0.13.1"
+
+      - name: Run test suite
+        run: tt run
+
+      - name: Archive diffs
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: artifacts
+          path: |
+            tests/**/diff/*.png
+            tests/**/out/*.png
+            tests/**/ref/*.png
+          retention-days: 5
+
+  typstyle:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@main
+        with:
+          ref: ${{ github.head_ref }}
+      - name: Run typstyle
+        uses: typstyle-rs/typstyle-action@main
+      - name: Push
+        uses: stefanzweifel/git-auto-commit-action@master
+        with:
+          commit_message: "style: format using typstyle"

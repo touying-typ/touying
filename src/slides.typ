@@ -29,13 +29,21 @@
 
   // set the document
   set document(
-    ..(if type(self.info.title) in (str, content) { (title: self.info.title) } else { }),
     ..(
-      if type(self.info.author) in (str, array) { (author: self.info.author) } else if (
-        type(self.info.author) == content
-      ) { (author: utils.markup-text(self.info.author)) } else { }
+      if type(self.info.title) in (str, content) {
+        (title: self.info.title)
+      } else {}
     ),
-    ..(if type(self.info.date) in (datetime,) { (date: self.info.date) } else { }),
+    ..(
+      if type(self.info.author) in (str, array) {
+        (author: self.info.author)
+      } else if (
+        type(self.info.author) == content
+      ) { (author: utils.markup-text(self.info.author)) } else {}
+    ),
+    ..(
+      if type(self.info.date) in (datetime,) { (date: self.info.date) } else {}
+    ),
   )
 
   // get the init function
@@ -47,7 +55,10 @@
 
   show: body => {
     if self.at("scale-list-items", default: none) != none {
-      magic.scale-list-items(scale: self.at("scale-list-items", default: none), body)
+      magic.scale-list-items(
+        scale: self.at("scale-list-items", default: none),
+        body,
+      )
     } else {
       body
     }
@@ -91,7 +102,12 @@
       if type(args) == dictionary {
         let bibliography = args.at("bibliography")
         args.remove("bibliography")
-        magic.show-bibliography-as-footnote.with(..args, record: false, bibliography, body)
+        magic.show-bibliography-as-footnote.with(
+          ..args,
+          record: false,
+          bibliography,
+          body,
+        )
       } else {
         // args is a bibliography like `bibliography(title: none, "ref.bib")`
         magic.bibliography-as-footnote(args, record: false, body)
