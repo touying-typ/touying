@@ -17,7 +17,11 @@
     ),
 
     rect(
-      fill: gradient.linear(self.colors.primary-dark, self.colors.primary.lighten(90%), angle: 90deg),
+      fill: gradient.linear(
+        self.colors.primary-dark,
+        self.colors.primary.lighten(90%),
+        angle: 90deg,
+      ),
       width: 100%,
       height: 4pt,
     ),
@@ -38,7 +42,10 @@
 /// - title (string): The title of the theorem. Default is `none`.
 ///
 /// - it (content): The content of the theorem.
-#let tblock(title: none, it) = touying-fn-wrapper(_tblock.with(title: title, it))
+#let tblock(title: none, it) = touying-fn-wrapper(_tblock.with(
+  title: title,
+  it,
+))
 
 
 /// Default slide function for the presentation.
@@ -94,7 +101,14 @@
     show: setting
     body
   }
-  touying-slide(self: self, config: config, repeat: repeat, setting: new-setting, composer: composer, ..bodies)
+  touying-slide(
+    self: self,
+    config: config,
+    repeat: repeat,
+    setting: new-setting,
+    composer: composer,
+    ..bodies,
+  )
 })
 
 
@@ -112,7 +126,7 @@
 ///
 /// #title-slide(subtitle: [Subtitle])
 /// ```
-/// 
+///
 /// - config (dictionary): The configuration of the slide. You can use `config-xxx` to set the configuration of the slide. For more several configurations, you can use `utils.merge-dicts` to merge them.
 #let title-slide(config: (:), ..args) = touying-slide-wrapper(self => {
   self = utils.merge-dicts(
@@ -141,10 +155,20 @@
       radius: 0.5em,
       breakable: false,
       {
-        text(size: 1.2em, fill: self.colors.neutral-lightest, weight: "bold", info.title)
+        text(
+          size: 1.2em,
+          fill: self.colors.neutral-lightest,
+          weight: "bold",
+          info.title,
+        )
         if info.subtitle != none {
           parbreak()
-          text(size: 1.0em, fill: self.colors.neutral-lightest, weight: "bold", info.subtitle)
+          text(
+            size: 1.0em,
+            fill: self.colors.neutral-lightest,
+            weight: "bold",
+            info.subtitle,
+          )
         }
       },
     )
@@ -173,7 +197,7 @@
 
 
 /// Outline slide for the presentation.
-/// 
+///
 /// - config (dictionary): is the configuration of the slide. You can use `config-xxx` to set the configuration of the slide. For more several configurations, you can use `utils.merge-dicts` to merge them.
 ///
 /// - title (string): is the title of the outline. Default is `utils.i18n-outline-title`.
@@ -208,7 +232,8 @@
             ..args.named(),
           ),
         ),
-      ) + args.pos().sum(default: none),
+      )
+        + args.pos().sum(default: none),
     ),
   )
 })
@@ -217,7 +242,7 @@
 /// New section slide for the presentation. You can update it by updating the `new-section-slide-fn` argument for `config-common` function.
 ///
 /// Example: `config-common(new-section-slide-fn: new-section-slide.with(numbered: false))`
-/// 
+///
 /// - config (dictionary): is the configuration of the slide. You can use `config-xxx` to set the configuration of the slide. For more several configurations, you can use `utils.merge-dicts` to merge them.
 ///
 /// - title (content, function): is the title of the section. The default is `utils.i18n-outline-title`.
@@ -234,18 +259,29 @@
   numbered: true,
   ..args,
   body,
-) = outline-slide(config: config, title: title, level: level, numbered: numbered, ..args, body)
+) = outline-slide(
+  config: config,
+  title: title,
+  level: level,
+  numbered: numbered,
+  ..args,
+  body,
+)
 
 
 
 /// Focus on some content.
 ///
 /// Example: `#focus-slide[Wake up!]`
-/// 
+///
 /// - config (dictionary): is the configuration of the slide. You can use `config-xxx` to set the configuration of the slide. For more several configurations, you can use `utils.merge-dicts` to merge them.
 ///
 /// - align (alignment): is the alignment of the content. The default is `horizon + center`.
-#let focus-slide(config: (:), align: horizon + center, body) = touying-slide-wrapper(self => {
+#let focus-slide(
+  config: (:),
+  align: horizon + center,
+  body,
+) = touying-slide-wrapper(self => {
   self = utils.merge-dicts(
     self,
     config-common(freeze-slide-counter: true),
@@ -264,25 +300,27 @@
 /// End slide for the presentation.
 ///
 /// - config (dictionary): is the configuration of the slide. You can use `config-xxx` to set the configuration of the slide. For more several configurations, you can use `utils.merge-dicts` to merge them.
-/// 
+///
 /// - title (string): is the title of the slide. The default is `none`.
 ///
 /// - body (array): is the content of the slide.
-#let ending-slide(config: (:), title: none, body) = touying-slide-wrapper(self => {
-  let content = {
-    set std.align(center + horizon)
-    if title != none {
-      block(
-        fill: self.colors.tertiary,
-        inset: (top: 0.7em, bottom: 0.7em, left: 3em, right: 3em),
-        radius: 0.5em,
-        text(size: 1.5em, fill: self.colors.neutral-lightest, title),
-      )
+#let ending-slide(config: (:), title: none, body) = touying-slide-wrapper(
+  self => {
+    let content = {
+      set std.align(center + horizon)
+      if title != none {
+        block(
+          fill: self.colors.tertiary,
+          inset: (top: 0.7em, bottom: 0.7em, left: 3em, right: 3em),
+          radius: 0.5em,
+          text(size: 1.5em, fill: self.colors.neutral-lightest, title),
+        )
+      }
+      body
     }
-    body
-  }
-  touying-slide(self: self, config: config, content)
-})
+    touying-slide(self: self, config: config, content)
+  },
+)
 
 
 /// Touying stargazer theme.
@@ -353,7 +391,9 @@
   } else {
     self.info.short-title
   },
-  footer-d: context utils.slide-counter.display() + " / " + utils.last-slide-number,
+  footer-d: context utils.slide-counter.display()
+    + " / "
+    + utils.last-slide-number,
   ..args,
   body,
 ) = {
@@ -374,7 +414,11 @@
       if self.store.progress-bar {
         utils.call-or-display(
           self,
-          components.progress-bar(height: 2pt, self.colors.primary, self.colors.neutral-lightest),
+          components.progress-bar(
+            height: 2pt,
+            self.colors.primary,
+            self.colors.neutral-lightest,
+          ),
         )
       },
     )
@@ -433,13 +477,31 @@
       footer-b: footer-b,
       footer-c: footer-c,
       footer-d: footer-d,
-      navigation: self => components.simple-navigation(self: self, primary: white, secondary: gray, background: self.colors.neutral-darkest, logo: utils.call-or-display(self, self.store.header-right)),
+      navigation: self => components.simple-navigation(
+        self: self,
+        primary: white,
+        secondary: gray,
+        background: self.colors.neutral-darkest,
+        logo: utils.call-or-display(self, self.store.header-right),
+      ),
       header: self => if self.store.title != none {
         block(
           width: 100%,
           height: 1.8em,
-          fill: gradient.linear(self.colors.primary, self.colors.neutral-darkest),
-          place(left + horizon, text(fill: self.colors.neutral-lightest, weight: "bold", size: 1.3em, utils.call-or-display(self, self.store.title)), dx: 1.5em),
+          fill: gradient.linear(
+            self.colors.primary,
+            self.colors.neutral-darkest,
+          ),
+          place(
+            left + horizon,
+            text(
+              fill: self.colors.neutral-lightest,
+              weight: "bold",
+              size: 1.3em,
+              utils.call-or-display(self, self.store.title),
+            ),
+            dx: 1.5em,
+          ),
         )
       },
       footer: self => {
@@ -455,12 +517,24 @@
         grid(
           columns: self.store.footer-columns,
           rows: (1.5em, auto),
-          cell(fill: self.colors.neutral-darkest, utils.call-or-display(self, self.store.footer-a)),
-          cell(fill: self.colors.neutral-darkest, utils.call-or-display(self, self.store.footer-b)),
-          cell(fill: self.colors.primary, utils.call-or-display(self, self.store.footer-c)),
-          cell(fill: self.colors.primary, utils.call-or-display(self, self.store.footer-d)),
+          cell(fill: self.colors.neutral-darkest, utils.call-or-display(
+            self,
+            self.store.footer-a,
+          )),
+          cell(fill: self.colors.neutral-darkest, utils.call-or-display(
+            self,
+            self.store.footer-b,
+          )),
+          cell(fill: self.colors.primary, utils.call-or-display(
+            self,
+            self.store.footer-c,
+          )),
+          cell(fill: self.colors.primary, utils.call-or-display(
+            self,
+            self.store.footer-d,
+          )),
         )
-      }
+      },
     ),
     ..args,
   )

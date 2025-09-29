@@ -3,7 +3,10 @@
 #import "@preview/cetz:0.4.2"
 
 // cetz bindings for touying
-#let cetz-canvas = touying-reducer.with(reduce: cetz.canvas, cover: cetz.draw.hide.with(bounds: true))
+#let cetz-canvas = touying-reducer.with(
+  reduce: cetz.canvas,
+  cover: cetz.draw.hide.with(bounds: true),
+)
 
 #show: university-theme.with(aspect-ratio: "16-9")
 

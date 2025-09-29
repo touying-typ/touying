@@ -30,7 +30,14 @@
   composer: auto,
   ..bodies,
 ) = touying-slide-wrapper(self => {
-  touying-slide(self: self, config: config, repeat: repeat, setting: setting, composer: composer, ..bodies)
+  touying-slide(
+    self: self,
+    config: config,
+    repeat: repeat,
+    setting: setting,
+    composer: composer,
+    ..bodies,
+  )
 })
 
 

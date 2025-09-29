@@ -9,7 +9,14 @@
 
 // Useful functions
 #let crimson = rgb("#c00000")
-#let greybox(..args, body) = rect(fill: luma(95%), stroke: 0.5pt, inset: 0pt, outset: 10pt, ..args, body)
+#let greybox(..args, body) = rect(
+  fill: luma(95%),
+  stroke: 0.5pt,
+  inset: 0pt,
+  outset: 10pt,
+  ..args,
+  body,
+)
 #let redbold(body) = {
   set text(fill: crimson, weight: "bold")
   body
@@ -34,7 +41,9 @@
 
   #greybox[
     Given a function $g(n)$, we denote by $O(g(n))$ the following *set of functions*:
-    #redbold(${f(n): "exists" c > 0 "and" n_0 > 0, "such that" f(n) <= c dot g(n) "for all" n >= n_0}$)
+    #redbold(
+      ${f(n): "exists" c > 0 "and" n_0 > 0, "such that" f(n) <= c dot g(n) "for all" n >= n_0}$,
+    )
   ]
 
   #pinit-highlight("h1", "h2")
@@ -47,7 +56,13 @@
 
   $f(n) redbold(in) O(g(n))$: $f(n)$ is *asymptotically* #redbold[at most] $g(n)$.
 
-  #only("4-", pinit-line(stroke: 3pt + crimson, start-dy: -0.25em, end-dy: -0.25em, 1, 2))
+  #only("4-", pinit-line(
+    stroke: 3pt + crimson,
+    start-dy: -0.25em,
+    end-dy: -0.25em,
+    1,
+    2,
+  ))
 
   #pause
 

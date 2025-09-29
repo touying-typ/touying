@@ -43,7 +43,15 @@
 /// -> content
 #let align-enum-marker-with-baseline(body) = {
   let counting-symbols = "1aAiI一壹あいアイא가ㄱ*"
-  let consume-regex = regex("[^" + counting-symbols + "]*[" + counting-symbols + "][^" + counting-symbols + "]*")
+  let consume-regex = regex(
+    "[^"
+      + counting-symbols
+      + "]*["
+      + counting-symbols
+      + "][^"
+      + counting-symbols
+      + "]*",
+  )
 
   show enum.item: it => {
     if it.number == none {
@@ -146,7 +154,9 @@
 #let record-bibliography(bibliography) = {
   show grid: it => {
     bibliography-state.update(
-      range(it.children.len()).filter(i => calc.rem(i, 2) == 1).map(i => it.children.at(i).body),
+      range(it.children.len())
+        .filter(i => calc.rem(i, 2) == 1)
+        .map(i => it.children.at(i).body),
     )
   }
   place(hide(bibliography))
@@ -163,14 +173,21 @@
 /// - bibliography (bibliography): The bibliography argument. You should use the `bibliography` function to define the bibliography like `bibliography("ref.bib")`.
 ///
 /// -> content
-#let bibliography-as-footnote(numbering: "[1]", record: true, bibliography, body) = {
+#let bibliography-as-footnote(
+  numbering: "[1]",
+  record: true,
+  bibliography,
+  body,
+) = {
   show cite: it => (
     context {
       if it.key not in bibliography-visited.get() {
         box({
           place(hide(it))
           context {
-            let bibitem = bibliography-state.final().at(bibliography-counter.get().at(0))
+            let bibitem = bibliography-state
+              .final()
+              .at(bibliography-counter.get().at(0))
             footnote(numbering: numbering, bibitem)
             bibliography-map.update(map => {
               map.insert(str(it.key), bibitem)
@@ -181,7 +198,9 @@
           bibliography-visited.update(visited => visited + (it.key,))
         })
       } else {
-        footnote(numbering: numbering, context bibliography-map.final().at(str(it.key)))
+        footnote(numbering: numbering, context bibliography-map
+          .final()
+          .at(str(it.key)))
       }
     }
   )
@@ -220,7 +239,9 @@
       columns: (auto, 1fr),
       column-gutter: .7em,
       row-gutter: 1.2em,
-      ..range(bibitems.len()).map(i => (numbering("[1]", i + 1), bibitems.at(i))).flatten(),
+      ..range(bibitems.len())
+        .map(i => (numbering("[1]", i + 1), bibitems.at(i)))
+        .flatten(),
     )
   }
 }

@@ -2,7 +2,7 @@
 #import themes.simple: *
 
 #show: simple-theme.with(
-  config-common(handout: true)
+  config-common(handout: true),
 )
 
 = Handout Mode Test

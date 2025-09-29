@@ -98,9 +98,13 @@
     self.new-section-slide-fn
   } else if last-heading-depth == 2 and self.new-subsection-slide-fn != none {
     self.new-subsection-slide-fn
-  } else if last-heading-depth == 3 and self.new-subsubsection-slide-fn != none {
+  } else if (
+    last-heading-depth == 3 and self.new-subsubsection-slide-fn != none
+  ) {
     self.new-subsubsection-slide-fn
-  } else if last-heading-depth == 4 and self.new-subsubsubsection-slide-fn != none {
+  } else if (
+    last-heading-depth == 4 and self.new-subsubsubsection-slide-fn != none
+  ) {
     self.new-subsubsubsection-slide-fn
   } else {
     if default == auto {
@@ -130,18 +134,42 @@
 /// Use headings to split a content block into slides
 ///
 /// -> content
-#let split-content-into-slides(self: none, recaller-map: (:), new-start: true, is-first-slide: false, body) = {
+#let split-content-into-slides(
+  self: none,
+  recaller-map: (:),
+  new-start: true,
+  is-first-slide: false,
+  body,
+) = {
   // Extract arguments
   assert(type(self) == dictionary, message: "`self` must be a dictionary")
-  assert("slide-level" in self and type(self.slide-level) == int, message: "`self.slide-level` must be an integer")
-  assert("slide-fn" in self and type(self.slide-fn) == function, message: "`self.slide-fn` must be a function")
+  assert(
+    "slide-level" in self and type(self.slide-level) == int,
+    message: "`self.slide-level` must be an integer",
+  )
+  assert(
+    "slide-fn" in self and type(self.slide-fn) == function,
+    message: "`self.slide-fn` must be a function",
+  )
   let slide-level = self.slide-level
   let slide-fn = auto
   let new-section-slide-fn = self.at("new-section-slide-fn", default: none)
-  let new-subsection-slide-fn = self.at("new-subsection-slide-fn", default: none)
-  let new-subsubsection-slide-fn = self.at("new-subsubsection-slide-fn", default: none)
-  let new-subsubsubsection-slide-fn = self.at("new-subsubsubsection-slide-fn", default: none)
-  let horizontal-line-to-pagebreak = self.at("horizontal-line-to-pagebreak", default: true)
+  let new-subsection-slide-fn = self.at(
+    "new-subsection-slide-fn",
+    default: none,
+  )
+  let new-subsubsection-slide-fn = self.at(
+    "new-subsubsection-slide-fn",
+    default: none,
+  )
+  let new-subsubsubsection-slide-fn = self.at(
+    "new-subsubsubsection-slide-fn",
+    default: none,
+  )
+  let horizontal-line-to-pagebreak = self.at(
+    "horizontal-line-to-pagebreak",
+    default: true,
+  )
   let children = if utils.is-sequence(body) {
     body.children
   } else {
@@ -156,7 +184,13 @@
     }
   }
   children = children.map(sequence-to-array).flatten()
-  let call-slide-fn-and-reset(self, already-slide-wrapper: false, slide-fn, current-slide-cont, recaller-map) = {
+  let call-slide-fn-and-reset(
+    self,
+    already-slide-wrapper: false,
+    slide-fn,
+    current-slide-cont,
+    recaller-map,
+  ) = {
     let cont = if already-slide-wrapper {
       slide-fn(self)
     } else {
@@ -191,9 +225,20 @@
   for child in children {
     // Handle horizontal-line
     // split content when we have a horizontal line
-    if horizontal-line-to-pagebreak and horizontal-line and child not in ([—], [---], [–], [--], [-]) {
+    if (
+      horizontal-line-to-pagebreak
+        and horizontal-line
+        and child not in ([—], [---], [–], [--], [-])
+    ) {
       current-slide = utils.trim(current-slide)
-      (cont, recaller-map, current-headings, current-slide, new-start, is-first-slide) = call-slide-fn-and-reset(
+      (
+        cont,
+        recaller-map,
+        current-headings,
+        current-slide,
+        new-start,
+        is-first-slide,
+      ) = call-slide-fn-and-reset(
         self + (headings: current-headings, is-first-slide: is-first-slide),
         slide-fn,
         current-slide.sum(default: none),
@@ -205,8 +250,19 @@
     // Main logic
     if utils.is-kind(child, "touying-slide-wrapper") {
       current-slide = utils.trim(current-slide)
-      if current-slide != () or _get-slide-fn(self + (headings: current-headings), default: none) != none {
-        (cont, recaller-map, current-headings, current-slide, new-start, is-first-slide) = call-slide-fn-and-reset(
+      if (
+        current-slide != ()
+          or _get-slide-fn(self + (headings: current-headings), default: none)
+            != none
+      ) {
+        (
+          cont,
+          recaller-map,
+          current-headings,
+          current-slide,
+          new-start,
+          is-first-slide,
+        ) = call-slide-fn-and-reset(
           self + (headings: current-headings, is-first-slide: is-first-slide),
           slide-fn,
           current-slide.sum(default: none),
@@ -214,7 +270,14 @@
         )
         result.push(cont)
       }
-      (cont, recaller-map, current-headings, current-slide, new-start, is-first-slide) = call-slide-fn-and-reset(
+      (
+        cont,
+        recaller-map,
+        current-headings,
+        current-slide,
+        new-start,
+        is-first-slide,
+      ) = call-slide-fn-and-reset(
         self + (headings: current-headings, is-first-slide: is-first-slide),
         already-slide-wrapper: true,
         child.value.fn,
@@ -228,7 +291,14 @@
     } else if utils.is-kind(child, "touying-slide-recaller") {
       current-slide = utils.trim(current-slide)
       if current-slide != () or current-headings != () {
-        (cont, recaller-map, current-headings, current-slide, new-start, is-first-slide) = call-slide-fn-and-reset(
+        (
+          cont,
+          recaller-map,
+          current-headings,
+          current-slide,
+          new-start,
+          is-first-slide,
+        ) = call-slide-fn-and-reset(
           self + (headings: current-headings, is-first-slide: is-first-slide),
           slide-fn,
           current-slide.sum(default: none),
@@ -237,13 +307,23 @@
         result.push(cont)
       }
       let lbl = child.value.label
-      assert(lbl in recaller-map, message: "label not found in the recaller map for slides")
+      assert(
+        lbl in recaller-map,
+        message: "label not found in the recaller map for slides",
+      )
       // recall the slide
       result.push(recaller-map.at(lbl))
     } else if child in (pagebreak(), pagebreak(weak: true)) {
       // split content when we have a pagebreak
       current-slide = utils.trim(current-slide)
-      (cont, recaller-map, current-headings, current-slide, new-start, is-first-slide) = call-slide-fn-and-reset(
+      (
+        cont,
+        recaller-map,
+        current-headings,
+        current-slide,
+        new-start,
+        is-first-slide,
+      ) = call-slide-fn-and-reset(
         self + (headings: current-headings, is-first-slide: is-first-slide),
         slide-fn,
         current-slide.sum(default: none),
@@ -253,22 +333,42 @@
     } else if horizontal-line-to-pagebreak and child in ([—], [---]) {
       horizontal-line = true
       continue
-    } else if horizontal-line-to-pagebreak and horizontal-line and child in ([–], [--], [-]) {
+    } else if (
+      horizontal-line-to-pagebreak
+        and horizontal-line
+        and child in ([–], [--], [-])
+    ) {
       continue
     } else if utils.is-heading(child, depth: slide-level) {
       let last-heading-depth = _get-last-heading-depth(current-headings)
       current-slide = utils.trim(current-slide)
-      if _get-slide-fn(
-        self + (headings: current-headings),
-        default: none,
-      ) != none or child.depth <= last-heading-depth or current-slide != () or (
-        child.depth == 1 and new-section-slide-fn != none
-      ) or (child.depth == 2 and new-subsection-slide-fn != none) or (
-        child.depth == 3 and new-subsubsection-slide-fn != none
-      ) or (child.depth == 4 and new-subsubsubsection-slide-fn != none) {
+      if (
+        _get-slide-fn(
+          self + (headings: current-headings),
+          default: none,
+        )
+          != none
+          or child.depth <= last-heading-depth
+          or current-slide != ()
+          or (
+            child.depth == 1 and new-section-slide-fn != none
+          )
+          or (child.depth == 2 and new-subsection-slide-fn != none)
+          or (
+            child.depth == 3 and new-subsubsection-slide-fn != none
+          )
+          or (child.depth == 4 and new-subsubsubsection-slide-fn != none)
+      ) {
         current-slide = utils.trim(current-slide)
         if current-slide != () or current-headings != () {
-          (cont, recaller-map, current-headings, current-slide, new-start, is-first-slide) = call-slide-fn-and-reset(
+          (
+            cont,
+            recaller-map,
+            current-headings,
+            current-slide,
+            new-start,
+            is-first-slide,
+          ) = call-slide-fn-and-reset(
             self + (headings: current-headings, is-first-slide: is-first-slide),
             slide-fn,
             current-slide.sum(default: none),
@@ -281,33 +381,80 @@
       current-headings.push(child)
       new-start = true
 
-      if not child.has("label") or str(child.label) not in ("touying:hidden", "touying:skip") {
-        if child.depth == 1 and new-section-slide-fn != none and not self.receive-body-for-new-section-slide-fn {
-          (cont, recaller-map, current-headings, current-slide, new-start, is-first-slide) = call-slide-fn-and-reset(
+      if (
+        not child.has("label")
+          or str(child.label) not in ("touying:hidden", "touying:skip")
+      ) {
+        if (
+          child.depth == 1
+            and new-section-slide-fn != none
+            and not self.receive-body-for-new-section-slide-fn
+        ) {
+          (
+            cont,
+            recaller-map,
+            current-headings,
+            current-slide,
+            new-start,
+            is-first-slide,
+          ) = call-slide-fn-and-reset(
             self + (headings: current-headings, is-first-slide: is-first-slide),
             new-section-slide-fn,
             none,
             recaller-map,
           )
           result.push(cont)
-        } else if child.depth == 2 and new-subsection-slide-fn != none and not self.receive-body-for-new-subsection-slide-fn {
-          (cont, recaller-map, current-headings, current-slide, new-start, is-first-slide) = call-slide-fn-and-reset(
+        } else if (
+          child.depth == 2
+            and new-subsection-slide-fn != none
+            and not self.receive-body-for-new-subsection-slide-fn
+        ) {
+          (
+            cont,
+            recaller-map,
+            current-headings,
+            current-slide,
+            new-start,
+            is-first-slide,
+          ) = call-slide-fn-and-reset(
             self + (headings: current-headings, is-first-slide: is-first-slide),
             new-subsection-slide-fn,
             none,
             recaller-map,
           )
           result.push(cont)
-        } else if child.depth == 3 and new-subsubsection-slide-fn != none and not self.receive-body-for-new-subsubsection-slide-fn {
-          (cont, recaller-map, current-headings, current-slide, new-start, is-first-slide) = call-slide-fn-and-reset(
+        } else if (
+          child.depth == 3
+            and new-subsubsection-slide-fn != none
+            and not self.receive-body-for-new-subsubsection-slide-fn
+        ) {
+          (
+            cont,
+            recaller-map,
+            current-headings,
+            current-slide,
+            new-start,
+            is-first-slide,
+          ) = call-slide-fn-and-reset(
             self + (headings: current-headings, is-first-slide: is-first-slide),
             new-subsubsection-slide-fn,
             none,
             recaller-map,
           )
           result.push(cont)
-        } else if child.depth == 4 and new-subsubsubsection-slide-fn != none and not self.receive-body-for-new-subsubsubsection-slide-fn {
-          (cont, recaller-map, current-headings, current-slide, new-start, is-first-slide) = call-slide-fn-and-reset(
+        } else if (
+          child.depth == 4
+            and new-subsubsubsection-slide-fn != none
+            and not self.receive-body-for-new-subsubsubsection-slide-fn
+        ) {
+          (
+            cont,
+            recaller-map,
+            current-headings,
+            current-slide,
+            new-start,
+            is-first-slide,
+          ) = call-slide-fn-and-reset(
             self + (headings: current-headings, is-first-slide: is-first-slide),
             new-subsubsubsection-slide-fn,
             none,
@@ -316,7 +463,10 @@
           result.push(cont)
         }
       }
-    } else if self.at("auto-offset-for-heading", default: true) and utils.is-heading(child) {
+    } else if (
+      self.at("auto-offset-for-heading", default: true)
+        and utils.is-heading(child)
+    ) {
       let fields = child.fields()
       let lbl = fields.remove("label", default: none)
       let _ = fields.remove("body", default: none)
@@ -334,7 +484,14 @@
     } else if utils.is-kind(child, "touying-set-config") {
       current-slide = utils.trim(current-slide)
       if current-slide != () or current-headings != () {
-        (cont, recaller-map, current-headings, current-slide, new-start, is-first-slide) = call-slide-fn-and-reset(
+        (
+          cont,
+          recaller-map,
+          current-headings,
+          current-slide,
+          new-start,
+          is-first-slide,
+        ) = call-slide-fn-and-reset(
           self + (headings: current-headings, is-first-slide: is-first-slide),
           slide-fn,
           current-slide.sum(default: none),
@@ -354,7 +511,14 @@
     } else if is-first-slide and utils.is-styled(child) {
       current-slide = utils.trim(current-slide)
       if current-slide != () or current-headings != () {
-        (cont, recaller-map, current-headings, current-slide, new-start, is-first-slide) = call-slide-fn-and-reset(
+        (
+          cont,
+          recaller-map,
+          current-headings,
+          current-slide,
+          new-start,
+          is-first-slide,
+        ) = call-slide-fn-and-reset(
           self + (headings: current-headings, is-first-slide: is-first-slide),
           slide-fn,
           current-slide.sum(default: none),
@@ -402,7 +566,14 @@
   // Handle the last slide
   current-slide = utils.trim(current-slide)
   if current-slide != () or current-headings != () {
-    (cont, recaller-map, current-headings, current-slide, new-start, is-first-slide) = call-slide-fn-and-reset(
+    (
+      cont,
+      recaller-map,
+      current-headings,
+      current-slide,
+      new-start,
+      is-first-slide,
+    ) = call-slide-fn-and-reset(
       self + (headings: current-headings, is-first-slide: is-first-slide),
       slide-fn,
       current-slide.sum(default: none),
@@ -438,7 +609,12 @@
 ///   It accepts a `(repetitions, args)` and should return a (nextrepetitions, extra-args).
 ///
 /// -> content
-#let touying-fn-wrapper(fn, last-subslide: none, repetitions: none, ..args) = utils.label-it(
+#let touying-fn-wrapper(
+  fn,
+  last-subslide: none,
+  repetitions: none,
+  ..args,
+) = utils.label-it(
   metadata((
     kind: "touying-fn-wrapper",
     fn: fn,
@@ -478,7 +654,9 @@
 
 
 /// Display content after the `#meanwhile` mark meanwhile.
-#let meanwhile = [#metadata((kind: "touying-meanwhile"))<touying-temporary-mark>]
+#let meanwhile = [#metadata((
+  kind: "touying-meanwhile",
+))<touying-temporary-mark>]
 
 
 /// Take effect in some subslides.
@@ -594,10 +772,16 @@
 ///   Important: If you use a zero-length content like context expression, you should set `stretch: false`.
 ///
 /// -> content
-#let alternatives-match(subslides-contents, position: bottom + left, stretch: false) = {
+#let alternatives-match(
+  subslides-contents,
+  position: bottom + left,
+  stretch: false,
+) = {
   touying-fn-wrapper(
     utils.alternatives-match,
-    last-subslide: calc.max(..subslides-contents.pairs().map(kv => utils.last-required-subslide(kv.at(0)))),
+    last-subslide: calc.max(..subslides-contents
+      .pairs()
+      .map(kv => utils.last-required-subslide(kv.at(0)))),
     subslides-contents,
     position: position,
     stretch: false,
@@ -629,7 +813,10 @@
 ) = {
   let extra = if start == auto {
     (
-      last-subslide: repetitions => (repetitions + args.pos().len() - 1, (start: repetitions)),
+      last-subslide: repetitions => (
+        repetitions + args.pos().len() - 1,
+        (start: repetitions),
+      ),
     )
   } else {
     (
@@ -719,7 +906,13 @@
 ///   Important: If you use a zero-length content like context expression, you should set `stretch: false`.
 ///
 /// -> content
-#let alternatives-cases(cases, fn, position: bottom + left, stretch: false, ..kwargs) = {
+#let alternatives-cases(
+  cases,
+  fn,
+  position: bottom + left,
+  stretch: false,
+  ..kwargs,
+) = {
   touying-fn-wrapper(
     utils.alternatives-cases,
     last-subslide: calc.max(..cases.map(utils.last-required-subslide)),
@@ -782,7 +975,13 @@
 /// - body (string, content, function): The content of the equation. It should be a string, a raw text, or a function that receives `self` as an argument and returns a string.
 ///
 /// -> content
-#let touying-equation(block: true, numbering: none, supplement: auto, scope: (:), body) = utils.label-it(
+#let touying-equation(
+  block: true,
+  numbering: none,
+  supplement: auto,
+  scope: (:),
+  body,
+) = utils.label-it(
   metadata((
     kind: "touying-equation",
     block: block,
@@ -828,7 +1027,13 @@
 /// - body (string, content, function): The content of the equation. It should be a string, a raw text, or a function that receives `self` as an argument and returns a string.
 ///
 /// -> content
-#let touying-mitex(block: true, numbering: none, supplement: auto, mitex, body) = utils.label(
+#let touying-mitex(
+  block: true,
+  numbering: none,
+  supplement: auto,
+  mitex,
+  body,
+) = utils.label(
   metadata((
     kind: "touying-mitex",
     block: block,
@@ -866,7 +1071,11 @@
 /// - args (array): The arguments of the reducer function.
 ///
 /// -> content
-#let touying-reducer(reduce: arr => arr.sum(), cover: arr => none, ..args) = utils.label-it(
+#let touying-reducer(
+  reduce: arr => arr.sum(),
+  cover: arr => none,
+  ..args,
+) = utils.label-it(
   metadata((
     kind: "touying-reducer",
     reduce: reduce,
@@ -879,7 +1088,13 @@
 
 
 // parse touying equation, and get the repetitions
-#let _parse-touying-equation(self: none, need-cover: true, base: 1, index: 1, eqt-metadata) = {
+#let _parse-touying-equation(
+  self: none,
+  need-cover: true,
+  base: 1,
+  index: 1,
+  eqt-metadata,
+) = {
   let eqt = eqt-metadata.value
   let result-arr = ()
   // repetitions
@@ -944,17 +1159,20 @@
     supplement: eqt.supplement,
     eval(
       "$" + result.sum(default: "") + "$",
-      scope: eqt.scope + (
-        cover: (..args) => {
-          let cover = eqt.scope.at("cover", default: cover)
-          if args.pos().len() != 0 {
-            cover(args.pos().first())
-          }
-        },
-      ),
+      scope: eqt.scope
+        + (
+          cover: (..args) => {
+            let cover = eqt.scope.at("cover", default: cover)
+            if args.pos().len() != 0 {
+              cover(args.pos().first())
+            }
+          },
+        ),
     ),
   )
-  if eqt-metadata.has("label") and eqt-metadata.label != <touying-temporary-mark> {
+  if (
+    eqt-metadata.has("label") and eqt-metadata.label != <touying-temporary-mark>
+  ) {
     equation = utils.label-it(equation, eqt-metadata.label)
   }
   result-arr.push(equation)
@@ -963,7 +1181,13 @@
 }
 
 // parse touying mitex, and get the repetitions
-#let _parse-touying-mitex(self: none, need-cover: true, base: 1, index: 1, eqt-metadata) = {
+#let _parse-touying-mitex(
+  self: none,
+  need-cover: true,
+  base: 1,
+  index: 1,
+  eqt-metadata,
+) = {
   let eqt = eqt-metadata.value
   let result-arr = ()
   // repetitions
@@ -1026,7 +1250,9 @@
     supplement: eqt.supplement,
     result.sum(default: ""),
   )
-  if eqt-metadata.has("label") and eqt-metadata.label != <touying-temporary-mark> {
+  if (
+    eqt-metadata.has("label") and eqt-metadata.label != <touying-temporary-mark>
+  ) {
     equation = utils.label-it(equation, eqt-metadata.label)
   }
   result-arr.push(equation)
@@ -1046,7 +1272,11 @@
   let result = ()
   let cover-arr = ()
   for child in reducer.args.flatten() {
-    if type(child) == content and child.func() == metadata and type(child.value) == dictionary {
+    if (
+      type(child) == content
+        and child.func() == metadata
+        and type(child.value) == dictionary
+    ) {
       let kind = child.value.at("kind", default: none)
       if kind == "touying-pause" {
         repetitions += 1
@@ -1105,7 +1335,11 @@
 ) = {
   let labeled(func) = {
     return not (
-      "repeat" in self and "subslide" in self and "label-only-on-last-subslide" in self and func in self.label-only-on-last-subslide and self.subslide != self.repeat
+      "repeat" in self
+        and "subslide" in self
+        and "label-only-on-last-subslide" in self
+        and func in self.label-only-on-last-subslide
+        and self.subslide != self.repeat
     )
   }
   let bodies = bodies.pos()
@@ -1120,7 +1354,11 @@
   for it in bodies {
     // a hack for code like #table([A], pause, [B])
     if type(it) == content and it.func() in (table.cell, grid.cell) {
-      if type(it.body) == content and it.body.func() == metadata and type(it.body.value) == dictionary {
+      if (
+        type(it.body) == content
+          and it.body.func() == metadata
+          and type(it.body.value) == dictionary
+      ) {
         let kind = it.body.value.at("kind", default: none)
         if kind == "touying-pause" {
           repetitions += 1
@@ -1147,7 +1385,11 @@
       (it,)
     }
     for child in children {
-      if type(child) == content and child.func() == metadata and type(child.value) == dictionary {
+      if (
+        type(child) == content
+          and child.func() == metadata
+          and type(child.value) == dictionary
+      ) {
         let kind = child.value.at("kind", default: none)
         if kind == "touying-pause" {
           repetitions += 1
@@ -1213,15 +1455,25 @@
           let extra-args = (:)
           if child.value.last-subslide != none {
             if type(child.value.last-subslide) == function {
-              (last-subslide, extra-args) = (child.value.last-subslide)(repetitions)
+              (last-subslide, extra-args) = (child.value.last-subslide)(
+                repetitions,
+              )
             } else {
               last-subslide = calc.max(last-subslide, child.value.last-subslide)
             }
           }
           if repetitions <= index or not need-cover {
-            result.push((child.value.fn)(self: self, ..child.value.args, ..extra-args))
+            result.push((child.value.fn)(
+              self: self,
+              ..child.value.args,
+              ..extra-args,
+            ))
           } else {
-            cover-arr.push((child.value.fn)(self: self, ..child.value.args, ..extra-args))
+            cover-arr.push((child.value.fn)(
+              self: self,
+              ..child.value.args,
+              ..extra-args,
+            ))
           }
           repetitions = nextrepetitions
         } else if kind == "touying-delayed-wrapper" {
@@ -1248,7 +1500,11 @@
         result.push(child)
       } else if utils.is-sequence(child) {
         // handle the sequence
-        let (conts, nextrepetitions, next-last-subslide) = _parse-content-into-results-and-repetitions(
+        let (
+          conts,
+          nextrepetitions,
+          next-last-subslide,
+        ) = _parse-content-into-results-and-repetitions(
           self: self,
           need-cover: repetitions <= index,
           base: repetitions,
@@ -1265,7 +1521,11 @@
         last-subslide = calc.max(last-subslide, next-last-subslide)
       } else if utils.is-styled(child) {
         // handle styled
-        let (conts, nextrepetitions, next-last-subslide) = _parse-content-into-results-and-repetitions(
+        let (
+          conts,
+          nextrepetitions,
+          next-last-subslide,
+        ) = _parse-content-into-results-and-repetitions(
           self: self,
           need-cover: repetitions <= index,
           base: repetitions,
@@ -1280,9 +1540,16 @@
         }
         repetitions = nextrepetitions
         last-subslide = calc.max(last-subslide, next-last-subslide)
-      } else if type(child) == content and child.func() in (list.item, enum.item, align, link) {
+      } else if (
+        type(child) == content
+          and child.func() in (list.item, enum.item, align, link)
+      ) {
         // handle the list item
-        let (conts, nextrepetitions, next-last-subslide) = _parse-content-into-results-and-repetitions(
+        let (
+          conts,
+          nextrepetitions,
+          next-last-subslide,
+        ) = _parse-content-into-results-and-repetitions(
           self: self,
           need-cover: repetitions <= index,
           base: repetitions,
@@ -1291,15 +1558,29 @@
         )
         let cont = conts.first()
         if repetitions <= index or not need-cover {
-          result.push(utils.reconstruct(child, labeled: labeled(child.func()), cont))
+          result.push(utils.reconstruct(
+            child,
+            labeled: labeled(child.func()),
+            cont,
+          ))
         } else {
-          cover-arr.push(utils.reconstruct(child, labeled: labeled(child.func()), cont))
+          cover-arr.push(utils.reconstruct(
+            child,
+            labeled: labeled(child.func()),
+            cont,
+          ))
         }
         repetitions = nextrepetitions
         last-subslide = calc.max(last-subslide, next-last-subslide)
-      } else if type(child) == content and child.func() in (table, grid, stack) {
+      } else if (
+        type(child) == content and child.func() in (table, grid, stack)
+      ) {
         // handle the table-like
-        let (conts, nextrepetitions, next-last-subslide) = _parse-content-into-results-and-repetitions(
+        let (
+          conts,
+          nextrepetitions,
+          next-last-subslide,
+        ) = _parse-content-into-results-and-repetitions(
           self: self,
           need-cover: repetitions <= index,
           base: repetitions,
@@ -1307,39 +1588,51 @@
           ..child.children,
         )
         if repetitions <= index or not need-cover {
-          result.push(utils.reconstruct-table-like(child, labeled: labeled(child.func()), conts))
+          result.push(utils.reconstruct-table-like(
+            child,
+            labeled: labeled(child.func()),
+            conts,
+          ))
         } else {
-          cover-arr.push(utils.reconstruct-table-like(child, labeled: labeled(child.func()), conts))
+          cover-arr.push(utils.reconstruct-table-like(
+            child,
+            labeled: labeled(child.func()),
+            conts,
+          ))
         }
         repetitions = nextrepetitions
         last-subslide = calc.max(last-subslide, next-last-subslide)
-      } else if type(child) == content and child.func() in (
-        pad,
-        figure,
-        quote,
-        strong,
-        emph,
-        footnote,
-        highlight,
-        overline,
-        underline,
-        strike,
-        smallcaps,
-        sub,
-        super,
-        box,
-        block,
-        hide,
-        move,
-        scale,
-        circle,
-        ellipse,
-        rect,
-        square,
-        table.cell,
-        grid.cell,
-        math.equation,
-        heading,
+      } else if (
+        type(child) == content
+          and child.func()
+            in (
+              pad,
+              figure,
+              quote,
+              strong,
+              emph,
+              footnote,
+              highlight,
+              overline,
+              underline,
+              strike,
+              smallcaps,
+              sub,
+              super,
+              box,
+              block,
+              hide,
+              move,
+              scale,
+              circle,
+              ellipse,
+              rect,
+              square,
+              table.cell,
+              grid.cell,
+              math.equation,
+              heading,
+            )
       ) {
         let (
           conts,
@@ -1355,15 +1648,29 @@
         )
         let cont = conts.first()
         if repetitions <= index or not need-cover {
-          result.push(utils.reconstruct(named: true, labeled: labeled(child.func()), child, cont))
+          result.push(utils.reconstruct(
+            named: true,
+            labeled: labeled(child.func()),
+            child,
+            cont,
+          ))
         } else {
-          cover-arr.push(utils.reconstruct(named: true, labeled: labeled(child.func()), child, cont))
+          cover-arr.push(utils.reconstruct(
+            named: true,
+            labeled: labeled(child.func()),
+            child,
+            cont,
+          ))
         }
         repetitions = nextrepetitions
         last-subslide = calc.max(last-subslide, next-last-subslide)
       } else if type(child) == content and child.func() == terms.item {
         // handle the terms item
-        let (conts, nextrepetitions, next-last-subslide) = _parse-content-into-results-and-repetitions(
+        let (
+          conts,
+          nextrepetitions,
+          next-last-subslide,
+        ) = _parse-content-into-results-and-repetitions(
           self: self,
           need-cover: repetitions <= index,
           base: repetitions,
@@ -1380,7 +1687,11 @@
         last-subslide = calc.max(last-subslide, next-last-subslide)
       } else if type(child) == content and child.func() == columns {
         // handle columns
-        let (conts, nextrepetitions, next-last-subslide) = _parse-content-into-results-and-repetitions(
+        let (
+          conts,
+          nextrepetitions,
+          next-last-subslide,
+        ) = _parse-content-into-results-and-repetitions(
           self: self,
           need-cover: repetitions <= index,
           base: repetitions,
@@ -1405,7 +1716,11 @@
         last-subslide = calc.max(last-subslide, next-last-subslide)
       } else if type(child) == content and child.func() == place {
         // handle place
-        let (conts, nextrepetitions, next-last-subslide) = _parse-content-into-results-and-repetitions(
+        let (
+          conts,
+          nextrepetitions,
+          next-last-subslide,
+        ) = _parse-content-into-results-and-repetitions(
           self: self,
           need-cover: repetitions <= index,
           base: repetitions,
@@ -1430,7 +1745,11 @@
         last-subslide = calc.max(last-subslide, next-last-subslide)
       } else if type(child) == content and child.func() == rotate {
         // handle rotate
-        let (conts, nextrepetitions, next-last-subslide) = _parse-content-into-results-and-repetitions(
+        let (
+          conts,
+          nextrepetitions,
+          next-last-subslide,
+        ) = _parse-content-into-results-and-repetitions(
           self: self,
           need-cover: repetitions <= index,
           base: repetitions,
@@ -1475,10 +1794,20 @@
 // get negative pad for header and footer
 #let _get-negative-pad(self) = {
   let margin = self.page.margin
-  if type(margin) != dictionary and type(margin) != length and type(margin) != relative {
+  if (
+    type(margin) != dictionary
+      and type(margin) != length
+      and type(margin) != relative
+  ) {
     return it => it
   }
-  let cell = block.with(width: 100%, height: 100%, above: 0pt, below: 0pt, breakable: false)
+  let cell = block.with(
+    width: 100%,
+    height: 100%,
+    above: 0pt,
+    below: 0pt,
+    breakable: false,
+  )
   if type(margin) == length or type(margin) == relative {
     return it => pad(x: -margin, cell(it))
   }
@@ -1501,10 +1830,17 @@
 // get bottom pad for footer
 #let _get-bottom-pad(self) = {
   assert(
-    self.page.paper == "presentation-16-9" or self.page.paper == "presentation-4-3",
+    self.page.paper == "presentation-16-9"
+      or self.page.paper == "presentation-4-3",
     message: "The paper of page should be presentation-16-9 or presentation-4-3",
   )
-  let cell = block.with(width: 100%, height: 100%, above: 0pt, below: 0pt, breakable: false)
+  let cell = block.with(
+    width: 100%,
+    height: 100%,
+    above: 0pt,
+    below: 0pt,
+    breakable: false,
+  )
   let page-height = if self.page.paper == "presentation-16-9" {
     self.page.at("height", default: 473.56pt)
   } else {
@@ -1518,7 +1854,8 @@
   if self.show-notes-on-second-screen in (bottom, right) {
     let margin = self.page.margin
     assert(
-      self.page.paper == "presentation-16-9" or self.page.paper == "presentation-4-3",
+      self.page.paper == "presentation-16-9"
+        or self.page.paper == "presentation-4-3",
       message: "The paper of page should be presentation-16-9 or presentation-4-3",
     )
     let page-width = if self.page.paper == "presentation-16-9" {
@@ -1531,7 +1868,11 @@
     } else {
       self.page.at("height", default: 595.28pt)
     }
-    if type(margin) != dictionary and type(margin) != length and type(margin) != relative {
+    if (
+      type(margin) != dictionary
+        and type(margin) != length
+        and type(margin) != relative
+    ) {
       return (:)
     }
     if type(margin) == length or type(margin) == relative {
@@ -1559,8 +1900,14 @@
 }
 
 #let _get-header-footer(self) = {
-  let header = utils.call-or-display(self, self.page.at("header", default: none))
-  let footer = utils.call-or-display(self, self.page.at("footer", default: none))
+  let header = utils.call-or-display(self, self.page.at(
+    "header",
+    default: none,
+  ))
+  let footer = utils.call-or-display(self, self.page.at(
+    "footer",
+    default: none,
+  ))
   // negative padding
   if self.at("zero-margin-header", default: true) {
     let negative-pad = _get-negative-pad(self)
@@ -1577,7 +1924,8 @@
   // speaker note
   if self.show-notes-on-second-screen in (bottom, right) {
     assert(
-      self.page.paper == "presentation-16-9" or self.page.paper == "presentation-4-3",
+      self.page.paper == "presentation-16-9"
+        or self.page.paper == "presentation-4-3",
       message: "The paper of page should be presentation-16-9 or presentation-4-3",
     )
     let page-width = if self.page.paper == "presentation-16-9" {
@@ -1590,7 +1938,11 @@
     } else {
       self.page.at("height", default: 595.28pt)
     }
-    let show-notes = (self.methods.show-notes)(self: self, width: page-width, height: page-height)
+    let show-notes = (self.methods.show-notes)(
+      self: self,
+      width: page-width,
+      height: page-height,
+    )
     let margin-left = if type(self.page.margin) != dictionary {
       self.page.margin
     } else if "left" in self.page.margin {
@@ -1677,9 +2029,15 @@
   if config != (:) {
     self = utils.merge-dicts(self, config)
   }
-  assert(bodies.named().len() == 0, message: "unexpected named arguments:" + repr(bodies.named().keys()))
+  assert(
+    bodies.named().len() == 0,
+    message: "unexpected named arguments:" + repr(bodies.named().keys()),
+  )
   let setting-fn(body) = {
-    set heading(offset: self.at("slide-level", default: 0)) if self.at("auto-offset-for-heading", default: true)
+    set heading(offset: self.at("slide-level", default: 0)) if self.at(
+      "auto-offset-for-heading",
+      default: true,
+    )
     show: body => {
       if self.at("show-strong-with-alert", default: true) {
         show strong: self.methods.alert.with(self: self)
@@ -1710,36 +2068,49 @@
     if self.at("headings", default: ()) != () {
       set heading(offset: 0)
       show heading: none
-      let headings = self.at("headings", default: ()).map(it => if it.has("label") {
-        if str(it.label) in ("touying:hidden", "touying:unnumbered", "touying:unoutlined", "touying:unbookmarked") {
-          let fields = it.fields()
-          let _ = fields.remove("label", default: none)
-          let _ = fields.remove("body", default: none)
-          if str(it.label) == "touying:hidden" {
-            fields.numbering = none
-            fields.outlined = false
-            fields.bookmarked = false
+      let headings = self
+        .at("headings", default: ())
+        .map(it => if it.has("label") {
+          if (
+            str(it.label)
+              in (
+                "touying:hidden",
+                "touying:unnumbered",
+                "touying:unoutlined",
+                "touying:unbookmarked",
+              )
+          ) {
+            let fields = it.fields()
+            let _ = fields.remove("label", default: none)
+            let _ = fields.remove("body", default: none)
+            if str(it.label) == "touying:hidden" {
+              fields.numbering = none
+              fields.outlined = false
+              fields.bookmarked = false
+            }
+            if str(it.label) == "touying:unnumbered" {
+              fields.numbering = none
+            }
+            if str(it.label) == "touying:unoutlined" {
+              fields.outlined = false
+            }
+            if str(it.label) == "touying:unbookmarked" {
+              fields.bookmarked = false
+            }
+            utils.label-it(heading(..fields, it.body), it.label)
+          } else {
+            it
           }
-          if str(it.label) == "touying:unnumbered" {
-            fields.numbering = none
-          }
-          if str(it.label) == "touying:unoutlined" {
-            fields.outlined = false
-          }
-          if str(it.label) == "touying:unbookmarked" {
-            fields.bookmarked = false
-          }
-          utils.label-it(heading(..fields, it.body), it.label)
         } else {
           it
-        }
-      } else {
-        it
-      })
+        })
       headings.sum(default: none)
     }
     utils.call-or-display(self, self.at("slide-preamble", default: none))
-    utils.call-or-display(self, self.at("default-slide-preamble", default: none))
+    utils.call-or-display(self, self.at(
+      "default-slide-preamble",
+      default: none,
+    ))
   }
   // preamble for the subslides
   let subslide-preamble(self) = {
@@ -1747,7 +2118,11 @@
       slide-preamble(self)
     }
     [#metadata((kind: "touying-new-subslide")) <touying-metadata>]
-    if self.at("enable-frozen-states-and-counters", default: true) and not self.handout and self.repeat > 1 {
+    if (
+      self.at("enable-frozen-states-and-counters", default: true)
+        and not self.handout
+        and self.repeat > 1
+    ) {
       if self.subslide == 1 {
         context {
           utils.loc-prior-newslide.update(here())
@@ -1763,7 +2138,10 @@
       }
     }
     utils.call-or-display(self, self.at("subslide-preamble", default: none))
-    utils.call-or-display(self, self.at("default-subslide-preamble", default: none))
+    utils.call-or-display(self, self.at(
+      "default-subslide-preamble",
+      default: none,
+    ))
   }
   // update states for every page
   let page-preamble(self) = {
@@ -1787,7 +2165,11 @@
   self.subslide = 1
   // for single page slide, get the repetitions
   if repeat == auto {
-    let (_, repetitions, last-subslide) = _parse-content-into-results-and-repetitions(
+    let (
+      _,
+      repetitions,
+      last-subslide,
+    ) = _parse-content-into-results-and-repetitions(
       self: self,
       base: 1,
       index: 1,
@@ -1821,12 +2203,23 @@
       let delayed-args = if i == repeat {
         (show-delayed-wrapper: true)
       }
-      let (conts, _, _) = _parse-content-into-results-and-repetitions(self: self, index: i, ..delayed-args, ..bodies)
+      let (conts, _, _) = _parse-content-into-results-and-repetitions(
+        self: self,
+        index: i,
+        ..delayed-args,
+        ..bodies,
+      )
       let new-header = page-preamble(self) + header
       // update the counter in the first subslide only
       result.push({
-        set page(..(self.page + page-extra-args + (header: new-header, footer: footer)))
-        setting-fn(subslide-preamble(self) + composer-with-side-by-side(..conts))
+        set page(
+          ..(
+            self.page + page-extra-args + (header: new-header, footer: footer)
+          ),
+        )
+        setting-fn(
+          subslide-preamble(self) + composer-with-side-by-side(..conts),
+        )
       })
     }
     // return the result
@@ -1867,7 +2260,14 @@
   composer: auto,
   ..bodies,
 ) = touying-slide-wrapper(self => {
-  touying-slide(self: self, config: config, repeat: repeat, setting: setting, composer: composer, ..bodies)
+  touying-slide(
+    self: self,
+    config: config,
+    repeat: repeat,
+    setting: setting,
+    composer: composer,
+    ..bodies,
+  )
 })
 
 
@@ -1903,5 +2303,12 @@
   composer: auto,
   ..bodies,
 ) = touying-slide-wrapper(self => {
-  touying-slide(self: self, config: config, repeat: repeat, setting: setting, composer: composer, ..bodies)
+  touying-slide(
+    self: self,
+    config: config,
+    repeat: repeat,
+    setting: setting,
+    composer: composer,
+    ..bodies,
+  )
 })

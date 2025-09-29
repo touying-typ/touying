@@ -1,11 +1,17 @@
 #import "/lib.typ": *
 #import themes.simple: *
 #import "@preview/cetz:0.4.1"
-#import "@preview/fletcher:0.5.8" as fletcher: node, edge
+#import "@preview/fletcher:0.5.8" as fletcher: edge, node
 
 // cetz and fletcher bindings for touying
-#let cetz-canvas = touying-reducer.with(reduce: cetz.canvas, cover: cetz.draw.hide.with(bounds: true))
-#let fletcher-diagram = touying-reducer.with(reduce: fletcher.diagram, cover: fletcher.hide)
+#let cetz-canvas = touying-reducer.with(
+  reduce: cetz.canvas,
+  cover: cetz.draw.hide.with(bounds: true),
+)
+#let fletcher-diagram = touying-reducer.with(
+  reduce: fletcher.diagram,
+  cover: fletcher.hide,
+)
 
 #show: simple-theme
 
@@ -63,8 +69,8 @@ use #only("2-")[`#only` function] for not reserving space,
 Equation with `pause`:
 
 $
-  f(x) &= pause x^2 + 2x + 1 \
-  &= pause (x + 1)^2 \
+  f(x) & = pause x^2 + 2x + 1 \
+       & = pause (x + 1)^2 \
 $
 
 #meanwhile
@@ -108,16 +114,16 @@ By factorizing, we can obtain this result.
       config-methods(cover: utils.method-wrapper(hide.with(bounds: true))),
     )
     let (uncover,) = utils.methods(self)
-    
-    rect((0,0), (5,5))
+
+    rect((0, 0), (5, 5))
 
     uncover("2-3", {
-      rect((0,0), (1,1))
-      rect((1,1), (2,2))
-      rect((2,2), (3,3))
+      rect((0, 0), (1, 1))
+      rect((1, 1), (2, 2))
+      rect((2, 2), (3, 3))
     })
 
-    only(3, line((0,0), (2.5, 2.5), name: "line"))
+    only(3, line((0, 0), (2.5, 2.5), name: "line"))
   })
 ])
 
@@ -126,7 +132,12 @@ By factorizing, we can obtain this result.
 
 #fletcher-diagram(
   node-stroke: .1em,
-  node-fill: gradient.radial(blue.lighten(80%), blue, center: (30%, 20%), radius: 80%),
+  node-fill: gradient.radial(
+    blue.lighten(80%),
+    blue,
+    center: (30%, 20%),
+    radius: 80%,
+  ),
   spacing: 4em,
   edge((-1, 0), "r", "-|>", `open(path)`, label-pos: 0, label-side: center),
   node((0, 0), `reading`, radius: 2em),

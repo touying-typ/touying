@@ -10,7 +10,9 @@
 
 Regular content here.
 
-#show: touying-set-config.with(config-methods(cover: utils.semi-transparent-cover))
+#show: touying-set-config.with(config-methods(
+  cover: utils.semi-transparent-cover,
+))
 
 #pause
 
@@ -27,7 +29,9 @@ More content with the same effect.
 
 == Default Cover Behavior
 
-#show: touying-set-config.with(config-methods(cover: utils.method-wrapper(hide)))
+#show: touying-set-config.with(config-methods(
+  cover: utils.method-wrapper(hide),
+))
 
 Content that gets hidden completely when covered.
 
@@ -44,7 +48,9 @@ New content replaces the old content entirely.
 
 Regular content here.
 
-#show: touying-set-config.with(config-methods(cover: utils.color-changing-cover.with(color: gray)))
+#show: touying-set-config.with(config-methods(
+  cover: utils.color-changing-cover.with(color: gray),
+))
 
 #pause
 
@@ -63,7 +69,9 @@ More text with gray cover effect.
 
 Regular content here.
 
-#show: touying-set-config.with(config-methods(cover: utils.alpha-changing-cover.with(alpha: 25%)))
+#show: touying-set-config.with(config-methods(
+  cover: utils.alpha-changing-cover.with(alpha: 25%),
+))
 
 #pause
 

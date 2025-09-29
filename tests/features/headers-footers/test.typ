@@ -22,7 +22,11 @@ Content of the slide goes here.
 == Different Header Styles
 
 #show: touying-set-config.with(config-page(
-  header: text(blue, weight: "bold", utils.display-current-short-heading(level: 1)),
+  header: text(
+    blue,
+    weight: "bold",
+    utils.display-current-short-heading(level: 1),
+  ),
 ))
 
 Now the header should be blue and bold, showing the main section.

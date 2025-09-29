@@ -1,21 +1,27 @@
 #import "/lib.typ": *
 #import themes.university: *
 #import "@preview/cetz:0.4.1"
-#import "@preview/fletcher:0.5.8" as fletcher: node, edge
+#import "@preview/fletcher:0.5.8" as fletcher: edge, node
 #import "@preview/numbly:0.1.0": numbly
 #import "@preview/theorion:0.4.0": *
 #import cosmos.clouds: *
 #show: show-theorion
 
 // cetz and fletcher bindings for touying
-#let cetz-canvas = touying-reducer.with(reduce: cetz.canvas, cover: cetz.draw.hide.with(bounds: true))
-#let fletcher-diagram = touying-reducer.with(reduce: fletcher.diagram, cover: fletcher.hide)
+#let cetz-canvas = touying-reducer.with(
+  reduce: cetz.canvas,
+  cover: cetz.draw.hide.with(bounds: true),
+)
+#let fletcher-diagram = touying-reducer.with(
+  reduce: fletcher.diagram,
+  cover: fletcher.hide,
+)
 
 #show: university-theme.with(
   aspect-ratio: "16-9",
   // align: horizon,
   // config-common(handout: true),
-  config-common(frozen-counters: (theorem-counter,)),  // freeze theorem counter for animation
+  config-common(frozen-counters: (theorem-counter,)), // freeze theorem counter for animation
   config-info(
     title: [Title],
     subtitle: [Subtitle],
@@ -88,8 +94,8 @@ use #only("2-")[`#only` function] for not reserving space,
 Equation with `pause`:
 
 $
-  f(x) &= pause x^2 + 2x + 1 \
-  &= pause (x + 1)^2 \
+  f(x) & = pause x^2 + 2x + 1 \
+       & = pause (x + 1)^2 \
 $
 
 #meanwhile
@@ -128,7 +134,12 @@ Fletcher Animation in Touying:
 
 #fletcher-diagram(
   node-stroke: .1em,
-  node-fill: gradient.radial(blue.lighten(80%), blue, center: (30%, 20%), radius: 80%),
+  node-fill: gradient.radial(
+    blue.lighten(80%),
+    blue,
+    center: (30%, 20%),
+    radius: 80%,
+  ),
   spacing: 4em,
   edge((-1, 0), "r", "-|>", `open(path)`, label-pos: 0, label-side: center),
   node((0, 0), `reading`, radius: 2em),
@@ -180,9 +191,7 @@ Fletcher Animation in Touying:
 ]
 
 #proof[
-  For any $n > 2$, consider $
-    n! + 2, quad n! + 3, quad ..., quad n! + n
-  $
+  For any $n > 2$, consider $ n! + 2, quad n! + 3, quad ..., quad n! + n $
 ]
 
 

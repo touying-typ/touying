@@ -136,7 +136,10 @@
     } else if type(time) == str {
       time
     } else {
-      panic(msg-name + " must be either a datetime or a string in the HH:MM format.")
+      panic(
+        msg-name
+          + " must be either a datetime or a string in the HH:MM format.",
+      )
     }
 
     [ #metadata((t: tag-name, v: time)) <pdfpc> ]
@@ -174,12 +177,20 @@
     }
 
     let transition-str = (
-      default-transition.at("type", default: "replace") + ":" + str(
-        default-transition.at("duration-seconds", default: 1),
-      ) + ":" + dir-to-angle(default-transition.at("angle", default: rtl)) + ":" + default-transition.at(
-        "alignment",
-        default: "horizontal",
-      ) + ":" + default-transition.at("direction", default: "outward")
+      default-transition.at("type", default: "replace")
+        + ":"
+        + str(
+          default-transition.at("duration-seconds", default: 1),
+        )
+        + ":"
+        + dir-to-angle(default-transition.at("angle", default: rtl))
+        + ":"
+        + default-transition.at(
+          "alignment",
+          default: "horizontal",
+        )
+        + ":"
+        + default-transition.at("direction", default: "outward")
     )
 
     [ #metadata((t: "DefaultTransition", v: transition-str)) <pdfpc> ]

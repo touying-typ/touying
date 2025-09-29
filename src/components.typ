@@ -2,7 +2,14 @@
 
 #let _typst-builtin-numbering = numbering
 
-#let cell = block.with(width: 100%, height: 100%, above: 0pt, below: 0pt, outset: 0pt, breakable: false)
+#let cell = block.with(
+  width: 100%,
+  height: 100%,
+  above: 0pt,
+  below: 0pt,
+  outset: 0pt,
+  breakable: false,
+)
 
 
 /// SIDE BY SIDE
@@ -51,9 +58,18 @@
 /// - body (content): The content to place in the columns.
 ///
 /// -> content
-#let adaptive-columns(gutter: 4%, max-count: 3, start: none, end: none, body) = layout(size => {
+#let adaptive-columns(
+  gutter: 4%,
+  max-count: 3,
+  start: none,
+  end: none,
+  body,
+) = layout(size => {
   let n = calc.min(
-    calc.ceil(measure(body).height / (size.height - measure(start).height - measure(end).height)),
+    calc.ceil(
+      measure(body).height
+        / (size.height - measure(start).height - measure(end).height),
+    ),
     max-count,
   )
   if n < 1 {
@@ -78,14 +94,16 @@
 /// - height (length): The height of the progress bar, optional. Default is `2pt`.
 ///
 /// -> content
-#let progress-bar(height: 2pt, primary, secondary) = utils.touying-progress(ratio => {
-  grid(
-    columns: (ratio * 100%, 1fr),
-    rows: height,
-    gutter: 0pt,
-    cell(fill: primary), cell(fill: secondary),
-  )
-})
+#let progress-bar(height: 2pt, primary, secondary) = utils.touying-progress(
+  ratio => {
+    grid(
+      columns: (ratio * 100%, 1fr),
+      rows: height,
+      gutter: 0pt,
+      cell(fill: primary), cell(fill: secondary),
+    )
+  },
+)
 
 
 /// Left and right.
@@ -112,15 +130,22 @@
 /// - Check that there are enough rows and columns to fit in all the content blocks.
 ///
 /// That means that `#checkerboard[...][...]` stacks horizontally and `#checkerboard(columns: 1)[...][...]` stacks vertically.
-/// 
+///
 /// - alignment (alignment): The alignment applied to the contents of each checkerboard cell. Default is `center + horizon`.
-/// 
+///
 /// - primary (color): The background color of odd cells. Default is `white`.
-/// 
+///
 /// - secondary (color): The background color of even cells. Default is `silver`.
 ///
 /// -> content
-#let checkerboard(columns: none, rows: none, alignment: center + horizon, primary: white, secondary: silver, ..bodies) = {
+#let checkerboard(
+  columns: none,
+  rows: none,
+  alignment: center + horizon,
+  primary: white,
+  secondary: silver,
+  ..bodies,
+) = {
   let bodies = bodies.pos()
   let columns = if type(columns) == int {
     (1fr,) * columns
@@ -145,9 +170,17 @@
   }
   let num-rows = rows.len()
   if num-rows * num-cols < bodies.len() {
-    panic("number of rows (" + str(num-rows) + ") * number of columns (" + str(num-cols) + ") must at least be number of content arguments (" + str(
-      bodies.len(),
-    ) + ")")
+    panic(
+      "number of rows ("
+        + str(num-rows)
+        + ") * number of columns ("
+        + str(num-cols)
+        + ") must at least be number of content arguments ("
+        + str(
+          bodies.len(),
+        )
+        + ")",
+    )
   }
   let cart-idx(i) = (calc.quo(i, num-cols), calc.rem(i, num-cols))
   let color-body(idx-body) = {
@@ -203,7 +236,10 @@
         start-page = current-heading.location().page()
         if level != auto {
           let next-headings = query(
-            selector(heading.where(level: level)).after(inclusive: false, current-heading.location()),
+            selector(heading.where(level: level)).after(
+              inclusive: false,
+              current-heading.location(),
+            ),
           )
           if next-headings != () {
             end-page = next-headings.at(0).location().page()
@@ -214,7 +250,8 @@
       }
     }
     show outline.entry: it => transform(
-      cover: it.element.location().page() < start-page or it.element.location().page() >= end-page,
+      cover: it.element.location().page() < start-page
+        or it.element.location().page() >= end-page,
       level: level,
       alpha: alpha,
       ..args,
@@ -316,7 +353,10 @@
         it.level,
         {
           if array-at(numbered, it.level - 1) {
-            let current-numbering = numbering.at(it.level - 1, default: it.element.numbering)
+            let current-numbering = numbering.at(
+              it.level - 1,
+              default: it.element.numbering,
+            )
             if current-numbering != none {
               _typst-builtin-numbering(
                 current-numbering,
@@ -403,10 +443,13 @@
     let first-page = sections.at(0).location().page()
     headings = headings.filter(it => it.location().page() >= first-page)
     let slides = query(<touying-metadata>).filter(it => (
-      utils.is-kind(it, "touying-new-slide") and it.location().page() >= first-page
+      utils.is-kind(it, "touying-new-slide")
+        and it.location().page() >= first-page
     ))
     let current-page = here().page()
-    let current-index = sections.filter(it => it.location().page() <= current-page).len() - 1
+    let current-index = (
+      sections.filter(it => it.location().page() <= current-page).len() - 1
+    )
     let cols = ()
     let col = ()
     for (hd, next-hd) in headings.zip(headings.slice(1) + (none,)) {
@@ -428,7 +471,9 @@
           }
           [#link(hd.location(), body)<touying-link>]
           linebreak()
-          while slides.len() > 0 and slides.at(0).location().page() < next-page {
+          while (
+            slides.len() > 0 and slides.at(0).location().page() < next-page
+          ) {
             let slide = slides.remove(0)
             if display-section {
               let next-slide-page = if slides.len() > 0 {
@@ -436,7 +481,10 @@
               } else {
                 calc.inf
               }
-              if slide.location().page() <= current-page and current-page < next-slide-page {
+              if (
+                slide.location().page() <= current-page
+                  and current-page < next-slide-page
+              ) {
                 [#link(slide.location(), sym.circle.filled)<touying-link>]
               } else {
                 [#link(slide.location(), sym.circle.small)<touying-link>]
@@ -449,7 +497,9 @@
         })
       } else {
         col.push({
-          while slides.len() > 0 and slides.at(0).location().page() < next-page {
+          while (
+            slides.len() > 0 and slides.at(0).location().page() < next-page
+          ) {
             let slide = slides.remove(0)
             if display-subsection {
               let next-slide-page = if slides.len() > 0 {
@@ -457,7 +507,10 @@
               } else {
                 calc.inf
               }
-              if slide.location().page() <= current-page and current-page < next-slide-page {
+              if (
+                slide.location().page() <= current-page
+                  and current-page < next-slide-page
+              ) {
                 [#link(slide.location(), sym.circle.filled)<touying-link>]
               } else {
                 [#link(slide.location(), sym.circle.small)<touying-link>]
@@ -477,14 +530,16 @@
     if current-index < 0 or current-index >= cols.len() {
       cols = cols.map(body => text(fill: fill, body))
     } else {
-      cols = cols.enumerate().map(pair => {
-        let (idx, body) = pair
-        if idx == current-index {
-          text(fill: fill, body)
-        } else {
-          text(fill: utils.update-alpha(fill, alpha), body)
-        }
-      })
+      cols = cols
+        .enumerate()
+        .map(pair => {
+          let (idx, body) = pair
+          if idx == current-index {
+            text(fill: fill, body)
+          } else {
+            text(fill: utils.update-alpha(fill, alpha), body)
+          }
+        })
     }
     set align(top)
     show: block.with(inset: (top: .5em, x: 2em))
@@ -527,21 +582,23 @@
       let current-page = here().page()
       set text(size: 0.5em)
       for (section, next-section) in sections.zip(sections.slice(1) + (none,)) {
-        set text(fill: if section.location().page() <= current-page and (
-          next-section == none or current-page < next-section.location().page()
-        ) {
+        set text(fill: if section.location().page() <= current-page
+          and (
+            next-section == none
+              or current-page < next-section.location().page()
+          ) {
           primary
         } else {
           secondary
         })
         box(inset: 0.5em)[#link(
-            section.location(),
-            if short-heading {
-              utils.short-heading(self: self, section)
-            } else {
-              section.body
-            },
-          )<touying-link>]
+          section.location(),
+          if short-heading {
+            utils.short-heading(self: self, section)
+          } else {
+            section.body
+          },
+        )<touying-link>]
       }
     }
     block(
@@ -557,7 +614,10 @@
           fill: background,
           body(),
         ),
-        block(fill: background, inset: 4pt, height: 100%, text(fill: primary, logo)),
+        block(fill: background, inset: 4pt, height: 100%, text(
+          fill: primary,
+          logo,
+        )),
       ),
     )
   }

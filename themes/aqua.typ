@@ -38,14 +38,25 @@
         width: 100%,
         height: 1.8em,
         fill: self.colors.primary,
-        align(left + horizon, h(1.5em) + text(fill: white, utils.call-or-display(self, self.store.header))),
+        align(
+          left + horizon,
+          h(1.5em)
+            + text(fill: white, utils.call-or-display(self, self.store.header)),
+        ),
       ),
     )
-    place(left + top, line(start: (30%, 0%), end: (27%, 100%), stroke: .5em + white))
+    place(left + top, line(
+      start: (30%, 0%),
+      end: (27%, 100%),
+      stroke: .5em + white,
+    ))
   }
   let footer(self) = {
     set text(size: 0.8em)
-    place(right, dx: -5%, utils.call-or-display(self, utils.call-or-display(self, self.store.footer)))
+    place(right, dx: -5%, utils.call-or-display(self, utils.call-or-display(
+      self,
+      self.store.footer,
+    )))
   }
   let self = utils.merge-dicts(
     self,
@@ -54,7 +65,14 @@
       footer: footer,
     ),
   )
-  touying-slide(self: self, config: config, repeat: repeat, setting: setting, composer: composer, ..bodies)
+  touying-slide(
+    self: self,
+    config: config,
+    repeat: repeat,
+    setting: setting,
+    composer: composer,
+    ..bodies,
+  )
 })
 
 
@@ -71,7 +89,7 @@
 ///
 /// #title-slide(subtitle: [Subtitle], extra: [Extra information])
 /// ```
-/// 
+///
 /// - config (dictionary): The configuration of the slide. You can use `config-xxx` to set the configuration of the slide. For more configurations, you can use `utils.merge-dicts` to merge them.
 #let title-slide(config: (:), ..args) = touying-slide-wrapper(self => {
   self = utils.merge-dicts(
@@ -92,7 +110,12 @@
         text(size: 48pt, weight: "bold", fill: self.colors.primary, info.title)
       },
       if info.author != none {
-        text(fill: self.colors.primary-light, size: 28pt, weight: "regular", info.author)
+        text(
+          fill: self.colors.primary-light,
+          size: 28pt,
+          weight: "regular",
+          info.author,
+        )
       },
       if info.date != none {
         text(
@@ -109,7 +132,7 @@
 
 
 /// Outline slide for the presentation.
-/// 
+///
 /// - config (dictionary): The configuration of the slide. You can use `config-xxx` to set the configuration of the slide. For more configurations, you can use `utils.merge-dicts` to merge them.
 ///
 /// - leading (length): The leading of paragraphs in the outline. Default is `50pt`.
@@ -120,7 +143,7 @@
   let body = {
     grid(
       columns: (1fr, 1fr),
-      rows: (1fr),
+      rows: 1fr,
       align(
         center + horizon,
         {
@@ -130,7 +153,7 @@
               text(
                 size: 80pt,
                 weight: "bold",
-                [#text(size:36pt)[CONTENTS]\ 目录],
+                [#text(size: 36pt)[CONTENTS]\ 目录],
               )
             } else {
               text(
@@ -173,50 +196,52 @@
 /// Example: `config-common(new-section-slide-fn: new-section-slide.with(numbered: false))`
 ///
 /// - config (dictionary): The configuration of the slide. You can use `config-xxx` to set the configuration of the slide. For more configurations, you can use `utils.merge-dicts` to merge them.
-/// 
+///
 /// - level (int): The level of the heading.
 ///
 /// - body (content): The body of the section. It will be passed by touying automatically.
-#let new-section-slide(config: (:), level: 1, body) = touying-slide-wrapper(self => {
-  let slide-body = {
-    stack(
-      dir: ttb,
-      spacing: 12%,
-      align(
-        center,
-        text(
-          fill: self.colors.primary,
-          size: 166pt,
-          utils.display-current-heading-number(level: level),
+#let new-section-slide(config: (:), level: 1, body) = touying-slide-wrapper(
+  self => {
+    let slide-body = {
+      stack(
+        dir: ttb,
+        spacing: 12%,
+        align(
+          center,
+          text(
+            fill: self.colors.primary,
+            size: 166pt,
+            utils.display-current-heading-number(level: level),
+          ),
         ),
-      ),
-      align(
-        center,
-        text(
-          fill: self.colors.primary,
-          size: 60pt,
-          weight: "bold",
-          utils.display-current-heading(level: level, numbered: false),
+        align(
+          center,
+          text(
+            fill: self.colors.primary,
+            size: 60pt,
+            weight: "bold",
+            utils.display-current-heading(level: level, numbered: false),
+          ),
         ),
+      )
+      body
+    }
+    self = utils.merge-dicts(
+      self,
+      config-page(
+        margin: (left: 0%, right: 0%, top: 20%, bottom: 0%),
+        background: utils.call-or-display(self, self.store.background),
       ),
     )
-    body
-  }
-  self = utils.merge-dicts(
-    self,
-    config-page(
-      margin: (left: 0%, right: 0%, top: 20%, bottom: 0%),
-      background: utils.call-or-display(self, self.store.background),
-    ),
-  )
-  touying-slide(self: self, config: config, slide-body)
-})
+    touying-slide(self: self, config: config, slide-body)
+  },
+)
 
 
 /// Focus on some content.
 ///
 /// Example: `#focus-slide[Wake up!]`
-/// 
+///
 /// - config (dictionary): The configuration of the slide. You can use `config-xxx` to set the configuration of the slide. For more configurations, you can use `utils.merge-dicts` to merge them.
 #let focus-slide(config: (:), body) = touying-slide-wrapper(self => {
   self = utils.merge-dicts(
@@ -294,7 +319,7 @@
       primary: rgb("#003F88"),
       primary-light: rgb("#2159A5"),
       primary-lightest: rgb("#F2F4F8"),
-      neutral-lightest: rgb("#FFFFFF")
+      neutral-lightest: rgb("#FFFFFF"),
     ),
     // save the variables for later use
     config-store(
@@ -302,39 +327,78 @@
       header: header,
       footer: footer,
       background: self => {
-        let page-width = if self.page.paper == "presentation-16-9" { 841.89pt } else { 793.7pt }
-        let r = if self.at("show-notes-on-second-screen", default: none) == none { 1.0 } else { 0.5 }
-        let bias1 = - page-width * (1-r)
-        let bias2 = - page-width * 2 * (1-r)
-        place(left + top, dx: -15pt, dy: -26pt,
-          circle(radius: 40pt, fill: self.colors.primary))
-        place(left + top, dx: 65pt, dy: 12pt,
-          circle(radius: 21pt, fill: self.colors.primary))
-        place(left + top, dx: r * 3%, dy: 15%,
-          circle(radius: 13pt, fill: self.colors.primary))
-        place(left + top, dx: r * 2.5%, dy: 27%,
-          circle(radius: 8pt, fill: self.colors.primary))
-        place(right + bottom, dx: 15pt + bias2, dy: 26pt,
-          circle(radius: 40pt, fill: self.colors.primary))
-        place(right + bottom, dx: -65pt + bias2, dy: -12pt,
-          circle(radius: 21pt, fill: self.colors.primary))
-        place(right + bottom, dx: r * -3% + bias2, dy: -15%,
-          circle(radius: 13pt, fill: self.colors.primary))
-        place(right + bottom, dx: r * -2.5% + bias2, dy: -27%,
-          circle(radius: 8pt, fill: self.colors.primary))
-        place(center + horizon, dx: bias1, polygon(fill: self.colors.primary-lightest,
-          (35% * page-width, -17%), (70% * page-width, 10%), (35% * page-width, 30%), (0% * page-width, 10%)))
-        place(center + horizon, dy: 7%, dx: bias1,
-          ellipse(fill: white, width: r * 45%, height: 120pt))
-        place(center + horizon, dy: 5%, dx: bias1,
-          ellipse(fill: self.colors.primary-lightest, width: r * 40%, height: 80pt))
-        place(center + horizon, dy: 12%, dx: bias1,
-          rect(fill: self.colors.primary-lightest, width: r * 40%, height: 60pt))
-        place(center + horizon, dy: 20%, dx: bias1,
-          ellipse(fill: white, width: r * 40%, height: 70pt))
-        place(center + horizon, dx: r * 28% + bias1, dy: -6%,
-          circle(radius: 13pt, fill: white))
-      }
+        let page-width = if self.page.paper == "presentation-16-9" {
+          841.89pt
+        } else { 793.7pt }
+        let r = if (
+          self.at("show-notes-on-second-screen", default: none) == none
+        ) { 1.0 } else { 0.5 }
+        let bias1 = -page-width * (1 - r)
+        let bias2 = -page-width * 2 * (1 - r)
+        place(left + top, dx: -15pt, dy: -26pt, circle(
+          radius: 40pt,
+          fill: self.colors.primary,
+        ))
+        place(left + top, dx: 65pt, dy: 12pt, circle(
+          radius: 21pt,
+          fill: self.colors.primary,
+        ))
+        place(left + top, dx: r * 3%, dy: 15%, circle(
+          radius: 13pt,
+          fill: self.colors.primary,
+        ))
+        place(left + top, dx: r * 2.5%, dy: 27%, circle(
+          radius: 8pt,
+          fill: self.colors.primary,
+        ))
+        place(right + bottom, dx: 15pt + bias2, dy: 26pt, circle(
+          radius: 40pt,
+          fill: self.colors.primary,
+        ))
+        place(right + bottom, dx: -65pt + bias2, dy: -12pt, circle(
+          radius: 21pt,
+          fill: self.colors.primary,
+        ))
+        place(right + bottom, dx: r * -3% + bias2, dy: -15%, circle(
+          radius: 13pt,
+          fill: self.colors.primary,
+        ))
+        place(right + bottom, dx: r * -2.5% + bias2, dy: -27%, circle(
+          radius: 8pt,
+          fill: self.colors.primary,
+        ))
+        place(center + horizon, dx: bias1, polygon(
+          fill: self.colors.primary-lightest,
+          (35% * page-width, -17%),
+          (70% * page-width, 10%),
+          (35% * page-width, 30%),
+          (0% * page-width, 10%),
+        ))
+        place(center + horizon, dy: 7%, dx: bias1, ellipse(
+          fill: white,
+          width: r * 45%,
+          height: 120pt,
+        ))
+        place(center + horizon, dy: 5%, dx: bias1, ellipse(
+          fill: self.colors.primary-lightest,
+          width: r * 40%,
+          height: 80pt,
+        ))
+        place(center + horizon, dy: 12%, dx: bias1, rect(
+          fill: self.colors.primary-lightest,
+          width: r * 40%,
+          height: 60pt,
+        ))
+        place(center + horizon, dy: 20%, dx: bias1, ellipse(
+          fill: white,
+          width: r * 40%,
+          height: 70pt,
+        ))
+        place(center + horizon, dx: r * 28% + bias1, dy: -6%, circle(
+          radius: 13pt,
+          fill: white,
+        ))
+      },
     ),
     ..args,
   )
