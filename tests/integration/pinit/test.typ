@@ -2,7 +2,7 @@
 #import themes.default: *
 #import "@preview/pinit:0.2.2": *
 
-#set text(size: 20pt, font: "Calibri", ligatures: false)
+#set text(size: 20pt, ligatures: false)
 #show heading: set text(weight: "regular")
 #show heading: set block(above: 1.4em, below: 1em)
 #show heading.where(level: 1): set text(size: 1.5em)
