@@ -8,10 +8,7 @@
 /// ------------------------------------------------
 
 /// -> content
-#let _delayed-wrapper(body) = utils.label-it(
-  metadata((kind: "touying-delayed-wrapper", body: body)),
-  "touying-temporary-mark",
-)
+#let _delayed-wrapper(body) = [#metadata((kind: "touying-delayed-wrapper", body: body))<touying-temporary-mark>]
 
 /// Update configurations for the presentation.
 ///
@@ -22,14 +19,11 @@
 /// - body (content): The content of the slide.
 ///
 /// -> content
-#let touying-set-config(config, body) = utils.label-it(
-  metadata((
-    kind: "touying-set-config",
-    config: config,
-    body: body,
-  )),
-  "touying-temporary-mark",
-)
+#let touying-set-config(config, body) = [#metadata((
+  kind: "touying-set-config",
+  config: config,
+  body: body,
+))<touying-temporary-mark>]
 
 
 /// Appendix for the presentation. The last-slide-counter will be frozen at the last slide before the appendix. It is simple wrapper for `touying-set-config`, just like `#show: touying-set-config.with((appendix: true))`.
@@ -56,17 +50,14 @@
 /// - lbl (string): The label of the slide to recall
 ///
 /// -> content
-#let touying-recall(lbl) = utils.label-it(
-  metadata((
-    kind: "touying-slide-recaller",
-    label: if type(lbl) == label {
-      str(lbl)
-    } else {
-      lbl
-    },
-  )),
-  "touying-temporary-mark",
-)
+#let touying-recall(lbl) = [#metadata((
+  kind: "touying-slide-recaller",
+  label: if type(lbl) == label {
+    str(lbl)
+  } else {
+    lbl
+  },
+))<touying-temporary-mark>]
 
 #let _get-last-heading-depth(current-headings) = {
   if current-headings != () {
@@ -481,7 +472,7 @@
       let _ = fields.remove("body", default: none)
       fields.offset = 0
       let new-heading = if lbl != none {
-        utils.label-it(heading(..fields, child.body), child.label)
+        [#heading(..fields, child.body)#child.label]
       } else {
         heading(..fields, child.body)
       }
@@ -623,16 +614,13 @@
   last-subslide: none,
   repetitions: none,
   ..args,
-) = utils.label-it(
-  metadata((
-    kind: "touying-fn-wrapper",
-    fn: fn,
-    args: args,
-    last-subslide: last-subslide,
-    repetitions: repetitions,
-  )),
-  "touying-temporary-mark",
-)
+) = [#metadata((
+  kind: "touying-fn-wrapper",
+  fn: fn,
+  args: args,
+  last-subslide: last-subslide,
+  repetitions: repetitions,
+))<touying-temporary-mark>]
 
 /// Wrapper for a slide function to make it can receive `self` as an argument.
 ///
@@ -649,13 +637,10 @@
 /// - fn (function): The function that will be called with an argument `self` like `self => { .. }`.
 ///
 /// -> content
-#let touying-slide-wrapper(fn) = utils.label-it(
-  metadata((
-    kind: "touying-slide-wrapper",
-    fn: fn,
-  )),
-  "touying-temporary-mark",
-)
+#let touying-slide-wrapper(fn) = [#metadata((
+  kind: "touying-slide-wrapper",
+  fn: fn,
+))<touying-temporary-mark>]
 
 
 /// Uncover content after the `#pause` mark in next subslide.
@@ -988,27 +973,24 @@
   supplement: auto,
   scope: (:),
   body,
-) = utils.label-it(
-  metadata((
-    kind: "touying-equation",
-    block: block,
-    numbering: numbering,
-    supplement: supplement,
-    scope: scope,
-    body: {
-      if type(body) == function {
-        body
-      } else if type(body) == str {
-        body
-      } else if type(body) == content and body.has("text") {
-        body.text
-      } else {
-        panic("Unsupported type: " + str(type(body)))
-      }
-    },
-  )),
-  "touying-temporary-mark",
-)
+) = [#metadata((
+  kind: "touying-equation",
+  block: block,
+  numbering: numbering,
+  supplement: supplement,
+  scope: scope,
+  body: {
+    if type(body) == function {
+      body
+    } else if type(body) == str {
+      body
+    } else if type(body) == content and body.has("text") {
+      body.text
+    } else {
+      panic("Unsupported type: " + str(type(body)))
+    }
+  },
+))<touying-temporary-mark>]
 
 
 /// Touying can integrate with `mitex` to display math equations.
@@ -1082,16 +1064,13 @@
   reduce: arr => arr.sum(),
   cover: arr => none,
   ..args,
-) = utils.label-it(
-  metadata((
-    kind: "touying-reducer",
-    reduce: reduce,
-    cover: cover,
-    kwargs: args.named(),
-    args: args.pos(),
-  )),
-  "touying-temporary-mark",
-)
+) = [#metadata((
+  kind: "touying-reducer",
+  reduce: reduce,
+  cover: cover,
+  kwargs: args.named(),
+  args: args.pos(),
+))<touying-temporary-mark>]
 
 
 /// Parse touying equation content and extract animation repetitions
@@ -1191,7 +1170,7 @@
   if (
     eqt-metadata.has("label") and eqt-metadata.label != <touying-temporary-mark>
   ) {
-    equation = utils.label-it(equation, eqt-metadata.label)
+    equation = [#equation#eqt-metadata.label]
   }
   parsed-results.push(equation)
   max-repetitions = calc.max(max-repetitions, repetitions)
@@ -1281,7 +1260,7 @@
   if (
     eqt-metadata.has("label") and eqt-metadata.label != <touying-temporary-mark>
   ) {
-    equation = utils.label-it(equation, eqt-metadata.label)
+    equation = [#equation#eqt-metadata.label]
   }
   parsed-results.push(equation)
   max-repetitions = calc.max(max-repetitions, repetitions)
@@ -1309,16 +1288,6 @@
   // parse the content
   let result = ()
   let hidden-parts = ()
-  let dump = (arr, res) => {
-    if arr.len() != 0 {
-      let r = cover(arr)
-      if type(r) == array {
-        res += r
-      } else {
-        res.push(r)
-      }
-    }
-  }
   for child in reducer.args.flatten() {
     if (
       type(child) == content and child.func() == metadata and type(child.value) == dictionary
@@ -1328,7 +1297,14 @@
         repetitions += 1
       } else if kind == "touying-meanwhile" {
         // clear the hidden-parts when encounter #meanwhile
-        dump(hidden-parts, result)
+        if hidden-parts.len() != 0 {
+          let r = cover(hidden-parts)
+          if type(r) == array {
+            result += r
+          } else {
+            result.push(r)
+          }
+        }
         hidden-parts = ()
         // then reset the repetitions
         max-repetitions = calc.max(max-repetitions, repetitions)
@@ -1349,7 +1325,14 @@
     }
   }
   // clear the hidden-parts when end
-  dump(hidden-parts, result)
+  if hidden-parts.len() != 0 {
+    let r = cover(hidden-parts)
+    if type(r) == array {
+      result += r
+    } else {
+      result.push(r)
+    }
+  }
   hidden-parts = ()
   parsed-results.push(
     (reducer.reduce)(
@@ -1361,7 +1344,6 @@
   return (parsed-results, max-repetitions)
 }
 
-}
 
 /// Parse content into results and repetitions with animation handling
 ///
@@ -2147,7 +2129,7 @@
             if str(it.label) == "touying:unbookmarked" {
               fields.bookmarked = false
             }
-            utils.label-it(heading(..fields, it.body), it.label)
+            [#heading(..fields, it.body)#it.label]
           } else {
             it
           }

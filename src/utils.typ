@@ -11,9 +11,7 @@
   let res = dict-a
   for key in dict-b.keys() {
     if (
-      key in res
-        and type(res.at(key)) == dictionary
-        and type(dict-b.at(key)) == dictionary
+      key in res and type(res.at(key)) == dictionary and type(dict-b.at(key)) == dictionary
     ) {
       res.insert(key, add-dicts(res.at(key), dict-b.at(key)))
     } else {
@@ -142,13 +140,13 @@
   let _ = fields.remove(body-name, default: none)
   if named {
     if label != none and labeled {
-      return label-it((it.func())(..fields, ..new-body), label)
+      return [#(it.func())(..fields, ..new-body)#label]
     } else {
       return (it.func())(..fields, ..new-body)
     }
   } else {
     if label != none and labeled {
-      return label-it((it.func())(..fields.values(), ..new-body), label)
+      return [#(it.func())(..fields.values(), ..new-body)#label]
     } else {
       return (it.func())(..fields.values(), ..new-body)
     }
@@ -227,9 +225,7 @@
 /// -> bool
 #let is-kind(it, kind) = {
   (
-    is-metadata(it)
-      and type(it.value) == dictionary
-      and it.value.at("kind", default: none) == kind
+    is-metadata(it) and type(it.value) == dictionary and it.value.at("kind", default: none) == kind
   )
 }
 
@@ -325,9 +321,7 @@
     return
   }
   let convert-label-to-short-heading = if (
-    type(self) == dictionary
-      and "methods" in self
-      and "convert-label-to-short-heading" in self.methods
+    type(self) == dictionary and "methods" in self and "convert-label-to-short-heading" in self.methods
   ) {
     self.methods.convert-label-to-short-heading
   } else {
@@ -363,9 +357,7 @@
   let current-page = here().page()
   if not hierachical and level != auto {
     let headings = query(heading).filter(h => (
-      h.location().page() <= current-page
-        and h.level <= depth
-        and h.level == level
+      h.location().page() <= current-page and h.level <= depth and h.level == level
     ))
     return headings.at(-1, default: none)
   }
@@ -476,9 +468,7 @@
       depth: depth,
     )
     if (
-      current-heading != none
-        and numbering == auto
-        and current-heading.numbering != none
+      current-heading != none and numbering == auto and current-heading.numbering != none
     ) {
       _typst-builtin-numbering(
         current-heading.numbering,
@@ -573,11 +563,7 @@
             + indent * " "
             + "```"
             + it.lang
-            + it
-              .text
-              .split("\n")
-              .map(l => "\n" + indent * " " + l)
-              .sum(default: "")
+            + it.text.split("\n").map(l => "\n" + indent * " " + l).sum(default: "")
             + "\n"
             + indent * " "
             + "```"
@@ -593,12 +579,7 @@
       "\n" + indent * " " + "- " + indent-markup-text(it.body)
     } else if it.func() == terms.item {
       (
-        "\n"
-          + indent * " "
-          + "/ "
-          + markup-text(it.term)
-          + ": "
-          + indent-markup-text(it.description)
+        "\n" + indent * " " + "/ " + markup-text(it.term) + ": " + indent-markup-text(it.description)
       )
     } else if it.func() == linebreak {
       "\n" + indent * " "
@@ -764,8 +745,7 @@
     if (
       content-width != 0pt
         and (
-          (shrink and (width < content-width))
-            or (grow and (width > content-width))
+          (shrink and (width < content-width)) or (grow and (width > content-width))
         )
     ) {
       let ratio = width / content-width * 100%
@@ -800,8 +780,7 @@
 #let cover-with-rect(..cover-args, fill: auto, inline: true, body) = {
   if fill == auto {
     panic(
-      "`auto` fill value is not supported until typst provides utilities to"
-        + " retrieve the current page background",
+      "`auto` fill value is not supported until typst provides utilities to" + " retrieve the current page background",
     )
   }
   if type(fill) == str {
