@@ -1271,6 +1271,16 @@
   // parse the content
   let result = ()
   let cover-arr = ()
+  let dump = (arr, res) => {
+    if arr.len() != 0 {
+      let r = cover(arr)
+      if type(r) == array {
+        res += r
+      } else {
+        res.push(r)
+      }
+    }
+  }
   for child in reducer.args.flatten() {
     if (
       type(child) == content
@@ -1282,10 +1292,8 @@
         repetitions += 1
       } else if kind == "touying-meanwhile" {
         // clear the cover-arr when encounter #meanwhile
-        if cover-arr.len() != 0 {
-          result.push(cover(cover-arr.sum()))
-          cover-arr = ()
-        }
+        dump(cover-arr, result)
+        cover-arr = ()
         // then reset the repetitions
         max-repetitions = calc.max(max-repetitions, repetitions)
         repetitions = 1
@@ -1305,15 +1313,8 @@
     }
   }
   // clear the cover-arr when end
-  if cover-arr.len() != 0 {
-    let r = cover(cover-arr)
-    if type(r) == array {
-      result += r
-    } else {
-      result.push(r)
-    }
-    cover-arr = ()
-  }
+  dump(cover-arr, result)
+  cover-arr = ()
   result-arr.push(
     (reducer.reduce)(
       ..reducer.kwargs,
