@@ -84,6 +84,12 @@
   }
 }
 
+/// Get the appropriate slide function based on current heading context
+///
+/// - self (dictionary): The presentation context
+/// - default (function): Default slide function to use if no specific one matches
+///
+/// -> function
 #let _get-slide-fn(self, default: auto) = {
   let last-heading-depth = _get-last-heading-depth(self.headings)
   let last-heading-label = _get-last-heading-label(self.headings)
@@ -115,7 +121,13 @@
   }
 }
 
-/// Call touying slide function
+/// Call the appropriate slide function with the given body content
+///
+/// - self (dictionary): The presentation context
+/// - fn (function): The slide function to use (auto to determine automatically)
+/// - body (content): The slide content to render
+///
+/// -> content
 #let _call-slide-fn(self, fn, body) = {
   let slide-fn = if fn == auto {
     _get-slide-fn(self)
@@ -132,6 +144,15 @@
 
 
 /// Use headings to split a content block into slides
+///
+/// This function recursively processes content and splits it into individual slides
+/// based on heading levels and other slide-breaking elements like pagebreaks.
+///
+/// - self (dictionary): The presentation context containing slide configuration
+/// - recaller-map (dictionary): Map of slide labels to their content for recall functionality
+/// - new-start (boolean): Whether this is the start of a new slide section
+/// - is-first-slide (boolean): Whether this is the first slide of the presentation
+/// - body (content): The content to be split into slides
 ///
 /// -> content
 #let split-content-into-slides(
@@ -191,33 +212,33 @@
     current-slide-cont,
     recaller-map,
   ) = {
-    let cont = if already-slide-wrapper {
+    let slide-content = if already-slide-wrapper {
       slide-fn(self)
     } else {
       _call-slide-fn(self, slide-fn, current-slide-cont)
     }
     let last-heading-label = _get-last-heading-label(self.headings)
     if last-heading-label != none {
-      recaller-map.insert(last-heading-label, cont)
+      recaller-map.insert(last-heading-label, slide-content)
     }
-    (cont, recaller-map, (), (), true, false)
+    (slide-content, recaller-map, (), (), true, false)
   }
   // The empty content list
-  let empty-contents = ([], [ ], parbreak(), linebreak())
+  let empty-content-types = ([], [ ], parbreak(), linebreak())
   // The headings that we currently have
   let current-headings = ()
   // Recaller map
   let recaller-map = recaller-map
   // The current slide we are building
-  let current-slide = ()
+  let slide-parts = ()
   // The current slide content
-  let cont = none
+  let slide-content = none
   // is new start
   let is-new-start = new-start
   // start part
   let start-part = ()
   // result
-  let result = ()
+  let output-slides = ()
 
   // Is we have a horizontal line
   let horizontal-line = false
@@ -226,55 +247,51 @@
     // Handle horizontal-line
     // split content when we have a horizontal line
     if (
-      horizontal-line-to-pagebreak
-        and horizontal-line
-        and child not in ([—], [---], [–], [--], [-])
+      horizontal-line-to-pagebreak and horizontal-line and child not in ([—], [---], [–], [--], [-])
     ) {
-      current-slide = utils.trim(current-slide)
+      slide-parts = utils.trim(slide-parts)
       (
-        cont,
+        slide-content,
         recaller-map,
         current-headings,
-        current-slide,
+        slide-parts,
         new-start,
         is-first-slide,
       ) = call-slide-fn-and-reset(
         self + (headings: current-headings, is-first-slide: is-first-slide),
         slide-fn,
-        current-slide.sum(default: none),
+        slide-parts.sum(default: none),
         recaller-map,
       )
-      result.push(cont)
+      output-slides.push(slide-content)
       horizontal-line = false
     }
     // Main logic
     if utils.is-kind(child, "touying-slide-wrapper") {
-      current-slide = utils.trim(current-slide)
+      slide-parts = utils.trim(slide-parts)
       if (
-        current-slide != ()
-          or _get-slide-fn(self + (headings: current-headings), default: none)
-            != none
+        slide-parts != () or _get-slide-fn(self + (headings: current-headings), default: none) != none
       ) {
         (
-          cont,
+          slide-content,
           recaller-map,
           current-headings,
-          current-slide,
+          slide-parts,
           new-start,
           is-first-slide,
         ) = call-slide-fn-and-reset(
           self + (headings: current-headings, is-first-slide: is-first-slide),
           slide-fn,
-          current-slide.sum(default: none),
+          slide-parts.sum(default: none),
           recaller-map,
         )
-        result.push(cont)
+        output-slides.push(slide-content)
       }
       (
-        cont,
+        slide-content,
         recaller-map,
         current-headings,
-        current-slide,
+        slide-parts,
         new-start,
         is-first-slide,
       ) = call-slide-fn-and-reset(
@@ -285,26 +302,26 @@
         recaller-map,
       )
       if child.has("label") and child.label != <touying-temporary-mark> {
-        recaller-map.insert(str(child.label), cont)
+        recaller-map.insert(str(child.label), slide-content)
       }
-      result.push(cont)
+      output-slides.push(slide-content)
     } else if utils.is-kind(child, "touying-slide-recaller") {
-      current-slide = utils.trim(current-slide)
-      if current-slide != () or current-headings != () {
+      slide-parts = utils.trim(slide-parts)
+      if slide-parts != () or current-headings != () {
         (
-          cont,
+          slide-content,
           recaller-map,
           current-headings,
-          current-slide,
+          slide-parts,
           new-start,
           is-first-slide,
         ) = call-slide-fn-and-reset(
           self + (headings: current-headings, is-first-slide: is-first-slide),
           slide-fn,
-          current-slide.sum(default: none),
+          slide-parts.sum(default: none),
           recaller-map,
         )
-        result.push(cont)
+        output-slides.push(slide-content)
       }
       let lbl = child.value.label
       assert(
@@ -312,36 +329,34 @@
         message: "label not found in the recaller map for slides",
       )
       // recall the slide
-      result.push(recaller-map.at(lbl))
+      output-slides.push(recaller-map.at(lbl))
     } else if child in (pagebreak(), pagebreak(weak: true)) {
       // split content when we have a pagebreak
-      current-slide = utils.trim(current-slide)
+      slide-parts = utils.trim(slide-parts)
       (
-        cont,
+        slide-content,
         recaller-map,
         current-headings,
-        current-slide,
+        slide-parts,
         new-start,
         is-first-slide,
       ) = call-slide-fn-and-reset(
         self + (headings: current-headings, is-first-slide: is-first-slide),
         slide-fn,
-        current-slide.sum(default: none),
+        slide-parts.sum(default: none),
         recaller-map,
       )
-      result.push(cont)
+      output-slides.push(slide-content)
     } else if horizontal-line-to-pagebreak and child in ([—], [---]) {
       horizontal-line = true
       continue
     } else if (
-      horizontal-line-to-pagebreak
-        and horizontal-line
-        and child in ([–], [--], [-])
+      horizontal-line-to-pagebreak and horizontal-line and child in ([–], [--], [-])
     ) {
       continue
     } else if utils.is-heading(child, depth: slide-level) {
       let last-heading-depth = _get-last-heading-depth(current-headings)
-      current-slide = utils.trim(current-slide)
+      slide-parts = utils.trim(slide-parts)
       if (
         _get-slide-fn(
           self + (headings: current-headings),
@@ -349,7 +364,7 @@
         )
           != none
           or child.depth <= last-heading-depth
-          or current-slide != ()
+          or slide-parts != ()
           or (
             child.depth == 1 and new-section-slide-fn != none
           )
@@ -359,22 +374,22 @@
           )
           or (child.depth == 4 and new-subsubsubsection-slide-fn != none)
       ) {
-        current-slide = utils.trim(current-slide)
-        if current-slide != () or current-headings != () {
+        slide-parts = utils.trim(slide-parts)
+        if slide-parts != () or current-headings != () {
           (
-            cont,
+            slide-content,
             recaller-map,
             current-headings,
-            current-slide,
+            slide-parts,
             new-start,
             is-first-slide,
           ) = call-slide-fn-and-reset(
             self + (headings: current-headings, is-first-slide: is-first-slide),
             slide-fn,
-            current-slide.sum(default: none),
+            slide-parts.sum(default: none),
             recaller-map,
           )
-          result.push(cont)
+          output-slides.push(slide-content)
         }
       }
 
@@ -382,19 +397,16 @@
       new-start = true
 
       if (
-        not child.has("label")
-          or str(child.label) not in ("touying:hidden", "touying:skip")
+        not child.has("label") or str(child.label) not in ("touying:hidden", "touying:skip")
       ) {
         if (
-          child.depth == 1
-            and new-section-slide-fn != none
-            and not self.receive-body-for-new-section-slide-fn
+          child.depth == 1 and new-section-slide-fn != none and not self.receive-body-for-new-section-slide-fn
         ) {
           (
-            cont,
+            slide-content,
             recaller-map,
             current-headings,
-            current-slide,
+            slide-parts,
             new-start,
             is-first-slide,
           ) = call-slide-fn-and-reset(
@@ -403,17 +415,15 @@
             none,
             recaller-map,
           )
-          result.push(cont)
+          output-slides.push(slide-content)
         } else if (
-          child.depth == 2
-            and new-subsection-slide-fn != none
-            and not self.receive-body-for-new-subsection-slide-fn
+          child.depth == 2 and new-subsection-slide-fn != none and not self.receive-body-for-new-subsection-slide-fn
         ) {
           (
-            cont,
+            slide-content,
             recaller-map,
             current-headings,
-            current-slide,
+            slide-parts,
             new-start,
             is-first-slide,
           ) = call-slide-fn-and-reset(
@@ -422,17 +432,17 @@
             none,
             recaller-map,
           )
-          result.push(cont)
+          output-slides.push(slide-content)
         } else if (
           child.depth == 3
             and new-subsubsection-slide-fn != none
             and not self.receive-body-for-new-subsubsection-slide-fn
         ) {
           (
-            cont,
+            slide-content,
             recaller-map,
             current-headings,
-            current-slide,
+            slide-parts,
             new-start,
             is-first-slide,
           ) = call-slide-fn-and-reset(
@@ -441,17 +451,17 @@
             none,
             recaller-map,
           )
-          result.push(cont)
+          output-slides.push(slide-content)
         } else if (
           child.depth == 4
             and new-subsubsubsection-slide-fn != none
             and not self.receive-body-for-new-subsubsubsection-slide-fn
         ) {
           (
-            cont,
+            slide-content,
             recaller-map,
             current-headings,
-            current-slide,
+            slide-parts,
             new-start,
             is-first-slide,
           ) = call-slide-fn-and-reset(
@@ -460,12 +470,11 @@
             none,
             recaller-map,
           )
-          result.push(cont)
+          output-slides.push(slide-content)
         }
       }
     } else if (
-      self.at("auto-offset-for-heading", default: true)
-        and utils.is-heading(child)
+      self.at("auto-offset-for-heading", default: true) and utils.is-heading(child)
     ) {
       let fields = child.fields()
       let lbl = fields.remove("label", default: none)
@@ -477,30 +486,30 @@
         heading(..fields, child.body)
       }
       if new-start {
-        current-slide.push(new-heading)
+        slide-parts.push(new-heading)
       } else {
         start-part.push(new-heading)
       }
     } else if utils.is-kind(child, "touying-set-config") {
-      current-slide = utils.trim(current-slide)
-      if current-slide != () or current-headings != () {
+      slide-parts = utils.trim(slide-parts)
+      if slide-parts != () or current-headings != () {
         (
-          cont,
+          slide-content,
           recaller-map,
           current-headings,
-          current-slide,
+          slide-parts,
           new-start,
           is-first-slide,
         ) = call-slide-fn-and-reset(
           self + (headings: current-headings, is-first-slide: is-first-slide),
           slide-fn,
-          current-slide.sum(default: none),
+          slide-parts.sum(default: none),
           recaller-map,
         )
-        result.push(cont)
+        output-slides.push(slide-content)
       }
       // Appendix content
-      result.push(
+      output-slides.push(
         split-content-into-slides(
           self: utils.merge-dicts(self, child.value.config),
           recaller-map: recaller-map,
@@ -509,24 +518,24 @@
         ),
       )
     } else if is-first-slide and utils.is-styled(child) {
-      current-slide = utils.trim(current-slide)
-      if current-slide != () or current-headings != () {
+      slide-parts = utils.trim(slide-parts)
+      if slide-parts != () or current-headings != () {
         (
-          cont,
+          slide-content,
           recaller-map,
           current-headings,
-          current-slide,
+          slide-parts,
           new-start,
           is-first-slide,
         ) = call-slide-fn-and-reset(
           self + (headings: current-headings, is-first-slide: is-first-slide),
           slide-fn,
-          current-slide.sum(default: none),
+          slide-parts.sum(default: none),
           recaller-map,
         )
-        result.push(cont)
+        output-slides.push(slide-content)
       }
-      result.push(
+      output-slides.push(
         utils.reconstruct-styled(
           child,
           split-content-into-slides(
@@ -541,7 +550,7 @@
     } else {
       let child = if utils.is-styled(child) {
         // Split the content into slides recursively for styled content
-        let (start-part, cont) = split-content-into-slides(
+        let (start-part, slide-content-part) = split-content-into-slides(
           self: self,
           recaller-map: recaller-map,
           new-start: false,
@@ -550,13 +559,13 @@
         if start-part != none {
           utils.reconstruct-styled(child, start-part)
         }
-        _delayed-wrapper(utils.reconstruct-styled(child, cont))
+        _delayed-wrapper(utils.reconstruct-styled(child, slide-content-part))
       } else {
         child
       }
       if new-start {
         // Add the child to the current slide
-        current-slide.push(child)
+        slide-parts.push(child)
       } else {
         start-part.push(child)
       }
@@ -564,28 +573,28 @@
   }
 
   // Handle the last slide
-  current-slide = utils.trim(current-slide)
-  if current-slide != () or current-headings != () {
+  slide-parts = utils.trim(slide-parts)
+  if slide-parts != () or current-headings != () {
     (
-      cont,
+      slide-content,
       recaller-map,
       current-headings,
-      current-slide,
+      slide-parts,
       new-start,
       is-first-slide,
     ) = call-slide-fn-and-reset(
       self + (headings: current-headings, is-first-slide: is-first-slide),
       slide-fn,
-      current-slide.sum(default: none),
+      slide-parts.sum(default: none),
       recaller-map,
     )
-    result.push(cont)
+    output-slides.push(slide-content)
   }
 
   if is-new-start {
-    return result.sum(default: none)
+    return output-slides.sum(default: none)
   } else {
-    return (start-part.sum(default: none), result.sum(default: none))
+    return (start-part.sum(default: none), output-slides.sum(default: none))
   }
 }
 
@@ -779,9 +788,7 @@
 ) = {
   touying-fn-wrapper(
     utils.alternatives-match,
-    last-subslide: calc.max(..subslides-contents
-      .pairs()
-      .map(kv => utils.last-required-subslide(kv.at(0)))),
+    last-subslide: calc.max(..subslides-contents.pairs().map(kv => utils.last-required-subslide(kv.at(0)))),
     subslides-contents,
     position: position,
     stretch: false,
@@ -1087,7 +1094,18 @@
 )
 
 
-// parse touying equation, and get the repetitions
+/// Parse touying equation content and extract animation repetitions
+///
+/// Processes equation content with pause and meanwhile markers, returning
+/// the parsed equation and the total number of repetitions needed.
+///
+/// - self (dictionary): The presentation context
+/// - need-cover (boolean): Whether hidden content should be covered
+/// - base (int): Base repetition count
+/// - index (int): Current subslide index
+/// - eqt-metadata (content): The equation metadata to parse
+///
+/// -> (array, int)
 #let _parse-touying-equation(
   self: none,
   need-cover: true,
@@ -1096,7 +1114,7 @@
   eqt-metadata,
 ) = {
   let eqt = eqt-metadata.value
-  let result-arr = ()
+  let parsed-results = ()
   // repetitions
   let repetitions = base
   let max-repetitions = repetitions
@@ -1111,7 +1129,7 @@
   assert(type(it) == str, message: "Unsupported type: " + str(type(it)))
   // parse the content
   let result = ()
-  let cover-arr = ()
+  let hidden-parts = ()
   let children = it
     .split(regex("(#meanwhile;?)|(meanwhile)"))
     .intersperse("touying-meanwhile")
@@ -1125,33 +1143,33 @@
     if child == "touying-pause" {
       repetitions += 1
     } else if child == "touying-meanwhile" {
-      // clear the cover-arr when encounter #meanwhile
-      if cover-arr.len() != 0 {
-        result.push("cover(" + cover-arr.sum() + ")")
-        cover-arr = ()
+      // clear the hidden-parts when encounter #meanwhile
+      if hidden-parts.len() != 0 {
+        result.push("cover(" + hidden-parts.sum() + ")")
+        hidden-parts = ()
       }
       // then reset the repetitions
       max-repetitions = calc.max(max-repetitions, repetitions)
       repetitions = 1
     } else if child == "\\\n" or child == "&" {
-      // clear the cover-arr when encounter linebreak or parbreak
-      if cover-arr.len() != 0 {
-        result.push("cover(" + cover-arr.sum() + ")")
-        cover-arr = ()
+      // clear the hidden-parts when encounter linebreak or parbreak
+      if hidden-parts.len() != 0 {
+        result.push("cover(" + hidden-parts.sum() + ")")
+        hidden-parts = ()
       }
       result.push(child)
     } else {
       if repetitions <= index or not need-cover {
         result.push(child)
       } else {
-        cover-arr.push(child)
+        hidden-parts.push(child)
       }
     }
   }
-  // clear the cover-arr when end
-  if cover-arr.len() != 0 {
-    result.push("cover(" + cover-arr.sum() + ")")
-    cover-arr = ()
+  // clear the hidden-parts when end
+  if hidden-parts.len() != 0 {
+    result.push("cover(" + hidden-parts.sum() + ")")
+    hidden-parts = ()
   }
   let equation = math.equation(
     block: eqt.block,
@@ -1175,12 +1193,22 @@
   ) {
     equation = utils.label-it(equation, eqt-metadata.label)
   }
-  result-arr.push(equation)
+  parsed-results.push(equation)
   max-repetitions = calc.max(max-repetitions, repetitions)
-  return (result-arr, max-repetitions)
+  return (parsed-results, max-repetitions)
 }
 
-// parse touying mitex, and get the repetitions
+/// Parse touying mitex content and extract animation repetitions
+///
+/// Similar to _parse-touying-equation but for MiTeX equations.
+///
+/// - self (dictionary): The presentation context
+/// - need-cover (boolean): Whether hidden content should be covered
+/// - base (int): Base repetition count
+/// - index (int): Current subslide index
+/// - eqt-metadata (content): The mitex metadata to parse
+///
+/// -> (array, int)
 #let _parse-touying-mitex(
   self: none,
   need-cover: true,
@@ -1189,7 +1217,7 @@
   eqt-metadata,
 ) = {
   let eqt = eqt-metadata.value
-  let result-arr = ()
+  let parsed-results = ()
   // repetitions
   let repetitions = base
   let max-repetitions = repetitions
@@ -1202,7 +1230,7 @@
   assert(type(it) == str, message: "Unsupported type: " + str(type(it)))
   // parse the content
   let result = ()
-  let cover-arr = ()
+  let hidden-parts = ()
   let children = it
     .split(regex("\\\\meanwhile"))
     .intersperse("touying-meanwhile")
@@ -1216,33 +1244,33 @@
     if child == "touying-pause" {
       repetitions += 1
     } else if child == "touying-meanwhile" {
-      // clear the cover-arr when encounter #meanwhile
-      if cover-arr.len() != 0 {
-        result.push("\\phantom{" + cover-arr.sum() + "}")
-        cover-arr = ()
+      // clear the hidden-parts when encounter #meanwhile
+      if hidden-parts.len() != 0 {
+        result.push("\\phantom{" + hidden-parts.sum() + "}")
+        hidden-parts = ()
       }
       // then reset the repetitions
       max-repetitions = calc.max(max-repetitions, repetitions)
       repetitions = 1
     } else if child == "\\\n" or child == "&" {
-      // clear the cover-arr when encounter linebreak or parbreak
-      if cover-arr.len() != 0 {
-        result.push("\\phantom{" + cover-arr.sum() + "}")
-        cover-arr = ()
+      // clear the hidden-parts when encounter linebreak or parbreak
+      if hidden-parts.len() != 0 {
+        result.push("\\phantom{" + hidden-parts.sum() + "}")
+        hidden-parts = ()
       }
       result.push(child)
     } else {
       if repetitions <= index or not need-cover {
         result.push(child)
       } else {
-        cover-arr.push(child)
+        hidden-parts.push(child)
       }
     }
   }
-  // clear the cover-arr when end
-  if cover-arr.len() != 0 {
-    result.push("\\phantom{" + cover-arr.sum() + "}")
-    cover-arr = ()
+  // clear the hidden-parts when end
+  if hidden-parts.len() != 0 {
+    result.push("\\phantom{" + hidden-parts.sum() + "}")
+    hidden-parts = ()
   }
   let equation = (eqt.mitex)(
     block: eqt.block,
@@ -1255,14 +1283,24 @@
   ) {
     equation = utils.label-it(equation, eqt-metadata.label)
   }
-  result-arr.push(equation)
+  parsed-results.push(equation)
   max-repetitions = calc.max(max-repetitions, repetitions)
-  return (result-arr, max-repetitions)
+  return (parsed-results, max-repetitions)
 }
 
-// parse touying reducer, and get the repetitions
+/// Parse touying reducer content and extract animation repetitions
+///
+/// Processes reducer content (used for external packages like CeTZ, Fletcher)
+/// with pause and meanwhile markers.
+///
+/// - self (dictionary): The presentation context
+/// - base (int): Base repetition count
+/// - index (int): Current subslide index
+/// - reducer (dictionary): The reducer configuration
+///
+/// -> (array, int)
 #let _parse-touying-reducer(self: none, base: 1, index: 1, reducer) = {
-  let result-arr = ()
+  let parsed-results = ()
   // repetitions
   let repetitions = base
   let max-repetitions = repetitions
@@ -1270,7 +1308,7 @@
   let cover = reducer.cover
   // parse the content
   let result = ()
-  let cover-arr = ()
+  let hidden-parts = ()
   let dump = (arr, res) => {
     if arr.len() != 0 {
       let r = cover(arr)
@@ -1283,17 +1321,15 @@
   }
   for child in reducer.args.flatten() {
     if (
-      type(child) == content
-        and child.func() == metadata
-        and type(child.value) == dictionary
+      type(child) == content and child.func() == metadata and type(child.value) == dictionary
     ) {
       let kind = child.value.at("kind", default: none)
       if kind == "touying-pause" {
         repetitions += 1
       } else if kind == "touying-meanwhile" {
-        // clear the cover-arr when encounter #meanwhile
-        dump(cover-arr, result)
-        cover-arr = ()
+        // clear the hidden-parts when encounter #meanwhile
+        dump(hidden-parts, result)
+        hidden-parts = ()
         // then reset the repetitions
         max-repetitions = calc.max(max-repetitions, repetitions)
         repetitions = 1
@@ -1301,31 +1337,46 @@
         if repetitions <= index {
           result.push(child)
         } else {
-          cover-arr.push(child)
+          hidden-parts.push(child)
         }
       }
     } else {
       if repetitions <= index {
         result.push(child)
       } else {
-        cover-arr.push(child)
+        hidden-parts.push(child)
       }
     }
   }
-  // clear the cover-arr when end
-  dump(cover-arr, result)
-  cover-arr = ()
-  result-arr.push(
+  // clear the hidden-parts when end
+  dump(hidden-parts, result)
+  hidden-parts = ()
+  parsed-results.push(
     (reducer.reduce)(
       ..reducer.kwargs,
       result,
     ),
   )
   max-repetitions = calc.max(max-repetitions, repetitions)
-  return (result-arr, max-repetitions)
+  return (parsed-results, max-repetitions)
 }
 
-// parse content into results and repetitions
+}
+
+/// Parse content into results and repetitions with animation handling
+///
+/// This is the core parsing function that handles all types of content including
+/// animations, pauses, meanwhile markers, and various content types. It recursively
+/// processes content and determines what should be visible on each subslide.
+///
+/// - self (dictionary): The presentation context
+/// - need-cover (boolean): Whether hidden content should be covered
+/// - base (int): Base repetition count
+/// - index (int): Current subslide index
+/// - show-delayed-wrapper (boolean): Whether to show delayed wrapper content
+/// - bodies (content): The content elements to parse
+///
+/// -> (array, int, int)
 #let _parse-content-into-results-and-repetitions(
   self: none,
   need-cover: true,
@@ -1343,8 +1394,62 @@
         and self.subslide != self.repeat
     )
   }
+  // Helper function to parse child content and reconstruct
+  // Returns (reconstructed-content, next-repetitions, next-last-subslide)
+  let parse-and-reconstruct(self, child, body-field, repetitions, index, need-cover, reconstruct-fn) = {
+    let body-content = if body-field == "body-or-none" {
+      child.at("body", default: none)
+    } else {
+      child.at(body-field)
+    }
+    let (
+      conts,
+      next-repetitions,
+      next-last-subslide,
+    ) = _parse-content-into-results-and-repetitions(
+      self: self,
+      need-cover: repetitions <= index,
+      base: repetitions,
+      index: index,
+      body-content,
+    )
+    let cont = conts.first()
+    let reconstructed = reconstruct-fn(child, cont)
+    return (reconstructed, next-repetitions, next-last-subslide)
+  }
+  // Content function sets for different handling categories
+  let list-item-functions = (list.item, enum.item, align, link)
+  let table-like-functions = (table, grid, stack)
+  let reconstructable-functions = (
+    pad,
+    figure,
+    quote,
+    strong,
+    emph,
+    footnote,
+    highlight,
+    overline,
+    underline,
+    strike,
+    smallcaps,
+    sub,
+    super,
+    box,
+    block,
+    hide,
+    move,
+    scale,
+    circle,
+    ellipse,
+    rect,
+    square,
+    table.cell,
+    grid.cell,
+    math.equation,
+    heading,
+  )
   let bodies = bodies.pos()
-  let result-arr = ()
+  let parsed-results = ()
   // repetitions
   let repetitions = base
   let max-repetitions = repetitions
@@ -1352,13 +1457,15 @@
   let last-subslide = 0
   // get cover function from self
   let cover = self.methods.cover.with(self: self)
-  for it in bodies {
-    // a hack for code like #table([A], pause, [B])
+
+  // Main parsing loop: process each content item and handle animations
+  for item in bodies {
+    let it = item
+    // Special handling for table/grid cells containing pause/meanwhile markers
+    // This is a workaround for syntax like #table([A], pause, [B])
     if type(it) == content and it.func() in (table.cell, grid.cell) {
       if (
-        type(it.body) == content
-          and it.body.func() == metadata
-          and type(it.body.value) == dictionary
+        type(it.body) == content and it.body.func() == metadata and type(it.body.value) == dictionary
       ) {
         let kind = it.body.value.at("kind", default: none)
         if kind == "touying-pause" {
@@ -1379,32 +1486,33 @@
     }
     // parse the content
     let result = ()
-    let cover-arr = ()
+    let hidden-parts = ()
+
+    // Flatten sequences and handle each child element
     let children = if utils.is-sequence(it) {
       it.children
     } else {
       (it,)
     }
+
+    // Process each child element for animation markers and content types
     for child in children {
       if (
-        type(child) == content
-          and child.func() == metadata
-          and type(child.value) == dictionary
+        type(child) == content and child.func() == metadata and type(child.value) == dictionary
       ) {
         let kind = child.value.at("kind", default: none)
         if kind == "touying-pause" {
-          repetitions += 1
+          repetitions += 1 // Increment subslide count for pause
         } else if kind == "touying-meanwhile" {
-          // clear the cover-arr when encounter #meanwhile
-          if cover-arr.len() != 0 {
-            result.push(cover(cover-arr.sum()))
-            cover-arr = ()
+          // Meanwhile: reveal all hidden content and reset to subslide 1
+          if hidden-parts.len() != 0 {
+            result.push(cover(hidden-parts.sum()))
+            hidden-parts = ()
           }
-          // then reset the repetitions
           max-repetitions = calc.max(max-repetitions, repetitions)
           repetitions = 1
         } else if kind == "touying-equation" {
-          // handle touying-equation
+          // Handle animated equations with pause/meanwhile markers
           let (conts, nextrepetitions) = _parse-touying-equation(
             self: self,
             need-cover: repetitions <= index,
@@ -1416,11 +1524,11 @@
           if repetitions <= index or not need-cover {
             result.push(cont)
           } else {
-            cover-arr.push(cont)
+            hidden-parts.push(cont)
           }
           repetitions = nextrepetitions
         } else if kind == "touying-mitex" {
-          // handle touying-mitex
+          // Handle animated MiTeX equations with pause/meanwhile markers
           let (conts, nextrepetitions) = _parse-touying-mitex(
             self: self,
             need-cover: repetitions <= index,
@@ -1432,11 +1540,11 @@
           if repetitions <= index or not need-cover {
             result.push(cont)
           } else {
-            cover-arr.push(cont)
+            hidden-parts.push(cont)
           }
           repetitions = nextrepetitions
         } else if kind == "touying-reducer" {
-          // handle touying-reducer
+          // Handle external package reducers (CeTZ, Fletcher) with animations
           let (conts, nextrepetitions) = _parse-touying-reducer(
             self: self,
             base: repetitions,
@@ -1447,11 +1555,11 @@
           if repetitions <= index or not need-cover {
             result.push(cont)
           } else {
-            cover-arr.push(cont)
+            hidden-parts.push(cont)
           }
           repetitions = nextrepetitions
         } else if kind == "touying-fn-wrapper" {
-          // handle touying-fn-wrapper
+          // Handle function wrappers (uncover, only, alternatives, etc.)
           let nextrepetitions = repetitions
           let extra-args = (:)
           if child.value.last-subslide != none {
@@ -1470,7 +1578,7 @@
               ..extra-args,
             ))
           } else {
-            cover-arr.push((child.value.fn)(
+            hidden-parts.push((child.value.fn)(
               self: self,
               ..child.value.args,
               ..extra-args,
@@ -1482,21 +1590,21 @@
             if repetitions <= index or not need-cover {
               result.push(child.value.body)
             } else {
-              cover-arr.push(child.value.body)
+              hidden-parts.push(child.value.body)
             }
           }
         } else {
           if repetitions <= index or not need-cover {
             result.push(child)
           } else {
-            cover-arr.push(child)
+            hidden-parts.push(child)
           }
         }
       } else if child == linebreak() or child == parbreak() {
-        // clear the cover-arr when encounter linebreak or parbreak
-        if cover-arr.len() != 0 {
-          result.push(cover(cover-arr.sum()))
-          cover-arr = ()
+        // clear the hidden-parts when encounter linebreak or parbreak
+        if hidden-parts.len() != 0 {
+          result.push(cover(hidden-parts.sum()))
+          hidden-parts = ()
         }
         result.push(child)
       } else if utils.is-sequence(child) {
@@ -1516,65 +1624,54 @@
         if repetitions <= index or not need-cover {
           result.push(cont)
         } else {
-          cover-arr.push(cont)
+          hidden-parts.push(cont)
         }
         repetitions = nextrepetitions
         last-subslide = calc.max(last-subslide, next-last-subslide)
       } else if utils.is-styled(child) {
         // handle styled
-        let (
-          conts,
-          nextrepetitions,
-          next-last-subslide,
-        ) = _parse-content-into-results-and-repetitions(
-          self: self,
-          need-cover: repetitions <= index,
-          base: repetitions,
-          index: index,
-          child.child,
+        let (reconstructed, next-repetitions, next-last-subslide) = parse-and-reconstruct(
+          self,
+          child,
+          "child",
+          repetitions,
+          index,
+          need-cover,
+          (child, cont) => utils.typst-builtin-styled(cont, child.styles),
         )
-        let cont = conts.first()
         if repetitions <= index or not need-cover {
-          result.push(utils.typst-builtin-styled(cont, child.styles))
+          result.push(reconstructed)
         } else {
-          cover-arr.push(utils.typst-builtin-styled(cont, child.styles))
+          hidden-parts.push(reconstructed)
         }
-        repetitions = nextrepetitions
+        repetitions = next-repetitions
         last-subslide = calc.max(last-subslide, next-last-subslide)
       } else if (
-        type(child) == content
-          and child.func() in (list.item, enum.item, align, link)
+        type(child) == content and child.func() in list-item-functions
       ) {
         // handle the list item
-        let (
-          conts,
-          nextrepetitions,
-          next-last-subslide,
-        ) = _parse-content-into-results-and-repetitions(
-          self: self,
-          need-cover: repetitions <= index,
-          base: repetitions,
-          index: index,
-          child.body,
+        let (reconstructed, next-repetitions, next-last-subslide) = parse-and-reconstruct(
+          self,
+          child,
+          "body",
+          repetitions,
+          index,
+          need-cover,
+          (child, cont) => utils.reconstruct(
+            child,
+            labeled: labeled(child.func()),
+            cont,
+          ),
         )
-        let cont = conts.first()
         if repetitions <= index or not need-cover {
-          result.push(utils.reconstruct(
-            child,
-            labeled: labeled(child.func()),
-            cont,
-          ))
+          result.push(reconstructed)
         } else {
-          cover-arr.push(utils.reconstruct(
-            child,
-            labeled: labeled(child.func()),
-            cont,
-          ))
+          hidden-parts.push(reconstructed)
         }
-        repetitions = nextrepetitions
+        repetitions = next-repetitions
         last-subslide = calc.max(last-subslide, next-last-subslide)
       } else if (
-        type(child) == content and child.func() in (table, grid, stack)
+        type(child) == content and child.func() in table-like-functions
       ) {
         // handle the table-like
         let (
@@ -1595,7 +1692,7 @@
             conts,
           ))
         } else {
-          cover-arr.push(utils.reconstruct-table-like(
+          hidden-parts.push(utils.reconstruct-table-like(
             child,
             labeled: labeled(child.func()),
             conts,
@@ -1604,87 +1701,46 @@
         repetitions = nextrepetitions
         last-subslide = calc.max(last-subslide, next-last-subslide)
       } else if (
-        type(child) == content
-          and child.func()
-            in (
-              pad,
-              figure,
-              quote,
-              strong,
-              emph,
-              footnote,
-              highlight,
-              overline,
-              underline,
-              strike,
-              smallcaps,
-              sub,
-              super,
-              box,
-              block,
-              hide,
-              move,
-              scale,
-              circle,
-              ellipse,
-              rect,
-              square,
-              table.cell,
-              grid.cell,
-              math.equation,
-              heading,
-            )
+        type(child) == content and child.func() in reconstructable-functions
       ) {
-        let (
-          conts,
-          nextrepetitions,
-          next-last-subslide,
-        ) = _parse-content-into-results-and-repetitions(
-          self: self,
-          need-cover: repetitions <= index,
-          base: repetitions,
-          index: index,
-          // Some functions (e.g. square) may have no body
-          child.at("body", default: none),
+        let (reconstructed, next-repetitions, next-last-subslide) = parse-and-reconstruct(
+          self,
+          child,
+          "body-or-none",
+          repetitions,
+          index,
+          need-cover,
+          (child, cont) => utils.reconstruct(
+            named: true,
+            labeled: labeled(child.func()),
+            child,
+            cont,
+          ),
         )
-        let cont = conts.first()
         if repetitions <= index or not need-cover {
-          result.push(utils.reconstruct(
-            named: true,
-            labeled: labeled(child.func()),
-            child,
-            cont,
-          ))
+          result.push(reconstructed)
         } else {
-          cover-arr.push(utils.reconstruct(
-            named: true,
-            labeled: labeled(child.func()),
-            child,
-            cont,
-          ))
+          hidden-parts.push(reconstructed)
         }
-        repetitions = nextrepetitions
+        repetitions = next-repetitions
         last-subslide = calc.max(last-subslide, next-last-subslide)
       } else if type(child) == content and child.func() == terms.item {
         // handle the terms item
-        let (
-          conts,
-          nextrepetitions,
-          next-last-subslide,
-        ) = _parse-content-into-results-and-repetitions(
-          self: self,
-          need-cover: repetitions <= index,
-          base: repetitions,
-          index: index,
-          child.description,
+        let (reconstructed, next-repetitions, next-last-subslide) = parse-and-reconstruct(
+          self,
+          child,
+          "description",
+          repetitions,
+          index,
+          need-cover,
+          (child, cont) => terms.item(child.term, cont),
         )
-        let cont = conts.first()
         if repetitions <= index or not need-cover {
-          result.push(terms.item(child.term, cont))
+          result.push(reconstructed)
         } else {
-          cover-arr.push(terms.item(child.term, cont))
+          hidden-parts.push(reconstructed)
         }
-        repetitions = nextrepetitions
+        repetitions = next-repetitions
         last-subslide = calc.max(last-subslide, next-last-subslide)
       } else if type(child) == content and child.func() == columns {
         // handle columns
@@ -1711,7 +1767,7 @@
         if repetitions <= index or not need-cover {
           result.push(columns(count, ..args, cont))
         } else {
-          cover-arr.push(columns(count, ..args, cont))
+          hidden-parts.push(columns(count, ..args, cont))
         }
         repetitions = nextrepetitions
         last-subslide = calc.max(last-subslide, next-last-subslide)
@@ -1740,7 +1796,7 @@
         if repetitions <= index or not need-cover {
           result.push(place(alignment, ..fields, cont))
         } else {
-          cover-arr.push(place(alignment, ..fields, cont))
+          hidden-parts.push(place(alignment, ..fields, cont))
         }
         repetitions = nextrepetitions
         last-subslide = calc.max(last-subslide, next-last-subslide)
@@ -1769,7 +1825,7 @@
         if repetitions <= index or not need-cover {
           result.push(rotate(angle, ..fields, cont))
         } else {
-          cover-arr.push(rotate(angle, ..fields, cont))
+          hidden-parts.push(rotate(angle, ..fields, cont))
         }
         repetitions = nextrepetitions
         last-subslide = calc.max(last-subslide, next-last-subslide)
@@ -1777,28 +1833,26 @@
         if repetitions <= index or not need-cover {
           result.push(child)
         } else {
-          cover-arr.push(child)
+          hidden-parts.push(child)
         }
       }
     }
-    // clear the cover-arr when end
-    if cover-arr.len() != 0 {
-      result.push(cover(cover-arr.sum()))
-      cover-arr = ()
+    // clear the hidden-parts when end
+    if hidden-parts.len() != 0 {
+      result.push(cover(hidden-parts.sum()))
+      hidden-parts = ()
     }
-    result-arr.push(result.sum(default: []))
+    parsed-results.push(result.sum(default: []))
   }
   max-repetitions = calc.max(max-repetitions, repetitions)
-  return (result-arr, max-repetitions, last-subslide)
+  return (parsed-results, max-repetitions, last-subslide)
 }
 
 // get negative pad for header and footer
 #let _get-negative-pad(self) = {
   let margin = self.page.margin
   if (
-    type(margin) != dictionary
-      and type(margin) != length
-      and type(margin) != relative
+    type(margin) != dictionary and type(margin) != length and type(margin) != relative
   ) {
     return it => it
   }
@@ -1831,8 +1885,7 @@
 // get bottom pad for footer
 #let _get-bottom-pad(self) = {
   assert(
-    self.page.paper == "presentation-16-9"
-      or self.page.paper == "presentation-4-3",
+    self.page.paper == "presentation-16-9" or self.page.paper == "presentation-4-3",
     message: "The paper of page should be presentation-16-9 or presentation-4-3",
   )
   let cell = block.with(
@@ -1855,8 +1908,7 @@
   if self.show-notes-on-second-screen in (bottom, right) {
     let margin = self.page.margin
     assert(
-      self.page.paper == "presentation-16-9"
-        or self.page.paper == "presentation-4-3",
+      self.page.paper == "presentation-16-9" or self.page.paper == "presentation-4-3",
       message: "The paper of page should be presentation-16-9 or presentation-4-3",
     )
     let page-width = if self.page.paper == "presentation-16-9" {
@@ -1870,9 +1922,7 @@
       self.page.at("height", default: 595.28pt)
     }
     if (
-      type(margin) != dictionary
-        and type(margin) != length
-        and type(margin) != relative
+      type(margin) != dictionary and type(margin) != length and type(margin) != relative
     ) {
       return (:)
     }
@@ -1925,8 +1975,7 @@
   // speaker note
   if self.show-notes-on-second-screen in (bottom, right) {
     assert(
-      self.page.paper == "presentation-16-9"
-        or self.page.paper == "presentation-4-3",
+      self.page.paper == "presentation-16-9" or self.page.paper == "presentation-4-3",
       message: "The paper of page should be presentation-16-9 or presentation-4-3",
     )
     let page-width = if self.page.paper == "presentation-16-9" {
@@ -2058,7 +2107,7 @@
   }
   let bodies = bodies.pos()
 
-  // preambles
+  // Slide and subslide preamble functions for setup and metadata
   let slide-preamble(self) = {
     if self.at("is-first-slide", default: false) {
       utils.call-or-display(self, self.at("preamble", default: none))
@@ -2120,9 +2169,7 @@
     }
     [#metadata((kind: "touying-new-subslide")) <touying-metadata>]
     if (
-      self.at("enable-frozen-states-and-counters", default: true)
-        and not self.handout
-        and self.repeat > 1
+      self.at("enable-frozen-states-and-counters", default: true) and not self.handout and self.repeat > 1
     ) {
       if self.subslide == 1 {
         context {
