@@ -1,6 +1,6 @@
 # ![logo](https://github.com/user-attachments/assets/58a91b14-ae1a-49e2-a3e7-5e3a148e2ba5)
 
-[Touying](https://github.com/touying-typ/touying) (投影 in chinese, /tóuyǐng/, meaning projection) is a user-friendly, powerful and efficient package for creating presentation slides in Typst. Partial code is inherited from [Polylux](https://github.com/andreasKroepelin/polylux) like `#only()` and `#uncover()`.
+[Touying](https://github.com/touying-typ/touying) (投影 in chinese, /tóuyǐng/, meaning projection) is a user-friendly, powerful and efficient package for creating presentation slides in Typst.
 
 Touying provides automatically injected global configurations, which is convenient for configuring themes. Besides, Touying does not rely on `counter` and `context` to implement `#pause`, resulting in better performance.
 
@@ -8,15 +8,16 @@ If you like it, consider [giving a star on GitHub](https://github.com/touying-ty
 
 [![Typst Universe](https://img.shields.io/badge/dynamic/xml?url=https%3A%2F%2Ftypst.app%2Funiverse%2Fpackage%2Ftouying&query=%2Fhtml%2Fbody%2Fdiv%2Fmain%2Fdiv%5B2%5D%2Faside%2Fsection%5B2%5D%2Fdl%2Fdd%5B3%5D&logo=typst&label=universe&color=%2339cccc)](https://typst.app/universe/package/touying)
 [![Book badge](https://img.shields.io/badge/docs-book-green)](https://touying-typ.github.io/)
-[![Gallery badge](https://img.shields.io/badge/docs-gallery-orange)](https://github.com/touying-typ/touying/wiki)
+[![DeepWiki](https://img.shields.io/badge/ask-deepwiki-blue)](https://deepwiki.com/touying-typ/touying)
+[![Gallery badge](https://img.shields.io/badge/demo-gallery-red)](https://github.com/touying-typ/touying/wiki)
 ![GitHub](https://img.shields.io/github/license/touying-typ/touying)
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/touying-typ/touying)
 ![GitHub Repo stars](https://img.shields.io/github/stars/touying-typ/touying)
 ![Themes badge](https://img.shields.io/badge/themes-6-aqua)
 
-## Document
 
-Read [the document](https://touying-typ.github.io/) to learn all about Touying.
+## Document
+Read [touying documentation](https://touying-typ.github.io/) to learn all about Touying. If you have any questions, you can also ask on [DeepWiki](https://deepwiki.com/touying-typ/touying) for AI help.
 
 We will maintain **English** and **Chinese** versions of the documentation for Touying, and for each major version, we will maintain a documentation copy. This allows you to easily refer to old versions of the Touying documentation and migrate to new versions.
 
@@ -93,6 +94,8 @@ Hello, Typst!
 9. Export slides to PPTX and HTML formats and show presentation online. [touying-exporter](https://github.com/touying-typ/touying-exporter) [touying-template](https://github.com/touying-typ/touying-template) [online](https://touying-typ.github.io/touying-template/)
 
 ![image](https://github.com/touying-typ/touying-exporter/assets/34951714/207ddffc-87c8-4976-9bf4-4c6c5e2573ea)
+
+10. Instantly share touying slides on git, [example](https://gistd.myriad-dreamin.com/touying-typ/touying/blob/main/examples/simple.typ?g-mode=slide) with [gistd](https://github.com/Myriad-Dreamin/gistd)
 
 
 ## Quick start
