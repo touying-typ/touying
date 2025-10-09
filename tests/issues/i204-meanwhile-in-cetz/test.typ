@@ -19,16 +19,16 @@
   #cetz-canvas({
     import cetz.draw: *
 
-    rect((0,0), (5,5))
+    rect((0, 0), (5, 5))
 
     (pause,)
 
-    rect((0,0), (1,1))
-    rect((1,1), (2,2))
-    rect((2,2), (3,3))
+    rect((0, 0), (1, 1))
+    rect((1, 1), (2, 2))
+    rect((2, 2), (3, 3))
 
     (meanwhile,)
 
-    line((0,0), (2.5, 2.5), name: "line")
+    line((0, 0), (2.5, 2.5), name: "line")
   })
 ]
