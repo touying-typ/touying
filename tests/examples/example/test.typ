@@ -3,7 +3,7 @@
 #import "@preview/cetz:0.4.1"
 #import "@preview/fletcher:0.5.8" as fletcher: edge, node
 #import "@preview/numbly:0.1.0": numbly
-#import "@preview/theorion:0.4.0": *
+#import "@preview/theorion:0.4.1": *
 #import cosmos.clouds: *
 #show: show-theorion
 
