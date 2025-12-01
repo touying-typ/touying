@@ -176,17 +176,23 @@
           },
         )
         set text(size: .8em)
-        for author-chunk in info.authors.chunks(3) {
-          grid(
-            columns: (1fr,) * author-chunk.len(),
-            column-gutter: 1em,
-            row-gutter: 1em,
-            ..author-chunk.map(author => text(
-              fill: self.colors.neutral-darkest,
-              author,
-            ))
-          )
-        }
+        stack(
+          dir: ttb,
+          spacing: 1em,
+          ..info
+            .authors
+            .chunks(3)
+            .map(author-chunk => {
+              grid(
+                columns: (1fr,) * author-chunk.len(),
+                column-gutter: 1em,
+                ..author-chunk.map(author => text(
+                  fill: self.colors.neutral-darkest,
+                  author,
+                ))
+              )
+            }),
+        )
         v(1em)
         if info.institution != none {
           parbreak()
