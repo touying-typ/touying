@@ -14,6 +14,6 @@ This directory contains visual regression tests for Touying's Fletcher diagram i
 Each test generates multiple pages (subslides). The reference images in `ref/` are compared against generated output in `out/`.
 
 - `basic/`: 3 subslides showing progressive Fletcher diagram build-up
-- `until/`: 3 subslides where red edge appears then disappears
-- `at/`: 3 subslides where yellow node Y appears only on slide 2
-- `between/`: 4 subslides where blue edge appears only on slides 2-3
+- `until/`: 4 subslides (red edge visible 1-2, green edge appears at 3)
+- `at/`: 4 subslides (yellow node Y only on slide 2, Z appears at slide 3)
+- `between/`: 5 subslides (blue edge visible on slides 2-3, End node at slide 4)

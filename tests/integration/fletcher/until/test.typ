@@ -19,11 +19,9 @@
     spacing: 4em,
     node((0, 0), [A], radius: 2em),
     node((2, 0), [B], radius: 2em),
-    // Temporary edge visible on slides 1-2
-    ..until(2, edge((0, 0), (2, 0), "-|>", stroke: red, label: [temp])),
-    pause,
-    pause,
+    // Temporary edge visible on slides 1-2, hidden from slide 3
+    until(2, edge((0, 0), (2, 0), "-|>", stroke: red, label: [temp])),
     // Permanent edge from slide 3 onwards
-    edge((0, 0), (2, 0), "-|>", stroke: green, label: [final], bend: -30deg),
+    at(3, edge((0, 0), (2, 0), "-|>", stroke: green, label: [final], bend: -30deg)),
   )
 ]

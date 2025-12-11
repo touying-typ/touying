@@ -671,46 +671,50 @@
 /// Show content only until slide n (inclusive), then hide it.
 ///
 /// Use with `touying-reducer` for external packages like CeTZ or Fletcher.
+/// Returns a single item when given one argument, or an array when given multiple.
 ///
 /// Example:
 ///
 /// ```typst
 /// #fletcher-diagram(
 ///   node((0, 0), [A]),
-///   (pause,),
-///   ..until(2, edge((0,0), (1,0), "->", stroke: red)),
-///   (pause,),
-///   edge((0,0), (1,0), "->", stroke: green),
+///   node((1, 0), [B]),
+///   until(2, edge((0,0), (1,0), "->", stroke: red)),  // visible slides 1-2
+///   edge((0,0), (1,0), "->", stroke: green),          // visible from slide 3
 /// )
 /// ```
 ///
 /// - n (int): The last subslide where the content should be visible (inclusive).
 /// - body (arguments): The content to display until slide n.
 ///
-/// -> array
-#let until(n, ..body) = (
-  body
+/// -> content | array
+#let until(n, ..body) = {
+  let items = body
     .pos()
     .map(item => [#metadata((
       kind: "touying-until",
       until: n,
       body: item,
     ))<touying-temporary-mark>])
-)
+  if items.len() == 1 {
+    items.first()
+  } else {
+    items
+  }
+}
 
 
 /// Show content only at slide n.
 ///
 /// Use with `touying-reducer` for external packages like CeTZ or Fletcher.
+/// Returns a single item when given one argument, or an array when given multiple.
 ///
 /// Example:
 ///
 /// ```typst
 /// #fletcher-diagram(
 ///   node((0, 0), [A]),
-///   (pause,),
-///   ..at(2, node((1, 0), [Temporary])),
-///   (pause,),
+///   at(2, node((1, 0), [Temporary])),  // only visible on slide 2
 ///   node((2, 0), [Permanent]),
 /// )
 /// ```
@@ -718,29 +722,34 @@
 /// - n (int): The subslide where the content should be visible.
 /// - body (arguments): The content to display at slide n.
 ///
-/// -> array
-#let at(n, ..body) = (
-  body
+/// -> content | array
+#let at(n, ..body) = {
+  let items = body
     .pos()
     .map(item => [#metadata((
       kind: "touying-at",
       at: n,
       body: item,
     ))<touying-temporary-mark>])
-)
+  if items.len() == 1 {
+    items.first()
+  } else {
+    items
+  }
+}
 
 
 /// Show content only during slides start through end (inclusive).
 ///
 /// Use with `touying-reducer` for external packages like CeTZ or Fletcher.
+/// Returns a single item when given one argument, or an array when given multiple.
 ///
 /// Example:
 ///
 /// ```typst
 /// #fletcher-diagram(
 ///   node((0, 0), [A]),
-///   ..between(2, 4, edge((0,0), (1,0), "->", stroke: blue)),
-///   (pause,),
+///   between(2, 3, edge((0,0), (1,0), "->", stroke: blue)),  // slides 2-3 only
 ///   node((2, 0), [B]),
 /// )
 /// ```
@@ -749,9 +758,9 @@
 /// - end (int): The last subslide where the content should be visible (inclusive).
 /// - body (arguments): The content to display between slides start and end.
 ///
-/// -> array
-#let between(start, end, ..body) = (
-  body
+/// -> content | array
+#let between(start, end, ..body) = {
+  let items = body
     .pos()
     .map(item => [#metadata((
       kind: "touying-between",
@@ -759,7 +768,12 @@
       end: end,
       body: item,
     ))<touying-temporary-mark>])
-)
+  if items.len() == 1 {
+    items.first()
+  } else {
+    items
+  }
+}
 
 
 /// Take effect in some subslides.

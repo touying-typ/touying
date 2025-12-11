@@ -19,9 +19,8 @@
     spacing: 4em,
     node((0, 0), [X], radius: 2em),
     // Node Y only visible at slide 2
-    ..at(2, node((1, 0), [Y], radius: 2em, fill: yellow)),
-    pause,
-    pause,
-    node((2, 0), [Z], radius: 2em),
+    at(2, node((1, 0), [Y], radius: 2em, fill: yellow)),
+    // Node Z appears from slide 3
+    at(3, node((2, 0), [Z], radius: 2em)),
   )
 ]

@@ -19,10 +19,8 @@
     spacing: 4em,
     node((0, 0), [Start], radius: 2em),
     // Edge visible only on slides 2-3
-    ..between(2, 3, edge((0, 0), (1, 0), "-|>", stroke: blue, label: [2-3 only])),
-    pause,
-    pause,
-    pause,
-    node((2, 0), [End], radius: 2em),
+    between(2, 3, edge((0, 0), (1, 0), "-|>", stroke: blue, label: [2-3 only])),
+    // End node appears from slide 4
+    at(4, node((2, 0), [End], radius: 2em)),
   )
 ]
