@@ -241,9 +241,7 @@
     // Handle horizontal-line
     // split content when we have a horizontal line
     if (
-      horizontal-line-to-pagebreak
-        and horizontal-line
-        and child not in ([—], [---], [–], [--], [-])
+      horizontal-line-to-pagebreak and horizontal-line and child not in ([—], [---], [–], [--], [-])
     ) {
       slide-parts = utils.trim(slide-parts)
       (
@@ -266,9 +264,7 @@
     if utils.is-kind(child, "touying-slide-wrapper") {
       slide-parts = utils.trim(slide-parts)
       if (
-        slide-parts != ()
-          or _get-slide-fn(self + (headings: current-headings), default: none)
-            != none
+        slide-parts != () or _get-slide-fn(self + (headings: current-headings), default: none) != none
       ) {
         (
           slide-content,
@@ -349,9 +345,7 @@
       horizontal-line = true
       continue
     } else if (
-      horizontal-line-to-pagebreak
-        and horizontal-line
-        and child in ([–], [--], [-])
+      horizontal-line-to-pagebreak and horizontal-line and child in ([–], [--], [-])
     ) {
       continue
     } else if utils.is-heading(child, depth: slide-level) {
@@ -397,13 +391,10 @@
       new-start = true
 
       if (
-        not child.has("label")
-          or str(child.label) not in ("touying:hidden", "touying:skip")
+        not child.has("label") or str(child.label) not in ("touying:hidden", "touying:skip")
       ) {
         if (
-          child.depth == 1
-            and new-section-slide-fn != none
-            and not self.receive-body-for-new-section-slide-fn
+          child.depth == 1 and new-section-slide-fn != none and not self.receive-body-for-new-section-slide-fn
         ) {
           (
             slide-content,
@@ -420,9 +411,7 @@
           )
           output-slides.push(slide-content)
         } else if (
-          child.depth == 2
-            and new-subsection-slide-fn != none
-            and not self.receive-body-for-new-subsection-slide-fn
+          child.depth == 2 and new-subsection-slide-fn != none and not self.receive-body-for-new-subsection-slide-fn
         ) {
           (
             slide-content,
@@ -479,8 +468,7 @@
         }
       }
     } else if (
-      self.at("auto-offset-for-heading", default: true)
-        and utils.is-heading(child)
+      self.at("auto-offset-for-heading", default: true) and utils.is-heading(child)
     ) {
       let fields = child.fields()
       let lbl = fields.remove("label", default: none)
@@ -689,11 +677,15 @@
 /// - body (arguments): The content to display until slide n.
 ///
 /// -> array
-#let until(n, ..body) = body.pos().map(item => [#metadata((
-  kind: "touying-until",
-  until: n,
-  body: item,
-))<touying-temporary-mark>])
+#let until(n, ..body) = (
+  body
+    .pos()
+    .map(item => [#metadata((
+      kind: "touying-until",
+      until: n,
+      body: item,
+    ))<touying-temporary-mark>])
+)
 
 
 /// Show content only at slide n.
@@ -717,11 +709,15 @@
 /// - body (arguments): The content to display at slide n.
 ///
 /// -> array
-#let at(n, ..body) = body.pos().map(item => [#metadata((
-  kind: "touying-at",
-  at: n,
-  body: item,
-))<touying-temporary-mark>])
+#let at(n, ..body) = (
+  body
+    .pos()
+    .map(item => [#metadata((
+      kind: "touying-at",
+      at: n,
+      body: item,
+    ))<touying-temporary-mark>])
+)
 
 
 /// Show content only during slides start through end (inclusive).
@@ -746,12 +742,16 @@
 /// - body (arguments): The content to display between slides start and end.
 ///
 /// -> array
-#let between(start, end, ..body) = body.pos().map(item => [#metadata((
-  kind: "touying-between",
-  start: start,
-  end: end,
-  body: item,
-))<touying-temporary-mark>])
+#let between(start, end, ..body) = (
+  body
+    .pos()
+    .map(item => [#metadata((
+      kind: "touying-between",
+      start: start,
+      end: end,
+      body: item,
+    ))<touying-temporary-mark>])
+)
 
 
 /// Take effect in some subslides.
@@ -874,9 +874,7 @@
 ) = {
   touying-fn-wrapper(
     utils.alternatives-match,
-    last-subslide: calc.max(..subslides-contents
-      .pairs()
-      .map(kv => utils.last-required-subslide(kv.at(0)))),
+    last-subslide: calc.max(..subslides-contents.pairs().map(kv => utils.last-required-subslide(kv.at(0)))),
     subslides-contents,
     position: position,
     stretch: false,
@@ -1393,9 +1391,7 @@
   let hidden-parts = ()
   for child in reducer.args.flatten() {
     if (
-      type(child) == content
-        and child.func() == metadata
-        and type(child.value) == dictionary
+      type(child) == content and child.func() == metadata and type(child.value) == dictionary
     ) {
       let kind = child.value.at("kind", default: none)
       if kind == "touying-pause" {
@@ -1593,9 +1589,7 @@
     // This is a workaround for syntax like #table([A], pause, [B])
     if type(it) == content and it.func() in (table.cell, grid.cell) {
       if (
-        type(it.body) == content
-          and it.body.func() == metadata
-          and type(it.body.value) == dictionary
+        type(it.body) == content and it.body.func() == metadata and type(it.body.value) == dictionary
       ) {
         let kind = it.body.value.at("kind", default: none)
         if kind == "touying-pause" {
@@ -1628,9 +1622,7 @@
     // Process each child element for animation markers and content types
     for child in children {
       if (
-        type(child) == content
-          and child.func() == metadata
-          and type(child.value) == dictionary
+        type(child) == content and child.func() == metadata and type(child.value) == dictionary
       ) {
         let kind = child.value.at("kind", default: none)
         if kind == "touying-pause" {
@@ -2000,9 +1992,7 @@
 #let _get-negative-pad(self) = {
   let margin = self.page.margin
   if (
-    type(margin) != dictionary
-      and type(margin) != length
-      and type(margin) != relative
+    type(margin) != dictionary and type(margin) != length and type(margin) != relative
   ) {
     return it => it
   }
@@ -2035,8 +2025,7 @@
 // get bottom pad for footer
 #let _get-bottom-pad(self) = {
   assert(
-    self.page.paper == "presentation-16-9"
-      or self.page.paper == "presentation-4-3",
+    self.page.paper == "presentation-16-9" or self.page.paper == "presentation-4-3",
     message: "The paper of page should be presentation-16-9 or presentation-4-3",
   )
   let cell = block.with(
@@ -2059,8 +2048,7 @@
   if self.show-notes-on-second-screen in (bottom, right) {
     let margin = self.page.margin
     assert(
-      self.page.paper == "presentation-16-9"
-        or self.page.paper == "presentation-4-3",
+      self.page.paper == "presentation-16-9" or self.page.paper == "presentation-4-3",
       message: "The paper of page should be presentation-16-9 or presentation-4-3",
     )
     let page-width = if self.page.paper == "presentation-16-9" {
@@ -2074,9 +2062,7 @@
       self.page.at("height", default: 595.28pt)
     }
     if (
-      type(margin) != dictionary
-        and type(margin) != length
-        and type(margin) != relative
+      type(margin) != dictionary and type(margin) != length and type(margin) != relative
     ) {
       return (:)
     }
@@ -2129,8 +2115,7 @@
   // speaker note
   if self.show-notes-on-second-screen in (bottom, right) {
     assert(
-      self.page.paper == "presentation-16-9"
-        or self.page.paper == "presentation-4-3",
+      self.page.paper == "presentation-16-9" or self.page.paper == "presentation-4-3",
       message: "The paper of page should be presentation-16-9 or presentation-4-3",
     )
     let page-width = if self.page.paper == "presentation-16-9" {
@@ -2324,9 +2309,7 @@
     }
     [#metadata((kind: "touying-new-subslide")) <touying-metadata>]
     if (
-      self.at("enable-frozen-states-and-counters", default: true)
-        and not self.handout
-        and self.repeat > 1
+      self.at("enable-frozen-states-and-counters", default: true) and not self.handout and self.repeat > 1
     ) {
       if self.subslide == 1 {
         context {
