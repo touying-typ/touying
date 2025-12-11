@@ -668,6 +668,92 @@
 ))<touying-temporary-mark>]
 
 
+/// Show content only until slide n (inclusive), then hide it.
+///
+/// Use with `touying-reducer` for external packages like CeTZ or Fletcher.
+///
+/// Example:
+///
+/// ```typst
+/// #fletcher-diagram(
+///   node((0, 0), [A]),
+///   (pause,),
+///   ..until(2, edge((0,0), (1,0), "->", stroke: red)),
+///   (pause,),
+///   edge((0,0), (1,0), "->", stroke: green),
+/// )
+/// ```
+///
+/// - n (int): The last subslide where the content should be visible (inclusive).
+///
+/// - body (arguments): The content to display until slide n.
+///
+/// -> array
+#let until(n, ..body) = body.pos().map(item => [#metadata((
+  kind: "touying-until",
+  until: n,
+  body: item,
+))<touying-temporary-mark>])
+
+
+/// Show content only at slide n.
+///
+/// Use with `touying-reducer` for external packages like CeTZ or Fletcher.
+///
+/// Example:
+///
+/// ```typst
+/// #fletcher-diagram(
+///   node((0, 0), [A]),
+///   (pause,),
+///   ..at(2, node((1, 0), [Temporary])),
+///   (pause,),
+///   node((2, 0), [Permanent]),
+/// )
+/// ```
+///
+/// - n (int): The subslide where the content should be visible.
+///
+/// - body (arguments): The content to display at slide n.
+///
+/// -> array
+#let at(n, ..body) = body.pos().map(item => [#metadata((
+  kind: "touying-at",
+  at: n,
+  body: item,
+))<touying-temporary-mark>])
+
+
+/// Show content only during slides start through end (inclusive).
+///
+/// Use with `touying-reducer` for external packages like CeTZ or Fletcher.
+///
+/// Example:
+///
+/// ```typst
+/// #fletcher-diagram(
+///   node((0, 0), [A]),
+///   ..between(2, 4, edge((0,0), (1,0), "->", stroke: blue)),
+///   (pause,),
+///   node((2, 0), [B]),
+/// )
+/// ```
+///
+/// - start (int): The first subslide where the content should be visible.
+///
+/// - end (int): The last subslide where the content should be visible (inclusive).
+///
+/// - body (arguments): The content to display between slides start and end.
+///
+/// -> array
+#let between(start, end, ..body) = body.pos().map(item => [#metadata((
+  kind: "touying-between",
+  start: start,
+  end: end,
+  body: item,
+))<touying-temporary-mark>])
+
+
 /// Take effect in some subslides.
 ///
 /// Example: `#effect(text.with(fill: red), "2-")[Something]` will display `[Something]` if the current slide is 2 or later.
@@ -1287,7 +1373,7 @@
 /// Parse touying reducer content and extract animation repetitions
 ///
 /// Processes reducer content (used for external packages like CeTZ, Fletcher)
-/// with pause and meanwhile markers.
+/// with pause, meanwhile, until, at, and between markers.
 ///
 /// - self (dictionary): The presentation context
 /// - base (int): Base repetition count
@@ -1328,6 +1414,39 @@
         // then reset the repetitions
         max-repetitions = calc.max(max-repetitions, repetitions)
         repetitions = 1
+      } else if kind == "touying-until" {
+        // Show content only until specified slide (inclusive)
+        let until-n = child.value.until
+        let body-item = child.value.body
+        max-repetitions = calc.max(max-repetitions, until-n + 1)
+        if index <= until-n {
+          // Currently visible
+          result.push(body-item)
+        } else {
+          // Should be hidden (cover it)
+          hidden-parts.push(body-item)
+        }
+      } else if kind == "touying-at" {
+        // Show content only at specific slide
+        let at-n = child.value.at
+        let body-item = child.value.body
+        max-repetitions = calc.max(max-repetitions, at-n + 1)
+        if index == at-n {
+          result.push(body-item)
+        } else {
+          hidden-parts.push(body-item)
+        }
+      } else if kind == "touying-between" {
+        // Show content in range [start, end]
+        let start-n = child.value.start
+        let end-n = child.value.end
+        let body-item = child.value.body
+        max-repetitions = calc.max(max-repetitions, end-n + 1)
+        if index >= start-n and index <= end-n {
+          result.push(body-item)
+        } else {
+          hidden-parts.push(body-item)
+        }
       } else {
         if repetitions <= index {
           result.push(child)
