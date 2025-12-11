@@ -4,7 +4,8 @@
 
 ### Features
 
-- feat: add `until(n)`, `at(n)`, and `between(start, end)` functions for conditional rendering in `touying-reducer`
+- feat: add `step(n)`, `until(n)`, `at(n)`, and `between(start, end)` functions for conditional rendering in `touying-reducer`
+  - `step(n)`: Jump to subslide n (alternative to counting `pause` markers)
   - `until(n, ..)`: Show content only until slide n (inclusive), then hide it
   - `at(n, ..)`: Show content only at slide n
   - `between(start, end, ..)`: Show content only during slides start through end (inclusive)

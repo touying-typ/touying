@@ -668,10 +668,42 @@
 ))<touying-temporary-mark>]
 
 
+/// Jump to a specific subslide index (1-based).
+///
+/// Use with `touying-reducer` for external packages like CeTZ or Fletcher.
+/// Makes it easier to coordinate with `until`, `at`, and `between` functions
+/// by explicitly declaring subslide numbers instead of counting `pause` markers.
+///
+/// Subslide indices start from 1. Content before any `step` is visible from slide 1.
+/// The first `step(1)` can be omitted since it's the default starting point.
+///
+/// Example:
+///
+/// ```typst
+/// #fletcher-diagram(
+///   node((0, 0), [A]),           // visible from slide 1 (implicit)
+///   step(2),
+///   node((1, 0), [B]),           // visible from slide 2
+///   step(3),
+///   node((2, 0), [C]),           // visible from slide 3
+///   until(2, edge((0,0), (1,0), "->", stroke: red)),  // slides 1-2
+/// )
+/// ```
+///
+/// - n (int): The subslide index (1-based). Content after this marker appears from slide n.
+///
+/// -> content
+#let step(n) = [#metadata((
+  kind: "touying-step",
+  step: n,
+))<touying-temporary-mark>]
+
+
 /// Show content only until slide n (inclusive), then hide it.
 ///
 /// Use with `touying-reducer` for external packages like CeTZ or Fletcher.
 /// Returns a single item when given one argument, or an array when given multiple.
+/// Subslide indices are 1-based.
 ///
 /// Example:
 ///
@@ -680,11 +712,12 @@
 ///   node((0, 0), [A]),
 ///   node((1, 0), [B]),
 ///   until(2, edge((0,0), (1,0), "->", stroke: red)),  // visible slides 1-2
+///   step(3),
 ///   edge((0,0), (1,0), "->", stroke: green),          // visible from slide 3
 /// )
 /// ```
 ///
-/// - n (int): The last subslide where the content should be visible (inclusive).
+/// - n (int): The last subslide (1-based) where the content should be visible.
 /// - body (arguments): The content to display until slide n.
 ///
 /// -> content | array
@@ -708,6 +741,7 @@
 ///
 /// Use with `touying-reducer` for external packages like CeTZ or Fletcher.
 /// Returns a single item when given one argument, or an array when given multiple.
+/// Subslide indices are 1-based.
 ///
 /// Example:
 ///
@@ -715,11 +749,11 @@
 /// #fletcher-diagram(
 ///   node((0, 0), [A]),
 ///   at(2, node((1, 0), [Temporary])),  // only visible on slide 2
-///   node((2, 0), [Permanent]),
+///   at(3, node((2, 0), [Permanent])),  // visible from slide 3
 /// )
 /// ```
 ///
-/// - n (int): The subslide where the content should be visible.
+/// - n (int): The subslide (1-based) where the content should be visible.
 /// - body (arguments): The content to display at slide n.
 ///
 /// -> content | array
@@ -743,6 +777,7 @@
 ///
 /// Use with `touying-reducer` for external packages like CeTZ or Fletcher.
 /// Returns a single item when given one argument, or an array when given multiple.
+/// Subslide indices are 1-based.
 ///
 /// Example:
 ///
@@ -750,12 +785,13 @@
 /// #fletcher-diagram(
 ///   node((0, 0), [A]),
 ///   between(2, 3, edge((0,0), (1,0), "->", stroke: blue)),  // slides 2-3 only
-///   node((2, 0), [B]),
+///   step(4),
+///   node((2, 0), [B]),  // visible from slide 4
 /// )
 /// ```
 ///
-/// - start (int): The first subslide where the content should be visible.
-/// - end (int): The last subslide where the content should be visible (inclusive).
+/// - start (int): The first subslide (1-based) where the content should be visible.
+/// - end (int): The last subslide (1-based) where the content should be visible (inclusive).
 /// - body (arguments): The content to display between slides start and end.
 ///
 /// -> content | array
@@ -1422,6 +1458,11 @@
       let kind = child.value.at("kind", default: none)
       if kind == "touying-pause" {
         repetitions += 1
+      } else if kind == "touying-step" {
+        // Jump to specific subslide
+        let step-n = child.value.step
+        repetitions = step-n
+        max-repetitions = calc.max(max-repetitions, step-n)
       } else if kind == "touying-meanwhile" {
         // clear the hidden-parts when encounter #meanwhile
         if hidden-parts.len() != 0 {

@@ -1,7 +1,7 @@
 #import "core.typ": (
   alert, alternatives, alternatives-cases, alternatives-fn, alternatives-match,
   appendix, at, between, effect, empty-slide, meanwhile, only, pause, slide,
-  speaker-note, touying-equation, touying-fn-wrapper, touying-mitex,
+  speaker-note, step, touying-equation, touying-fn-wrapper, touying-mitex,
   touying-recall, touying-reducer, touying-set-config, touying-slide,
   touying-slide-wrapper, uncover, until,
 )
