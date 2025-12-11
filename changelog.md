@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+### Features
+
+- feat: add `until(n)`, `at(n)`, and `between(start, end)` functions for conditional rendering in `touying-reducer`
+  - `until(n, ..)`: Show content only until slide n (inclusive), then hide it
+  - `at(n, ..)`: Show content only at slide n
+  - `between(start, end, ..)`: Show content only during slides start through end (inclusive)
+  - These functions work with external packages like CeTZ and Fletcher via `touying-reducer`
+
 ## v0.6.1
 
 Added support for the [theorion](https://github.com/OrangeX4/typst-theorion) package, and used it as the default math theorem environment.

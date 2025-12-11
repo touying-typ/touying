@@ -2,6 +2,7 @@
 #import themes.university: *
 #import "@preview/fletcher:0.5.8" as fletcher: edge, node
 
+// fletcher bindings for touying
 #let fletcher-diagram = touying-reducer.with(
   reduce: fletcher.diagram,
   cover: fletcher.hide,
