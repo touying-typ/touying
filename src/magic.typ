@@ -162,7 +162,6 @@
   bibliography,
   body,
 ) = {
-  let bibliography-visited-on-page = state("bibliography-visited-on-page", ())
   show cite.where(form: "normal"): it => (
     context {
       let label-str = "subsection-" + str(current-heading(level: 2).location().page()) + str(it.key)
