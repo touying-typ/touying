@@ -104,13 +104,12 @@
         args.remove("bibliography")
         magic.show-bibliography-as-footnote.with(
           ..args,
-          record: false,
           bibliography,
           body,
         )
       } else {
         // args is a bibliography like `bibliography(title: none, "ref.bib")`
-        magic.bibliography-as-footnote(args, record: false, body)
+        magic.bibliography-as-footnote(args, body)
       }
     } else {
       body
