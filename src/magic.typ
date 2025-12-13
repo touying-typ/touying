@@ -1,3 +1,5 @@
+#import "utils.typ": current-heading
+
 // ---------------------------------------------------------------------
 // List, Enum, and Terms
 // ---------------------------------------------------------------------
@@ -160,35 +162,29 @@
   bibliography,
   body,
 ) = {
+  let bibliography-visited-on-page = state("bibliography-visited-on-page", ())
   show cite.where(form: "normal"): it => (
     context {
-      if it.key not in bibliography-visited.get() {
-        box({
-          place(hide(it))
-          context {
-            let bibitem = {
-              show: body => {
-                show regex("^\[\d+\]\s"): it => ""
-                body
-              }
-              cite(it.key, form: "full")
-            }
-            bibliography-state.update(x => (..x, bibitem))
-            footnote(numbering: numbering, bibitem)
-          }
-          bibliography-visited.update(visited => visited + (it.key,))
-        })
-      } else {
-        footnote(numbering: numbering, {
-            {
-              show: body => {
-                show regex("^\[\d+\]\s"): it => ""
-                body
-              }
-              cite(it.key, form: "full")
-            }
-        })
+      let label-str = "subsection-" + str(current-heading(level: 2).location().page()) + str(it.key)
+      let bibitem = {
+        show: body => {
+          show regex("^\[\d+\]\s"): it => ""
+          body
+        }
+        cite(it.key, form: "full")
       }
+      if it.key not in bibliography-visited.get() {
+        bibliography-state.update(x => (..x, bibitem))
+        bibliography-visited.update(visited => visited + (it.key,))
+      }
+      box({
+        place(hide(it))
+        if query(selector(label(label-str)).before(here())).len() > 0 {
+          [#footnote(label(label-str), numbering: numbering)]
+        } else {
+          [#footnote(numbering: numbering, bibitem)#label(label-str)]
+        }
+      }) 
     }
   )
 
