@@ -12,7 +12,7 @@
 == Reverse Reveal with `until`
 
 #slide[
-  Content visible until slide 2, then hidden:
+  Content visible until slide 2, then replaced:
 
   #fletcher-diagram(
     node-stroke: .1em,
@@ -21,7 +21,8 @@
     node((2, 0), [B], radius: 2em),
     // Temporary edge visible on slides 1-2, hidden from slide 3
     until(2, edge((0, 0), (2, 0), "-|>", stroke: red, label: [temp])),
-    // Permanent edge from slide 3 onwards
-    at(3, edge((0, 0), (2, 0), "-|>", stroke: green, label: [final], bend: -30deg)),
+    // Permanent replacement edge from slide 3 onwards
+    step(3),
+    edge((0, 0), (2, 0), "-|>", stroke: green, label: [final], bend: -30deg),
   )
 ]

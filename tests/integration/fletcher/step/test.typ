@@ -9,10 +9,10 @@
 
 #show: university-theme.with(aspect-ratio: "16-9")
 
-== Fletcher Animation
+== Step-based Animation with `step`
 
 #slide[
-  Fletcher in Touying:
+  Using `step(n)` for explicit subslide control:
 
   #fletcher-diagram(
     node-stroke: .1em,
