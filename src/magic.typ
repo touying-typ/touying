@@ -164,7 +164,7 @@
 ) = {
   show cite.where(form: "normal"): it => (
     context {
-      let label-str = "subsection-" + str(current-heading(level: 2).location().page()) + str(it.key)
+      let label-str = str(here().page()) + str(it.key)
       let bibitem = {
         show: body => {
           show regex("^\[\d+\]\s"): it => ""
@@ -177,7 +177,6 @@
         bibliography-visited.update(visited => visited + (it.key,))
       }
       box({
-        place(hide(it))
         if query(selector(label(label-str)).before(here())).len() > 0 {
           [#footnote(label(label-str), numbering: numbering)]
         } else {
