@@ -1377,6 +1377,7 @@
     ca: "Índex",
     cs: "Obsah",
     da: "Indhold",
+    de: "Inhalte",
     en: "Outline",
     es: "Índice",
     et: "Sisukord",
