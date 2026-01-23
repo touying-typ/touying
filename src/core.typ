@@ -1896,13 +1896,9 @@
     below: 0pt,
     breakable: false,
   )
-  if type(margin) == length or type(margin) == relative {
-    return it => pad(x: -margin, cell(it))
-  }
 
   return it => context {
     let page-width = page.width
-
     let to-abs(val) = {
       if type(val) == ratio {
         val * page-width
@@ -1912,20 +1908,30 @@
         val
       }
     }
-    let pad-args = (:)
-    if "x" in margin {
-      pad-args.x = -to-abs(margin.x)
+
+    if type(margin) == length {
+      pad(x: -margin, cell(it))
+    } else if (
+      type(margin) == ratio 
+      or type(margin) == relative
+    ) {
+      pad(x: -to-abs(margin), cell(it))
+    } else {
+      let pad-args = (:)
+      if "x" in margin {
+        pad-args.x = -to-abs(margin.x)
+      }
+      if "left" in margin {
+        pad-args.left = -to-abs(margin.left)
+      }
+      if "right" in margin {
+        pad-args.right = -to-abs(margin.right)
+      }
+      if "rest" in margin {
+        pad-args.x = -to-abs(margin.rest)
+      }
+      pad(..pad-args, cell(it))
     }
-    if "left" in margin {
-      pad-args.left = -to-abs(margin.left)
-    }
-    if "right" in margin {
-      pad-args.right = -to-abs(margin.right)
-    }
-    if "rest" in margin {
-      pad-args.x = -to-abs(margin.rest)
-    }
-    pad(..pad-args, cell(it))
   }
 
 }
