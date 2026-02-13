@@ -46,13 +46,7 @@
 #let align-enum-marker-with-baseline(body) = {
   let counting-symbols = "1aAiI一壹あいアイא가ㄱ*"
   let consume-regex = regex(
-    "[^"
-      + counting-symbols
-      + "]*["
-      + counting-symbols
-      + "][^"
-      + counting-symbols
-      + "]*",
+    "[^" + counting-symbols + "]*[" + counting-symbols + "][^" + counting-symbols + "]*",
   )
 
   show enum.item: it => {
@@ -182,7 +176,7 @@
         } else {
           [#footnote(numbering: numbering, bibitem)#label(label-str)]
         }
-      }) 
+      })
     }
   )
 
@@ -215,9 +209,7 @@
       columns: (auto, 1fr),
       column-gutter: .7em,
       row-gutter: 1.2em,
-      ..range(bibitems.len())
-        .map(i => (numbering("[1]", i + 1), bibitems.at(i)))
-        .flatten(),
+      ..range(bibitems.len()).map(i => (numbering("[1]", i + 1), bibitems.at(i))).flatten(),
     )
   }
 }
