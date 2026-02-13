@@ -2247,7 +2247,6 @@
     utils.call-or-display(self, self.at("default-page-preamble", default: none))
   }
 
-
   self.subslide = 1
   // for single page slide, get the repetitions
   if repeat == auto {
