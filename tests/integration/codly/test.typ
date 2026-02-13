@@ -1,7 +1,7 @@
 #import "/lib.typ": *
 #import themes.simple: *
 #import "@preview/codly:1.3.0": *
-#import "@preview/codly-languages:0.1.1": *
+#import "@preview/codly-languages:0.1.10": *
 #show: codly-init.with()
 
 #show: simple-theme.with(

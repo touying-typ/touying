@@ -1,6 +1,6 @@
 #import "/lib.typ": *
 #import themes.simple: *
-#import "@preview/mitex:0.2.5": *
+#import "@preview/mitex:0.2.6": *
 
 #show: simple-theme
 
