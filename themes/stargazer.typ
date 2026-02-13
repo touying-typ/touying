@@ -173,11 +173,19 @@
       },
     )
     // authors
-    grid(
-      columns: (1fr,) * calc.min(info.authors.len(), 3),
-      column-gutter: 1em,
-      row-gutter: 1em,
-      ..info.authors.map(author => text(fill: black, author)),
+    stack(
+      dir: ttb,
+      spacing: 1em,
+      ..info
+        .authors
+        .chunks(3)
+        .map(author-chunk => {
+          grid(
+            columns: (1fr,) * author-chunk.len(),
+            column-gutter: 1em,
+            ..author-chunk.map(author => text(fill: black, author))
+          )
+        }),
     )
     v(0.5em)
     // institution
@@ -391,9 +399,7 @@
   } else {
     self.info.short-title
   },
-  footer-d: context utils.slide-counter.display()
-    + " / "
-    + utils.last-slide-number,
+  footer-d: context utils.slide-counter.display() + " / " + utils.last-slide-number,
   ..args,
   body,
 ) = {
