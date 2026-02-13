@@ -64,7 +64,7 @@
     } else {
       args
     }
-    magic.record-bibliography(bibliography)
+    place(hide(bibliography))
   }
 }
 
