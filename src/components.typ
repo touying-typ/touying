@@ -424,6 +424,8 @@
 ///
 /// - short-heading (boolean): Indicates whether the headings should be shortened. Default is `true`.
 ///
+/// - inline (boolean): Indicates whether the bullets are displayed right after the text, instead of breaking the line. Default is `false`.
+///
 /// -> content
 #let mini-slides(
   self: none,
@@ -433,6 +435,7 @@
   display-subsection: true,
   linebreaks: true,
   short-heading: true,
+  inline: false,
 ) = (
   context {
     let headings = query(heading.where(level: 1).or(heading.where(level: 2)))
@@ -470,7 +473,11 @@
             hd.body
           }
           [#link(hd.location(), body)<touying-link>]
-          linebreak()
+          if inline {
+            h(.5em)
+          } else {
+            linebreak()
+          }
           while (
             slides.len() > 0 and slides.at(0).location().page() < next-page
           ) {
@@ -542,7 +549,7 @@
         })
     }
     set align(top)
-    show: block.with(inset: (top: .5em, x: 2em))
+    show: block.with(inset: (top: .5em, x: if inline { 1em } else { 2em }))
     show linebreak: it => it + v(-1em)
     set text(size: .7em)
     grid(columns: cols.map(_ => auto).intersperse(1fr), ..cols.intersperse([]))
