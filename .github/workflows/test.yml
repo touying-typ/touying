@@ -19,7 +19,7 @@ jobs:
           tool: cargo-binstall
 
       - name: Install tytanic
-        run: cargo binstall tytanic@0.2.2 -y
+        run: cargo binstall tytanic@0.3.3 -y
 
       - name: Setup typst
         uses: typst-community/setup-typst@v4
