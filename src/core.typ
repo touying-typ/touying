@@ -241,9 +241,7 @@
     // Handle horizontal-line
     // split content when we have a horizontal line
     if (
-      horizontal-line-to-pagebreak
-        and horizontal-line
-        and child not in ([—], [---], [–], [--], [-])
+      horizontal-line-to-pagebreak and horizontal-line and child not in ([—], [---], [–], [--], [-])
     ) {
       slide-parts = utils.trim(slide-parts)
       (
@@ -266,9 +264,7 @@
     if utils.is-kind(child, "touying-slide-wrapper") {
       slide-parts = utils.trim(slide-parts)
       if (
-        slide-parts != ()
-          or _get-slide-fn(self + (headings: current-headings), default: none)
-            != none
+        slide-parts != () or _get-slide-fn(self + (headings: current-headings), default: none) != none
       ) {
         (
           slide-content,
@@ -349,9 +345,7 @@
       horizontal-line = true
       continue
     } else if (
-      horizontal-line-to-pagebreak
-        and horizontal-line
-        and child in ([–], [--], [-])
+      horizontal-line-to-pagebreak and horizontal-line and child in ([–], [--], [-])
     ) {
       continue
     } else if utils.is-heading(child, depth: slide-level) {
@@ -397,13 +391,10 @@
       new-start = true
 
       if (
-        not child.has("label")
-          or str(child.label) not in ("touying:hidden", "touying:skip")
+        not child.has("label") or str(child.label) not in ("touying:hidden", "touying:skip")
       ) {
         if (
-          child.depth == 1
-            and new-section-slide-fn != none
-            and not self.receive-body-for-new-section-slide-fn
+          child.depth == 1 and new-section-slide-fn != none and not self.receive-body-for-new-section-slide-fn
         ) {
           (
             slide-content,
@@ -420,9 +411,7 @@
           )
           output-slides.push(slide-content)
         } else if (
-          child.depth == 2
-            and new-subsection-slide-fn != none
-            and not self.receive-body-for-new-subsection-slide-fn
+          child.depth == 2 and new-subsection-slide-fn != none and not self.receive-body-for-new-subsection-slide-fn
         ) {
           (
             slide-content,
@@ -479,8 +468,7 @@
         }
       }
     } else if (
-      self.at("auto-offset-for-heading", default: true)
-        and utils.is-heading(child)
+      self.at("auto-offset-for-heading", default: true) and utils.is-heading(child)
     ) {
       let fields = child.fields()
       let lbl = fields.remove("label", default: none)
@@ -668,6 +656,158 @@
 ))<touying-temporary-mark>]
 
 
+/// Jump to a specific subslide index (1-based).
+///
+/// Use with `touying-reducer` for external packages like CeTZ or Fletcher.
+/// Makes it easier to coordinate with `until`, `at`, and `between` functions
+/// by explicitly declaring subslide numbers instead of counting `pause` markers.
+///
+/// Subslide indices start from 1. Content before any `step` is visible from slide 1.
+/// The first `step(1)` can be omitted since it's the default starting point.
+///
+/// Example:
+///
+/// ```typst
+/// #fletcher-diagram(
+///   node((0, 0), [A]),           // visible from slide 1 (implicit)
+///   step(2),
+///   node((1, 0), [B]),           // visible from slide 2
+///   step(3),
+///   node((2, 0), [C]),           // visible from slide 3
+///   until(2, edge((0,0), (1,0), "->", stroke: red)),  // slides 1-2
+/// )
+/// ```
+///
+/// - n (int): The subslide index (1-based). Content after this marker appears from slide n.
+///
+/// -> content
+#let step(n) = [#metadata((
+  kind: "touying-step",
+  step: n,
+))<touying-temporary-mark>]
+
+
+/// Show content only until slide n (inclusive), then hide it.
+///
+/// Use with `touying-reducer` for external packages like CeTZ or Fletcher.
+/// Returns a single item when given one argument, or an array when given multiple.
+/// Subslide indices are 1-based.
+///
+/// Example:
+///
+/// ```typst
+/// #fletcher-diagram(
+///   node((0, 0), [A]),
+///   node((1, 0), [B]),
+///   until(2, edge((0,0), (1,0), "->", stroke: red)),  // visible slides 1-2
+///   step(3),
+///   edge((0,0), (1,0), "->", stroke: green),          // visible from slide 3
+/// )
+/// ```
+///
+/// - n (int): The last subslide (1-based) where the content should be visible.
+/// - body (arguments): The content to display until slide n.
+///
+/// -> content | array
+#let until(n, ..body) = {
+  let items = body.pos()
+  if items.len() == 0 {
+    return none
+  }
+  let items = items.map(item => [#metadata((
+    kind: "touying-until",
+    until: n,
+    body: item,
+  ))<touying-temporary-mark>])
+  if items.len() == 1 {
+    items.first()
+  } else {
+    items
+  }
+}
+
+
+/// Show content only at slide n (not before, not after).
+///
+/// Use with `touying-reducer` for external packages like CeTZ or Fletcher.
+/// Returns a single item when given one argument, or an array when given multiple.
+/// Subslide indices are 1-based.
+///
+/// Example:
+///
+/// ```typst
+/// #fletcher-diagram(
+///   node((0, 0), [A]),
+///   at(2, node((1, 0), [Flash])),  // only visible on slide 2
+///   step(3),
+///   node((2, 0), [Permanent]),     // visible from slide 3 onwards
+/// )
+/// ```
+///
+/// - n (int): The subslide (1-based) where the content should be visible.
+/// - body (arguments): The content to display only at slide n.
+///
+/// -> content | array
+#let at(n, ..body) = {
+  let items = body.pos()
+  if items.len() == 0 {
+    return none
+  }
+  let items = items.map(item => [#metadata((
+    kind: "touying-at",
+    at: n,
+    body: item,
+  ))<touying-temporary-mark>])
+  if items.len() == 1 {
+    items.first()
+  } else {
+    items
+  }
+}
+
+
+/// Show content only during slides start through end (inclusive).
+///
+/// Use with `touying-reducer` for external packages like CeTZ or Fletcher.
+/// Returns a single item when given one argument, or an array when given multiple.
+/// Subslide indices are 1-based.
+///
+/// Example:
+///
+/// ```typst
+/// #fletcher-diagram(
+///   node((0, 0), [A]),
+///   between(2, 3, edge((0,0), (1,0), "->", stroke: blue)),  // slides 2-3 only
+///   step(4),
+///   node((2, 0), [B]),  // visible from slide 4
+/// )
+/// ```
+///
+/// - start (int): The first subslide (1-based) where the content should be visible.
+/// - end (int): The last subslide (1-based) where the content should be visible (inclusive).
+/// - body (arguments): The content to display between slides start and end.
+///
+/// -> content | array
+#let between(start, end, ..body) = {
+  assert(start <= end, message: "between: start must be <= end")
+  let items = body.pos()
+  if items.len() == 0 {
+    return none
+  }
+  let items = items.map(item => [#metadata((
+    kind: "touying-between",
+    start: start,
+    end: end,
+    body: item,
+  ))<touying-temporary-mark>])
+  if items.len() == 1 {
+    items.first()
+  } else {
+    items
+  }
+}
+
+
 /// Take effect in some subslides.
 ///
 /// Example: `#effect(text.with(fill: red), "2-")[Something]` will display `[Something]` if the current slide is 2 or later.
@@ -788,9 +928,7 @@
 ) = {
   touying-fn-wrapper(
     utils.alternatives-match,
-    last-subslide: calc.max(..subslides-contents
-      .pairs()
-      .map(kv => utils.last-required-subslide(kv.at(0)))),
+    last-subslide: calc.max(..subslides-contents.pairs().map(kv => utils.last-required-subslide(kv.at(0)))),
     subslides-contents,
     position: position,
     stretch: false,
@@ -1287,7 +1425,7 @@
 /// Parse touying reducer content and extract animation repetitions
 ///
 /// Processes reducer content (used for external packages like CeTZ, Fletcher)
-/// with pause and meanwhile markers.
+/// with pause, meanwhile, until, at, and between markers.
 ///
 /// - self (dictionary): The presentation context
 /// - base (int): Base repetition count
@@ -1307,13 +1445,16 @@
   let hidden-parts = ()
   for child in reducer.args.flatten() {
     if (
-      type(child) == content
-        and child.func() == metadata
-        and type(child.value) == dictionary
+      type(child) == content and child.func() == metadata and type(child.value) == dictionary
     ) {
       let kind = child.value.at("kind", default: none)
       if kind == "touying-pause" {
         repetitions += 1
+      } else if kind == "touying-step" {
+        // Jump to specific subslide
+        let step-n = child.value.step
+        repetitions = step-n
+        max-repetitions = calc.max(max-repetitions, step-n)
       } else if kind == "touying-meanwhile" {
         // clear the hidden-parts when encounter #meanwhile
         if hidden-parts.len() != 0 {
@@ -1328,6 +1469,39 @@
         // then reset the repetitions
         max-repetitions = calc.max(max-repetitions, repetitions)
         repetitions = 1
+      } else if kind == "touying-until" {
+        // Show content only until specified slide (inclusive)
+        let until-n = child.value.until
+        let body-item = child.value.body
+        max-repetitions = calc.max(max-repetitions, until-n + 1)
+        if index <= until-n {
+          // Currently visible
+          result.push(body-item)
+        } else {
+          // Should be hidden (cover it)
+          hidden-parts.push(body-item)
+        }
+      } else if kind == "touying-at" {
+        // Show content only at specific slide
+        let at-n = child.value.at
+        let body-item = child.value.body
+        max-repetitions = calc.max(max-repetitions, at-n + 1)
+        if index == at-n {
+          result.push(body-item)
+        } else {
+          hidden-parts.push(body-item)
+        }
+      } else if kind == "touying-between" {
+        // Show content in range [start, end]
+        let start-n = child.value.start
+        let end-n = child.value.end
+        let body-item = child.value.body
+        max-repetitions = calc.max(max-repetitions, end-n + 1)
+        if index >= start-n and index <= end-n {
+          result.push(body-item)
+        } else {
+          hidden-parts.push(body-item)
+        }
       } else {
         if repetitions <= index {
           result.push(child)
@@ -1474,9 +1648,7 @@
     // This is a workaround for syntax like #table([A], pause, [B])
     if type(it) == content and it.func() in (table.cell, grid.cell) {
       if (
-        type(it.body) == content
-          and it.body.func() == metadata
-          and type(it.body.value) == dictionary
+        type(it.body) == content and it.body.func() == metadata and type(it.body.value) == dictionary
       ) {
         let kind = it.body.value.at("kind", default: none)
         if kind == "touying-pause" {
@@ -1509,9 +1681,7 @@
     // Process each child element for animation markers and content types
     for child in children {
       if (
-        type(child) == content
-          and child.func() == metadata
-          and type(child.value) == dictionary
+        type(child) == content and child.func() == metadata and type(child.value) == dictionary
       ) {
         let kind = child.value.at("kind", default: none)
         if kind == "touying-pause" {
@@ -1881,9 +2051,7 @@
 #let _get-negative-pad(self) = {
   let margin = self.page.margin
   if (
-    type(margin) != dictionary
-      and type(margin) != length
-      and type(margin) != relative
+    type(margin) != dictionary and type(margin) != length and type(margin) != relative
   ) {
     return it => it
   }
@@ -1916,8 +2084,7 @@
 // get bottom pad for footer
 #let _get-bottom-pad(self) = {
   assert(
-    self.page.paper == "presentation-16-9"
-      or self.page.paper == "presentation-4-3",
+    self.page.paper == "presentation-16-9" or self.page.paper == "presentation-4-3",
     message: "The paper of page should be presentation-16-9 or presentation-4-3",
   )
   let cell = block.with(
@@ -1940,8 +2107,7 @@
   if self.show-notes-on-second-screen in (bottom, right) {
     let margin = self.page.margin
     assert(
-      self.page.paper == "presentation-16-9"
-        or self.page.paper == "presentation-4-3",
+      self.page.paper == "presentation-16-9" or self.page.paper == "presentation-4-3",
       message: "The paper of page should be presentation-16-9 or presentation-4-3",
     )
     let page-width = if self.page.paper == "presentation-16-9" {
@@ -1955,9 +2121,7 @@
       self.page.at("height", default: 595.28pt)
     }
     if (
-      type(margin) != dictionary
-        and type(margin) != length
-        and type(margin) != relative
+      type(margin) != dictionary and type(margin) != length and type(margin) != relative
     ) {
       return (:)
     }
@@ -2010,8 +2174,7 @@
   // speaker note
   if self.show-notes-on-second-screen in (bottom, right) {
     assert(
-      self.page.paper == "presentation-16-9"
-        or self.page.paper == "presentation-4-3",
+      self.page.paper == "presentation-16-9" or self.page.paper == "presentation-4-3",
       message: "The paper of page should be presentation-16-9 or presentation-4-3",
     )
     let page-width = if self.page.paper == "presentation-16-9" {
@@ -2205,9 +2368,7 @@
     }
     [#metadata((kind: "touying-new-subslide")) <touying-metadata>]
     if (
-      self.at("enable-frozen-states-and-counters", default: true)
-        and not self.handout
-        and self.repeat > 1
+      self.at("enable-frozen-states-and-counters", default: true) and not self.handout and self.repeat > 1
     ) {
       if self.subslide == 1 {
         context {
