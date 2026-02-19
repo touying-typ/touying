@@ -48,4 +48,6 @@ jobs:
       - name: Run typstyle
         uses: typstyle-rs/typstyle-action@main
       - name: Check for changes
+        # Fails the CI job if typstyle modified any files.
+        # This ensures developers format their code before merging.
         run: git diff --exit-code
