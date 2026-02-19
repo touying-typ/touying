@@ -42,16 +42,10 @@ jobs:
 
   typstyle:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     steps:
       - name: Checkout
-        uses: actions/checkout@main
-        with:
-          ref: ${{ github.head_ref }}
+        uses: actions/checkout@v4
       - name: Run typstyle
         uses: typstyle-rs/typstyle-action@main
-      - name: Push
-        uses: stefanzweifel/git-auto-commit-action@master
-        with:
-          commit_message: "style: format using typstyle"
+      - name: Check for changes
+        run: git diff --exit-code
