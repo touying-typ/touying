@@ -47,6 +47,10 @@ jobs:
         uses: actions/checkout@v4
       - name: Run typstyle
         uses: typstyle-rs/typstyle-action@main
+        with:
+          # Pass both in-place (-i) and line length (-l 120) options to the action.
+          # This overrides the default '-i', so we must include it explicitly.
+          opts: '-i -l 120'
       - name: Check for changes
         # Fails the CI job if typstyle modified any files.
         # This ensures developers format their code before merging.
