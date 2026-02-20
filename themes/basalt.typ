@@ -12,6 +12,8 @@
 
 #import "../src/exports.typ": *
 
+#set text(font: "Alexandria")
+
 // ─── Palette (oklch) ────────────────────────────────────────────
 #let basalt-base      = oklch(14%, 0.01, 30deg)      // #1a1818
 #let basalt-dark      = oklch(10%, 0.01, 30deg)      // #121111
@@ -60,7 +62,6 @@
   }
 }
 
-// ─── Slide background compositor ────────────────────────────────
 #let _basalt-bg(self, is-title: false) = {
   let page-width = if self.page.paper == "presentation-16-9" {
     841.89pt
@@ -153,7 +154,7 @@
       top + left,
       image(title-noise, width: 100%, height: 100%),
     )
-  } else if noise-images.len() > 0 {
+  } else if not is-title and noise-images.len() > 0 {
     // Use a context block to read the current slide number
     context {
       let idx = utils.slide-counter.get().first() - 1
@@ -319,8 +320,8 @@
     pad(x: 2em, y: 2em)[
       // Title with gradient text fill
       #set text(
-        size: 2.2em,
-        weight: "bold",
+        size: 2.8em,
+        weight: "extrabold",
         fill: gradient.linear(
           bone,
           citron-bright,
