@@ -260,77 +260,78 @@ fill: gradient.linear(
   if title != auto {
     self.store.title = title
   }
+
   let header(self) = {
     set std.align(top)
-    // Gradient header bar
-    // Gradient header bar (gradient + crosshatch overlay, no extra layout allocation)
-block(
-  width: 100%,
-  height: 1.8em,
-  inset: 0pt,
-  clip: true,
+    block(
+      width: 100%,
+      height: 3.6em,
+      inset: 0pt,
+      clip: true,
+      {
+        // Layer 1: base gradient
+        place(
+          top + left,
+          rect(
+            width: 100%,
+            height: 100%,
+            fill: gradient.linear(
+              basalt-dark,
+              selection-hi.transparentize(40%),
+              basalt-dark,
+              space: oklch,
+            ),
+            stroke: none,
+          ),
+        )
 
-  {
-    // Layer 1: base gradient
-    place(
-      top + left,
-      rect(
-        width: 100%,
-        height: 100%,
-        fill: gradient.linear(
-          basalt-dark,
-          selection-hi.transparentize(40%),
-          basalt-dark,
-          space: oklch,
-        ),
-        stroke: none,
-      ),
-    )
+        // Layer 2: crosshatch overlay
+        place(
+          top + left,
+          rect(
+            width: 100%,
+            height: 100%,
+            fill: _basalt-crosshatch,
+            stroke: none,
+          ),
+        )
 
-    // Layer 2: crosshatch overlay
-    place(
-      top + left,
-      rect(
-        width: 100%,
-        height: 100%,
-        fill: _basalt-crosshatch,
-        stroke: none,
-      ),
-    )
+        // Layer 3: accent line pinned to bottom of block
+        place(
+          bottom + left,
+          rect(
+            width: 100%,
+            height: 1.5pt,
+            fill: gradient.linear(
+              cherry-red,
+              citron-bright.transparentize(50%),
+              mint-silver.transparentize(70%),
+              space: oklch,
+            ),
+            stroke: none,
+          ),
+        )
 
-    // Layer 3: header text
-    place(
-      left + horizon,
-      dx: 1.5em,
-      text(
-        fill: bone,
-        weight: "medium",
-        size: 0.9em,
-        if self.store.title != none {
-          utils.call-or-display(self, self.store.title)
-        } else {
-          utils.display-current-heading(depth: self.slide-level)
-        },
-      ),
+        // Layer 4: header text
+        place(
+          left + horizon,
+          dx: 2.0em,
+          text(
+            fill: bone,
+            weight: "medium",
+            size: 1.8em,
+            if self.store.title != none {
+              utils.call-or-display(self, self.store.title)
+            } else {
+              utils.display-current-heading(depth: self.slide-level)
+            },
+          ),
+        )
+      },
     )
-  },
-)
-    // Thin accent line under header
-    place(
-      top + left,
-      dy: 1.8em,
-      rect(
-        width: 100%,
-        height: 1.5pt,
-        fill: gradient.linear(
-          cherry-red,
-          citron-bright.transparentize(50%),
-          mint-silver.transparentize(70%),
-          space: oklch,
-        ),
-      ),
-    )
+  v(10em)
   }
+
   let footer(self) = {
     set text(size: 0.7em, fill: ash-grey)
     set std.align(bottom)
@@ -338,16 +339,17 @@ block(
       .4em,
       components.left-and-right(
         utils.call-or-display(self, self.store.footer),
-        text(fill: warm-grey, utils.call-or-display(
-          self,
-          self.store.footer-right,
-        )),
+        text(
+          fill: warm-grey,
+          utils.call-or-display(self, self.store.footer-right),
+        ),
       ),
     )
     if self.store.progress-bar {
       place(bottom, _basalt-progress-bar())
     }
   }
+
   let self = utils.merge-dicts(
     self,
     config-page(
@@ -355,6 +357,7 @@ block(
       footer: footer,
     ),
   )
+
   touying-slide(
     self: self,
     config: config,
@@ -666,7 +669,7 @@ block(
       paper: "presentation-" + aspect-ratio,
       header-ascent: 0em,
       footer-descent: 0em,
-      margin: (top: 3.5em, bottom: 2em, x: 2em),
+      margin: (top: 5.5em, bottom: 2em, x: 2em),
       fill: basalt-base,
     ),
     config-common(
