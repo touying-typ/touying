@@ -304,6 +304,7 @@
 
 
 /// Title slide.
+/// Title slide.
 #let title-slide(config: (:), ..args) = touying-slide-wrapper(self => {
   self = utils.merge-dicts(
     self,
@@ -311,76 +312,89 @@
     config-common(freeze-slide-counter: true),
     config-page(
       background: _basalt-bg(self, is-title: true),
-      margin: (x: 0em, top: 0%, bottom: 0%),
+      // Remove standard margins so we have full control over placement
+      margin: 0em,
     ),
   )
   let info = self.info + args.named()
+  
   let body = {
-    set std.align(left + horizon)
-    pad(x: 1.5em, y: 2em)[
-      // Title with gradient text fill
-      #set text(
-        size: 2.8em,
-        weight: "extrabold",
-        fill: gradient.linear(
-          bone,
-          citron-bright,
-          space: oklch,
-        ),
-      )
-      #if info.title != none { info.title }
+    // We use a full-page rect with padding to control the layout manually
+    rect(
+      width: 100%, 
+      height: 100%, 
+      fill: none, 
+      inset: (x: 2em, top: 15%, bottom: 3em), // Adjust 'top' to move title up/down
+      {
+        // 1. Title Section (Top-Left)
+        align(top + left)[
+          #block(below: 1em)[
+            #text(
+              size: 3.8em,
+              weight: "extrabold",
+              fill: gradient.linear(bone, citron-bright, space: oklch),
+              if info.title != none { info.title } else { "Title" }
+            )
+          ]
+          
+          #if info.subtitle != none {
+            block(below: 0.8em)[
+              #text(
+                size: 2.2em,
+                weight: "regular",
+                fill: champagne.transparentize(20%),
+                info.subtitle
+              )
+            ]
+          }
 
-      #if info.subtitle != none {
-        v(-0.4em)
-        text(
-          size: 0.55em,
-          weight: "regular",
-          fill: champagne.transparentize(20%),
-          info.subtitle,
-        )
+          #if info.at("description", default: none) != none {
+            block(below: 0.5em)[
+              #text(
+                size: 0.9em, 
+                weight: "regular", 
+                fill: warm-grey,
+                info.description
+              )
+            ]
+          }
+        ]
+
+        // 2. Footer Section (Bottom-Center)
+        // We place this relative to the container we are in.
+        place(bottom + center)[
+          #stack(dir: ltr, spacing: 4em,
+            if info.date != none {
+              text(
+                size: 0.7em,
+                fill: mint-silver.transparentize(30%),
+                utils.display-info-date(self),
+              )
+            },
+            if info.author != none {
+               let authors = if type(info.author) == array {
+                  info.author
+                } else {
+                  (info.author,)
+                }
+              text(
+                size: 0.8em,
+                fill: bone.transparentize(15%),
+                weight: "bold",
+                authors.join(", ", last: " & "),
+              )
+            },
+            if info.institution != none {
+              text(
+                size: 0.7em, 
+                fill: ash-grey, 
+                info.institution
+              )
+            }
+          )
+        ]
       }
-
-      #if info.at("description", default: none) != none {
-        v(0.3em)
-        text(
-          size: 0.45em,
-          weight: "regular",
-          fill: warm-grey,
-          info.description,
-        )
-      }
-
-      #set std.align(center + bottom)
-
-      #stack( dir: ltr, spacing: 10%,
-      if info.date != none {
-        v(0.3em)
-        text(
-          size: 0.4em,
-          fill: mint-silver.transparentize(30%),
-          utils.display-info-date(self),
-        )
-      },
-
-      if info.author != none {
-        let authors = if type(info.author) == array {
-          info.author
-        } else {
-          (info.author,)
-        }
-        text(
-          size: 0.5em,
-          fill: bone.transparentize(15%),
-          authors.join(", ", last: " & "),
-        )
-      },
-
-      if info.institution != none {
-        v(0.3em)
-        text(size: 0.4em, fill: ash-grey, info.institution)
-      }
-      )
-    ]
+    )
   }
   touying-slide(self: self, body)
 })
