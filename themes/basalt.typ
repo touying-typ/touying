@@ -14,25 +14,23 @@
 
 #set text(font: "Alexandria")
 
-// ─── Palette (oklch) ────────────────────────────────────────────
-#let basalt-base      = oklch(14%, 0.01, 30deg)      // #1a1818
-#let basalt-dark      = oklch(10%, 0.01, 30deg)      // #121111
-#let basalt-soft      = oklch(20%, 0.01, 30deg)      // #2a2828
-#let bone             = oklch(94%, 0.01, 75deg)       // #f2ede7
-#let bone-grey        = oklch(72%, 0.01, 70deg)       // #A9A7A3
-#let warm-grey        = oklch(60%, 0.01, 55deg)       // #8a817c
-#let ash-grey         = oklch(42%, 0.01, 40deg)       // #5e5855
-#let citron-bright    = oklch(89%, 0.09, 105deg)      // #e2e0a5
-#let citron-dim       = oklch(76%, 0.07, 105deg)      // #b5b382
-#let champagne        = oklch(91%, 0.08, 85deg)       // #f7e1a0
-#let cherry-red       = oklch(65%, 0.22, 15deg)       // #ff4b6b
-#let cherry-soft      = oklch(55%, 0.17, 10deg)       // #d64d68
-#let error-red        = oklch(60%, 0.27, 20deg)       // #ff1f48
-#let mint-silver      = oklch(88%, 0.07, 175deg)      // #b5e8e0
-#let selection-hi     = oklch(40%, 0.06, 270deg)      // #4a4d6d
+#let basalt-base      = oklch(14%, 0.01, 30deg)      
+#let basalt-dark      = oklch(10%, 0.01, 30deg)      
+#let basalt-soft      = oklch(20%, 0.01, 30deg)      
+#let bone             = oklch(94%, 0.01, 75deg)      
+#let bone-grey        = oklch(72%, 0.01, 70deg)      
+#let warm-grey        = oklch(60%, 0.01, 55deg)      
+#let ash-grey         = oklch(42%, 0.01, 40deg)      
+#let citron-bright    = oklch(89%, 0.09, 105deg)     
+#let citron-dim       = oklch(76%, 0.07, 105deg)     
+#let champagne        = oklch(91%, 0.08, 85deg)      
+#let cherry-red       = oklch(65%, 0.22, 15deg)      
+#let cherry-soft      = oklch(55%, 0.17, 10deg)      
+#let error-red        = oklch(60%, 0.27, 20deg)      
+#let mint-silver      = oklch(88%, 0.07, 175deg)     
+#let selection-hi     = oklch(40%, 0.06, 270deg)     
 
-// ─── Stripe pattern (diagonal hatching) ─────────────────────────
-#let _basalt-stripes = pattern(
+#let _basalt-stripes = tiling(
   size: (12pt, 12pt),
   relative: "parent",
   place(
