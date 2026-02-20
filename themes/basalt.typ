@@ -315,7 +315,7 @@ fill: gradient.linear(
         // Layer 4: header text
         place(
           left + horizon,
-          dx: 2.0em,
+          dx: 1.5em,
           text(
             fill: bone,
             weight: "medium",
@@ -660,7 +660,6 @@ fill: gradient.linear(
   body,
 ) = {
   set text(size: 20pt, fill: bone)
-  set heading(numbering: "1.1")
   show heading.where(level: 1): set heading(numbering: "01")
   set par(justify: true)
 
@@ -669,7 +668,8 @@ fill: gradient.linear(
       paper: "presentation-" + aspect-ratio,
       header-ascent: 0em,
       footer-descent: 0em,
-      margin: (top: 5.5em, bottom: 2em, x: 2em),
+      numbering: none,
+      margin: (top: 5.5em, bottom: 2em, x: 1.5em),
       fill: basalt-base,
     ),
     config-common(
