@@ -93,16 +93,16 @@
     rect(
       width: 100%,
       height: 100%,
-      fill: gradient.linear(
-        selection-hi,
-        warm-grey,
-        mint-silver.transparentize(40%),
-        champagne,
-        angle: 160deg,
-        space: oklch,
-      ),
-    )
-  }
+fill: gradient.linear(
+  selection-hi,
+  basalt-soft,
+  cherry-soft.transparentize(35%),
+  citron-dim.transparentize(40%),
+  warm-grey,
+  angle: 160deg,
+  space: oklch,
+),)
+ }
 
   // Layer 2: Radial glow — cherry on title, mint on normal
   if is-title {
@@ -425,14 +425,14 @@
       set std.align(center)
       // Large section number with conic gradient fill
       text(
-      fill: gradient.conic(
-        basalt-soft.transparentize(10%),
-        ash-grey.transparentize(10%),
-        warm-grey.transparentize(10%),
-        basalt-soft.transparentize(10%),
-        space: oklch,
-      ),
-      size: 6em,
+        fill: gradient.conic(
+          cherry-red.transparentize(30%),
+          citron-bright.transparentize(30%),
+          mint-silver.transparentize(30%),
+          cherry-red.transparentize(30%),
+          space: oklch,
+        ),
+        size: 4.5em,
         weight: "extrabold",
         utils.display-current-heading-number(level: level),
       )
@@ -441,7 +441,7 @@
       text(
         fill: gradient.linear(bone, citron-bright, space: oklch),
         size: 5em,
-        weight: "bold",
+        font: "Cabinet Grotesk",
         utils.display-current-heading(level: level, numbered: false),
       )
       body
