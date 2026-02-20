@@ -324,7 +324,7 @@
       width: 100%, 
       height: 100%, 
       fill: none, 
-      inset: (x: 2em, top: 15%, bottom: 3em), // Adjust 'top' to move title up/down
+      inset: (x: 3em, top: 3em, bottom: 3em), // Adjust 'top' to move title up/down
       {
         // 1. Title Section (Top-Left)
         align(top + left)[
