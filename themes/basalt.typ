@@ -62,7 +62,7 @@
   }
 }
 
-#let _basalt-bg(self, is-title: false) = {
+#let _basalt-bg(self, is-title: false, is-focus: false) = {
   let page-width = if self.page.paper == "presentation-16-9" {
     841.89pt
   } else {
@@ -87,6 +87,8 @@
         space: oklch,
       ),
     )
+  } else if is-focus {    
+  // No-Op
   } else {
     rect(
       width: 100%,
@@ -118,6 +120,8 @@
         ),
       ),
     )
+   } else if is-focus {
+  // no-op
   } else {
     place(
       center + top,
@@ -165,6 +169,11 @@
       )
       place(top + left, image(path, width: 100%, height: 100%))
     }
+  }
+
+  // Finished what we came for, now exit
+  if is-focus {
+    return
   }
 
   // Layer 5: Decorative corner accents (conic gradient circles)
@@ -496,6 +505,7 @@
     self,
     config-common(freeze-slide-counter: true),
     config-page(
+      background: _basalt-bg(self, is-title: false),
       fill: gradient.radial(
         cherry-red.transparentize(40%),
         basalt-dark,
