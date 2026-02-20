@@ -92,10 +92,10 @@
       width: 100%,
       height: 100%,
       fill: gradient.linear(
-        basalt-base,
-        basalt-dark,
-        basalt-soft.transparentize(40%),
-        basalt-dark,
+        selection-hi,
+        warm-grey,
+        mint-silver.transparentize(40%),
+        champagne,
         angle: 160deg,
         space: oklch,
       ),
@@ -136,10 +136,12 @@
   }
 
   // Layer 3: Diagonal stripes
+  if is-title {
   place(
     top + left,
     rect(width: 100%, height: 100%, fill: _basalt-stripes),
   )
+  }
 
   // Layer 4: Noise image overlay (if provided)
   let noise-images = self.store.at("noise-images", default: ())
@@ -421,15 +423,15 @@
           cherry-red.transparentize(30%),
           space: oklch,
         ),
-        size: 8em,
-        weight: "bold",
+        size: 6em,
+        weight: "extrabold",
         utils.display-current-heading-number(level: level),
       )
       v(0.5em)
       // Section title
       text(
         fill: gradient.linear(bone, citron-bright, space: oklch),
-        size: 2.5em,
+        size: 5em,
         weight: "bold",
         utils.display-current-heading(level: level, numbered: false),
       )
