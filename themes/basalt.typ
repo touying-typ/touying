@@ -425,14 +425,14 @@
       set std.align(center)
       // Large section number with conic gradient fill
       text(
-        fill: gradient.conic(
-          cherry-red.transparentize(30%),
-          citron-bright.transparentize(30%),
-          mint-silver.transparentize(30%),
-          cherry-red.transparentize(30%),
-          space: oklch,
-        ),
-        size: 6em,
+      fill: gradient.conic(
+        basalt-soft.transparentize(10%),
+        ash-grey.transparentize(10%),
+        warm-grey.transparentize(10%),
+        basalt-soft.transparentize(10%),
+        space: oklch,
+      ),
+      size: 6em,
         weight: "extrabold",
         utils.display-current-heading-number(level: level),
       )
