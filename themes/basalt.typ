@@ -316,8 +316,8 @@
   )
   let info = self.info + args.named()
   let body = {
-    set std.align(center + horizon)
-    pad(x: 2em, y: 2em)[
+    set std.align(left + horizon)
+    pad(x: 1.5em, y: 2em)[
       // Title with gradient text fill
       #set text(
         size: 2.8em,
@@ -331,7 +331,7 @@
       #if info.title != none { info.title }
 
       #if info.subtitle != none {
-        v(0.4em)
+        v(-0.4em)
         text(
           size: 0.55em,
           weight: "regular",
@@ -350,19 +350,19 @@
         )
       }
 
-      #if info.date != none {
+      #set std.align(center + bottom)
+
+      #stack( dir: ltr, spacing: 10%,
+      if info.date != none {
         v(0.3em)
         text(
           size: 0.4em,
           fill: mint-silver.transparentize(30%),
           utils.display-info-date(self),
         )
-      }
+      },
 
-      #v(0.5em)
-
-      // Authors
-      #if info.author != none {
+      if info.author != none {
         let authors = if type(info.author) == array {
           info.author
         } else {
@@ -373,12 +373,13 @@
           fill: bone.transparentize(15%),
           authors.join(", ", last: " & "),
         )
-      }
+      },
 
-      #if info.institution != none {
+      if info.institution != none {
         v(0.3em)
         text(size: 0.4em, fill: ash-grey, info.institution)
       }
+      )
     ]
   }
   touying-slide(self: self, body)
