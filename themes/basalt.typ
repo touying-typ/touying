@@ -47,6 +47,32 @@
   ),
 )
 
+#let _basalt-crosshatch = tiling(
+  size: (12pt, 12pt),
+  relative: "parent",
+  place(
+    line(
+      start: (0%, 0%),
+      end: (100%, 100%),
+      stroke: (
+        paint: basalt-soft.transparentize(60%),
+        thickness: 0.6pt,
+      ),
+    ),
+  )
+  +
+  place(
+    line(
+      start: (0%, 100%),
+      end: (100%, 0%),
+      stroke: (
+        paint: basalt-soft.transparentize(60%),
+        thickness: 0.6pt,
+      ),
+    ),
+  ),
+)
+
 // ─── Helper: pick noise image from array, cycling ───────────────
 // noise-images: array of image paths (strings)
 // index: slide number (0-based)
@@ -239,30 +265,58 @@ fill: gradient.linear(
   let header(self) = {
     set std.align(top)
     // Gradient header bar
-    block(
-      width: 100%,
-      height: 1.8em,
-      fill: gradient.linear(
-        basalt-dark,
-        selection-hi.transparentize(40%),
-        basalt-dark,
-        space: oklch,
+    // Gradient header bar (gradient + crosshatch overlay, no extra layout allocation)
+block(
+  width: 100%,
+  height: 1.8em,
+  inset: 0pt,
+  clip: true,
+
+  {
+    // Layer 1: base gradient
+    place(
+      top + left,
+      rect(
+        width: 100%,
+        height: 100%,
+        fill: gradient.linear(
+          basalt-dark,
+          selection-hi.transparentize(40%),
+          basalt-dark,
+          space: oklch,
+        ),
+        stroke: none,
       ),
-      {
-        set std.align(left + horizon)
-        h(1.5em)
-        text(
-          fill: bone,
-          weight: "medium",
-          size: 0.9em,
-          if self.store.title != none {
-            utils.call-or-display(self, self.store.title)
-          } else {
-            utils.display-current-heading(depth: self.slide-level)
-          },
-        )
-      },
     )
+
+    // Layer 2: crosshatch overlay
+    place(
+      top + left,
+      rect(
+        width: 100%,
+        height: 100%,
+        fill: _basalt-crosshatch,
+        stroke: none,
+      ),
+    )
+
+    // Layer 3: header text
+    place(
+      left + horizon,
+      dx: 1.5em,
+      text(
+        fill: bone,
+        weight: "medium",
+        size: 0.9em,
+        if self.store.title != none {
+          utils.call-or-display(self, self.store.title)
+        } else {
+          utils.display-current-heading(depth: self.slide-level)
+        },
+      ),
+    )
+  },
+)
     // Thin accent line under header
     place(
       top + left,
