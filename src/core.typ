@@ -1476,7 +1476,12 @@
     )
     let cont = conts.first()
     let reconstructed = reconstruct-fn(child, cont)
-    return (reconstructed, inner-max-repetitions, next-last-subslide, final-repetitions)
+    return (
+      reconstructed,
+      inner-max-repetitions,
+      next-last-subslide,
+      final-repetitions,
+    )
   }
   // Content function sets for different handling categories
   let list-item-functions = (list.item, enum.item, align, link)
