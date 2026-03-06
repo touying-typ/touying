@@ -2214,6 +2214,9 @@
     }
   }
   let bodies = bodies.pos()
+  // Returns true when all parsed slide content items are empty (none or []).
+  // Used to decide whether to inject a page-forcing anchor for empty slides.
+  let is-empty-body(conts) = conts.all(c => c == none or c == [])
 
   // Slide and subslide preamble functions for setup and metadata
   let slide-preamble(self) = {
@@ -2275,13 +2278,6 @@
     if self.handout or self.subslide == 1 {
       slide-preamble(self)
     }
-    // Ensure the page is always physically created, even when the slide body has no
-    // visible content (e.g. an empty slide with only a hidden heading). Without this
-    // place element, Typst may skip creating the page, causing headings to leak onto
-    // the wrong page and appear in the wrong slide's header.
-    // Using `place` (out-of-flow) instead of `box` to avoid creating an implicit
-    // paragraph with non-zero line height that would shift slide content.
-    place(box(width: 0pt, height: 0pt))
     [#metadata((kind: "touying-new-subslide")) <touying-metadata>]
     if (
       self.at("enable-frozen-states-and-counters", default: true)
@@ -2357,7 +2353,11 @@
     )
     header = page-preamble(self) + header
     set page(..(self.page + page-extra-args + (header: header, footer: footer)))
-    setting-fn(subslide-preamble(self) + composer-with-side-by-side(..conts))
+    setting-fn(
+      subslide-preamble(self)
+        + if is-empty-body(conts) { place(box(width: 0pt, height: 0pt)) } else { [] }
+        + composer-with-side-by-side(..conts),
+    )
   } else {
     // render all the subslides
     let result = ()
@@ -2382,7 +2382,9 @@
           ),
         )
         setting-fn(
-          subslide-preamble(self) + composer-with-side-by-side(..conts),
+          subslide-preamble(self)
+            + if is-empty-body(conts) { place(box(width: 0pt, height: 0pt)) } else { [] }
+            + composer-with-side-by-side(..conts),
         )
       })
     }
