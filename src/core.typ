@@ -2275,6 +2275,11 @@
     if self.handout or self.subslide == 1 {
       slide-preamble(self)
     }
+    // Ensure the page is always physically created, even when the slide body has no
+    // visible content (e.g. an empty slide with only a hidden heading). Without this
+    // zero-size box, Typst may skip creating the page, causing headings to leak onto
+    // the wrong page and appear in the wrong slide's header.
+    box(width: 0pt, height: 0pt)
     [#metadata((kind: "touying-new-subslide")) <touying-metadata>]
     if (
       self.at("enable-frozen-states-and-counters", default: true)
