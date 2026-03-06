@@ -148,7 +148,7 @@
 #let bibliography-state = state("footer-bibliography-state", ())
 #let bibliography-visited = state("footer-bibliography-visited", ())
 
-/// Display the bibliography as footnote.
+/// Display the bibliography as footnote. You need to add a `#place(hide(bibliography))` at the end of the document to make it work.
 ///
 /// Usage: `#show: magic.bibliography-as-footnote.with(bibliography(title: none, "ref.bib"))`
 ///
