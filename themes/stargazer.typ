@@ -439,7 +439,7 @@
       footer: footer,
       header-ascent: 0em,
       footer-descent: 0em,
-      margin: (top: 3.5em, bottom: 2.5em, x: 2.5em),
+      margin: (top: 4em, bottom: 2.5em, x: 2.5em),
     ),
     config-common(
       slide-fn: slide,
@@ -495,20 +495,16 @@
       header: self => if self.store.title != none {
         block(
           width: 100%,
-          height: 1.8em,
           fill: gradient.linear(
             self.colors.primary,
             self.colors.neutral-darkest,
           ),
-          place(
-            left + horizon,
-            text(
-              fill: self.colors.neutral-lightest,
-              weight: "bold",
-              size: 1.3em,
-              utils.call-or-display(self, self.store.title),
-            ),
-            dx: 1.5em,
+          inset: (x: 1.5em, y: 0.35em),
+          text(
+            fill: self.colors.neutral-lightest,
+            weight: "bold",
+            size: 1.3em,
+            utils.call-or-display(self, self.store.title),
           ),
         )
       },
