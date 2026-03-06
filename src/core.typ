@@ -2299,10 +2299,10 @@
     )
     header = page-preamble(self) + header
     set page(..(self.page + page-extra-args + (header: header, footer: footer)))
-    // When all content is empty, add a hidden placeholder so Typst creates the
-    // page even without visible body content (e.g. a heading-only slide).
+    // When all content is empty, add a zero-height placeholder so Typst creates
+    // the page even without visible body content (e.g. a heading-only slide).
     let body-placeholder = if conts.all(c => c == none or c == []) {
-      hide([ ])
+      v(0pt, weak: false)
     } else {
       none
     }
@@ -2323,10 +2323,10 @@
         ..bodies,
       )
       let new-header = page-preamble(self) + header
-      // When all content is empty, add a hidden placeholder so Typst creates the
-      // page even without visible body content (e.g. a heading-only slide).
+      // When all content is empty, add a zero-height placeholder so Typst creates
+      // the page even without visible body content (e.g. a heading-only slide).
       let body-placeholder = if conts.all(c => c == none or c == []) {
-        hide([ ])
+        v(0pt, weak: false)
       } else {
         none
       }
