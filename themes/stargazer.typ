@@ -439,7 +439,7 @@
       footer: footer,
       header-ascent: 0em,
       footer-descent: 0em,
-      margin: (top: 3.5em, bottom: 2.5em, x: 2.5em),
+      margin: (top: 4em, bottom: 2em, x: 2.5em),
     ),
     config-common(
       slide-fn: slide,
