@@ -1153,7 +1153,9 @@
 ///
 /// -> content
 #let uncover(self: none, visible-subslides, uncover-cont, cover-fn: auto) = {
-  let cover = if cover-fn != auto { cover-fn } else { self.methods.cover.with(self: self) }
+  let cover = if cover-fn != auto { cover-fn } else {
+    self.methods.cover.with(self: self)
+  }
   if check-visible(self.subslide, visible-subslides) {
     uncover-cont
   } else {
