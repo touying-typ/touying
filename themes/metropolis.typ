@@ -132,6 +132,7 @@
     self,
     config-common(freeze-slide-counter: true),
     config-page(fill: self.colors.neutral-lightest),
+    config,
   )
   let info = self.info + args.named()
   let body = {
@@ -169,7 +170,7 @@
       },
     )
   }
-  touying-slide(self: self, config: config, body)
+  touying-slide(self: self, body)
 })
 
 

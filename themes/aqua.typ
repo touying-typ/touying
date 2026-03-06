@@ -99,6 +99,7 @@
       background: utils.call-or-display(self, self.store.background),
       margin: (x: 0em, top: 30%, bottom: 0%),
     ),
+    config,
   )
   let info = self.info + args.named()
   let body = {
@@ -126,7 +127,7 @@
       },
     )
   }
-  touying-slide(self: self, config: config, body)
+  touying-slide(self: self, body)
 })
 
 

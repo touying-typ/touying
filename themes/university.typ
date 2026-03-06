@@ -142,6 +142,7 @@
   self = utils.merge-dicts(
     self,
     config-common(freeze-slide-counter: true),
+    config,
   )
   let info = self.info + args.named()
   info.authors = {
@@ -204,7 +205,7 @@
       },
     )
   }
-  touying-slide(self: self, config: config, body)
+  touying-slide(self: self, body)
 })
 
 
