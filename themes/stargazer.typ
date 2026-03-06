@@ -399,7 +399,9 @@
   } else {
     self.info.short-title
   },
-  footer-d: context utils.slide-counter.display() + " / " + utils.last-slide-number,
+  footer-d: context utils.slide-counter.display()
+    + " / "
+    + utils.last-slide-number,
   ..args,
   body,
 ) = {
