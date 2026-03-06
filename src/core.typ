@@ -1428,7 +1428,7 @@
 /// - show-delayed-wrapper (boolean): Whether to show delayed wrapper content
 /// - bodies (content): The content elements to parse
 ///
-/// -> (array, int, int)
+/// -> (array, int, int, int)
 #let _parse-content-into-results-and-repetitions(
   self: none,
   need-cover: true,
@@ -1447,7 +1447,7 @@
     )
   }
   // Helper function to parse child content and reconstruct
-  // Returns (reconstructed-content, next-repetitions, next-last-subslide)
+  // Returns (reconstructed-content, max-repetitions, next-last-subslide, final-repetitions)
   let parse-and-reconstruct(
     self,
     child,
@@ -1464,8 +1464,9 @@
     }
     let (
       conts,
-      next-repetitions,
+      inner-max-repetitions,
       next-last-subslide,
+      final-repetitions,
     ) = _parse-content-into-results-and-repetitions(
       self: self,
       need-cover: repetitions <= index,
@@ -1475,7 +1476,12 @@
     )
     let cont = conts.first()
     let reconstructed = reconstruct-fn(child, cont)
-    return (reconstructed, next-repetitions, next-last-subslide)
+    return (
+      reconstructed,
+      inner-max-repetitions,
+      next-last-subslide,
+      final-repetitions,
+    )
   }
   // Content function sets for different handling categories
   let list-item-functions = (list.item, enum.item, align, link)
@@ -1675,8 +1681,9 @@
         // handle the sequence
         let (
           conts,
-          nextrepetitions,
+          inner-max-repetitions,
           next-last-subslide,
+          final-repetitions,
         ) = _parse-content-into-results-and-repetitions(
           self: self,
           need-cover: repetitions <= index,
@@ -1685,19 +1692,29 @@
           child,
         )
         let cont = conts.first()
-        if repetitions <= index or not need-cover {
+        // Propagate meanwhile effect from inside the sequence
+        if final-repetitions < repetitions {
+          if hidden-parts.len() != 0 {
+            result.push(cover(hidden-parts.sum()))
+            hidden-parts = ()
+          }
+          max-repetitions = calc.max(max-repetitions, repetitions)
+        }
+        if calc.min(repetitions, final-repetitions) <= index or not need-cover {
           result.push(cont)
         } else {
           hidden-parts.push(cont)
         }
-        repetitions = nextrepetitions
+        repetitions = final-repetitions
+        max-repetitions = calc.max(max-repetitions, inner-max-repetitions)
         last-subslide = calc.max(last-subslide, next-last-subslide)
       } else if utils.is-styled(child) {
         // handle styled
         let (
           reconstructed,
-          next-repetitions,
+          inner-max-repetitions,
           next-last-subslide,
+          final-repetitions,
         ) = parse-and-reconstruct(
           self,
           child,
@@ -1707,12 +1724,21 @@
           need-cover,
           (child, cont) => utils.typst-builtin-styled(cont, child.styles),
         )
-        if repetitions <= index or not need-cover {
+        // Propagate meanwhile effect from inside the styled element
+        if final-repetitions < repetitions {
+          if hidden-parts.len() != 0 {
+            result.push(cover(hidden-parts.sum()))
+            hidden-parts = ()
+          }
+          max-repetitions = calc.max(max-repetitions, repetitions)
+        }
+        if calc.min(repetitions, final-repetitions) <= index or not need-cover {
           result.push(reconstructed)
         } else {
           hidden-parts.push(reconstructed)
         }
-        repetitions = next-repetitions
+        repetitions = final-repetitions
+        max-repetitions = calc.max(max-repetitions, inner-max-repetitions)
         last-subslide = calc.max(last-subslide, next-last-subslide)
       } else if (
         type(child) == content and child.func() in list-item-functions
@@ -1720,8 +1746,9 @@
         // handle the list item
         let (
           reconstructed,
-          next-repetitions,
+          inner-max-repetitions,
           next-last-subslide,
+          final-repetitions,
         ) = parse-and-reconstruct(
           self,
           child,
@@ -1735,12 +1762,21 @@
             cont,
           ),
         )
-        if repetitions <= index or not need-cover {
+        // Propagate meanwhile effect from inside the list item
+        if final-repetitions < repetitions {
+          if hidden-parts.len() != 0 {
+            result.push(cover(hidden-parts.sum()))
+            hidden-parts = ()
+          }
+          max-repetitions = calc.max(max-repetitions, repetitions)
+        }
+        if calc.min(repetitions, final-repetitions) <= index or not need-cover {
           result.push(reconstructed)
         } else {
           hidden-parts.push(reconstructed)
         }
-        repetitions = next-repetitions
+        repetitions = final-repetitions
+        max-repetitions = calc.max(max-repetitions, inner-max-repetitions)
         last-subslide = calc.max(last-subslide, next-last-subslide)
       } else if (
         type(child) == content and child.func() in table-like-functions
@@ -1748,8 +1784,9 @@
         // handle the table-like
         let (
           conts,
-          nextrepetitions,
+          inner-max-repetitions,
           next-last-subslide,
+          final-repetitions,
         ) = _parse-content-into-results-and-repetitions(
           self: self,
           need-cover: repetitions <= index,
@@ -1757,7 +1794,15 @@
           index: index,
           ..child.children,
         )
-        if repetitions <= index or not need-cover {
+        // Propagate meanwhile effect from inside the table/grid/stack
+        if final-repetitions < repetitions {
+          if hidden-parts.len() != 0 {
+            result.push(cover(hidden-parts.sum()))
+            hidden-parts = ()
+          }
+          max-repetitions = calc.max(max-repetitions, repetitions)
+        }
+        if calc.min(repetitions, final-repetitions) <= index or not need-cover {
           result.push(utils.reconstruct-table-like(
             child,
             labeled: labeled(child.func()),
@@ -1770,15 +1815,17 @@
             conts,
           ))
         }
-        repetitions = nextrepetitions
+        repetitions = final-repetitions
+        max-repetitions = calc.max(max-repetitions, inner-max-repetitions)
         last-subslide = calc.max(last-subslide, next-last-subslide)
       } else if (
         type(child) == content and child.func() in reconstructable-functions
       ) {
         let (
           reconstructed,
-          next-repetitions,
+          inner-max-repetitions,
           next-last-subslide,
+          final-repetitions,
         ) = parse-and-reconstruct(
           self,
           child,
@@ -1793,19 +1840,29 @@
             cont,
           ),
         )
-        if repetitions <= index or not need-cover {
+        // Propagate meanwhile effect from inside the reconstructable element
+        if final-repetitions < repetitions {
+          if hidden-parts.len() != 0 {
+            result.push(cover(hidden-parts.sum()))
+            hidden-parts = ()
+          }
+          max-repetitions = calc.max(max-repetitions, repetitions)
+        }
+        if calc.min(repetitions, final-repetitions) <= index or not need-cover {
           result.push(reconstructed)
         } else {
           hidden-parts.push(reconstructed)
         }
-        repetitions = next-repetitions
+        repetitions = final-repetitions
+        max-repetitions = calc.max(max-repetitions, inner-max-repetitions)
         last-subslide = calc.max(last-subslide, next-last-subslide)
       } else if type(child) == content and child.func() == terms.item {
         // handle the terms item
         let (
           reconstructed,
-          next-repetitions,
+          inner-max-repetitions,
           next-last-subslide,
+          final-repetitions,
         ) = parse-and-reconstruct(
           self,
           child,
@@ -1815,19 +1872,29 @@
           need-cover,
           (child, cont) => terms.item(child.term, cont),
         )
-        if repetitions <= index or not need-cover {
+        // Propagate meanwhile effect from inside the terms item
+        if final-repetitions < repetitions {
+          if hidden-parts.len() != 0 {
+            result.push(cover(hidden-parts.sum()))
+            hidden-parts = ()
+          }
+          max-repetitions = calc.max(max-repetitions, repetitions)
+        }
+        if calc.min(repetitions, final-repetitions) <= index or not need-cover {
           result.push(reconstructed)
         } else {
           hidden-parts.push(reconstructed)
         }
-        repetitions = next-repetitions
+        repetitions = final-repetitions
+        max-repetitions = calc.max(max-repetitions, inner-max-repetitions)
         last-subslide = calc.max(last-subslide, next-last-subslide)
       } else if type(child) == content and child.func() == columns {
         // handle columns
         let (
           conts,
-          nextrepetitions,
+          inner-max-repetitions,
           next-last-subslide,
+          final-repetitions,
         ) = _parse-content-into-results-and-repetitions(
           self: self,
           need-cover: repetitions <= index,
@@ -1844,19 +1911,29 @@
         } else {
           2
         }
-        if repetitions <= index or not need-cover {
+        // Propagate meanwhile effect from inside the columns
+        if final-repetitions < repetitions {
+          if hidden-parts.len() != 0 {
+            result.push(cover(hidden-parts.sum()))
+            hidden-parts = ()
+          }
+          max-repetitions = calc.max(max-repetitions, repetitions)
+        }
+        if calc.min(repetitions, final-repetitions) <= index or not need-cover {
           result.push(columns(count, ..args, cont))
         } else {
           hidden-parts.push(columns(count, ..args, cont))
         }
-        repetitions = nextrepetitions
+        repetitions = final-repetitions
+        max-repetitions = calc.max(max-repetitions, inner-max-repetitions)
         last-subslide = calc.max(last-subslide, next-last-subslide)
       } else if type(child) == content and child.func() == place {
         // handle place
         let (
           conts,
-          nextrepetitions,
+          inner-max-repetitions,
           next-last-subslide,
+          final-repetitions,
         ) = _parse-content-into-results-and-repetitions(
           self: self,
           need-cover: repetitions <= index,
@@ -1873,19 +1950,29 @@
         } else {
           start
         }
-        if repetitions <= index or not need-cover {
+        // Propagate meanwhile effect from inside the place
+        if final-repetitions < repetitions {
+          if hidden-parts.len() != 0 {
+            result.push(cover(hidden-parts.sum()))
+            hidden-parts = ()
+          }
+          max-repetitions = calc.max(max-repetitions, repetitions)
+        }
+        if calc.min(repetitions, final-repetitions) <= index or not need-cover {
           result.push(place(alignment, ..fields, cont))
         } else {
           hidden-parts.push(place(alignment, ..fields, cont))
         }
-        repetitions = nextrepetitions
+        repetitions = final-repetitions
+        max-repetitions = calc.max(max-repetitions, inner-max-repetitions)
         last-subslide = calc.max(last-subslide, next-last-subslide)
       } else if type(child) == content and child.func() == rotate {
         // handle rotate
         let (
           conts,
-          nextrepetitions,
+          inner-max-repetitions,
           next-last-subslide,
+          final-repetitions,
         ) = _parse-content-into-results-and-repetitions(
           self: self,
           need-cover: repetitions <= index,
@@ -1902,12 +1989,21 @@
         } else {
           0deg
         }
-        if repetitions <= index or not need-cover {
+        // Propagate meanwhile effect from inside the rotate
+        if final-repetitions < repetitions {
+          if hidden-parts.len() != 0 {
+            result.push(cover(hidden-parts.sum()))
+            hidden-parts = ()
+          }
+          max-repetitions = calc.max(max-repetitions, repetitions)
+        }
+        if calc.min(repetitions, final-repetitions) <= index or not need-cover {
           result.push(rotate(angle, ..fields, cont))
         } else {
           hidden-parts.push(rotate(angle, ..fields, cont))
         }
-        repetitions = nextrepetitions
+        repetitions = final-repetitions
+        max-repetitions = calc.max(max-repetitions, inner-max-repetitions)
         last-subslide = calc.max(last-subslide, next-last-subslide)
       } else {
         if repetitions <= index or not need-cover {
@@ -1925,7 +2021,7 @@
     parsed-results.push(result.sum(default: []))
   }
   max-repetitions = calc.max(max-repetitions, repetitions)
-  return (parsed-results, max-repetitions, last-subslide)
+  return (parsed-results, max-repetitions, last-subslide, repetitions)
 }
 
 // get negative pad for header and footer
@@ -2326,6 +2422,7 @@
       _,
       repetitions,
       last-subslide,
+      _,
     ) = _parse-content-into-results-and-repetitions(
       self: self,
       base: 1,
@@ -2342,7 +2439,7 @@
 
   if self.handout {
     self.subslide = repeat
-    let (conts, _, _) = _parse-content-into-results-and-repetitions(
+    let (conts, _, _, _) = _parse-content-into-results-and-repetitions(
       self: self,
       index: repeat,
       show-delayed-wrapper: true,
@@ -2360,7 +2457,7 @@
       let delayed-args = if i == repeat {
         (show-delayed-wrapper: true)
       }
-      let (conts, _, _) = _parse-content-into-results-and-repetitions(
+      let (conts, _, _, _) = _parse-content-into-results-and-repetitions(
         self: self,
         index: i,
         ..delayed-args,
