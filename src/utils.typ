@@ -416,7 +416,9 @@
 ///
 /// - style (function): The style of the heading. If `style` is a function, it will use the function to style the heading. For example, `style: current-heading => current-heading.body`.
 ///
-///   If you set it to `style: auto`, it will could be controlled by `show heading` rule.
+///   If you set it to `style: auto`, it will display the heading body with a size proportional to
+///   the heading level (0.715em for level 1, 0.835em for level 2), along with numbering computed
+///   at the heading's original location.
 ///
 /// -> content
 #let display-current-heading(
@@ -449,12 +451,24 @@
         current-heading
       } else if style == auto {
         let current-level = current-heading.level
+        let content = {
+          if current-heading.numbering != none {
+            (
+              _typst-builtin-numbering(
+                current-heading.numbering,
+                ..counter(heading).at(current-heading.location()),
+              )
+                + h(.3em)
+            )
+          }
+          current-heading.body
+        }
         if current-level == 1 {
-          text(.715em, current-heading)
+          text(.715em, content)
         } else if current-level == 2 {
-          text(.835em, current-heading)
+          text(.835em, content)
         } else {
-          current-heading
+          content
         }
       } else {
         style(..setting-args, current-heading)
