@@ -150,3 +150,23 @@ By factorizing, we can obtain this result.
   node((2, 0), `closed`, radius: 2em, extrude: (-2.5, 0)),
   edge((0, 0), (2, 0), `close()`, "-|>", bend: -40deg),
 )
+
+= Pause + Uncover Mixing
+
+== Pause + Uncover/Only in List
+
+- On 1 #pause
+- On 2 #pause
+- #uncover("2-")[Uncover 2-]
+- #only(2)[Only 2]
+- On 3
+
+
+== Pause + Uncover/Only Inline
+
+Text before #pause and #uncover("2-")[uncover 2-] and #only(2)[only 2] after pause.
+
+
+== Pause + Alternatives Inline
+
+Text #pause then #alternatives[Alt 1][Alt 2][Alt 3] and more.
