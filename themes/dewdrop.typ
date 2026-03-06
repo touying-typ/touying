@@ -47,6 +47,7 @@
       ),
       linebreaks: self.store.mini-slides.at("linebreaks", default: true),
       short-heading: self.store.mini-slides.at("short-heading", default: true),
+      inline: self.store.mini-slides.at("inline", default: false),
     )
   }
 }
@@ -326,6 +327,7 @@
 ///   - display-subsection (boolean): Whether the slides of subsections are displayed in the mini-slides.
 ///   - linebreaks (boolean): Whether line breaks are in between links for sections and subsections in the mini-slides.
 ///   - short-heading (boolean): Whether the mini-slides are short. Default is `true`.
+///   - inline (boolean): Whether the mini-slides are displayed right after the section or subsection link, or on a new line. Default is `false`.
 ///
 /// - footer (content, function): The footer of the slides. Default is `none`.
 ///
