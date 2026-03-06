@@ -88,7 +88,7 @@ $x = (-b ± sqrt(b^2 - 4 a c)) / (2 a)$
 
 ### Theme Usage
 ```typst
-#import "@preview/touying:0.6.1": *
+#import "@preview/touying:0.6.2": *
 #import themes.simple: *
 
 #show: simple-theme.with(

@@ -2,7 +2,7 @@
 // https://github.com/touying-typ/touying/issues/204
 
 #import "/lib.typ": *
-#import "@preview/cetz:0.4.1"
+#import "@preview/cetz:0.4.2"
 #import themes.default: *
 
 // Cetz bindings for touying.

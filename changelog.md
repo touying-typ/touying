@@ -1,5 +1,30 @@
 # Changelog
 
+## v0.6.2
+
+### Features
+
+- feat: allow customisation of `components.checkerboard` (#161)
+
+### Fixes
+
+- fix: support ratio and relative margins for full-width headers (#256)
+- fix: fix `magic.bibliography-as-footnote` in Typst 0.14 (#249)
+- fix: theorion package is broken with Typst 0.14.0 (#237)
+- fix: update `components.typ` and pass named arguments to grid (#207)
+- fix: fix `#meanwhile` in cetz (#205)
+- fix: documentation contains unclosed raw text error (#187)
+- fix: use correct circle symbol (#171)
+- fix: use regex to override colors of equations (#167)
+- fix: `show-hide-set-list-marker-none` with full enum (#157)
+- fix: remove dump and label-it function for better cache
+
+### Miscellaneous
+
+- docs: update README, bump versions of deps, and fix comment docs
+- ci: add more tests, bump versions of `tytanic`, and update typstyle workflow (#221, #261)
+
+
 ## v0.6.1
 
 Added support for the [theorion](https://github.com/OrangeX4/typst-theorion) package, and used it as the default math theorem environment.
