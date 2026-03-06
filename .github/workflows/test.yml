@@ -23,8 +23,6 @@ jobs:
 
       - name: Setup typst
         uses: typst-community/setup-typst@v4
-        with:
-          version: "v0.13.1"
 
       - name: Run test suite
         run: tt run
