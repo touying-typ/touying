@@ -346,6 +346,15 @@
     return it.body
   }
   let lbl = str(it.label)
+  if lbl in (
+    "touying:hidden",
+    "touying:skip",
+    "touying:unnumbered",
+    "touying:unoutlined",
+    "touying:unbookmarked",
+  ) {
+    return it.body
+  }
   return convert-label-to-short-heading(lbl)
 }
 
