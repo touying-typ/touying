@@ -722,13 +722,16 @@
 ///
 /// - uncover-cont (content): The content to display when the content is visible in the subslide.
 ///
+/// - cover-fn (function | none): An optional cover function to use instead of the default cover method from the theme. Useful when using `uncover` inside external package integrations (e.g. `fletcher.hide` for fletcher diagrams).
+///
 /// -> content
-#let uncover(visible-subslides, uncover-cont) = {
+#let uncover(visible-subslides, uncover-cont, cover-fn: none) = {
   touying-fn-wrapper(
     utils.uncover,
     last-subslide: utils.last-required-subslide(visible-subslides),
     visible-subslides,
     uncover-cont,
+    cover-fn: cover-fn,
   )
 }
 
