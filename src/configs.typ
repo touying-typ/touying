@@ -175,7 +175,7 @@
 ///
 /// - default-frozen-counters (array): The default frozen counters for the frozen states and counters. The default value is `(counter(math.equation), counter(figure.where(kind: table)), counter(figure.where(kind: image)))`.
 ///
-/// - label-only-on-last-subslide (array): We only label some contents in the last subslide, which is useful for ref equations, figures, and theorems with multiple subslides. Default is `(figure, math.equation)`.
+/// - label-only-on-last-subslide (array): We only label some contents in the last subslide, which is useful for ref equations, figures, footnotes, and theorems with multiple subslides. Default is `(figure, math.equation, footnote)`.
 ///
 /// - preamble (function): The function to run before each slide. Default is `none`.
 ///
@@ -657,7 +657,7 @@
     default-frozen-states: _default-frozen-states,
     frozen-counters: (),
     default-frozen-counters: _default-frozen-counters,
-    label-only-on-last-subslide: (figure, math.equation, heading),
+    label-only-on-last-subslide: (figure, math.equation, heading, footnote),
     preamble: none,
     default-preamble: _default-preamble,
     slide-preamble: none,
