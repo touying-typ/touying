@@ -1149,11 +1149,11 @@
 ///
 /// - uncover-cont (content): The content to display when the content is visible in the subslide.
 ///
-/// - cover-fn (function | none): An optional cover function to use instead of the default cover method from the theme. Useful when using `uncover` inside external package integrations (e.g. `fletcher.hide` for fletcher diagrams).
+/// - cover-fn (function | auto): An optional cover function to use instead of the default cover method from the theme. Useful when using `uncover` inside external package integrations (e.g. `fletcher.hide` for fletcher diagrams).
 ///
 /// -> content
-#let uncover(self: none, visible-subslides, uncover-cont, cover-fn: none) = {
-  let cover = if cover-fn != none { cover-fn } else { self.methods.cover.with(self: self) }
+#let uncover(self: none, visible-subslides, uncover-cont, cover-fn: auto) = {
+  let cover = if cover-fn != auto { cover-fn } else { self.methods.cover.with(self: self) }
   if check-visible(self.subslide, visible-subslides) {
     uncover-cont
   } else {
