@@ -515,14 +515,12 @@
         output-slides.push(slide-content)
       }
       // Appendix content
-      output-slides.push(
-        split-content-into-slides(
-          self: utils.merge-dicts(self, child.value.config),
-          recaller-map: recaller-map,
-          new-start: true,
-          child.value.body,
-        ),
-      )
+      output-slides.push(split-content-into-slides(
+        self: utils.merge-dicts(self, child.value.config),
+        recaller-map: recaller-map,
+        new-start: true,
+        child.value.body,
+      ))
     } else if is-first-slide and utils.is-styled(child) {
       slide-parts = utils.trim(slide-parts)
       if slide-parts != () or current-headings != () {
@@ -541,18 +539,16 @@
         )
         output-slides.push(slide-content)
       }
-      output-slides.push(
-        utils.reconstruct-styled(
-          child,
-          split-content-into-slides(
-            self: self,
-            recaller-map: recaller-map,
-            new-start: true,
-            is-first-slide: is-first-slide,
-            child.child,
-          ),
+      output-slides.push(utils.reconstruct-styled(
+        child,
+        split-content-into-slides(
+          self: self,
+          recaller-map: recaller-map,
+          new-start: true,
+          is-first-slide: is-first-slide,
+          child.child,
         ),
-      )
+      ))
     } else {
       let child = if utils.is-styled(child) {
         // Split the content into slides recursively for styled content
@@ -1353,12 +1349,10 @@
     }
   }
   hidden-parts = ()
-  parsed-results.push(
-    (reducer.reduce)(
-      ..reducer.kwargs,
-      result,
-    ),
-  )
+  parsed-results.push((reducer.reduce)(
+    ..reducer.kwargs,
+    result,
+  ))
   max-repetitions = calc.max(max-repetitions, repetitions)
   return (parsed-results, max-repetitions)
 }
@@ -2306,7 +2300,11 @@
     } else {
       none
     }
-    setting-fn(subslide-preamble(self) + composer-with-side-by-side(..conts) + body-placeholder)
+    setting-fn(
+      subslide-preamble(self)
+        + composer-with-side-by-side(..conts)
+        + body-placeholder,
+    )
   } else {
     // render all the subslides
     let result = ()
@@ -2338,7 +2336,9 @@
           ),
         )
         setting-fn(
-          subslide-preamble(self) + composer-with-side-by-side(..conts) + body-placeholder,
+          subslide-preamble(self)
+            + composer-with-side-by-side(..conts)
+            + body-placeholder,
         )
       })
     }
