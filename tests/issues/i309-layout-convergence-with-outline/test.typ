@@ -1,8 +1,11 @@
+// Issue: layout did not converge under some weird circumstances which leads to wrong page titles and numberings
+// https://github.com/touying-typ/touying/issues/309
+
 #import "/lib.typ": *
 #import themes.university: *
 #import "@preview/numbly:0.1.0": numbly
 
-#show: university-theme.with(progress-bar: false)
+#show: university-theme
 
 #set heading(numbering: numbly(none, "{2}.", default: "1.1"))
 

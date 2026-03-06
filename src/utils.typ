@@ -416,7 +416,10 @@
 ///
 /// - style (function): The style of the heading. If `style` is a function, it will use the function to style the heading. For example, `style: current-heading => current-heading.body`.
 ///
-///   If you set it to `style: auto`, it will could be controlled by `show heading` rule.
+///   If you set it to `style: auto`, it will apply size adjustments based on heading level
+///   (0.715em for level 1, 0.835em for level 2) while using explicit counter queries to avoid
+///   layout convergence issues that occur when heading elements are rendered directly inside
+///   context blocks.
 ///
 /// -> content
 #let display-current-heading(
@@ -449,12 +452,24 @@
         current-heading
       } else if style == auto {
         let current-level = current-heading.level
+        // Build the heading content using explicit counter queries to avoid layout
+        // non-convergence caused by rendering heading elements directly inside context blocks.
+        let heading-content = {
+          if current-heading.numbering != none {
+            _typst-builtin-numbering(
+              current-heading.numbering,
+              ..counter(heading).at(current-heading.location()),
+            )
+            h(.3em)
+          }
+          current-heading.body
+        }
         if current-level == 1 {
-          text(.715em, current-heading)
+          text(.715em, heading-content)
         } else if current-level == 2 {
-          text(.835em, current-heading)
+          text(.835em, heading-content)
         } else {
-          current-heading
+          heading-content
         }
       } else {
         style(..setting-args, current-heading)
