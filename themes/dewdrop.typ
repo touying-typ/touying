@@ -142,7 +142,6 @@
 ) = touying-slide-wrapper(self => {
   self = utils.merge-dicts(
     self,
-    config,
     config-common(freeze-slide-counter: true),
     config-page(margin: 0em),
   )
@@ -188,7 +187,7 @@
       },
     )
   }
-  touying-slide(self: self, body)
+  touying-slide(self: self, config: config, body)
 })
 
 

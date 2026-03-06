@@ -85,7 +85,7 @@
 ///
 /// - config (dictionary): The configuration of the slide. You can use `config-xxx` to set the configuration of the slide. For more several configurations, you can use `utils.merge-dicts` to merge them.
 #let title-slide(config: (:), body) = centered-slide(
-  config: utils.merge-dicts(config, config-common(freeze-slide-counter: true)),
+  config: utils.merge-dicts(config-common(freeze-slide-counter: true), config),
   body,
 )
 
