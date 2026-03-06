@@ -586,7 +586,8 @@
               new-start,
               is-first-slide,
             ) = call-slide-fn-and-reset(
-              self + (headings: current-headings, is-first-slide: is-first-slide),
+              self
+                + (headings: current-headings, is-first-slide: is-first-slide),
               slide-fn,
               slide-parts.sum(default: none),
               recaller-map,
@@ -595,7 +596,10 @@
           }
           // Add new slides, wrapped in the same styled node so that the
           // show/set rules cascade to subsequent slides (matching Typst semantics)
-          output-slides.push(utils.reconstruct-styled(child, slide-content-part))
+          output-slides.push(utils.reconstruct-styled(
+            child,
+            slide-content-part,
+          ))
         } else {
           // No slide-breaking content inside; use the original delayed-wrapper
           // approach so that subslide animations work correctly within the styled scope
