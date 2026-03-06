@@ -176,14 +176,22 @@
           },
         )
         set text(size: .8em)
-        grid(
-          columns: (1fr,) * calc.min(info.authors.len(), 3),
-          column-gutter: 1em,
-          row-gutter: 1em,
-          ..info.authors.map(author => text(
-            fill: self.colors.neutral-darkest,
-            author,
-          ))
+        stack(
+          dir: ttb,
+          spacing: 1em,
+          ..info
+            .authors
+            .chunks(3)
+            .map(author-chunk => {
+              grid(
+                columns: (1fr,) * author-chunk.len(),
+                column-gutter: 1em,
+                ..author-chunk.map(author => text(
+                  fill: self.colors.neutral-darkest,
+                  author,
+                ))
+              )
+            }),
         )
         v(1em)
         if info.institution != none {
