@@ -2299,7 +2299,14 @@
     )
     header = page-preamble(self) + header
     set page(..(self.page + page-extra-args + (header: header, footer: footer)))
-    setting-fn(subslide-preamble(self) + composer-with-side-by-side(..conts))
+    // When all content is empty, add a hidden placeholder so Typst creates the
+    // page even without visible body content (e.g. a heading-only slide).
+    let body-placeholder = if conts.all(c => c == none or c == []) {
+      hide([ ])
+    } else {
+      none
+    }
+    setting-fn(subslide-preamble(self) + composer-with-side-by-side(..conts) + body-placeholder)
   } else {
     // render all the subslides
     let result = ()
@@ -2316,6 +2323,13 @@
         ..bodies,
       )
       let new-header = page-preamble(self) + header
+      // When all content is empty, add a hidden placeholder so Typst creates the
+      // page even without visible body content (e.g. a heading-only slide).
+      let body-placeholder = if conts.all(c => c == none or c == []) {
+        hide([ ])
+      } else {
+        none
+      }
       // update the counter in the first subslide only
       result.push({
         set page(
@@ -2324,7 +2338,7 @@
           ),
         )
         setting-fn(
-          subslide-preamble(self) + composer-with-side-by-side(..conts),
+          subslide-preamble(self) + composer-with-side-by-side(..conts) + body-placeholder,
         )
       })
     }
