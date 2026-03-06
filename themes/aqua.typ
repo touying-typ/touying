@@ -94,12 +94,12 @@
 #let title-slide(config: (:), ..args) = touying-slide-wrapper(self => {
   self = utils.merge-dicts(
     self,
-    config,
     config-common(freeze-slide-counter: true),
     config-page(
       background: utils.call-or-display(self, self.store.background),
       margin: (x: 0em, top: 30%, bottom: 0%),
     ),
+    config,
   )
   let info = self.info + args.named()
   let body = {

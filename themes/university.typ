@@ -141,8 +141,8 @@
 ) = touying-slide-wrapper(self => {
   self = utils.merge-dicts(
     self,
-    config,
     config-common(freeze-slide-counter: true),
+    config,
   )
   let info = self.info + args.named()
   info.authors = {
