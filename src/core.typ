@@ -2277,9 +2277,11 @@
     }
     // Ensure the page is always physically created, even when the slide body has no
     // visible content (e.g. an empty slide with only a hidden heading). Without this
-    // zero-size box, Typst may skip creating the page, causing headings to leak onto
+    // place element, Typst may skip creating the page, causing headings to leak onto
     // the wrong page and appear in the wrong slide's header.
-    box(width: 0pt, height: 0pt)
+    // Using `place` (out-of-flow) instead of `box` to avoid creating an implicit
+    // paragraph with non-zero line height that would shift slide content.
+    place(box(width: 0pt, height: 0pt))
     [#metadata((kind: "touying-new-subslide")) <touying-metadata>]
     if (
       self.at("enable-frozen-states-and-counters", default: true)
