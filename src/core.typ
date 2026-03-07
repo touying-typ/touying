@@ -706,14 +706,52 @@
 ))<touying-temporary-mark>]
 
 
-/// Uncover content after the `#pause` mark in next subslide.
-#let pause = [#metadata((kind: "touying-pause"))<touying-temporary-mark>]
+/// Step forward by `n` subslides relative to the current position.
+///
+/// This is a generalization of `#pause`, which is equivalent to `#step(1)`.
+///
+/// Example:
+///
+/// ```typst
+/// Content A #step(1) Content B  // same as: Content A #pause Content B
+/// Content A #step(2) Content C  // skip an extra subslide
+/// ```
+///
+/// - n (int): Number of subslides to advance. Must be a positive integer.
+///
+/// -> content
+#let step(n) = {
+  assert(type(n) == int and n >= 1, message: "step: n must be a positive integer, got " + repr(n))
+  [#metadata((kind: "touying-step", n: n))<touying-temporary-mark>]
+}
 
 
-/// Display content after the `#meanwhile` mark meanwhile.
-#let meanwhile = [#metadata((
-  kind: "touying-meanwhile",
-))<touying-temporary-mark>]
+/// Jump to an absolute subslide position.
+///
+/// This is a generalization of `#meanwhile`, which is equivalent to `#goto(1)`.
+///
+/// Example:
+///
+/// ```typst
+/// A #pause B #goto(1) C  // C is always visible (like #meanwhile)
+/// A #pause B #goto(3) D  // D is visible from subslide 3 onward
+/// ```
+///
+/// - n (int): The absolute subslide number to jump to. Must be a positive integer.
+///
+/// -> content
+#let goto(n) = {
+  assert(type(n) == int and n >= 1, message: "goto: n must be a positive integer, got " + repr(n))
+  [#metadata((kind: "touying-goto", n: n))<touying-temporary-mark>]
+}
+
+
+/// Uncover content after the `#pause` mark in next subslide. Equivalent to `#step(1)`.
+#let pause = step(1)
+
+
+/// Display content after the `#meanwhile` mark simultaneously. Equivalent to `#goto(1)`.
+#let meanwhile = goto(1)
 
 
 /// Take effect in some subslides.
@@ -1363,10 +1401,10 @@
         and type(child.value) == dictionary
     ) {
       let kind = child.value.at("kind", default: none)
-      if kind == "touying-pause" {
-        repetitions += 1
-      } else if kind == "touying-meanwhile" {
-        // clear the hidden-parts when encounter #meanwhile
+      if kind == "touying-step" {
+        repetitions += child.value.n
+      } else if kind == "touying-goto" {
+        // clear the hidden-parts when encounter #goto / #meanwhile
         if hidden-parts.len() != 0 {
           let r = cover(hidden-parts)
           if type(r) == array {
@@ -1376,9 +1414,9 @@
           }
         }
         hidden-parts = ()
-        // then reset the repetitions
+        // then jump to the target subslide
         max-repetitions = calc.max(max-repetitions, repetitions)
-        repetitions = 1
+        repetitions = child.value.n
       } else {
         if repetitions <= index {
           result.push(child)
@@ -1575,13 +1613,13 @@
           and type(it.body.value) == dictionary
       ) {
         let kind = it.body.value.at("kind", default: none)
-        if kind == "touying-pause" {
-          repetitions += 1
+        if kind == "touying-step" {
+          repetitions += it.body.value.n
           continue
-        } else if kind == "touying-meanwhile" {
-          // reset the repetitions
+        } else if kind == "touying-goto" {
+          // jump to the target subslide
           max-repetitions = calc.max(max-repetitions, repetitions)
-          repetitions = 1
+          repetitions = it.body.value.n
           continue
         }
       }
@@ -1610,16 +1648,16 @@
           and type(child.value) == dictionary
       ) {
         let kind = child.value.at("kind", default: none)
-        if kind == "touying-pause" {
-          repetitions += 1 // Increment subslide count for pause
-        } else if kind == "touying-meanwhile" {
-          // Meanwhile: reveal all hidden content and reset to subslide 1
+        if kind == "touying-step" {
+          repetitions += child.value.n // Increment subslide count by n (pause = step(1))
+        } else if kind == "touying-goto" {
+          // goto(n): reveal all hidden content and jump to subslide n (meanwhile = goto(1))
           if hidden-parts.len() != 0 {
             result.push(cover(hidden-parts.sum()))
             hidden-parts = ()
           }
           max-repetitions = calc.max(max-repetitions, repetitions)
-          repetitions = 1
+          repetitions = child.value.n
         } else if kind == "touying-equation" {
           // Handle animated equations with pause/meanwhile markers
           let (conts, nextrepetitions) = _parse-touying-equation(

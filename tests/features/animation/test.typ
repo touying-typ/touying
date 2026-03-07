@@ -173,3 +173,43 @@ By factorizing, we can obtain this result.
 == Pause + Alternatives Inline
 
 Text #pause then #alternatives[Alt 1][Alt 2] and more.
+
+= Step and Goto
+
+== step(n) — relative stepping
+
+`#step(1)` is equivalent to `#pause`:
+
+A #step(1) B #step(1) C
+
+`#step(2)` skips an extra subslide:
+
+X #step(2) Z
+
+
+== goto(n) — absolute jumping
+
+`#goto(1)` is equivalent to `#meanwhile`:
+
+First #pause Second #goto(1) Always visible
+
+`#goto(3)` jumps to subslide 3:
+
+Part A #pause Part B #goto(3) Part C
+
+
+== step and goto in CeTZ
+
+#cetz-canvas({
+  import cetz.draw: *
+
+  rect((0, 0), (5, 5))
+
+  (step(1),)
+
+  rect((0, 0), (2, 2))
+
+  (step(2),)
+
+  circle((3.5, 3.5), radius: 1)
+})
