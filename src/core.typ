@@ -2481,9 +2481,9 @@
     footer = bottom-pad(footer)
   }
   // speaker note (full-screen notes mode with slide thumbnail)
-  if self.at("show-notes", default: false) {
+  if self.at("show-only-notes", default: false) {
     let (page-width, page-height) = utils.get-page-dimensions(self)
-    let show-notes = (self.methods.show-notes)(
+    let show-only-notes = (self.methods.show-only-notes)(
       self: self,
       width: page-width,
       height: page-height,
@@ -2530,7 +2530,7 @@
       0pt
     }
 
-    let cutout-height = show-notes.cutout-height
+    let cutout-height = show-only-notes.cutout-height
     let inset = (left: margin-left, right: margin-right)
 
     // header: place notes background + thumbnail of slide header
@@ -2539,7 +2539,7 @@
         left + bottom,
         dx: -margin-left,
         dy: margin-top,
-        show-notes.background,
+        show-only-notes.background,
       )
       place(
         right + top,
@@ -2580,7 +2580,7 @@
       place(
         left + bottom,
         dx: -margin-left,
-        show-notes.foreground,
+        show-only-notes.foreground,
       )
     }
 
@@ -2604,7 +2604,7 @@
   } else if self.show-notes-on-second-screen in (bottom, right) {
     // speaker note (second-screen mode)
     let (page-width, page-height) = utils.get-page-dimensions(self)
-    let show-notes = (self.methods.show-notes)(
+    let show-only-notes = (self.methods.show-only-notes)(
       self: self,
       width: page-width,
       height: page-height,
@@ -2622,13 +2622,13 @@
       footer += place(
         left + bottom,
         dx: -margin-left,
-        show-notes,
+        show-only-notes,
       )
     } else if self.show-notes-on-second-screen == right {
       footer += place(
         left + bottom,
         dx: page-width - margin-left,
-        show-notes,
+        show-only-notes,
       )
     }
   }
@@ -2859,7 +2859,9 @@
     )
     header = page-preamble(self) + header
     set page(..(self.page + page-extra-args + (header: header, footer: footer)))
-    body-transform(setting-fn(subslide-preamble(self) + composer-with-side-by-side(..conts)))
+    body-transform(setting-fn(
+      subslide-preamble(self) + composer-with-side-by-side(..conts),
+    ))
   } else {
     // render all the subslides
     let result = ()

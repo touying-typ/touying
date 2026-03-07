@@ -1,7 +1,7 @@
 #import "/lib.typ": *
 #import themes.simple: *
 
-#show: simple-theme.with(config-common(show-notes: true))
+#show: simple-theme.with(config-common(show-only-notes: true))
 
 = Show Notes Tests
 
