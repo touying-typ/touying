@@ -1059,9 +1059,12 @@
 /// -> content
 #let item-by-item(start: 1, cont) = {
   let num-items = if utils.is-sequence(cont) {
-    cont.children.filter(c => (
-      type(c) == content and c.func() in (list.item, enum.item, terms.item)
-    )).len()
+    cont
+      .children
+      .filter(c => (
+        type(c) == content and c.func() in (list.item, enum.item, terms.item)
+      ))
+      .len()
   } else if cont.func() in (list, enum, terms) {
     cont.children.len()
   } else {

@@ -1391,23 +1391,29 @@
     result.sum(default: [])
   } else if cont.func() == list or cont.func() == enum {
     // Programmatic list/enum container
-    let new-items = cont.children.enumerate().map(((idx, item)) => {
-      if check-visible(self.subslide, (beginning: start + idx)) {
-        item
-      } else {
-        reconstruct(item, cover(item.body))
-      }
-    })
+    let new-items = cont
+      .children
+      .enumerate()
+      .map(((idx, item)) => {
+        if check-visible(self.subslide, (beginning: start + idx)) {
+          item
+        } else {
+          reconstruct(item, cover(item.body))
+        }
+      })
     reconstruct-table-like(cont, new-items)
   } else if cont.func() == terms {
     // Programmatic terms container
-    let new-items = cont.children.enumerate().map(((idx, item)) => {
-      if check-visible(self.subslide, (beginning: start + idx)) {
-        item
-      } else {
-        terms.item(cover(item.term), cover(item.description))
-      }
-    })
+    let new-items = cont
+      .children
+      .enumerate()
+      .map(((idx, item)) => {
+        if check-visible(self.subslide, (beginning: start + idx)) {
+          item
+        } else {
+          terms.item(cover(item.term), cover(item.description))
+        }
+      })
     reconstruct-table-like(cont, new-items)
   } else {
     // Fallback: show content as-is
