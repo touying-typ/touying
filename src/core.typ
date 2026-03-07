@@ -1199,27 +1199,24 @@
   supplement: auto,
   mitex,
   body,
-) = utils.label-it(
-  metadata((
-    kind: "touying-mitex",
-    block: block,
-    numbering: numbering,
-    supplement: supplement,
-    mitex: mitex,
-    body: {
-      if type(body) == function {
-        body
-      } else if type(body) == str {
-        body
-      } else if type(body) == content and body.has("text") {
-        body.text
-      } else {
-        panic("Unsupported type: " + str(type(body)))
-      }
-    },
-  )),
-  "touying-temporary-mark",
-)
+) = [#metadata((
+  kind: "touying-mitex",
+  block: block,
+  numbering: numbering,
+  supplement: supplement,
+  mitex: mitex,
+  body: {
+    if type(body) == function {
+      body
+    } else if type(body) == str {
+      body
+    } else if type(body) == content and body.has("text") {
+      body.text
+    } else {
+      panic("Unsupported type: " + str(type(body)))
+    }
+  },
+))<touying-temporary-mark>]
 
 
 /// Touying raw function for creating animated code blocks.
@@ -1259,7 +1256,9 @@
   body,
 ) = [#metadata((
   kind: "touying-raw",
-  block: if type(body) == content and body.has("block") { body.block } else { block },
+  block: if type(body) == content and body.has("block") { body.block } else {
+    block
+  },
   lang: if lang == none and type(body) == content and body.has("lang") {
     body.lang
   } else {
