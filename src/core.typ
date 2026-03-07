@@ -48,18 +48,22 @@
 ///
 /// ```typ
 /// #touying-recall("recall")
+/// #touying-recall("recall", subslide: 2)
 /// ```
 ///
 /// - lbl (string): The label of the slide to recall
 ///
+/// - subslide (none | int): The subslide index to recall. Default is `none`, which recalls all subslides.
+///
 /// -> content
-#let touying-recall(lbl) = [#metadata((
+#let touying-recall(lbl, subslide: none) = [#metadata((
   kind: "touying-slide-recaller",
   label: if type(lbl) == label {
     str(lbl)
   } else {
     lbl
   },
+  subslide: subslide,
 ))<touying-temporary-mark>]
 
 #let _get-last-heading-depth(current-headings) = {
@@ -133,7 +137,7 @@
     utils.is-kind(slide-wrapper, "touying-slide-wrapper"),
     message: "you must use `touying-slide-wrapper` in your slide function",
   )
-  return (slide-wrapper.value.fn)(self)
+  return ((slide-wrapper.value.fn)(self), slide-wrapper.value.fn)
 }
 
 
@@ -211,13 +215,17 @@
     if last-heading-label == "touying:handout" and not self.handout {
       return (none, recaller-map, (), (), true, false)
     }
-    let slide-content = if already-slide-wrapper {
-      slide-fn(self)
+    let (slide-content, callable) = if already-slide-wrapper {
+      (slide-fn(self), slide-fn)
     } else {
       _call-slide-fn(self, slide-fn, current-slide-cont)
     }
     if last-heading-label != none {
-      recaller-map.insert(last-heading-label, slide-content)
+      recaller-map.insert(last-heading-label, (
+        content: slide-content,
+        callable: callable,
+        slide-self: self,
+      ))
     }
     (slide-content, recaller-map, (), (), true, false)
   }
@@ -289,6 +297,9 @@
         )
         if slide-content != none { output-slides.push(slide-content) }
       }
+      let slide-self = (
+        self + (headings: current-headings, is-first-slide: is-first-slide)
+      )
       (
         slide-content,
         recaller-map,
@@ -297,14 +308,18 @@
         new-start,
         is-first-slide,
       ) = call-slide-fn-and-reset(
-        self + (headings: current-headings, is-first-slide: is-first-slide),
+        slide-self,
         already-slide-wrapper: true,
         child.value.fn,
         none,
         recaller-map,
       )
       if child.has("label") and child.label != <touying-temporary-mark> {
-        recaller-map.insert(str(child.label), slide-content)
+        recaller-map.insert(str(child.label), (
+          content: slide-content,
+          callable: child.value.fn,
+          slide-self: slide-self,
+        ))
       }
       if slide-content != none { output-slides.push(slide-content) }
     } else if utils.is-kind(child, "touying-slide-recaller") {
@@ -331,7 +346,21 @@
         message: "label not found in the recaller map for slides",
       )
       // recall the slide
-      output-slides.push(recaller-map.at(lbl))
+      let recall-entry = recaller-map.at(lbl)
+      let recall-subslide = child.value.at("subslide", default: none)
+      if recall-subslide == none {
+        output-slides.push(recall-entry.content)
+      } else {
+        let recalled-self = (
+          recall-entry.slide-self
+            + (
+              freeze-slide-counter: true,
+              _recall-subslide: recall-subslide,
+              enable-frozen-states-and-counters: false,
+            )
+        )
+        output-slides.push((recall-entry.callable)(recalled-self))
+      }
     } else if child in (pagebreak(), pagebreak(weak: true)) {
       // split content when we have a pagebreak
       slide-parts = utils.trim(slide-parts)
@@ -3139,6 +3168,32 @@
     )
     header = page-preamble(self) + header
     set page(..(self.page + page-extra-args + (header: header, footer: footer)))
+    body-transform(setting-fn(
+      subslide-preamble(self) + composer-with-side-by-side(..conts),
+    ))
+  } else if self.at("_recall-subslide", default: none) != none {
+    // render only the specific subslide requested by touying-recall
+    let i = self._recall-subslide
+    assert(
+      i >= 1 and i <= repeat,
+      message: "subslide "
+        + str(i)
+        + " is out of range (1.."
+        + str(repeat)
+        + ")",
+    )
+    self.subslide = i
+    let (header, footer, body-transform) = _get-header-footer(self)
+    let (conts, _, _, _) = _parse-content-into-results-and-repetitions(
+      self: self,
+      index: i,
+      show-delayed-wrapper: i == repeat,
+      ..bodies,
+    )
+    let new-header = page-preamble(self) + header
+    set page(
+      ..(self.page + page-extra-args + (header: new-header, footer: footer)),
+    )
     body-transform(setting-fn(
       subslide-preamble(self) + composer-with-side-by-side(..conts),
     ))
