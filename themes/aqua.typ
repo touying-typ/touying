@@ -300,7 +300,7 @@
 
   show: touying-slides.with(
     config-page(
-      paper: "presentation-" + aspect-ratio,
+      ..utils.page-args-from-aspect-ratio(aspect-ratio),
       margin: (x: 2em, top: 3.5em, bottom: 2em),
     ),
     config-common(
@@ -327,9 +327,7 @@
       header: header,
       footer: footer,
       background: self => {
-        let page-width = if self.page.paper == "presentation-16-9" {
-          841.89pt
-        } else { 793.7pt }
+        let (page-width, _) = utils.get-page-dimensions(self)
         let r = if (
           self.at("show-notes-on-second-screen", default: none) == none
         ) { 1.0 } else { 0.5 }

@@ -404,7 +404,7 @@
 
   show: touying-slides.with(
     config-page(
-      paper: "presentation-" + aspect-ratio,
+      ..utils.page-args-from-aspect-ratio(aspect-ratio),
       header-ascent: 0em,
       footer-descent: 0em,
       margin: if navigation == "sidebar" {

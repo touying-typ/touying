@@ -1458,6 +1458,78 @@
 }
 
 
+/// Convert an aspect ratio string to page configuration arguments.
+///
+/// For the built-in Typst presentation paper sizes ("16-9" and "4-3"), returns
+/// a `paper` key. For other ratios (e.g. "16-10", "3-2"), returns explicit
+/// `width` and `height` keys computed from the 16-9 base width (841.89pt).
+///
+/// Example:
+///
+/// ```typst
+/// config-page(..utils.page-args-from-aspect-ratio("16-10"))
+/// ```
+///
+/// - aspect-ratio (string): The aspect ratio string in `"W-H"` format where `W`
+///   and `H` are positive numbers. E.g., `"16-9"`, `"4-3"`, `"16-10"`.
+///
+/// -> dictionary
+#let page-args-from-aspect-ratio(aspect-ratio) = {
+  let known = ("16-9", "4-3")
+  if aspect-ratio in known {
+    (paper: "presentation-" + aspect-ratio)
+  } else {
+    let parts = aspect-ratio.split("-")
+    assert(
+      parts.len() == 2,
+      message: "Invalid aspect ratio \""
+        + aspect-ratio
+        + "\". Expected format: \"W-H\" with positive numbers, e.g. \"16-10\".",
+    )
+    let w-ratio = float(parts.at(0))
+    let h-ratio = float(parts.at(1))
+    assert(
+      w-ratio > 0 and h-ratio > 0,
+      message: "Invalid aspect ratio \""
+        + aspect-ratio
+        + "\": width and height must be positive numbers.",
+    )
+    let base-width = 841.89pt
+    (width: base-width, height: base-width * h-ratio / w-ratio)
+  }
+}
+
+
+/// Get the page width and height from the slide configuration.
+///
+/// Returns a tuple `(width, height)`. If the page has explicit `width`/`height`
+/// keys those are used directly; otherwise dimensions are derived from the
+/// `paper` key. The built-in Typst presentation paper sizes
+/// (`"presentation-16-9"` and `"presentation-4-3"`) are recognised; for any
+/// other paper name the 16-9 default dimensions (841.89pt × 473.56pt) are used
+/// as a fallback.
+///
+/// - self (dictionary): The current slide self dictionary.
+///
+/// -> array
+#let get-page-dimensions(self) = {
+  let page = self.page
+  let paper = page.at("paper", default: "presentation-16-9")
+  let (pw, ph) = if paper == "presentation-16-9" {
+    (841.89pt, 473.56pt)
+  } else if paper == "presentation-4-3" {
+    (793.7pt, 595.28pt)
+  } else {
+    // For explicit width/height pages the paper key may still be the default;
+    // the actual dimensions are read from the page dict below.
+    (841.89pt, 473.56pt)
+  }
+  let width = page.at("width", default: pw)
+  let height = page.at("height", default: ph)
+  (width, height)
+}
+
+
 /// i18n Outline Title
 ///
 /// -> content

@@ -390,7 +390,7 @@
 ) = {
   show: touying-slides.with(
     config-page(
-      paper: "presentation-" + aspect-ratio,
+      ..utils.page-args-from-aspect-ratio(aspect-ratio),
       header-ascent: 0em,
       footer-descent: 0em,
       margin: (top: 2em, bottom: 1.25em, x: 2em),
