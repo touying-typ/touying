@@ -1037,6 +1037,48 @@
 }
 
 
+/// Display list, enum, or terms items one by one with animation.
+///
+/// Each item is revealed on a successive subslide. Items before `start` appear immediately;
+/// from subslide `start`, one additional item is revealed per subslide.
+///
+/// == Example
+///
+/// ```typst
+/// #item-by-item(start: 2)[
+///   - first
+///   - second
+///   - third
+/// ]
+/// ```
+///
+/// - start (int): The subslide on which the first item appears. Default is `1`.
+///
+/// - cont (content): The content containing a list, enum, or terms element.
+///
+/// -> content
+#let item-by-item(start: 1, cont) = {
+  let num-items = if utils.is-sequence(cont) {
+    cont
+      .children
+      .filter(c => (
+        type(c) == content and c.func() in (list.item, enum.item, terms.item)
+      ))
+      .len()
+  } else if cont.func() in (list, enum, terms) {
+    cont.children.len()
+  } else {
+    1
+  }
+  touying-fn-wrapper(
+    utils.item-by-item,
+    last-subslide: start + num-items - 1,
+    start,
+    cont,
+  )
+}
+
+
 /// Speaker notes are a way to add additional information to your slides that is not visible to the audience. This can be useful for providing additional context or reminders to yourself.
 ///
 /// == Example

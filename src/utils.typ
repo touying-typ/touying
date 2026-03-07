@@ -1348,6 +1348,80 @@
 }
 
 
+/// Display list, enum, or terms items one by one with animation.
+///
+/// Each item is revealed on a successive subslide. Items before `start` appear immediately;
+/// from subslide `start`, one additional item is revealed per subslide.
+///
+/// Example:
+///
+/// ```typst
+/// #item-by-item(start: 2)[
+///   - first
+///   - second
+///   - third
+/// ]
+/// ```
+///
+/// - start (int): The subslide on which the first item appears. Default is `1`.
+///
+/// - cont (content): The content containing a list, enum, or terms element.
+///
+/// -> content
+#let item-by-item(self: none, start, cont) = {
+  let cover = self.methods.cover.with(self: self)
+  let item-funcs = (list.item, enum.item, terms.item)
+
+  if is-sequence(cont) {
+    // Markup list/enum/terms: items appear as list.item/enum.item/terms.item in a sequence
+    let item-count = 0
+    let result = ()
+    for child in cont.children {
+      if type(child) == content and child.func() in item-funcs {
+        if check-visible(self.subslide, (beginning: start + item-count)) {
+          result.push(child)
+        } else {
+          result.push(cover(child))
+        }
+        item-count += 1
+      } else {
+        result.push(child)
+      }
+    }
+    result.sum(default: [])
+  } else if cont.func() == list or cont.func() == enum {
+    // Programmatic list/enum container
+    let new-items = cont
+      .children
+      .enumerate()
+      .map(((idx, item)) => {
+        if check-visible(self.subslide, (beginning: start + idx)) {
+          item
+        } else {
+          reconstruct(item, cover(item.body))
+        }
+      })
+    reconstruct-table-like(cont, new-items)
+  } else if cont.func() == terms {
+    // Programmatic terms container
+    let new-items = cont
+      .children
+      .enumerate()
+      .map(((idx, item)) => {
+        if check-visible(self.subslide, (beginning: start + idx)) {
+          item
+        } else {
+          terms.item(cover(item.term), cover(item.description))
+        }
+      })
+    reconstruct-table-like(cont, new-items)
+  } else {
+    // Fallback: show content as-is
+    cont
+  }
+}
+
+
 /// Speaker notes are a way to add additional information to your slides that is not visible to the audience. This can be useful for providing additional context or reminders to yourself.
 ///
 /// Example: `#speaker-note[This is a speaker note]`

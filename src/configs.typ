@@ -354,6 +354,8 @@
 ///
 /// - alternatives-cases (function): The function to show alternatives with cases. The default value is `utils.alternatives-cases` function.
 ///
+/// - item-by-item (function): The function to show items one by one. The default value is `utils.item-by-item` function.
+///
 /// - alert (function): The function to alert the content. The default value is `utils.method-wrapper(text.with(weight: "bold"))` function.
 ///
 /// - show-notes (function): The function to show notes on second screen. It should be `(self: none, width: 0pt, height: 0pt) => { .. }` with core code `utils.current-slide-note` and `utils.slide-note-state.update(none)`.
@@ -375,6 +377,7 @@
   alternatives: _default,
   alternatives-fn: _default,
   alternatives-cases: _default,
+  item-by-item: _default,
   // alert interface
   alert: _default,
   // show notes
@@ -395,6 +398,7 @@
       alternatives: alternatives,
       alternatives-fn: alternatives-fn,
       alternatives-cases: alternatives-cases,
+      item-by-item: item-by-item,
       alert: alert,
       show-notes: show-notes,
       convert-label-to-short-heading: convert-label-to-short-heading,
@@ -679,6 +683,7 @@
     alternatives: utils.alternatives,
     alternatives-fn: utils.alternatives-fn,
     alternatives-cases: utils.alternatives-cases,
+    item-by-item: utils.item-by-item,
     // alert interface
     alert: _default-alert,
     // show notes
