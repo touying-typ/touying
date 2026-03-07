@@ -141,6 +141,10 @@
 ///
 /// - reset-page-counter-to-slide-counter (boolean): Whether to reset the page counter to the slide counter. Default is `true`.
 ///
+/// - show-only-notes (boolean): Whether to show the speaker notes as the main content with the slide shown as a small thumbnail in the top right corner. Default is `false`.
+///
+///   This is similar to LaTeX Beamer's `\setbeameroption{show only notes}`. It is useful for using speaker notes with presentation tools that let you load two PDFs and synchronize them, one to display on the main screen and one on the auxiliary screen.
+///
 /// - show-notes-on-second-screen (none, alignment): Whether to show the speaker notes on the second screen. Default is `none`.
 ///
 ///   Currently, the alignment can be `none`, `bottom`, and `right`.
@@ -230,6 +234,7 @@
   default-subslide-preamble: _default,
   page-preamble: _default,
   default-page-preamble: _default,
+  show-only-notes: _default,
   show-notes-on-second-screen: _default,
   horizontal-line-to-pagebreak: _default,
   reset-footnote-number-per-slide: _default,
@@ -279,6 +284,7 @@
       default-subslide-preamble: default-subslide-preamble,
       page-preamble: page-preamble,
       default-page-preamble: default-page-preamble,
+      show-only-notes: show-only-notes,
       show-notes-on-second-screen: show-notes-on-second-screen,
       horizontal-line-to-pagebreak: horizontal-line-to-pagebreak,
       reset-footnote-number-per-slide: reset-footnote-number-per-slide,
@@ -300,31 +306,56 @@
 
 #let _default-cover = utils.method-wrapper(hide)
 
-#let _default-show-notes(self: none, width: 0pt, height: 0pt) = block(
-  fill: rgb("#E6E6E6"),
-  width: width,
-  height: height,
-  {
-    set align(left + top)
-    set text(size: 24pt, fill: black, weight: "regular")
-    block(
-      width: 100%,
-      height: 88pt,
-      inset: (left: 32pt, top: 16pt),
-      outset: 0pt,
-      fill: rgb("#CCCCCC"),
-      {
-        utils.display-current-heading(level: 1, depth: self.slide-level)
-        linebreak()
-        [ --- ]
-        utils.display-current-heading(level: 2, depth: self.slide-level)
-      },
-    )
+#let _default-show-only-notes(
+  self: none,
+  width: 0pt,
+  height: 0pt,
+  cutout: false,
+) = {
+  let header-fill = rgb("#CCCCCC")
+  let header-height = 88pt
+  let header-content = {
+    utils.display-current-heading(level: 1, depth: self.slide-level)
+    linebreak()
+    [ --- ]
+    utils.display-current-heading(level: 2, depth: self.slide-level)
+  }
+  let body-fill = rgb("#E6E6E6")
+  let body-content = {
     pad(x: 48pt, utils.current-slide-note)
     // clear the slide note
     utils.slide-note-state.update(none)
-  },
-)
+  }
+
+  let template(hdr-fill, hdr-content, bdy-fill, bdy-content) = block(
+    fill: bdy-fill,
+    width: width,
+    height: height,
+    {
+      set align(left + top)
+      set text(size: 24pt, fill: black, weight: "regular")
+      block(
+        width: 100%,
+        height: header-height,
+        inset: (left: 32pt, top: 16pt),
+        outset: 0pt,
+        fill: hdr-fill,
+        hdr-content,
+      )
+      bdy-content
+    },
+  )
+
+  if cutout {
+    (
+      background: template(header-fill, none, body-fill, none),
+      foreground: template(none, header-content, none, body-content),
+      cutout-height: header-height,
+    )
+  } else {
+    template(header-fill, header-content, body-fill, body-content)
+  }
+}
 
 #let _default-alert = utils.method-wrapper(text.with(weight: "bold"))
 
@@ -358,7 +389,9 @@
 ///
 /// - alert (function): The function to alert the content. The default value is `utils.method-wrapper(text.with(weight: "bold"))` function.
 ///
-/// - show-notes (function): The function to show notes on second screen. It should be `(self: none, width: 0pt, height: 0pt) => { .. }` with core code `utils.current-slide-note` and `utils.slide-note-state.update(none)`.
+/// - show-only-notes (function): The function to show notes on second screen. It should be `(self: none, width: 0pt, height: 0pt, cutout: false) => { .. }` with core code `utils.current-slide-note` and `utils.slide-note-state.update(none)`.
+///
+///   When `cutout: true` (used by `config-common(show-only-notes: true)` mode), the function should return a dictionary with `background`, `foreground`, and `cutout-height` keys.
 ///
 /// - convert-label-to-short-heading (function): The function to convert label to short heading. It is useful for the short heading for heading with label. It will be used in function with `short-heading`.
 ///
@@ -381,7 +414,7 @@
   // alert interface
   alert: _default,
   // show notes
-  show-notes: _default,
+  show-only-notes: _default,
   // convert label to short heading
   convert-label-to-short-heading: _default,
   ..args,
@@ -400,7 +433,7 @@
       alternatives-cases: alternatives-cases,
       item-by-item: item-by-item,
       alert: alert,
-      show-notes: show-notes,
+      show-only-notes: show-only-notes,
       convert-label-to-short-heading: convert-label-to-short-heading,
     ))
       + args.named(),
@@ -647,6 +680,7 @@
     reset-page-counter-to-slide-counter: true,
     // some black magics for better slides writing,
     // maybe will be deprecated in the future
+    show-only-notes: false,
     show-notes-on-second-screen: none,
     horizontal-line-to-pagebreak: true,
     reset-footnote-number-per-slide: true,
@@ -687,7 +721,7 @@
     // alert interface
     alert: _default-alert,
     // show notes
-    show-notes: _default-show-notes,
+    show-only-notes: _default-show-only-notes,
     // convert label to short heading
     convert-label-to-short-heading: _default-convert-label-to-short-heading,
   ),
