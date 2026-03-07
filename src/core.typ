@@ -2401,6 +2401,26 @@
   it => pad(bottom: page-height, cell(it))
 }
 
+// Scale content down to new-height, preserving aspect ratio.
+// Returns a box of dimensions (width * new-height / height) × new-height
+// containing the original content scaled proportionally.
+#let _miniaturize(width, height, new-height, outer-style: (), content) = {
+  let factor = new-height / height * 100%
+  let new-width = width * factor
+  box(
+    stroke: black,
+    width: new-width,
+    height: new-height,
+    ..outer-style,
+    scale(
+      x: factor,
+      y: factor,
+      reflow: true,
+      box(width: width, height: height, align(left + top, content)),
+    ),
+  )
+}
+
 // get page extra args for show-notes-on-second-screen
 #let _get-page-extra-args(self) = {
   if self.show-notes-on-second-screen in (bottom, right) {
@@ -2446,6 +2466,7 @@
     "footer",
     default: none,
   ))
+  let body-transform = body => body
   // negative padding
   if self.at("zero-margin-header", default: true) {
     let negative-pad = _get-negative-pad(self)
@@ -2459,8 +2480,129 @@
     let bottom-pad = _get-bottom-pad(self)
     footer = bottom-pad(footer)
   }
-  // speaker note
-  if self.show-notes-on-second-screen in (bottom, right) {
+  // speaker note (full-screen notes mode with slide thumbnail)
+  if self.at("show-notes", default: false) {
+    let (page-width, page-height) = utils.get-page-dimensions(self)
+    let show-notes = (self.methods.show-notes)(
+      self: self,
+      width: page-width,
+      height: page-height,
+      cutout: true,
+    )
+
+    let margin-left = if type(self.page.margin) != dictionary {
+      self.page.margin
+    } else if "left" in self.page.margin {
+      self.page.margin.left
+    } else if "x" in self.page.margin {
+      self.page.margin.x
+    } else {
+      0pt
+    }
+
+    let margin-right = if type(self.page.margin) != dictionary {
+      self.page.margin
+    } else if "right" in self.page.margin {
+      self.page.margin.right
+    } else if "x" in self.page.margin {
+      self.page.margin.x
+    } else {
+      0pt
+    }
+
+    let margin-top = if type(self.page.margin) != dictionary {
+      self.page.margin
+    } else if "top" in self.page.margin {
+      self.page.margin.top
+    } else if "y" in self.page.margin {
+      self.page.margin.y
+    } else {
+      0pt
+    }
+
+    let margin-bottom = if type(self.page.margin) != dictionary {
+      self.page.margin
+    } else if "bottom" in self.page.margin {
+      self.page.margin.bottom
+    } else if "y" in self.page.margin {
+      self.page.margin.y
+    } else {
+      0pt
+    }
+
+    let cutout-height = show-notes.cutout-height
+    let inset = (left: margin-left, right: margin-right)
+
+    // header: place notes background + thumbnail of slide header
+    header = {
+      place(
+        left + bottom,
+        dx: -margin-left,
+        dy: margin-top,
+        show-notes.background,
+      )
+      place(
+        right + top,
+        dx: margin-right,
+        _miniaturize(
+          page-width,
+          page-height,
+          cutout-height,
+          outer-style: (fill: white),
+          box(
+            width: 100%,
+            height: 100%,
+            inset: (bottom: page-height - margin-top, ..inset),
+            align(horizon, header),
+          ),
+        ),
+      )
+    }
+
+    // footer: place notes foreground + thumbnail of slide footer
+    footer = {
+      place(
+        right + bottom,
+        dx: margin-right,
+        dy: -(page-height - cutout-height),
+        _miniaturize(
+          page-width,
+          page-height,
+          cutout-height,
+          box(
+            width: 100%,
+            height: 100%,
+            inset: (top: page-height - margin-bottom, ..inset),
+            align(horizon, footer),
+          ),
+        ),
+      )
+      place(
+        left + bottom,
+        dx: -margin-left,
+        show-notes.foreground,
+      )
+    }
+
+    // body-transform: miniaturize the slide body and place in top-right corner
+    body-transform = body => place(
+      right + top,
+      dx: margin-right,
+      dy: -margin-top,
+      _miniaturize(
+        page-width,
+        page-height,
+        cutout-height,
+        box(
+          width: 100%,
+          height: 100%,
+          inset: (top: margin-top, bottom: margin-bottom, ..inset),
+          body,
+        ),
+      ),
+    )
+  } else if self.show-notes-on-second-screen in (bottom, right) {
+    // speaker note (second-screen mode)
     let (page-width, page-height) = utils.get-page-dimensions(self)
     let show-notes = (self.methods.show-notes)(
       self: self,
@@ -2490,7 +2632,7 @@
       )
     }
   }
-  (header, footer)
+  (header, footer, body-transform)
 }
 
 #let _rewind-states(states, location) = {
@@ -2704,7 +2846,7 @@
   assert(type(repeat) == int, message: "The repeat should be an integer")
   self.repeat = repeat
   // page header and footer
-  let (header, footer) = _get-header-footer(self)
+  let (header, footer, body-transform) = _get-header-footer(self)
   let page-extra-args = _get-page-extra-args(self)
 
   if self.handout {
@@ -2717,13 +2859,13 @@
     )
     header = page-preamble(self) + header
     set page(..(self.page + page-extra-args + (header: header, footer: footer)))
-    setting-fn(subslide-preamble(self) + composer-with-side-by-side(..conts))
+    body-transform(setting-fn(subslide-preamble(self) + composer-with-side-by-side(..conts)))
   } else {
     // render all the subslides
     let result = ()
     for i in range(1, repeat + 1) {
       self.subslide = i
-      let (header, footer) = _get-header-footer(self)
+      let (header, footer, body-transform) = _get-header-footer(self)
       let delayed-args = if i == repeat {
         (show-delayed-wrapper: true)
       }
@@ -2741,9 +2883,9 @@
             self.page + page-extra-args + (header: new-header, footer: footer)
           ),
         )
-        setting-fn(
+        body-transform(setting-fn(
           subslide-preamble(self) + composer-with-side-by-side(..conts),
-        )
+        ))
       })
     }
     // return the result
