@@ -3159,18 +3159,62 @@
   let page-extra-args = _get-page-extra-args(self)
 
   if self.handout {
-    self.subslide = repeat
-    let (conts, _, _, _) = _parse-content-into-results-and-repetitions(
-      self: self,
-      index: repeat,
-      show-delayed-wrapper: true,
-      ..bodies,
-    )
-    header = page-preamble(self) + header
-    set page(..(self.page + page-extra-args + (header: header, footer: footer)))
-    body-transform(setting-fn(
-      subslide-preamble(self) + composer-with-side-by-side(..conts),
-    ))
+    let handout-subslides = self.at("handout-subslides", default: none)
+    if handout-subslides == none {
+      // Original behavior: render only the last subslide
+      self.subslide = repeat
+      let (conts, _, _, _) = _parse-content-into-results-and-repetitions(
+        self: self,
+        index: repeat,
+        show-delayed-wrapper: true,
+        ..bodies,
+      )
+      header = page-preamble(self) + header
+      set page(..(self.page + page-extra-args + (header: header, footer: footer)))
+      body-transform(setting-fn(
+        subslide-preamble(self) + composer-with-side-by-side(..conts),
+      ))
+    } else {
+      // Render only the subslides that match handout-subslides
+      let handout-subslide-indices = range(1, repeat + 1).filter(i =>
+        utils.check-visible(i, handout-subslides)
+      )
+      // Fall back to the last subslide if none match
+      if handout-subslide-indices.len() == 0 {
+        handout-subslide-indices = (repeat,)
+      }
+      let result = ()
+      for (pos, i) in handout-subslide-indices.enumerate() {
+        let is-first = pos == 0
+        let is-last = pos == handout-subslide-indices.len() - 1
+        let subslide-self = self
+        subslide-self.subslide = i
+        // Disable frozen states for handout multi-subslide rendering
+        subslide-self.enable-frozen-states-and-counters = false
+        // For non-first subslides, clear handout flag so the slide counter
+        // and slide-preamble are not repeated
+        if not is-first {
+          subslide-self.handout = false
+        }
+        let (header-i, footer-i, body-transform-i) = _get-header-footer(subslide-self)
+        let (conts, _, _, _) = _parse-content-into-results-and-repetitions(
+          self: subslide-self,
+          index: i,
+          show-delayed-wrapper: is-last,
+          ..bodies,
+        )
+        let new-header = page-preamble(subslide-self) + header-i
+        result.push({
+          set page(
+            ..(subslide-self.page + page-extra-args + (header: new-header, footer: footer-i)),
+          )
+          body-transform-i(setting-fn(
+            subslide-preamble(subslide-self) + composer-with-side-by-side(..conts),
+          ))
+        })
+      }
+      result.sum(default: none)
+    }
   } else if self.at("_recall-subslide", default: none) != none {
     // render only the specific subslide requested by touying-recall
     let i = self._recall-subslide
