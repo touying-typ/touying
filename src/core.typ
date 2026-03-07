@@ -1199,27 +1199,85 @@
   supplement: auto,
   mitex,
   body,
-) = utils.label(
-  metadata((
-    kind: "touying-mitex",
-    block: block,
-    numbering: numbering,
-    supplement: supplement,
-    mitex: mitex,
-    body: {
-      if type(body) == function {
-        body
-      } else if type(body) == str {
-        body
-      } else if type(body) == content and body.has("text") {
-        body.text
-      } else {
-        panic("Unsupported type: " + str(type(body)))
-      }
-    },
-  )),
-  "touying-temporary-mark",
-)
+) = [#metadata((
+  kind: "touying-mitex",
+  block: block,
+  numbering: numbering,
+  supplement: supplement,
+  mitex: mitex,
+  body: {
+    if type(body) == function {
+      body
+    } else if type(body) == str {
+      body
+    } else if type(body) == content and body.has("text") {
+      body.text
+    } else {
+      panic("Unsupported type: " + str(type(body)))
+    }
+  },
+))<touying-temporary-mark>]
+
+
+/// Touying raw function for creating animated code blocks.
+///
+/// A line is treated as a `pause` or `meanwhile` marker when its only
+/// meaningful characters (letters, digits, CJK) exactly spell "pause" or
+/// "meanwhile". For example, `// pause`, `# pause`, and `#pause` are all
+/// valid markers, while `pause = 1` or `def pause():` are not.
+///
+/// Example:
+///
+/// ```typst
+/// #touying-raw(```rust
+///   fn main() {
+///       // pause
+///       println!("Hello, world!");
+///   }
+/// ```)
+/// ```
+///
+/// - block (boolean): Whether the raw block is a block element. Default is `true`.
+///
+/// - lang (none, string): The language for syntax highlighting. When `none`, the language is inferred from the raw block body if possible. Default is `none`.
+///
+/// - fill-empty-lines (boolean): Whether to replace hidden lines with empty lines to preserve the layout of visible lines. Default is `true`.
+///
+/// - simple (boolean): When `true`, use `#pause;` and `#meanwhile;` as direct split markers (similar to how `touying-mitex` uses `\pause`). Default is `false`.
+///
+/// - body (string, content, function): The raw code content. Can be a raw block, a string, or a function receiving `self` as an argument.
+///
+/// -> content
+#let touying-raw(
+  block: true,
+  lang: none,
+  fill-empty-lines: true,
+  simple: false,
+  body,
+) = [#metadata((
+  kind: "touying-raw",
+  block: if type(body) == content and body.has("block") { body.block } else {
+    block
+  },
+  lang: if lang == none and type(body) == content and body.has("lang") {
+    body.lang
+  } else {
+    lang
+  },
+  fill-empty-lines: fill-empty-lines,
+  simple: simple,
+  body: {
+    if type(body) == function {
+      body
+    } else if type(body) == str {
+      body
+    } else if type(body) == content and body.has("text") {
+      body.text
+    } else {
+      panic("Unsupported type: " + str(type(body)))
+    }
+  },
+))<touying-temporary-mark>]
 
 
 /// Touying reducer is a powerful tool to provide more powerful animation effects for other packages or functions.
@@ -1440,6 +1498,106 @@
     equation = [#equation#eqt-metadata.label]
   }
   parsed-results.push(equation)
+  max-repetitions = calc.max(max-repetitions, repetitions)
+  return (parsed-results, max-repetitions)
+}
+
+/// Parse touying raw content and extract animation repetitions
+///
+/// Processes raw code block content with pause and meanwhile markers, returning
+/// the rendered raw block and the total number of repetitions needed.
+///
+/// A line acts as a pause or meanwhile marker when every meaningful character
+/// on that line (letters, digits, CJK) spells exactly "pause" or "meanwhile".
+/// This allows markers like `// pause`, `# pause`, or `#pause` while ignoring
+/// lines like `pause = 1` or `def pause():`.
+///
+/// - self (dictionary): The presentation context
+/// - need-cover (boolean): Whether hidden content should be covered
+/// - base (int): Base repetition count
+/// - index (int): Current subslide index
+/// - raw-metadata (content): The raw metadata to parse
+///
+/// -> (array, int)
+#let _parse-touying-raw(
+  self: none,
+  need-cover: true,
+  base: 1,
+  index: 1,
+  raw-metadata,
+) = {
+  let raw-data = raw-metadata.value
+  // Pattern matching meaningful characters: letters, digits, and CJK Unified Ideographs
+  let meaningful-chars-pattern = regex("[a-zA-Z0-9\u{4E00}-\u{9FFF}]+")
+  let parsed-results = ()
+  let repetitions = base
+  let max-repetitions = repetitions
+  let it = raw-data.body
+  if type(it) == function {
+    it = it(self)
+  }
+  assert(type(it) == str, message: "Unsupported type: " + str(type(it)))
+
+  let result-text = ""
+
+  if raw-data.simple {
+    // Simple mode: split directly on #pause; and #meanwhile; markers.
+    // Markers may appear anywhere in the text (including inline), so we work
+    // directly with text segments rather than splitting into lines first —
+    // that would introduce spurious newlines when markers are inline.
+    let text-parts = ()
+    let parts = it
+      .split(regex("#meanwhile;"))
+      .intersperse("touying-meanwhile")
+      .map(s => s.split(regex("#pause;")).intersperse("touying-pause"))
+      .flatten()
+    for part in parts {
+      if part == "touying-pause" {
+        repetitions += 1
+      } else if part == "touying-meanwhile" {
+        max-repetitions = calc.max(max-repetitions, repetitions)
+        repetitions = 1
+      } else {
+        if repetitions <= index or not need-cover {
+          text-parts.push(part)
+        } else if raw-data.fill-empty-lines {
+          // Preserve line structure: keep newlines, erase all other characters
+          text-parts.push(part.replace(regex("[^\n]+"), ""))
+        }
+      }
+    }
+    result-text = text-parts.join("")
+  } else {
+    // Normal mode: process line by line.
+    // A line is a pause/meanwhile marker when its only meaningful characters
+    // (letters, digits, CJK Unified Ideographs) spell exactly "pause" or "meanwhile"
+    let result-lines = ()
+    let lines = it.split("\n")
+    for line in lines {
+      let meaningful = line
+        .matches(meaningful-chars-pattern)
+        .map(m => m.text)
+        .join("")
+      if meaningful == "pause" {
+        repetitions += 1
+      } else if meaningful == "meanwhile" {
+        max-repetitions = calc.max(max-repetitions, repetitions)
+        repetitions = 1
+      } else if repetitions <= index or not need-cover {
+        result-lines.push(line)
+      } else if raw-data.fill-empty-lines {
+        result-lines.push("")
+      }
+    }
+    result-text = result-lines.join("\n")
+  }
+  let raw-block = raw(result-text, lang: raw-data.lang, block: raw-data.block)
+  if (
+    raw-metadata.has("label") and raw-metadata.label != <touying-temporary-mark>
+  ) {
+    raw-block = [#raw-block#raw-metadata.label]
+  }
+  parsed-results.push(raw-block)
   max-repetitions = calc.max(max-repetitions, repetitions)
   return (parsed-results, max-repetitions)
 }
@@ -1778,6 +1936,22 @@
         } else if kind == "touying-mitex" {
           // Handle animated MiTeX equations with pause/meanwhile markers
           let (conts, nextrepetitions) = _parse-touying-mitex(
+            self: self,
+            need-cover: repetitions <= index,
+            base: repetitions,
+            index: index,
+            child,
+          )
+          let cont = conts.first()
+          if repetitions <= index or not need-cover {
+            result.push(cont)
+          } else {
+            hidden-parts.push(cont)
+          }
+          repetitions = nextrepetitions
+        } else if kind == "touying-raw" {
+          // Handle animated raw code blocks with pause/meanwhile markers
+          let (conts, nextrepetitions) = _parse-touying-raw(
             self: self,
             need-cover: repetitions <= index,
             base: repetitions,
