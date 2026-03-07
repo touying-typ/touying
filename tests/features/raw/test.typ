@@ -14,16 +14,12 @@
 )
 #show: simple-theme
 
-= Raw Code Block Animations
-
 == Normal Mode with pause and meanwhile
 
 #touying-raw(```rust
 fn main() {
     // pause
     println!("Hello, world!");
-    // pause
-    println!("Goodbye!");
     // meanwhile
 }
 ```)
@@ -34,8 +30,6 @@ fn main() {
 function foo() {
     // pause
     return 42;
-    // pause
-    return 0;
 }
 ```)
 
