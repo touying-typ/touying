@@ -1,9 +1,9 @@
 #import "core.typ": (
   alert, alternatives, alternatives-cases, alternatives-fn, alternatives-match,
-  appendix, effect, empty-slide, handout-only, item-by-item, jump, meanwhile, only, pause,
-  slide, speaker-note, touying-equation, touying-fn-wrapper, touying-mitex,
-  touying-raw, touying-recall, touying-reducer, touying-set-config,
-  touying-slide, touying-slide-wrapper, uncover,
+  appendix, effect, empty-slide, handout-only, item-by-item, jump, meanwhile,
+  only, pause, slide, speaker-note, touying-equation, touying-fn-wrapper,
+  touying-mitex, touying-raw, touying-recall, touying-reducer,
+  touying-set-config, touying-slide, touying-slide-wrapper, uncover,
 )
 #import "configs.typ": (
   config-colors, config-common, config-info, config-methods, config-page,
