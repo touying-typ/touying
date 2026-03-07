@@ -1538,10 +1538,14 @@
   }
   assert(type(it) == str, message: "Unsupported type: " + str(type(it)))
 
-  let result-lines = ()
+  let result-text = ""
 
   if raw-data.simple {
-    // Simple mode: split directly on #pause; and #meanwhile; markers
+    // Simple mode: split directly on #pause; and #meanwhile; markers.
+    // Markers may appear anywhere in the text (including inline), so we work
+    // directly with text segments rather than splitting into lines first —
+    // that would introduce spurious newlines when markers are inline.
+    let text-parts = ()
     let parts = it
       .split(regex("#meanwhile;"))
       .intersperse("touying-meanwhile")
@@ -1554,18 +1558,20 @@
         max-repetitions = calc.max(max-repetitions, repetitions)
         repetitions = 1
       } else {
-        let segment-lines = part.split("\n")
         if repetitions <= index or not need-cover {
-          result-lines += segment-lines
+          text-parts.push(part)
         } else if raw-data.fill-empty-lines {
-          result-lines += segment-lines.map(_ => "")
+          // Preserve line structure: keep newlines, erase all other characters
+          text-parts.push(part.replace(regex("[^\n]+"), ""))
         }
       }
     }
+    result-text = text-parts.join("")
   } else {
-    // Normal mode: process line by line
+    // Normal mode: process line by line.
     // A line is a pause/meanwhile marker when its only meaningful characters
     // (letters, digits, CJK Unified Ideographs) spell exactly "pause" or "meanwhile"
+    let result-lines = ()
     let lines = it.split("\n")
     for line in lines {
       let meaningful = line
@@ -1583,9 +1589,8 @@
         result-lines.push("")
       }
     }
+    result-text = result-lines.join("\n")
   }
-
-  let result-text = result-lines.join("\n")
   let raw-block = raw(result-text, lang: raw-data.lang, block: raw-data.block)
   if (
     raw-metadata.has("label") and raw-metadata.label != <touying-temporary-mark>
