@@ -1442,7 +1442,13 @@
 /// - note (content): The content of the speaker note.
 ///
 /// -> content
-#let speaker-note(self: none, mode: "typ", setting: it => it, subslide: none, note) = {
+#let speaker-note(
+  self: none,
+  mode: "typ",
+  setting: it => it,
+  subslide: none,
+  note,
+) = {
   let show-only-notes = self.at("show-only-notes", default: false)
   assert(
     show-only-notes in (false, true),
@@ -1456,7 +1462,11 @@
     show-notes-on-second-screen in (none, bottom, right),
     message: "`show-notes-on-second-screen` should be `none`, `bottom` or `right`",
   )
-  let is-visible = subslide == none or subslide == auto or check-visible(self.subslide, subslide)
+  let is-visible = (
+    subslide == none
+      or subslide == auto
+      or check-visible(self.subslide, subslide)
+  )
   if is-visible {
     if self.at("enable-pdfpc", default: true) {
       let raw-text = if type(note) == content and note.has("text") {

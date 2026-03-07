@@ -1102,7 +1102,12 @@
 /// - note (content): The content of the speaker note. May contain `#pause` to reveal parts progressively.
 ///
 /// -> content
-#let speaker-note(mode: "typ", setting: it => it, subslide: auto, note) = [#metadata((
+#let speaker-note(
+  mode: "typ",
+  setting: it => it,
+  subslide: auto,
+  note,
+) = [#metadata((
   kind: "touying-speaker-note",
   mode: mode,
   setting: setting,
@@ -1852,7 +1857,9 @@
           let extra-args = (:)
           if child.value.last-subslide != none {
             if type(child.value.last-subslide) == function {
-              let (callback-last-subslide, callback-extra-args) = (child.value.last-subslide)(
+              let (callback-last-subslide, callback-extra-args) = (
+                child.value.last-subslide
+              )(
                 repetitions,
               )
               // Use calc.max to prevent callback from decreasing last-subslide
@@ -1873,7 +1880,7 @@
           // Handle speaker notes with optional #pause markers inside the note body.
           // Speaker notes always escape the pause zone (like fn-wrappers): they emit
           // only side effects (state updates, pdfpc metadata) and produce no visible content.
-          let outer-rep = repetitions  // pause count at this position in the outer slide
+          let outer-rep = repetitions // pause count at this position in the outer slide
 
           // Inner subslide index: how far into the note's own pauses we advance.
           // If the outer slide is at repetition outer-rep and we're rendering subslide index,
@@ -1885,7 +1892,10 @@
           )
 
           // Account for subslides needed by inner pauses in the note body.
-          max-repetitions = calc.max(max-repetitions, outer-rep + note-max-rep - 1)
+          max-repetitions = calc.max(
+            max-repetitions,
+            outer-rep + note-max-rep - 1,
+          )
 
           // Determine the effective outer subslide filter.
           let effective-subslide = if child.value.subslide == auto {
