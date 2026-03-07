@@ -7,26 +7,20 @@
   ),
 )
 
-= Default Composer
+#set par(justify: true)
 
 == Custom gutter via default-composer
 
 #slide[
-  First column with 3em gutter.
+  First column with 3em gutter. #lorem(20)
 ][
-  Second column with 3em gutter.
+  Second column with 3em gutter. #lorem(20)
 ]
 
 == Override default-composer per slide
 
 #slide(composer: components.side-by-side.with(gutter: 0.5em))[
-  Overridden gutter (0.5em).
+  Overridden gutter (0.5em). #lorem(20)
 ][
-  Second column.
-]
-
-== Single column still works
-
-#slide[
-  Single column slide.
+  Second column. #lorem(20)
 ]
