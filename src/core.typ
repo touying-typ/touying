@@ -2792,10 +2792,15 @@
     setting(body)
   }
   let composer-with-side-by-side(..args) = {
-    if type(composer) == function {
-      composer(..args)
+    let effective-composer = if composer != auto {
+      composer
     } else {
-      components.side-by-side(columns: composer, ..args)
+      self.at("default-composer", default: auto)
+    }
+    if type(effective-composer) == function {
+      effective-composer(..args)
+    } else {
+      components.side-by-side(columns: effective-composer, ..args)
     }
   }
   let bodies = bodies.pos()
