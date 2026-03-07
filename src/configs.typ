@@ -97,7 +97,9 @@
 
 /// The common configurations of the slides.
 ///
-/// - handout (boolean): Whether to enable the handout mode. It retains only the last subslide of each slide in handout mode. Default is `false`.
+/// - handout (boolean): Whether to enable the handout mode. By default, it retains only the last subslide of each slide, but this can be overridden via `handout-subslides`. Default is `false`.
+///
+/// - handout-subslides (none, int, array, string): The subslides to include in handout mode. Accepts the same format as `visible-subslides` (e.g. `2`, `(1, 3)`, `"2-"`, `"1, 3-5"`). When `none`, the last subslide is used (default behavior). Default is `none`.
 ///
 /// - slide-level (int): The level of the slides. Default is `2`, which means the level 1 and 2 headings will be treated as slides.
 ///
@@ -202,6 +204,7 @@
 ///   For example, `config-common(default-composer: components.side-by-side.with(gutter: 2em))` sets the default gutter between columns to `2em` for all slides.
 #let config-common(
   handout: _default,
+  handout-subslides: _default,
   slide-level: _default,
   slide-fn: _default,
   new-section-slide-fn: _default,
@@ -255,6 +258,7 @@
   return (
     _get-dict-without-default((
       handout: handout,
+      handout-subslides: handout-subslides,
       slide-level: slide-level,
       slide-fn: slide-fn,
       new-section-slide-fn: new-section-slide-fn,
@@ -664,6 +668,7 @@
 #let default-config = utils.merge-dicts(
   config-common(
     handout: false,
+    handout-subslides: none,
     slide-level: 2,
     slide-fn: slide,
     new-section-slide-fn: none,

@@ -3106,7 +3106,10 @@
   }
   // preamble for the subslides
   let subslide-preamble(self) = {
-    if self.handout or self.subslide == 1 {
+    if (
+      (self.handout and not self.at("_handout-secondary", default: false))
+        or self.subslide == 1
+    ) {
       slide-preamble(self)
     }
     [#metadata((kind: "touying-new-subslide")) <touying-metadata>]
@@ -3140,7 +3143,10 @@
     [#metadata((kind: "touying-new-page")) <touying-metadata>]
     // 1. slide counter part
     //    if freeze-slide-counter is false, then update the slide-counter
-    if self.handout or self.subslide == 1 {
+    if (
+      (self.handout and not self.at("_handout-secondary", default: false))
+        or self.subslide == 1
+    ) {
       if not self.at("freeze-slide-counter", default: false) {
         utils.slide-counter.step()
         //  if appendix is false, then update the last-slide-counter
@@ -3176,18 +3182,72 @@
   let page-extra-args = _get-page-extra-args(self)
 
   if self.handout {
-    self.subslide = repeat
-    let (conts, _, _, _) = _parse-content-into-results-and-repetitions(
-      self: self,
-      index: repeat,
-      show-delayed-wrapper: true,
-      ..bodies,
-    )
-    header = page-preamble(self) + header
-    set page(..(self.page + page-extra-args + (header: header, footer: footer)))
-    body-transform(setting-fn(
-      subslide-preamble(self) + composer-with-side-by-side(..conts),
-    ))
+    let handout-subslides = self.at("handout-subslides", default: none)
+    if handout-subslides == none {
+      // Original behavior: render only the last subslide
+      self.subslide = repeat
+      let (conts, _, _, _) = _parse-content-into-results-and-repetitions(
+        self: self,
+        index: repeat,
+        show-delayed-wrapper: true,
+        ..bodies,
+      )
+      header = page-preamble(self) + header
+      set page(
+        ..(self.page + page-extra-args + (header: header, footer: footer)),
+      )
+      body-transform(setting-fn(
+        subslide-preamble(self) + composer-with-side-by-side(..conts),
+      ))
+    } else {
+      // Render only the subslides that match handout-subslides
+      let handout-subslide-indices = range(1, repeat + 1).filter(
+        i => utils.check-visible(i, handout-subslides),
+      )
+      // Fall back to the last subslide if none match
+      if handout-subslide-indices.len() == 0 {
+        handout-subslide-indices = (repeat,)
+      }
+      let result = ()
+      for (pos, i) in handout-subslide-indices.enumerate() {
+        let is-first = pos == 0
+        let is-last = pos == handout-subslide-indices.len() - 1
+        let subslide-self = self
+        subslide-self.subslide = i
+        // Disable frozen states for handout multi-subslide rendering
+        subslide-self.enable-frozen-states-and-counters = false
+        // For non-first subslides, mark as a secondary handout page so that
+        // slide/page preambles and the slide counter are not repeated, while
+        // keeping handout: true so that handout-only content remains visible.
+        if not is-first {
+          subslide-self._handout-secondary = true
+        }
+        let (header-i, footer-i, body-transform-i) = _get-header-footer(
+          subslide-self,
+        )
+        let (conts, _, _, _) = _parse-content-into-results-and-repetitions(
+          self: subslide-self,
+          index: i,
+          show-delayed-wrapper: is-last,
+          ..bodies,
+        )
+        let new-header = page-preamble(subslide-self) + header-i
+        result.push({
+          set page(
+            ..(
+              subslide-self.page
+                + page-extra-args
+                + (header: new-header, footer: footer-i)
+            ),
+          )
+          body-transform-i(setting-fn(
+            subslide-preamble(subslide-self)
+              + composer-with-side-by-side(..conts),
+          ))
+        })
+      }
+      result.sum(default: none)
+    }
   } else if self.at("_recall-subslide", default: none) != none {
     // render only the specific subslide requested by touying-recall
     let i = self._recall-subslide
