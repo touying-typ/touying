@@ -706,14 +706,66 @@
 ))<touying-temporary-mark>]
 
 
-/// Uncover content after the `#pause` mark in next subslide.
-#let pause = [#metadata((kind: "touying-pause"))<touying-temporary-mark>]
+/// Jump to a subslide position, either relatively or absolutely.
+///
+/// This is the unified core for both `#pause` and `#meanwhile`.
+///
+/// - When `relative: true` (relative mode): advances the subslide counter by `n`.
+///   Positive `n` moves forward; negative `n` moves backward.
+///   `n` must be a non-zero integer (zero would be a no-op with no visible effect).
+///   `#pause` is equivalent to `#jump(1, relative: true)`.
+///
+/// - When `relative: false` (absolute mode, default): reveals all currently hidden
+///   content and jumps to absolute subslide `n`.
+///   `#meanwhile` is equivalent to `#jump(1)`.
+///
+/// Example:
+///
+/// ```typst
+/// A #jump(1, relative: true) B   // same as A #pause B
+/// A #jump(2, relative: true) C   // skip an extra subslide before C
+/// A #pause B #jump(1) C          // C is always visible (same as #meanwhile)
+/// A #pause B #jump(3) D          // D visible from subslide 3 onward
+/// // A #pause B #pause C — normally C appears at subslide 3;
+/// // adding #jump(-1, relative: true) before D makes D appear at subslide 2 (same as B):
+/// A #pause B #pause C #jump(-1, relative: true) D
+/// ```
+///
+/// - n (int): When `relative: true`, the number of subslides to advance (non-zero integer).
+///   When `relative: false`, the absolute target subslide number (positive integer >= 1).
+///
+/// - relative (bool): If `true`, `n` is a relative offset from the current subslide counter.
+///   If `false` (default), `n` is an absolute target subslide number.
+///
+/// -> content
+#let jump(n, relative: false) = {
+  if relative {
+    assert(
+      type(n) == int and n != 0,
+      message: "jump: n must be a non-zero integer when relative: true, got "
+        + repr(n),
+    )
+  } else {
+    assert(
+      type(n) == int and n >= 1,
+      message: "jump: n must be a positive integer when relative: false, got "
+        + repr(n),
+    )
+  }
+  [#metadata((
+    kind: "touying-jump",
+    n: n,
+    relative: relative,
+  ))<touying-temporary-mark>]
+}
 
 
-/// Display content after the `#meanwhile` mark meanwhile.
-#let meanwhile = [#metadata((
-  kind: "touying-meanwhile",
-))<touying-temporary-mark>]
+/// Uncover content in the next subslide. Equivalent to `#jump(1, relative: true)`.
+#let pause = jump(1, relative: true)
+
+
+/// Display content simultaneously with the current subslide. Equivalent to `#jump(1)`.
+#let meanwhile = jump(1)
 
 
 /// Take effect in some subslides.
@@ -1363,22 +1415,37 @@
         and type(child.value) == dictionary
     ) {
       let kind = child.value.at("kind", default: none)
-      if kind == "touying-pause" {
-        repetitions += 1
-      } else if kind == "touying-meanwhile" {
-        // clear the hidden-parts when encounter #meanwhile
-        if hidden-parts.len() != 0 {
-          let r = cover(hidden-parts)
-          if type(r) == array {
-            result += r
-          } else {
-            result.push(r)
+      if kind == "touying-jump" {
+        if child.value.relative {
+          repetitions += child.value.n
+          // Track the peak repetitions so that a subsequent negative jump doesn't
+          // cause the slide count to be underestimated
+          max-repetitions = calc.max(max-repetitions, repetitions)
+          // If we jumped back into the visible zone, flush hidden-parts in order
+          // (so they appear before subsequent visible content, not after it)
+          if hidden-parts.len() != 0 and repetitions <= index {
+            let r = cover(hidden-parts)
+            if type(r) == array {
+              result += r
+            } else {
+              result.push(r)
+            }
+            hidden-parts = ()
           }
+        } else {
+          // absolute jump: clear hidden-parts and jump to target subslide
+          if hidden-parts.len() != 0 {
+            let r = cover(hidden-parts)
+            if type(r) == array {
+              result += r
+            } else {
+              result.push(r)
+            }
+          }
+          hidden-parts = ()
+          max-repetitions = calc.max(max-repetitions, repetitions)
+          repetitions = child.value.n
         }
-        hidden-parts = ()
-        // then reset the repetitions
-        max-repetitions = calc.max(max-repetitions, repetitions)
-        repetitions = 1
       } else {
         if repetitions <= index {
           result.push(child)
@@ -1447,7 +1514,14 @@
     )
   }
   // Helper function to parse child content and reconstruct
-  // Returns (reconstructed-content, max-repetitions, next-last-subslide, final-repetitions)
+  // Returns a 5-tuple:
+  //   - reconstructed-content: the reconstructed container content
+  //   - max-repetitions: maximum repetitions found inside the content
+  //   - next-last-subslide: maximum last-subslide of any fn-wrappers found (0 if none)
+  //   - final-repetitions: repetitions count after processing all inner content
+  //   - force-to-result: true when fn-wrappers were found inside a pause zone and the
+  //       returned `reconstructed-content` was produced with proper inner covering;
+  //       the caller MUST push this content directly to `result` (not `hidden-parts`).
   let parse-and-reconstruct(
     self,
     child,
@@ -1475,12 +1549,44 @@
       body-content,
     )
     let cont = conts.first()
-    let reconstructed = reconstruct-fn(child, cont)
+    // Two-pass: if fn-wrappers are present inside a pause zone, re-run the inner parse
+    // with the outer need-cover so that fn-wrappers handle their own visibility and
+    // non-fn-wrapper content is properly covered by the inner mechanism.
+    //
+    // `next-last-subslide > 0` indicates that at least one touying-fn-wrapper was found
+    // inside the container (fn-wrappers set last-subslide to the max subslide they cover,
+    // which is always >= 1 -- see uncover/only/alternatives implementations).
+    let would-be-hidden = not (
+      calc.min(repetitions, final-repetitions) <= index or not need-cover
+    )
+    if would-be-hidden and next-last-subslide > 0 {
+      let (
+        conts2,
+        inner-max-repetitions2,
+        _,
+        _,
+      ) = _parse-content-into-results-and-repetitions(
+        self: self,
+        need-cover: need-cover,
+        base: repetitions,
+        index: index,
+        body-content,
+      )
+      let cont2 = conts2.first()
+      return (
+        reconstruct-fn(child, cont2),
+        inner-max-repetitions2,
+        next-last-subslide,
+        final-repetitions,
+        true,
+      )
+    }
     return (
-      reconstructed,
+      reconstruct-fn(child, cont),
       inner-max-repetitions,
       next-last-subslide,
       final-repetitions,
+      false,
     )
   }
   // Content function sets for different handling categories
@@ -1536,13 +1642,14 @@
           and type(it.body.value) == dictionary
       ) {
         let kind = it.body.value.at("kind", default: none)
-        if kind == "touying-pause" {
-          repetitions += 1
-          continue
-        } else if kind == "touying-meanwhile" {
-          // reset the repetitions
-          max-repetitions = calc.max(max-repetitions, repetitions)
-          repetitions = 1
+        if kind == "touying-jump" {
+          if it.body.value.relative {
+            repetitions += it.body.value.n
+          } else {
+            // absolute jump
+            max-repetitions = calc.max(max-repetitions, repetitions)
+            repetitions = it.body.value.n
+          }
           continue
         }
       }
@@ -1571,16 +1678,27 @@
           and type(child.value) == dictionary
       ) {
         let kind = child.value.at("kind", default: none)
-        if kind == "touying-pause" {
-          repetitions += 1 // Increment subslide count for pause
-        } else if kind == "touying-meanwhile" {
-          // Meanwhile: reveal all hidden content and reset to subslide 1
-          if hidden-parts.len() != 0 {
-            result.push(cover(hidden-parts.sum()))
-            hidden-parts = ()
+        if kind == "touying-jump" {
+          if child.value.relative {
+            repetitions += child.value.n // relative: advance by n (pause = jump(1, relative: true))
+            // Track the peak repetitions so that a subsequent negative jump doesn't
+            // cause the slide count to be underestimated
+            max-repetitions = calc.max(max-repetitions, repetitions)
+            // If we jumped back into the visible zone, flush hidden-parts in order
+            // (so they appear before subsequent visible content, not after it)
+            if hidden-parts.len() != 0 and repetitions <= index {
+              result.push(cover(hidden-parts.sum()))
+              hidden-parts = ()
+            }
+          } else {
+            // absolute: reveal all hidden content then jump to target subslide
+            if hidden-parts.len() != 0 {
+              result.push(cover(hidden-parts.sum()))
+              hidden-parts = ()
+            }
+            max-repetitions = calc.max(max-repetitions, repetitions)
+            repetitions = child.value.n
           }
-          max-repetitions = calc.max(max-repetitions, repetitions)
-          repetitions = 1
         } else if kind == "touying-equation" {
           // Handle animated equations with pause/meanwhile markers
           let (conts, nextrepetitions) = _parse-touying-equation(
@@ -1630,6 +1748,8 @@
           repetitions = nextrepetitions
         } else if kind == "touying-fn-wrapper" {
           // Handle function wrappers (uncover, only, alternatives, etc.)
+          // These always escape the pause zone: they handle their own subslide
+          // visibility internally, so they must never be pushed to hidden-parts.
           let nextrepetitions = repetitions
           let extra-args = (:)
           if child.value.last-subslide != none {
@@ -1641,19 +1761,11 @@
               last-subslide = calc.max(last-subslide, child.value.last-subslide)
             }
           }
-          if repetitions <= index or not need-cover {
-            result.push((child.value.fn)(
-              self: self,
-              ..child.value.args,
-              ..extra-args,
-            ))
-          } else {
-            hidden-parts.push((child.value.fn)(
-              self: self,
-              ..child.value.args,
-              ..extra-args,
-            ))
-          }
+          result.push((child.value.fn)(
+            self: self,
+            ..child.value.args,
+            ..extra-args,
+          ))
           repetitions = nextrepetitions
         } else if kind == "touying-delayed-wrapper" {
           if show-delayed-wrapper {
@@ -1691,7 +1803,30 @@
           index: index,
           child,
         )
-        let cont = conts.first()
+        // Two-pass: if fn-wrappers are present and sequence would be hidden,
+        // re-run with outer need-cover so fn-wrappers handle their own visibility.
+        let would-be-hidden = not (
+          calc.min(repetitions, final-repetitions) <= index or not need-cover
+        )
+        let (cont, inner-max-repetitions) = if (
+          would-be-hidden and next-last-subslide > 0
+        ) {
+          let (
+            conts2,
+            inner-max-repetitions2,
+            _,
+            _,
+          ) = _parse-content-into-results-and-repetitions(
+            self: self,
+            need-cover: need-cover,
+            base: repetitions,
+            index: index,
+            child,
+          )
+          (conts2.first(), inner-max-repetitions2)
+        } else {
+          (conts.first(), inner-max-repetitions)
+        }
         // Propagate meanwhile effect from inside the sequence
         if final-repetitions < repetitions {
           if hidden-parts.len() != 0 {
@@ -1700,7 +1835,11 @@
           }
           max-repetitions = calc.max(max-repetitions, repetitions)
         }
-        if calc.min(repetitions, final-repetitions) <= index or not need-cover {
+        if (
+          would-be-hidden and next-last-subslide > 0
+            or calc.min(repetitions, final-repetitions) <= index
+            or not need-cover
+        ) {
           result.push(cont)
         } else {
           hidden-parts.push(cont)
@@ -1715,6 +1854,7 @@
           inner-max-repetitions,
           next-last-subslide,
           final-repetitions,
+          force-to-result,
         ) = parse-and-reconstruct(
           self,
           child,
@@ -1732,7 +1872,11 @@
           }
           max-repetitions = calc.max(max-repetitions, repetitions)
         }
-        if calc.min(repetitions, final-repetitions) <= index or not need-cover {
+        if (
+          force-to-result
+            or calc.min(repetitions, final-repetitions) <= index
+            or not need-cover
+        ) {
           result.push(reconstructed)
         } else {
           hidden-parts.push(reconstructed)
@@ -1749,6 +1893,7 @@
           inner-max-repetitions,
           next-last-subslide,
           final-repetitions,
+          force-to-result,
         ) = parse-and-reconstruct(
           self,
           child,
@@ -1770,7 +1915,11 @@
           }
           max-repetitions = calc.max(max-repetitions, repetitions)
         }
-        if calc.min(repetitions, final-repetitions) <= index or not need-cover {
+        if (
+          force-to-result
+            or calc.min(repetitions, final-repetitions) <= index
+            or not need-cover
+        ) {
           result.push(reconstructed)
         } else {
           hidden-parts.push(reconstructed)
@@ -1794,6 +1943,30 @@
           index: index,
           ..child.children,
         )
+        // Two-pass: if fn-wrappers are present and container would be hidden,
+        // re-run with outer need-cover so fn-wrappers handle their own visibility.
+        let would-be-hidden = not (
+          calc.min(repetitions, final-repetitions) <= index or not need-cover
+        )
+        let (conts, inner-max-repetitions) = if (
+          would-be-hidden and next-last-subslide > 0
+        ) {
+          let (
+            conts2,
+            inner-max-repetitions2,
+            _,
+            _,
+          ) = _parse-content-into-results-and-repetitions(
+            self: self,
+            need-cover: need-cover,
+            base: repetitions,
+            index: index,
+            ..child.children,
+          )
+          (conts2, inner-max-repetitions2)
+        } else {
+          (conts, inner-max-repetitions)
+        }
         // Propagate meanwhile effect from inside the table/grid/stack
         if final-repetitions < repetitions {
           if hidden-parts.len() != 0 {
@@ -1802,18 +1975,19 @@
           }
           max-repetitions = calc.max(max-repetitions, repetitions)
         }
-        if calc.min(repetitions, final-repetitions) <= index or not need-cover {
-          result.push(utils.reconstruct-table-like(
-            child,
-            labeled: labeled(child.func()),
-            conts,
-          ))
+        let reconstructed-table = utils.reconstruct-table-like(
+          child,
+          labeled: labeled(child.func()),
+          conts,
+        )
+        if (
+          would-be-hidden and next-last-subslide > 0
+            or calc.min(repetitions, final-repetitions) <= index
+            or not need-cover
+        ) {
+          result.push(reconstructed-table)
         } else {
-          hidden-parts.push(utils.reconstruct-table-like(
-            child,
-            labeled: labeled(child.func()),
-            conts,
-          ))
+          hidden-parts.push(reconstructed-table)
         }
         repetitions = final-repetitions
         max-repetitions = calc.max(max-repetitions, inner-max-repetitions)
@@ -1826,6 +2000,7 @@
           inner-max-repetitions,
           next-last-subslide,
           final-repetitions,
+          force-to-result,
         ) = parse-and-reconstruct(
           self,
           child,
@@ -1848,7 +2023,11 @@
           }
           max-repetitions = calc.max(max-repetitions, repetitions)
         }
-        if calc.min(repetitions, final-repetitions) <= index or not need-cover {
+        if (
+          force-to-result
+            or calc.min(repetitions, final-repetitions) <= index
+            or not need-cover
+        ) {
           result.push(reconstructed)
         } else {
           hidden-parts.push(reconstructed)
@@ -1863,6 +2042,7 @@
           inner-max-repetitions,
           next-last-subslide,
           final-repetitions,
+          force-to-result,
         ) = parse-and-reconstruct(
           self,
           child,
@@ -1880,7 +2060,11 @@
           }
           max-repetitions = calc.max(max-repetitions, repetitions)
         }
-        if calc.min(repetitions, final-repetitions) <= index or not need-cover {
+        if (
+          force-to-result
+            or calc.min(repetitions, final-repetitions) <= index
+            or not need-cover
+        ) {
           result.push(reconstructed)
         } else {
           hidden-parts.push(reconstructed)
@@ -1902,7 +2086,6 @@
           index: index,
           child.body,
         )
-        let cont = conts.first()
         let args = if child.has("gutter") {
           (gutter: child.gutter)
         }
@@ -1910,6 +2093,30 @@
           child.count
         } else {
           2
+        }
+        // Two-pass: if fn-wrappers are present and columns would be hidden,
+        // re-run with outer need-cover so fn-wrappers handle their own visibility.
+        let would-be-hidden = not (
+          calc.min(repetitions, final-repetitions) <= index or not need-cover
+        )
+        let (cont, inner-max-repetitions) = if (
+          would-be-hidden and next-last-subslide > 0
+        ) {
+          let (
+            conts2,
+            inner-max-repetitions2,
+            _,
+            _,
+          ) = _parse-content-into-results-and-repetitions(
+            self: self,
+            need-cover: need-cover,
+            base: repetitions,
+            index: index,
+            child.body,
+          )
+          (conts2.first(), inner-max-repetitions2)
+        } else {
+          (conts.first(), inner-max-repetitions)
         }
         // Propagate meanwhile effect from inside the columns
         if final-repetitions < repetitions {
@@ -1919,7 +2126,11 @@
           }
           max-repetitions = calc.max(max-repetitions, repetitions)
         }
-        if calc.min(repetitions, final-repetitions) <= index or not need-cover {
+        if (
+          would-be-hidden and next-last-subslide > 0
+            or calc.min(repetitions, final-repetitions) <= index
+            or not need-cover
+        ) {
           result.push(columns(count, ..args, cont))
         } else {
           hidden-parts.push(columns(count, ..args, cont))
@@ -1941,7 +2152,6 @@
           index: index,
           child.body,
         )
-        let cont = conts.first()
         let fields = child.fields()
         let _ = fields.remove("alignment", default: none)
         let _ = fields.remove("body", default: none)
@@ -1949,6 +2159,30 @@
           child.alignment
         } else {
           start
+        }
+        // Two-pass: if fn-wrappers are present and place would be hidden,
+        // re-run with outer need-cover so fn-wrappers handle their own visibility.
+        let would-be-hidden = not (
+          calc.min(repetitions, final-repetitions) <= index or not need-cover
+        )
+        let (cont, inner-max-repetitions) = if (
+          would-be-hidden and next-last-subslide > 0
+        ) {
+          let (
+            conts2,
+            inner-max-repetitions2,
+            _,
+            _,
+          ) = _parse-content-into-results-and-repetitions(
+            self: self,
+            need-cover: need-cover,
+            base: repetitions,
+            index: index,
+            child.body,
+          )
+          (conts2.first(), inner-max-repetitions2)
+        } else {
+          (conts.first(), inner-max-repetitions)
         }
         // Propagate meanwhile effect from inside the place
         if final-repetitions < repetitions {
@@ -1958,7 +2192,11 @@
           }
           max-repetitions = calc.max(max-repetitions, repetitions)
         }
-        if calc.min(repetitions, final-repetitions) <= index or not need-cover {
+        if (
+          would-be-hidden and next-last-subslide > 0
+            or calc.min(repetitions, final-repetitions) <= index
+            or not need-cover
+        ) {
           result.push(place(alignment, ..fields, cont))
         } else {
           hidden-parts.push(place(alignment, ..fields, cont))
@@ -1980,7 +2218,6 @@
           index: index,
           child.body,
         )
-        let cont = conts.first()
         let fields = child.fields()
         let _ = fields.remove("angle", default: none)
         let _ = fields.remove("body", default: none)
@@ -1988,6 +2225,30 @@
           child.angle
         } else {
           0deg
+        }
+        // Two-pass: if fn-wrappers are present and rotate would be hidden,
+        // re-run with outer need-cover so fn-wrappers handle their own visibility.
+        let would-be-hidden = not (
+          calc.min(repetitions, final-repetitions) <= index or not need-cover
+        )
+        let (cont, inner-max-repetitions) = if (
+          would-be-hidden and next-last-subslide > 0
+        ) {
+          let (
+            conts2,
+            inner-max-repetitions2,
+            _,
+            _,
+          ) = _parse-content-into-results-and-repetitions(
+            self: self,
+            need-cover: need-cover,
+            base: repetitions,
+            index: index,
+            child.body,
+          )
+          (conts2.first(), inner-max-repetitions2)
+        } else {
+          (conts.first(), inner-max-repetitions)
         }
         // Propagate meanwhile effect from inside the rotate
         if final-repetitions < repetitions {
@@ -1997,7 +2258,11 @@
           }
           max-repetitions = calc.max(max-repetitions, repetitions)
         }
-        if calc.min(repetitions, final-repetitions) <= index or not need-cover {
+        if (
+          would-be-hidden and next-last-subslide > 0
+            or calc.min(repetitions, final-repetitions) <= index
+            or not need-cover
+        ) {
           result.push(rotate(angle, ..fields, cont))
         } else {
           hidden-parts.push(rotate(angle, ..fields, cont))

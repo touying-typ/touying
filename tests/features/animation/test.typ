@@ -150,3 +150,57 @@ By factorizing, we can obtain this result.
   node((2, 0), `closed`, radius: 2em, extrude: (-2.5, 0)),
   edge((0, 0), (2, 0), `close()`, "-|>", bend: -40deg),
 )
+
+= Pause + Uncover Mixing
+
+== Pause + Uncover/Only Inline
+
+- On 1 #pause
+- On 2 #pause
+- #uncover("2-")[Uncover 2-]  // was hidden even on subslide 2
+- #only(2)[Only 2]            // was hidden even on subslide 2
+- On 3
+
+== Pause + Alternatives Inline
+
+Text #pause then #alternatives[Alt 1][Alt 2] and more.
+
+= Jump
+
+== jump(n, relative: true) — relative stepping
+
+`#jump(1, relative: true)` is equivalent to `#pause`:
+
+A #jump(1, relative: true) B #jump(1, relative: true) C
+
+`#jump(2, relative: true)` skips an extra subslide:
+
+X #jump(2, relative: true) Z
+
+
+== jump(n) — absolute jumping
+
+`#jump(1)` is equivalent to `#meanwhile`:
+
+First #pause Second #jump(1) Always visible
+
+`#jump(3)` jumps to absolute subslide 3:
+
+Part A #pause Part B #jump(3) Part C
+
+
+== jump negative relative in CeTZ
+
+#cetz-canvas({
+  import cetz.draw: *
+
+  rect((0, 0), (5, 5))
+
+  (jump(1, relative: true),)
+
+  rect((0, 0), (2, 2))
+
+  (jump(-1, relative: true),)
+
+  circle((3.5, 3.5), radius: 1)
+})
