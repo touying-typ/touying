@@ -206,12 +206,16 @@
     current-slide-cont,
     recaller-map,
   ) = {
+    let last-heading-label = _get-last-heading-label(self.headings)
+    // Skip handout-only slides when not in handout mode
+    if last-heading-label == "touying:handout" and not self.handout {
+      return (none, recaller-map, (), (), true, false)
+    }
     let slide-content = if already-slide-wrapper {
       slide-fn(self)
     } else {
       _call-slide-fn(self, slide-fn, current-slide-cont)
     }
-    let last-heading-label = _get-last-heading-label(self.headings)
     if last-heading-label != none {
       recaller-map.insert(last-heading-label, slide-content)
     }
@@ -259,7 +263,7 @@
         slide-parts.sum(default: none),
         recaller-map,
       )
-      output-slides.push(slide-content)
+      if slide-content != none { output-slides.push(slide-content) }
       horizontal-line = false
     }
     // Main logic
@@ -283,7 +287,7 @@
           slide-parts.sum(default: none),
           recaller-map,
         )
-        output-slides.push(slide-content)
+        if slide-content != none { output-slides.push(slide-content) }
       }
       (
         slide-content,
@@ -302,7 +306,7 @@
       if child.has("label") and child.label != <touying-temporary-mark> {
         recaller-map.insert(str(child.label), slide-content)
       }
-      output-slides.push(slide-content)
+      if slide-content != none { output-slides.push(slide-content) }
     } else if utils.is-kind(child, "touying-slide-recaller") {
       slide-parts = utils.trim(slide-parts)
       if slide-parts != () or current-headings != () {
@@ -319,7 +323,7 @@
           slide-parts.sum(default: none),
           recaller-map,
         )
-        output-slides.push(slide-content)
+        if slide-content != none { output-slides.push(slide-content) }
       }
       let lbl = child.value.label
       assert(
@@ -344,7 +348,7 @@
         slide-parts.sum(default: none),
         recaller-map,
       )
-      output-slides.push(slide-content)
+      if slide-content != none { output-slides.push(slide-content) }
     } else if horizontal-line-to-pagebreak and child in ([—], [---]) {
       horizontal-line = true
       continue
@@ -389,7 +393,7 @@
             slide-parts.sum(default: none),
             recaller-map,
           )
-          output-slides.push(slide-content)
+          if slide-content != none { output-slides.push(slide-content) }
         }
       }
 
@@ -418,7 +422,7 @@
             none,
             recaller-map,
           )
-          output-slides.push(slide-content)
+          if slide-content != none { output-slides.push(slide-content) }
         } else if (
           child.depth == 2
             and new-subsection-slide-fn != none
@@ -437,7 +441,7 @@
             none,
             recaller-map,
           )
-          output-slides.push(slide-content)
+          if slide-content != none { output-slides.push(slide-content) }
         } else if (
           child.depth == 3
             and new-subsubsection-slide-fn != none
@@ -456,7 +460,7 @@
             none,
             recaller-map,
           )
-          output-slides.push(slide-content)
+          if slide-content != none { output-slides.push(slide-content) }
         } else if (
           child.depth == 4
             and new-subsubsubsection-slide-fn != none
@@ -475,7 +479,7 @@
             none,
             recaller-map,
           )
-          output-slides.push(slide-content)
+          if slide-content != none { output-slides.push(slide-content) }
         }
       }
     } else if (
@@ -512,7 +516,7 @@
           slide-parts.sum(default: none),
           recaller-map,
         )
-        output-slides.push(slide-content)
+        if slide-content != none { output-slides.push(slide-content) }
       }
       // Appendix content
       output-slides.push(
@@ -539,7 +543,7 @@
           slide-parts.sum(default: none),
           recaller-map,
         )
-        output-slides.push(slide-content)
+        if slide-content != none { output-slides.push(slide-content) }
       }
       output-slides.push(
         utils.reconstruct-styled(
@@ -592,7 +596,7 @@
               slide-parts.sum(default: none),
               recaller-map,
             )
-            output-slides.push(slide-content)
+            if slide-content != none { output-slides.push(slide-content) }
           }
           // Add new slides, wrapped in the same styled node so that the
           // show/set rules cascade to subsequent slides (matching Typst semantics)
@@ -642,7 +646,7 @@
       slide-parts.sum(default: none),
       recaller-map,
     )
-    output-slides.push(slide-content)
+    if slide-content != none { output-slides.push(slide-content) }
   }
 
   if is-new-start {
@@ -860,6 +864,26 @@
     last-subslide: utils.last-required-subslide(visible-subslides),
     visible-subslides,
     only-cont,
+  )
+}
+
+
+/// Display content only in handout mode.
+/// Don't reserve space when hidden, content is completely not existing there.
+///
+/// Example:
+///
+/// ```typst
+/// #handout-only[This content is only visible in handout mode.]
+/// ```
+///
+/// - cont (content): The content to display in handout mode.
+///
+/// -> content
+#let handout-only(cont) = {
+  touying-fn-wrapper(
+    utils.handout-only,
+    cont,
   )
 }
 

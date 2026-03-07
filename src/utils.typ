@@ -1188,6 +1188,25 @@
 }
 
 
+/// Display content only in handout mode.
+/// Don't reserve space when hidden, content is completely not existing there.
+///
+/// Example:
+///
+/// ```typst
+/// #handout-only[This content is only visible in handout mode.]
+/// ```
+///
+/// - cont (content): The content to display in handout mode.
+///
+/// -> content
+#let handout-only(self: none, cont) = {
+  if self.handout {
+    cont
+  }
+}
+
+
 /// `#alternatives` has a couple of "cousins" that might be more convenient in some situations. The first one is `#alternatives-match` that has a name inspired by match-statements in many functional programming languages. The idea is that you give it a dictionary mapping from subslides to content:
 ///
 /// Example:
