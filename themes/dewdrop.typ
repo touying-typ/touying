@@ -415,6 +415,7 @@
     config-common(
       slide-fn: slide,
       new-section-slide-fn: new-section-slide,
+      receive-body-for-new-section-slide-fn: false,
     ),
     config-methods(
       init: (self: none, body) => {
