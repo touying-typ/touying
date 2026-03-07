@@ -73,7 +73,7 @@
     counter(footnote).update(0)
   }
   if self.at("reset-page-counter-to-slide-counter", default: true) {
-    context counter(page).update(utils.slide-counter.get())
+    context counter(page).update(calc.max(1, utils.slide-counter.get().first()))
   }
   if self.at("enable-pdfpc", default: true) {
     context [
@@ -82,7 +82,7 @@
       #metadata((t: "Overlay", v: self.subslide - 1)) <pdfpc>
       #metadata((
         t: "LogicalSlide",
-        v: utils.slide-counter.get().first(),
+        v: calc.max(1, utils.slide-counter.get().first()),
       )) <pdfpc>
     ]
   }
