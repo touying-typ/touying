@@ -10,7 +10,7 @@
 This slide contains speaker notes that won't be visible in normal presentation mode.
 
 #speaker-note[
-  + This is the first speaker note point
+  + This is the first speaker note point #pause
   + Remember to explain the concept clearly
   + Don't forget to mention the example
 ]

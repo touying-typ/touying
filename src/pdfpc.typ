@@ -42,7 +42,11 @@
           pdfpc.endSlide = page.label - 1
         }
       } else if item.t == "Note" {
-        page.note = item.v
+        page.note = if "note" in page {
+          page.note + "\n\n" + item.v
+        } else {
+          item.v
+        }
       } else {
         pdfpc.insert(lower(item.t.at(0)) + item.t.slice(1), item.v)
       }

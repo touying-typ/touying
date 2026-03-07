@@ -1424,6 +1424,8 @@
 
 /// Speaker notes are a way to add additional information to your slides that is not visible to the audience. This can be useful for providing additional context or reminders to yourself.
 ///
+/// Multiple calls on the same slide are combined (accumulated), so all notes are shown together.
+///
 /// Example: `#speaker-note[This is a speaker note]`
 ///
 /// - self (content): The current context.
@@ -1432,18 +1434,21 @@
 ///
 /// - setting (function): A function that takes the note as input and returns a processed note.
 ///
+/// - subslide (none, auto, int, array, string): Restricts the note to specific subslides, similar to `only`.
+///   - `none`: shown on all subslides.
+///   - `auto`: automatically determined from the current pause position (default when called via `#speaker-note`).
+///   - int, array, or string: shown only on the specified subslides.
+///
 /// - note (content): The content of the speaker note.
 ///
 /// -> content
-#let speaker-note(self: none, mode: "typ", setting: it => it, note) = {
-  if self.at("enable-pdfpc", default: true) {
-    let raw-text = if type(note) == content and note.has("text") {
-      note.text
-    } else {
-      markup-text(note, mode: mode).trim()
-    }
-    pdfpc.speaker-note(raw-text)
-  }
+#let speaker-note(
+  self: none,
+  mode: "typ",
+  setting: it => it,
+  subslide: none,
+  note,
+) = {
   let show-only-notes = self.at("show-only-notes", default: false)
   assert(
     show-only-notes in (false, true),
@@ -1457,8 +1462,27 @@
     show-notes-on-second-screen in (none, bottom, right),
     message: "`show-notes-on-second-screen` should be `none`, `bottom` or `right`",
   )
-  if show-only-notes or show-notes-on-second-screen != none {
-    slide-note-state.update(setting(note))
+  let is-visible = (
+    subslide == none
+      or subslide == auto
+      or check-visible(self.subslide, subslide)
+  )
+  if is-visible {
+    if self.at("enable-pdfpc", default: true) {
+      let raw-text = if type(note) == content and note.has("text") {
+        note.text
+      } else {
+        markup-text(note, mode: mode).trim()
+      }
+      pdfpc.speaker-note(raw-text)
+    }
+    if show-only-notes or show-notes-on-second-screen != none {
+      slide-note-state.update(old => if old == none {
+        setting(note)
+      } else {
+        old + parbreak() + setting(note)
+      })
+    }
   }
 }
 
