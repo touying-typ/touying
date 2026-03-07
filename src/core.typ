@@ -3170,14 +3170,16 @@
         ..bodies,
       )
       header = page-preamble(self) + header
-      set page(..(self.page + page-extra-args + (header: header, footer: footer)))
+      set page(
+        ..(self.page + page-extra-args + (header: header, footer: footer)),
+      )
       body-transform(setting-fn(
         subslide-preamble(self) + composer-with-side-by-side(..conts),
       ))
     } else {
       // Render only the subslides that match handout-subslides
-      let handout-subslide-indices = range(1, repeat + 1).filter(i =>
-        utils.check-visible(i, handout-subslides)
+      let handout-subslide-indices = range(1, repeat + 1).filter(
+        i => utils.check-visible(i, handout-subslides),
       )
       // Fall back to the last subslide if none match
       if handout-subslide-indices.len() == 0 {
@@ -3196,7 +3198,9 @@
         if not is-first {
           subslide-self.handout = false
         }
-        let (header-i, footer-i, body-transform-i) = _get-header-footer(subslide-self)
+        let (header-i, footer-i, body-transform-i) = _get-header-footer(
+          subslide-self,
+        )
         let (conts, _, _, _) = _parse-content-into-results-and-repetitions(
           self: subslide-self,
           index: i,
@@ -3206,10 +3210,15 @@
         let new-header = page-preamble(subslide-self) + header-i
         result.push({
           set page(
-            ..(subslide-self.page + page-extra-args + (header: new-header, footer: footer-i)),
+            ..(
+              subslide-self.page
+                + page-extra-args
+                + (header: new-header, footer: footer-i)
+            ),
           )
           body-transform-i(setting-fn(
-            subslide-preamble(subslide-self) + composer-with-side-by-side(..conts),
+            subslide-preamble(subslide-self)
+              + composer-with-side-by-side(..conts),
           ))
         })
       }
