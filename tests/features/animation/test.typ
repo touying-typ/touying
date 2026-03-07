@@ -164,9 +164,12 @@ By factorizing, we can obtain this result.
 
 == Pause + Uncover/Only Inline
 
-Text before #pause and #uncover("2-")[uncover 2-] and #only(2)[only 2] after pause.
-
+- On 1 #pause
+- On 2 #pause
+- #uncover("2-")[Uncover 2-]  // was hidden even on subslide 2
+- #only(2)[Only 2]            // was hidden even on subslide 2
+- On 3
 
 == Pause + Alternatives Inline
 
-Text #pause then #alternatives[Alt 1][Alt 2][Alt 3] and more.
+Text #pause then #alternatives[Alt 1][Alt 2] and more.
