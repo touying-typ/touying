@@ -174,42 +174,42 @@ By factorizing, we can obtain this result.
 
 Text #pause then #alternatives[Alt 1][Alt 2] and more.
 
-= Step and Goto
+= Jump
 
-== step(n) — relative stepping
+== jump(n, relative: true) — relative stepping
 
-`#step(1)` is equivalent to `#pause`:
+`#jump(1, relative: true)` is equivalent to `#pause`:
 
-A #step(1) B #step(1) C
+A #jump(1, relative: true) B #jump(1, relative: true) C
 
-`#step(2)` skips an extra subslide:
+`#jump(2, relative: true)` skips an extra subslide:
 
-X #step(2) Z
-
-
-== goto(n) — absolute jumping
-
-`#goto(1)` is equivalent to `#meanwhile`:
-
-First #pause Second #goto(1) Always visible
-
-`#goto(3)` jumps to subslide 3:
-
-Part A #pause Part B #goto(3) Part C
+X #jump(2, relative: true) Z
 
 
-== step and goto in CeTZ
+== jump(n) — absolute jumping
+
+`#jump(1)` is equivalent to `#meanwhile`:
+
+First #pause Second #jump(1) Always visible
+
+`#jump(3)` jumps to absolute subslide 3:
+
+Part A #pause Part B #jump(3) Part C
+
+
+== jump in CeTZ
 
 #cetz-canvas({
   import cetz.draw: *
 
   rect((0, 0), (5, 5))
 
-  (step(1),)
+  (jump(1, relative: true),)
 
   rect((0, 0), (2, 2))
 
-  (step(2),)
+  (jump(2, relative: true),)
 
   circle((3.5, 3.5), radius: 1)
 })

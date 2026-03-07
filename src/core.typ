@@ -706,52 +706,54 @@
 ))<touying-temporary-mark>]
 
 
-/// Step forward by `n` subslides relative to the current position.
+/// Jump to a subslide position, either relatively or absolutely.
 ///
-/// This is a generalization of `#pause`, which is equivalent to `#step(1)`.
+/// This is the unified core for both `#pause` and `#meanwhile`.
 ///
-/// Example:
+/// - When `relative: true` (relative mode): advances the subslide counter by `n`.
+///   Positive `n` moves forward; negative `n` moves backward.
+///   `n` must be a non-zero integer (zero would be a no-op with no visible effect).
+///   `#pause` is equivalent to `#jump(1, relative: true)`.
 ///
-/// ```typst
-/// Content A #step(1) Content B  // same as: Content A #pause Content B
-/// Content A #step(2) Content C  // skip an extra subslide
-/// ```
-///
-/// - n (int): Number of subslides to advance. Must be a positive integer.
-///
-/// -> content
-#let step(n) = {
-  assert(type(n) == int and n >= 1, message: "step: n must be a positive integer, got " + repr(n))
-  [#metadata((kind: "touying-step", n: n))<touying-temporary-mark>]
-}
-
-
-/// Jump to an absolute subslide position.
-///
-/// This is a generalization of `#meanwhile`, which is equivalent to `#goto(1)`.
+/// - When `relative: false` (absolute mode, default): reveals all currently hidden
+///   content and jumps to absolute subslide `n`.
+///   `#meanwhile` is equivalent to `#jump(1)`.
 ///
 /// Example:
 ///
 /// ```typst
-/// A #pause B #goto(1) C  // C is always visible (like #meanwhile)
-/// A #pause B #goto(3) D  // D is visible from subslide 3 onward
+/// A #jump(1, relative: true) B   // same as A #pause B
+/// A #jump(2, relative: true) C   // skip an extra subslide before C
+/// A #pause B #jump(1) C          // C is always visible (same as #meanwhile)
+/// A #pause B #jump(3) D          // D visible from subslide 3 onward
+/// // A #pause B #pause C — normally C appears at subslide 3;
+/// // adding #jump(-1, relative: true) before D makes D appear at subslide 2 (same as B):
+/// A #pause B #pause C #jump(-1, relative: true) D
 /// ```
 ///
-/// - n (int): The absolute subslide number to jump to. Must be a positive integer.
+/// - n (int): When `relative: true`, the number of subslides to advance (non-zero integer).
+///   When `relative: false`, the absolute target subslide number (positive integer >= 1).
+///
+/// - relative (bool): If `true`, `n` is a relative offset from the current subslide counter.
+///   If `false` (default), `n` is an absolute target subslide number.
 ///
 /// -> content
-#let goto(n) = {
-  assert(type(n) == int and n >= 1, message: "goto: n must be a positive integer, got " + repr(n))
-  [#metadata((kind: "touying-goto", n: n))<touying-temporary-mark>]
+#let jump(n, relative: false) = {
+  if relative {
+    assert(type(n) == int and n != 0, message: "jump: n must be a non-zero integer when relative: true, got " + repr(n))
+  } else {
+    assert(type(n) == int and n >= 1, message: "jump: n must be a positive integer when relative: false, got " + repr(n))
+  }
+  [#metadata((kind: "touying-jump", n: n, relative: relative))<touying-temporary-mark>]
 }
 
 
-/// Uncover content after the `#pause` mark in next subslide. Equivalent to `#step(1)`.
-#let pause = step(1)
+/// Uncover content in the next subslide. Equivalent to `#jump(1, relative: true)`.
+#let pause = jump(1, relative: true)
 
 
-/// Display content after the `#meanwhile` mark simultaneously. Equivalent to `#goto(1)`.
-#let meanwhile = goto(1)
+/// Display content simultaneously with the current subslide. Equivalent to `#jump(1)`.
+#let meanwhile = jump(1)
 
 
 /// Take effect in some subslides.
@@ -1401,22 +1403,23 @@
         and type(child.value) == dictionary
     ) {
       let kind = child.value.at("kind", default: none)
-      if kind == "touying-step" {
-        repetitions += child.value.n
-      } else if kind == "touying-goto" {
-        // clear the hidden-parts when encounter #goto / #meanwhile
-        if hidden-parts.len() != 0 {
-          let r = cover(hidden-parts)
-          if type(r) == array {
-            result += r
-          } else {
-            result.push(r)
+      if kind == "touying-jump" {
+        if child.value.relative {
+          repetitions += child.value.n
+        } else {
+          // absolute jump: clear hidden-parts and jump to target subslide
+          if hidden-parts.len() != 0 {
+            let r = cover(hidden-parts)
+            if type(r) == array {
+              result += r
+            } else {
+              result.push(r)
+            }
           }
+          hidden-parts = ()
+          max-repetitions = calc.max(max-repetitions, repetitions)
+          repetitions = child.value.n
         }
-        hidden-parts = ()
-        // then jump to the target subslide
-        max-repetitions = calc.max(max-repetitions, repetitions)
-        repetitions = child.value.n
       } else {
         if repetitions <= index {
           result.push(child)
@@ -1613,13 +1616,14 @@
           and type(it.body.value) == dictionary
       ) {
         let kind = it.body.value.at("kind", default: none)
-        if kind == "touying-step" {
-          repetitions += it.body.value.n
-          continue
-        } else if kind == "touying-goto" {
-          // jump to the target subslide
-          max-repetitions = calc.max(max-repetitions, repetitions)
-          repetitions = it.body.value.n
+        if kind == "touying-jump" {
+          if it.body.value.relative {
+            repetitions += it.body.value.n
+          } else {
+            // absolute jump
+            max-repetitions = calc.max(max-repetitions, repetitions)
+            repetitions = it.body.value.n
+          }
           continue
         }
       }
@@ -1648,16 +1652,18 @@
           and type(child.value) == dictionary
       ) {
         let kind = child.value.at("kind", default: none)
-        if kind == "touying-step" {
-          repetitions += child.value.n // Increment subslide count by n (pause = step(1))
-        } else if kind == "touying-goto" {
-          // goto(n): reveal all hidden content and jump to subslide n (meanwhile = goto(1))
-          if hidden-parts.len() != 0 {
-            result.push(cover(hidden-parts.sum()))
-            hidden-parts = ()
+        if kind == "touying-jump" {
+          if child.value.relative {
+            repetitions += child.value.n // relative: advance by n (pause = jump(1, relative: true))
+          } else {
+            // absolute: reveal all hidden content then jump to target subslide
+            if hidden-parts.len() != 0 {
+              result.push(cover(hidden-parts.sum()))
+              hidden-parts = ()
+            }
+            max-repetitions = calc.max(max-repetitions, repetitions)
+            repetitions = child.value.n
           }
-          max-repetitions = calc.max(max-repetitions, repetitions)
-          repetitions = child.value.n
         } else if kind == "touying-equation" {
           // Handle animated equations with pause/meanwhile markers
           let (conts, nextrepetitions) = _parse-touying-equation(
