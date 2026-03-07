@@ -97,7 +97,7 @@
 
 /// The common configurations of the slides.
 ///
-/// - handout (boolean): Whether to enable the handout mode. It retains only the last subslide of each slide in handout mode. Default is `false`.
+/// - handout (boolean): Whether to enable the handout mode. By default, it retains only the last subslide of each slide, but this can be overridden via `handout-subslides`. Default is `false`.
 ///
 /// - handout-subslides (none, int, array, string): The subslides to include in handout mode. Accepts the same format as `visible-subslides` (e.g. `2`, `(1, 3)`, `"2-"`, `"1, 3-5"`). When `none`, the last subslide is used (default behavior). Default is `none`.
 ///
