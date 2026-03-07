@@ -3089,7 +3089,10 @@
   }
   // preamble for the subslides
   let subslide-preamble(self) = {
-    if (self.handout and not self.at("_handout-secondary", default: false)) or self.subslide == 1 {
+    if (
+      (self.handout and not self.at("_handout-secondary", default: false))
+        or self.subslide == 1
+    ) {
       slide-preamble(self)
     }
     [#metadata((kind: "touying-new-subslide")) <touying-metadata>]
@@ -3123,7 +3126,10 @@
     [#metadata((kind: "touying-new-page")) <touying-metadata>]
     // 1. slide counter part
     //    if freeze-slide-counter is false, then update the slide-counter
-    if (self.handout and not self.at("_handout-secondary", default: false)) or self.subslide == 1 {
+    if (
+      (self.handout and not self.at("_handout-secondary", default: false))
+        or self.subslide == 1
+    ) {
       if not self.at("freeze-slide-counter", default: false) {
         utils.slide-counter.step()
         //  if appendix is false, then update the last-slide-counter
