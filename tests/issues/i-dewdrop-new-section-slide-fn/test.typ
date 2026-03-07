@@ -1,3 +1,10 @@
+// Issue: Strange behaviour of dewdrop theme with new-section-slide-fn
+// https://github.com/touying-typ/touying/issues/388
+// When a custom new-section-slide-fn body contains only context elements
+// (lazily evaluated), Typst fails to properly anchor the page layout in the
+// first pass. This caused hidden headings from subsequent slides to receive
+// incorrect page assignments, making context queries return wrong headings.
+
 #import "/lib.typ": *
 #import themes.dewdrop: *
 

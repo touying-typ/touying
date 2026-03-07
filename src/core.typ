@@ -3034,6 +3034,13 @@
       }
     }
     setting(body)
+    // Layout anchor: ensures proper page break even when the slide body
+    // contains only context elements (which are lazily evaluated and may not
+    // anchor the page layout in Typst's first layout pass). Without this,
+    // hidden headings from subsequent slides may receive incorrect page
+    // assignments, leading to wrong heading display in context queries.
+    // See: https://github.com/touying-typ/touying/issues/388
+    v(0pt, weak: true)
   }
   let composer-with-side-by-side(..args) = {
     let effective-composer = if composer != auto {
