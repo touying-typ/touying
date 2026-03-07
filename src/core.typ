@@ -740,11 +740,23 @@
 /// -> content
 #let jump(n, relative: false) = {
   if relative {
-    assert(type(n) == int and n != 0, message: "jump: n must be a non-zero integer when relative: true, got " + repr(n))
+    assert(
+      type(n) == int and n != 0,
+      message: "jump: n must be a non-zero integer when relative: true, got "
+        + repr(n),
+    )
   } else {
-    assert(type(n) == int and n >= 1, message: "jump: n must be a positive integer when relative: false, got " + repr(n))
+    assert(
+      type(n) == int and n >= 1,
+      message: "jump: n must be a positive integer when relative: false, got "
+        + repr(n),
+    )
   }
-  [#metadata((kind: "touying-jump", n: n, relative: relative))<touying-temporary-mark>]
+  [#metadata((
+    kind: "touying-jump",
+    n: n,
+    relative: relative,
+  ))<touying-temporary-mark>]
 }
 
 
@@ -1796,8 +1808,15 @@
         let would-be-hidden = not (
           calc.min(repetitions, final-repetitions) <= index or not need-cover
         )
-        let (cont, inner-max-repetitions) = if would-be-hidden and next-last-subslide > 0 {
-          let (conts2, inner-max-repetitions2, _, _) = _parse-content-into-results-and-repetitions(
+        let (cont, inner-max-repetitions) = if (
+          would-be-hidden and next-last-subslide > 0
+        ) {
+          let (
+            conts2,
+            inner-max-repetitions2,
+            _,
+            _,
+          ) = _parse-content-into-results-and-repetitions(
             self: self,
             need-cover: need-cover,
             base: repetitions,
@@ -1816,7 +1835,11 @@
           }
           max-repetitions = calc.max(max-repetitions, repetitions)
         }
-        if would-be-hidden and next-last-subslide > 0 or calc.min(repetitions, final-repetitions) <= index or not need-cover {
+        if (
+          would-be-hidden and next-last-subslide > 0
+            or calc.min(repetitions, final-repetitions) <= index
+            or not need-cover
+        ) {
           result.push(cont)
         } else {
           hidden-parts.push(cont)
@@ -1849,7 +1872,11 @@
           }
           max-repetitions = calc.max(max-repetitions, repetitions)
         }
-        if force-to-result or calc.min(repetitions, final-repetitions) <= index or not need-cover {
+        if (
+          force-to-result
+            or calc.min(repetitions, final-repetitions) <= index
+            or not need-cover
+        ) {
           result.push(reconstructed)
         } else {
           hidden-parts.push(reconstructed)
@@ -1888,7 +1915,11 @@
           }
           max-repetitions = calc.max(max-repetitions, repetitions)
         }
-        if force-to-result or calc.min(repetitions, final-repetitions) <= index or not need-cover {
+        if (
+          force-to-result
+            or calc.min(repetitions, final-repetitions) <= index
+            or not need-cover
+        ) {
           result.push(reconstructed)
         } else {
           hidden-parts.push(reconstructed)
@@ -1917,8 +1948,15 @@
         let would-be-hidden = not (
           calc.min(repetitions, final-repetitions) <= index or not need-cover
         )
-        let (conts, inner-max-repetitions) = if would-be-hidden and next-last-subslide > 0 {
-          let (conts2, inner-max-repetitions2, _, _) = _parse-content-into-results-and-repetitions(
+        let (conts, inner-max-repetitions) = if (
+          would-be-hidden and next-last-subslide > 0
+        ) {
+          let (
+            conts2,
+            inner-max-repetitions2,
+            _,
+            _,
+          ) = _parse-content-into-results-and-repetitions(
             self: self,
             need-cover: need-cover,
             base: repetitions,
@@ -1942,7 +1980,11 @@
           labeled: labeled(child.func()),
           conts,
         )
-        if would-be-hidden and next-last-subslide > 0 or calc.min(repetitions, final-repetitions) <= index or not need-cover {
+        if (
+          would-be-hidden and next-last-subslide > 0
+            or calc.min(repetitions, final-repetitions) <= index
+            or not need-cover
+        ) {
           result.push(reconstructed-table)
         } else {
           hidden-parts.push(reconstructed-table)
@@ -1981,7 +2023,11 @@
           }
           max-repetitions = calc.max(max-repetitions, repetitions)
         }
-        if force-to-result or calc.min(repetitions, final-repetitions) <= index or not need-cover {
+        if (
+          force-to-result
+            or calc.min(repetitions, final-repetitions) <= index
+            or not need-cover
+        ) {
           result.push(reconstructed)
         } else {
           hidden-parts.push(reconstructed)
@@ -2014,7 +2060,11 @@
           }
           max-repetitions = calc.max(max-repetitions, repetitions)
         }
-        if force-to-result or calc.min(repetitions, final-repetitions) <= index or not need-cover {
+        if (
+          force-to-result
+            or calc.min(repetitions, final-repetitions) <= index
+            or not need-cover
+        ) {
           result.push(reconstructed)
         } else {
           hidden-parts.push(reconstructed)
@@ -2049,8 +2099,15 @@
         let would-be-hidden = not (
           calc.min(repetitions, final-repetitions) <= index or not need-cover
         )
-        let (cont, inner-max-repetitions) = if would-be-hidden and next-last-subslide > 0 {
-          let (conts2, inner-max-repetitions2, _, _) = _parse-content-into-results-and-repetitions(
+        let (cont, inner-max-repetitions) = if (
+          would-be-hidden and next-last-subslide > 0
+        ) {
+          let (
+            conts2,
+            inner-max-repetitions2,
+            _,
+            _,
+          ) = _parse-content-into-results-and-repetitions(
             self: self,
             need-cover: need-cover,
             base: repetitions,
@@ -2069,7 +2126,11 @@
           }
           max-repetitions = calc.max(max-repetitions, repetitions)
         }
-        if would-be-hidden and next-last-subslide > 0 or calc.min(repetitions, final-repetitions) <= index or not need-cover {
+        if (
+          would-be-hidden and next-last-subslide > 0
+            or calc.min(repetitions, final-repetitions) <= index
+            or not need-cover
+        ) {
           result.push(columns(count, ..args, cont))
         } else {
           hidden-parts.push(columns(count, ..args, cont))
@@ -2104,8 +2165,15 @@
         let would-be-hidden = not (
           calc.min(repetitions, final-repetitions) <= index or not need-cover
         )
-        let (cont, inner-max-repetitions) = if would-be-hidden and next-last-subslide > 0 {
-          let (conts2, inner-max-repetitions2, _, _) = _parse-content-into-results-and-repetitions(
+        let (cont, inner-max-repetitions) = if (
+          would-be-hidden and next-last-subslide > 0
+        ) {
+          let (
+            conts2,
+            inner-max-repetitions2,
+            _,
+            _,
+          ) = _parse-content-into-results-and-repetitions(
             self: self,
             need-cover: need-cover,
             base: repetitions,
@@ -2124,7 +2192,11 @@
           }
           max-repetitions = calc.max(max-repetitions, repetitions)
         }
-        if would-be-hidden and next-last-subslide > 0 or calc.min(repetitions, final-repetitions) <= index or not need-cover {
+        if (
+          would-be-hidden and next-last-subslide > 0
+            or calc.min(repetitions, final-repetitions) <= index
+            or not need-cover
+        ) {
           result.push(place(alignment, ..fields, cont))
         } else {
           hidden-parts.push(place(alignment, ..fields, cont))
@@ -2159,8 +2231,15 @@
         let would-be-hidden = not (
           calc.min(repetitions, final-repetitions) <= index or not need-cover
         )
-        let (cont, inner-max-repetitions) = if would-be-hidden and next-last-subslide > 0 {
-          let (conts2, inner-max-repetitions2, _, _) = _parse-content-into-results-and-repetitions(
+        let (cont, inner-max-repetitions) = if (
+          would-be-hidden and next-last-subslide > 0
+        ) {
+          let (
+            conts2,
+            inner-max-repetitions2,
+            _,
+            _,
+          ) = _parse-content-into-results-and-repetitions(
             self: self,
             need-cover: need-cover,
             base: repetitions,
@@ -2179,7 +2258,11 @@
           }
           max-repetitions = calc.max(max-repetitions, repetitions)
         }
-        if would-be-hidden and next-last-subslide > 0 or calc.min(repetitions, final-repetitions) <= index or not need-cover {
+        if (
+          would-be-hidden and next-last-subslide > 0
+            or calc.min(repetitions, final-repetitions) <= index
+            or not need-cover
+        ) {
           result.push(rotate(angle, ..fields, cont))
         } else {
           hidden-parts.push(rotate(angle, ..fields, cont))
