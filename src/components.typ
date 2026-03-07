@@ -438,7 +438,9 @@
   inline: false,
 ) = (
   context {
-    let headings = query(heading.where(level: 1).or(heading.where(level: 2)))
+    let headings = query(
+      heading.where(level: 1).or(heading.where(level: 2)),
+    ).filter(it => it.outlined)
     let sections = headings.filter(it => it.level == 1)
     if sections == () {
       return
@@ -582,7 +584,7 @@
 ) = (
   context {
     let body() = {
-      let sections = query(heading.where(level: 1))
+      let sections = query(heading.where(level: 1, outlined: true))
       if sections.len() == 0 {
         return
       }
