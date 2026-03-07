@@ -1851,7 +1851,12 @@
             self,
             (methods: (cover: (self: none, body) => [])),
           )
-          let (note-conts, note-max-rep, _, _) = _parse-content-into-results-and-repetitions(
+          let (
+            note-conts,
+            note-max-rep,
+            _,
+            _,
+          ) = _parse-content-into-results-and-repetitions(
             self: note-self,
             need-cover: true,
             base: 1,
