@@ -251,24 +251,27 @@
   touying-slide(
     self: self,
     config: config,
-    components.adaptive-columns(
-      start: text(
-        1.2em,
-        fill: self.colors.primary,
-        weight: "bold",
-        utils.call-or-display(self, title),
-      ),
-      text(
-        fill: self.colors.neutral-darkest,
-        components.progressive-outline(
-          alpha: self.store.alpha,
-          title: none,
-          indent: 1em,
-          depth: self.slide-level,
-          ..args,
+    {
+      components.adaptive-columns(
+        start: text(
+          1.2em,
+          fill: self.colors.primary,
+          weight: "bold",
+          utils.call-or-display(self, title),
         ),
-      ),
-    ),
+        text(
+          fill: self.colors.neutral-darkest,
+          components.progressive-outline(
+            alpha: self.store.alpha,
+            title: none,
+            indent: 1em,
+            depth: self.slide-level,
+            ..args,
+          ),
+        ),
+      )
+      body
+    },
   )
 })
 
@@ -415,7 +418,6 @@
     config-common(
       slide-fn: slide,
       new-section-slide-fn: new-section-slide,
-      receive-body-for-new-section-slide-fn: false,
     ),
     config-methods(
       init: (self: none, body) => {
