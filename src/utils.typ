@@ -1434,12 +1434,15 @@
 ///
 /// - setting (function): A function that takes the note as input and returns a processed note.
 ///
-/// - visible-subslides (none, int, array, string): If not `none`, the note is only shown on the specified subslides, similar to `only`. Default is `none` (shown on all subslides).
+/// - subslide (none, auto, int, array, string): Restricts the note to specific subslides, similar to `only`.
+///   - `none`: shown on all subslides.
+///   - `auto`: automatically determined from the current pause position (default when called via `#speaker-note`).
+///   - int, array, or string: shown only on the specified subslides.
 ///
 /// - note (content): The content of the speaker note.
 ///
 /// -> content
-#let speaker-note(self: none, mode: "typ", setting: it => it, visible-subslides: none, note) = {
+#let speaker-note(self: none, mode: "typ", setting: it => it, subslide: none, note) = {
   let show-only-notes = self.at("show-only-notes", default: false)
   assert(
     show-only-notes in (false, true),
@@ -1453,7 +1456,7 @@
     show-notes-on-second-screen in (none, bottom, right),
     message: "`show-notes-on-second-screen` should be `none`, `bottom` or `right`",
   )
-  let is-visible = visible-subslides == none or check-visible(self.subslide, visible-subslides)
+  let is-visible = subslide == none or subslide == auto or check-visible(self.subslide, subslide)
   if is-visible {
     if self.at("enable-pdfpc", default: true) {
       let raw-text = if type(note) == content and note.has("text") {

@@ -1095,13 +1095,26 @@
 ///
 /// - setting (function): A function that takes the note as input and returns a processed note.
 ///
-/// - visible-subslides (none, int, array, string): If not `none`, the note is only shown on the specified subslides, similar to `only`. Default is `none` (shown on all subslides).
+/// - subslide (none, auto, int, array, string): Restricts the note to specific subslides, similar to `only`.
+///   - `auto` (default): automatically determined from the current pause position. A note placed after `#pause` will automatically appear only from that subslide onward.
+///   - `none`: shown on all subslides regardless of position.
+///   - int, array, or string: shown only on the specified subslides.
 ///
 /// - note (content): The content of the speaker note.
 ///
 /// -> content
-#let speaker-note(mode: "typ", setting: it => it, visible-subslides: none, note) = {
-  touying-fn-wrapper(utils.speaker-note, mode: mode, setting: setting, visible-subslides: visible-subslides, note)
+#let speaker-note(mode: "typ", setting: it => it, subslide: auto, note) = {
+  if subslide == auto {
+    touying-fn-wrapper(
+      utils.speaker-note,
+      last-subslide: rep => (rep, (subslide: str(rep) + "-")),
+      mode: mode,
+      setting: setting,
+      note,
+    )
+  } else {
+    touying-fn-wrapper(utils.speaker-note, mode: mode, setting: setting, subslide: subslide, note)
+  }
 }
 
 
@@ -1800,9 +1813,13 @@
           let extra-args = (:)
           if child.value.last-subslide != none {
             if type(child.value.last-subslide) == function {
-              (last-subslide, extra-args) = (child.value.last-subslide)(
+              let (callback-last-subslide, callback-extra-args) = (child.value.last-subslide)(
                 repetitions,
               )
+              // Use calc.max to prevent callback from decreasing last-subslide
+              // (mirrors the non-callback branch below)
+              last-subslide = calc.max(last-subslide, callback-last-subslide)
+              extra-args = callback-extra-args
             } else {
               last-subslide = calc.max(last-subslide, child.value.last-subslide)
             }
