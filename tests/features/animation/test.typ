@@ -153,15 +153,6 @@ By factorizing, we can obtain this result.
 
 = Pause + Uncover Mixing
 
-== Pause + Uncover/Only in List
-
-- On 1 #pause
-- On 2 #pause
-- #uncover("2-")[Uncover 2-]
-- #only(2)[Only 2]
-- On 3
-
-
 == Pause + Uncover/Only Inline
 
 - On 1 #pause
@@ -196,23 +187,6 @@ First #pause Second #jump(1) Always visible
 `#jump(3)` jumps to absolute subslide 3:
 
 Part A #pause Part B #jump(3) Part C
-
-
-== jump in CeTZ
-
-#cetz-canvas({
-  import cetz.draw: *
-
-  rect((0, 0), (5, 5))
-
-  (jump(1, relative: true),)
-
-  rect((0, 0), (2, 2))
-
-  (jump(2, relative: true),)
-
-  circle((3.5, 3.5), radius: 1)
-})
 
 
 == jump negative relative in CeTZ
