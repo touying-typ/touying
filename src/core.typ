@@ -1081,6 +1081,8 @@
 
 /// Speaker notes are a way to add additional information to your slides that is not visible to the audience. This can be useful for providing additional context or reminders to yourself.
 ///
+/// Multiple calls on the same slide are combined (accumulated), so all notes are shown together.
+///
 /// == Example
 ///
 /// ```typ
@@ -1093,11 +1095,13 @@
 ///
 /// - setting (function): A function that takes the note as input and returns a processed note.
 ///
+/// - visible-subslides (none, int, array, string): If not `none`, the note is only shown on the specified subslides, similar to `only`. Default is `none` (shown on all subslides).
+///
 /// - note (content): The content of the speaker note.
 ///
 /// -> content
-#let speaker-note(mode: "typ", setting: it => it, note) = {
-  touying-fn-wrapper(utils.speaker-note, mode: mode, setting: setting, note)
+#let speaker-note(mode: "typ", setting: it => it, visible-subslides: none, note) = {
+  touying-fn-wrapper(utils.speaker-note, mode: mode, setting: setting, visible-subslides: visible-subslides, note)
 }
 
 

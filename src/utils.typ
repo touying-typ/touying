@@ -1424,6 +1424,8 @@
 
 /// Speaker notes are a way to add additional information to your slides that is not visible to the audience. This can be useful for providing additional context or reminders to yourself.
 ///
+/// Multiple calls on the same slide are combined (accumulated), so all notes are shown together.
+///
 /// Example: `#speaker-note[This is a speaker note]`
 ///
 /// - self (content): The current context.
@@ -1432,18 +1434,12 @@
 ///
 /// - setting (function): A function that takes the note as input and returns a processed note.
 ///
+/// - visible-subslides (none, int, array, string): If not `none`, the note is only shown on the specified subslides, similar to `only`. Default is `none` (shown on all subslides).
+///
 /// - note (content): The content of the speaker note.
 ///
 /// -> content
-#let speaker-note(self: none, mode: "typ", setting: it => it, note) = {
-  if self.at("enable-pdfpc", default: true) {
-    let raw-text = if type(note) == content and note.has("text") {
-      note.text
-    } else {
-      markup-text(note, mode: mode).trim()
-    }
-    pdfpc.speaker-note(raw-text)
-  }
+#let speaker-note(self: none, mode: "typ", setting: it => it, visible-subslides: none, note) = {
   let show-only-notes = self.at("show-only-notes", default: false)
   assert(
     show-only-notes in (false, true),
@@ -1457,8 +1453,23 @@
     show-notes-on-second-screen in (none, bottom, right),
     message: "`show-notes-on-second-screen` should be `none`, `bottom` or `right`",
   )
-  if show-only-notes or show-notes-on-second-screen != none {
-    slide-note-state.update(setting(note))
+  let is-visible = visible-subslides == none or check-visible(self.subslide, visible-subslides)
+  if is-visible {
+    if self.at("enable-pdfpc", default: true) {
+      let raw-text = if type(note) == content and note.has("text") {
+        note.text
+      } else {
+        markup-text(note, mode: mode).trim()
+      }
+      pdfpc.speaker-note(raw-text)
+    }
+    if show-only-notes or show-notes-on-second-screen != none {
+      slide-note-state.update(old => if old == none {
+        setting(note)
+      } else {
+        old + parbreak() + setting(note)
+      })
+    }
   }
 }
 
