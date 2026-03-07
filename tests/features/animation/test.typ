@@ -213,3 +213,20 @@ Part A #pause Part B #jump(3) Part C
 
   circle((3.5, 3.5), radius: 1)
 })
+
+
+== jump negative relative in CeTZ
+
+#cetz-canvas({
+  import cetz.draw: *
+
+  rect((0, 0), (5, 5))
+
+  (jump(1, relative: true),)
+
+  rect((0, 0), (2, 2))
+
+  (jump(-1, relative: true),)
+
+  circle((3.5, 3.5), radius: 1)
+})

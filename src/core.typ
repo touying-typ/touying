@@ -1406,6 +1406,17 @@
       if kind == "touying-jump" {
         if child.value.relative {
           repetitions += child.value.n
+          // If we jumped back into the visible zone, flush hidden-parts in order
+          // (so they appear before subsequent visible content, not after it)
+          if hidden-parts.len() != 0 and repetitions <= index {
+            let r = cover(hidden-parts)
+            if type(r) == array {
+              result += r
+            } else {
+              result.push(r)
+            }
+            hidden-parts = ()
+          }
         } else {
           // absolute jump: clear hidden-parts and jump to target subslide
           if hidden-parts.len() != 0 {
@@ -1655,6 +1666,12 @@
         if kind == "touying-jump" {
           if child.value.relative {
             repetitions += child.value.n // relative: advance by n (pause = jump(1, relative: true))
+            // If we jumped back into the visible zone, flush hidden-parts in order
+            // (so they appear before subsequent visible content, not after it)
+            if hidden-parts.len() != 0 and repetitions <= index {
+              result.push(cover(hidden-parts.sum()))
+              hidden-parts = ()
+            }
           } else {
             // absolute: reveal all hidden content then jump to target subslide
             if hidden-parts.len() != 0 {
