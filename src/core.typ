@@ -2390,11 +2390,6 @@
 
 // get bottom pad for footer
 #let _get-bottom-pad(self) = {
-  assert(
-    self.page.paper == "presentation-16-9"
-      or self.page.paper == "presentation-4-3",
-    message: "The paper of page should be presentation-16-9 or presentation-4-3",
-  )
   let cell = block.with(
     width: 100%,
     height: 100%,
@@ -2402,11 +2397,7 @@
     below: 0pt,
     breakable: false,
   )
-  let page-height = if self.page.paper == "presentation-16-9" {
-    self.page.at("height", default: 473.56pt)
-  } else {
-    self.page.at("height", default: 595.28pt)
-  }
+  let (_, page-height) = utils.get-page-dimensions(self)
   it => pad(bottom: page-height, cell(it))
 }
 
@@ -2414,21 +2405,7 @@
 #let _get-page-extra-args(self) = {
   if self.show-notes-on-second-screen in (bottom, right) {
     let margin = self.page.margin
-    assert(
-      self.page.paper == "presentation-16-9"
-        or self.page.paper == "presentation-4-3",
-      message: "The paper of page should be presentation-16-9 or presentation-4-3",
-    )
-    let page-width = if self.page.paper == "presentation-16-9" {
-      self.page.at("width", default: 841.89pt)
-    } else {
-      self.page.at("width", default: 793.7pt)
-    }
-    let page-height = if self.page.paper == "presentation-16-9" {
-      self.page.at("height", default: 473.56pt)
-    } else {
-      self.page.at("height", default: 595.28pt)
-    }
+    let (page-width, page-height) = utils.get-page-dimensions(self)
     if (
       type(margin) != dictionary
         and type(margin) != length
@@ -2484,21 +2461,7 @@
   }
   // speaker note
   if self.show-notes-on-second-screen in (bottom, right) {
-    assert(
-      self.page.paper == "presentation-16-9"
-        or self.page.paper == "presentation-4-3",
-      message: "The paper of page should be presentation-16-9 or presentation-4-3",
-    )
-    let page-width = if self.page.paper == "presentation-16-9" {
-      self.page.at("width", default: 841.89pt)
-    } else {
-      self.page.at("width", default: 793.7pt)
-    }
-    let page-height = if self.page.paper == "presentation-16-9" {
-      self.page.at("height", default: 473.56pt)
-    } else {
-      self.page.at("height", default: 595.28pt)
-    }
+    let (page-width, page-height) = utils.get-page-dimensions(self)
     let show-notes = (self.methods.show-notes)(
       self: self,
       width: page-width,

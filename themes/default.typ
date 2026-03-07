@@ -58,7 +58,7 @@
   set text(size: 20pt)
 
   show: touying-slides.with(
-    config-page(paper: "presentation-" + aspect-ratio),
+    config-page(..utils.page-args-from-aspect-ratio(aspect-ratio)),
     config-common(slide-fn: slide),
     ..args,
   )
