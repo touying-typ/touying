@@ -217,7 +217,11 @@
     }
     let last-heading-label = _get-last-heading-label(self.headings)
     if last-heading-label != none {
-      recaller-map.insert(last-heading-label, (content: slide-content, callable: callable, slide-self: self))
+      recaller-map.insert(last-heading-label, (
+        content: slide-content,
+        callable: callable,
+        slide-self: self,
+      ))
     }
     (slide-content, recaller-map, (), (), true, false)
   }
@@ -289,7 +293,9 @@
         )
         output-slides.push(slide-content)
       }
-      let slide-self = self + (headings: current-headings, is-first-slide: is-first-slide)
+      let slide-self = (
+        self + (headings: current-headings, is-first-slide: is-first-slide)
+      )
       (
         slide-content,
         recaller-map,
@@ -305,7 +311,11 @@
         recaller-map,
       )
       if child.has("label") and child.label != <touying-temporary-mark> {
-        recaller-map.insert(str(child.label), (content: slide-content, callable: child.value.fn, slide-self: slide-self))
+        recaller-map.insert(str(child.label), (
+          content: slide-content,
+          callable: child.value.fn,
+          slide-self: slide-self,
+        ))
       }
       output-slides.push(slide-content)
     } else if utils.is-kind(child, "touying-slide-recaller") {
@@ -337,10 +347,13 @@
       if recall-subslide == none {
         output-slides.push(recall-entry.content)
       } else {
-        let recalled-self = recall-entry.slide-self + (
-          freeze-slide-counter: true,
-          _recall-subslide: recall-subslide,
-          enable-frozen-states-and-counters: false,
+        let recalled-self = (
+          recall-entry.slide-self
+            + (
+              freeze-slide-counter: true,
+              _recall-subslide: recall-subslide,
+              enable-frozen-states-and-counters: false,
+            )
         )
         output-slides.push((recall-entry.callable)(recalled-self))
       }
@@ -3139,7 +3152,11 @@
     let i = self._recall-subslide
     assert(
       i >= 1 and i <= repeat,
-      message: "subslide " + str(i) + " is out of range (1.." + str(repeat) + ")",
+      message: "subslide "
+        + str(i)
+        + " is out of range (1.."
+        + str(repeat)
+        + ")",
     )
     self.subslide = i
     let (header, footer, body-transform) = _get-header-footer(self)
@@ -3150,7 +3167,9 @@
       ..bodies,
     )
     let new-header = page-preamble(self) + header
-    set page(..(self.page + page-extra-args + (header: new-header, footer: footer)))
+    set page(
+      ..(self.page + page-extra-args + (header: new-header, footer: footer)),
+    )
     body-transform(setting-fn(
       subslide-preamble(self) + composer-with-side-by-side(..conts),
     ))
