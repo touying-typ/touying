@@ -1082,14 +1082,13 @@
 /// Speaker notes are a way to add additional information to your slides that is not visible to the audience. This can be useful for providing additional context or reminders to yourself.
 ///
 /// Multiple calls on the same slide are combined (accumulated), so all notes are shown together.
+/// You can also use `#pause` inside the note body to reveal note content progressively.
 ///
 /// == Example
 ///
 /// ```typ
 /// #speaker-note[This is a speaker note]
 /// ```
-///
-/// - self (none): The current context.
 ///
 /// - mode (string): The mode of the markup text, either `typ` or `md`. Default is `typ`.
 ///
@@ -1100,22 +1099,16 @@
 ///   - `none`: shown on all subslides regardless of position.
 ///   - int, array, or string: shown only on the specified subslides.
 ///
-/// - note (content): The content of the speaker note.
+/// - note (content): The content of the speaker note. May contain `#pause` to reveal parts progressively.
 ///
 /// -> content
-#let speaker-note(mode: "typ", setting: it => it, subslide: auto, note) = {
-  if subslide == auto {
-    touying-fn-wrapper(
-      utils.speaker-note,
-      last-subslide: rep => (rep, (subslide: str(rep) + "-")),
-      mode: mode,
-      setting: setting,
-      note,
-    )
-  } else {
-    touying-fn-wrapper(utils.speaker-note, mode: mode, setting: setting, subslide: subslide, note)
-  }
-}
+#let speaker-note(mode: "typ", setting: it => it, subslide: auto, note) = [#metadata((
+  kind: "touying-speaker-note",
+  mode: mode,
+  setting: setting,
+  subslide: subslide,
+  note: note,
+))<touying-temporary-mark>]
 
 
 /// Alert is a way to display a message to the audience. It can be used to draw attention to important information or to provide instructions.
@@ -1541,7 +1534,53 @@
 }
 
 
-/// Parse content into results and repetitions with animation handling
+/// Parse the body of a speaker note for pause/jump markers and return the visible content
+/// for the given inner subslide index.
+///
+/// This is a simplified version of `_parse-content-into-results-and-repetitions` designed
+/// specifically for speaker note bodies. Covered content is omitted entirely.
+///
+/// -> (content, int) — (visible content for this inner subslide, max repetitions in the note)
+#let _parse-note-body-for-subslide(body, index) = {
+  let children = if utils.is-sequence(body) {
+    body.children
+  } else {
+    (body,)
+  }
+
+  let repetitions = 1
+  let max-rep = 1
+  let result = ()
+
+  for child in children {
+    if (
+      type(child) == content
+        and child.func() == metadata
+        and type(child.value) == dictionary
+    ) {
+      let kind = child.value.at("kind", default: none)
+      if kind == "touying-jump" {
+        if child.value.relative {
+          repetitions += child.value.n
+        } else {
+          max-rep = calc.max(max-rep, repetitions)
+          repetitions = child.value.n
+        }
+        max-rep = calc.max(max-rep, repetitions)
+        continue
+      }
+    }
+    if repetitions <= index {
+      result.push(child)
+    }
+    // else: skip covered content entirely (notes don't use the cover function)
+  }
+
+  (result.sum(default: []), max-rep)
+}
+
+
+
 ///
 /// This is the core parsing function that handles all types of content including
 /// animations, pauses, meanwhile markers, and various content types. It recursively
@@ -1817,7 +1856,7 @@
                 repetitions,
               )
               // Use calc.max to prevent callback from decreasing last-subslide
-              // (mirrors the non-callback branch below)
+              // (mirrors the non-callback else-branch)
               last-subslide = calc.max(last-subslide, callback-last-subslide)
               extra-args = callback-extra-args
             } else {
@@ -1830,6 +1869,39 @@
             ..extra-args,
           ))
           repetitions = nextrepetitions
+        } else if kind == "touying-speaker-note" {
+          // Handle speaker notes with optional #pause markers inside the note body.
+          // Speaker notes always escape the pause zone (like fn-wrappers): they emit
+          // only side effects (state updates, pdfpc metadata) and produce no visible content.
+          let outer-rep = repetitions  // pause count at this position in the outer slide
+
+          // Inner subslide index: how far into the note's own pauses we advance.
+          // If the outer slide is at repetition outer-rep and we're rendering subslide index,
+          // the note's inner subslide is (index - outer-rep + 1), clamped to >= 1.
+          let inner-index = calc.max(1, index - outer-rep + 1)
+          let (note-cont, note-max-rep) = _parse-note-body-for-subslide(
+            child.value.note,
+            inner-index,
+          )
+
+          // Account for subslides needed by inner pauses in the note body.
+          max-repetitions = calc.max(max-repetitions, outer-rep + note-max-rep - 1)
+
+          // Determine the effective outer subslide filter.
+          let effective-subslide = if child.value.subslide == auto {
+            str(outer-rep) + "-"
+          } else {
+            child.value.subslide
+          }
+
+          // Always push to result (never hidden-parts): produces no visible content.
+          result.push(utils.speaker-note(
+            self: self,
+            mode: child.value.mode,
+            setting: child.value.setting,
+            subslide: effective-subslide,
+            note-cont,
+          ))
         } else if kind == "touying-delayed-wrapper" {
           if show-delayed-wrapper {
             if repetitions <= index or not need-cover {
