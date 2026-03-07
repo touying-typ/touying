@@ -584,7 +584,10 @@
                 is-first-slide,
               ) = call-slide-fn-and-reset(
                 self
-                  + (headings: current-headings, is-first-slide: is-first-slide),
+                  + (
+                    headings: current-headings,
+                    is-first-slide: is-first-slide,
+                  ),
                 slide-fn,
                 slide-parts.sum(default: none),
                 recaller-map,
@@ -608,7 +611,10 @@
             // emit the new slides directly instead of using _delayed-wrapper,
             // which would hide them when show-delayed-wrapper is false.
             if inner-start-part != none {
-              let styled-start = utils.reconstruct-styled(child, inner-start-part)
+              let styled-start = utils.reconstruct-styled(
+                child,
+                inner-start-part,
+              )
               if new-start {
                 slide-parts.push(styled-start)
               } else {
@@ -627,7 +633,10 @@
                 is-first-slide,
               ) = call-slide-fn-and-reset(
                 self
-                  + (headings: current-headings, is-first-slide: is-first-slide),
+                  + (
+                    headings: current-headings,
+                    is-first-slide: is-first-slide,
+                  ),
                 slide-fn,
                 slide-parts.sum(default: none),
                 recaller-map,
