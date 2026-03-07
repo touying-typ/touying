@@ -3,8 +3,6 @@
 
 #import "../src/exports.typ": *
 
-#let _typst-builtin-repeat = repeat
-
 #let dewdrop-header(self) = {
   if self.store.navigation == "sidebar" {
     place(
@@ -24,7 +22,7 @@
           vspace: (-.2em,),
           indent: (0em, self.store.sidebar.at("indent", default: .5em)),
           fill: (
-            self.store.sidebar.at("fill", default: _typst-builtin-repeat[.]),
+            self.store.sidebar.at("fill", default: std.repeat[.]),
           ),
           filled: (self.store.sidebar.at("filled", default: false),),
           paged: (self.store.sidebar.at("paged", default: false),),

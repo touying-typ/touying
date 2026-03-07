@@ -1,7 +1,5 @@
 #import "utils.typ"
 
-#let _typst-builtin-numbering = numbering
-
 #let cell = block.with(
   width: 100%,
   height: 100%,
@@ -358,7 +356,7 @@
               default: it.element.numbering,
             )
             if current-numbering != none {
-              _typst-builtin-numbering(
+              std.numbering(
                 current-numbering,
                 ..counter(heading).at(it.element.location()),
               )
@@ -381,7 +379,7 @@
                 },
               )
               if array-at(paged, it.level - 1) {
-                _typst-builtin-numbering(
+                std.numbering(
                   if page.numbering != none {
                     page.numbering
                   } else {

@@ -1,7 +1,5 @@
 #import "pdfpc.typ"
 
-#let _typst-builtin-numbering = numbering
-
 /// Add a dictionary to another dictionary recursively
 ///
 /// Example: `add-dicts((a: (b: 1), (a: (c: 2))` returns `(a: (b: 1, c: 2)`
@@ -427,7 +425,7 @@
   style: (setting: body => body, numbered: true, current-heading) => setting({
     if numbered and current-heading.numbering != none {
       (
-        _typst-builtin-numbering(
+        std.numbering(
           current-heading.numbering,
           ..counter(heading).at(current-heading.location()),
         )
@@ -492,12 +490,12 @@
         and numbering == auto
         and current-heading.numbering != none
     ) {
-      _typst-builtin-numbering(
+      std.numbering(
         current-heading.numbering,
         ..counter(heading).at(current-heading.location()),
       )
     } else if current-heading != none and numbering != auto {
-      _typst-builtin-numbering(
+      std.numbering(
         numbering,
         ..counter(heading).at(current-heading.location()),
       )
