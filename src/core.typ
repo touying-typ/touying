@@ -1406,6 +1406,9 @@
       if kind == "touying-jump" {
         if child.value.relative {
           repetitions += child.value.n
+          // Track the peak repetitions so that a subsequent negative jump doesn't
+          // cause the slide count to be underestimated
+          max-repetitions = calc.max(max-repetitions, repetitions)
           // If we jumped back into the visible zone, flush hidden-parts in order
           // (so they appear before subsequent visible content, not after it)
           if hidden-parts.len() != 0 and repetitions <= index {
@@ -1666,6 +1669,9 @@
         if kind == "touying-jump" {
           if child.value.relative {
             repetitions += child.value.n // relative: advance by n (pause = jump(1, relative: true))
+            // Track the peak repetitions so that a subsequent negative jump doesn't
+            // cause the slide count to be underestimated
+            max-repetitions = calc.max(max-repetitions, repetitions)
             // If we jumped back into the visible zone, flush hidden-parts in order
             // (so they appear before subsequent visible content, not after it)
             if hidden-parts.len() != 0 and repetitions <= index {
