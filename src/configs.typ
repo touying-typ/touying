@@ -353,7 +353,7 @@
 /// - alternatives-fn (function): The function to show alternatives with a function. The default value is `utils.alternatives-fn` function.
 ///
 /// - alternatives-cases (function): The function to show alternatives with cases. The default value is `utils.alternatives-cases` function.
-/// 
+///
 /// - item-by-item (function): The function to show items one by one. The default value is `utils.item-by-item` function.
 ///
 /// - alert (function): The function to alert the content. The default value is `utils.method-wrapper(text.with(weight: "bold"))` function.
