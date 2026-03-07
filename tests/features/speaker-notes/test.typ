@@ -52,3 +52,13 @@ Meanwhile content with its own speaker notes.
 #speaker-note[
   Notes specific to the meanwhile content.
 ]
+
+== Speaker Notes with Pause Inside Note
+
+Slide content here.
+
+#speaker-note[
+  + This is the first speaker note point #pause
+  + Remember to explain the concept clearly
+  + Don't forget to mention the example
+]

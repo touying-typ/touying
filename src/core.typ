@@ -1539,50 +1539,7 @@
 }
 
 
-/// Parse the body of a speaker note for pause/jump markers and return the visible content
-/// for the given inner subslide index.
-///
-/// This is a simplified version of `_parse-content-into-results-and-repetitions` designed
-/// specifically for speaker note bodies. Covered content is omitted entirely.
-///
-/// -> (content, int) — (visible content for this inner subslide, max repetitions in the note)
-#let _parse-note-body-for-subslide(body, index) = {
-  let children = if utils.is-sequence(body) {
-    body.children
-  } else {
-    (body,)
-  }
 
-  let repetitions = 1
-  let max-rep = 1
-  let result = ()
-
-  for child in children {
-    if (
-      type(child) == content
-        and child.func() == metadata
-        and type(child.value) == dictionary
-    ) {
-      let kind = child.value.at("kind", default: none)
-      if kind == "touying-jump" {
-        if child.value.relative {
-          repetitions += child.value.n
-        } else {
-          max-rep = calc.max(max-rep, repetitions)
-          repetitions = child.value.n
-        }
-        max-rep = calc.max(max-rep, repetitions)
-        continue
-      }
-    }
-    if repetitions <= index {
-      result.push(child)
-    }
-    // else: skip covered content entirely (notes don't use the cover function)
-  }
-
-  (result.sum(default: []), max-rep)
-}
 
 
 
@@ -1886,10 +1843,22 @@
           // If the outer slide is at repetition outer-rep and we're rendering subslide index,
           // the note's inner subslide is (index - outer-rep + 1), clamped to >= 1.
           let inner-index = calc.max(1, index - outer-rep + 1)
-          let (note-cont, note-max-rep) = _parse-note-body-for-subslide(
-            child.value.note,
-            inner-index,
+
+          // Use _parse-content-into-results-and-repetitions to handle nested pauses
+          // (e.g. #pause inside a list item). Override cover to omit hidden content
+          // entirely (notes don't need visual placeholders for covered text).
+          let note-self = utils.merge-dicts(
+            self,
+            (methods: (cover: (self: none, body) => [])),
           )
+          let (note-conts, note-max-rep, _, _) = _parse-content-into-results-and-repetitions(
+            self: note-self,
+            need-cover: true,
+            base: 1,
+            index: inner-index,
+            child.value.note,
+          )
+          let note-cont = note-conts.first()
 
           // Account for subslides needed by inner pauses in the note body.
           max-repetitions = calc.max(
