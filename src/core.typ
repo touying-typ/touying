@@ -556,36 +556,6 @@
           child.value.body,
         ),
       )
-    } else if is-first-slide and utils.is-styled(child) {
-      slide-parts = utils.trim(slide-parts)
-      if slide-parts != () or current-headings != () {
-        (
-          slide-content,
-          recaller-map,
-          current-headings,
-          slide-parts,
-          new-start,
-          is-first-slide,
-        ) = call-slide-fn-and-reset(
-          self + (headings: current-headings, is-first-slide: is-first-slide),
-          slide-fn,
-          slide-parts.sum(default: none),
-          recaller-map,
-        )
-        if slide-content != none { output-slides.push(slide-content) }
-      }
-      output-slides.push(
-        utils.reconstruct-styled(
-          child,
-          split-content-into-slides(
-            self: self,
-            recaller-map: recaller-map,
-            new-start: true,
-            is-first-slide: is-first-slide,
-            child.child,
-          ),
-        ),
-      )
     } else {
       if utils.is-styled(child) {
         // Split the content into slides recursively for styled content
@@ -597,42 +567,89 @@
         )
         if slide-content-part != none {
           // The styled node contains slide-breaking content (e.g., headings that
-          // trigger new slides). Add the pre-heading content to the current slide,
-          // then flush and emit the new slides directly instead of using
-          // _delayed-wrapper, which would hide them when show-delayed-wrapper is false.
-          if inner-start-part != none {
-            let styled-start = utils.reconstruct-styled(child, inner-start-part)
-            if new-start {
-              slide-parts.push(styled-start)
-            } else {
-              start-part.push(styled-start)
+          // trigger new slides).
+          if is-first-slide {
+            // On the first slide, calling with new-start: false causes content after
+            // headings to land in start-part instead of slide-parts, resulting in
+            // slides with missing bodies. Re-call with new-start: true to build
+            // slides correctly, and flush any accumulated content beforehand.
+            slide-parts = utils.trim(slide-parts)
+            if slide-parts != () or current-headings != () {
+              (
+                slide-content,
+                recaller-map,
+                current-headings,
+                slide-parts,
+                new-start,
+                is-first-slide,
+              ) = call-slide-fn-and-reset(
+                self
+                  + (
+                    headings: current-headings,
+                    is-first-slide: is-first-slide,
+                  ),
+                slide-fn,
+                slide-parts.sum(default: none),
+                recaller-map,
+              )
+              if slide-content != none { output-slides.push(slide-content) }
             }
-          }
-          // Flush the current slide before adding new slides
-          slide-parts = utils.trim(slide-parts)
-          if slide-parts != () or current-headings != () {
-            (
-              slide-content,
-              recaller-map,
-              current-headings,
-              slide-parts,
-              new-start,
-              is-first-slide,
-            ) = call-slide-fn-and-reset(
-              self
-                + (headings: current-headings, is-first-slide: is-first-slide),
-              slide-fn,
-              slide-parts.sum(default: none),
-              recaller-map,
+            output-slides.push(
+              utils.reconstruct-styled(
+                child,
+                split-content-into-slides(
+                  self: self,
+                  recaller-map: recaller-map,
+                  new-start: true,
+                  is-first-slide: is-first-slide,
+                  child.child,
+                ),
+              ),
             )
-            if slide-content != none { output-slides.push(slide-content) }
+          } else {
+            // Add the pre-heading content to the current slide, then flush and
+            // emit the new slides directly instead of using _delayed-wrapper,
+            // which would hide them when show-delayed-wrapper is false.
+            if inner-start-part != none {
+              let styled-start = utils.reconstruct-styled(
+                child,
+                inner-start-part,
+              )
+              if new-start {
+                slide-parts.push(styled-start)
+              } else {
+                start-part.push(styled-start)
+              }
+            }
+            // Flush the current slide before adding new slides
+            slide-parts = utils.trim(slide-parts)
+            if slide-parts != () or current-headings != () {
+              (
+                slide-content,
+                recaller-map,
+                current-headings,
+                slide-parts,
+                new-start,
+                is-first-slide,
+              ) = call-slide-fn-and-reset(
+                self
+                  + (
+                    headings: current-headings,
+                    is-first-slide: is-first-slide,
+                  ),
+                slide-fn,
+                slide-parts.sum(default: none),
+                recaller-map,
+              )
+              if slide-content != none { output-slides.push(slide-content) }
+            }
+            // Add new slides, wrapped in the same styled node so that the
+            // show/set rules cascade to subsequent slides (matching Typst semantics)
+            output-slides.push(utils.reconstruct-styled(
+              child,
+              slide-content-part,
+            ))
           }
-          // Add new slides, wrapped in the same styled node so that the
-          // show/set rules cascade to subsequent slides (matching Typst semantics)
-          output-slides.push(utils.reconstruct-styled(
-            child,
-            slide-content-part,
-          ))
         } else {
           // No slide-breaking content inside; use the original delayed-wrapper
           // approach so that subslide animations work correctly within the styled scope
