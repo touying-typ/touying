@@ -1,0 +1,8 @@
+{
+  "label": "教程",
+  "position": 2,
+  "link": {
+    "type": "generated-index",
+    "description": "循序渐进的教程，带你从第一个演示文稿到构建自定义主题，全面掌握 Touying 的核心概念和功能。"
+  }
+}

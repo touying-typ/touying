@@ -1,5 +1,5 @@
 ---
-sidebar_position: 15
+sidebar_position: 7
 ---
 
 # 更新日志

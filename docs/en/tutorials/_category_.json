@@ -1,0 +1,8 @@
+{
+  "label": "Tutorials",
+  "position": 2,
+  "link": {
+    "type": "generated-index",
+    "description": "Step-by-step tutorials that walk you through Touying's core concepts and features — from your first presentation to building a custom theme."
+  }
+}
