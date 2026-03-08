@@ -1,0 +1,48 @@
+name: "Copilot Setup Steps"
+
+# Automatically run the setup steps when they are changed to allow for easy validation,
+# and allow manual testing through the repository's "Actions" tab.
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
+  pull_request:
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
+
+jobs:
+  # The job MUST be called `copilot-setup-steps` or it will not be picked up by Copilot.
+  copilot-setup-steps:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Install the Typst CLI (used for compiling .typ files and running tests)
+      - name: Setup Typst
+        uses: typst-community/setup-typst@v4
+
+      # Install Rust toolchain (needed by cargo-binstall and tytanic)
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      # cargo-binstall provides fast binary installation without full compilation
+      - name: Install cargo-binstall
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-binstall
+
+      # tytanic (tt) is the visual regression test runner for Touying
+      # Pinned to the same version used in test.yml CI
+      - name: Install tytanic
+        run: cargo binstall tytanic@0.3.3 -y
+
+      # typstyle is the official Typst code formatter
+      # Usage: typstyle -i file1.typ file2.typ dir/
+      - name: Install typstyle
+        run: cargo binstall typstyle -y
