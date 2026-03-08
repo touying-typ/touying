@@ -418,7 +418,7 @@
 ///
 /// - short-heading (bool): Indicates whether the headings should be shortened. Default is `true`.
 ///
-/// - inline (boolean): Indicates whether the bullets are displayed right after the text, instead of breaking the line. Default is `false`.
+/// - inline (bool): Indicates whether the bullets are displayed right after the text, instead of breaking the line. Default is `false`.
 ///
 /// -> content
 #let mini-slides(
