@@ -203,20 +203,27 @@
 
 /// Show progressive outline. It will make other sections except the current section to be semi-transparent.
 ///
+/// Example:
+///
+/// ```typst
+/// #components.progressive-outline()
+/// ```
+///
 /// - alpha (ratio): The transparency of the other sections. Default is `60%`.
 ///
-/// - level (int): The level of the outline. Default is `1`.
+/// - level (int, auto, none): The heading level used to determine the current section. Use `1` for top-level sections, `auto` for the most recent heading of any level (single-page range), or `none` to disable section detection (show all entries with equal styling). Default is `1`.
 ///
-/// - transform (function): The transformation applied to the text of the outline. It should take the following arguments:
+/// - filter (function, none): An optional function used to hide specific outline entries entirely (rather than just covering them with transparency). The function receives named arguments `cover` (bool), `level` (the level passed to `progressive-outline`), and a positional `outline.entry` argument, and should return `true` to show the entry or `false` to hide it. Default is `none`.
 ///
-/// - cover (boolean): Indicates whether the current entry should be covered.
+/// - transform (function): The transformation applied to each outline entry. It receives named arguments `cover` (bool), `level`, `alpha`, any extra `..args`, and a positional `outline.entry`. Default makes covered entries semi-transparent.
 ///
-/// - args (content): The other arguments passed to the `progressive-outline`.
+/// - args (content): Additional arguments forwarded to `outline()`.
 ///
 /// -> content
 #let progressive-outline(
   alpha: 60%,
   level: 1,
+  filter: none,
   transform: (cover: false, alpha: 60%, ..args, it) => if cover {
     text(utils.update-alpha(text.fill, alpha), it)
   } else {
@@ -247,14 +254,22 @@
         }
       }
     }
-    show outline.entry: it => transform(
-      cover: it.element.location().page() < start-page
-        or it.element.location().page() >= end-page,
-      level: level,
-      alpha: alpha,
-      ..args,
-      it,
-    )
+    show outline.entry: it => {
+      let is-covered = (
+        it.element.location().page() < start-page
+          or it.element.location().page() >= end-page
+      )
+      if filter != none and not filter(cover: is-covered, level: level, it) {
+        return none
+      }
+      transform(
+        cover: is-covered,
+        level: level,
+        alpha: alpha,
+        ..args,
+        it,
+      )
+    }
 
     outline(..args)
   }
@@ -263,11 +278,22 @@
 
 /// Custom progressive outline function.
 ///
+/// Example:
+///
+/// ```typst
+/// // Basic usage — highlights the current section
+/// #components.custom-progressive-outline()
+///
+/// // Beamer-style: hide subsections of other sections and emphasize the
+/// // current subsection within the current section
+/// #components.custom-progressive-outline(hide-other-sections-subsections: true)
+/// ```
+///
 /// - self (none): The self context.
 ///
 /// - alpha (ratio): The transparency of the other headings. Default is `60%`.
 ///
-/// - level (auto): The level of the outline. Default is `auto`.
+/// - level (auto, int, none): The heading level used to determine the current section. When `hide-other-sections-subsections` is `true` and `level` is `auto`, it automatically defaults to `1` for section-based detection. Default is `auto`.
 ///
 /// - numbered (array): Indicates whether the headings should be numbered. Default is `(false,)`.
 ///
@@ -295,6 +321,13 @@
 ///
 /// - uncover-fn (function): A function that takes the body of the heading and returns the body of the heading when it is uncovered. Default is the identity function.
 ///
+/// - hide-other-sections-subsections (boolean): When `true`, enables Beamer-style `hideothersubsections` behavior:
+///   - Subsections (headings deeper than `level`) belonging to sections other than the current one are hidden entirely.
+///   - Within the current section, the active subsection (the most recent one at or before the current page) is highlighted normally.
+///   - Other subsections of the current section are shown with `alpha` transparency.
+///   - Section-level entries (at `level`) always remain visible, covered with `alpha` when not active.
+///   Default is `false`.
+///
 /// - args (content): The other arguments passed to the `progressive-outline` and `transform`.
 ///
 /// -> content
@@ -315,93 +348,142 @@
   fill: (repeat[.],),
   short-heading: true,
   uncover-fn: body => body,
+  hide-other-sections-subsections: false,
   ..args,
-) = progressive-outline(
-  alpha: alpha,
-  level: level,
-  transform: (cover: false, alpha: alpha, ..args, it) => {
-    let array-at(arr, idx) = arr.at(idx, default: arr.last())
-    let set-text(level, body) = {
-      set text(fill: {
-        let text-color = if type(text-fill) == array and text-fill.len() > 0 {
-          array-at(text-fill, level - 1)
-        } else {
-          text.fill
-        }
-        if cover {
-          utils.update-alpha(text-color, alpha)
-        } else {
-          text-color
-        }
-      })
-      set text(
-        size: array-at(text-size, level - 1),
-      ) if type(text-size) == array and text-size.len() > 0
-      set text(
-        weight: array-at(text-weight, level - 1),
-      ) if type(text-weight) == array and text-weight.len() > 0
-      body
+) = {
+  // When hide-other-sections-subsections is enabled and no explicit level was
+  // given, use level 1 for section-range detection.
+  let effective-level = if hide-other-sections-subsections and level == auto {
+    1
+  } else {
+    level
+  }
+
+  // Filter that hides subsection entries belonging to non-current sections.
+  // A subsection entry has level > effective-level and cover == true.
+  let entry-filter = if hide-other-sections-subsections {
+    (cover: false, ..filter-args, it) => {
+      not (cover and it.level > effective-level)
     }
-    let body = {
-      if type(vspace) == array and vspace.len() > it.level - 1 {
-        v(vspace.at(it.level - 1))
-      }
-      h(range(1, it.level + 1).map(level => array-at(indent, level - 1)).sum())
-      set-text(
-        it.level,
-        {
-          if array-at(numbered, it.level - 1) {
-            let current-numbering = numbering.at(
-              it.level - 1,
-              default: it.element.numbering,
-            )
-            if current-numbering != none {
-              std.numbering(
-                current-numbering,
-                ..counter(heading).at(it.element.location()),
-              )
-              h(.3em)
+  } else {
+    none
+  }
+
+  progressive-outline(
+    alpha: alpha,
+    level: effective-level,
+    filter: entry-filter,
+    transform: (cover: false, alpha: alpha, ..transform-args, it) => {
+      let array-at(arr, idx) = arr.at(idx, default: arr.last())
+
+      // Helper that builds the styled heading content for a given coverage state.
+      // effective-cover == true  → render with alpha (inactive)
+      // effective-cover == false → render at full colour (active), wrapped by uncover-fn
+      let build-styled-body(effective-cover) = {
+        let set-text(level, body) = {
+          set text(fill: {
+            let text-color = if type(text-fill) == array and text-fill.len() > 0 {
+              array-at(text-fill, level - 1)
+            } else {
+              text.fill
             }
+            if effective-cover {
+              utils.update-alpha(text-color, alpha)
+            } else {
+              text-color
+            }
+          })
+          set text(
+            size: array-at(text-size, level - 1),
+          ) if type(text-size) == array and text-size.len() > 0
+          set text(
+            weight: array-at(text-weight, level - 1),
+          ) if type(text-weight) == array and text-weight.len() > 0
+          body
+        }
+        let body = {
+          if type(vspace) == array and vspace.len() > it.level - 1 {
+            v(vspace.at(it.level - 1))
           }
-          link(
-            it.element.location(),
+          h(range(1, it.level + 1).map(level => array-at(indent, level - 1)).sum())
+          set-text(
+            it.level,
             {
-              if short-heading {
-                utils.short-heading(self: self, it.element)
-              } else {
-                it.element.body
+              if array-at(numbered, it.level - 1) {
+                let current-numbering = numbering.at(
+                  it.level - 1,
+                  default: it.element.numbering,
+                )
+                if current-numbering != none {
+                  std.numbering(
+                    current-numbering,
+                    ..counter(heading).at(it.element.location()),
+                  )
+                  h(.3em)
+                }
               }
-              box(
-                width: 1fr,
-                inset: (x: .2em),
-                if array-at(filled, it.level - 1) {
-                  array-at(fill, level - 1)
+              link(
+                it.element.location(),
+                {
+                  if short-heading {
+                    utils.short-heading(self: self, it.element)
+                  } else {
+                    it.element.body
+                  }
+                  box(
+                    width: 1fr,
+                    inset: (x: .2em),
+                    if array-at(filled, it.level - 1) {
+                      array-at(fill, level - 1)
+                    },
+                  )
+                  if array-at(paged, it.level - 1) {
+                    std.numbering(
+                      if page.numbering != none {
+                        page.numbering
+                      } else {
+                        "1"
+                      },
+                      ..counter(page).at(it.element.location()),
+                    )
+                  }
                 },
               )
-              if array-at(paged, it.level - 1) {
-                std.numbering(
-                  if page.numbering != none {
-                    page.numbering
-                  } else {
-                    "1"
-                  },
-                  ..counter(page).at(it.element.location()),
-                )
-              }
             },
           )
-        },
-      )
-    }
-    if cover {
-      body
-    } else {
-      uncover-fn(body)
-    }
-  },
-  title: title,
-  ..args,
-)
+        }
+        if effective-cover {
+          body
+        } else {
+          uncover-fn(body)
+        }
+      }
+
+      // Three-state rendering when hide-other-sections-subsections is enabled:
+      //   • Covered section-level entries           → alpha via build-styled-body(true)
+      //   • Subsections in other sections           → hidden by entry-filter (never reach here)
+      //   • Subsections in current section (active) → full colour via build-styled-body(false)
+      //   • Subsections in current section (others) → alpha via build-styled-body(true)
+      //
+      // For the last two cases we need context to look up the current heading, so we
+      // embed a context block directly in the returned content.
+      if hide-other-sections-subsections and it.level > effective-level and not cover {
+        context {
+          let current-sub = utils.current-heading(level: it.level, hierachical: false)
+          let is-active = (
+            current-sub != none
+              and current-sub.location().page() == it.element.location().page()
+          )
+          build-styled-body(not is-active)
+        }
+      } else {
+        build-styled-body(cover)
+      }
+    },
+    title: title,
+    ..args,
+  )
+}
 
 
 /// Show mini slides. It is usually used to show the navigation of the presentation in header.
