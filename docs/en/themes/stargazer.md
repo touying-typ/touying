@@ -122,6 +122,26 @@ Used to draw the audience's attention. The background color is `self.colors.prim
 
 Start a new section with the given title.
 
+---
+
+```typst
+#tblock(title: [Title])[
+  Content
+]
+```
+
+A theorem-style block with a colored title bar. Useful for definitions, theorems, and remarks.
+
+---
+
+```typst
+#ending-slide(title: [Thank you])[
+  Additional content
+]
+```
+
+A centered closing slide with a highlighted title block — ideal for "Thank You" or "Questions?" slides.
+
 ## Example
 
 ```example

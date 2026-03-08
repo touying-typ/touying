@@ -4,6 +4,7 @@ sidebar_position: 7
 
 # Custom Theme
 
-You could consider making your own theme, you can refer to the "Build Your Own Theme" section later.
+To build your own Touying theme, see the [Build Your Own Theme](../tutorials/build-your-own-theme) tutorial.
 
-If you have any questions or need to customize a template, you can also contact orangex4@qq.com for free or inexpensive paid help. All forms are welcome.
+If you have questions or need help customising a template, feel free to open an issue on [GitHub](https://github.com/touying-typ/touying/issues) or ask in the [Typst forum](https://forum.typst.app/tag/touying).
+
