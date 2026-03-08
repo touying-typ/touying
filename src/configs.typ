@@ -15,7 +15,9 @@
   return new-dict
 }
 
-/// The private configurations of the theme.
+/// Store theme-specific private data in the presentation context. Use this to pass arbitrary key-value pairs that your theme needs internally. Access via `self.store` in theme functions.
+///
+/// -> dictionary
 #let config-store(..args) = {
   assert(args.pos().len() == 0, message: "Unexpected positional arguments.")
   return (store: args.named())
@@ -199,9 +201,11 @@
 ///
 /// - default-page-preamble (function): The default preamble for each page. Default is a function to reset the footnote number per slide and reset the page counter to the slide counter.
 ///
-/// - default-composer (auto, function | array): The default composer for slides. It is used when the `composer` argument of the `slide` function is `auto`. Default is `auto`, which falls back to using `components.side-by-side`.
+/// - default-composer (auto, function, array): The default composer for slides. It is used when the `composer` argument of the `slide` function is `auto`. Default is `auto`, which falls back to using `components.side-by-side`.
 ///
 ///   For example, `config-common(default-composer: components.side-by-side.with(gutter: 2em))` sets the default gutter between columns to `2em` for all slides.
+///
+/// -> dictionary
 #let config-common(
   handout: _default,
   handout-subslides: _default,
@@ -399,15 +403,15 @@
 ///
 /// - alert (function): The function to alert the content. The default value is `utils.method-wrapper(text.with(weight: "bold"))` function.
 ///
-/// - show-only-notes (function): The function to show notes on second screen. It should be `(self: none, width: 0pt, height: 0pt, cutout: false) => { .. }` with core code `utils.current-slide-note` and `utils.slide-note-state.update(none)`.
-///
-///   When `cutout: true` (used by `config-common(show-only-notes: true)` mode), the function should return a dictionary with `background`, `foreground`, and `cutout-height` keys.
+/// - show-only-notes (function): The function used to render speaker notes, either as the primary content (`show-only-notes: true` mode) or on a second screen. It should accept `(self: none, width: 0pt, height: 0pt, cutout: false)`. When `cutout: true`, return a dictionary with `background`, `foreground`, and `cutout-height` keys.
 ///
 /// - convert-label-to-short-heading (function): The function to convert label to short heading. It is useful for the short heading for heading with label. It will be used in function with `short-heading`.
 ///
 ///   The default value is `utils.titlecase(lbl.replace(regex("^[^:]*:"), "").replace("_", " ").replace("-", " "))`.
 ///
 ///   It means that some headings with labels like `section:my-section` will be converted to `My Section`.
+///
+/// -> dictionary
 #let config-methods(
   // init
   init: _default,
@@ -466,13 +470,13 @@
 /// ```
 ///
 /// - title (content): The title of the presentation, which will be displayed in the title slide.
-/// - short-title (content, auto): The short title of the presentation, which will be displayed in the footer of the slides usally.
+/// - short-title (content, auto): The short title of the presentation, which will usually be displayed in the footer of the slides.
 ///
 ///   If you set it to `auto`, it will be the same as the title.
 ///
 /// - subtitle (content): The subtitle of the presentation.
 ///
-/// - short-subtitle (content, auto): The short subtitle of the presentation, which will be displayed in the footer of the slides usally.
+/// - short-subtitle (content, auto): The short subtitle of the presentation, which will usually be displayed in the footer of the slides.
 ///
 ///   If you set it to `auto`, it will be the same as the subtitle.
 ///
@@ -485,6 +489,8 @@
 /// - institution (content): The institution of the presentation.
 ///
 /// - logo (content): The logo of the institution.
+///
+/// -> dictionary
 #let config-info(
   title: _default,
   short-title: _default,
@@ -529,8 +535,11 @@
 ///
 /// IMPORTANT: The colors should be defined in the *RGB* format at most cases.
 ///
-/// There are four main colors in the theme: primary, secondary, tertiary, and neutral,
-/// and each of them has a light, lighter, lightest, dark, darker, and darkest version.
+/// There are four main color groups: `primary`, `secondary`, `tertiary`, and `neutral`.
+/// Each group includes the base color plus variants: `light`, `lighter`, `lightest`, `dark`, `darker`, `darkest`.
+/// For example, `primary`, `primary-light`, `primary-lightest`, `neutral-darkest`, etc.
+///
+/// -> dictionary
 #let config-colors(
   neutral: _default,
   neutral-light: _default,
@@ -614,7 +623,7 @@
 /// )
 /// ```
 ///
-/// - paper (string): A standard paper size to set width and height. The default value is "presentation-16-9".
+/// - paper (str): A standard paper size to set width and height. The default value is `"presentation-16-9"`.
 ///
 ///   You can also use `aspect-ratio` to set the aspect ratio of the paper.
 ///
@@ -637,9 +646,11 @@
 ///     - y: The vertical margins.
 ///     - rest: The margins on all sides except those for which the dictionary explicitly sets a size.
 ///
-/// - numbering (string, function): The numbering style of the page. The default value is `"1"`.
+/// - numbering (str, function): The numbering style of the page. The default value is `"1"`.
 ///
 ///   The values for left and right are mutually exclusive with the values for inside and outside.
+///
+/// -> dictionary
 #let config-page(
   paper: _default,
   header: _default,
@@ -664,7 +675,7 @@
 }
 
 
-/// The default configurations
+/// The default configuration values used when no explicit configuration is provided.
 #let default-config = utils.merge-dicts(
   config-common(
     handout: false,
