@@ -1,8 +1,12 @@
 #import "pdfpc.typ"
 
-/// Add a dictionary to another dictionary recursively
+/// Add a dictionary to another dictionary recursively.
 ///
-/// Example: `add-dicts((a: (b: 1), (a: (c: 2))` returns `(a: (b: 1, c: 2)`
+/// Example: `add-dicts((a: (b: 1)), (a: (c: 2)))` returns `(a: (b: 1, c: 2))`
+///
+/// - dict-a (dictionary): The base dictionary.
+///
+/// - dict-b (dictionary): The dictionary to merge into `dict-a`.
 ///
 /// -> dictionary
 #let add-dicts(dict-a, dict-b) = {
@@ -22,9 +26,13 @@
 }
 
 
-/// Merge some dictionaries recursively
+/// Merge some dictionaries recursively.
 ///
 /// Example: `merge-dicts((a: (b: 1)), (a: (c: 2)))` returns `(a: (b: 1, c: 2))`
+///
+/// - init-dict (dictionary): The initial dictionary to start from.
+///
+/// - dicts (array): Additional dictionaries to merge in order.
 ///
 /// -> dictionary
 #let merge-dicts(init-dict, ..dicts) = {
@@ -48,7 +56,26 @@
 
 /// Get the progress of the current slide.
 ///
-/// - callback (function): The callback function `ratio => { .. }` to get the progress of the current slide. The `ratio` is a float number between 0 and 1.
+/// `utils.last-slide-number` gives the total slide count and can be used directly in headers or footers.
+///
+/// #example(
+/// >>> #let is-dark = sys.inputs.at("x-color-theme", default: none) == "dark";
+/// >>> #let text-color = if is-dark { std.white } else { std.black };
+/// >>> #show: simple-theme.with(
+/// >>>   aspect-ratio: "16-9",
+/// >>>   config-page(width: 320pt, height: 180pt),
+/// >>>   config-colors(neutral-lightest: none, neutral-darkest: text-color),
+/// >>> )
+/// >>> #set text(.5em)
+/// <<< #show: simple-theme.with(aspect-ratio: "16-9")
+/// = Slide
+///
+/// #touying-progress(ratio => {
+///   "Progress: " + str(int(ratio * 100)) + "%"
+/// })
+/// )
+///
+/// - callback (function): A function `ratio => { .. }` receiving a float between `0.0` and `1.0`.
 ///
 /// -> content
 #let touying-progress(callback) = (
@@ -73,17 +100,15 @@
 #let loc-prior-newslide = state("touying-loc-prior-newslide", none)
 
 
-/// Remove leading and trailing empty elements from an array of content
+/// Remove leading and trailing empty elements from an array of content.
 ///
 /// Example: `trim(([], [ ], parbreak(), linebreak(), [a], [ ], [b], [c], linebreak(), parbreak(), [ ], [ ]))` returns `([a], [ ], [b], [c])`
 ///
-/// #let arr = `array(content)`
+/// - arr (array): The array of content to trim.
 ///
-/// - arr (arr): The array of content to trim
+/// - empty-contents (array): An array of content elements considered empty. Default is `([], [ ], parbreak(), linebreak())`.
 ///
-/// - empty-contents (array): An array of content that is considered empty
-///
-/// -> content
+/// -> array
 #let trim(arr, empty-contents: ([], [ ], parbreak(), linebreak())) = {
   let i = 0
   let j = arr.len() - 1
@@ -97,13 +122,13 @@
 }
 
 
-/// Add a label to a content
+/// Add a label to a content.
 ///
 /// Example: `label-it("key", [a])` is equivalent to `[a <key>]`
 ///
 /// - it (content): The content to label.
 ///
-/// - label-name (string, label): The name of the label, or a label.
+/// - label-name (str, label): The name of the label, or a label.
 ///
 /// -> content
 #let label-it(it, label-name) = {
@@ -117,11 +142,11 @@
 
 /// Reconstruct a content with a new body.
 ///
-/// - body-name (string): The property name of the body field.
+/// - body-name (str): The property name of the body field.
 ///
-/// - labeled (boolean): Indicates whether the fields should be labeled.
+/// - labeled (bool): Indicates whether the label of the content should be preserved.
 ///
-/// - named (boolean): Indicates whether the fields should be named.
+/// - named (bool): Indicates whether to pass fields as named arguments.
 ///
 /// - it (content): The content to reconstruct.
 ///
@@ -156,11 +181,13 @@
 
 /// Reconstruct a table-like content with new children.
 ///
-/// - `named` is a boolean indicating whether the fields should be named
+/// - named (bool): Whether to pass fields as named arguments. Default is `true`.
 ///
-/// - `it` is the content to reconstruct
+/// - labeled (bool): Whether to preserve the label of the content. Default is `true`.
 ///
-/// - `new-children` is the new children you want to replace the old children with
+/// - it (content): The content to reconstruct.
+///
+/// - new-children (array): The new children to replace the old children with.
 ///
 /// -> content
 #let reconstruct-table-like(named: true, labeled: true, it, new-children) = {
@@ -176,9 +203,11 @@
 
 #let typst-builtin-sequence = ([A] + [ ] + [B]).func()
 
-/// Determine if a content is a sequence.
+/// Determine if a content is a sequence (i.e. created by concatenating content with `+` or implicit adjacency).
 ///
 /// Example: `is-sequence([a])` returns `true`
+///
+/// - it (content): The content to check.
 ///
 /// -> bool
 #let is-sequence(it) = {
@@ -188,9 +217,11 @@
 
 #let typst-builtin-styled = [#set text(fill: red)].func()
 
-/// Determine if a content is styled.
+/// Determine if a content is styled (i.e. wrapped by Typst's internal styled element when `set` or `show` rules are applied).
 ///
 /// Example: `is-styled(text(fill: red)[Red])` returns `true`
+///
+/// - it (content): The content to check.
 ///
 /// -> bool
 #let is-styled(it) = {
@@ -210,9 +241,11 @@
 }
 
 
-/// Determine if a content is a metadata.
+/// Determine if a content is a `metadata(...)` element.
 ///
 /// Example: `is-metadata(metadata((a: 1)))` returns `true`
+///
+/// - it (content): The content to check.
 ///
 /// -> bool
 #let is-metadata(it) = {
@@ -221,6 +254,10 @@
 
 
 /// Determine if a content is a metadata with a specific kind.
+///
+/// - it (content): The content to check.
+///
+/// - kind (str): The kind string to match.
 ///
 /// -> bool
 #let is-kind(it, kind) = {
@@ -234,13 +271,21 @@
 
 /// Determine if a content is a heading in a specific depth.
 ///
+/// - it (content): The content to check.
+///
+/// - depth (int): Maximum heading depth to consider. Default is `9999`.
+///
 /// -> bool
 #let is-heading(it, depth: 9999) = {
   type(it) == content and it.func() == heading and it.depth <= depth
 }
 
 
-/// Call a `self => {..}` function and return the result, or just return the content.
+/// Call a `self => {..}` function and return the result, or wrap plain content in `[]`.
+///
+/// - self (dictionary): The presentation context.
+///
+/// - it (content, function): The content to display, or a callback `self => content`.
 ///
 /// -> content
 #let call-or-display(self, it) = {
@@ -251,16 +296,25 @@
 }
 
 
-/// Wrap a function with a `self` parameter to make it a method.
+/// Wrap a function with a `self` parameter to make it callable as a method.
+///
+/// Returns a new function of the form `(self: none, ..args) => fn(..args)`.
 ///
 /// Example: `#let hide = method-wrapper(hide)` to get a `hide` method.
+///
+/// - fn (function): The function to wrap.
+///
+/// -> function
 #let method-wrapper(fn) = (self: none, ..args) => fn(..args)
 
 
-/// Assuming all functions in dictionary have a named `self` parameter,
-/// `methods` function is used to get all methods in dictionary object.
+/// Extract all method functions from `self` and bind `self` as their first named argument.
+///
+/// Returns a dictionary of ready-to-call functions where the `self` argument has already been applied. Use destructuring to get individual methods.
 ///
 /// Example: `#let (uncover, only) = utils.methods(self)` to get `uncover` and `only` methods.
+///
+/// - self (dictionary): The presentation context (must have a `methods` key containing a dictionary of functions).
 ///
 /// -> dictionary
 #let methods(self) = {
@@ -284,7 +338,7 @@
 // -------------------------------------
 
 
-/// Capitalize a string
+/// Capitalize a string.
 ///
 /// - s (str): The string to convert.
 ///
@@ -299,7 +353,7 @@
 }
 
 
-/// Convert a string into title case
+/// Convert a string into title case.
 ///
 /// - s (str): The string to convert.
 ///
@@ -313,11 +367,14 @@
 }
 
 
-/// Convert a heading with label to short form
+/// Convert a heading with label to a short display form.
 ///
-/// - it (str): The heading.
+/// If the heading has a special Touying label (e.g. `touying:hidden`), returns the heading body as-is.
+/// If the heading has a user label (e.g. `section:my-section`), strips the namespace prefix and applies title case via `convert-label-to-short-heading`.
 ///
-/// -> str
+/// - it (content): The heading content element.
+///
+/// -> content
 #let short-heading(self: none, it) = {
   if it == none {
     return
@@ -364,7 +421,7 @@
 ///
 /// - level (int, auto): The level of the heading. If `level` is `auto`, it will return the last heading on or before the current page. If `level` is a number, it will return the last heading on or before the current page with the same level.
 ///
-/// - hierachical (boolean): A value to indicate whether to return the heading hierarchically. If `hierachical` is `true`, it will return the last heading according to the hierarchical structure. If `hierachical` is `false`, it will return the last heading on or before the current page with the same level.
+/// - hierachical (bool): Whether to return the heading hierarchically. If `true`, returns the last heading according to the hierarchical structure. If `false`, returns the last heading on or before the current page with the same level.
 ///
 /// - depth (int): The maximum depth of the heading to search. Usually, it should be set as slide-level.
 ///
@@ -404,9 +461,9 @@
 ///
 /// - level (int, auto): The level of the heading. If `level` is `auto`, it will return the last heading on or before the current page. If `level` is a number, it will return the last heading on or before the current page with the same level.
 ///
-/// - numbered (boolean): A value to indicate whether to display the numbering of the heading. Default is `true`.
+/// - numbered (bool): Whether to display the heading numbering. Default is `true`.
 ///
-/// - hierachical (boolean): A value to indicate whether to return the heading hierarchically. If `hierachical` is `true`, it will return the last heading according to the hierarchical structure. If `hierachical` is `false`, it will return the last heading on or before the current page with the same level.
+/// - hierachical (bool): Whether to return the heading hierarchically. If `true`, returns the last heading according to the hierarchical structure. If `false`, returns the last heading on or before the current page with the same level.
 ///
 /// - depth (int): The maximum depth of the heading to search. Usually, it should be set as slide-level.
 ///
@@ -414,7 +471,7 @@
 ///
 /// - style (function): The style of the heading. If `style` is a function, it will use the function to style the heading. For example, `style: current-heading => current-heading.body`.
 ///
-///   If you set it to `style: auto`, it will could be controlled by `show heading` rule.
+///   If you set it to `style: auto`, it will be controlled by `show heading` rules.
 ///
 /// -> content
 #let display-current-heading(
@@ -466,9 +523,9 @@
 ///
 /// - level (int, auto): The level of the heading. If `level` is `auto`, it will return the last heading on or before the current page. If `level` is a number, it will return the last heading on or before the current page with the same level.
 ///
-/// - numbering (string, auto): The numbering of the heading. If `numbering` is `auto`, it will use the numbering of the heading. If `numbering` is a string, it will use the string as the numbering.
+/// - numbering (str, auto): The numbering of the heading. If `auto`, uses the heading's own numbering. If a string, uses that as the numbering pattern.
 ///
-/// - hierachical (boolean): A value to indicate whether to return the heading hierarchically. If `hierachical` is `true`, it will return the last heading according to the hierarchical structure. If `hierachical` is `false`, it will return the last heading on or before the current page with the same level.
+/// - hierachical (bool): Whether to return the heading hierarchically. If `true`, returns the last heading according to the hierarchical structure. If `false`, returns the last heading on or before the current page with the same level.
 ///
 /// - depth (int): The maximum depth of the heading to search. Usually, it should be set as slide-level.
 ///
@@ -508,7 +565,7 @@
 ///
 /// - level (int, auto): The level of the heading. If `level` is `auto`, it will return the last heading on or before the current page. If `level` is a number, it will return the last heading on or before the current page with the same level.
 ///
-/// - hierachical (boolean): A value to indicate whether to return the heading hierarchically. If `hierachical` is `true`, it will return the last heading according to the hierarchical structure. If `hierachical` is `false`, it will return the last heading on or before the current page with the same level.
+/// - hierachical (bool): Whether to return the heading hierarchically. If `true`, returns the last heading according to the hierarchical structure. If `false`, returns the last heading on or before the current page with the same level.
 ///
 /// - depth (int): The maximum depth of the heading to search. Usually, it should be set as slide-level.
 ///
@@ -544,9 +601,13 @@
 )
 
 
-/// Display the date of `self.info.date` with `self.datetime-format` format.
+/// Display the date from `self.info.date` formatted with `self.datetime-format`.
 ///
-/// -> str
+/// Returns the date as a formatted string when `self.info.date` is a `datetime`, or returns it as-is when it is already `content`.
+///
+/// - self (dictionary): The presentation context (must have `self.info.date`).
+///
+/// -> content, str
 #let display-info-date(self) = {
   assert("info" in self, message: "self must have an info field")
   if type(self.info.date) == datetime {
@@ -560,11 +621,9 @@
 /// Convert content to markup text, partly from
 /// [typst-examples-book](https://sitandr.github.io/typst-examples-book/book/typstonomicon/extract_markup_text.html).
 ///
-/// #let mode = `str or "typ" or "md"`
-///
 /// - it (content, str): The content to convert.
 ///
-/// - mode (str, mode): The mode of the markup text, either `typ` or `md`.
+/// - mode (str): The output mode: `"typ"` for Typst markup or `"md"` for Markdown.
 ///
 /// - indent (int): The number of spaces to indent. Default is `0`.
 ///
@@ -693,9 +752,9 @@
 ///
 /// - prescale-width (length, fraction, relative): Allows you to make Typst's layout assume that the given content is to be laid out in a container of a certain width before scaling. For example, you can use `prescale-width: 200%` assuming the slide's width is twice the original.
 ///
-/// - grow (boolean): Indicates whether the content should be scaled up if it is smaller than the available height. Default is `true`.
+/// - grow (bool): Indicates whether the content should be scaled up if it is smaller than the available height. Default is `true`.
 ///
-/// - shrink (boolean): Indicates whether the content should be scaled down if it is larger than the available height. Default is `true`.
+/// - shrink (bool): Indicates whether the content should be scaled down if it is larger than the available height. Default is `true`.
 ///
 /// - height (length): The height to fit the content to.
 ///
@@ -758,9 +817,9 @@
 ///
 /// Example: `#utils.fit-to-width(100%)[BIG]`
 ///
-/// - grow (boolean): Indicates whether the content should be scaled up if it is smaller than the available width. Default is `true`.
+/// - grow (bool): Indicates whether the content should be scaled up if it is smaller than the available width. Default is `true`.
 ///
-/// - shrink (boolean): Indicates whether the content should be scaled down if it is larger than the available width. Default is `true`.
+/// - shrink (bool): Indicates whether the content should be scaled down if it is larger than the available width. Default is `true`.
 ///
 /// - width (length, fraction, relative): The width to fit the content to.
 ///
@@ -802,7 +861,7 @@
 ///
 /// - fill (color): The color to fill the rectangle with.
 ///
-/// - inline (boolean): Indicates whether the content should be displayed inline. Default is `true`.
+/// - inline (bool): Indicates whether the content should be displayed inline. Default is `true`.
 ///
 /// - body (content): The content to cover.
 ///
@@ -856,13 +915,11 @@
 
 /// Update the alpha channel of a color.
 ///
-/// Example: `update-alpha(rgb("#ff0000"), 0.5)` returns `rgb(255, 0, 0, 0.5)`
-///
-/// - constructor (function): The color constructor to use. Default is `rgb`.
+/// Example: `update-alpha(rgb("#ff0000"), 0.5)` returns a red color with 50% opacity.
 ///
 /// - color (color): The color to update.
 ///
-/// - alpha (float): The new alpha value.
+/// - alpha (ratio): The new alpha value as a percentage (e.g. `50%` for half-transparent).
 ///
 /// -> color
 #let update-alpha(color, alpha) = (
@@ -870,9 +927,15 @@
 )
 
 
-/// Cover content with a transparent rectangle.
+/// Cover content with a semi-transparent rectangle matching the page background color.
 ///
 /// Example: `config-methods(cover: utils.semi-transparent-cover)`
+///
+/// - alpha (ratio): The opacity of the covering rectangle (higher means more opaque/more hidden). Default is `85%`.
+///
+/// - body (content): The content to cover.
+///
+/// -> content
 #let semi-transparent-cover(self: none, alpha: 85%, body) = {
   cover-with-rect(
     fill: update-alpha(
@@ -914,11 +977,15 @@
 ///
 /// Example: `config-methods(cover: utils.color-changing-cover.with(color: gray))`
 ///
-/// - color (color): The color to change to. Default is `gray`.
+/// - color (color): The color to apply to text when covered. Default is `gray`.
 ///
-/// - fallback-hide (boolean): Indicates whether the content should be hidden if it does not contain text. Default is `true`.
+/// - fallback-hide (bool): Whether to hide the content if it does not contain text. Default is `true`.
 ///
-/// - transparentize-table (boolean): Indicates whether the content should be transparentized if it is a table. Default is `false`.
+/// - transparentize-table (bool): Whether to transparentize table content. Default is `false`.
+///
+/// - it (content): The content to cover.
+///
+/// -> content
 #let color-changing-cover(
   self: none,
   color: gray,
@@ -939,11 +1006,15 @@
 ///
 /// Example: `config-methods(cover: utils.alpha-changing-cover.with(alpha: 25%))`
 ///
-/// - alpha (percentage): The alpha value to change to. Default is `25%`.
+/// - alpha (ratio): The opacity to apply to text colors when covered. Default is `25%`.
 ///
-/// - fallback-hide (boolean): Indicates whether the content should be hidden if it does not contain text. Default is `true`.
+/// - fallback-hide (bool): Whether to hide the content if it does not contain text. Default is `true`.
 ///
-/// - transparentize-table (boolean): Indicates whether the content should be transparentized if it is a table. Default is `false`.
+/// - transparentize-table (bool): Whether to transparentize table content. Default is `false`.
+///
+/// - it (content): The content to cover.
+///
+/// -> content
 #let alpha-changing-cover(
   self: none,
   alpha: 25%,
@@ -962,7 +1033,7 @@
 }
 
 
-/// Alert content with a primary color.
+/// Applies the theme's primary color to text content. Used as the default `alert` method.
 ///
 /// Example: `config-methods(alert: utils.alert-with-primary-color)`
 ///
@@ -973,7 +1044,7 @@
 )
 
 
-/// Alert content.
+/// Apply alert styling to content using the theme's alert method. Equivalent to `(self.methods.alert)(self: self, body)`.
 ///
 /// -> content
 #let alert(self: none, body) = (self.methods.alert)(self: self, body)
@@ -1016,23 +1087,19 @@
 }
 
 
-/// Check if a slide is visible
+/// Check if a subslide index is visible given a visibility specification.
 ///
 /// Example: `check-visible(3, "2-")` returns `true`
 ///
-/// - idx (int): The index of the slide.
+/// - idx (int): The current subslide index.
 ///
-/// - visible-subslides (int, array): A single integer or an array of integers.
-///    or a string that specifies the visible subslides
+/// - visible-subslides (int, array, str): Specifies which subslides are visible.
 ///
-///    Read #link("https://polylux.dev/book/dynamic/complex.html", "polylux book")
+///    Supported formats:
 ///
-///    The simplest extension is to use an array, such as `(1, 2, 4)` indicating that
-///    slides 1, 2, and 4 are visible. This is equivalent to the string `"1, 2, 4"`.
-///
-///    You can also use more convenient and complex strings to specify visible slides.
-///
-///    For example, "-2, 4, 6-8, 10-" means slides 1, 2, 4, 6, 7, 8, 10, and slides after 10 are visible.
+///    - A single integer, e.g. `3` — only subslide 3.
+///    - An array, e.g. `(1, 2, 4)` — equivalent to `"1, 2, 4"`.
+///    - A string with ranges, e.g. `"-2, 4, 6-8, 10-"` — subslides 1, 2, 4, 6, 7, 8, 10, and all after 10.
 ///
 /// -> bool
 #let check-visible(idx, visible-subslides) = {
@@ -1103,21 +1170,19 @@
 /// - fn (function): The function that will be called in the subslide.
 ///      Or you can use a method function like `(self: none) => { .. }`.
 ///
-/// - visible-subslides (int, array, string): `visible-subslides` is a single integer, an array of integers,
-///    or a string that specifies the visible subslides
+/// - visible-subslides (int, array, str): A single integer, an array of integers, or a string specifying the visible subslides.
 ///
-///    Read #link("https://polylux.dev/book/dynamic/complex.html", "polylux book")
+///    Supported formats:
 ///
-///    The simplest extension is to use an array, such as `(1, 2, 4)` indicating that
-///    slides 1, 2, and 4 are visible. This is equivalent to the string `"1, 2, 4"`.
-///
-///    You can also use more convenient and complex strings to specify visible slides.
-///
-///    For example, "-2, 4, 6-8, 10-" means slides 1, 2, 4, 6, 7, 8, 10, and slides after 10 are visible.
+///    - A single integer, e.g. `3` — only subslide 3.
+///    - An array, e.g. `(1, 2, 4)` — equivalent to `"1, 2, 4"`.
+///    - A string with ranges, e.g. `"-2, 4, 6-8, 10-"` — subslides 1, 2, 4, 6, 7, 8, 10, and all after 10.
 ///
 /// - cont (content): The content to display when the content is visible in the subslide.
 ///
-/// - is-method (boolean): A boolean indicating whether the function is a method function. Default is `false`.
+/// - is-method (bool): Whether the function is a method function. Default is `false`.
+///
+/// -> content
 #let effect(self: none, fn, visible-subslides, cont, is-method: false) = {
   if is-method {
     fn
@@ -1132,22 +1197,32 @@
 
 /// Uncover content in some subslides. Reserved space when hidden (like `#hide()`).
 ///
-/// Example: `uncover("2-")[abc]` will display `[abc]` if the current slide is 2 or later
+/// #example(
+/// >>> #let is-dark = sys.inputs.at("x-color-theme", default: none) == "dark";
+/// >>> #let text-color = if is-dark { std.white } else { std.black };
+/// >>> #show: simple-theme.with(
+/// >>>   aspect-ratio: "16-9",
+/// >>>   config-page(width: 320pt, height: 180pt),
+/// >>>   config-colors(neutral-lightest: none, neutral-darkest: text-color),
+/// >>> )
+/// >>> #set text(.5em)
+/// <<< #show: simple-theme.with(aspect-ratio: "16-9")
+/// = Slide
 ///
-/// - visible-subslides (int, array, string): A single integer, an array of integers, or a string that specifies the visible subslides.
+/// #uncover("2-")[Only visible from subslide 2]
+/// )
 ///
-///   Read #link("https://polylux.dev/book/dynamic/complex.html", "polylux book").
+/// - visible-subslides (int, array, str): A single integer, an array of integers, or a string specifying the visible subslides.
 ///
-///   The simplest extension is to use an array, such as `(1, 2, 4)`, indicating that
-///   slides 1, 2, and 4 are visible. This is equivalent to the string `"1, 2, 4"`.
+///   Supported formats:
 ///
-///   You can also use more convenient and complex strings to specify visible slides.
+///   - A single integer, e.g. `3` — only subslide 3.
+///   - An array, e.g. `(1, 2, 4)` — equivalent to `"1, 2, 4"`.
+///   - A string with ranges, e.g. `"-2, 4, 6-8, 10-"` — subslides 1, 2, 4, 6, 7, 8, 10, and all after 10.
 ///
-///   For example, `"-2, 4, 6-8, 10-"` means slides 1, 2, 4, 6, 7, 8, 10, and slides after 10 are visible.
+/// - uncover-cont (content): The content to display when visible.
 ///
-/// - uncover-cont (content): The content to display when the content is visible in the subslide.
-///
-/// - cover-fn (function | auto): An optional cover function to use instead of the default cover method from the theme. Useful when using `uncover` inside external package integrations (e.g. `fletcher.hide` for fletcher diagrams).
+/// - cover-fn (function, auto): An optional cover function to use instead of the default cover method from the theme. Useful when using `uncover` inside external package integrations (e.g. `fletcher.hide` for fletcher diagrams).
 ///
 /// -> content
 #let uncover(self: none, visible-subslides, uncover-cont, cover-fn: auto) = {
@@ -1162,21 +1237,32 @@
 }
 
 
-/// Display content in some subslides only.
-/// Don't reserve space when hidden, content is completely not existing there.
+/// Display content in some subslides only. No space is reserved when hidden.
 ///
-/// - visible-subslides (int, array, string): A single integer, an array of integers, or a string that specifies the visible subslides.
+/// #example(
+/// >>> #let is-dark = sys.inputs.at("x-color-theme", default: none) == "dark";
+/// >>> #let text-color = if is-dark { std.white } else { std.black };
+/// >>> #show: simple-theme.with(
+/// >>>   aspect-ratio: "16-9",
+/// >>>   config-page(width: 320pt, height: 180pt),
+/// >>>   config-colors(neutral-lightest: none, neutral-darkest: text-color),
+/// >>> )
+/// >>> #set text(.5em)
+/// <<< #show: simple-theme.with(aspect-ratio: "16-9")
+/// = Slide
 ///
-///   Read #link("https://polylux.dev/book/dynamic/complex.html", "polylux book").
+/// #only("2")[Only on subslide 2]
+/// )
 ///
-///   The simplest extension is to use an array, such as `(1, 2, 4)`, indicating that
-///   slides 1, 2, and 4 are visible. This is equivalent to the string `"1, 2, 4"`.
+/// - visible-subslides (int, array, str): A single integer, an array of integers, or a string specifying the visible subslides.
 ///
-///   You can also use more convenient and complex strings to specify visible slides.
+///   Supported formats:
 ///
-///   For example, `"-2, 4, 6-8, 10-"` means slides 1, 2, 4, 6, 7, 8, 10, and slides after 10 are visible.
+///   - A single integer, e.g. `3` — only subslide 3.
+///   - An array, e.g. `(1, 2, 4)` — equivalent to `"1, 2, 4"`.
+///   - A string with ranges, e.g. `"-2, 4, 6-8, 10-"` — subslides 1, 2, 4, 6, 7, 8, 10, and all after 10.
 ///
-/// - only-cont (content): The content to display when the content is visible in the subslide.
+/// - only-cont (content): The content to display when visible.
 ///
 /// -> content
 #let only(self: none, visible-subslides, only-cont) = {
@@ -1220,7 +1306,7 @@
 ///
 /// - position (alignment): The position of the content. Default is `bottom + left`.
 ///
-/// - stretch (boolean): A boolean indicating whether the content should be stretched to the maximum width and height. Default is `false`.
+/// - stretch (bool): Whether to stretch all alternatives to the maximum width and height. Default is `false`.
 ///
 ///   Important: If you use a zero-length content like a context expression, you should set `stretch: false`.
 ///
@@ -1270,11 +1356,11 @@
 ///
 /// - start (int): The starting subslide number. Default is `1`.
 ///
-/// - repeat-last (boolean): A boolean indicating whether the last subslide should be repeated. Default is `true`.
+/// - repeat-last (bool): Whether the last alternative should persist on all remaining subslides. Default is `true`.
 ///
-/// - position (string): The position of the content. Default is `bottom + left`.
+/// - position (alignment): The alignment of alternatives within the reserved space. Default is `bottom + left`.
 ///
-/// - stretch (boolean): A boolean indicating whether the content should be stretched to the maximum width and height. Default is `false`.
+/// - stretch (bool): Whether to stretch all alternatives to the maximum width and height. Default is `false`.
 ///
 ///   Important: If you use a zero-length content like a context expression, you should set `stretch: false`.
 ///
@@ -1305,9 +1391,9 @@
 ///
 /// - count (int, none): The number of subslides. Default is `none`.
 ///
-/// - position (string): The position of the content. Default is `bottom + left`.
+/// - position (alignment): The alignment of alternatives within the reserved space. Default is `bottom + left`.
 ///
-/// - stretch (boolean): A boolean indicating whether the content should be stretched to the maximum width and height. Default is `false`.
+/// - stretch (bool): Whether to stretch all alternatives to the maximum width and height. Default is `false`.
 ///
 ///   Important: If you use a zero-length content like a context expression, you should set `stretch: false`.
 ///
@@ -1351,9 +1437,9 @@
 ///
 /// - fn (function): A function that maps the case to content. The argument `case` is the index of the cases array you input.
 ///
-/// - position (string): The position of the content. Default is `bottom + left`.
+/// - position (alignment): The alignment of alternatives within the reserved space. Default is `bottom + left`.
 ///
-/// - stretch (boolean): A boolean indicating whether the content should be stretched to the maximum width and height. Default is `false`.
+/// - stretch (bool): Whether to stretch all alternatives to the maximum width and height. Default is `false`.
 ///
 ///   Important: If you use a zero-length content like a context expression, you should set `stretch: false`.
 ///
@@ -1370,15 +1456,24 @@
 /// Each item is revealed on a successive subslide. Items before `start` appear immediately;
 /// from subslide `start`, one additional item is revealed per subslide.
 ///
-/// Example:
+/// #example(
+/// >>> #let is-dark = sys.inputs.at("x-color-theme", default: none) == "dark";
+/// >>> #let text-color = if is-dark { std.white } else { std.black };
+/// >>> #show: simple-theme.with(
+/// >>>   aspect-ratio: "16-9",
+/// >>>   config-page(width: 320pt, height: 180pt),
+/// >>>   config-colors(neutral-lightest: none, neutral-darkest: text-color),
+/// >>> )
+/// >>> #set text(.5em)
+/// <<< #show: simple-theme.with(aspect-ratio: "16-9")
+/// = Slide
 ///
-/// ```typst
-/// #item-by-item(start: 2)[
+/// #item-by-item[
 ///   - first
 ///   - second
 ///   - third
 /// ]
-/// ```
+/// )
 ///
 /// - start (int): The subslide on which the first item appears. Default is `1`.
 ///
@@ -1445,13 +1540,13 @@
 ///
 /// Example: `#speaker-note[This is a speaker note]`
 ///
-/// - self (content): The current context.
+/// - self (dictionary): The current presentation context.
 ///
-/// - mode (string): The mode of the markup text, either `typ` or `md`. Default is `typ`.
+/// - mode (str): The mode of the markup text, either `typ` or `md`. Default is `typ`.
 ///
 /// - setting (function): A function that takes the note as input and returns a processed note.
 ///
-/// - subslide (none, auto, int, array, string): Restricts the note to specific subslides, similar to `only`.
+/// - subslide (none, auto, int, array, str): Restricts the note to specific subslides, similar to `only`.
 ///   - `none`: shown on all subslides.
 ///   - `auto`: automatically determined from the current pause position (default when called via `#speaker-note`).
 ///   - int, array, or string: shown only on the specified subslides.
@@ -1516,7 +1611,7 @@
 /// config-page(..utils.page-args-from-aspect-ratio("16-10"))
 /// ```
 ///
-/// - aspect-ratio (string): The aspect ratio string in `"W-H"` format where `W`
+/// - aspect-ratio (str): The aspect ratio string in `"W-H"` format where `W`
 ///   and `H` are positive numbers. E.g., `"16-9"`, `"4-3"`, `"16-10"`.
 ///
 /// -> dictionary
@@ -1576,7 +1671,7 @@
 }
 
 
-/// i18n Outline Title
+/// Internationalized outline/table-of-contents title. Returns the appropriate word for the current document language (supports Arabic, Catalan, Czech, Danish, German, English, Spanish, Estonian, Finnish, Japanese, Russian, Traditional Chinese, and Simplified Chinese).
 ///
 /// -> content
 #let i18n-outline-title = context {

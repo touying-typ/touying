@@ -13,7 +13,7 @@
   body: body,
 ))<touying-temporary-mark>]
 
-/// Update configurations for the presentation.
+/// Inject configuration changes into a block of content. Changes take effect only within `body`. Useful for implementing features like `#show: appendix`.
 ///
 /// Example: `#let appendix(body) = touying-set-config((appendix: true), body)` and you can use `#show: appendix` to set the appendix for the presentation.
 ///
@@ -29,7 +29,9 @@
 ))<touying-temporary-mark>]
 
 
-/// Appendix for the presentation. The last-slide-counter will be frozen at the last slide before the appendix. It is simple wrapper for `touying-set-config`, just like `#show: touying-set-config.with((appendix: true))`.
+/// Begin the appendix of the presentation. The slide counter is frozen at the last non-appendix slide, so appendix slides do not affect the total slide count shown in footers.
+///
+/// Equivalent to `#show: touying-set-config.with((appendix: true))`.
 ///
 /// Example: `#show: appendix`
 ///
@@ -44,16 +46,16 @@
 
 /// Recall a slide by its label.
 ///
-/// == Example
+/// Example:
 ///
 /// ```typ
 /// #touying-recall("recall")
 /// #touying-recall("recall", subslide: 2)
 /// ```
 ///
-/// - lbl (string): The label of the slide to recall
+/// - lbl (str, label): The label of the slide to recall.
 ///
-/// - subslide (none | int): The subslide index to recall. Default is `none`, which recalls all subslides.
+/// - subslide (none, int): The subslide index to recall. Default is `none`, which recalls all subslides.
 ///
 /// -> content
 #let touying-recall(lbl, subslide: none) = [#metadata((
@@ -82,12 +84,12 @@
   }
 }
 
-/// Get the appropriate slide function based on current heading context
-///
-/// - self (dictionary): The presentation context
-/// - default (function): Default slide function to use if no specific one matches
-///
-/// -> function
+// Get the appropriate slide function based on current heading context
+//
+// - self (dictionary): The presentation context
+// - default (function): Default slide function to use if no specific one matches
+//
+// -> function
 #let _get-slide-fn(self, default: auto) = {
   let last-heading-depth = _get-last-heading-depth(self.headings)
   let last-heading-label = _get-last-heading-label(self.headings)
@@ -119,13 +121,13 @@
   }
 }
 
-/// Call the appropriate slide function with the given body content
-///
-/// - self (dictionary): The presentation context
-/// - fn (function): The slide function to use (auto to determine automatically)
-/// - body (content): The slide content to render
-///
-/// -> content
+// Call the appropriate slide function with the given body content
+//
+// - self (dictionary): The presentation context
+// - fn (function): The slide function to use (auto to determine automatically)
+// - body (content): The slide content to render
+//
+// -> content
 #let _call-slide-fn(self, fn, body) = {
   let slide-fn = if fn == auto {
     _get-slide-fn(self)
@@ -141,18 +143,18 @@
 }
 
 
-/// Use headings to split a content block into slides
-///
-/// This function recursively processes content and splits it into individual slides
-/// based on heading levels and other slide-breaking elements like pagebreaks.
-///
-/// - self (dictionary): The presentation context containing slide configuration
-/// - recaller-map (dictionary): Map of slide labels to their content for recall functionality
-/// - new-start (boolean): Whether this is the start of a new slide section
-/// - is-first-slide (boolean): Whether this is the first slide of the presentation
-/// - body (content): The content to be split into slides
-///
-/// -> content
+// Use headings to split a content block into slides
+//
+// This function recursively processes content and splits it into individual slides
+// based on heading levels and other slide-breaking elements like pagebreaks.
+//
+// - self (dictionary): The presentation context containing slide configuration
+// - recaller-map (dictionary): Map of slide labels to their content for recall functionality
+// - new-start (bool): Whether this is the start of a new slide section
+// - is-first-slide (bool): Whether this is the first slide of the presentation
+// - body (content): The content to be split into slides
+//
+// -> content
 #let split-content-into-slides(
   self: none,
   recaller-map: (:),
@@ -732,9 +734,7 @@
 ///
 /// - fn (function): The function that will be called like `(self: none, ..args) => { .. }`.
 ///
-/// - last-subslide (int): The max repetitions for the slide. It is useful for functions like `uncover`, `only` and `alternatives-match` that need to update the max repetitions for the slide.
-///
-///   It is useful for functions like `uncover`, `only` and `alternatives-match` that need to update the max repetitions for the slide.
+/// - last-subslide (int): The max subslide count for the slide. Used by functions like `uncover`, `only`, and `alternatives-match` to determine the total number of subslides needed.
 ///
 /// - repetitions (function): The repetitions for the function. It is useful for functions like `alternatives` with `start: auto`.
 ///
@@ -829,11 +829,15 @@
 }
 
 
-/// Uncover content in the next subslide. Equivalent to `#jump(1, relative: true)`.
+/// Reveal the next subslide. Inserts a subslide break: content after `#pause` appears one subslide later. Equivalent to `#jump(1, relative: true)`.
+///
+/// -> content
 #let pause = jump(1, relative: true)
 
 
-/// Display content simultaneously with the current subslide. Equivalent to `#jump(1)`.
+/// Reset the subslide counter back to 1, allowing content after `#meanwhile` to appear simultaneously with content from subslide 1. Equivalent to `#jump(1)`.
+///
+/// -> content
 #let meanwhile = jump(1)
 
 
@@ -846,21 +850,17 @@
 /// - fn (function): The function that will be called in the subslide.
 ///      Or you can use a method function like `(self: none) => { .. }`.
 ///
-/// - visible-subslides (int, array, string): `visible-subslides` is a single integer, an array of integers,
-///    or a string that specifies the visible subslides
+/// - visible-subslides (int, array, str): A single integer, an array of integers, or a string specifying the visible subslides.
 ///
-///    Read #link("https://polylux.dev/book/dynamic/complex.html", "polylux book")
+///    Supported formats:
 ///
-///    The simplest extension is to use an array, such as `(1, 2, 4)` indicating that
-///    slides 1, 2, and 4 are visible. This is equivalent to the string `"1, 2, 4"`.
+///    - A single integer, e.g. `3` — only subslide 3.
+///    - An array, e.g. `(1, 2, 4)` — equivalent to `"1, 2, 4"`.
+///    - A string with ranges, e.g. `"-2, 4, 6-8, 10-"` — subslides 1, 2, 4, 6, 7, 8, 10, and all after 10.
 ///
-///    You can also use more convenient and complex strings to specify visible slides.
+/// - cont (content): The content to display when visible.
 ///
-///    For example, "-2, 4, 6-8, 10-" means slides 1, 2, 4, 6, 7, 8, 10, and slides after 10 are visible.
-///
-/// - cont (content): The content to display when the content is visible in the subslide.
-///
-/// - is-method (boolean): A boolean indicating whether the function is a method function. Default is `false`.
+/// - is-method (bool): Whether the function is a method function. Default is `false`.
 #let effect(fn, visible-subslides, cont, is-method: false) = {
   touying-fn-wrapper(
     utils.effect,
@@ -875,23 +875,32 @@
 
 /// Uncover content in some subslides. Reserved space when hidden (like `#hide()`).
 ///
-/// Example: `uncover("2-")[abc]` will display `[abc]` if the current slide is 2 or later
+/// #example(
+/// >>> #let is-dark = sys.inputs.at("x-color-theme", default: none) == "dark";
+/// >>> #let text-color = if is-dark { std.white } else { std.black };
+/// >>> #show: simple-theme.with(
+/// >>>   aspect-ratio: "16-9",
+/// >>>   config-page(width: 320pt, height: 180pt),
+/// >>>   config-colors(neutral-lightest: none, neutral-darkest: text-color),
+/// >>> )
+/// >>> #set text(.5em)
+/// <<< #show: simple-theme.with(aspect-ratio: "16-9")
+/// = Slide
 ///
-/// - visible-subslides (int, array, string): `visible-subslides` is a single integer, an array of integers,
-///    or a string that specifies the visible subslides
+/// #uncover("2-")[Only visible from subslide 2]
+/// )
 ///
-///    Read #link("https://polylux.dev/book/dynamic/complex.html", "polylux book")
+/// - visible-subslides (int, array, str): A single integer, an array of integers, or a string specifying the visible subslides.
 ///
-///    The simplest extension is to use an array, such as `(1, 2, 4)` indicating that
-///    slides 1, 2, and 4 are visible. This is equivalent to the string `"1, 2, 4"`.
+///    Supported formats:
 ///
-///    You can also use more convenient and complex strings to specify visible slides.
+///    - A single integer, e.g. `3` — only subslide 3.
+///    - An array, e.g. `(1, 2, 4)` — equivalent to `"1, 2, 4"`.
+///    - A string with ranges, e.g. `"-2, 4, 6-8, 10-"` — subslides 1, 2, 4, 6, 7, 8, 10, and all after 10.
 ///
-///    For example, "-2, 4, 6-8, 10-" means slides 1, 2, 4, 6, 7, 8, 10, and slides after 10 are visible.
+/// - uncover-cont (content): The content to display when visible.
 ///
-/// - uncover-cont (content): The content to display when the content is visible in the subslide.
-///
-/// - cover-fn (function | auto): An optional cover function to use instead of the default cover method from the theme. Useful when using `uncover` inside external package integrations (e.g. `fletcher.hide` for fletcher diagrams).
+/// - cover-fn (function, auto): An optional cover function to use instead of the default cover method from the theme. Useful when using `uncover` inside external package integrations (e.g. `fletcher.hide` for fletcher diagrams).
 ///
 /// -> content
 #let uncover(visible-subslides, uncover-cont, cover-fn: auto) = {
@@ -905,22 +914,32 @@
 }
 
 
-/// Display content in some subslides only.
-/// Don't reserve space when hidden, content is completely not existing there.
+/// Display content in some subslides only. No space is reserved when hidden.
 ///
-/// - visible-subslides (int, array, string): `visible-subslides` is a single integer, an array of integers,
-///    or a string that specifies the visible subslides
+/// #example(
+/// >>> #let is-dark = sys.inputs.at("x-color-theme", default: none) == "dark";
+/// >>> #let text-color = if is-dark { std.white } else { std.black };
+/// >>> #show: simple-theme.with(
+/// >>>   aspect-ratio: "16-9",
+/// >>>   config-page(width: 320pt, height: 180pt),
+/// >>>   config-colors(neutral-lightest: none, neutral-darkest: text-color),
+/// >>> )
+/// >>> #set text(.5em)
+/// <<< #show: simple-theme.with(aspect-ratio: "16-9")
+/// = Slide
 ///
-///    Read #link("https://polylux.dev/book/dynamic/complex.html", "polylux book")
+/// #only("2")[Only on subslide 2]
+/// )
 ///
-///    The simplest extension is to use an array, such as `(1, 2, 4)` indicating that
-///    slides 1, 2, and 4 are visible. This is equivalent to the string `"1, 2, 4"`.
+/// - visible-subslides (int, array, str): A single integer, an array of integers, or a string specifying the visible subslides.
 ///
-///    You can also use more convenient and complex strings to specify visible slides.
+///    Supported formats:
 ///
-///    For example, "-2, 4, 6-8, 10-" means slides 1, 2, 4, 6, 7, 8, 10, and slides after 10 are visible.
+///    - A single integer, e.g. `3` — only subslide 3.
+///    - An array, e.g. `(1, 2, 4)` — equivalent to `"1, 2, 4"`.
+///    - A string with ranges, e.g. `"-2, 4, 6-8, 10-"` — subslides 1, 2, 4, 6, 7, 8, 10, and all after 10.
 ///
-/// - only-cont (content): The content to display when the content is visible in the subslide.
+/// - only-cont (content): The content to display when visible.
 ///
 /// -> content
 #let only(visible-subslides, only-cont) = {
@@ -966,11 +985,11 @@
 ///
 /// - subslides-contents (dictionary): A dictionary mapping from subslides to content.
 ///
-/// - position (string): The position of the content. Default is `bottom + left`.
+/// - position (alignment): The alignment of alternatives within the reserved space. Default is `bottom + left`.
 ///
-/// - stretch (boolean): A boolean indicating whether the content should be stretched to the maximum width and height. Default is `false`.
+/// - stretch (bool): Whether to stretch all alternatives to the maximum width and height. Default is `false`.
 ///
-///   Important: If you use a zero-length content like context expression, you should set `stretch: false`.
+///   Important: If you use a zero-length content like a context expression, you should set `stretch: false`.
 ///
 /// -> content
 #let alternatives-match(
@@ -996,13 +1015,13 @@
 ///
 /// - start (int): The starting subslide number. Default is `auto`.
 ///
-/// - repeat-last (boolean): A boolean indicating whether the last subslide should be repeated. Default is `true`.
+/// - repeat-last (bool): Whether the last alternative should persist on all remaining subslides. Default is `true`.
 ///
-/// - position (string): The position of the content. Default is `bottom + left`.
+/// - position (alignment): The alignment of alternatives within the reserved space. Default is `bottom + left`.
 ///
-/// - stretch (boolean): A boolean indicating whether the content should be stretched to the maximum width and height. Default is `false`.
+/// - stretch (bool): Whether to stretch all alternatives to the maximum width and height. Default is `false`.
 ///
-///   Important: If you use a zero-length content like context expression, you should set `stretch: false`.
+///   Important: If you use a zero-length content like a context expression, you should set `stretch: false`.
 ///
 /// -> content
 #let alternatives(
@@ -1046,11 +1065,11 @@
 ///
 /// - count (none, int): The number of subslides. Default is `none`.
 ///
-/// - position (string): The position of the content. Default is `bottom + left`.
+/// - position (alignment): The alignment of alternatives within the reserved space. Default is `bottom + left`.
 ///
-/// - stretch (boolean): A boolean indicating whether the content should be stretched to the maximum width and height. Default is `false`.
+/// - stretch (bool): Whether to stretch all alternatives to the maximum width and height. Default is `false`.
 ///
-///   Important: If you use a zero-length content like context expression, you should set `stretch: false`.
+///   Important: If you use a zero-length content like a context expression, you should set `stretch: false`.
 ///
 /// -> content
 #let alternatives-fn(
@@ -1100,11 +1119,11 @@
 ///
 /// - fn (function): A function that maps the case to content. The argument `case` is the index of the cases array you input.
 ///
-/// - position (string): The position of the content. Default is `bottom + left`.
+/// - position (alignment): The alignment of alternatives within the reserved space. Default is `bottom + left`.
 ///
-/// - stretch (boolean): A boolean indicating whether the content should be stretched to the maximum width and height. Default is `false`.
+/// - stretch (bool): Whether to stretch all alternatives to the maximum width and height. Default is `false`.
 ///
-///   Important: If you use a zero-length content like context expression, you should set `stretch: false`.
+///   Important: If you use a zero-length content like a context expression, you should set `stretch: false`.
 ///
 /// -> content
 #let alternatives-cases(
@@ -1131,7 +1150,7 @@
 /// Each item is revealed on a successive subslide. Items before `start` appear immediately;
 /// from subslide `start`, one additional item is revealed per subslide.
 ///
-/// == Example
+/// Example:
 ///
 /// ```typst
 /// #item-by-item(start: 2)[
@@ -1171,19 +1190,18 @@
 /// Speaker notes are a way to add additional information to your slides that is not visible to the audience. This can be useful for providing additional context or reminders to yourself.
 ///
 /// Multiple calls on the same slide are combined (accumulated), so all notes are shown together.
-/// You can also use `#pause` inside the note body to reveal note content progressively.
 ///
-/// == Example
+/// Example:
 ///
 /// ```typ
 /// #speaker-note[This is a speaker note]
 /// ```
 ///
-/// - mode (string): The mode of the markup text, either `typ` or `md`. Default is `typ`.
+/// - mode (str): The mode of the markup text, either `typ` or `md`. Default is `typ`.
 ///
 /// - setting (function): A function that takes the note as input and returns a processed note.
 ///
-/// - subslide (none, auto, int, array, string): Restricts the note to specific subslides, similar to `only`.
+/// - subslide (none, auto, int, array, str): Restricts the note to specific subslides, similar to `only`.
 ///   - `auto` (default): automatically determined from the current pause position. A note placed after `#pause` will automatically appear only from that subslide onward.
 ///   - `none`: shown on all subslides regardless of position.
 ///   - int, array, or string: shown only on the specified subslides.
@@ -1211,26 +1229,37 @@
 #let alert(body) = touying-fn-wrapper(utils.alert, body)
 
 
-/// Touying also provides a unique and highly useful feature—math equation animations, allowing you to conveniently use pause and meanwhile within math equations.
+/// Animated math equation. Use `pause` and `meanwhile` inside the equation body to reveal terms step by step.
 ///
-/// Example:
+/// Write the equation as a raw block (backtick string) or a plain string. Use `pause` (without backslash or `#`) as a pseudo-command inside the equation to insert a pause marker.
 ///
-/// ```typst
+/// #example(
+/// >>> #let is-dark = sys.inputs.at("x-color-theme", default: none) == "dark";
+/// >>> #let text-color = if is-dark { std.white } else { std.black };
+/// >>> #show: simple-theme.with(
+/// >>>   aspect-ratio: "16-9",
+/// >>>   config-page(width: 320pt, height: 180pt),
+/// >>>   config-colors(neutral-lightest: none, neutral-darkest: text-color),
+/// >>> )
+/// >>> #set text(.5em)
+/// <<< #show: simple-theme.with(aspect-ratio: "16-9")
+/// = Slide
+///
 /// #touying-equation(`
-///   f(x) &= pause x^2 + 2x + 1  \
-///         &= pause (x + 1)^2  \
+///   f(x) &= pause x^2 + 2x + 1 \
+///         &= pause (x + 1)^2
 /// `)
-/// ```
+/// )
 ///
-/// - block (boolean): A boolean indicating whether the equation is a block. Default is `true`.
+/// - block (bool): Whether the equation is a block element. Default is `true`.
 ///
-/// - numbering (none, string): The numbering of the equation. Default is `none`.
+/// - numbering (none, str): The numbering of the equation. Default is `none`.
 ///
-/// - supplement (string): The supplement of the equation. Default is `auto`.
+/// - supplement (auto, str): The supplement of the equation. Default is `auto`.
 ///
-/// - scope (dictionary): The scope when we use `eval()` function to evaluate the equation.
+/// - scope (dictionary): Extra bindings passed to `eval()` when the body is a string or raw block.
 ///
-/// - body (string, content, function): The content of the equation. It should be a string, a raw text, or a function that receives `self` as an argument and returns a string.
+/// - body (str, content, function): The equation content. Accepts a raw block (e.g. `` `f(x) = pause x^2` ``), a plain string, or a callback `self => str`.
 ///
 /// -> content
 #let touying-equation(
@@ -1273,11 +1302,11 @@
 ///
 /// - mitex (function): The mitex function. You can import it by code like `#import "@preview/mitex:0.2.3": mitex`.
 ///
-/// - block (boolean): A boolean indicating whether the equation is a block. Default is `true`.
+/// - block (bool): Whether the equation is a block element. Default is `true`.
 ///
-/// - numbering (none, string): The numbering of the equation. Default is `none`.
+/// - numbering (none, str): The numbering of the equation. Default is `none`.
 ///
-/// - supplement (string): The supplement of the equation. Default is `auto`.
+/// - supplement (auto, str): The supplement of the equation. Default is `auto`.
 ///
 /// - body (string, content, function): The content of the equation. It should be a string, a raw text, or a function that receives `self` as an argument and returns a string.
 ///
@@ -1308,33 +1337,42 @@
 ))<touying-temporary-mark>]
 
 
-/// Touying raw function for creating animated code blocks.
+/// Animated code block. Use a comment-style `pause` or `meanwhile` on its own line to insert animation markers.
 ///
 /// A line is treated as a `pause` or `meanwhile` marker when its only
 /// meaningful characters (letters, digits, CJK) exactly spell "pause" or
 /// "meanwhile". For example, `// pause`, `# pause`, and `#pause` are all
 /// valid markers, while `pause = 1` or `def pause():` are not.
 ///
-/// Example:
+/// #example(
+/// >>> #let is-dark = sys.inputs.at("x-color-theme", default: none) == "dark";
+/// >>> #let text-color = if is-dark { std.white } else { std.black };
+/// >>> #show: simple-theme.with(
+/// >>>   aspect-ratio: "16-9",
+/// >>>   config-page(width: 320pt, height: 180pt),
+/// >>>   config-colors(neutral-lightest: none, neutral-darkest: text-color),
+/// >>> )
+/// >>> #set text(.5em)
+/// <<< #show: simple-theme.with(aspect-ratio: "16-9")
+/// = Slide
 ///
-/// ```typst
 /// #touying-raw(```rust
 ///   fn main() {
 ///       // pause
 ///       println!("Hello, world!");
 ///   }
 /// ```)
-/// ```
+/// )
 ///
-/// - block (boolean): Whether the raw block is a block element. Default is `true`.
+/// - block (bool): Whether the raw block is a block element. Default is `true`.
 ///
-/// - lang (none, string): The language for syntax highlighting. When `none`, the language is inferred from the raw block body if possible. Default is `none`.
+/// - lang (none, str): The language for syntax highlighting. When `none`, the language is inferred from the raw block body if possible. Default is `none`.
 ///
-/// - fill-empty-lines (boolean): Whether to replace hidden lines with empty lines to preserve the layout of visible lines. Default is `true`.
+/// - fill-empty-lines (bool): Whether to replace hidden lines with empty lines to preserve the layout of visible lines. Default is `true`.
 ///
-/// - simple (boolean): When `true`, use `#pause;` and `#meanwhile;` as direct split markers (similar to how `touying-mitex` uses `\pause`). Default is `false`.
+/// - simple (bool): When `true`, use `#pause;` and `#meanwhile;` as direct split markers (similar to how `touying-mitex` uses `\pause`). Default is `false`.
 ///
-/// - body (string, content, function): The raw code content. Can be a raw block, a string, or a function receiving `self` as an argument.
+/// - body (str, content, function): The raw code content. Can be a raw block, a string, or a function receiving `self` as an argument.
 ///
 /// -> content
 #let touying-raw(
@@ -1369,19 +1407,31 @@
 ))<touying-temporary-mark>]
 
 
-/// Touying reducer is a powerful tool to provide more powerful animation effects for other packages or functions.
+/// Extend external packages with `pause` and `meanwhile` animation support.
 ///
-/// For example, you can adds `pause` and `meanwhile` animations to cetz and fletcher packages.
+/// Wraps an external drawing/diagram function (like `cetz.canvas` or `fletcher.diagram`) so that Touying can intercept `pause`/`meanwhile` markers inside its content array and hide/cover items across subslides.
 ///
-/// Cetz: `#let cetz-canvas = touying-reducer.with(reduce: cetz.canvas, cover: cetz.draw.hide.with(bounds: true))`
+/// Define package-specific wrappers once at the top of your document:
 ///
-/// Fletcher: `#let fletcher-diagram = touying-reducer.with(reduce: fletcher.diagram, cover: fletcher.hide)`
+/// ```typst
+/// // CeTZ
+/// #let cetz-canvas = touying-reducer.with(
+///   reduce: cetz.canvas,
+///   cover: cetz.draw.hide.with(bounds: true),
+/// )
 ///
-/// - reduce (function): The reduce function that will be called. It is usually a function that receives an array of content and returns the content it painted. Just like the `cetz.canvas` or `fletcher.diagram` function.
+/// // Fletcher
+/// #let fletcher-diagram = touying-reducer.with(
+///   reduce: fletcher.diagram,
+///   cover: fletcher.hide,
+/// )
+/// ```
 ///
-/// - cover (function): The cover function that will be called when some content is hidden. It is usually a function that receives the argument of the content that will be hidden. Just like the `cetz.draw.hide` or `fletcher.hide` function.
+/// - reduce (function): The external drawing function. It should accept an array of drawing commands and return rendered content (e.g. `cetz.canvas` or `fletcher.diagram`).
 ///
-/// - args (array): The arguments of the reducer function.
+/// - cover (function): Called with a drawing command when that command should be hidden on the current subslide. Should produce invisible but space-preserving content (e.g. `cetz.draw.hide.with(bounds: true)` or `fletcher.hide`).
+///
+/// - args (arguments): The positional and named arguments passed to the `reduce` function.
 ///
 /// -> content
 #let touying-reducer(
@@ -1403,7 +1453,7 @@
 /// the parsed equation and the total number of repetitions needed.
 ///
 /// - self (dictionary): The presentation context
-/// - need-cover (boolean): Whether hidden content should be covered
+/// - need-cover (bool): Whether hidden content should be covered
 /// - base (int): Base repetition count
 /// - index (int): Current subslide index
 /// - eqt-metadata (content): The equation metadata to parse
@@ -1506,7 +1556,7 @@
 /// Similar to _parse-touying-equation but for MiTeX equations.
 ///
 /// - self (dictionary): The presentation context
-/// - need-cover (boolean): Whether hidden content should be covered
+/// - need-cover (bool): Whether hidden content should be covered
 /// - base (int): Base repetition count
 /// - index (int): Current subslide index
 /// - eqt-metadata (content): The mitex metadata to parse
@@ -1602,7 +1652,7 @@
 /// lines like `pause = 1` or `def pause():`.
 ///
 /// - self (dictionary): The presentation context
-/// - need-cover (boolean): Whether hidden content should be covered
+/// - need-cover (bool): Whether hidden content should be covered
 /// - base (int): Base repetition count
 /// - index (int): Current subslide index
 /// - raw-metadata (content): The raw metadata to parse
@@ -1796,10 +1846,10 @@
 /// processes content and determines what should be visible on each subslide.
 ///
 /// - self (dictionary): The presentation context
-/// - need-cover (boolean): Whether hidden content should be covered
+/// - need-cover (bool): Whether hidden content should be covered
 /// - base (int): Base repetition count
 /// - index (int): Current subslide index
-/// - show-delayed-wrapper (boolean): Whether to show delayed wrapper content
+/// - show-delayed-wrapper (bool): Whether to show delayed wrapper content
 /// - bodies (content): The content elements to parse
 ///
 /// -> (array, int, int, int)
@@ -2985,45 +3035,8 @@
   }
 }
 
-/// Touying slide function, the core function of touying. It usually is used to create a slide with animation effects and works with `touying-slide-wrapper` function.
-///
-/// Example:
-///
-/// ```
-/// #let slide(
-///   config: (:),
-///   repeat: auto,
-///   setting: body => body,
-///   composer: auto,
-///   ..bodies,
-/// ) = touying-slide-wrapper(self => {
-///   touying-slide(self: self, config: config, repeat: repeat, setting: setting, composer: composer, ..bodies)
-/// })
-/// ```
-///
-/// - config (dictionary): The configuration of the slide. You can use `config-xxx` to set the configuration of the slide. For more configurations, you can use `utils.merge-dicts` to merge them.
-///
-/// - repeat (auto): The number of subslides. Default is `auto`, which means touying will automatically calculate the number of subslides.
-///
-///   The `repeat` argument is necessary when you use `#slide(repeat: 3, self => [ .. ])` style code to create a slide. The callback-style `uncover` and `only` cannot be detected by touying automatically.
-///
-/// - setting (function): The setting of the slide. You can use it to add some set/show rules for the slide.
-///
-/// - composer (function | array): The composer of the slide. You can use it to set the layout of the slide.
-///
-///   For example, `#slide(composer: (1fr, 2fr, 1fr))[A][B][C]` to split the slide into three parts. The first and last parts will take 1/4 of the slide, and the second part will take 1/2 of the slide.
-///
-///   If you pass a non-function value like `(1fr, 2fr, 1fr)`, it will be assumed to be the first argument of the `components.side-by-side` function.
-///
-///   The `components.side-by-side` function is a simple wrapper of the `grid` function. It means you can use the `grid.cell(colspan: 2, ..)` to make the cell take 2 columns.
-///
-///   For example, `#slide(composer: 2)[A][B][#grid.cell(colspan: 2)[Footer]]` will make the `Footer` cell take 2 columns.
-///
-///   If you want to customize the composer, you can pass a function to the `composer` argument. The function should receive the contents of the slide and return the content of the slide, like `#slide(composer: grid.with(columns: 2))[A][B]`.
-///
-/// - bodies (array): The contents of the slide. You can call the `slide` function with syntax like `#slide[A][B][C]` to create a slide.
-///
-/// -> content
+// Internal slide rendering function. Called by theme slide functions via `touying-slide-wrapper`.
+// See the public `slide` function for parameter documentation.
 #let touying-slide(
   self: none,
   config: (:),
@@ -3340,25 +3353,24 @@
 
 /// Touying slide function.
 ///
-/// - config (dict): The configuration of the slide. You can use `config-xxx` to set the configuration of the slide. For more configurations, you can use `utils.merge-dicts` to merge them.
+/// - config (dictionary): The configuration of the slide. You can use `config-xxx` to set the configuration of the slide. For more configurations, you can use `utils.merge-dicts` to merge them.
 ///
-/// - repeat (auto): The number of subslides. Default is `auto`, which means touying will automatically calculate the number of subslides.
+/// - repeat (auto, int): The number of subslides. Default is `auto`, which means touying will automatically calculate the number of subslides.
 ///
 ///   The `repeat` argument is necessary when you use `#slide(repeat: 3, self => [ .. ])` style code to create a slide. The callback-style `uncover` and `only` cannot be detected by touying automatically.
 ///
 /// - setting (function): The setting of the slide. You can use it to add some set/show rules for the slide.
 ///
-/// - composer (function | array): The composer of the slide. You can use it to set the layout of the slide.
+/// - composer (function, array, int, auto): The composer arranges multiple content bodies side by side.
 ///
-///   For example, `#slide(composer: (1fr, 2fr, 1fr))[A][B][C]` to split the slide into three parts. The first and last parts will take 1/4 of the slide, and the second part will take 1/2 of the slide.
+///   - `auto`: use the theme default (`components.side-by-side`)
+///   - array, e.g. `(1fr, 2fr, 1fr)`: column widths for `side-by-side`
+///   - int: equal columns shorthand
+///   - function: fully custom layout, e.g. `grid.with(columns: 2)`
 ///
-///   If you pass a non-function value like `(1fr, 2fr, 1fr)`, it will be assumed to be the first argument of the `components.side-by-side` function.
+///   For example, `#slide(composer: (1fr, 2fr, 1fr))[A][B][C]` splits the slide into three columns.
 ///
-///   The `components.side-by-side` function is a simple wrapper of the `grid` function. It means you can use the `grid.cell(colspan: 2, ..)` to make the cell take 2 columns.
-///
-///   For example, `#slide(composer: 2)[A][B][#grid.cell(colspan: 2)[Footer]]` will make the `Footer` cell take 2 columns.
-///
-///   If you want to customize the composer, you can pass a function to the `composer` argument. The function should receive the contents of the slide and return the content of the slide, like `#slide(composer: grid.with(columns: 2))[A][B]`.
+///   If you want to customize the composer, you can pass a function like `#slide(composer: grid.with(columns: 2))[A][B]`.
 ///
 /// - bodies (array): The contents of the slide. You can call the `slide` function with syntax like `#slide[A][B][C]` to create a slide.
 ///
@@ -3381,29 +3393,19 @@
 })
 
 
-/// Touying empty slide function.
+/// Empty slide with no default heading or section context.
 ///
-/// - config (dict): The configuration of the slide. You can use `config-xxx` to set the configuration of the slide. For more configurations, you can use `utils.merge-dicts` to merge them.
+/// Unlike `slide`, this function does not look at heading context or trigger `new-section-slide-fn` / `new-subsection-slide-fn`. Use it to create isolated slides outside the normal slide hierarchy (e.g. a standalone title card).
 ///
-/// - repeat (auto): The number of subslides. Default is `auto`, which means touying will automatically calculate the number of subslides.
+/// - config (dictionary): The configuration of the slide. You can use `config-xxx` to set the configuration of the slide. For more configurations, you can use `utils.merge-dicts` to merge them.
 ///
-///   The `repeat` argument is necessary when you use `#slide(repeat: 3, self => [ .. ])` style code to create a slide. The callback-style `uncover` and `only` cannot be detected by touying automatically.
+/// - repeat (auto, int): The number of subslides. Default is `auto`, which means touying will automatically calculate the number of subslides.
 ///
-/// - setting (function): The setting of the slide. You can use it to add some set/show rules for the slide.
+/// - setting (function): Set/show rules to apply for the slide. Receives the composed body and returns it.
 ///
-/// - composer (function | array): The composer of the slide. You can use it to set the layout of the slide.
+/// - composer (function, array, int, auto): Arranges multiple body blocks side-by-side. Same semantics as `slide`.
 ///
-///   For example, `#slide(composer: (1fr, 2fr, 1fr))[A][B][C]` to split the slide into three parts. The first and last parts will take 1/4 of the slide, and the second part will take 1/2 of the slide.
-///
-///   If you pass a non-function value like `(1fr, 2fr, 1fr)`, it will be assumed to be the first argument of the `components.side-by-side` function.
-///
-///   The `components.side-by-side` function is a simple wrapper of the `grid` function. It means you can use the `grid.cell(colspan: 2, ..)` to make the cell take 2 columns.
-///
-///   For example, `#slide(composer: 2)[A][B][#grid.cell(colspan: 2)[Footer]]` will make the `Footer` cell take 2 columns.
-///
-///   If you want to customize the composer, you can pass a function to the `composer` argument. The function should receive the contents of the slide and return the content of the slide, like `#slide(composer: grid.with(columns: 2))[A][B]`.
-///
-/// - bodies (array): The contents of the slide. You can call the `slide` function with syntax like `#slide[A][B][C]` to create a slide.
+/// - bodies (arguments): The content blocks of the slide.
 ///
 /// -> content
 #let empty-slide(

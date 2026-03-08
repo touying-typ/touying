@@ -10,16 +10,11 @@
 )
 
 
-/// SIDE BY SIDE
-///
-/// A simple wrapper around `grid` that creates a grid with a single row.
-/// It is useful for creating side-by-side slide.
-///
-/// It is also the default function for composer in the slide function.
+/// A simple wrapper around `grid` that creates a single-row grid. Used as the default `composer` for multi-body slides.
 ///
 /// Example: `side-by-side[a][b][c]` will display `a`, `b`, and `c` side by side.
 ///
-/// - columns (auto): The number of columns. Default is `auto`, which means the number of columns is equal to the number of bodies.
+/// - columns (auto, array): The column widths. Default is `auto`, which creates equal-width columns matching the number of bodies.
 ///
 /// - gutter (length): The space between columns. Default is `1em`.
 ///
@@ -41,17 +36,17 @@
 }
 
 
-/// Adaptive columns layout
+/// Adaptive columns layout that automatically chooses the number of columns based on content height.
 ///
 /// Example: `components.adaptive-columns(outline())`
 ///
-/// - gutter (length): The space between columns.
+/// - gutter (length): The space between columns. Default is `4%`.
 ///
-/// - max-count (int): The maximum number of columns.
+/// - max-count (int): The maximum number of columns. Default is `3`.
 ///
-/// - start (content): The content to place before the columns.
+/// - start (content, none): The content to place before the columns. Default is `none`.
 ///
-/// - end (content): The content to place after the columns.
+/// - end (content, none): The content to place after the columns. Default is `none`.
 ///
 /// - body (content): The content to place in the columns.
 ///
@@ -104,7 +99,7 @@
 )
 
 
-/// Left and right.
+/// Place two content blocks at the left and right edges of the available width using a three-column grid.
 ///
 /// - left (content): The content of the left part.
 ///
@@ -117,17 +112,22 @@
 )
 
 
-// Create a slide where the provided content blocks are displayed in a grid and coloured in a checkerboard pattern without further decoration. You can configure the grid using the rows and `columns` keyword arguments (both default to none). It is determined in the following way:
+/// Create a slide where the provided content blocks are displayed in a grid with a checkerboard color pattern.
+///
+/// You can configure the grid using the `rows` and `columns` keyword arguments (both default to `none`):
 ///
 /// - If `columns` is an integer, create that many columns of width `1fr`.
 /// - If `columns` is `none`, create as many columns of width `1fr` as there are content blocks.
 /// - Otherwise assume that `columns` is an array of widths already, use that.
 /// - If `rows` is an integer, create that many rows of height `1fr`.
-/// - If `rows` is `none`, create that many rows of height `1fr` as are needed given the number of co/ -ntent blocks and columns.
+/// - If `rows` is `none`, create as many rows of height `1fr` as needed given the number of content blocks and columns.
 /// - Otherwise assume that `rows` is an array of heights already, use that.
-/// - Check that there are enough rows and columns to fit in all the content blocks.
 ///
 /// That means that `#checkerboard[...][...]` stacks horizontally and `#checkerboard(columns: 1)[...][...]` stacks vertically.
+///
+/// - columns (int, array, none): The column specification. Default is `none`.
+///
+/// - rows (int, array, none): The row specification. Default is `none`.
 ///
 /// - alignment (alignment): The alignment applied to the contents of each checkerboard cell. Default is `center + horizon`.
 ///
@@ -207,11 +207,9 @@
 ///
 /// - level (int): The level of the outline. Default is `1`.
 ///
-/// - transform (function): The transformation applied to the text of the outline. It should take the following arguments:
+/// - transform (function): A function applied to each outline entry. It receives `(cover: bool, level: int, alpha: ratio, ..args, it)` where `cover` is `true` when the entry should be visually de-emphasized, `it` is the outline entry element, and `alpha` is the transparency value.
 ///
-/// - cover (boolean): Indicates whether the current entry should be covered.
-///
-/// - args (content): The other arguments passed to the `progressive-outline`.
+/// - args (arguments): Additional arguments forwarded to the inner `outline()` call.
 ///
 /// -> content
 #let progressive-outline(
@@ -261,41 +259,43 @@
 )
 
 
-/// Custom progressive outline function.
+/// A fully-featured progressive outline that renders headings from multiple levels with per-level styling.
+///
+/// Uses arrays indexed by heading level (first element = level 1, second = level 2, etc.) to apply different styling to each level. Unlike `progressive-outline` (a thin wrapper around Typst's built-in `outline`), this function renders each heading manually, giving full control over numbering, indentation, fills, and typography.
 ///
 /// - self (none): The self context.
 ///
 /// - alpha (ratio): The transparency of the other headings. Default is `60%`.
 ///
-/// - level (auto): The level of the outline. Default is `auto`.
+/// - level (auto, int): The outline level. When `auto`, all levels up to `slide-level` are shown. Default is `auto`.
 ///
-/// - numbered (array): Indicates whether the headings should be numbered. Default is `(false,)`.
+/// - numbered (array): Per-level booleans indicating whether headings are numbered. Default is `(false,)`.
 ///
-/// - filled (array): Indicates whether the headings should be filled. Default is `(false,)`.
+/// - filled (array): Per-level booleans indicating whether to show a fill between the heading and the page number. Default is `(false,)`.
 ///
-/// - paged (array): Indicates whether the headings should be paged. Default is `(false,)`.
+/// - paged (array): Per-level booleans indicating whether to show the page number. Default is `(false,)`.
 ///
-/// - numbering (array): An array of numbering strings for the headings. Default is `()`.
+/// - numbering (array): Per-level numbering strings or `none` overrides. Default is `()`.
 ///
-/// - text-fill (array, none): An array of colors for the text fill of the headings. Default is `none`.
+/// - text-fill (array, none): Per-level text fill colors. Default is `none` (inherits current text color).
 ///
-/// - text-size (array, none): An array of sizes for the text of the headings. Default is `none`.
+/// - text-size (array, none): Per-level text sizes. Default is `none` (inherits current text size).
 ///
-/// - text-weight (array, none): An array of weights for the text of the headings. Default is `none`.
+/// - text-weight (array, none): Per-level text weights. Default is `none` (inherits current text weight).
 ///
-/// - vspace (array, none): An array of vertical spaces above the headings. Default is `none`.
+/// - vspace (array, none): Per-level vertical space above each heading. Default is `none`.
 ///
-/// - title (string, none): The title of the outline. Default is `none`.
+/// - title (str, none): The title of the outline section. Default is `none`.
 ///
-/// - indent (array): An array of indentations for the headings. Default is `(0em,)`.
+/// - indent (array): Per-level left indentation. Default is `(0em,)`.
 ///
-/// - fill (array): An array of fills for the headings. Default is `(repeat[.],)`.
+/// - fill (array): Per-level fill content between heading and page number. Default is `(repeat[.],)`.
 ///
-/// - short-heading (boolean): Indicates whether the headings should be shortened. Default is `true`.
+/// - short-heading (bool): Whether to shorten headings that have labels using `utils.short-heading`. Default is `true`.
 ///
-/// - uncover-fn (function): A function that takes the body of the heading and returns the body of the heading when it is uncovered. Default is the identity function.
+/// - uncover-fn (function): A function `body => body` applied to currently-active (non-covered) headings. Default is the identity function.
 ///
-/// - args (content): The other arguments passed to the `progressive-outline` and `transform`.
+/// - args (arguments): Additional arguments forwarded to the underlying `progressive-outline` call.
 ///
 /// -> content
 #let custom-progressive-outline(
@@ -404,25 +404,25 @@
 )
 
 
-/// Show mini slides. It is usually used to show the navigation of the presentation in header.
+/// Section navigation component showing all sections and their per-slide progress as small filled/empty circle dots.
 ///
-/// - self (none): The self context, which is used to get the short heading of the headings.
+/// Typically placed in a theme's page header. Each section is labeled with a link, and each slide within the section is represented by a small dot (filled for the current slide, hollow for others). The active section uses the full `fill` color; inactive sections have `alpha` transparency applied.
 ///
-/// - fill (color): The fill color of the headings. Default is `rgb("000000")`.
+/// - self (none): The self context, used to resolve short headings.
 ///
-/// - alpha (ratio): The transparency of the headings. Default is `60%`.
+/// - fill (color): The text and dot color. Default is `rgb("000000")`.
 ///
-/// - display-section (boolean): Indicates whether the sections should be displayed. Default is `false`.
+/// - alpha (ratio): The transparency applied to inactive sections. Default is `60%`.
 ///
-/// - display-subsection (boolean): Indicates whether the subsections should be displayed. Default is `true`.
+/// - display-section (bool): Whether to show per-slide dots for level-1 section headings. Default is `false`.
 ///
-/// - linebreaks (boolean): Indicates whether or not to insert linebreaks between links for sections and subsections.
+/// - display-subsection (bool): Whether to show per-slide dots for level-2 subsection headings. Default is `true`.
 ///
-/// - display-subsection (boolean): Indicates whether the subsections should be displayed. Default is `true`.
+/// - linebreaks (bool): Whether to insert a line break after section/subsection labels. Default is `true`.
 ///
-/// - short-heading (boolean): Indicates whether the headings should be shortened. Default is `true`.
+/// - short-heading (bool): Whether to shorten heading labels using `utils.short-heading`. Default is `true`.
 ///
-/// - inline (boolean): Indicates whether the bullets are displayed right after the text, instead of breaking the line. Default is `false`.
+/// - inline (bool): Whether to place dots on the same line as the section label instead of below it. Default is `false`.
 ///
 /// -> content
 #let mini-slides(
@@ -557,19 +557,21 @@
 )
 
 
-/// Simple navigation.
+/// A horizontal navigation bar showing all level-1 sections as clickable links.
 ///
-/// - self (none): The self context, which is used to get the short heading of the headings.
+/// The active section label is shown in `primary` color; all other sections use `secondary` color. An optional logo is placed at the right edge. Typically used as a page header in themes.
 ///
-/// - short-heading (boolean): Indicates whether the headings should be shortened. Default is `true`.
+/// - self (none): The self context, used to resolve short headings.
 ///
-/// - primary (color): The color of the current section. Default is `white`.
+/// - short-heading (bool): Whether to shorten heading labels using `utils.short-heading`. Default is `true`.
 ///
-/// - secondary (color): The color of the other sections. Default is `gray`.
+/// - primary (color): The text color of the currently active section. Default is `white`.
 ///
-/// - background (color): The background color of the navigation. Default is `black`.
+/// - secondary (color): The text color of inactive sections. Default is `gray`.
 ///
-/// - logo (none): The logo of the navigation. Default is `none`.
+/// - background (color): The background fill of the navigation bar. Default is `black`.
+///
+/// - logo (content, none): Optional logo displayed at the right side of the bar. Default is `none`.
 ///
 /// -> content
 #let simple-navigation(
@@ -631,7 +633,7 @@
 )
 
 
-/// LaTeX-like knob marker for list
+/// LaTeX-like knob marker for list items.
 ///
 /// Example: `#set list(marker: components.knob-marker(primary: rgb("005bac")))`
 ///

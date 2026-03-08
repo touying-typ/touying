@@ -1,7 +1,7 @@
 // Attribution: This file is based on the code from https://github.com/andreasKroepelin/polylux/blob/main/utils/pdfpc.typ
 // Author: Andreas Kröpelin
 
-/// Generate a pdfpc file for the presentation.
+/// Generate pdfpc metadata for the presentation. Called internally in the preamble when `enable-pdfpc` is `true`. Query the result with `typst query --root . ./example.typ --field value --one "<pdfpc-file>" > ./example.pdfpc`.
 ///
 /// -> content
 #let pdfpc-file(loc) = {
@@ -57,7 +57,7 @@
   [#metadata(pdfpc)<pdfpc-file>]
 }
 
-/// Add some speaker notes to the slide for exporting to pdfpc file.
+/// Emit a raw speaker note string for the current slide into the pdfpc metadata. Called internally by `utils.speaker-note`.
 ///
 /// -> content
 #let speaker-note(text) = {
@@ -118,7 +118,7 @@
 ///
 /// - disable-markdown (bool): A flag to disable markdown in the speaker notes.
 ///
-/// - default-transition (string): The default transition for the slides.
+/// - default-transition (dictionary, none): The default slide transition. A dictionary with optional keys: `type` (str, e.g. `"push"`), `duration-seconds` (int), `angle` (direction, e.g. `ltr`), `alignment` (str, `"horizontal"` or `"vertical"`), `direction` (str, `"inward"` or `"outward"`). Default is `none`.
 ///
 /// -> content
 #let config(
