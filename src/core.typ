@@ -1300,7 +1300,7 @@
 /// `)
 /// ```
 ///
-/// - mitex (function): The mitex function. You can import it by code like `#import "@preview/mitex:0.2.3": mitex`.
+/// - mitex (function): The mitex function. You can import it by code like `#import "@preview/mitex:0.2.6": mitex`.
 ///
 /// - block (bool): Whether the equation is a block element. Default is `true`.
 ///

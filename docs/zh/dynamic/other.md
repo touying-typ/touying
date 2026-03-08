@@ -13,8 +13,8 @@ Touying 还提供了 `touying-reducer`，它能为 cetz 与 fletcher 加入 `pau
 ```example
 #import "@preview/touying:0.6.2": *
 #import themes.university: *
-#import "@preview/cetz:0.3.2"
-#import "@preview/fletcher:0.5.5" as fletcher: node, edge
+#import "@preview/cetz:0.4.2"
+#import "@preview/fletcher:0.5.8" as fletcher: node, edge
 
 // cetz and fletcher bindings for touying
 #let cetz-canvas = touying-reducer.with(reduce: cetz.canvas, cover: cetz.draw.hide.with(bounds: true))

@@ -9,20 +9,15 @@ sidebar_position: 5
 ```example
 #import "@preview/touying:0.6.2": *
 #import themes.simple: *
-#import "@preview/codly:1.0.0": *
+#import "@preview/codly:1.3.0": *
+#import "@preview/codly-languages:0.1.1": *
 
 #show: codly-init.with()
 
 #show: simple-theme.with(
   aspect-ratio: "16-9",
   config-common(preamble: {
-    codly(languages: (
-      rust: (
-        name: "Rust",
-        icon: text(font: "tabler-icons", "\u{fa53}"),
-        color: rgb("#CE412B"),
-      ),
-    ))
+    codly(languages: codly-languages)
   }),
 )
 

@@ -12,7 +12,7 @@ Touying 能够与 [Theorion](https://github.com/OrangeX4/typst-theorion) 包一�
 #import "@preview/touying:0.6.2": *
 #import themes.university: *
 #import "@preview/numbly:0.1.0": numbly
-#import "@preview/theorion:0.3.2": *
+#import "@preview/theorion:0.4.1": *
 #import cosmos.clouds: *
 #show: show-theorion
 
