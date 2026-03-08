@@ -1,9 +1,7 @@
 #import "/lib.typ": *
 #import themes.simple: *
 
-#show: simple-theme.with(
-  config-common(handout: true),
-)
+#show: simple-theme.with()
 
 // -----------------------------------------------
 // Test 1: Explicit waypoint with uncover
