@@ -26,9 +26,11 @@ Also block equations (this case is from #text(blue.lighten(20%), link("https://k
 Touying also provides a `touying-mitex` function, which can be used for example
 
 ```example
->>> #import "@preview/touying:0.6.2": *
->>> #import themes.simple: *
->>> #show: simple-theme
+#import "@preview/touying:0.6.2": *
+#import "@preview/mitex:0.2.6": *
+#import themes.simple: *
+#show: simple-theme
+
 #touying-mitex(mitex, `
   f(x) &= \pause x^2 + 2x + 1  \\
       &= \pause (x + 1)^2  \\
