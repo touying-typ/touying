@@ -10,16 +10,11 @@
 )
 
 
-/// SIDE BY SIDE
-///
-/// A simple wrapper around `grid` that creates a grid with a single row.
-/// It is useful for creating side-by-side slide.
-///
-/// It is also the default function for composer in the slide function.
+/// A simple wrapper around `grid` that creates a single-row grid. Used as the default `composer` for multi-body slides.
 ///
 /// Example: `side-by-side[a][b][c]` will display `a`, `b`, and `c` side by side.
 ///
-/// - columns (auto): The number of columns. Default is `auto`, which means the number of columns is equal to the number of bodies.
+/// - columns (auto, array): The column widths. Default is `auto`, which creates equal-width columns matching the number of bodies.
 ///
 /// - gutter (length): The space between columns. Default is `1em`.
 ///
@@ -41,17 +36,17 @@
 }
 
 
-/// Adaptive columns layout
+/// Adaptive columns layout that automatically chooses the number of columns based on content height.
 ///
 /// Example: `components.adaptive-columns(outline())`
 ///
-/// - gutter (length): The space between columns.
+/// - gutter (length): The space between columns. Default is `4%`.
 ///
-/// - max-count (int): The maximum number of columns.
+/// - max-count (int): The maximum number of columns. Default is `3`.
 ///
-/// - start (content): The content to place before the columns.
+/// - start (content, none): The content to place before the columns. Default is `none`.
 ///
-/// - end (content): The content to place after the columns.
+/// - end (content, none): The content to place after the columns. Default is `none`.
 ///
 /// - body (content): The content to place in the columns.
 ///
@@ -104,7 +99,7 @@
 )
 
 
-/// Left and right.
+/// Place two content blocks at the left and right edges of the available width using a three-column grid.
 ///
 /// - left (content): The content of the left part.
 ///
@@ -117,17 +112,22 @@
 )
 
 
-// Create a slide where the provided content blocks are displayed in a grid and coloured in a checkerboard pattern without further decoration. You can configure the grid using the rows and `columns` keyword arguments (both default to none). It is determined in the following way:
+/// Create a slide where the provided content blocks are displayed in a grid with a checkerboard color pattern.
+///
+/// You can configure the grid using the `rows` and `columns` keyword arguments (both default to `none`):
 ///
 /// - If `columns` is an integer, create that many columns of width `1fr`.
 /// - If `columns` is `none`, create as many columns of width `1fr` as there are content blocks.
 /// - Otherwise assume that `columns` is an array of widths already, use that.
 /// - If `rows` is an integer, create that many rows of height `1fr`.
-/// - If `rows` is `none`, create that many rows of height `1fr` as are needed given the number of co/ -ntent blocks and columns.
+/// - If `rows` is `none`, create as many rows of height `1fr` as needed given the number of content blocks and columns.
 /// - Otherwise assume that `rows` is an array of heights already, use that.
-/// - Check that there are enough rows and columns to fit in all the content blocks.
 ///
 /// That means that `#checkerboard[...][...]` stacks horizontally and `#checkerboard(columns: 1)[...][...]` stacks vertically.
+///
+/// - columns (int, array, none): The column specification. Default is `none`.
+///
+/// - rows (int, array, none): The row specification. Default is `none`.
 ///
 /// - alignment (alignment): The alignment applied to the contents of each checkerboard cell. Default is `center + horizon`.
 ///
@@ -207,11 +207,9 @@
 ///
 /// - level (int): The level of the outline. Default is `1`.
 ///
-/// - transform (function): The transformation applied to the text of the outline. It should take the following arguments:
+/// - transform (function): A function applied to each outline entry. It receives `(cover: bool, level: int, alpha: ratio, ..args, it)` where `cover` is `true` when the entry should be visually de-emphasized, `it` is the outline entry element, and `alpha` is the transparency value.
 ///
-/// - cover (boolean): Indicates whether the current entry should be covered.
-///
-/// - args (content): The other arguments passed to the `progressive-outline`.
+/// - args (arguments): Additional arguments forwarded to the inner `outline()` call.
 ///
 /// -> content
 #let progressive-outline(
@@ -414,13 +412,11 @@
 ///
 /// - display-section (boolean): Indicates whether the sections should be displayed. Default is `false`.
 ///
-/// - display-subsection (boolean): Indicates whether the subsections should be displayed. Default is `true`.
+/// - display-subsection (bool): Indicates whether the subsections should be displayed. Default is `true`.
 ///
-/// - linebreaks (boolean): Indicates whether or not to insert linebreaks between links for sections and subsections.
+/// - linebreaks (bool): Whether to insert linebreaks between links for sections and subsections.
 ///
-/// - display-subsection (boolean): Indicates whether the subsections should be displayed. Default is `true`.
-///
-/// - short-heading (boolean): Indicates whether the headings should be shortened. Default is `true`.
+/// - short-heading (bool): Indicates whether the headings should be shortened. Default is `true`.
 ///
 /// - inline (boolean): Indicates whether the bullets are displayed right after the text, instead of breaking the line. Default is `false`.
 ///
@@ -569,7 +565,7 @@
 ///
 /// - background (color): The background color of the navigation. Default is `black`.
 ///
-/// - logo (none): The logo of the navigation. Default is `none`.
+/// - logo (content, none): The logo displayed at the right side of the navigation. Default is `none`.
 ///
 /// -> content
 #let simple-navigation(

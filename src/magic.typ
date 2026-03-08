@@ -5,7 +5,7 @@
 // ---------------------------------------------------------------------
 
 
-/// Align the list marker with the baseline of the first line of the list item.
+/// Apply as a show rule to vertically align list markers with the baseline of the first line of each list item. This prevents markers from appearing too high when list items have tall content.
 ///
 /// Usage: `#show: align-list-marker-with-baseline`
 ///
@@ -38,7 +38,7 @@
   body
 }
 
-/// Align the enum marker with the baseline of the first line of the enum item. It will only work when the enum item has a number like `1.`.
+/// Apply as a show rule to vertically align enum markers with the baseline of the first line of each enum item. Only works for numeric markers (e.g. `1.`).
 ///
 /// Usage: `#show: align-enum-marker-with-baseline`
 ///
@@ -82,11 +82,13 @@
   body
 }
 
-/// Scale the font size of the list items.
+/// Scale the font size of nested list, enum, and terms items.
 ///
 /// Usage: `#show: scale-list-items.with(scale: .75)`
 ///
-/// - scale (int, float): The ratio of the font size of the current level to the font size of the upper level.
+/// - scale (int, float): The font size ratio of the current nesting level relative to the parent. Default is `.75`.
+///
+/// - body (content): The content to apply the scaling to.
 ///
 /// -> content
 #let scale-list-items(
@@ -100,9 +102,11 @@
   body
 }
 
-/// Make the list, enum, or terms nontight by default.
+/// Convert a single tight list, enum, or terms element to non-tight (with spacing between items). For use in show rules.
 ///
 /// Usage: `#show list: nontight(list)`
+///
+/// - lst (content): A list, enum, or terms element to make non-tight.
 ///
 /// -> content
 #let nontight(lst) = {
@@ -112,7 +116,7 @@
   return (lst.func())(..fields, ..lst.children)
 }
 
-/// Make the list, enum, and terms nontight by default.
+/// Apply as a show rule to make all lists, enumerations, and term lists use non-tight spacing by default (adds spacing between items).
 ///
 /// Usage: `#show: nontight-list-enum-and-terms`
 ///
@@ -124,7 +128,7 @@
   body
 }
 
-/// Set the list marker to none for hide function.
+/// Apply as a show rule to suppress list markers and enum numbering inside `#hide(...)` calls. This prevents phantom markers from taking up space in covered content.
 ///
 /// Usage: `#show: show-hide-set-list-marker-none`
 ///
@@ -148,13 +152,13 @@
 #let bibliography-state = state("footer-bibliography-state", ())
 #let bibliography-visited = state("footer-bibliography-visited", ())
 
-/// Display the bibliography as footnote. You need to add a `#place(hide(bibliography))` at the end of the document to make it work.
+/// Display bibliography citations as footnotes. Place `#place(hide(bibliography(...)))` at the end of the document to register the bibliography entries.
 ///
 /// Usage: `#show: magic.bibliography-as-footnote.with(bibliography(title: none, "ref.bib"))`
 ///
-/// - numbering (string): The numbering format of the bibliography in the footnote.
+/// - numbering (str): The numbering format for footnote citations. Default is `"[1]"`.
 ///
-/// - bibliography (bibliography): The bibliography argument. You should use the `bibliography` function to define the bibliography like `bibliography("ref.bib")`.
+/// - bibliography (bibliography): The bibliography element, e.g. `bibliography("ref.bib")`.
 ///
 /// -> content
 #let bibliography-as-footnote(
@@ -189,11 +193,11 @@
   body
 }
 
-/// Display the bibliography.
-///
-/// You can avoid `multiple bibliographies are not yet supported` error by using this function.
+/// Display the collected bibliography entries. Avoids the "multiple bibliographies are not yet supported" error by rendering entries gathered by `bibliography-as-footnote`.
 ///
 /// Usage: `#magic.bibliography()`
+///
+/// - title (str, auto, none): The heading for the bibliography section. When `auto`, uses a language-appropriate title. When `none`, no heading is shown. Default is `auto`.
 ///
 /// -> content
 #let bibliography(title: auto) = {
