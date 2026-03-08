@@ -283,7 +283,7 @@
 ///
 /// - vspace (array, none): An array of vertical spaces above the headings. Default is `none`.
 ///
-/// - title (string, none): The title of the outline. Default is `none`.
+/// - title (str, none): The title of the outline. Default is `none`.
 ///
 /// - indent (array): An array of indentations for the headings. Default is `(0em,)`.
 ///

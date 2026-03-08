@@ -1190,9 +1190,8 @@
 /// Speaker notes are a way to add additional information to your slides that is not visible to the audience. This can be useful for providing additional context or reminders to yourself.
 ///
 /// Multiple calls on the same slide are combined (accumulated), so all notes are shown together.
-/// You can also use `#pause` inside the note body to reveal note content progressively.
 ///
-/// == Example
+/// Example:
 ///
 /// ```typ
 /// #speaker-note[This is a speaker note]

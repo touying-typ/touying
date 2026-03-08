@@ -405,7 +405,7 @@
 ///
 /// - level (int, auto): The level of the heading. If `level` is `auto`, it will return the last heading on or before the current page. If `level` is a number, it will return the last heading on or before the current page with the same level.
 ///
-/// - hierarchical (bool): Whether to return the heading hierarchically. If `true`, returns the last heading according to the hierarchical structure. If `false`, returns the last heading on or before the current page with the same level.
+/// - hierachical (bool): Whether to return the heading hierarchically. If `true`, returns the last heading according to the hierarchical structure. If `false`, returns the last heading on or before the current page with the same level.
 ///
 /// - depth (int): The maximum depth of the heading to search. Usually, it should be set as slide-level.
 ///
@@ -447,7 +447,7 @@
 ///
 /// - numbered (bool): Whether to display the heading numbering. Default is `true`.
 ///
-/// - hierarchical (bool): Whether to return the heading hierarchically. If `true`, returns the last heading according to the hierarchical structure. If `false`, returns the last heading on or before the current page with the same level.
+/// - hierachical (bool): Whether to return the heading hierarchically. If `true`, returns the last heading according to the hierarchical structure. If `false`, returns the last heading on or before the current page with the same level.
 ///
 /// - depth (int): The maximum depth of the heading to search. Usually, it should be set as slide-level.
 ///
@@ -455,7 +455,7 @@
 ///
 /// - style (function): The style of the heading. If `style` is a function, it will use the function to style the heading. For example, `style: current-heading => current-heading.body`.
 ///
-///   If you set it to `style: auto`, it will could be controlled by `show heading` rule.
+///   If you set it to `style: auto`, it will be controlled by `show heading` rules.
 ///
 /// -> content
 #let display-current-heading(
@@ -509,7 +509,7 @@
 ///
 /// - numbering (str, auto): The numbering of the heading. If `auto`, uses the heading's own numbering. If a string, uses that as the numbering pattern.
 ///
-/// - hierarchical (bool): Whether to return the heading hierarchically. If `true`, returns the last heading according to the hierarchical structure. If `false`, returns the last heading on or before the current page with the same level.
+/// - hierachical (bool): Whether to return the heading hierarchically. If `true`, returns the last heading according to the hierarchical structure. If `false`, returns the last heading on or before the current page with the same level.
 ///
 /// - depth (int): The maximum depth of the heading to search. Usually, it should be set as slide-level.
 ///
@@ -549,7 +549,7 @@
 ///
 /// - level (int, auto): The level of the heading. If `level` is `auto`, it will return the last heading on or before the current page. If `level` is a number, it will return the last heading on or before the current page with the same level.
 ///
-/// - hierarchical (bool): Whether to return the heading hierarchically. If `true`, returns the last heading according to the hierarchical structure. If `false`, returns the last heading on or before the current page with the same level.
+/// - hierachical (bool): Whether to return the heading hierarchically. If `true`, returns the last heading according to the hierarchical structure. If `false`, returns the last heading on or before the current page with the same level.
 ///
 /// - depth (int): The maximum depth of the heading to search. Usually, it should be set as slide-level.
 ///
@@ -897,13 +897,11 @@
 
 /// Update the alpha channel of a color.
 ///
-/// Example: `update-alpha(rgb("#ff0000"), 0.5)` returns `rgb(255, 0, 0, 0.5)`
-///
-/// - constructor (function): The color constructor to use. Default is `rgb`.
+/// Example: `update-alpha(rgb("#ff0000"), 0.5)` returns a red color with 50% opacity.
 ///
 /// - color (color): The color to update.
 ///
-/// - alpha (float): The new alpha value.
+/// - alpha (ratio): The new alpha value as a percentage (e.g. `50%` for half-transparent).
 ///
 /// -> color
 #let update-alpha(color, alpha) = (
@@ -911,9 +909,13 @@
 )
 
 
-/// Cover content with a transparent rectangle.
+/// Cover content with a semi-transparent rectangle matching the page background color.
 ///
 /// Example: `config-methods(cover: utils.semi-transparent-cover)`
+///
+/// - alpha (ratio): The opacity of the covering rectangle (higher means more opaque/more hidden). Default is `85%`.
+///
+/// - body (content): The content to cover.
 ///
 /// -> content
 #let semi-transparent-cover(self: none, alpha: 85%, body) = {
@@ -957,11 +959,13 @@
 ///
 /// Example: `config-methods(cover: utils.color-changing-cover.with(color: gray))`
 ///
-/// - color (color): The color to change to. Default is `gray`.
+/// - color (color): The color to apply to text when covered. Default is `gray`.
 ///
 /// - fallback-hide (bool): Whether to hide the content if it does not contain text. Default is `true`.
 ///
 /// - transparentize-table (bool): Whether to transparentize table content. Default is `false`.
+///
+/// - it (content): The content to cover.
 ///
 /// -> content
 #let color-changing-cover(
@@ -984,11 +988,13 @@
 ///
 /// Example: `config-methods(cover: utils.alpha-changing-cover.with(alpha: 25%))`
 ///
-/// - alpha (ratio): The alpha (opacity) value to apply. Default is `25%`.
+/// - alpha (ratio): The opacity to apply to text colors when covered. Default is `25%`.
 ///
 /// - fallback-hide (bool): Whether to hide the content if it does not contain text. Default is `true`.
 ///
 /// - transparentize-table (bool): Whether to transparentize table content. Default is `false`.
+///
+/// - it (content): The content to cover.
 ///
 /// -> content
 #let alpha-changing-cover(
