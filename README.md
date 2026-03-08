@@ -28,7 +28,7 @@ Touying offers [a gallery page](https://github.com/touying-typ/touying/wiki) via
 
 ## Special Features
 
-1. Split slides by headings [document](https://touying-typ.github.io/docs/sections)
+1. Split slides by headings [document](https://touying-typ.github.io/docs/tutorials/sections)
 
 ```typst
 = Section
@@ -44,7 +44,7 @@ Hello, Touying!
 Hello, Typst!
 ```
 
-2. `#pause` and `#meanwhile` animations [document](https://touying-typ.github.io/docs/dynamic/simple)
+2. `#pause` and `#meanwhile` animations [document](https://touying-typ.github.io/docs/tutorials/dynamic/simple)
 
 ```typst
 #slide[
@@ -66,11 +66,11 @@ Hello, Typst!
 
 ![image](https://github.com/touying-typ/touying/assets/34951714/24ca19a3-b27c-4d31-ab75-09c37911e6ac)
 
-3. Math Equation Animation [document](https://touying-typ.github.io/docs/dynamic/equation)
+3. Math Equation Animation [document](https://touying-typ.github.io/docs/tutorials/dynamic/equation)
 
 ![image](https://github.com/touying-typ/touying/assets/34951714/8640fe0a-95e4-46ac-b570-c8c79f993de4)
 
-4. `touying-reducer` Cetz and Fletcher Animations [document](https://touying-typ.github.io/docs/dynamic/other)
+4. `touying-reducer` Cetz and Fletcher Animations [document](https://touying-typ.github.io/docs/tutorials/dynamic/other)
 
 ![image](https://github.com/touying-typ/touying/assets/34951714/9ba71f54-2a5d-4144-996c-4a42833cc5cc)
 
