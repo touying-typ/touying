@@ -91,44 +91,61 @@
 /// ```
 ///
 /// - config (dictionary): The configuration of the slide. You can use `config-xxx` to set the configuration of the slide. For more configurations, you can use `utils.merge-dicts` to merge them.
-#let title-slide(config: (:), ..args) = touying-slide-wrapper(self => {
-  self = utils.merge-dicts(
-    self,
-    config-common(freeze-slide-counter: true),
-    config-page(
-      background: utils.call-or-display(self, self.store.background),
-      margin: (x: 0em, top: 30%, bottom: 0%),
-    ),
-    config,
-  )
-  let info = self.info + args.named()
-  let body = {
-    set align(center)
-    stack(
-      spacing: 3em,
-      if info.title != none {
-        text(size: 48pt, weight: "bold", fill: self.colors.primary, info.title)
-      },
-      if info.author != none {
-        text(
-          fill: self.colors.primary-light,
-          size: 28pt,
-          weight: "regular",
-          info.author,
-        )
-      },
-      if info.date != none {
-        text(
-          fill: self.colors.primary-light,
-          size: 20pt,
-          weight: "regular",
-          utils.display-info-date(self),
-        )
-      },
+///
+/// - extra (content, none): The extra information you want to display on the title slide.
+#let title-slide(config: (:), extra: none, ..args) = touying-slide-wrapper(
+  self => {
+    self = utils.merge-dicts(
+      self,
+      config-common(freeze-slide-counter: true),
+      config-page(
+        background: utils.call-or-display(self, self.store.background),
+        margin: (x: 0em, top: 30%, bottom: 0%),
+      ),
+      config,
     )
-  }
-  touying-slide(self: self, body)
-})
+    let info = self.info + args.named()
+    let body = {
+      set align(center)
+      stack(
+        spacing: 3em,
+        if info.title != none {
+          text(
+            size: 48pt,
+            weight: "bold",
+            fill: self.colors.primary,
+            info.title,
+          )
+        },
+        if info.author != none {
+          text(
+            fill: self.colors.primary-light,
+            size: 28pt,
+            weight: "regular",
+            info.author,
+          )
+        },
+        if info.date != none {
+          text(
+            fill: self.colors.primary-light,
+            size: 20pt,
+            weight: "regular",
+            utils.display-info-date(self),
+          )
+        },
+        if extra != none {
+          text(
+            fill: self.colors.primary-light,
+            size: 20pt,
+            weight: "regular",
+            extra,
+          )
+        },
+      )
+    }
+    touying-slide(self: self, body)
+  },
+)
 
 
 /// Outline slide for the presentation.
