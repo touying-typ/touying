@@ -3330,7 +3330,12 @@
 ///
 /// - setting (function): The setting of the slide. You can use it to add some set/show rules for the slide.
 ///
-/// - composer (function, array, int, auto): The composer arranges multiple content bodies side by side. Pass an array of column widths like `(1fr, 2fr, 1fr)`, an integer for equal columns, a custom function, or `auto` to use the theme default (`components.side-by-side`).
+/// - composer (function, array, int, auto): The composer arranges multiple content bodies side by side.
+///
+///   - `auto`: use the theme default (`components.side-by-side`)
+///   - array, e.g. `(1fr, 2fr, 1fr)`: column widths for `side-by-side`
+///   - int: equal columns shorthand
+///   - function: fully custom layout, e.g. `grid.with(columns: 2)`
 ///
 ///   For example, `#slide(composer: (1fr, 2fr, 1fr))[A][B][C]` splits the slide into three columns.
 ///
