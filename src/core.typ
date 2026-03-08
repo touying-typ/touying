@@ -531,7 +531,15 @@
       }
     } else if utils.is-kind(child, "touying-set-config") {
       slide-parts = utils.trim(slide-parts)
-      if slide-parts != () or current-headings != () {
+      if slide-parts != () {
+        // Flush the current slide only when there is actual body content.
+        // If slide-parts is empty but current-headings is not, we skip
+        // the empty-body flush to avoid creating ghost pages (invisible
+        // slides that only contain hidden headings with no visible content).
+        // The pending headings are instead forwarded into the recursive
+        // processing by prepending them to the config body, so they are
+        // correctly associated with the first real content inside the
+        // touying-set-config block.
         (
           slide-content,
           recaller-map,
@@ -547,13 +555,24 @@
         )
         if slide-content != none { output-slides.push(slide-content) }
       }
-      // Appendix content
+      // Forward any pending headings (accumulated before the touying-set-config
+      // with no body content between them) into the recursive body so they are
+      // associated with the first content inside the config block.
+      let pending-headings = current-headings
+      current-headings = ()
+      slide-parts = ()
+      let recursive-body = if pending-headings != () {
+        pending-headings.sum(default: none) + child.value.body
+      } else {
+        child.value.body
+      }
+      // Process the content with the new configuration
       output-slides.push(
         split-content-into-slides(
           self: utils.merge-dicts(self, child.value.config),
           recaller-map: recaller-map,
           new-start: true,
-          child.value.body,
+          recursive-body,
         ),
       )
     } else {
@@ -3034,6 +3053,17 @@
       }
     }
     setting(body)
+    // Weak zero-height spacing that acts as a layout anchor for the current
+    // slide.  When a slide body consists entirely of context (lazily evaluated)
+    // elements, Typst may not commit to the new page in the first layout pass.
+    // This causes hidden headings placed at the start of the *next* slide's
+    // preamble to receive the wrong page number, which in turn makes context
+    // queries like `display-current-heading` return the wrong heading.
+    // Adding `v(0pt, weak: true)` forces Typst to finalize the current page
+    // without adding any visible space (the weak flag suppresses it when
+    // adjacent to other spacing).
+    // See: https://github.com/touying-typ/touying/issues/388
+    v(0pt, weak: true)
   }
   let composer-with-side-by-side(..args) = {
     let effective-composer = if composer != auto {
