@@ -47,6 +47,7 @@
       config-methods(cover: utils.method-wrapper(hide.with(bounds: true))),
     )
     let (uncover,) = utils.methods(self)
+    // let uncover = uncover.with(cover-fn: hide.with(bounds: true))
 
     rect((0, 0), (5, 5))
 
