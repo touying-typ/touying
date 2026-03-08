@@ -10,18 +10,19 @@
 ///
 /// Split slides by headings #link("https://touying-typ.github.io/docs/sections")[document]
 ///
-/// #example(```
+/// #example(````
 /// #import "@preview/touying:0.6.2": *
-/// #import themes.dewdrop: *
+/// #import themes.simple: *
 ///
 /// >>> #let is-dark = sys.inputs.at("x-color-theme", default: none) == "dark";
-/// >>> #let text-color = if is-dark { rgb("#c0caf5") } else { black };
-/// >>>
-/// >>> #show: dewdrop-theme.with(
+/// >>> #let text-color = if is-dark { std.white } else { std.black };
+/// >>> #show: simple-theme.with(
 /// >>>   aspect-ratio: "16-9",
+/// >>>   config-page(width: 320pt, height: 180pt),
 /// >>>   config-colors(neutral-lightest: none, neutral-darkest: text-color),
 /// >>> )
-/// <<< #show: dewdrop-theme.with(aspect-ratio: "16-9")
+/// >>> #set text(.5em)
+/// <<< #show: simple-theme.with(aspect-ratio: "16-9")
 ///
 /// = Section
 ///
@@ -30,7 +31,7 @@
 /// === Title
 ///
 /// Hello, Touying!
-/// ```)
+/// ````)
 ///
 /// == Example
 ///
