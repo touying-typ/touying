@@ -107,7 +107,25 @@ jobs:
         run: |
           echo "::warning::Slide preview image generation failed. The docs preview will be deployed without generated slide images. Check the 'Generate slide preview images' step log for details."
 
-      # ── 9. Build the Docusaurus site ───────────────────────────────────────
+      # ── 9. Patch Docusaurus config for PR preview ─────────────────────────
+      # The website navbar/footer may contain hardcoded links (e.g. /docs/start,
+      # /docs/dynamic/simple) that don't exist in every PR's docs structure.
+      # Downgrading onBrokenLinks from 'throw' to 'warn' prevents the build from
+      # failing over such link drift while still making broken links visible in
+      # the build log.
+      - name: Patch broken-links setting for PR preview
+        if: github.event.action != 'closed'
+        working-directory: website
+        run: |
+          for f in docusaurus.config.js docusaurus.config.ts docusaurus.config.mjs; do
+            if [ -f "$f" ]; then
+              sed -i "s/onBrokenLinks:[[:space:]]*['\"]throw['\"]/onBrokenLinks: 'warn'/g" "$f"
+              echo "Patched onBrokenLinks in $f"
+              break
+            fi
+          done
+
+      # ── 10. Build the Docusaurus site ──────────────────────────────────────
       # The touying repo is hosted at https://touying-typ.github.io/touying/
       # so PR previews live under /touying/pr-preview/pr-NNN/.
       # We pass this as DOCUSAURUS_BASE_URL so that Docusaurus sets the
