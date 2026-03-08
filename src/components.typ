@@ -259,41 +259,43 @@
 )
 
 
-/// Custom progressive outline function.
+/// A fully-featured progressive outline that renders headings from multiple levels with per-level styling.
+///
+/// Uses arrays indexed by heading level (first element = level 1, second = level 2, etc.) to apply different styling to each level. Unlike `progressive-outline` (a thin wrapper around Typst's built-in `outline`), this function renders each heading manually, giving full control over numbering, indentation, fills, and typography.
 ///
 /// - self (none): The self context.
 ///
 /// - alpha (ratio): The transparency of the other headings. Default is `60%`.
 ///
-/// - level (auto): The level of the outline. Default is `auto`.
+/// - level (auto, int): The outline level. When `auto`, all levels up to `slide-level` are shown. Default is `auto`.
 ///
-/// - numbered (array): Indicates whether the headings should be numbered. Default is `(false,)`.
+/// - numbered (array): Per-level booleans indicating whether headings are numbered. Default is `(false,)`.
 ///
-/// - filled (array): Indicates whether the headings should be filled. Default is `(false,)`.
+/// - filled (array): Per-level booleans indicating whether to show a fill between the heading and the page number. Default is `(false,)`.
 ///
-/// - paged (array): Indicates whether the headings should be paged. Default is `(false,)`.
+/// - paged (array): Per-level booleans indicating whether to show the page number. Default is `(false,)`.
 ///
-/// - numbering (array): An array of numbering strings for the headings. Default is `()`.
+/// - numbering (array): Per-level numbering strings or `none` overrides. Default is `()`.
 ///
-/// - text-fill (array, none): An array of colors for the text fill of the headings. Default is `none`.
+/// - text-fill (array, none): Per-level text fill colors. Default is `none` (inherits current text color).
 ///
-/// - text-size (array, none): An array of sizes for the text of the headings. Default is `none`.
+/// - text-size (array, none): Per-level text sizes. Default is `none` (inherits current text size).
 ///
-/// - text-weight (array, none): An array of weights for the text of the headings. Default is `none`.
+/// - text-weight (array, none): Per-level text weights. Default is `none` (inherits current text weight).
 ///
-/// - vspace (array, none): An array of vertical spaces above the headings. Default is `none`.
+/// - vspace (array, none): Per-level vertical space above each heading. Default is `none`.
 ///
-/// - title (str, none): The title of the outline. Default is `none`.
+/// - title (str, none): The title of the outline section. Default is `none`.
 ///
-/// - indent (array): An array of indentations for the headings. Default is `(0em,)`.
+/// - indent (array): Per-level left indentation. Default is `(0em,)`.
 ///
-/// - fill (array): An array of fills for the headings. Default is `(repeat[.],)`.
+/// - fill (array): Per-level fill content between heading and page number. Default is `(repeat[.],)`.
 ///
-/// - short-heading (bool): Indicates whether the headings should be shortened. Default is `true`.
+/// - short-heading (bool): Whether to shorten headings that have labels using `utils.short-heading`. Default is `true`.
 ///
-/// - uncover-fn (function): A function that takes the body of the heading and returns the body of the heading when it is uncovered. Default is the identity function.
+/// - uncover-fn (function): A function `body => body` applied to currently-active (non-covered) headings. Default is the identity function.
 ///
-/// - args (content): The other arguments passed to the `progressive-outline` and `transform`.
+/// - args (arguments): Additional arguments forwarded to the underlying `progressive-outline` call.
 ///
 /// -> content
 #let custom-progressive-outline(
@@ -402,23 +404,25 @@
 )
 
 
-/// Show mini slides. It is usually used to show the navigation of the presentation in header.
+/// Section navigation component showing all sections and their per-slide progress as small filled/empty circle dots.
 ///
-/// - self (none): The self context, which is used to get the short heading of the headings.
+/// Typically placed in a theme's page header. Each section is labeled with a link, and each slide within the section is represented by a small dot (filled for the current slide, hollow for others). The active section uses the full `fill` color; inactive sections have `alpha` transparency applied.
 ///
-/// - fill (color): The fill color of the headings. Default is `rgb("000000")`.
+/// - self (none): The self context, used to resolve short headings.
 ///
-/// - alpha (ratio): The transparency of the headings. Default is `60%`.
+/// - fill (color): The text and dot color. Default is `rgb("000000")`.
 ///
-/// - display-section (bool): Indicates whether the sections should be displayed. Default is `false`.
+/// - alpha (ratio): The transparency applied to inactive sections. Default is `60%`.
 ///
-/// - display-subsection (bool): Indicates whether the subsections should be displayed. Default is `true`.
+/// - display-section (bool): Whether to show per-slide dots for level-1 section headings. Default is `false`.
 ///
-/// - linebreaks (bool): Whether to insert linebreaks between links for sections and subsections.
+/// - display-subsection (bool): Whether to show per-slide dots for level-2 subsection headings. Default is `true`.
 ///
-/// - short-heading (bool): Indicates whether the headings should be shortened. Default is `true`.
+/// - linebreaks (bool): Whether to insert a line break after section/subsection labels. Default is `true`.
 ///
-/// - inline (bool): Indicates whether the bullets are displayed right after the text, instead of breaking the line. Default is `false`.
+/// - short-heading (bool): Whether to shorten heading labels using `utils.short-heading`. Default is `true`.
+///
+/// - inline (bool): Whether to place dots on the same line as the section label instead of below it. Default is `false`.
 ///
 /// -> content
 #let mini-slides(
@@ -553,19 +557,21 @@
 )
 
 
-/// Simple navigation.
+/// A horizontal navigation bar showing all level-1 sections as clickable links.
 ///
-/// - self (none): The self context, which is used to get the short heading of the headings.
+/// The active section label is shown in `primary` color; all other sections use `secondary` color. An optional logo is placed at the right edge. Typically used as a page header in themes.
 ///
-/// - short-heading (bool): Indicates whether the headings should be shortened. Default is `true`.
+/// - self (none): The self context, used to resolve short headings.
 ///
-/// - primary (color): The color of the current section. Default is `white`.
+/// - short-heading (bool): Whether to shorten heading labels using `utils.short-heading`. Default is `true`.
 ///
-/// - secondary (color): The color of the other sections. Default is `gray`.
+/// - primary (color): The text color of the currently active section. Default is `white`.
 ///
-/// - background (color): The background color of the navigation. Default is `black`.
+/// - secondary (color): The text color of inactive sections. Default is `gray`.
 ///
-/// - logo (content, none): The logo displayed at the right side of the navigation. Default is `none`.
+/// - background (color): The background fill of the navigation bar. Default is `black`.
+///
+/// - logo (content, none): Optional logo displayed at the right side of the bar. Default is `none`.
 ///
 /// -> content
 #let simple-navigation(
@@ -627,7 +633,7 @@
 )
 
 
-/// LaTeX-like knob marker for list
+/// LaTeX-like knob marker for list items.
 ///
 /// Example: `#set list(marker: components.knob-marker(primary: rgb("005bac")))`
 ///

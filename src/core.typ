@@ -1229,16 +1229,27 @@
 #let alert(body) = touying-fn-wrapper(utils.alert, body)
 
 
-/// Touying also provides a unique and highly useful feature—math equation animations, allowing you to conveniently use pause and meanwhile within math equations.
+/// Animated math equation. Use `pause` and `meanwhile` inside the equation body to reveal terms step by step.
 ///
-/// Example:
+/// Write the equation as a raw block (backtick string) or a plain string. Use `pause` (without backslash or `#`) as a pseudo-command inside the equation to insert a pause marker.
 ///
-/// ```typst
+/// #example(
+/// >>> #let is-dark = sys.inputs.at("x-color-theme", default: none) == "dark";
+/// >>> #let text-color = if is-dark { std.white } else { std.black };
+/// >>> #show: simple-theme.with(
+/// >>>   aspect-ratio: "16-9",
+/// >>>   config-page(width: 320pt, height: 180pt),
+/// >>>   config-colors(neutral-lightest: none, neutral-darkest: text-color),
+/// >>> )
+/// >>> #set text(.5em)
+/// <<< #show: simple-theme.with(aspect-ratio: "16-9")
+/// = Slide
+///
 /// #touying-equation(`
-///   f(x) &= pause x^2 + 2x + 1  \
-///         &= pause (x + 1)^2  \
+///   f(x) &= pause x^2 + 2x + 1 \
+///         &= pause (x + 1)^2
 /// `)
-/// ```
+/// )
 ///
 /// - block (bool): Whether the equation is a block element. Default is `true`.
 ///
@@ -1246,9 +1257,9 @@
 ///
 /// - supplement (auto, str): The supplement of the equation. Default is `auto`.
 ///
-/// - scope (dictionary): The scope when we use `eval()` function to evaluate the equation.
+/// - scope (dictionary): Extra bindings passed to `eval()` when the body is a string or raw block.
 ///
-/// - body (string, content, function): The content of the equation. It should be a string, a raw text, or a function that receives `self` as an argument and returns a string.
+/// - body (str, content, function): The equation content. Accepts a raw block (e.g. `` `f(x) = pause x^2` ``), a plain string, or a callback `self => str`.
 ///
 /// -> content
 #let touying-equation(
@@ -1326,23 +1337,32 @@
 ))<touying-temporary-mark>]
 
 
-/// Touying raw function for creating animated code blocks.
+/// Animated code block. Use a comment-style `pause` or `meanwhile` on its own line to insert animation markers.
 ///
 /// A line is treated as a `pause` or `meanwhile` marker when its only
 /// meaningful characters (letters, digits, CJK) exactly spell "pause" or
 /// "meanwhile". For example, `// pause`, `# pause`, and `#pause` are all
 /// valid markers, while `pause = 1` or `def pause():` are not.
 ///
-/// Example:
+/// #example(
+/// >>> #let is-dark = sys.inputs.at("x-color-theme", default: none) == "dark";
+/// >>> #let text-color = if is-dark { std.white } else { std.black };
+/// >>> #show: simple-theme.with(
+/// >>>   aspect-ratio: "16-9",
+/// >>>   config-page(width: 320pt, height: 180pt),
+/// >>>   config-colors(neutral-lightest: none, neutral-darkest: text-color),
+/// >>> )
+/// >>> #set text(.5em)
+/// <<< #show: simple-theme.with(aspect-ratio: "16-9")
+/// = Slide
 ///
-/// ```typst
 /// #touying-raw(```rust
 ///   fn main() {
 ///       // pause
 ///       println!("Hello, world!");
 ///   }
 /// ```)
-/// ```
+/// )
 ///
 /// - block (bool): Whether the raw block is a block element. Default is `true`.
 ///
@@ -1352,7 +1372,7 @@
 ///
 /// - simple (bool): When `true`, use `#pause;` and `#meanwhile;` as direct split markers (similar to how `touying-mitex` uses `\pause`). Default is `false`.
 ///
-/// - body (string, content, function): The raw code content. Can be a raw block, a string, or a function receiving `self` as an argument.
+/// - body (str, content, function): The raw code content. Can be a raw block, a string, or a function receiving `self` as an argument.
 ///
 /// -> content
 #let touying-raw(
@@ -1387,17 +1407,29 @@
 ))<touying-temporary-mark>]
 
 
-/// Touying reducer is a powerful tool to provide more powerful animation effects for other packages or functions.
+/// Extend external packages with `pause` and `meanwhile` animation support.
 ///
-/// For example, you can adds `pause` and `meanwhile` animations to cetz and fletcher packages.
+/// Wraps an external drawing/diagram function (like `cetz.canvas` or `fletcher.diagram`) so that Touying can intercept `pause`/`meanwhile` markers inside its content array and hide/cover items across subslides.
 ///
-/// Cetz: `#let cetz-canvas = touying-reducer.with(reduce: cetz.canvas, cover: cetz.draw.hide.with(bounds: true))`
+/// Define package-specific wrappers once at the top of your document:
 ///
-/// Fletcher: `#let fletcher-diagram = touying-reducer.with(reduce: fletcher.diagram, cover: fletcher.hide)`
+/// ```typst
+/// // CeTZ
+/// #let cetz-canvas = touying-reducer.with(
+///   reduce: cetz.canvas,
+///   cover: cetz.draw.hide.with(bounds: true),
+/// )
 ///
-/// - reduce (function): The reduce function that will be called. It is usually a function that receives an array of content and returns the content it painted. Just like the `cetz.canvas` or `fletcher.diagram` function.
+/// // Fletcher
+/// #let fletcher-diagram = touying-reducer.with(
+///   reduce: fletcher.diagram,
+///   cover: fletcher.hide,
+/// )
+/// ```
 ///
-/// - cover (function): The cover function that will be called when some content is hidden. It is usually a function that receives the argument of the content that will be hidden. Just like the `cetz.draw.hide` or `fletcher.hide` function.
+/// - reduce (function): The external drawing function. It should accept an array of drawing commands and return rendered content (e.g. `cetz.canvas` or `fletcher.diagram`).
+///
+/// - cover (function): Called with a drawing command when that command should be hidden on the current subslide. Should produce invisible but space-preserving content (e.g. `cetz.draw.hide.with(bounds: true)` or `fletcher.hide`).
 ///
 /// - args (arguments): The positional and named arguments passed to the `reduce` function.
 ///
@@ -3361,7 +3393,19 @@
 })
 
 
-/// Empty slide with no default heading or section context. Same parameters as `slide`.
+/// Empty slide with no default heading or section context.
+///
+/// Unlike `slide`, this function does not look at heading context or trigger `new-section-slide-fn` / `new-subsection-slide-fn`. Use it to create isolated slides outside the normal slide hierarchy (e.g. a standalone title card).
+///
+/// - config (dictionary): The configuration of the slide. You can use `config-xxx` to set the configuration of the slide. For more configurations, you can use `utils.merge-dicts` to merge them.
+///
+/// - repeat (auto, int): The number of subslides. Default is `auto`, which means touying will automatically calculate the number of subslides.
+///
+/// - setting (function): Set/show rules to apply for the slide. Receives the composed body and returns it.
+///
+/// - composer (function, array, int, auto): Arranges multiple body blocks side-by-side. Same semantics as `slide`.
+///
+/// - bodies (arguments): The content blocks of the slide.
 ///
 /// -> content
 #let empty-slide(

@@ -15,7 +15,20 @@
   return new-dict
 }
 
-/// Store theme-specific private data in the presentation context. Use this to pass arbitrary key-value pairs that your theme needs internally. Access via `self.store` in theme functions.
+/// Store theme-specific private data in the presentation context.
+///
+/// Use this in your theme's `#show: my-theme.with(...)` to pass arbitrary key-value pairs that your theme needs internally. The stored values are accessible via `self.store.<key>` inside any theme function.
+///
+/// Example:
+///
+/// ```typst
+/// config-store(
+///   header-height: 2em,
+///   show-logo: true,
+/// )
+/// ```
+///
+/// - args (arguments): Named key-value pairs to store in `self.store`.
 ///
 /// -> dictionary
 #let config-store(..args) = {

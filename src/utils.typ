@@ -122,7 +122,7 @@
 }
 
 
-/// Add a label to a content
+/// Add a label to a content.
 ///
 /// Example: `label-it("key", [a])` is equivalent to `[a <key>]`
 ///
@@ -203,9 +203,11 @@
 
 #let typst-builtin-sequence = ([A] + [ ] + [B]).func()
 
-/// Determine if a content is a sequence.
+/// Determine if a content is a sequence (i.e. created by concatenating content with `+` or implicit adjacency).
 ///
 /// Example: `is-sequence([a])` returns `true`
+///
+/// - it (content): The content to check.
 ///
 /// -> bool
 #let is-sequence(it) = {
@@ -215,9 +217,11 @@
 
 #let typst-builtin-styled = [#set text(fill: red)].func()
 
-/// Determine if a content is styled.
+/// Determine if a content is styled (i.e. wrapped by Typst's internal styled element when `set` or `show` rules are applied).
 ///
 /// Example: `is-styled(text(fill: red)[Red])` returns `true`
+///
+/// - it (content): The content to check.
 ///
 /// -> bool
 #let is-styled(it) = {
@@ -237,9 +241,11 @@
 }
 
 
-/// Determine if a content is a metadata.
+/// Determine if a content is a `metadata(...)` element.
 ///
 /// Example: `is-metadata(metadata((a: 1)))` returns `true`
+///
+/// - it (content): The content to check.
 ///
 /// -> bool
 #let is-metadata(it) = {
@@ -275,11 +281,11 @@
 }
 
 
-/// Call a `self => {..}` function and return the result, or just return the content.
+/// Call a `self => {..}` function and return the result, or wrap plain content in `[]`.
 ///
 /// - self (dictionary): The presentation context.
 ///
-/// - it (content, function): The content to display, or a function `self => content`.
+/// - it (content, function): The content to display, or a callback `self => content`.
 ///
 /// -> content
 #let call-or-display(self, it) = {
@@ -290,18 +296,25 @@
 }
 
 
-/// Wrap a function with a `self` parameter to make it a method.
+/// Wrap a function with a `self` parameter to make it callable as a method.
+///
+/// Returns a new function of the form `(self: none, ..args) => fn(..args)`.
 ///
 /// Example: `#let hide = method-wrapper(hide)` to get a `hide` method.
+///
+/// - fn (function): The function to wrap.
 ///
 /// -> function
 #let method-wrapper(fn) = (self: none, ..args) => fn(..args)
 
 
-/// Assuming all functions in dictionary have a named `self` parameter,
-/// `methods` function is used to get all methods in dictionary object.
+/// Extract all method functions from `self` and bind `self` as their first named argument.
+///
+/// Returns a dictionary of ready-to-call functions where the `self` argument has already been applied. Use destructuring to get individual methods.
 ///
 /// Example: `#let (uncover, only) = utils.methods(self)` to get `uncover` and `only` methods.
+///
+/// - self (dictionary): The presentation context (must have a `methods` key containing a dictionary of functions).
 ///
 /// -> dictionary
 #let methods(self) = {
@@ -325,7 +338,7 @@
 // -------------------------------------
 
 
-/// Capitalize a string
+/// Capitalize a string.
 ///
 /// - s (str): The string to convert.
 ///
@@ -340,7 +353,7 @@
 }
 
 
-/// Convert a string into title case
+/// Convert a string into title case.
 ///
 /// - s (str): The string to convert.
 ///
@@ -354,11 +367,14 @@
 }
 
 
-/// Convert a heading with label to short form
+/// Convert a heading with label to a short display form.
+///
+/// If the heading has a special Touying label (e.g. `touying:hidden`), returns the heading body as-is.
+/// If the heading has a user label (e.g. `section:my-section`), strips the namespace prefix and applies title case via `convert-label-to-short-heading`.
 ///
 /// - it (content): The heading content element.
 ///
-/// -> str
+/// -> content
 #let short-heading(self: none, it) = {
   if it == none {
     return
@@ -585,11 +601,13 @@
 )
 
 
-/// Display the date of `self.info.date` with `self.datetime-format` format.
+/// Display the date from `self.info.date` formatted with `self.datetime-format`.
+///
+/// Returns the date as a formatted string when `self.info.date` is a `datetime`, or returns it as-is when it is already `content`.
 ///
 /// - self (dictionary): The presentation context (must have `self.info.date`).
 ///
-/// -> str
+/// -> content, str
 #let display-info-date(self) = {
   assert("info" in self, message: "self must have an info field")
   if type(self.info.date) == datetime {
@@ -1069,13 +1087,13 @@
 }
 
 
-/// Check if a slide is visible
+/// Check if a subslide index is visible given a visibility specification.
 ///
 /// Example: `check-visible(3, "2-")` returns `true`
 ///
-/// - idx (int): The index of the slide.
+/// - idx (int): The current subslide index.
 ///
-/// - visible-subslides (int, array, str): A single integer, an array of integers, or a string specifying the visible subslides.
+/// - visible-subslides (int, array, str): Specifies which subslides are visible.
 ///
 ///    Supported formats:
 ///
@@ -1163,6 +1181,8 @@
 /// - cont (content): The content to display when the content is visible in the subslide.
 ///
 /// - is-method (bool): Whether the function is a method function. Default is `false`.
+///
+/// -> content
 #let effect(self: none, fn, visible-subslides, cont, is-method: false) = {
   if is-method {
     fn
