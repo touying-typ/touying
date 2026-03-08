@@ -15,7 +15,22 @@
   return new-dict
 }
 
-/// The private configurations of the theme.
+/// Store theme-specific private data in the presentation context.
+///
+/// Use this in your theme's `#show: my-theme.with(...)` to pass arbitrary key-value pairs that your theme needs internally. The stored values are accessible via `self.store.<key>` inside any theme function.
+///
+/// Example:
+///
+/// ```typst
+/// config-store(
+///   header-height: 2em,
+///   show-logo: true,
+/// )
+/// ```
+///
+/// - args (arguments): Named key-value pairs to store in `self.store`.
+///
+/// -> dictionary
 #let config-store(..args) = {
   assert(args.pos().len() == 0, message: "Unexpected positional arguments.")
   return (store: args.named())
@@ -97,9 +112,9 @@
 
 /// The common configurations of the slides.
 ///
-/// - handout (boolean): Whether to enable the handout mode. By default, it retains only the last subslide of each slide, but this can be overridden via `handout-subslides`. Default is `false`.
+/// - handout (bool): Whether to enable the handout mode. By default, it retains only the last subslide of each slide, but this can be overridden via `handout-subslides`. Default is `false`.
 ///
-/// - handout-subslides (none, int, array, string): The subslides to include in handout mode. Accepts the same format as `visible-subslides` (e.g. `2`, `(1, 3)`, `"2-"`, `"1, 3-5"`). When `none`, the last subslide is used (default behavior). Default is `none`.
+/// - handout-subslides (none, int, array, str): The subslides to include in handout mode. Accepts the same format as `visible-subslides` (e.g. `2`, `(1, 3)`, `"2-"`, `"1, 3-5"`). When `none`, the last subslide is used (default behavior). Default is `none`.
 ///
 /// - slide-level (int): The level of the slides. Default is `2`, which means the level 1 and 2 headings will be treated as slides.
 ///
@@ -113,37 +128,37 @@
 ///
 /// - new-subsubsubsection-slide-fn (function): The function to create a new slide for a new subsubsubsection. Default is `none`.
 ///
-/// - receive-body-for-new-section-slide-fn (boolean): Whether to receive the body for the new section slide function. Default is `true`.
+/// - receive-body-for-new-section-slide-fn (bool): Whether to receive the body for the new section slide function. Default is `true`.
 ///
-/// - receive-body-for-new-subsection-slide-fn (boolean): Whether to receive the body for the new subsection slide function. Default is `true`.
+/// - receive-body-for-new-subsection-slide-fn (bool): Whether to receive the body for the new subsection slide function. Default is `true`.
 ///
-/// - receive-body-for-new-subsubsection-slide-fn (boolean): Whether to receive the body for the new subsubsection slide function. Default is `true`.
+/// - receive-body-for-new-subsubsection-slide-fn (bool): Whether to receive the body for the new subsubsection slide function. Default is `true`.
 ///
-/// - receive-body-for-new-subsubsubsection-slide-fn (boolean): Whether to receive the body for the new subsubsubsection slide function. Default is `true`.
+/// - receive-body-for-new-subsubsubsection-slide-fn (bool): Whether to receive the body for the new subsubsubsection slide function. Default is `true`.
 ///
-/// - show-strong-with-alert (boolean): Whether to show strong with alert. Default is `true`.
+/// - show-strong-with-alert (bool): Whether to show strong with alert. Default is `true`.
 ///
-/// - datetime-format (auto, string): The format of the datetime. Default is `auto`.
+/// - datetime-format (auto, str): The format of the datetime. Default is `auto`.
 ///
-/// - appendix (boolean): Is touying in the appendix mode. The last-slide-counter will be frozen in the appendix mode. Default is `false`.
+/// - appendix (bool): Is touying in the appendix mode. The last-slide-counter will be frozen in the appendix mode. Default is `false`.
 ///
-/// - freeze-slide-counter (boolean): Whether to freeze the slide counter. Default is `false`.
+/// - freeze-slide-counter (bool): Whether to freeze the slide counter. Default is `false`.
 ///
-/// - zero-margin-header (boolean): Whether to show the full header (with negative padding). Default is `true`.
+/// - zero-margin-header (bool): Whether to show the full header (with negative padding). Default is `true`.
 ///
-/// - zero-margin-footer (boolean): Whether to show the full footer (with negative padding). Default is `true`.
+/// - zero-margin-footer (bool): Whether to show the full footer (with negative padding). Default is `true`.
 ///
-/// - auto-offset-for-heading (boolean): Whether to add an offset relative to slide-level for headings. Default is `true`.
+/// - auto-offset-for-heading (bool): Whether to add an offset relative to slide-level for headings. Default is `true`.
 ///
-/// - enable-pdfpc (boolean): Whether to add `<pdfpc-file>` label for querying. Default is `true`.
+/// - enable-pdfpc (bool): Whether to add `<pdfpc-file>` label for querying. Default is `true`.
 ///
 ///   You can export the .pdfpc file directly using: `typst query --root . ./example.typ --field value --one "<pdfpc-file>" > ./example.pdfpc`
 ///
-/// - enable-mark-warning (boolean): Whether to enable the mark warning. Default is `true`.
+/// - enable-mark-warning (bool): Whether to enable the mark warning. Default is `true`.
 ///
-/// - reset-page-counter-to-slide-counter (boolean): Whether to reset the page counter to the slide counter. Default is `true`.
+/// - reset-page-counter-to-slide-counter (bool): Whether to reset the page counter to the slide counter. Default is `true`.
 ///
-/// - show-only-notes (boolean): Whether to show the speaker notes as the main content with the slide shown as a small thumbnail in the top right corner. Default is `false`.
+/// - show-only-notes (bool): Whether to show the speaker notes as the main content with the slide shown as a small thumbnail in the top right corner. Default is `false`.
 ///
 ///   This is similar to LaTeX Beamer's `\setbeameroption{show only notes}`. It is useful for using speaker notes with presentation tools that let you load two PDFs and synchronize them, one to display on the main screen and one on the auxiliary screen.
 ///
@@ -151,25 +166,25 @@
 ///
 ///   Currently, the alignment can be `none`, `bottom`, and `right`.
 ///
-/// - horizontal-line-to-pagebreak (boolean): Whether to convert horizontal lines to page breaks. Default is `true`.
+/// - horizontal-line-to-pagebreak (bool): Whether to convert horizontal lines to page breaks. Default is `true`.
 ///
 ///   You can use markdown-like syntax `---` to divide slides.
 ///
-/// - reset-footnote-number-per-slide (boolean): Whether to reset the footnote number per slide. Default is `true`.
+/// - reset-footnote-number-per-slide (bool): Whether to reset the footnote number per slide. Default is `true`.
 ///
-/// - nontight-list-enum-and-terms (boolean): Whether to make `tight` argument always be `false` for list, enum, and terms. Default is `false`.
+/// - nontight-list-enum-and-terms (bool): Whether to make `tight` argument always be `false` for list, enum, and terms. Default is `false`.
 ///
-/// - align-list-marker-with-baseline (boolean): Whether to align the list marker with the baseline. Default is `false`.
+/// - align-list-marker-with-baseline (bool): Whether to align the list marker with the baseline. Default is `false`.
 ///
-/// - align-enum-marker-with-baseline (boolean): Whether to align the enum marker with the baseline. Default is `false`. It will only work when the enum item has a number like `1.`.
+/// - align-enum-marker-with-baseline (bool): Whether to align the enum marker with the baseline. Default is `false`. It will only work when the enum item has a number like `1.`.
 ///
 /// - scale-list-items (none, float): Whether to scale the list items recursively. For example, `scale-list-items: 0.8` will scale the list items by 0.8. Default is `none`.
 ///
-/// - enable-frozen-states-and-counters (boolean): Whether to enable the frozen states and counters. It is useful for equations, figures, and theorems. Default is `true`.
+/// - enable-frozen-states-and-counters (bool): Whether to enable the frozen states and counters. It is useful for equations, figures, and theorems. Default is `true`.
 ///
-/// - show-hide-set-list-marker-none (boolean): Whether to set the list marker to none for hide function. Default is `true`.
+/// - show-hide-set-list-marker-none (bool): Whether to set the list marker to none for hide function. Default is `true`.
 ///
-/// - show-bibliography-as-footnote (boolean): Whether to show the bibliography as footnote. Default is `none`.
+/// - show-bibliography-as-footnote (bool): Whether to show the bibliography as footnote. Default is `none`.
 ///
 ///   It receives a bibliography function like `bibliography(title: none, "ref.bib")`, or a dict like `(numbering: "[1]", bibliography: bibliography(title: none, "ref.bib"))`.
 ///
@@ -199,9 +214,11 @@
 ///
 /// - default-page-preamble (function): The default preamble for each page. Default is a function to reset the footnote number per slide and reset the page counter to the slide counter.
 ///
-/// - default-composer (auto, function | array): The default composer for slides. It is used when the `composer` argument of the `slide` function is `auto`. Default is `auto`, which falls back to using `components.side-by-side`.
+/// - default-composer (auto, function, array): The default composer for slides. It is used when the `composer` argument of the `slide` function is `auto`. Default is `auto`, which falls back to using `components.side-by-side`.
 ///
 ///   For example, `config-common(default-composer: components.side-by-side.with(gutter: 2em))` sets the default gutter between columns to `2em` for all slides.
+///
+/// -> dictionary
 #let config-common(
   handout: _default,
   handout-subslides: _default,
@@ -399,15 +416,15 @@
 ///
 /// - alert (function): The function to alert the content. The default value is `utils.method-wrapper(text.with(weight: "bold"))` function.
 ///
-/// - show-only-notes (function): The function to show notes on second screen. It should be `(self: none, width: 0pt, height: 0pt, cutout: false) => { .. }` with core code `utils.current-slide-note` and `utils.slide-note-state.update(none)`.
-///
-///   When `cutout: true` (used by `config-common(show-only-notes: true)` mode), the function should return a dictionary with `background`, `foreground`, and `cutout-height` keys.
+/// - show-only-notes (function): The function used to render speaker notes, either as the primary content (`show-only-notes: true` mode) or on a second screen. It should accept `(self: none, width: 0pt, height: 0pt, cutout: false)`. When `cutout: true`, return a dictionary with `background`, `foreground`, and `cutout-height` keys.
 ///
 /// - convert-label-to-short-heading (function): The function to convert label to short heading. It is useful for the short heading for heading with label. It will be used in function with `short-heading`.
 ///
 ///   The default value is `utils.titlecase(lbl.replace(regex("^[^:]*:"), "").replace("_", " ").replace("-", " "))`.
 ///
 ///   It means that some headings with labels like `section:my-section` will be converted to `My Section`.
+///
+/// -> dictionary
 #let config-methods(
   // init
   init: _default,
@@ -466,13 +483,13 @@
 /// ```
 ///
 /// - title (content): The title of the presentation, which will be displayed in the title slide.
-/// - short-title (content, auto): The short title of the presentation, which will be displayed in the footer of the slides usally.
+/// - short-title (content, auto): The short title of the presentation, which will usually be displayed in the footer of the slides.
 ///
 ///   If you set it to `auto`, it will be the same as the title.
 ///
 /// - subtitle (content): The subtitle of the presentation.
 ///
-/// - short-subtitle (content, auto): The short subtitle of the presentation, which will be displayed in the footer of the slides usally.
+/// - short-subtitle (content, auto): The short subtitle of the presentation, which will usually be displayed in the footer of the slides.
 ///
 ///   If you set it to `auto`, it will be the same as the subtitle.
 ///
@@ -485,6 +502,8 @@
 /// - institution (content): The institution of the presentation.
 ///
 /// - logo (content): The logo of the institution.
+///
+/// -> dictionary
 #let config-info(
   title: _default,
   short-title: _default,
@@ -529,8 +548,11 @@
 ///
 /// IMPORTANT: The colors should be defined in the *RGB* format at most cases.
 ///
-/// There are four main colors in the theme: primary, secondary, tertiary, and neutral,
-/// and each of them has a light, lighter, lightest, dark, darker, and darkest version.
+/// There are four main color groups: `primary`, `secondary`, `tertiary`, and `neutral`.
+/// Each group includes the base color plus variants: `light`, `lighter`, `lightest`, `dark`, `darker`, `darkest`.
+/// For example, `primary`, `primary-light`, `primary-lightest`, `neutral-darkest`, etc.
+///
+/// -> dictionary
 #let config-colors(
   neutral: _default,
   neutral-light: _default,
@@ -614,7 +636,7 @@
 /// )
 /// ```
 ///
-/// - paper (string): A standard paper size to set width and height. The default value is "presentation-16-9".
+/// - paper (str): A standard paper size to set width and height. The default value is `"presentation-16-9"`.
 ///
 ///   You can also use `aspect-ratio` to set the aspect ratio of the paper.
 ///
@@ -637,9 +659,11 @@
 ///     - y: The vertical margins.
 ///     - rest: The margins on all sides except those for which the dictionary explicitly sets a size.
 ///
-/// - numbering (string, function): The numbering style of the page. The default value is `"1"`.
+/// - numbering (str, function): The numbering style of the page. The default value is `"1"`.
 ///
 ///   The values for left and right are mutually exclusive with the values for inside and outside.
+///
+/// -> dictionary
 #let config-page(
   paper: _default,
   header: _default,
@@ -664,7 +688,7 @@
 }
 
 
-/// The default configurations
+/// The default configuration values used when no explicit configuration is provided.
 #let default-config = utils.merge-dicts(
   config-common(
     handout: false,

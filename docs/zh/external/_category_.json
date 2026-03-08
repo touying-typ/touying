@@ -1,0 +1,8 @@
+{
+  "label": "外部工具",
+  "position": 5,
+  "link": {
+    "type": "generated-index",
+    "description": "将 Touying 与外部演示工具和编辑器集成。"
+  }
+}

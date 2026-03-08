@@ -1,0 +1,8 @@
+{
+  "label": "包集成",
+  "position": 3,
+  "link": {
+    "type": "generated-index",
+    "description": "了解如何将第三方 Typst 包与 Touying 集成，以获得更强大的功能。"
+  }
+}

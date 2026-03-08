@@ -1,0 +1,154 @@
+name: Docs Preview
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+    paths:
+      - "docs/**"
+
+# Build runs share one concurrency group and can cancel each other when a new
+# commit arrives.  Cleanup (PR closed) uses a distinct group so it is never
+# cancelled by an in-progress build for the same PR.
+concurrency:
+  group: >-
+    docs-preview-${{ github.event.number }}-${{
+      github.event.action == 'closed' && 'cleanup' || 'build'
+    }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write      # push to gh-pages branch
+  pull-requests: write # post / update the preview comment
+
+jobs:
+  preview:
+    name: Deploy Docs Preview
+    runs-on: ubuntu-latest
+
+    steps:
+      # ── 1. Check out this (touying) repo at the workspace root ─────────────
+      # The root checkout establishes GITHUB_TOKEN credentials so that
+      # rossjrw/pr-preview-action can push to *this* repo's gh-pages branch.
+      - name: Checkout touying (PR branch)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # ── 2. Clone the Docusaurus website repo ───────────────────────────────
+      # We clone it without initialising its submodule because we are about to
+      # replace the submodule directory with the current PR's content anyway.
+      - name: Checkout website repo
+        if: github.event.action != 'closed'
+        uses: actions/checkout@v4
+        with:
+          repository: touying-typ/touying-typ.github.io
+          path: website
+          submodules: false
+
+      # ── 3. Inject this PR's touying content into the website tree ──────────
+      # The website scripts expect:
+      #   website/touying/docs/en/**   (hand-written docs)
+      #   website/touying/docs/zh/**   (Chinese docs)
+      #   website/touying/src/**       (Typst sources – for generate-docs.py)
+      #   website/touying/themes/**    (theme files    – for generate-docs.py)
+      # We rsync everything from the touying root except .git and the website/
+      # checkout directory itself to avoid recursion.
+      - name: Inject PR docs into website
+        if: github.event.action != 'closed'
+        run: |
+          mkdir -p website/touying
+          rsync -a --exclude='.git' --exclude='website' . website/touying/
+
+      # ── 4. Set up the Node.js environment ─────────────────────────────────
+      - name: Set up Node.js
+        if: github.event.action != 'closed'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: website/package-lock.json
+
+      # ── 5. Install Typst (required by generate-images.py) ──────────────────
+      - name: Install Typst
+        if: github.event.action != 'closed'
+        uses: typst-community/setup-typst@v4
+
+      # ── 6. Install Python dependencies (Pillow for generate-images.py) ─────
+      - name: Install Python dependencies
+        if: github.event.action != 'closed'
+        run: pip install Pillow
+
+      # ── 7. Install Node dependencies ───────────────────────────────────────
+      - name: Install Node dependencies
+        if: github.event.action != 'closed'
+        working-directory: website
+        run: npm ci
+
+      # ── 8. Run the website's own doc-preparation pipeline ─────────────────
+      - name: Copy docs from touying into website structure
+        if: github.event.action != 'closed'
+        working-directory: website
+        run: npm run copy-docs
+
+      - name: Generate API reference documentation
+        if: github.event.action != 'closed'
+        working-directory: website
+        run: npm run generate-docs
+
+      - name: Generate slide preview images
+        if: github.event.action != 'closed'
+        id: generate-images
+        working-directory: website
+        run: npm run generate-images
+        continue-on-error: true
+
+      - name: Warn if slide image generation failed
+        if: steps.generate-images.outcome == 'failure'
+        run: |
+          echo "::warning::Slide preview image generation failed. The docs preview will be deployed without generated slide images. Check the 'Generate slide preview images' step log for details."
+
+      # ── 9. Patch Docusaurus config for PR preview ─────────────────────────
+      # The website navbar/footer may contain hardcoded links (e.g. /docs/start,
+      # /docs/dynamic/simple) that don't exist in every PR's docs structure.
+      # Downgrading onBrokenLinks from 'throw' to 'warn' prevents the build from
+      # failing over such link drift while still making broken links visible in
+      # the build log.
+      - name: Patch broken-links setting for PR preview
+        if: github.event.action != 'closed'
+        working-directory: website
+        run: |
+          for f in docusaurus.config.js docusaurus.config.ts docusaurus.config.mjs; do
+            if [ -f "$f" ]; then
+              sed -i "s/onBrokenLinks:[[:space:]]*['\"]throw['\"]/onBrokenLinks: 'warn'/g" "$f"
+              echo "Patched onBrokenLinks in $f"
+              break
+            fi
+          done
+
+      # ── 10. Build the Docusaurus site ──────────────────────────────────────
+      # The touying repo is hosted at https://touying-typ.github.io/touying/
+      # so PR previews live under /touying/pr-preview/pr-NNN/.
+      # We pass this as DOCUSAURUS_BASE_URL so that Docusaurus sets the
+      # correct <base> href and all asset / link paths resolve properly.
+      - name: Build website
+        if: github.event.action != 'closed'
+        working-directory: website
+        run: npm run build
+        env:
+          DOCUSAURUS_BASE_URL: /touying/pr-preview/pr-${{ github.event.number }}/
+
+      # ── 10. Deploy preview (or clean up on PR close) ────────────────────────
+      # rossjrw/pr-preview-action:
+      #   - On open/sync/reopen: pushes build/ to the gh-pages branch under
+      #     pr-preview/pr-NNN/ and posts a comment with the preview URL.
+      #   - On close: removes pr-preview/pr-NNN/ from gh-pages and updates
+      #     the comment.
+      #
+      # Preview URL: https://touying-typ.github.io/touying/pr-preview/pr-NNN/
+      - name: Deploy / clean-up preview
+        uses: rossjrw/pr-preview-action@v1
+        with:
+          source-dir: website/build
+          preview-branch: gh-pages
+          umbrella-dir: pr-preview
+          action: auto
