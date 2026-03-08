@@ -1198,11 +1198,11 @@
 /// #speaker-note[This is a speaker note]
 /// ```
 ///
-/// - mode (string): The mode of the markup text, either `typ` or `md`. Default is `typ`.
+/// - mode (str): The mode of the markup text, either `typ` or `md`. Default is `typ`.
 ///
 /// - setting (function): A function that takes the note as input and returns a processed note.
 ///
-/// - subslide (none, auto, int, array, string): Restricts the note to specific subslides, similar to `only`.
+/// - subslide (none, auto, int, array, str): Restricts the note to specific subslides, similar to `only`.
 ///   - `auto` (default): automatically determined from the current pause position. A note placed after `#pause` will automatically appear only from that subslide onward.
 ///   - `none`: shown on all subslides regardless of position.
 ///   - int, array, or string: shown only on the specified subslides.
@@ -1422,7 +1422,7 @@
 /// the parsed equation and the total number of repetitions needed.
 ///
 /// - self (dictionary): The presentation context
-/// - need-cover (boolean): Whether hidden content should be covered
+/// - need-cover (bool): Whether hidden content should be covered
 /// - base (int): Base repetition count
 /// - index (int): Current subslide index
 /// - eqt-metadata (content): The equation metadata to parse
@@ -1525,7 +1525,7 @@
 /// Similar to _parse-touying-equation but for MiTeX equations.
 ///
 /// - self (dictionary): The presentation context
-/// - need-cover (boolean): Whether hidden content should be covered
+/// - need-cover (bool): Whether hidden content should be covered
 /// - base (int): Base repetition count
 /// - index (int): Current subslide index
 /// - eqt-metadata (content): The mitex metadata to parse
@@ -1621,7 +1621,7 @@
 /// lines like `pause = 1` or `def pause():`.
 ///
 /// - self (dictionary): The presentation context
-/// - need-cover (boolean): Whether hidden content should be covered
+/// - need-cover (bool): Whether hidden content should be covered
 /// - base (int): Base repetition count
 /// - index (int): Current subslide index
 /// - raw-metadata (content): The raw metadata to parse
@@ -1815,10 +1815,10 @@
 /// processes content and determines what should be visible on each subslide.
 ///
 /// - self (dictionary): The presentation context
-/// - need-cover (boolean): Whether hidden content should be covered
+/// - need-cover (bool): Whether hidden content should be covered
 /// - base (int): Base repetition count
 /// - index (int): Current subslide index
-/// - show-delayed-wrapper (boolean): Whether to show delayed wrapper content
+/// - show-delayed-wrapper (bool): Whether to show delayed wrapper content
 /// - bodies (content): The content elements to parse
 ///
 /// -> (array, int, int, int)

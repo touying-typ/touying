@@ -99,9 +99,9 @@
 
 /// The common configurations of the slides.
 ///
-/// - handout (boolean): Whether to enable the handout mode. By default, it retains only the last subslide of each slide, but this can be overridden via `handout-subslides`. Default is `false`.
+/// - handout (bool): Whether to enable the handout mode. By default, it retains only the last subslide of each slide, but this can be overridden via `handout-subslides`. Default is `false`.
 ///
-/// - handout-subslides (none, int, array, string): The subslides to include in handout mode. Accepts the same format as `visible-subslides` (e.g. `2`, `(1, 3)`, `"2-"`, `"1, 3-5"`). When `none`, the last subslide is used (default behavior). Default is `none`.
+/// - handout-subslides (none, int, array, str): The subslides to include in handout mode. Accepts the same format as `visible-subslides` (e.g. `2`, `(1, 3)`, `"2-"`, `"1, 3-5"`). When `none`, the last subslide is used (default behavior). Default is `none`.
 ///
 /// - slide-level (int): The level of the slides. Default is `2`, which means the level 1 and 2 headings will be treated as slides.
 ///
@@ -115,37 +115,37 @@
 ///
 /// - new-subsubsubsection-slide-fn (function): The function to create a new slide for a new subsubsubsection. Default is `none`.
 ///
-/// - receive-body-for-new-section-slide-fn (boolean): Whether to receive the body for the new section slide function. Default is `true`.
+/// - receive-body-for-new-section-slide-fn (bool): Whether to receive the body for the new section slide function. Default is `true`.
 ///
-/// - receive-body-for-new-subsection-slide-fn (boolean): Whether to receive the body for the new subsection slide function. Default is `true`.
+/// - receive-body-for-new-subsection-slide-fn (bool): Whether to receive the body for the new subsection slide function. Default is `true`.
 ///
-/// - receive-body-for-new-subsubsection-slide-fn (boolean): Whether to receive the body for the new subsubsection slide function. Default is `true`.
+/// - receive-body-for-new-subsubsection-slide-fn (bool): Whether to receive the body for the new subsubsection slide function. Default is `true`.
 ///
-/// - receive-body-for-new-subsubsubsection-slide-fn (boolean): Whether to receive the body for the new subsubsubsection slide function. Default is `true`.
+/// - receive-body-for-new-subsubsubsection-slide-fn (bool): Whether to receive the body for the new subsubsubsection slide function. Default is `true`.
 ///
-/// - show-strong-with-alert (boolean): Whether to show strong with alert. Default is `true`.
+/// - show-strong-with-alert (bool): Whether to show strong with alert. Default is `true`.
 ///
-/// - datetime-format (auto, string): The format of the datetime. Default is `auto`.
+/// - datetime-format (auto, str): The format of the datetime. Default is `auto`.
 ///
-/// - appendix (boolean): Is touying in the appendix mode. The last-slide-counter will be frozen in the appendix mode. Default is `false`.
+/// - appendix (bool): Is touying in the appendix mode. The last-slide-counter will be frozen in the appendix mode. Default is `false`.
 ///
-/// - freeze-slide-counter (boolean): Whether to freeze the slide counter. Default is `false`.
+/// - freeze-slide-counter (bool): Whether to freeze the slide counter. Default is `false`.
 ///
-/// - zero-margin-header (boolean): Whether to show the full header (with negative padding). Default is `true`.
+/// - zero-margin-header (bool): Whether to show the full header (with negative padding). Default is `true`.
 ///
-/// - zero-margin-footer (boolean): Whether to show the full footer (with negative padding). Default is `true`.
+/// - zero-margin-footer (bool): Whether to show the full footer (with negative padding). Default is `true`.
 ///
-/// - auto-offset-for-heading (boolean): Whether to add an offset relative to slide-level for headings. Default is `true`.
+/// - auto-offset-for-heading (bool): Whether to add an offset relative to slide-level for headings. Default is `true`.
 ///
-/// - enable-pdfpc (boolean): Whether to add `<pdfpc-file>` label for querying. Default is `true`.
+/// - enable-pdfpc (bool): Whether to add `<pdfpc-file>` label for querying. Default is `true`.
 ///
 ///   You can export the .pdfpc file directly using: `typst query --root . ./example.typ --field value --one "<pdfpc-file>" > ./example.pdfpc`
 ///
-/// - enable-mark-warning (boolean): Whether to enable the mark warning. Default is `true`.
+/// - enable-mark-warning (bool): Whether to enable the mark warning. Default is `true`.
 ///
-/// - reset-page-counter-to-slide-counter (boolean): Whether to reset the page counter to the slide counter. Default is `true`.
+/// - reset-page-counter-to-slide-counter (bool): Whether to reset the page counter to the slide counter. Default is `true`.
 ///
-/// - show-only-notes (boolean): Whether to show the speaker notes as the main content with the slide shown as a small thumbnail in the top right corner. Default is `false`.
+/// - show-only-notes (bool): Whether to show the speaker notes as the main content with the slide shown as a small thumbnail in the top right corner. Default is `false`.
 ///
 ///   This is similar to LaTeX Beamer's `\setbeameroption{show only notes}`. It is useful for using speaker notes with presentation tools that let you load two PDFs and synchronize them, one to display on the main screen and one on the auxiliary screen.
 ///
@@ -153,25 +153,25 @@
 ///
 ///   Currently, the alignment can be `none`, `bottom`, and `right`.
 ///
-/// - horizontal-line-to-pagebreak (boolean): Whether to convert horizontal lines to page breaks. Default is `true`.
+/// - horizontal-line-to-pagebreak (bool): Whether to convert horizontal lines to page breaks. Default is `true`.
 ///
 ///   You can use markdown-like syntax `---` to divide slides.
 ///
-/// - reset-footnote-number-per-slide (boolean): Whether to reset the footnote number per slide. Default is `true`.
+/// - reset-footnote-number-per-slide (bool): Whether to reset the footnote number per slide. Default is `true`.
 ///
-/// - nontight-list-enum-and-terms (boolean): Whether to make `tight` argument always be `false` for list, enum, and terms. Default is `false`.
+/// - nontight-list-enum-and-terms (bool): Whether to make `tight` argument always be `false` for list, enum, and terms. Default is `false`.
 ///
-/// - align-list-marker-with-baseline (boolean): Whether to align the list marker with the baseline. Default is `false`.
+/// - align-list-marker-with-baseline (bool): Whether to align the list marker with the baseline. Default is `false`.
 ///
-/// - align-enum-marker-with-baseline (boolean): Whether to align the enum marker with the baseline. Default is `false`. It will only work when the enum item has a number like `1.`.
+/// - align-enum-marker-with-baseline (bool): Whether to align the enum marker with the baseline. Default is `false`. It will only work when the enum item has a number like `1.`.
 ///
 /// - scale-list-items (none, float): Whether to scale the list items recursively. For example, `scale-list-items: 0.8` will scale the list items by 0.8. Default is `none`.
 ///
-/// - enable-frozen-states-and-counters (boolean): Whether to enable the frozen states and counters. It is useful for equations, figures, and theorems. Default is `true`.
+/// - enable-frozen-states-and-counters (bool): Whether to enable the frozen states and counters. It is useful for equations, figures, and theorems. Default is `true`.
 ///
-/// - show-hide-set-list-marker-none (boolean): Whether to set the list marker to none for hide function. Default is `true`.
+/// - show-hide-set-list-marker-none (bool): Whether to set the list marker to none for hide function. Default is `true`.
 ///
-/// - show-bibliography-as-footnote (boolean): Whether to show the bibliography as footnote. Default is `none`.
+/// - show-bibliography-as-footnote (bool): Whether to show the bibliography as footnote. Default is `none`.
 ///
 ///   It receives a bibliography function like `bibliography(title: none, "ref.bib")`, or a dict like `(numbering: "[1]", bibliography: bibliography(title: none, "ref.bib"))`.
 ///

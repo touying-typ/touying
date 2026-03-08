@@ -734,9 +734,9 @@
 ///
 /// - prescale-width (length, fraction, relative): Allows you to make Typst's layout assume that the given content is to be laid out in a container of a certain width before scaling. For example, you can use `prescale-width: 200%` assuming the slide's width is twice the original.
 ///
-/// - grow (boolean): Indicates whether the content should be scaled up if it is smaller than the available height. Default is `true`.
+/// - grow (bool): Indicates whether the content should be scaled up if it is smaller than the available height. Default is `true`.
 ///
-/// - shrink (boolean): Indicates whether the content should be scaled down if it is larger than the available height. Default is `true`.
+/// - shrink (bool): Indicates whether the content should be scaled down if it is larger than the available height. Default is `true`.
 ///
 /// - height (length): The height to fit the content to.
 ///
@@ -799,9 +799,9 @@
 ///
 /// Example: `#utils.fit-to-width(100%)[BIG]`
 ///
-/// - grow (boolean): Indicates whether the content should be scaled up if it is smaller than the available width. Default is `true`.
+/// - grow (bool): Indicates whether the content should be scaled up if it is smaller than the available width. Default is `true`.
 ///
-/// - shrink (boolean): Indicates whether the content should be scaled down if it is larger than the available width. Default is `true`.
+/// - shrink (bool): Indicates whether the content should be scaled down if it is larger than the available width. Default is `true`.
 ///
 /// - width (length, fraction, relative): The width to fit the content to.
 ///
@@ -843,7 +843,7 @@
 ///
 /// - fill (color): The color to fill the rectangle with.
 ///
-/// - inline (boolean): Indicates whether the content should be displayed inline. Default is `true`.
+/// - inline (bool): Indicates whether the content should be displayed inline. Default is `true`.
 ///
 /// - body (content): The content to cover.
 ///
@@ -1516,11 +1516,11 @@
 ///
 /// - self (dictionary): The current presentation context.
 ///
-/// - mode (string): The mode of the markup text, either `typ` or `md`. Default is `typ`.
+/// - mode (str): The mode of the markup text, either `typ` or `md`. Default is `typ`.
 ///
 /// - setting (function): A function that takes the note as input and returns a processed note.
 ///
-/// - subslide (none, auto, int, array, string): Restricts the note to specific subslides, similar to `only`.
+/// - subslide (none, auto, int, array, str): Restricts the note to specific subslides, similar to `only`.
 ///   - `none`: shown on all subslides.
 ///   - `auto`: automatically determined from the current pause position (default when called via `#speaker-note`).
 ///   - int, array, or string: shown only on the specified subslides.
@@ -1585,7 +1585,7 @@
 /// config-page(..utils.page-args-from-aspect-ratio("16-10"))
 /// ```
 ///
-/// - aspect-ratio (string): The aspect ratio string in `"W-H"` format where `W`
+/// - aspect-ratio (str): The aspect ratio string in `"W-H"` format where `W`
 ///   and `H` are positive numbers. E.g., `"16-9"`, `"4-3"`, `"16-10"`.
 ///
 /// -> dictionary

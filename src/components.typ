@@ -289,7 +289,7 @@
 ///
 /// - fill (array): An array of fills for the headings. Default is `(repeat[.],)`.
 ///
-/// - short-heading (boolean): Indicates whether the headings should be shortened. Default is `true`.
+/// - short-heading (bool): Indicates whether the headings should be shortened. Default is `true`.
 ///
 /// - uncover-fn (function): A function that takes the body of the heading and returns the body of the heading when it is uncovered. Default is the identity function.
 ///
@@ -410,7 +410,7 @@
 ///
 /// - alpha (ratio): The transparency of the headings. Default is `60%`.
 ///
-/// - display-section (boolean): Indicates whether the sections should be displayed. Default is `false`.
+/// - display-section (bool): Indicates whether the sections should be displayed. Default is `false`.
 ///
 /// - display-subsection (bool): Indicates whether the subsections should be displayed. Default is `true`.
 ///
@@ -557,7 +557,7 @@
 ///
 /// - self (none): The self context, which is used to get the short heading of the headings.
 ///
-/// - short-heading (boolean): Indicates whether the headings should be shortened. Default is `true`.
+/// - short-heading (bool): Indicates whether the headings should be shortened. Default is `true`.
 ///
 /// - primary (color): The color of the current section. Default is `white`.
 ///
