@@ -53,3 +53,34 @@ sidebar_position: 1
 - `width`: 需要指定的宽度。
 - `body`: 具体的内容。
 
+
+## 实用示例：将表格适配到幻灯片
+
+```example
+>>> #import "@preview/touying:0.6.2": *
+>>> #import themes.simple: *
+>>> #show: simple-theme
+#slide[
+  #utils.fit-to-height(1fr)[
+    #table(
+      columns: (1fr, 1fr, 1fr),
+      [A], [B], [C],
+      [1], [2], [3],
+      [4], [5], [6],
+    )
+  ]
+]
+```
+
+## 将标题适配到全宽
+
+```example
+>>> #import "@preview/touying:0.6.2": *
+>>> #import themes.simple: *
+>>> #show: simple-theme
+#slide[
+  #utils.fit-to-width(1fr)[
+    #text(weight: "bold")[A Very Long Presentation Title That Should Fill the Entire Slide Width]
+  ]
+]
+```

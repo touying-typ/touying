@@ -60,3 +60,56 @@ config-common(datetime-format: "[year]-[month]-[day]")
 ```
 
 的方式更改。
+
+## 前言（Preamble）
+
+`config-common(preamble: ...)` 选项允许你在每张幻灯片上执行初始化代码，而无需手动重复。这在集成 `codly` 等包时非常有用：
+
+```typst
+#show: simple-theme.with(
+  config-common(preamble: {
+    codly(languages: codly-languages)
+  }),
+)
+```
+
+## 单张幻灯片配置覆盖
+
+你可以使用 `#show: touying-set-config.with(...)` 为单张幻灯片或一段幻灯片覆盖任意配置：
+
+```example
+#import "@preview/touying:0.6.2": *
+#import themes.simple: *
+
+#show: simple-theme.with(aspect-ratio: "16-9")
+
+== Normal Slide
+
+This slide uses the default settings.
+
+#show: touying-set-config.with(config-page(fill: blue.lighten(80%)))
+
+== Blue Background Slide
+
+This slide has a blue background applied via `touying-set-config`.
+
+#show: touying-set-config.with(config-colors(primary: red))
+
+== Red Accent Slide
+
+This slide uses a red primary color.
+```
+
+## 冻结计数器
+
+在使用动画时，单张幻灯片内的图表和定理计数器默认会随每个子幻灯片递增。若要冻结某个计数器（使其在子幻灯片之间保持不变），请使用：
+
+```typst
+config-common(frozen-counters: (figure.where(kind: image),))
+```
+
+在使用 [Theorion](../integration/theorion.md) 包时这尤为有用：
+
+```typst
+config-common(frozen-counters: (theorem-counter,))
+```

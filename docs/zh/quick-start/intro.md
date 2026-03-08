@@ -4,43 +4,37 @@ sidebar_position: 1
 
 # Touying 介绍
 
-[Touying](https://github.com/touying-typ/touying) 是为 Typst 开发的幻灯片/演示文稿包。Touying 也类似于 LaTeX 的 Beamer，但是得益于 Typst，你可以拥有更快的渲染速度与更简洁的语法。后面，我们会使用 slides 指代幻灯片，slide 指代单张幻灯片，subslide 指代子幻灯片。
+[Touying](https://github.com/touying-typ/touying) 是为 [Typst](https://typst.app/) 开发的强大幻灯片/演示文稿包。Touying 类似于 LaTeX 的 Beamer，但得益于 Typst 的现代语法和极速编译，体验更为出色。在本文档中，我们使用 **slides** 指代整套幻灯片，**slide** 指代单张幻灯片，**subslide** 指代动画步骤所产生的子页面。
 
-## 为什么使用 Touying
+## 为什么使用 Touying？
 
-- 相较于 PowerPoint，Touying 并非「所示即所得的」，你可以使用一种「内容与样式分离」的方式编写你的 slides，尤其是 Typst 作为一个新兴的排版语言，提供了简洁但强大的语法，对于代码块、数学公式和定理等内容有着更好的支持。另一个优势是，在有着模板的情况下，用 Touying 编写 slides 要比 PowerPoint 快得多。因此 Touying 相较于 PowerPoint，更适合有着「科研写作」需求的用户使用。
-- 相较于 Markdown Slides，Touying 所依托的 Typst 有着更强大的排版控制能力，例如页眉、页脚、布局和便捷的自定义函数，而这是 Markdown 很难具备、或者说很难做好的能力。并且 Touying 提供了 `#pause` 和 `#meanwhile` 标记，提供了更为便捷的动态 slides 能力。
-- 相较于 Beamer，Touying 有着更快的编译速度、更简洁的语法，以及更简单的自定义主题的能力。相较于 Beamer 动辄几秒几十秒的编译时间，Touying 的编译速度基本上能够维持在几毫秒几十毫秒。并且 Touying 的语法相较于 Beamer 更为简洁，也更容易更改模板主题，以及创建你自己的模板。在功能上，Touying 支持了 Beamer 大部分的能力，并且还提供了一些 Beamer 所没有的便利功能。
-- 相较于 Polylux，Touying 提供了简洁但强大的语法与功能，能够通过自动注入的方式提供「全局变量」的能力，进而可以方便地编写主题。并且 Touying 并不依赖 `counter` 和 `locate` 来实现 `#pause`，因此能有更好的性能。Touying 自身定位是一个社区驱动的项目（我们欢迎更多的人加入），并且不会过分强调维持 API 的一致性，而是选择维护多个版本的文档，因而能够提供更多新颖但强大的功能。
+- **相较于 PowerPoint** — Touying 遵循「内容与样式分离」的理念。你只需编写带有轻量标记的纯文本，主题会自动处理视觉设计。这对于包含代码块、数学公式和定理环境的科研类演示文稿尤为高效。
+- **相较于 Markdown Slides** — Typst 提供了精细的排版控制能力（页眉、页脚、自定义布局以及一流的数学支持），这是基于 Markdown 的工具难以实现的。Touying 还提供了 `#pause` 和 `#meanwhile` 标记，让渐进式动画在代码优先的工作流中自然流畅。
+- **相较于 Beamer** — Touying 的编译速度以毫秒计，而非秒乃至数十秒。其语法更为简洁，创建或修改主题也更加直接。在功能上，Touying 与 Beamer 高度对标，并额外提供了针对 CeTZ/Fletcher 图表的 `touying-reducer` 等便利功能。
+- **相较于 Polylux** — Touying 实现 `#pause` 时不依赖 `counter` 和 `locate`，从而避免了这些原语带来的性能损耗。Touying 还提供了更丰富的主题工具集以及统一的配置 API，让你以最少的改动即可切换主题。
 
 ## 名称来源
 
-Touying 取自中文里的「投影」，在英文中意为 project。相较而言，LaTeX 中的 beamer 就是德文的投影仪的意思。
+「Touying」取自中文「投影」（tóuyǐng），意为"投射/放映"——正如 LaTeX 世界里德文单词 *Beamer* 意为投影仪一样。
 
-## 关于文档
+## 在哪里编写幻灯片
 
-这个文档通过 [Docusaurus](https://docusaurus.io/) 驱动开发，我们将会为 Touying 维持英文和中文版本的文档，并且每个大版本维护一份文档，以便你随时可以查阅旧版本的 Touying 文档，并且可以更容易地迁移到新版本。
+你有两种主要选择：
 
-Docusaurus 创建新版本：
+| 选项 | 说明 |
+|------|------|
+| **[Typst Web App](https://typst.app/)** | 基于浏览器的编辑器，无需安装；打开 `typst.app`，创建新项目即可开始编写。支持实时预览和协作。 |
+| **[Tinymist for VS Code](https://marketplace.visualstudio.com/items?itemName=myriad-dreamin.tinymist)** | 功能完整的 Typst LSP 扩展。提供语法高亮、自动补全、错误诊断以及内置幻灯片预览面板（参见 [Typst Preview](../external/typst-preview.md)）。 |
 
-```sh
-npm run docusaurus docs:version 0.y.x
-```
-
-Docusaurus 多语言：
-
-```sh
-npm run start -- --locale zh
-```
-
-## 贡献
-
-Touying 是免费、开源且社区驱动的。如果你感兴趣，你可以随时访问 [GitHub](https://github.com/touying-typ/touying) 并提出 issue 或 PR，我们也同样欢迎你加入 [touying-typ](https://github.com/touying-typ) 组织。
-
+两种方式均会自动从 Typst 包注册表下载 Touying，无需单独安装。
 
 ## 画廊
 
-Touying 通过 wiki 提供 [画廊页面](https://github.com/touying-typ/touying/wiki)，您可以在其中浏览由 Touying 用户创建的优雅幻灯片。我们也鼓励您在这里贡献自己的精美幻灯片！
+Touying 提供了一个[画廊](https://github.com/touying-typ/touying/wiki)，社区成员可在此分享自己的幻灯片。欢迎你贡献自己的作品！
+
+## 贡献
+
+Touying 是免费、开源且社区驱动的项目。欢迎访问 [GitHub](https://github.com/touying-typ/touying) 提交 issue、发起 PR，或加入 [touying-typ](https://github.com/touying-typ) 组织。
 
 ## License
 
