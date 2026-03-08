@@ -949,21 +949,3 @@ Use `config-common(frozen-counters: true)` to prevent counters from advancing be
   config-common(frozen-counters: true),
 )
 ```
-
-### Why does my `#pause` inside a `grid` or `table` not work?
-
-`#pause` cannot be placed directly inside `grid`, `table`, or similar layout primitives. Wrap them with a `#slide` block using the `composer` argument instead, or use the callback form:
-
-```example
->>> #import "@preview/touying:0.6.2": *
->>> #import themes.simple: *
->>> #show: simple-theme
-#slide(self => {
-  let (uncover,) = utils.methods(self)
-  grid(
-    columns: 2,
-    [Cell A],
-    uncover("2-")[Cell B — revealed on subslide 2],
-  )
-})
-```

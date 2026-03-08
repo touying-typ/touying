@@ -949,21 +949,3 @@ The header shows the current section name.
   config-common(frozen-counters: true),
 )
 ```
-
-### 为什么 `#pause` 在 `grid` 或 `table` 内不起作用？
-
-`#pause` 无法直接放置在 `grid`、`table` 或类似布局原语的内部。请改用带 `composer` 参数的 `#slide` 块，或使用回调式写法：
-
-```example
->>> #import "@preview/touying:0.6.2": *
->>> #import themes.simple: *
->>> #show: simple-theme
-#slide(self => {
-  let (uncover,) = utils.methods(self)
-  grid(
-    columns: 2,
-    [Cell A],
-    uncover("2-")[Cell B — revealed on subslide 2],
-  )
-})
-```
