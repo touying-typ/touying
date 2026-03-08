@@ -130,83 +130,85 @@
 /// - config (dictionary): The configuration of the slide. You can use `config-xxx` to set the configuration of the slide. For more several configurations, you can use `utils.merge-dicts` to merge them.
 ///
 /// - extra (content, none): The extra information you want to display on the title slide.
-#let title-slide(config: (:), extra: none, ..args) = touying-slide-wrapper(self => {
-  self = utils.merge-dicts(
-    self,
-    config,
-  )
-  self.store.title = none
-  let info = self.info + args.named()
-  info.authors = {
-    let authors = if "authors" in info {
-      info.authors
-    } else {
-      info.author
+#let title-slide(config: (:), extra: none, ..args) = touying-slide-wrapper(
+  self => {
+    self = utils.merge-dicts(
+      self,
+      config,
+    )
+    self.store.title = none
+    let info = self.info + args.named()
+    info.authors = {
+      let authors = if "authors" in info {
+        info.authors
+      } else {
+        info.author
+      }
+      if type(authors) == array {
+        authors
+      } else {
+        (authors,)
+      }
     }
-    if type(authors) == array {
-      authors
-    } else {
-      (authors,)
-    }
-  }
-  let body = {
-    show: std.align.with(center + horizon)
-    block(
-      fill: self.colors.primary,
-      inset: 1.5em,
-      radius: 0.5em,
-      breakable: false,
-      {
-        text(
-          size: 1.2em,
-          fill: self.colors.neutral-lightest,
-          weight: "bold",
-          info.title,
-        )
-        if info.subtitle != none {
-          parbreak()
+    let body = {
+      show: std.align.with(center + horizon)
+      block(
+        fill: self.colors.primary,
+        inset: 1.5em,
+        radius: 0.5em,
+        breakable: false,
+        {
           text(
-            size: 1.0em,
+            size: 1.2em,
             fill: self.colors.neutral-lightest,
             weight: "bold",
-            info.subtitle,
+            info.title,
           )
-        }
-      },
-    )
-    // authors
-    stack(
-      dir: ttb,
-      spacing: 1em,
-      ..info
-        .authors
-        .chunks(3)
-        .map(author-chunk => {
-          grid(
-            columns: (1fr,) * author-chunk.len(),
-            column-gutter: 1em,
-            ..author-chunk.map(author => text(fill: black, author))
-          )
-        }),
-    )
-    v(0.5em)
-    // institution
-    if info.institution != none {
-      parbreak()
-      text(size: 0.7em, info.institution)
+          if info.subtitle != none {
+            parbreak()
+            text(
+              size: 1.0em,
+              fill: self.colors.neutral-lightest,
+              weight: "bold",
+              info.subtitle,
+            )
+          }
+        },
+      )
+      // authors
+      stack(
+        dir: ttb,
+        spacing: 1em,
+        ..info
+          .authors
+          .chunks(3)
+          .map(author-chunk => {
+            grid(
+              columns: (1fr,) * author-chunk.len(),
+              column-gutter: 1em,
+              ..author-chunk.map(author => text(fill: black, author))
+            )
+          }),
+      )
+      v(0.5em)
+      // institution
+      if info.institution != none {
+        parbreak()
+        text(size: 0.7em, info.institution)
+      }
+      // date
+      if info.date != none {
+        parbreak()
+        text(size: 1.0em, utils.display-info-date(self))
+      }
+      if extra != none {
+        parbreak()
+        text(size: 0.8em, extra)
+      }
     }
-    // date
-    if info.date != none {
-      parbreak()
-      text(size: 1.0em, utils.display-info-date(self))
-    }
-    if extra != none {
-      parbreak()
-      text(size: 0.8em, extra)
-    }
-  }
-  touying-slide(self: self, body)
-})
+    touying-slide(self: self, body)
+  },
+)
 
 
 
