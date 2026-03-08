@@ -91,7 +91,9 @@
 /// ```
 ///
 /// - config (dictionary): The configuration of the slide. You can use `config-xxx` to set the configuration of the slide. For more configurations, you can use `utils.merge-dicts` to merge them.
-#let title-slide(config: (:), ..args) = touying-slide-wrapper(self => {
+///
+/// - extra (content, none): The extra information you want to display on the title slide.
+#let title-slide(config: (:), extra: none, ..args) = touying-slide-wrapper(self => {
   self = utils.merge-dicts(
     self,
     config-common(freeze-slide-counter: true),
@@ -124,6 +126,9 @@
           weight: "regular",
           utils.display-info-date(self),
         )
+      },
+      if extra != none {
+        text(fill: self.colors.primary-light, size: 20pt, weight: "regular", extra)
       },
     )
   }
