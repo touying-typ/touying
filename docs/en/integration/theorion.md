@@ -69,3 +69,20 @@ Touying can work properly with the [Theorion](https://github.com/OrangeX4/typst-
   $
 ]
 ```
+## Why `frozen-counters` is Required
+
+Touying renders each subslide by re-evaluating slide content. Without `frozen-counters`, Theorion's internal `theorem-counter` would increment on every subslide, causing theorem numbers to jump unexpectedly.
+
+`config-common(frozen-counters: (theorem-counter,))` tells Touying to capture the counter value at the start of each slide and restore it before rendering each subslide, so theorem numbers remain consistent across animation steps.
+
+## Multiple Counter Types
+
+If you also have figure counters that should be frozen:
+
+```typst
+config-common(frozen-counters: (theorem-counter, figure.where(kind: image)))
+```
+
+## Cosmos Styles
+
+Theorion ships with several visual styles. The example above uses `cosmos.clouds`. Others include `cosmos.fancy`, `cosmos.aurora`, and more. See the [Theorion documentation](https://github.com/OrangeX4/typst-theorion) for details.
