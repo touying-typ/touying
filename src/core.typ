@@ -841,13 +841,13 @@
 /// (by Zral0kh)
 /// ------------------------------------------------
 ///
-/// Declare a waypoint at the current position in the slide.
+/// Declare a named waypoint in the slide's subslide sequence.
 ///
-/// A waypoint names the current subslide position so that it can be referred to
+/// A waypoint names a set of subslide positions so that it can be referred to
 /// by label in `uncover`, `only`, `effect`, `alternatives`, and other animation
 /// functions. This lets you avoid counting subslide numbers manually.
 ///
-/// By default, a waypoint also acts as a `#pause` (advancing to the next subslide).
+/// By default, a waypoint call also acts as a `#pause` (advancing to the next subslide).
 /// Set `advance: false` to mark the current position without advancing.
 ///
 /// A waypoint covers all subslides from its declaration until the next waypoint
@@ -876,6 +876,10 @@
 ///
 /// -> content
 #let waypoint(lbl, advance: true) = {
+  assert(
+    type(lbl) == label or type(lbl) == str,
+    message: "waypoint: expected a label or string, got " + str(type(lbl)),
+  )
   if advance {
     jump(1, relative: true)
   }
@@ -900,14 +904,20 @@
 /// - lbl (label | str): The waypoint label.
 ///
 /// -> dictionary
-#let get-first(lbl) = (
-  kind: "waypoint-first",
-  label: if type(lbl) == label {
-    str(lbl)
-  } else {
-    lbl
-  },
-)
+#let get-first(lbl) = {
+  assert(
+    type(lbl) == label or type(lbl) == str,
+    message: "get-first: expected a label or string, got " + str(type(lbl)),
+  )
+  (
+    kind: "waypoint-first",
+    label: if type(lbl) == label {
+      str(lbl)
+    } else {
+      lbl
+    },
+  )
+}
 
 
 /// Get the last subslide number of a waypoint.
@@ -920,14 +930,20 @@
 /// - lbl (label | str): The waypoint label.
 ///
 /// -> dictionary
-#let get-last(lbl) = (
-  kind: "waypoint-last",
-  label: if type(lbl) == label {
-    str(lbl)
-  } else {
-    lbl
-  },
-)
+#let get-last(lbl) = {
+  assert(
+    type(lbl) == label or type(lbl) == str,
+    message: "get-last: expected a label or string, got " + str(type(lbl)),
+  )
+  (
+    kind: "waypoint-last",
+    label: if type(lbl) == label {
+      str(lbl)
+    } else {
+      lbl
+    },
+  )
+}
 
 
 /// Create a "from" range starting at a waypoint (inclusive to end of slide).
@@ -946,14 +962,21 @@
 ///   (e.g. `next-wp(<label>)`).
 ///
 /// -> dictionary
-#let from(wp) = (
-  kind: "waypoint-from",
-  inner: if type(wp) == label {
-    str(wp)
-  } else {
-    wp
-  },
-)
+#let from(wp) = {
+  assert(
+    type(wp) in (label, str, dictionary),
+    message: "from: expected a label, string, or dictionary, got "
+      + str(type(wp)),
+  )
+  (
+    kind: "waypoint-from",
+    inner: if type(wp) == label {
+      str(wp)
+    } else {
+      wp
+    },
+  )
+}
 
 
 /// Create an "until" range ending just before a waypoint (exclusive).
@@ -970,14 +993,21 @@
 /// - wp (label | str | dictionary): A waypoint label or a shifted reference.
 ///
 /// -> dictionary
-#let until(wp) = (
-  kind: "waypoint-until",
-  inner: if type(wp) == label {
-    str(wp)
-  } else {
-    wp
-  },
-)
+#let until(wp) = {
+  assert(
+    type(wp) in (label, str, dictionary),
+    message: "until: expected a label, string, or dictionary, got "
+      + str(type(wp)),
+  )
+  (
+    kind: "waypoint-until",
+    inner: if type(wp) == label {
+      str(wp)
+    } else {
+      wp
+    },
+  )
+}
 
 
 /// Shift a waypoint reference to a previous waypoint in subslide order.
@@ -995,6 +1025,11 @@
 ///
 /// -> dictionary
 #let prev-wp(wp, amount: 1) = {
+  assert(
+    type(wp) in (label, str, dictionary),
+    message: "prev-wp: expected a label, string, or dictionary, got "
+      + str(type(wp)),
+  )
   if type(wp) == label {
     (kind: "waypoint-prev", inner: str(wp), amount: amount)
   } else if type(wp) == dictionary {
@@ -1026,6 +1061,11 @@
 ///
 /// -> dictionary
 #let next-wp(wp, amount: 1) = {
+  assert(
+    type(wp) in (label, str, dictionary),
+    message: "next-wp: expected a label, string, or dictionary, got "
+      + str(type(wp)),
+  )
   if type(wp) == label {
     (kind: "waypoint-next", inner: str(wp), amount: amount)
   } else if type(wp) == dictionary {

@@ -1270,7 +1270,7 @@
 
     // --- array ----------------------------------------------------------
   } else if type(visible-subslides) == array {
-    // If the array contains from/until range markers, intersect (AND).
+    // If the array contains from/until range markers, span the full range.
     let has-range-markers = visible-subslides.any(s => (
       type(s) == dictionary
         and s.at("kind", default: "") in ("waypoint-from", "waypoint-until")
