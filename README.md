@@ -2,6 +2,8 @@
 
 [Touying](https://github.com/touying-typ/touying) (投影 in Chinese, /tóuyǐng/, meaning projection) is a user-friendly, powerful, and efficient package for creating presentation slides in [Typst](https://typst.app/).
 
+If you like it, consider [giving a star ⭐ on GitHub](https://github.com/touying-typ/touying). Touying is a community-driven project — feel free to suggest ideas and contribute!
+
 [![Typst Universe](https://img.shields.io/badge/dynamic/xml?url=https%3A%2F%2Ftypst.app%2Funiverse%2Fpackage%2Ftouying&query=%2Fhtml%2Fbody%2Fdiv%2Fmain%2Fdiv%5B2%5D%2Faside%2Fsection%5B2%5D%2Fdl%2Fdd%5B3%5D&logo=typst&label=universe&color=%2339cccc)](https://typst.app/universe/package/touying)
 [![Book badge](https://img.shields.io/badge/docs-book-green)](https://touying-typ.github.io/)
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/touying-typ/touying)
@@ -11,8 +13,6 @@
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/touying-typ/touying)
 ![GitHub Repo stars](https://img.shields.io/github/stars/touying-typ/touying)
 ![Themes badge](https://img.shields.io/badge/themes-6-aqua)
-
-If you like it, consider [giving a star ⭐ on GitHub](https://github.com/touying-typ/touying). Touying is a community-driven project — feel free to suggest ideas and contribute!
 
 
 ## Why Touying?
