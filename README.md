@@ -1,8 +1,6 @@
 # ![logo](https://github.com/user-attachments/assets/58a91b14-ae1a-49e2-a3e7-5e3a148e2ba5)
 
-[Touying](https://github.com/touying-typ/touying) (投影 in chinese, /tóuyǐng/, meaning projection) is a user-friendly, powerful and efficient package for creating presentation slides in Typst.
-
-If you like it, consider [giving a star on GitHub](https://github.com/touying-typ/touying). Touying is a community-driven project, feel free to suggest any ideas and contribute.
+[Touying](https://github.com/touying-typ/touying) (投影 in Chinese, /tóuyǐng/, meaning projection) is a user-friendly, powerful, and efficient package for creating presentation slides in [Typst](https://typst.app/).
 
 [![Typst Universe](https://img.shields.io/badge/dynamic/xml?url=https%3A%2F%2Ftypst.app%2Funiverse%2Fpackage%2Ftouying&query=%2Fhtml%2Fbody%2Fdiv%2Fmain%2Fdiv%5B2%5D%2Faside%2Fsection%5B2%5D%2Fdl%2Fdd%5B3%5D&logo=typst&label=universe&color=%2339cccc)](https://typst.app/universe/package/touying)
 [![Book badge](https://img.shields.io/badge/docs-book-green)](https://touying-typ.github.io/)
@@ -14,94 +12,30 @@ If you like it, consider [giving a star on GitHub](https://github.com/touying-ty
 ![GitHub Repo stars](https://img.shields.io/github/stars/touying-typ/touying)
 ![Themes badge](https://img.shields.io/badge/themes-6-aqua)
 
-
-## Document
-Read [touying documentation](https://touying-typ.github.io/) to learn all about Touying. If you have any questions, you can also ask on [DeepWiki](https://deepwiki.com/touying-typ/touying) or [Zread](https://zread.ai/touying-typ/touying) for AI help.
-
-We will maintain **English** and **Chinese** versions of the documentation for Touying, and for each major version, we will maintain a documentation copy. This allows you to easily refer to old versions of the Touying documentation and migrate to new versions.
-
-**Note that the documentation may be outdated, and you can also use Tinymist to view Touying's annotated documentation by hovering over the code.**
-
-## Gallery
-
-Touying offers [a gallery page](https://github.com/touying-typ/touying/wiki) via wiki, where you can browse elegant slides created by Touying users. You're also encouraged to contribute your own beautiful slides here!
-
-## Special Features
-
-1. Split slides by headings [document](https://touying-typ.github.io/docs/tutorials/sections)
-
-```typst
-= Section
-
-== Subsection
-
-=== First Slide
-
-Hello, Touying!
-
-=== Second Slide
-
-Hello, Typst!
-```
-
-2. `#pause` and `#meanwhile` animations [document](https://touying-typ.github.io/docs/tutorials/dynamic/simple)
-
-```typst
-#slide[
-  First
-
-  #pause
-
-  Second
-
-  #meanwhile
-
-  Third
-
-  #pause
-
-  Fourth
-]
-```
-
-![image](https://github.com/touying-typ/touying/assets/34951714/24ca19a3-b27c-4d31-ab75-09c37911e6ac)
-
-3. Math Equation Animation [document](https://touying-typ.github.io/docs/tutorials/dynamic/equation)
-
-![image](https://github.com/touying-typ/touying/assets/34951714/8640fe0a-95e4-46ac-b570-c8c79f993de4)
-
-4. `touying-reducer` Cetz and Fletcher Animations [document](https://touying-typ.github.io/docs/tutorials/dynamic/other)
-
-![image](https://github.com/touying-typ/touying/assets/34951714/9ba71f54-2a5d-4144-996c-4a42833cc5cc)
-
-5. Correct outline and bookmark (no duplicate and correct page number)
-
-![image](https://github.com/touying-typ/touying/assets/34951714/7b62fcaf-6342-4dba-901b-818c16682529)
-
-6. Dewdrop Theme Navigation Bar [document](https://touying-typ.github.io/docs/themes/dewdrop)
-
-![image](https://github.com/touying-typ/touying/assets/34951714/0426516d-aa3c-4b7a-b7b6-2d5d276fb971)
-
-7. Semi-transparent cover mode [document](https://touying-typ.github.io/docs/tutorials/dynamic/cover)
-
-![image](https://github.com/touying-typ/touying/assets/34951714/22a9ea66-c8b5-431e-a52c-2c8ca3f18e49)
-
-8. Speaker notes for dual-screen [document](https://touying-typ.github.io/docs/external/pympress)
-
-![image](https://github.com/touying-typ/touying/assets/34951714/afbe17cb-46d4-4507-90e8-959c53de95d5)
-
-9. Export slides to PPTX and HTML formats and show presentation online. [touying-exporter](https://github.com/touying-typ/touying-exporter) [touying-template](https://github.com/touying-typ/touying-template) [online](https://touying-typ.github.io/touying-template/)
-
-![image](https://github.com/touying-typ/touying-exporter/assets/34951714/207ddffc-87c8-4976-9bf4-4c6c5e2573ea)
-
-10. Instantly share touying slides on git, [example](https://gistd.myriad-dreamin.com/touying-typ/touying/blob/main/examples/simple.typ?g-mode=slide) with [gistd](https://github.com/Myriad-Dreamin/gistd)
+If you like it, consider [giving a star ⭐ on GitHub](https://github.com/touying-typ/touying). Touying is a community-driven project — feel free to suggest ideas and contribute!
 
 
-## Quick start
+## Why Touying?
 
-Before you begin, make sure you have installed the Typst environment. If not, you can use the [Web App](https://typst.app/) or the [Tinymist LSP](https://marketplace.visualstudio.com/items?itemName=myriad-dreamin.tinymist) extensions for VS Code.
+- **Beautiful built-in themes** — Simple, Metropolis, Dewdrop, University, Aqua, Stargazer
+- **Fast** — Typst compiles in milliseconds. Live previews update as you type, giving you the instant feedback.
+- **Rich animations** — `#pause`, `#meanwhile`, math equation animations, CeTZ & Fletcher support
+- **Heading-based slides** — write presentations like a document, no boilerplate
+- **Speaker notes** — dual-screen support via tools like PowerPoint, HTML or pympress
+- **Export** — Builtin PDF export, PPTX and HTML via [touying-exporter](https://github.com/touying-typ/touying-exporter)
+- **Correct bookmarks** — proper PDF outline and page numbers out of the box
 
-To use Touying, you only need to include the following code in your document:
+## Document & Help
+
+- [Full documentation and references](https://touying-typ.github.io/) (English & Chinese)
+- [Ask DeepWiki](https://deepwiki.com/touying-typ/touying) or [Ask Zread](https://zread.ai/touying-typ/touying) for AI-assisted help
+- [Gallery](https://github.com/touying-typ/touying/wiki) — slides made by the community
+- [Share slides instantly on GitHub](https://gistd.myriad-dreamin.com/touying-typ/touying/blob/main/examples/simple.typ?g-mode=slide) with [gistd](https://github.com/Myriad-Dreamin/gistd) or [export](https://github.com/touying-typ/touying-exporter) slides to PPTX and HTML formats and show presentation [online](https://touying-typ.github.io/touying-template/).
+
+
+## Quick Start
+
+Make sure you have [Typst](https://typst.app/) installed, or use the [Web App](https://typst.app/) / [Tinymist for VS Code](https://marketplace.visualstudio.com/items?itemName=myriad-dreamin.tinymist).
 
 ```typst
 #import "@preview/touying:0.6.2": *
@@ -122,14 +56,23 @@ Hello, Typst!
 
 ![image](https://github.com/touying-typ/touying/assets/34951714/f5bdbf8f-7bf9-45fd-9923-0fa5d66450b2)
 
-It's simple. Congratulations on creating your first Touying slide! 🎉
-
-**Tip:** You can use Typst syntax like `#import "config.typ": *` or `#include "content.typ"` to implement Touying's multi-file architecture.
+Congratulations on creating your first Touying slide! 🎉
 
 
-## More Complex Examples
+## Animations
 
-In fact, Touying provides various styles for writing slides. For example, the above example uses first-level and second-level titles to create new slides. However, you can also use the `#slide[..]` format to access more powerful features provided by Touying.
+Touying supports incremental reveal with `#pause` and `#meanwhile`, math equation animations, and integrations with CeTZ and Fletcher:
+
+| Math equations | CeTZ & Fletcher |
+|:---:|:---:|
+| ![math animation](https://github.com/touying-typ/touying/assets/34951714/8640fe0a-95e4-46ac-b570-c8c79f993de4) | ![cetz fletcher animation](https://github.com/touying-typ/touying/assets/34951714/9ba71f54-2a5d-4144-996c-4a42833cc5cc) |
+
+For the full feature set — cover mode, callback-style animations, `#uncover`, `#only`, `#alternatives` — see the [documentation](https://touying-typ.github.io/docs/tutorials/dynamic/simple).
+
+
+## Full Example
+
+For a comprehensive example showcasing university theme, theorems, CeTZ/Fletcher animations, speaker notes, and more. you can also use the #slide[..] format to access more powerful features provided by Touying.
 
 ```typst
 #import "@preview/touying:0.6.2": *
@@ -360,10 +303,10 @@ Thanks to...
 - [@Coekjan](https://github.com/Coekjan) and [@QuadnucYard](https://github.com/QuadnucYard) for the `stargazer` theme
 - [@ntjess](https://github.com/ntjess) for contributing to `fit-to-height`, `fit-to-width` and `cover-with-rect`
 
+
 ## Poster
 
 ![poster](https://github.com/user-attachments/assets/e1ddb672-8e8f-472d-b364-b8caed1da16b)
-
 
 [View Code](https://github.com/touying-typ/touying-poster)
 
