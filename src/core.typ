@@ -2183,6 +2183,110 @@
   waypoints.keys().any(k => k.starts-with(prefix))
 }
 
+/// Count the peak repetition produced by an animated block (touying-equation,
+/// touying-mitex, touying-raw, touying-reducer). Returns the max-repetitions
+/// value, mirroring what the corresponding `_parse-touying-*` function would
+/// return without needing `self` or cover logic.
+///
+/// - kind (str): The metadata kind.
+/// - value (dictionary): The metadata value.
+/// - base (int): The starting repetition count.
+///
+/// -> int
+#let _count-animated-block-repetitions(kind, value, base) = {
+  let repetitions = base
+  let max-repetitions = repetitions
+
+  if kind == "touying-reducer" {
+    // Reducer: iterate positional args looking for touying-jump metadata
+    for child in value.args.flatten() {
+      if (
+        type(child) == content and child.func() == metadata and type(child.value) == dictionary
+      ) {
+        let k = child.value.at("kind", default: none)
+        if k == "touying-jump" {
+          if child.value.relative {
+            repetitions += child.value.n
+            max-repetitions = calc.max(max-repetitions, repetitions)
+          } else {
+            max-repetitions = calc.max(max-repetitions, repetitions)
+            repetitions = child.value.n
+          }
+        }
+      }
+    }
+    return calc.max(max-repetitions, repetitions)
+  }
+
+  // Text-based blocks: equation, mitex, raw
+  let body = value.body
+  if type(body) == function {
+    // Cannot evaluate callback bodies during pre-pass (no self context).
+    return base
+  }
+  if type(body) != str {
+    return base
+  }
+
+  if kind == "touying-equation" {
+    let parts = body
+      .split(regex("(#meanwhile;?)|(meanwhile)"))
+      .intersperse("touying-meanwhile")
+      .map(s => s.split(regex("(#pause;?)|(pause)")).intersperse("touying-pause"))
+      .flatten()
+    for part in parts {
+      if part == "touying-pause" {
+        repetitions += 1
+      } else if part == "touying-meanwhile" {
+        max-repetitions = calc.max(max-repetitions, repetitions)
+        repetitions = 1
+      }
+    }
+  } else if kind == "touying-mitex" {
+    let parts = body
+      .split(regex("\\\\meanwhile"))
+      .intersperse("touying-meanwhile")
+      .map(s => s.split(regex("\\\\pause")).intersperse("touying-pause"))
+      .flatten()
+    for part in parts {
+      if part == "touying-pause" {
+        repetitions += 1
+      } else if part == "touying-meanwhile" {
+        max-repetitions = calc.max(max-repetitions, repetitions)
+        repetitions = 1
+      }
+    }
+  } else if kind == "touying-raw" {
+    if value.at("simple", default: false) {
+      let parts = body
+        .split(regex("#meanwhile;"))
+        .intersperse("touying-meanwhile")
+        .map(s => s.split(regex("#pause;")).intersperse("touying-pause"))
+        .flatten()
+      for part in parts {
+        if part == "touying-pause" {
+          repetitions += 1
+        } else if part == "touying-meanwhile" {
+          max-repetitions = calc.max(max-repetitions, repetitions)
+          repetitions = 1
+        }
+      }
+    } else {
+      let meaningful-chars-pattern = regex("[a-zA-Z0-9\u{4E00}-\u{9FFF}]+")
+      for line in body.split("\n") {
+        let meaningful = line.matches(meaningful-chars-pattern).map(m => m.text).join("")
+        if meaningful == "pause" {
+          repetitions += 1
+        } else if meaningful == "meanwhile" {
+          max-repetitions = calc.max(max-repetitions, repetitions)
+          repetitions = 1
+        }
+      }
+    }
+  }
+  calc.max(max-repetitions, repetitions)
+}
+
 /// Walk content children to collect waypoint declarations and track pause
 /// positions. Returns `(repetitions, waypoints-dict)` where
 /// `waypoints-dict` maps label strings to their raw subslide numbers.
@@ -2230,9 +2334,11 @@
           repetitions,
           waypoints,
         )
+      } else if kind in ("touying-equation", "touying-mitex", "touying-raw", "touying-reducer") {
+        repetitions = _count-animated-block-repetitions(kind, child.value, repetitions)
       }
-      // touying-fn-wrapper, touying-equation, etc.: their inner pauses don't
-      // affect the outer counter, so we skip them.
+      // touying-fn-wrapper and other unknown kinds don't affect the outer
+      // repetition counter, so we skip them.
     } else if utils.is-styled(child) {
       (repetitions, waypoints) = _collect-waypoints-impl(
         (child.child,),

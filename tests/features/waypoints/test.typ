@@ -1,5 +1,17 @@
 #import "/lib.typ": *
 #import themes.simple: *
+#import "@preview/cetz:0.4.2"
+#import "@preview/fletcher:0.5.8" as fletcher: edge, node
+
+#let cetz-canvas = touying-reducer.with(
+  reduce: cetz.canvas,
+  cover: cetz.draw.hide.with(bounds: true),
+)
+
+#let fletcher-diagram = touying-reducer.with(
+  reduce: fletcher.diagram,
+  cover: fletcher.hide,
+)
 
 #show: simple-theme.with()
 
@@ -639,5 +651,106 @@ Part C.
     #only(<cb-summary>)[Only during summary.]
   ]
 })
+
+
+// -----------------------------------------------
+// Test 37: touying-equation then waypoint
+// -----------------------------------------------
+
+== Equation Block then Waypoint
+
+Before equation.
+
+#touying-equation(`f(x) = pause x^2`)
+
+#waypoint(<after-eq-block>)
+
+After equation text via waypoint.
+
+#uncover(<after-eq-block>)[Only after equation animation.]
+
+
+// -----------------------------------------------
+// Test 38: touying-raw then waypoint
+// -----------------------------------------------
+
+== Raw Block then Waypoint
+
+Before raw.
+
+#touying-raw(```rust
+fn main() {
+    // pause
+    println!("Hello!");
+}
+```)
+
+#waypoint(<after-raw>)
+
+After raw text via waypoint.
+
+#only(<after-raw>)[Only after raw animation.]
+
+
+// -----------------------------------------------
+// Test 39: touying-equation with 2 pauses then waypoint + from-wp
+// -----------------------------------------------
+
+== Multi-pause Equation then Waypoint
+
+#touying-equation(
+  `
+  f(x) &= pause x^2 + 2x + 1 \
+       &= pause (x + 1)^2
+`,
+)
+
+#waypoint(<after-multi-eq>)
+
+#uncover(from-wp(<after-multi-eq>))[Visible only after all equation pauses.]
+
+#only(get-first(<after-multi-eq>))[Exactly on the waypoint subslide.]
+
+
+// -----------------------------------------------
+// Test 40: CeTZ reducer then waypoint
+// -----------------------------------------------
+
+== CeTZ then Waypoint
+
+#cetz-canvas({
+  import cetz.draw: *
+  rect((0, 0), (4, 3))
+  (pause,)
+  circle((2, 1.5), radius: 1)
+})
+
+#waypoint(<after-cetz>)
+
+#uncover(<after-cetz>)[Visible after CeTZ animation.]
+
+#only(from-wp(<after-cetz>))[From-wp after CeTZ.]
+
+
+// -----------------------------------------------
+// Test 41: Fletcher reducer then waypoint
+// -----------------------------------------------
+
+== Fletcher then Waypoint
+
+#fletcher-diagram(
+  node-stroke: .1em,
+  spacing: 3em,
+  node((0, 0), `A`, radius: 1.5em),
+  edge(`go`, "-|>"),
+  pause,
+  node((1, 0), `B`, radius: 1.5em),
+)
+
+#waypoint(<after-fletcher>)
+
+#uncover(<after-fletcher>)[Visible after Fletcher animation.]
+
+#only(from-wp(<after-fletcher>))[From-wp after Fletcher.]
 
 
