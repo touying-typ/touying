@@ -436,6 +436,7 @@ Note: Waypoints work in contexts like fletcher, but not inside text blocks like 
 == Navigating Hierarchies with `next-wp` / `prev-wp`
 
 #slide(composer: (1fr, 1fr))[
+  #v(-1em)
   #code-col(
     "#waypoint(<before>)
 Before the group.
@@ -443,41 +444,36 @@ Before the group.
 Part A.
 #waypoint(<grp:b>)
 Part B.
-#waypoint(<grp:c>)
-Part C.
 #waypoint(<after>)
 After the group.
-
 // Virtual parent (no <grp> waypoint):
 // next-wp → last child + 1
-#only(next-wp(<grp>))[
-  Past the group (after).
-]
+#only(next-wp(<grp>))[Past the group (after).]
 // prev-wp → first child − 1
-#only(prev-wp(<grp>))[
-  Before the group.
-]",
+#only(prev-wp(<grp>))[ Before the group.]
+",
   )
-
+  #v(-0.8em)
   When `<grp>` is a _virtual_ parent (only children like `<grp:a>` etc. exist), `next-wp` anchors to the *last* child and `prev-wp` to the *first* — so they navigate _past_ or _before_ the entire group.
 
-  If an explicit `#waypoint(<grp>)` exists, it anchors to that label directly — stepping into the children from there.
 ][
+
   #waypoint(<hn-before>)
   Before the group.
   #waypoint(<hn-grp:a>)
   Part A.
   #waypoint(<hn-grp:b>)
   Part B.
-  #waypoint(<hn-grp:c>)
-  Part C.
   #waypoint(<hn-after>)
   After the group.
 
   #only(next-wp(<hn-grp>))[_(next-wp: past group → after)_]
   #only(prev-wp(<hn-grp>))[_(prev-wp: before group → before)_]
 
-  You can also reach children: `next-wp(get-first(<grp>))` starts at the first child and steps forward within the group.
+  #uncover("0-")[#place(
+    bottom,
+  )[You can also reach children: `next-wp(get-first(<grp>))` starts at the first child and steps forward within the group. \
+    If an explicit `#waypoint(<grp>)` exists, it anchors to that label directly — stepping into the children from there.]]
 ]
 
 = Integration: CeTZ & Fletcher
@@ -487,37 +483,35 @@ After the group.
 Waypoints work inside `touying-reducer`, letting you name animation steps in CeTZ and Fletcher diagrams.
 
 First, set up the reducer bindings (once, at the top of your file):
+#show block: set text(size: 16pt)
+#grid(
+  columns: (1fr, 1fr),
+  fill: luma(245),
+  inset: 5pt,
+  column-gutter: 1em,
+  [
+    *CeTZ:* #v(-0.5em)
+    ```typst
+    #import "@preview/cetz:0.4.2"
+    #let cetz-canvas = touying-reducer.with(
+      reduce: cetz.canvas,
+      cover: cetz.draw.hide.with(bounds: true),
+    )
+    ```
+  ],
+  [
+    *Fletcher:* #v(-0.5em)
+    ```typst
+    #import "@preview/fletcher:0.5.8" as fletcher: edge, node
+    #let fletcher-diagram = touying-reducer.with(
+      reduce: fletcher.diagram,
+      cover: fletcher.hide,
+    )
+    ```
+  ],
+)
+Then use `(waypoint(<lbl>),)` for CeTZ or `waypoint(<lbl>)` for Fletcher inside the diagram — just like `(pause,)` or `pause`.
 
-#slide[
-  #set text(size: 13pt)
-  #grid(
-    columns: (1fr, 1fr),
-    column-gutter: 1em,
-    [
-      *CeTZ:*
-      ```typst
-      #import "@preview/cetz:0.4.2"
-      #let cetz-canvas = touying-reducer.with(
-        reduce: cetz.canvas,
-        cover: cetz.draw.hide.with(bounds: true),
-      )
-      ```
-    ],
-    [
-      *Fletcher:*
-      ```typst
-      #import "@preview/fletcher:0.5.8" as fletcher: edge, node
-      #let fletcher-diagram = touying-reducer.with(
-        reduce: fletcher.diagram,
-        cover: fletcher.hide,
-      )
-      ```
-    ],
-  )
-
-  #v(0.5em)
-  Then use `(waypoint(<lbl>),)` (CeTZ) or `waypoint(<lbl>)` (Fletcher) inside the diagram — just like `(pause,)` or `pause`.
-]
 
 == Fletcher: First Isomorphism Theorem
 
@@ -546,7 +540,7 @@ First, set up the reducer bindings (once, at the top of your file):
 ",
   )
   #v(-0.5em)
-  Use math as labels, not for the whole diagram when using `pause` or `waypoint` inside it.
+  Use math as labels, not for the whole diagram when using `pause` or `waypoint` inside it. We cannot recognize it otherwise.
 ][
   #fletcher-diagram(
     cell-size: 15mm,
@@ -592,7 +586,7 @@ First, set up the reducer bindings (once, at the top of your file):
 #only(<cz-xz>)[Red wave (xz).]",
   )
   #set text(size: 16pt)
-  For CeTZ, `pause` and `waypoint` must be at the top level of the canvas args. Split `ortho(...)` and similar functions into separate calls — one per animation step.
+  Similarly, for CeTZ, `pause` and `waypoint` must be at the top level of the canvas. Split `ortho(...)` and similar functions into separate calls — one per animation step. Do not put `pause` or `waypoint` inside functions like `ortho` or `on-xz`.
 ][
   #cetz-canvas({
     import cetz.draw: *
