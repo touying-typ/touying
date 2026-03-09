@@ -48,13 +48,40 @@
 /// Example:
 ///
 /// ```typ
-/// #touying-recall("recall")
-/// #touying-recall("recall", subslide: 2)
+/// // Recall all subslides
+/// #touying-recall(<my-slide>)
+///
+/// // Recall only a specific subslide
+/// #touying-recall(<my-slide>, subslide: 2)
+///
+/// // Recall only the last (final) subslide
+/// #touying-recall(<my-slide>, subslide: auto)
+///
+/// // Recall the last subslide of every waypoint
+/// #touying-recall(<my-slide>, subslide: "waypoints")
+///
+/// // Recall the subslides covered by a waypoint
+/// #touying-recall(<my-slide>, subslide: <my-waypoint>)
+///
+/// // Recall only the last subslide of a waypoint
+/// #touying-recall(<my-slide>, subslide: get-last(<my-waypoint>))
 /// ```
 ///
 /// - lbl (str, label): The label of the slide to recall.
 ///
-/// - subslide (none, int): The subslide index to recall. Default is `none`, which recalls all subslides.
+/// - subslide (none, auto, int, str, label, dictionary): Which subslide(s) to recall.
+///
+///   - `none` (default): recall all subslides.
+///   - `auto`: recall only the last subslide (the final animation state).
+///   - `int`: recall a specific subslide by number.
+///   - `"waypoints"`: recall one subslide per waypoint — specifically, the
+///     last subslide of each waypoint. This shows every animation phase at
+///     its final state.
+///   - `label`: recall the subslides covered by a waypoint in the original
+///     slide. E.g. `subslide: <my-waypoint>`.
+///   - Waypoint marker: `get-first(<wp>)`, `get-last(<wp>)`, `prev-wp(<wp>)`,
+///     `next-wp(<wp>)` — resolves to a single subslide or waypoint range
+///     using the recalled slide's waypoint map.
 ///
 /// -> content
 #let touying-recall(lbl, subslide: none) = [#metadata((
@@ -348,6 +375,8 @@
       if recall-subslide == none {
         output-slides.push(recall-entry.content)
       } else {
+        // Pass the raw subslide spec through to touying-slide, which will
+        // resolve it after computing `repeat` and `waypoints`.
         let recalled-self = (
           recall-entry.slide-self
             + (
@@ -1241,9 +1270,13 @@
   }
   for key in keys {
     if type(key) == label {
-      panic("alternatives-match: waypoint labels are not supported. Use alternatives() with the at: parameter instead.")
+      panic(
+        "alternatives-match: waypoint labels are not supported. Use alternatives() with the at: parameter instead.",
+      )
     }
-    if type(key) == dictionary and "kind" in key and str(key.kind).starts-with("waypoint-") {
+    if (
+      type(key) == dictionary and "kind" in key and str(key.kind).starts-with("waypoint-")
+    ) {
       panic(
         "alternatives-match: waypoint markers are not supported. Use alternatives() with the at: parameter instead.",
       )
@@ -1454,9 +1487,13 @@
   // Validate: alternatives-cases doesn't support waypoints, only numeric subslide specs
   for case in cases {
     if type(case) == label {
-      panic("alternatives-cases: waypoint labels are not supported. Use alternatives() with the at: parameter instead.")
+      panic(
+        "alternatives-cases: waypoint labels are not supported. Use alternatives() with the at: parameter instead.",
+      )
     }
-    if type(case) == dictionary and "kind" in case and str(case.kind).starts-with("waypoint-") {
+    if (
+      type(case) == dictionary and "kind" in case and str(case.kind).starts-with("waypoint-")
+    ) {
       panic(
         "alternatives-cases: waypoint markers are not supported. Use alternatives() with the at: parameter instead.",
       )
@@ -4044,27 +4081,79 @@
       result.sum(default: none)
     }
   } else if self.at("_recall-subslide", default: none) != none {
-    // render only the specific subslide requested by touying-recall
-    let i = self._recall-subslide
-    assert(
-      i >= 1 and i <= repeat,
-      message: "subslide " + str(i) + " is out of range (1.." + str(repeat) + ")",
-    )
-    self.subslide = i
-    let (header, footer, body-transform) = _get-header-footer(self)
-    let (conts, _, _, _) = _parse-content-into-results-and-repetitions(
-      self: self,
-      index: i,
-      show-delayed-wrapper: i == repeat,
-      ..bodies,
-    )
-    let new-header = page-preamble(self) + header
-    set page(
-      ..(self.page + page-extra-args + (header: new-header, footer: footer)),
-    )
-    body-transform(setting-fn(
-      subslide-preamble(self) + composer-with-side-by-side(..conts),
-    ))
+    // Render specific subslide(s) requested by touying-recall.
+    // The spec is resolved here because `repeat` and `self.waypoints`
+    // are only available after the pre-pass above.
+    let recall-spec = self._recall-subslide
+    let recall-indices = if recall-spec == auto {
+      // auto → last subslide only
+      (repeat,)
+    } else if type(recall-spec) == int {
+      // Explicit single subslide
+      (recall-spec,)
+    } else if type(recall-spec) == str and recall-spec == "waypoints" {
+      // "waypoints" → last subslide of every waypoint
+      let wp-map = self.at("waypoints", default: (:))
+      if wp-map.len() == 0 {
+        (repeat,)
+      } else {
+        let sorted = wp-map.pairs().sorted(key: p => p.at(1).first)
+        sorted.map(p => p.at(1).last).dedup()
+      }
+    } else if type(recall-spec) == label or type(recall-spec) == dictionary {
+      // Waypoint label or marker — resolve using the slide's waypoint map
+      let resolved = utils.resolve-waypoints(self, recall-spec)
+      if type(resolved) == int {
+        (resolved,)
+      } else if type(resolved) == dictionary {
+        let first = resolved.at("beginning", default: resolved.at(
+          "first",
+          default: 1,
+        ))
+        let last = resolved.at("until", default: resolved.at(
+          "last",
+          default: repeat,
+        ))
+        range(first, last + 1)
+      } else {
+        panic(
+          "touying-recall: unexpected resolved waypoint type: " + repr(resolved),
+        )
+      }
+    } else {
+      panic(
+        "touying-recall: subslide must be none, auto, int, \"waypoints\", label, or waypoint marker, got "
+          + str(type(recall-spec)),
+      )
+    }
+    // Validate and render each requested subslide
+    let result = ()
+    for i in recall-indices {
+      assert(
+        i >= 1 and i <= repeat,
+        message: "touying-recall: subslide " + str(i) + " is out of range (1.." + str(repeat) + ")",
+      )
+      self.subslide = i
+      let (header, footer, body-transform) = _get-header-footer(self)
+      let (conts, _, _, _) = _parse-content-into-results-and-repetitions(
+        self: self,
+        index: i,
+        show-delayed-wrapper: i == repeat,
+        ..bodies,
+      )
+      let new-header = page-preamble(self) + header
+      result.push({
+        set page(
+          ..(
+            self.page + page-extra-args + (header: new-header, footer: footer)
+          ),
+        )
+        body-transform(setting-fn(
+          subslide-preamble(self) + composer-with-side-by-side(..conts),
+        ))
+      })
+    }
+    result.sum()
   } else {
     // render all the subslides
     let result = ()
