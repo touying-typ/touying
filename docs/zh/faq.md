@@ -1,5 +1,5 @@
 ---
-sidebar_position: 6
+sidebar_position: 7
 ---
 
 # 常见问题
@@ -28,6 +28,24 @@ sidebar_position: 6
 Hello, Touying!
 ```
 
+对于单页幻灯片，也可以使用 `config-common(fill: ...)`：
+
+```example
+#import "@preview/touying:0.6.2": *
+#import themes.simple: *
+
+#show: simple-theme.with(aspect-ratio: "16-9")
+
+= Title
+
+== First Slide
+
+#slide(config: config-page(fill: gray))[
+  Hello, Touying!
+]
+```
+
+
 ### 如何为幻灯片添加背景图片？
 
 将 `image(...)` 调用传递给 `config-page(background: ...)`：
@@ -48,6 +66,22 @@ Hello, Touying!
 == Gradient Background Slide
 
 Content appears over the background.
+```
+
+对于单页幻灯片，也可以使用 `config-common(background: ...)`：
+
+```example
+#import "@preview/touying:0.6.2": *
+#import themes.simple: *
+#show: simple-theme.with(aspect-ratio: "16-9")
+
+= Title
+
+== Gradient Background Slide
+
+#slide(config: config-page(background: rect(width: 100%, height: 100%, fill: gradient.linear(blue.lighten(80%), purple.lighten(80%)))))[
+  Hello, Touying!
+]
 ```
 
 如果使用真实图片文件，可以这样写：
