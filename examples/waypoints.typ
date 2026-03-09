@@ -1,5 +1,17 @@
 #import "/lib.typ": *
 #import themes.simple: *
+#import "@preview/cetz:0.4.2"
+#import "@preview/fletcher:0.5.8" as fletcher: edge, node
+
+#let cetz-canvas = touying-reducer.with(
+  reduce: cetz.canvas,
+  cover: cetz.draw.hide.with(bounds: true),
+)
+
+#let fletcher-diagram = touying-reducer.with(
+  reduce: fletcher.diagram,
+  cover: fletcher.hide,
+)
 
 #show: simple-theme.with(
   aspect-ratio: "16-9",
@@ -62,7 +74,7 @@ With numeric indices, inserting a `#pause` shifts every number:
 ```
 
 And in reality we don't need to know every single animation step, special ones are often enough.
-Note: Waypoints are not compatible within `cetz` or similar contexts.
+Note: Waypoints work in contexts like fletcher, but not inside text blocks like raw.
 
 
 = Explicit Waypoints
@@ -421,6 +433,175 @@ Note: Waypoints are not compatible within `cetz` or similar contexts.
   Results during more.
 ]
 
+= Integration: CeTZ & Fletcher
+
+== Waypoints inside `touying-reducer`
+
+Waypoints work inside `touying-reducer`, letting you name animation steps in CeTZ and Fletcher diagrams.
+
+First, set up the reducer bindings (once, at the top of your file):
+
+#slide[
+  #set text(size: 13pt)
+  #grid(
+    columns: (1fr, 1fr),
+    column-gutter: 1em,
+    [
+      *CeTZ:*
+      ```typst
+      #import "@preview/cetz:0.4.2"
+      #let cetz-canvas = touying-reducer.with(
+        reduce: cetz.canvas,
+        cover: cetz.draw.hide.with(bounds: true),
+      )
+      ```
+    ],
+    [
+      *Fletcher:*
+      ```typst
+      #import "@preview/fletcher:0.5.8" as fletcher: edge, node
+      #let fletcher-diagram = touying-reducer.with(
+        reduce: fletcher.diagram,
+        cover: fletcher.hide,
+      )
+      ```
+    ],
+  )
+
+  #v(0.5em)
+  Then use `(waypoint(<lbl>),)` (CeTZ) or `waypoint(<lbl>)` (Fletcher) inside the diagram — just like `(pause,)` or `pause`.
+]
+
+== Fletcher: First Isomorphism Theorem
+
+#slide(composer: (1.5fr, 1fr))[
+  #show block: set text(size: 12pt)
+  #v(-1em)
+  #code-col(
+    "#fletcher-diagram(
+  cell-size: 15mm,
+  waypoint(<fl-maps>, advance: false),
+  node((0, 0), $G$),
+  edge((0, 0), (1, 0), $f$, \"->\"),
+  edge((0, 0), (0, 1), $pi$, \"->>\"),
+  pause,
+  node((1, 0), $im(f)$),
+  node((0, 1), $G\\/ker(f)$),
+  waypoint(<fl-iso>),
+  edge((0, 1), (1, 0), $tilde(f)$, \"hook-->\"),
+)
+#alternatives(
+  at: (get-first(<fl-maps>), from-wp(get-last(fl-maps)))
+)[
+  $f: G -> $, $pi: G ->> $ ][
+  $f: G -> im(f)$, $pi: G ->> G\/ker(f)$ ]
+#uncover(<fl-iso>)[$tilde(f)$: the isomorphism.]
+",
+  )
+  #v(-0.5em)
+  Use math as labels, not for the whole diagram when using `pause` or `waypoint` inside it.
+][
+  #fletcher-diagram(
+    cell-size: 15mm,
+    waypoint(<fl-maps>, advance: false),
+    node((0, 0), $G$),
+    edge((0, 0), (1, 0), $f$, "->"),
+    edge((0, 0), (0, 1), $pi$, "->>"),
+    pause,
+    node((1, 0), $im(f)$),
+    node((0, 1), $G\/ker(f)$),
+    waypoint(<fl-iso>),
+    edge((0, 1), (1, 0), $tilde(f)$, "hook-->"),
+  ) \ \
+  #alternatives(
+    at: (get-first(<fl-maps>), from-wp(get-last(<fl-maps>))),
+  )[
+    $f: G ->$,\ $pi: G ->>$
+  ][
+    $f: G -> im(f)$, \ $pi: G ->> G\/ker(f)$
+  ] \
+  #uncover(<fl-iso>)[$tilde(f)$: the isomorphism.]
+]
+
+== CeTZ: 3D Sine Waves
+
+#slide(composer: (1.5fr, 1fr))[
+  #show block: set text(size: 12pt)
+  #code-col(
+    "#cetz-canvas({
+  import cetz.draw: *
+  let wave(amp, col) = { ... }
+  (waypoint(<cz-grid>, advance: false),)
+  ortho(y: -30deg, x: 30deg, {
+    on-xz({grid((0,-2), (8,2), stroke: gray + .5pt)})
+  })
+  (waypoint(<cz-xy>),)
+  ortho(y: -30deg, x: 30deg, {on-xy({ wave(1.6, blue) })})
+  (waypoint(<cz-xz>),)
+  ortho(y: -30deg, x: 30deg, {on-xz({ wave(1.0, red) })})
+})
+#only(<cz-grid>)[Grid plane.]
+#only(<cz-xy>)[Blue wave (xy).]
+#only(<cz-xz>)[Red wave (xz).]",
+  )
+  #set text(size: 16pt)
+  For CeTZ, `pause` and `waypoint` must be at the top level of the canvas args. Split `ortho(...)` and similar functions into separate calls — one per animation step.
+][
+  #cetz-canvas({
+    import cetz.draw: *
+    let N = 50
+    let wave(amp, fill-col, stroke-col) = {
+      line(
+        ..(
+          for i in range(N + 1) {
+            let t = i / N
+            let p = 4 * calc.pi * t
+            ((t * 8, calc.sin(p) * amp),)
+          }
+        ),
+        stroke: stroke-col + 1.2pt,
+        fill: fill-col,
+      )
+      for phase in range(0, 2) {
+        let x0 = phase / 2
+        for div in range(1, 9) {
+          let p = 2 * calc.pi * (div / 8)
+          let y = calc.sin(p) * amp
+          let x = x0 * 8 + div / 8 * 4
+          line((x, 0), (x, y), stroke: stroke-col.transparentize(40%) + .5pt)
+        }
+      }
+    }
+    (waypoint(<cz-grid>, advance: false),)
+    ortho(y: -30deg, x: 30deg, {
+      on-xz({
+        grid(
+          (0, -2),
+          (8, 2),
+          stroke: gray + .5pt,
+        )
+      })
+    })
+    (waypoint(<cz-xy>),)
+    ortho(y: -30deg, x: 30deg, {
+      on-xy({
+        wave(1.6, rgb(0, 0, 255, 50), blue)
+      })
+    })
+    (waypoint(<cz-xz>),)
+    ortho(y: -30deg, x: 30deg, {
+      on-xz({
+        wave(1.0, rgb(255, 0, 0, 50), red)
+      })
+    })
+  })
+
+  #v(0.5em)
+  #only(<cz-grid>)[Grid plane drawn.]
+  #only(<cz-xy>)[Blue wave on the xy-plane.]
+  #only(<cz-xz>)[Red wave on the xz-plane.]
+]
+
 = Summary
 
 == Quick reference
@@ -442,9 +623,11 @@ Note: Waypoints are not compatible within `cetz` or similar contexts.
   [`get-last(<lbl>)`], [Last subslide of the range],
   [`from-wp(<lbl>)`], [From waypoint to end of slide],
   [`until-wp(<lbl>)`], [Before waypoint (exclusive)],
-  [`next-wp(<lbl>, amount:1)`], [Adjacent waypoint (forward), allows `amount` to skip multiple],
+  [`next-wp(<lbl>, amount:1)`],
+  [Adjacent waypoint (forward), allows `amount` to skip multiple],
 
-  [`prev-wp(<lbl>, amount:1)`], [Adjacent waypoint (backward), allows `amount` to skip multiple],
+  [`prev-wp(<lbl>, amount:1)`],
+  [Adjacent waypoint (backward), allows `amount` to skip multiple],
 
   [`(from-wp(<a>), until-wp(<b>))`], [Bounded range: `<a>` to before `<b>`],
   [`#alternatives(at: (..))[..][..]`], [Named alternative mapping],
@@ -452,4 +635,10 @@ Note: Waypoints are not compatible within `cetz` or similar contexts.
   [`#item-by-item(start: <wp>)[...]`], [Waypoint-anchored item reveal],
   [`<label:sublabel>`],
   [Hierarchical waypoint. The parent (e.g. `<label>`) refers to all its children (e.g. `<label:sublabel>`).],
+
+  [`(waypoint(<lbl>),)` inside CeTZ],
+  [Waypoint inside `touying-reducer` (CeTZ). Wrap in tuple like `(pause,)`.],
+
+  [`waypoint(<lbl>)` inside Fletcher],
+  [Waypoint inside `touying-reducer` (Fletcher). No tuple needed.],
 )

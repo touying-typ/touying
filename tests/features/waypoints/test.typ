@@ -495,7 +495,10 @@ Fourth.
 #only(prev-wp(<am-d>, amount: 2))[During B (jumped backward 2 from D).]
 
 // Compose with from: from-wp(next-wp(<am-a>, amount: 2)) = from am-c onward
-#uncover(from-wp(next-wp(<am-a>, amount: 2)))[From Next^2(A): C onward (amount: 2).]
+#uncover(from-wp(next-wp(
+  <am-a>,
+  amount: 2,
+)))[From Next^2(A): C onward (amount: 2).]
 
 // -----------------------------------------------
 // Test 28: Hierarchy — parent first, then child (two subslides)
@@ -825,6 +828,63 @@ Text after CeTZ. Box should be red now.
 
 #uncover(from-wp(<inner-cetz>))[From inner CeTZ waypoint (subslide 3).]
 
-#uncover(from-wp(<after-inner-cetz>))[From outer waypoint after CeTZ (subslide 4).]
+#uncover(from-wp(
+  <after-inner-cetz>,
+))[From outer waypoint after CeTZ (subslide 4).]
 
+// ------------------------------------------------
+// Test 45: get-last inside from-wp resolves correctly
+// -----------------------------------------------
+// <gl-phase> spans subslides 1-2 (pause inside its range), <gl-after> at 3.
+// from-wp(get-last(<gl-phase>)) should mean "from subslide 2 onward".
+// BUG before fix: resolved to (beginning: 1) instead of (beginning: 2).
+
+== get-last inside from-wp
+
+#waypoint(<gl-phase>, advance: false)
+Phase content.
+#pause
+More phase content.
+#waypoint(<gl-after>)
+After content.
+
+#only(get-first(<gl-phase>))[First of phase only (subslide 1).]
+#only(get-last(<gl-phase>))[Last of phase only (subslide 2).]
+#uncover(from-wp(get-last(
+  <gl-phase>,
+)))[From last of phase onward (subslides 2-3).]
+
+// -----------------------------------------------
+// Test 46: get-first inside from-wp (control — should behave like bare label)
+// -----------------------------------------------
+
+== get-first inside from-wp
+
+#waypoint(<gf-phase>, advance: false)
+Phase content.
+#pause
+More phase content.
+#waypoint(<gf-after>)
+After content.
+
+#uncover(from-wp(get-first(
+  <gf-phase>,
+)))[From first of phase onward (subslides 1-3).]
+#uncover(from-wp(<gf-phase>))[From phase onward (subslides 1-3, same).]
+
+// -----------------------------------------------
+// Test 47: get-last inside until-wp
+// -----------------------------------------------
+
+== get-last inside until-wp
+
+#waypoint(<gu-a>, advance: false)
+Part A.
+#pause
+More A.
+#waypoint(<gu-b>)
+Part B.
+
+#uncover(until-wp(get-last(<gu-a>)))[Until last of A (subslide 1 only).]
+#uncover(from-wp(get-last(<gu-a>)))[From last of A onward (subslides 2-3).]
 

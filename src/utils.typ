@@ -13,7 +13,9 @@
   let res = dict-a
   for key in dict-b.keys() {
     if (
-      key in res and type(res.at(key)) == dictionary and type(dict-b.at(key)) == dictionary
+      key in res
+        and type(res.at(key)) == dictionary
+        and type(dict-b.at(key)) == dictionary
     ) {
       res.insert(key, add-dicts(res.at(key), dict-b.at(key)))
     } else {
@@ -260,7 +262,9 @@
 /// -> bool
 #let is-kind(it, kind) = {
   (
-    is-metadata(it) and type(it.value) == dictionary and it.value.at("kind", default: none) == kind
+    is-metadata(it)
+      and type(it.value) == dictionary
+      and it.value.at("kind", default: none) == kind
   )
 }
 
@@ -356,7 +360,10 @@
           }
         })
       } else {
-        methods.insert(key, (..args) => self.methods.at(key)(self: self, ..args))
+        methods.insert(key, (..args) => self.methods.at(key)(
+          self: self,
+          ..args,
+        ))
       }
     }
   }
@@ -411,7 +418,9 @@
     return
   }
   let convert-label-to-short-heading = if (
-    type(self) == dictionary and "methods" in self and "convert-label-to-short-heading" in self.methods
+    type(self) == dictionary
+      and "methods" in self
+      and "convert-label-to-short-heading" in self.methods
   ) {
     self.methods.convert-label-to-short-heading
   } else {
@@ -459,7 +468,9 @@
   let current-page = here().page()
   if not hierachical and level != auto {
     let headings = query(heading).filter(h => (
-      h.location().page() <= current-page and h.level <= depth and h.level == level
+      h.location().page() <= current-page
+        and h.level <= depth
+        and h.level == level
     ))
     return headings.at(-1, default: none)
   }
@@ -570,7 +581,9 @@
       depth: depth,
     )
     if (
-      current-heading != none and numbering == auto and current-heading.numbering != none
+      current-heading != none
+        and numbering == auto
+        and current-heading.numbering != none
     ) {
       std.numbering(
         current-heading.numbering,
@@ -667,7 +680,11 @@
             + indent * " "
             + "```"
             + it.lang
-            + it.text.split("\n").map(l => "\n" + indent * " " + l).sum(default: "")
+            + it
+              .text
+              .split("\n")
+              .map(l => "\n" + indent * " " + l)
+              .sum(default: "")
             + "\n"
             + indent * " "
             + "```"
@@ -683,7 +700,12 @@
       "\n" + indent * " " + "- " + indent-markup-text(it.body)
     } else if it.func() == terms.item {
       (
-        "\n" + indent * " " + "/ " + markup-text(it.term) + ": " + indent-markup-text(it.description)
+        "\n"
+          + indent * " "
+          + "/ "
+          + markup-text(it.term)
+          + ": "
+          + indent-markup-text(it.description)
       )
     } else if it.func() == linebreak {
       "\n" + indent * " "
@@ -849,7 +871,8 @@
     if (
       content-width != 0pt
         and (
-          (shrink and (width < content-width)) or (grow and (width > content-width))
+          (shrink and (width < content-width))
+            or (grow and (width > content-width))
         )
     ) {
       let ratio = width / content-width * 100%
@@ -884,7 +907,8 @@
 #let cover-with-rect(..cover-args, fill: auto, inline: true, body) = {
   if fill == auto {
     panic(
-      "`auto` fill value is not supported until typst provides utilities to" + " retrieve the current page background",
+      "`auto` fill value is not supported until typst provides utilities to"
+        + " retrieve the current page background",
     )
   }
   if type(fill) == str {
@@ -1160,7 +1184,9 @@
 /// Returns `(first: int, last: int)` or `none` when the label is unknown.
 #let _lookup-waypoint-range(waypoints, lbl-str) = {
   let prefix = lbl-str + ":"
-  let matches = waypoints.pairs().filter(p => p.at(0) == lbl-str or p.at(0).starts-with(prefix))
+  let matches = waypoints
+    .pairs()
+    .filter(p => p.at(0) == lbl-str or p.at(0).starts-with(prefix))
   if matches.len() > 0 {
     let first = calc.min(..matches.map(p => p.at(1).first))
     let last = calc.max(..matches.map(p => p.at(1).last))
@@ -1193,7 +1219,9 @@
       // Try hierarchical prefix match if exact label not found
       if idx == none {
         let prefix = base + ":"
-        let pm = labels.enumerate().filter(p => p.at(1) == base or p.at(1).starts-with(prefix))
+        let pm = labels
+          .enumerate()
+          .filter(p => p.at(1) == base or p.at(1).starts-with(prefix))
         if pm.len() > 0 {
           idx = pm.first().at(0)
         }
@@ -1210,7 +1238,13 @@
         let dir = if kind == "waypoint-prev" { "previous" } else { "next" }
         assert(
           false,
-          message: "No " + dir + " waypoint " + str(amount) + " step(s) from <" + base + ">",
+          message: "No "
+            + dir
+            + " waypoint "
+            + str(amount)
+            + " step(s) from <"
+            + base
+            + ">",
         )
       }
       labels.at(new-idx)
@@ -1285,40 +1319,63 @@
       }
       range.last
     } else if kind == "waypoint-from" {
-      let lbl = _resolve-waypoint-label(
-        waypoints,
-        visible-subslides.inner,
-        prepass: prepass,
-      )
-      if lbl == none {
-        if prepass { return (beginning: 1) }
-        assert(false, message: "Cannot resolve waypoint reference in from-wp()")
-      }
-      let range = _lookup-waypoint-range(waypoints, lbl)
-      if range == none {
-        if prepass { return (beginning: 1) }
-        assert(false, message: "Unknown waypoint label: <" + lbl + ">")
-      }
-      (beginning: range.first)
-    } else if kind == "waypoint-until" {
-      let lbl = _resolve-waypoint-label(
-        waypoints,
-        visible-subslides.inner,
-        prepass: prepass,
-      )
-      if lbl == none {
-        if prepass { return (until: 1) }
-        assert(
-          false,
-          message: "Cannot resolve waypoint reference in until-wp()",
+      let inner = visible-subslides.inner
+      let inner-kind = if type(inner) == dictionary {
+        inner.at("kind", default: none)
+      } else { none }
+      if inner-kind in ("waypoint-first", "waypoint-last") {
+        // Resolve get-first/get-last to a concrete subslide number
+        let resolved = resolve-waypoints(self, inner)
+        (beginning: resolved)
+      } else {
+        let lbl = _resolve-waypoint-label(
+          waypoints,
+          inner,
+          prepass: prepass,
         )
+        if lbl == none {
+          if prepass { return (beginning: 1) }
+          assert(
+            false,
+            message: "Cannot resolve waypoint reference in from-wp()",
+          )
+        }
+        let range = _lookup-waypoint-range(waypoints, lbl)
+        if range == none {
+          if prepass { return (beginning: 1) }
+          assert(false, message: "Unknown waypoint label: <" + lbl + ">")
+        }
+        (beginning: range.first)
       }
-      let range = _lookup-waypoint-range(waypoints, lbl)
-      if range == none {
-        if prepass { return (until: 1) }
-        assert(false, message: "Unknown waypoint label: <" + lbl + ">")
+    } else if kind == "waypoint-until" {
+      let inner = visible-subslides.inner
+      let inner-kind = if type(inner) == dictionary {
+        inner.at("kind", default: none)
+      } else { none }
+      if inner-kind in ("waypoint-first", "waypoint-last") {
+        // Resolve get-first/get-last to a concrete subslide number
+        let resolved = resolve-waypoints(self, inner)
+        (until: resolved - 1)
+      } else {
+        let lbl = _resolve-waypoint-label(
+          waypoints,
+          inner,
+          prepass: prepass,
+        )
+        if lbl == none {
+          if prepass { return (until: 1) }
+          assert(
+            false,
+            message: "Cannot resolve waypoint reference in until-wp()",
+          )
+        }
+        let range = _lookup-waypoint-range(waypoints, lbl)
+        if range == none {
+          if prepass { return (until: 1) }
+          assert(false, message: "Unknown waypoint label: <" + lbl + ">")
+        }
+        (until: range.first - 1)
       }
-      (until: range.first - 1)
     } else if kind in ("waypoint-prev", "waypoint-next") {
       let lbl = _resolve-waypoint-label(
         waypoints,
@@ -1346,7 +1403,8 @@
   } else if type(visible-subslides) == array {
     // If the array contains from/until range markers, span the full range.
     let has-range-markers = visible-subslides.any(s => (
-      type(s) == dictionary and s.at("kind", default: "") in ("waypoint-from", "waypoint-until")
+      type(s) == dictionary
+        and s.at("kind", default: "") in ("waypoint-from", "waypoint-until")
     ))
     if has-range-markers {
       // Range construction: combine from/until markers into a single range.
@@ -1877,7 +1935,9 @@
     message: "`show-notes-on-second-screen` should be `none`, `bottom` or `right`",
   )
   let is-visible = (
-    subslide == none or subslide == auto or check-visible(self.subslide, subslide)
+    subslide == none
+      or subslide == auto
+      or check-visible(self.subslide, subslide)
   )
   if is-visible {
     if self.at("enable-pdfpc", default: true) {
@@ -1931,7 +1991,9 @@
     let h-ratio = float(parts.at(1))
     assert(
       w-ratio > 0 and h-ratio > 0,
-      message: "Invalid aspect ratio \"" + aspect-ratio + "\": width and height must be positive numbers.",
+      message: "Invalid aspect ratio \""
+        + aspect-ratio
+        + "\": width and height must be positive numbers.",
     )
     let base-width = 841.89pt
     (width: base-width, height: base-width * h-ratio / w-ratio)
