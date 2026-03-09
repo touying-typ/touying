@@ -2132,6 +2132,18 @@
           max-repetitions = calc.max(max-repetitions, repetitions)
           repetitions = child.value.n
         }
+      } else if kind == "touying-waypoint" {
+        // Waypoint inside reducer: advance repetitions if this is the defining
+        // occurrence (same logic as the outer parser). Never pushed to result
+        // or hidden-parts — it is not a draw command.
+        let wp = self.at("waypoints", default: (:))
+        let lbl = child.value.label
+        if (
+          child.value.at("advance", default: true) and lbl in wp and wp.at(lbl).first == repetitions + 1
+        ) {
+          repetitions += 1
+          max-repetitions = calc.max(max-repetitions, repetitions)
+        }
       } else {
         if repetitions <= index {
           result.push(child)
@@ -2198,7 +2210,7 @@
   let max-repetitions = repetitions
 
   if kind == "touying-reducer" {
-    // Reducer: iterate positional args looking for touying-jump metadata
+    // Reducer: iterate positional args looking for touying-jump and touying-waypoint metadata
     for child in value.args.flatten() {
       if (
         type(child) == content and child.func() == metadata and type(child.value) == dictionary
@@ -2211,6 +2223,10 @@
           } else {
             max-repetitions = calc.max(max-repetitions, repetitions)
             repetitions = child.value.n
+          }
+        } else if k == "touying-waypoint" {
+          if child.value.at("advance", default: true) {
+            repetitions += 1
           }
         }
       }
@@ -2334,8 +2350,41 @@
           repetitions,
           waypoints,
         )
-      } else if kind in ("touying-equation", "touying-mitex", "touying-raw", "touying-reducer") {
+      } else if kind in ("touying-equation", "touying-mitex", "touying-raw") {
         repetitions = _count-animated-block-repetitions(kind, child.value, repetitions)
+      } else if kind == "touying-reducer" {
+        // Recurse into the reducer's positional args to find waypoints and track pauses.
+        let inner-rep = repetitions
+        let inner-max = repetitions
+        for inner-child in child.value.args.flatten() {
+          if (
+            type(inner-child) == content and inner-child.func() == metadata and type(inner-child.value) == dictionary
+          ) {
+            let ik = inner-child.value.at("kind", default: none)
+            if ik == "touying-jump" {
+              if inner-child.value.relative {
+                inner-rep += inner-child.value.n
+                inner-max = calc.max(inner-max, inner-rep)
+              } else {
+                inner-max = calc.max(inner-max, inner-rep)
+                inner-rep = inner-child.value.n
+              }
+            } else if ik == "touying-waypoint" {
+              if not _waypoint-known(waypoints, inner-child.value.label) {
+                if inner-child.value.at("advance", default: true) {
+                  inner-rep += 1
+                }
+                waypoints.insert(inner-child.value.label, inner-rep)
+              }
+            } else if ik == "touying-implicit-waypoint" {
+              if not _waypoint-known(waypoints, inner-child.value.label) {
+                inner-rep += 1
+                waypoints.insert(inner-child.value.label, inner-rep)
+              }
+            }
+          }
+        }
+        repetitions = calc.max(inner-max, inner-rep)
       }
       // touying-fn-wrapper and other unknown kinds don't affect the outer
       // repetition counter, so we skip them.

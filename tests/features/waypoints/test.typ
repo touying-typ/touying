@@ -754,3 +754,77 @@ After raw text via waypoint.
 #only(from-wp(<after-fletcher>))[From-wp after Fletcher.]
 
 
+// -----------------------------------------------
+// Test 42: Waypoint inside CeTZ reducer
+// -----------------------------------------------
+
+== Waypoint inside CeTZ
+
+#cetz-canvas({
+  import cetz.draw: *
+  rect((0, 0), (4, 3))
+  (waypoint(<cetz-mid>, advance: false),)
+  (pause,)
+  circle((2, 1.5), radius: 1)
+  (waypoint(<cetz-end>),)
+  circle((2, 1.5), radius: 0.1, fill: red, stroke: none)
+})
+
+#uncover(<cetz-mid>)[Visible from start (no-advance waypoint inside CeTZ).]
+
+#uncover(<cetz-end>)[Visible when Cetz Red Dot appears.]
+
+#only(from-wp(<cetz-end>))[From-wp referencing waypoint inside CeTZ.]
+
+
+// -----------------------------------------------
+// Test 43: Waypoint inside Fletcher reducer
+// -----------------------------------------------
+
+== Waypoint inside Fletcher
+
+#fletcher-diagram(
+  node-stroke: .1em,
+  spacing: 3em,
+  node((0, 0), `A`, radius: 1.5em),
+  waypoint(<fl-mid>, advance: false),
+  pause,
+  edge(`go`, "-|>"),
+  node((1, 0), `B`, radius: 1.5em),
+  waypoint(<fl-after-b>),
+  edge((1, 0), (0, 0), `back`, "|->", bend: 50deg),
+)
+
+#uncover(<fl-mid>)[Visible from start (no-advance waypoint in Fletcher).]
+
+#uncover(get-last(<fl-mid>))[Visible after node B appears.]
+
+#only(from-wp(<fl-after-b>))[From-wp referencing back waypoint inside Fletcher.]
+
+
+// -----------------------------------------------
+// Test 44: Waypoint inside reducer + outer waypoint interaction
+// -----------------------------------------------
+
+== Reducer Waypoint with Outer Reference
+
+#cetz-canvas({
+  import cetz.draw: *
+  rect((0, 0), (4, 3))
+  (pause,)
+  line((0, 0), (4, 3))
+  (waypoint(<inner-cetz>),)
+  circle((2, 1.5), radius: 0.5)
+  (waypoint(<after-inner-cetz>),)
+  rect((0, 0), (4, 3), stroke: red)
+})
+
+#waypoint(<after-inner-cetz>) //noop bc inside already declares it.
+
+Text after CeTZ. Box should be red now.
+
+#uncover(from-wp(<inner-cetz>))[From inner CeTZ waypoint (subslide 3).]
+
+#uncover(from-wp(<after-inner-cetz>))[From outer waypoint after CeTZ (subslide 4).]
+
+
