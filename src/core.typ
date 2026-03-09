@@ -822,7 +822,7 @@
     )
   }
   [#metadata((
-    kind: "touying-jump",
+    kind: "touying-jump/pause/meanwhile",
     n: n,
     relative: relative,
   ))<touying-temporary-mark>]
@@ -1769,7 +1769,7 @@
         and type(child.value) == dictionary
     ) {
       let kind = child.value.at("kind", default: none)
-      if kind == "touying-jump" {
+      if kind == "touying-jump/pause/meanwhile" {
         if child.value.relative {
           repetitions += child.value.n
           // Track the peak repetitions so that a subsequent negative jump doesn't
@@ -1999,7 +1999,7 @@
           and type(it.body.value) == dictionary
       ) {
         let kind = it.body.value.at("kind", default: none)
-        if kind == "touying-jump" {
+        if kind == "touying-jump/pause/meanwhile" {
           if it.body.value.relative {
             repetitions += it.body.value.n
           } else {
@@ -2035,7 +2035,7 @@
           and type(child.value) == dictionary
       ) {
         let kind = child.value.at("kind", default: none)
-        if kind == "touying-jump" {
+        if kind == "touying-jump/pause/meanwhile" {
           if child.value.relative {
             repetitions += child.value.n // relative: advance by n (pause = jump(1, relative: true))
             // Track the peak repetitions so that a subsequent negative jump doesn't
