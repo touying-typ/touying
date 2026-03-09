@@ -72,7 +72,7 @@ For the full feature set — cover mode, callback-style animations, `#uncover`, 
 
 ## Full Example
 
-For a comprehensive example showcasing university theme, theorems, CeTZ/Fletcher animations, speaker notes, and more. you can also use the #slide[..] format to access more powerful features provided by Touying.
+For a comprehensive example showcasing university theme, theorems, CeTZ/Fletcher animations, speaker notes, and more. You can also use the `#slide[..]` format to access more powerful features provided by Touying.
 
 ```typst
 #import "@preview/touying:0.6.2": *
