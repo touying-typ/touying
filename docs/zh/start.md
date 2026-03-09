@@ -2,14 +2,14 @@
 sidebar_position: 2
 ---
 
-# Getting Started
+# 开始
 
-Before you begin, make sure you have the Typst environment installed. If not, you can use the [Web App](https://typst.app/) or install the [Tinymist LSP](https://marketplace.visualstudio.com/items?itemName=myriad-dreamin.tinymist) plugins for VS Code.
+在开始之前，请确保您已经安装了 Typst 环境，如果没有，可以使用 [Web App](https://typst.app/) 或 VS Code 的 [Tinymist LSP](https://marketplace.visualstudio.com/items?itemName=myriad-dreamin.tinymist) 插件。
 
-To use Touying, you just need to include the following in your document:
+要使用 Touying，您只需要在文档里加入
 
 ```example
-#import "@preview/touying:0.6.2": *
+#import "@preview/touying:0.6.3": *
 #import themes.simple: *
 
 #show: simple-theme.with(aspect-ratio: "16-9")
@@ -25,18 +25,16 @@ Hello, Touying!
 Hello, Typst!
 ```
 
-It's that simple! You've created your first Touying slides. Congratulations! 🎉
+这很简单，您创建了您的第一个 Touying slides，恭喜！🎉
 
-**Tip:** You can use Typst syntax like `#import "config.typ": *` or `#include "content.typ"` to implement Touying's multi-file architecture.
+**提示:** 你可以使用 `#import "config.typ": *` 或 `#include "content.typ"` 等 Typst 语法来实现 Touying 的多文件架构。
 
-## More Complex Examples
+## 更复杂的例子
 
-In fact, Touying provides various styles for slide writing. You can also use the `#slide[..]` syntax to access more powerful features provided by Touying.
-
-Touying offers many built-in themes to easily create beautiful slides. For example, in this case:
+事实上，Touying 提供了多种 slides 编写风格，实际上您也可以使用 `#slide[..]` 的写法，以获得 Touying 提供的更多更强大的功能。
 
 ```example
-#import "@preview/touying:0.6.2": *
+#import "@preview/touying:0.6.3": *
 #import themes.university: *
 #import "@preview/cetz:0.4.2"
 #import "@preview/fletcher:0.5.8" as fletcher: node, edge
@@ -249,4 +247,10 @@ Fletcher Animation in Touying:
 Please pay attention to the current slide number.
 ```
 
-For more detailed tutorials on themes, you can refer to the following sections.
+Touying 提供了很多内置的主题，能够简单地编写精美的 slides，例如此处的
+
+```
+#show: university-theme.with()
+```
+
+可以使用 university 主题。关于主题更详细的教程，您可以参阅后面的章节。

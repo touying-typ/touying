@@ -1,5 +1,5 @@
 ---
-sidebar_position: 1
+sidebar_position: 4
 ---
 
 # Pdfpc
@@ -52,7 +52,7 @@ typst query --root . ./example.typ --field value --one "<pdfpc-file>" > ./exampl
 With the compatibility of Touying and Polylux, you can make Polylux also support direct export by adding the following code:
 
 ```typst
-#import "@preview/touying:0.6.2"
+#import "@preview/touying:0.6.3"
 
 #context touying.pdfpc.pdfpc-file(here())
 ```

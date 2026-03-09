@@ -1,5 +1,5 @@
 ---
-sidebar_position: 1
+sidebar_position: 4
 ---
 
 # pdfpc
@@ -54,7 +54,7 @@ typst query --root . ./example.typ --field value --one "<pdfpc-file>" > ./exampl
 借助 Touying 与 Polylux 的兼容性，你可以让 Polylux 也支持直接导出，只需要加入下面的代码即可。
 
 ```
-#import "@preview/touying:0.6.2"
+#import "@preview/touying:0.6.3"
 
 #context touying.pdfpc.pdfpc-file(here())
 ```

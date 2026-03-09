@@ -1,5 +1,5 @@
 ---
-sidebar_position: 2
+sidebar_position: 3
 ---
 
 # Pympress
@@ -10,7 +10,7 @@ sidebar_position: 2
 ## Speaker Notes
 
 ```typst
-#import "@preview/touying:0.6.2": *
+#import "@preview/touying:0.6.3": *
 #import themes.university: *
 
 #show: university-theme.with(

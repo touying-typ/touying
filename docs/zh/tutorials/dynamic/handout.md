@@ -15,7 +15,7 @@ config-common(handout: true)
 将其放在主题设置中：
 
 ```example
-#import "@preview/touying:0.6.2": *
+#import "@preview/touying:0.6.3": *
 #import themes.simple: *
 
 #show: simple-theme.with(

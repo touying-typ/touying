@@ -1,55 +1,104 @@
 ---
-sidebar_position: 4
+sidebar_position: 1
 ---
 
 # Touying Exporter
 
-[touying-exporter](https://github.com/touying-typ/touying-exporter) is a command-line tool that exports Touying presentations to video formats (MP4, GIF, WebM) by rendering each subslide and assembling them into an animation.
+[touying-exporter](https://github.com/touying-typ/touying-exporter) is a command-line tool that exports Touying presentations to various formats. It is designed to be used with Touying presentations, but it can also be used with other Typst files. Export presentation slides in various formats for Touying.
 
-## Installation
+## Touying Template
 
-```sh
-cargo install touying-exporter
-```
+[Touying template](https://github.com/touying-typ/touying-template) for online presentation in github pages.
 
-Or download a pre-built binary from the [releases page](https://github.com/touying-typ/touying-exporter/releases).
+Demo: https://touying-typ.github.io/touying-template/
 
-## Basic Usage
+To use this template, follow these steps:
 
-Given a Touying `.typ` file, run:
+1. Click `Use this template` button to copy repo.
+2. Click `Settings -> Pages -> Branch -> None -> gh-pages -> Save` to enable github pages.
+3. Open link `your-name.github.io/repo-name` to start your presentation.
 
-```sh
-touying-exporter slides.typ --output slides.mp4
-```
+Disadvantages: Cannot select and copy text, if needed, please use [Gistd](https://github.com/Myriad-Dreamin/gistd).
 
-This compiles each page (subslide) of the presentation and encodes them into a video at the default frame rate.
+## HTML Export
 
-### Common Options
+We generate SVG image files and package them with impress.js into an HTML file. This way, you can open and present it using a browser, and it supports GIF animations and speaker notes.
 
-| Flag | Description |
-|------|-------------|
-| `--output <PATH>` | Output file path. The format is inferred from the extension (`.mp4`, `.gif`, `.webm`). |
-| `--fps <N>` | Frames per second for the exported video (default: `24`). |
-| `--duration <SECS>` | Duration in seconds to hold each slide before transitioning (default: `1`). |
-| `--root <PATH>` | Root path for the Typst compiler, equivalent to `typst compile --root`. |
-| `--font-path <PATH>` | Additional font search path. |
+![image](https://github.com/touying-typ/touying-exporter/assets/34951714/207ddffc-87c8-4976-9bf4-4c6c5e2573ea)
 
-### Example: export to GIF
+![image](https://github.com/touying-typ/touying-exporter/assets/34951714/eac4976b-7d5d-40b6-8827-88c9a024b89a)
 
-```sh
-touying-exporter slides.typ --output slides.gif --fps 2 --duration 2
-```
+[Touying template](https://github.com/touying-typ/touying-template) for online presentation. [Online](https://touying-typ.github.io/touying-template/)
 
-This produces a GIF that advances one subslide every 2 seconds at 2 fps — suitable for embedding animated demos in websites or README files.
+## PPTX Export
 
-### Example: export to MP4
+We generate PNG image files and package them into a PPTX file. This way, you can open and present it using PowerPoint, and it supports speaker notes.
+
+![image](https://github.com/touying-typ/touying-exporter/assets/34951714/3d547c74-fb4b-4c31-81e5-5138a5d727c9)
+
+## Install
 
 ```sh
-touying-exporter slides.typ --output slides.mp4 --fps 30 --duration 3
+pip install touying
 ```
 
-## Tips
 
-- **Handout mode** — Before exporting, consider whether you want the full animated version or a static handout. For a static export, pass `config-common(handout: true)` in your document.
-- **Font paths** — If your system fonts are not automatically detected, add `--font-path /path/to/fonts`.
-- **CI/automation** — `touying-exporter` can be integrated into CI pipelines to automatically produce demo GIFs for your slides repository.
+## CLI
+
+```text
+usage: touying compile [-h] [--output OUTPUT] [--root ROOT] [--font-paths [FONT_PATHS ...]] [--start-page START_PAGE] [--count COUNT] [--ppi PPI] [--silent SILENT] [--format {html,pptx,pdf,pdfpc}] [--sys-inputs SYS_INPUTS] input
+
+positional arguments:
+  input                 Input file
+
+options:
+  -h, --help            show this help message and exit
+  --output OUTPUT       Output file
+  --root ROOT           Root directory for typst file
+  --font-paths [FONT_PATHS ...]
+                        Paths to custom fonts
+  --start-page START_PAGE
+                        Page to start from
+  --count COUNT         Number of pages to convert
+  --ppi PPI             Pixels per inch for PPTX format
+  --silent SILENT       Run silently
+  --format {html,pptx,pdf,pdfpc}
+                        Output format
+  --sys-inputs SYS_INPUTS
+                        JSON string to pass to typst's sys.inputs
+```
+
+For example:
+
+```sh
+touying compile example.typ
+```
+
+You will get a `example.html` file. Open it with your browser and start your presentation :-)
+
+### Passing variables to typst
+
+You can pass variables to your typst files using the `--sys-inputs` parameter:
+
+```sh
+touying compile example.typ --sys-inputs '{"title":"My Presentation","author":"John Doe"}'
+```
+
+In your typst file, you can access these variables like this:
+
+```typst
+#let title = sys.inputs.at("title", default: "Default Title")
+#let author = sys.inputs.at("author", default: "Default Author")
+
+= #title
+By #author
+```
+
+
+## Use it as a python package
+
+```python
+import touying
+
+touying.to_html("example.typ")
+```

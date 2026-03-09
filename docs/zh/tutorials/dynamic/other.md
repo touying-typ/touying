@@ -11,7 +11,7 @@ Touying 还提供了 `touying-reducer`，它能为 cetz 与 fletcher 加入 `pau
 一个例子：
 
 ```example
-#import "@preview/touying:0.6.2": *
+#import "@preview/touying:0.6.3": *
 #import themes.university: *
 #import "@preview/cetz:0.4.2"
 #import "@preview/fletcher:0.5.8" as fletcher: node, edge
@@ -71,7 +71,7 @@ Touying 还提供了 `touying-reducer`，它能为 cetz 与 fletcher 加入 `pau
 事实上，我们也可以在 cetz 内部使用 `only` 和 `uncover`，只是需要一点技巧：
 
 ```example
-#import "@preview/touying:0.6.2": *
+#import "@preview/touying:0.6.3": *
 #import "@preview/cetz:0.4.2"
 #import themes.simple: *
 #show: simple-theme.with(aspect-ratio: "16-9")

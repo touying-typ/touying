@@ -11,7 +11,7 @@ sidebar_position: 2
 一般而言，1 级、2 级和 3 级标题分别用来对应 section、subsection 和 subsubsection，例如 dewdrop 主题。
 
 ```example
-#import "@preview/touying:0.6.2": *
+#import "@preview/touying:0.6.3": *
 #import themes.dewdrop: *
 
 #show: dewdrop-theme.with(aspect-ratio: "16-9")
@@ -28,7 +28,7 @@ Hello, Touying!
 但是很多时候我们并不需要 subsection，因此也会使用 1 级和 2 级标题来分别对应 section 和 title，例如 university 主题。
 
 ```example
-#import "@preview/touying:0.6.2": *
+#import "@preview/touying:0.6.3": *
 #import themes.university: *
 
 #show: university-theme.with(aspect-ratio: "16-9")
@@ -60,7 +60,7 @@ Hello, Touying!
 在 Touying 中显示目录很简单：
 
 ```example
-#import "@preview/touying:0.6.2": *
+#import "@preview/touying:0.6.3": *
 #import themes.simple: *
 #import "@preview/numbly:0.1.0": numbly
 
@@ -94,7 +94,7 @@ Touying 识别标题上的特殊标签以控制幻灯片行为：
 示例——使用 `<touying:hidden>` 标签隐藏目录幻灯片，使其不出现在最终 PDF 中：
 
 ```example
-#import "@preview/touying:0.6.2": *
+#import "@preview/touying:0.6.3": *
 #import themes.simple: *
 #import "@preview/numbly:0.1.0": numbly
 
@@ -118,7 +118,7 @@ Content.
 `appendix` 函数会停止幻灯片计数器，使附录幻灯片不影响页脚中显示的总数。
 
 ```example
-#import "@preview/touying:0.6.2": *
+#import "@preview/touying:0.6.3": *
 #import themes.simple: *
 
 #show: simple-theme

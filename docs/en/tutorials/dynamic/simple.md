@@ -11,7 +11,7 @@ Touying provides two markers for simple animation effects: `#pause` and `#meanwh
 The purpose of `#pause` is straightforward – it separates the subsequent content into the next subslide. You can use multiple `#pause` to create multiple subslides. Here's a simple example:
 
 ```example
->>> #import "@preview/touying:0.6.2": *
+>>> #import "@preview/touying:0.6.3": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
 #slide[
@@ -32,7 +32,7 @@ As you can see, `#pause` can be used inline or on a separate line.
 In some cases, you may need to display additional content simultaneously with `#pause`. In such cases, you can use `#meanwhile`.
 
 ```example
->>> #import "@preview/touying:0.6.2": *
+>>> #import "@preview/touying:0.6.3": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
 #slide[

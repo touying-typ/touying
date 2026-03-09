@@ -75,7 +75,7 @@ The `config-common(preamble: ...)` option lets you run setup code on every slide
 You can override any configuration for a single slide or a range of slides using `#show: touying-set-config.with(...)`:
 
 ```example
-#import "@preview/touying:0.6.2": *
+#import "@preview/touying:0.6.3": *
 #import themes.simple: *
 
 #show: simple-theme.with(aspect-ratio: "16-9")

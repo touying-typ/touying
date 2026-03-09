@@ -78,7 +78,7 @@ config-common(datetime-format: "[year]-[month]-[day]")
 你可以使用 `#show: touying-set-config.with(...)` 为单张幻灯片或一段幻灯片覆盖任意配置：
 
 ```example
-#import "@preview/touying:0.6.2": *
+#import "@preview/touying:0.6.3": *
 #import themes.simple: *
 
 #show: simple-theme.with(aspect-ratio: "16-9")

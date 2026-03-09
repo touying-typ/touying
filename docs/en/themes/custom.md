@@ -16,7 +16,7 @@ Both approaches are described in detail in the [Build Your Own Theme](../tutoria
 For minor adjustments to an existing theme, you do not need to create a separate theme file. You can override individual settings inline:
 
 ```example
-#import "@preview/touying:0.6.2": *
+#import "@preview/touying:0.6.3": *
 #import themes.metropolis: *
 
 #show: metropolis-theme.with(
@@ -46,11 +46,11 @@ Content with the custom color.
 To make deeper structural changes, copy the theme source file to your project:
 
 1. Download the relevant file from `themes/` in the Touying repository (e.g., `themes/metropolis.typ`).
-2. Change the import at the top from `#import "../src/exports.typ": *` to `#import "@preview/touying:0.6.2": *`.
+2. Change the import at the top from `#import "../src/exports.typ": *` to `#import "@preview/touying:0.6.3": *`.
 3. Import the local copy instead of the built-in theme.
 
 ```typst
-#import "@preview/touying:0.6.2": *
+#import "@preview/touying:0.6.3": *
 #import "metropolis.typ": *   // your local copy
 
 #show: metropolis-theme.with(

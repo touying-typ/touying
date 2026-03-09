@@ -11,7 +11,7 @@ Touying also provides `touying-reducer`, which adds `pause` and `meanwhile` anim
 Here's an example:
 
 ```example
-#import "@preview/touying:0.6.2": *
+#import "@preview/touying:0.6.3": *
 #import themes.university: *
 #import "@preview/cetz:0.4.2"
 #import "@preview/fletcher:0.5.8" as fletcher: node, edge
@@ -71,7 +71,7 @@ Here's an example:
 In fact, we can also use `only` and `uncover` within cetz, just requiring a bit of skill:
 
 ```example
-#import "@preview/touying:0.6.2": *
+#import "@preview/touying:0.6.3": *
 #import "@preview/cetz:0.4.2"
 #import themes.simple: *
 #show: simple-theme.with(aspect-ratio: "16-9")
