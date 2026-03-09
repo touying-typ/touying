@@ -69,7 +69,9 @@ Note: Waypoints are not compatible within `cetz` or similar contexts.
 
 #slide(composer: (1fr, 1fr))[
   #text(weight: "bold")[`#waypoint` + `#uncover`]
-  #code-col("Content before.\n#waypoint(<demo>)\nFirst Content.\n#pause\nSecond Content.\n#uncover(<demo>)[\n  Revealed during waypoint.\n]")
+  #code-col(
+    "Content before.\n#waypoint(<demo>)\nFirst Content.\n#pause\nSecond Content.\n#uncover(<demo>)[\n  Revealed during waypoint.\n]",
+  )
   `#waypoint` acts like `#pause` but names the position.
   `#uncover(<lbl>)` shows content during that waypoint's range.
 ][
@@ -83,7 +85,8 @@ Note: Waypoints are not compatible within `cetz` or similar contexts.
 
 #slide(composer: (1fr, 1fr))[
   #text(weight: "bold")[`#waypoint` + `#uncover` (multiple)]
-  #code-col("
+  #code-col(
+    "
     #waypoint(<intro>)
     Intro phase.
     #pause
@@ -92,7 +95,8 @@ Note: Waypoints are not compatible within `cetz` or similar contexts.
     Detail phase.
     #uncover(<intro>)[During intro.]
     #uncover(<detail>)[During detail.]
-  ")
+  ",
+  )
   Each waypoint owns a range of subslides. Content uncovered with a label is visible only during that range.
 ][
   #waypoint(<intro>)
@@ -107,7 +111,9 @@ Note: Waypoints are not compatible within `cetz` or similar contexts.
 
 #slide(composer: (1fr, 1fr))[
   #text(weight: "bold")[`#waypoint` + `#effect`]
-  #code-col("Normal text.\n#waypoint(<hl>)\n#effect(\n  text.with(fill: red), <hl>\n)[Red during <hl>.]")
+  #code-col(
+    "Normal text.\n#waypoint(<hl>)\n#effect(\n  text.with(fill: red), <hl>\n)[Red during <hl>.]",
+  )
   `#effect(fn, <lbl>)` applies a transform while the waypoint is active.
 ][
   Normal text.
@@ -117,7 +123,9 @@ Note: Waypoints are not compatible within `cetz` or similar contexts.
 
 #slide(composer: (1fr, 1fr))[
   #text(weight: "bold")[No-advance waypoint]
-  #code-col("#waypoint(<here>, advance: false)\nStill subslide 1.\n#uncover(<here>)[\n  Visible immediately.\n]")
+  #code-col(
+    "#waypoint(<here>, advance: false)\nStill subslide 1.\n#uncover(<here>)[\n  Visible immediately.\n]",
+  )
   `advance: false` marks the position *without* creating a new subslide.
 ][
   #waypoint(<here>, advance: false)
@@ -129,7 +137,9 @@ Note: Waypoints are not compatible within `cetz` or similar contexts.
 
 #slide(composer: (1fr, 1fr))[
   #text(weight: "bold")[`get-first` / `get-last`]
-  #code-col("#waypoint(<p>)\nStart. #pause\nContinued.\n#waypoint(<q>)\nNext.\n#only(get-first(<p>))[First of p.]\n#only(get-last(<p>))[Last of p.]")
+  #code-col(
+    "#waypoint(<p>)\nStart. #pause\nContinued.\n#waypoint(<q>)\nNext.\n#only(get-first(<p>))[First of p.]\n#only(get-last(<p>))[Last of p.]",
+  )
   A waypoint spanning multiple subslides (due to `#pause` inside its range) can be queried at its edges.
 ][
   #waypoint(<p>)
@@ -142,36 +152,44 @@ Note: Waypoints are not compatible within `cetz` or similar contexts.
 ]
 
 #slide(composer: (1fr, 1fr))[
-  #text(weight: "bold")[`from` — onward from a waypoint]
-  #code-col("#waypoint(<step>)\nStep content.\n#waypoint(<later>)\nLater content.\ \n#uncover(from(<step>))[\n  From step onward — through `<later>` too.\n]")
-  #text(size:20pt)[`from(<lbl>)` is visible from the waypoint's first subslide to the *end of the slide*. Unlike a bare label, it is not bounded by the next waypoint.]
+  #text(weight: "bold")[`from-wp` — onward from a waypoint]
+  #code-col(
+    "#waypoint(<step>)\nStep content.\n#waypoint(<later>)\nLater content.\ \n#uncover(from-wp(<step>))[\n  From step onward — through `<later>` too.\n]",
+  )
+  #text(
+    size: 20pt,
+  )[`from-wp(<lbl>)` is visible from the waypoint's first subslide to the *end of the slide*. Unlike a bare label, it is not bounded by the next waypoint.]
 ][
   #waypoint(<step>)
   Step content.
   #waypoint(<later>)
   Later content. \
-  #uncover(from(<step>))[From `<step>` onward — through `<later>` too.]
+  #uncover(from-wp(<step>))[From `<step>` onward — through `<later>` too.]
 ]
 
 #slide(composer: (1fr, 1fr))[
-  #text(weight: "bold")[`until` — before a waypoint]
-  #code-col("#waypoint(<phase-1>)\nPhase 1 content.\n#waypoint(<phase-2>)\nPhase 2 content.\n#uncover(until(<phase-2>))[\n  Before phase 2.\n]\n#uncover(from(<phase-2>))[\n  Only from phase 2.\n]")
-  `until(<lbl>)` is visible on all subslides *before* the waypoint starts — including subslides before any waypoint is reached.
+  #text(weight: "bold")[`until-wp` — before a waypoint]
+  #code-col(
+    "#waypoint(<phase-1>)\nPhase 1 content.\n#waypoint(<phase-2>)\nPhase 2 content.\n#uncover(until-wp(<phase-2>))[\n  Before phase 2.\n]\n#uncover(from-wp(<phase-2>))[\n  Only from phase 2.\n]",
+  )
+  `until-wp(<lbl>)` is visible on all subslides *before* the waypoint starts — including subslides before any waypoint is reached.
 ][
   #waypoint(<phase-1>)
   Phase 1 content.
   #waypoint(<phase-2>)
   Phase 2 content.
-  #uncover(until(<phase-2>))[Before phase 2.]
-  #uncover(from(<phase-2>))[Only from phase 2.]
+  #uncover(until-wp(<phase-2>))[Before phase 2.]
+  #uncover(from-wp(<phase-2>))[Only from phase 2.]
 ]
 
 = Ranges & Navigation
 
 #slide(composer: (1fr, 1fr))[
   #text(weight: "bold")[Bounded range]
-  #code-col("#waypoint(<ra>)\nRange A.\n#waypoint(<rb>)\nRange B.\n#waypoint(<rc>)\nRange C.\n#uncover(\n  (from(<ra>), until(<rc>))\n)[During A and B.]")
-  Combine `from` and `until` in an array to span a range. Runs from `<ra>` up to (but not including) `<rc>`.
+  #code-col(
+    "#waypoint(<ra>)\nRange A.\n#waypoint(<rb>)\nRange B.\n#waypoint(<rc>)\nRange C.\n#uncover(\n  (from-wp(<ra>), until-wp(<rc>))\n)[During A and B.]",
+  )
+  Combine `from-wp` and `until-wp` in an array to span a range. Runs from `<ra>` up to (but not including) `<rc>`.
 ][
   #waypoint(<ra>)
   Range A.
@@ -179,12 +197,14 @@ Note: Waypoints are not compatible within `cetz` or similar contexts.
   Range B.
   #waypoint(<rc>)
   Range C.
-  #uncover((from(<ra>), until(<rc>)))[During A and B.]
+  #uncover((from-wp(<ra>), until-wp(<rc>)))[During A and B.]
 ]
 
 #slide(composer: (1fr, 1fr))[
   #text(weight: "bold")[`prev-wp` / `next-wp`]
-  #code-col("#waypoint(<na>)\nSection A.\n#waypoint(<nb>)\nSection B.\n#waypoint(<nc>)\nSection C.\n#only(next-wp(<na>))[\n  During B (next after A).\n]\n#only(prev-wp(<nc>))[\n  During B (prev before C).\n]")
+  #code-col(
+    "#waypoint(<na>)\nSection A.\n#waypoint(<nb>)\nSection B.\n#waypoint(<nc>)\nSection C.\n#only(next-wp(<na>))[\n  During B (next after A).\n]\n#only(prev-wp(<nc>))[\n  During B (prev before C).\n]",
+  )
   Jump to the adjacent waypoint in subslide order. \
   In fact you may also pass an `amount` to jump multiple waypoints: `next-wp(<lbl>, amount: 2)`.
 ][
@@ -199,9 +219,11 @@ Note: Waypoints are not compatible within `cetz` or similar contexts.
 ]
 
 #slide(composer: (1fr, 1fr))[
-  #text(weight: "bold")[Composing shifts with from/until]
-  #code-col("#waypoint(<ca>)\nPart A.\n#waypoint(<cb>)\nPart B.\n#waypoint(<cc>)\nPart C.\n// from(next-wp(<ca>)) = from B\n#uncover(from(next-wp(<ca>)))[\n  From B onward.\n]\n// until(prev-wp(<cc>)) = until B\n#uncover(until(prev-wp(<cc>)))[\n  Only during A.\n]")
-  Shifts compose naturally with `from`/`until`.
+  #text(weight: "bold")[Composing shifts with `from-wp`/`until-wp`]
+  #code-col(
+    "#waypoint(<ca>)\nPart A.\n#waypoint(<cb>)\nPart B.\n#waypoint(<cc>)\nPart C.\n// from-wp(next-wp(<ca>)) = from B\n#uncover(from-wp(next-wp(<ca>)))[\n  From B onward.\n]\n// until-wp(prev-wp(<cc>)) = until B\n#uncover(until-wp(prev-wp(<cc>)))[\n  Only during A.\n]",
+  )
+  Shifts compose naturally with `from-wp`/`until-wp`.
 ][
   #waypoint(<ca>)
   Part A.
@@ -209,14 +231,16 @@ Note: Waypoints are not compatible within `cetz` or similar contexts.
   Part B.
   #waypoint(<cc>)
   Part C.
-  #uncover(from(next-wp(<ca>)))[From B onward.]
-  #uncover(until(prev-wp(<cc>)))[Only during A.]
+  #uncover(from-wp(next-wp(<ca>)))[From B onward.]
+  #uncover(until-wp(prev-wp(<cc>)))[Only during A.]
 ]
 
 #slide(composer: (1fr, 1fr))[
   #text(weight: "bold")[Inclusive range via `next-wp`]
-  #code-col("#waypoint(<ia>)\nPart A.\n#waypoint(<ib>)\nPart B.\n#waypoint(<ic>)\nPart C.\n// A only (exclusive of B)\n#only((from(<ia>), until(<ib>)))[\n  Exactly A.\n]\n// A and B (inclusive)\n#only((from(<ia>),\n   next-wp(until(<ib>)))\n)[A and B.]")
-  `next-wp(until(<ib>))` → `until(<ic>)`, so `<ib>` is included.
+  #code-col(
+    "#waypoint(<ia>)\nPart A.\n#waypoint(<ib>)\nPart B.\n#waypoint(<ic>)\nPart C.\n// A only (exclusive of B)\n#only((from-wp(<ia>), until-wp(<ib>)))[\n  Exactly A.\n]\n// A and B (inclusive)\n#only((from-wp(<ia>),\n   next-wp(until-wp(<ib>)))\n)[A and B.]",
+  )
+  `next-wp(until-wp(<ib>))` → `until-wp(<ic>)`, so `<ib>` is included.
 ][
   #waypoint(<ia>)
   Part A.
@@ -224,15 +248,17 @@ Note: Waypoints are not compatible within `cetz` or similar contexts.
   Part B.
   #waypoint(<ic>)
   Part C.
-  #only((from(<ia>), until(<ib>)))[Exactly during A.]
-  #only((from(<ia>), next-wp(until(<ib>))))[During A and B (inclusive).]
+  #only((from-wp(<ia>), until-wp(<ib>)))[Exactly during A.]
+  #only((from-wp(<ia>), next-wp(until-wp(<ib>))))[During A and B (inclusive).]
 ]
 
 = Implicit Waypoints
 
 #slide(composer: (1fr, 1fr))[
   #text(weight: "bold")[Labels as auto-waypoints]
-  #code-col("Always visible.\n#uncover(<imp-rev>)[\n  Appears via implicit wp.\n]")
+  #code-col(
+    "Always visible.\n#uncover(<imp-rev>)[\n  Appears via implicit wp.\n]",
+  )
   Using a label in `#uncover`, `#only`, or `#effect` creates a waypoint automatically — no `#waypoint` call needed.
 ][
   Always visible.
@@ -241,7 +267,9 @@ Note: Waypoints are not compatible within `cetz` or similar contexts.
 
 #slide(composer: (1fr, 1fr))[
   #text(weight: "bold")[Multiple implicit]
-  #code-col("Base content.\n#uncover(<im-a>)[Phase A.]\n#effect(\n  text.with(fill: blue), <im-b>\n)[Phase B styled.]\n#only(<im-c>)[Phase C only.]")
+  #code-col(
+    "Base content.\n#uncover(<im-a>)[Phase A.]\n#effect(\n  text.with(fill: blue), <im-b>\n)[Phase B styled.]\n#only(<im-c>)[Phase C only.]",
+  )
   Each distinct label → one implicit waypoint. Reusing a label adds no extra subslides.
 ][
   Base content.
@@ -252,12 +280,14 @@ Note: Waypoints are not compatible within `cetz` or similar contexts.
 
 #slide(composer: (1fr, 1fr))[
   #text(weight: "bold")[Mixed explicit + implicit]
-  #code-col("#waypoint(<expl>)\nExplicit phase.\n#uncover(<impl>)[\n  Implicit phase.\n]\n#uncover(from(<expl>))[\n  From explicit onward.\n]")
+  #code-col(
+    "#waypoint(<expl>)\nExplicit phase.\n#uncover(<impl>)[\n  Implicit phase.\n]\n#uncover(from-wp(<expl>))[\n  From explicit onward.\n]",
+  )
 ][
   #waypoint(<expl>)
   Explicit phase.
   #uncover(<impl>)[Implicit phase.]
-  #uncover(from(<expl>))[From explicit onward.]
+  #uncover(from-wp(<expl>))[From explicit onward.]
 ]
 
 = Forward References
@@ -266,19 +296,21 @@ Note: Waypoints are not compatible within `cetz` or similar contexts.
 
 #slide(composer: (1fr, 1fr))[
   #text(weight: "bold")[Forward reference]
-  #code-col("// Reference before definition\n#uncover(until(<summary>))[\n  Shown before summary.\n]\nContent.\n#waypoint(<summary>)\nSummary text.\n#uncover(from(<summary>))[\n  Summary visible.\n]")
-  Waypoints can be referenced *before* they are defined on the same slide. `from`/`until` are lazy markers resolved at render time — after all waypoints are collected.
+  #code-col(
+    "// Reference before definition\n#uncover(until-wp(<summary>))[\n  Shown before summary.\n]\nContent.\n#waypoint(<summary>)\nSummary text.\n#uncover(from-wp(<summary>))[\n  Summary visible.\n]",
+  )
+  Waypoints can be referenced *before* they are defined on the same slide. `from-wp`/`until-wp` are lazy markers resolved at render time — after all waypoints are collected.
 ][
-  #uncover(until(<summary>))[Shown before summary.]
+  #uncover(until-wp(<summary>))[Shown before summary.]
   Content.
   #waypoint(<summary>)
   Summary text.
-  #uncover(from(<summary>))[Summary visible.]
+  #uncover(from-wp(<summary>))[Summary visible.]
 ]
 
 == Rules for waypoint references
 
-- *Forward references work.* `from(<lbl>)`, `until(<lbl>)`, and bare `<lbl>` can appear before `#waypoint(<lbl>)` (or other waypoint creating functions) on the same slide.
+- *Forward references work.* `from-wp(<lbl>)`, `until-wp(<lbl>)`, and bare `<lbl>` can appear before `#waypoint(<lbl>)` (or other waypoint creating functions) on the same slide.
 
 - *Cross-slide references do not work.* Waypoints are scoped to a single slide. A label defined on slide 3 cannot be used on slide 5.
 
@@ -290,7 +322,9 @@ Note: Waypoints are not compatible within `cetz` or similar contexts.
 
 #slide(composer: (1fr, 1fr))[
   #text(weight: "bold")[`#alternatives` with `at:`]
-  #code-col("#waypoint(<opt-a>)\nOption A active.\n#waypoint(<opt-b>)\nOption B active.\n#alternatives(\n  at: (<opt-a>, <opt-b>)\n)[Content A.][Content B.]")
+  #code-col(
+    "#waypoint(<opt-a>)\nOption A active.\n#waypoint(<opt-b>)\nOption B active.\n#alternatives(\n  at: (<opt-a>, <opt-b>)\n)[Content A.][Content B.]",
+  )
   Maps each body to a named waypoint instead of sequential numbering.
 ][
   #waypoint(<opt-a>)
@@ -302,7 +336,9 @@ Note: Waypoints are not compatible within `cetz` or similar contexts.
 
 #slide(composer: (1fr, 1fr))[
   #text(weight: "bold")[`item-by-item` — relative (auto)]
-  #code-col("Text before.\n#pause\nAfter first pause.\n#item-by-item[\n  - First item\n  - Second item\n  - Third item\n]")
+  #code-col(
+    "Text before.\n#pause\nAfter first pause.\n#item-by-item[\n  - First item\n  - Second item\n  - Third item\n]",
+  )
   With `start: auto` (default), items continue from the current pause position.
 ][
   Text before.
@@ -317,7 +353,9 @@ Note: Waypoints are not compatible within `cetz` or similar contexts.
 
 #slide(composer: (1fr, 1fr))[
   #text(weight: "bold")[`item-by-item` with waypoint start]
-  #code-col("#waypoint(<list-wp>)\n#item-by-item(start: <list-wp>)[\n  - Alpha\n  - Beta\n  - Gamma\n]\n#uncover(<list-wp>)[\n  List revealed above.\n]")
+  #code-col(
+    "#waypoint(<list-wp>)\n#item-by-item(start: <list-wp>)[\n  - Alpha\n  - Beta\n  - Gamma\n]\n#uncover(<list-wp>)[\n  List revealed above.\n]",
+  )
   Anchor the item reveal to a named waypoint.
 ][
   #waypoint(<list-wp>)
@@ -332,8 +370,9 @@ Note: Waypoints are not compatible within `cetz` or similar contexts.
 == Callback style
 
 #slide(self => {
-block(width: 50%)[
-  #code-col("#slide(self => {
+  block(width: 50%)[
+    #code-col(
+      "#slide(self => {
   let (uncover, only) = utils.methods(self)
   [
     Base content.
@@ -342,9 +381,10 @@ block(width: 50%)[
     #waypoint(<cb-b>)
     #only(<cb-b>)[Only during cb-b.]
   ]
-})")
-]
-[ 
+})",
+    )
+  ]
+  [
     #let (uncover, only) = utils.methods(self)
     Base content.
     #waypoint(<cb-a>)
@@ -356,8 +396,9 @@ block(width: 50%)[
 
 == Hierarchical Waypoints
 
-#slide(composer: (1fr,1fr))[
-  #code-col("#alternatives(at: (<intro>, <more>))[Introduction.][More details.]
+#slide(composer: (1fr, 1fr))[
+  #code-col(
+    "#alternatives(at: (<intro>, <more>))[Introduction.][More details.]
   #waypoint(<intro:background>)
   Some background during intro.
   #waypoint(<intro:goal>)
@@ -365,7 +406,8 @@ block(width: 50%)[
   #waypoint(<more:analysis>)
   Analysis during more.
   #waypoint(<more:results>)
-  Results during more.")
+  Results during more.",
+  )
   You may even construct hierarchical waypoints, which we collect automatically by their shared top level. \ We use ':' as the separator of levels.
 ][
   #alternatives(at: (<intro>, <more>))[*Introduction.*][*More details.*]\
@@ -398,13 +440,16 @@ block(width: 50%)[
   [`#effect(fn, <lbl>)[...]`], [Apply style during range (implicit)],
   [`get-first(<lbl>)`], [First subslide of the range],
   [`get-last(<lbl>)`], [Last subslide of the range],
-  [`from(<lbl>)`], [From waypoint to end of slide],
-  [`until(<lbl>)`], [Before waypoint (exclusive)],
+  [`from-wp(<lbl>)`], [From waypoint to end of slide],
+  [`until-wp(<lbl>)`], [Before waypoint (exclusive)],
   [`next-wp(<lbl>, amount:1)`], [Adjacent waypoint (forward), allows `amount` to skip multiple],
+
   [`prev-wp(<lbl>, amount:1)`], [Adjacent waypoint (backward), allows `amount` to skip multiple],
-  [`(from(<a>), until(<b>))`], [Bounded range: `<a>` to before `<b>`],
+
+  [`(from-wp(<a>), until-wp(<b>))`], [Bounded range: `<a>` to before `<b>`],
   [`#alternatives(at: (..))[..][..]`], [Named alternative mapping],
   [`#item-by-item[...]`], [Relative item reveal (auto from pause)],
   [`#item-by-item(start: <wp>)[...]`], [Waypoint-anchored item reveal],
-  [`<label:sublabel>`], [Hierarchical waypoint. The parent (e.g. `<label>`) refers to all its children (e.g. `<label:sublabel>`).],
+  [`<label:sublabel>`],
+  [Hierarchical waypoint. The parent (e.g. `<label>`) refers to all its children (e.g. `<label:sublabel>`).],
 )

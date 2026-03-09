@@ -18,10 +18,22 @@ Second phase.
 
 #uncover(
   <reveal>,
-)[Revealed after waypoint. Basically a meanwhile starting from the waypoint.]
+)[Revealed during waypoint. Basically a meanwhile starting from the waypoint.]
 
 // -----------------------------------------------
-// Test 2: Explicit waypoint with effect
+// Test 2: Waypoint without advance
+// -----------------------------------------------
+
+== No Advance Waypoint
+
+#waypoint(<here>, advance: false)
+
+Everything on subslide 1.
+
+#uncover(<here>)[This should be visible on subslide 1.]
+
+// -----------------------------------------------
+// Test 3: Explicit waypoint with effect
 // -----------------------------------------------
 
 == Effect Waypoint
@@ -33,14 +45,12 @@ Normal text.
 #effect(text.with(fill: red), <highlight>)[Red from waypoint onward.]
 
 // -----------------------------------------------
-// Test 3: Multiple explicit waypoints and only
+// Test 4: Multiple explicit waypoints and only
 // -----------------------------------------------
 
 == Multiple Waypoints
 
-Start content.
-
-#waypoint(<first>)
+#waypoint(<first>, advance: false)
 
 First phase.
 
@@ -53,14 +63,11 @@ Second phase.
 #only(<second>)[Only during second.]
 
 // -----------------------------------------------
-// Test 4: get-first / get-last
+// Test 5: get-first / get-last
 // -----------------------------------------------
 
 == Get First and Last
-
-Content.
-
-#waypoint(<a>)
+#waypoint(<a>, advance: false)
 
 Phase A.1.
 
@@ -79,7 +86,7 @@ Phase B.2.
 #only(get-last(<b>))[Exactly on last subslide of B: Phase B.2.]
 
 // -----------------------------------------------
-// Test 5: from() — visible from waypoint onward
+// Test 6: from-wp() — visible from waypoint onward
 // -----------------------------------------------
 
 == From
@@ -94,31 +101,31 @@ Step content.
 
 Next content.
 
-#uncover(from(<step>))[Visible from step onward (including next).]
+#uncover(from-wp(<step>))[Visible from step onward (including next).]
 
 // -----------------------------------------------
-// Test 6: until() — visible before a waypoint
+// Test 7: until-wp() — visible before a waypoint
 // -----------------------------------------------
 
 == Until
 
-#waypoint(<phase-1>)
+#waypoint(<phase-1>, advance: false)
 Phase 1 content.
 
 #waypoint(<phase-2>)
 Phase 2 content.
 
-#uncover(until(<phase-2>))[Only visible during phase 1.]
+#uncover(until-wp(<phase-2>))[Only visible before phase 2.]
 
-#uncover(from(<phase-2>))[Only visible from phase 2.]
+#uncover(from-wp(<phase-2>))[Only visible from phase 2.]
 
 // -----------------------------------------------
-// Test 7: Bounded range with (from, until) array
+// Test 8: Bounded range with (from-wp, until-wp) array
 // -----------------------------------------------
 
 == Bounded Range
 
-#waypoint(<rng-a>)
+#waypoint(<rng-a>, advance: false)
 Range A.
 
 #waypoint(<rng-b>)
@@ -127,17 +134,17 @@ Range B.
 #waypoint(<rng-c>)
 Range C.
 
-#uncover((from(<rng-a>), until(<rng-c>)))[Visible during A and B only.]
+#uncover((from-wp(<rng-a>), until-wp(<rng-c>)))[Visible during A and B only.]
 
-#only((from(<rng-b>), until(<rng-c>)))[Only during B.]
+#only((from-wp(<rng-b>), until-wp(<rng-c>)))[Only during B.]
 
 // -----------------------------------------------
-// Test 8: prev-wp / next-wp
+// Test 9: prev-wp / next-wp
 // -----------------------------------------------
 
 == Prev and Next WP
 
-#waypoint(<nav-a>)
+#waypoint(<nav-a>, advance: false)
 Section A.
 
 #waypoint(<nav-b>)
@@ -151,12 +158,12 @@ Section C.
 #only(prev-wp(<nav-c>))[This shows during B (prev before C).]
 
 // -----------------------------------------------
-// Test 9: from(next-wp()) and until(prev-wp()) composition
+// Test 10: from-wp(next-wp()) and until-wp(prev-wp()) composition
 // -----------------------------------------------
 
 == Composed Shifts
 
-#waypoint(<cs-a>)
+#waypoint(<cs-a>, advance: false)
 Part A.
 
 #waypoint(<cs-b>)
@@ -165,14 +172,14 @@ Part B.
 #waypoint(<cs-c>)
 Part C.
 
-#uncover(from(next-wp(<cs-a>)))[From B onward (next after A).]
+#uncover(from-wp(next-wp(<cs-a>)))[From B onward (next after A).]
 
-#uncover(until(prev-wp(
+#uncover(until-wp(prev-wp(
   <cs-c>,
-)))[Until before B (prev of C = B, until B = only A).]
+)))[Until before C (prev of C = B => until B).]
 
 // -----------------------------------------------
-// Test 10: next-wp(until()) pushed inward
+// Test 11: next-wp(until-wp()) pushed inward
 // -----------------------------------------------
 
 == Next-WP Until Push
@@ -186,21 +193,11 @@ Beta.
 #waypoint(<pu-c>)
 Gamma.
 
-// next-wp(until(<pu-b>)) becomes until(next-wp(<pu-b>)) = until(<pu-c>)
+// next-wp(until-wp(<pu-b>)) becomes until-wp(next-wp(<pu-b>)) = until-wp(<pu-c>)
 // So visible: subslides before pu-c = during A and B.
-#uncover(next-wp(until(<pu-b>)))[Visible during A and B (pushed until next).]
+#uncover(next-wp(until-wp(<pu-a>), amount: 2))[Until Next^2(A): before C.]
 
-// -----------------------------------------------
-// Test 11: Waypoint without advance
-// -----------------------------------------------
 
-== No Advance Waypoint
-
-#waypoint(<here>, advance: false)
-
-Everything on subslide 1.
-
-#uncover(<here>)[This should be visible on subslide 1.]
 
 // -----------------------------------------------
 // Test 12: Alternatives with `at:`
@@ -208,9 +205,7 @@ Everything on subslide 1.
 
 == Alternatives at Waypoints
 
-Intro.
-
-#waypoint(<alt-a>)
+#waypoint(<alt-a>, advance: false)
 
 Phase A.
 
@@ -250,6 +245,8 @@ Content always shown.
 
 #only(<imp-show>)[Only via implicit waypoint.]
 
+#uncover(<imp-end>)[New waypoint.]
+
 // -----------------------------------------------
 // Test 16: Multiple implicit waypoints
 // -----------------------------------------------
@@ -261,28 +258,28 @@ Base content.
 #uncover(<imp-a>)[Phase A content.]
 
 #pause
+Last of A, always.
+
 
 #effect(text.with(fill: blue), <imp-b>)[Phase B styled.]
 
 #only(<imp-c>)[Phase C only.]
 
-#only((get-last(<imp-a>), <imp-c>))[On last of A and at C.]
+#only((get-last(<imp-a>), <imp-c>))[On last of A, and at C.]
 
 // -----------------------------------------------
-// Test 17: Mixed explicit and implicit with from()
+// Test 17: Mixed explicit and implicit with from-wp()
 // -----------------------------------------------
 
 == Mixed Waypoints
 
-Intro.
-
-#waypoint(<explicit-wp>)
+#waypoint(<explicit-wp>, advance: false)
 
 Explicit phase.
 
 #uncover(<implicit-wp>)[Implicit phase content.]
 
-#uncover(from(<explicit-wp>))[Visible from explicit onward.]
+#uncover(from-wp(<explicit-wp>))[Visible from explicit onward.]
 
 // -----------------------------------------------
 // Test 18: Same implicit label used twice (idempotent)
@@ -309,13 +306,14 @@ $
        & = pause (x + 1)^2 \
 $
 
+#uncover(<eq-phase>)[Equation explanation visible from waypoint.]
+
 #waypoint(<eq-after>)
 
 Some more explanation.
 
 #only(<eq-after>)[Visible after equation explanation.]
 
-#uncover(<eq-phase>)[Equation explanation visible from waypoint.]
 
 // -----------------------------------------------
 // Test 20: Callback-style with uncover + only + effect
@@ -336,12 +334,12 @@ Some more explanation.
 
     #only(<cb-b>)[Only during cb-b.]
 
-    #effect(text.with(fill: red), <cb-a>)[Red from cb-a onward.]
+    #effect(text.with(fill: red), <cb-a>)[Red during cb-a.]
   ]
 })
 
 // -----------------------------------------------
-// Test 21: Callback-style with get-first / get-last / from
+// Test 21: Callback-style with get-first / get-last / from-wp
 // -----------------------------------------------
 
 == Callback Get-First Get-Last
@@ -349,16 +347,16 @@ Some more explanation.
 #slide(self => {
   let (only,) = utils.methods(self)
   [
-    #waypoint(<m1>)
-    Phase 1.
+    #waypoint(<m1>, advance: false)
+    Phase 1. \
     #pause
-    Phase 1 continued.
+    Phase 1 continued. \
     #waypoint(<m2>)
-    Phase 2.
+    Phase 2. \
 
     #only(get-first(<m1>))[Exactly first of m1.]
     #only(get-last(<m1>))[Exactly last of m1.]
-    #only(from(<m2>))[From m2 onward.]
+    #only(from-wp(<m2>))[From m2 onward.]
   ]
 })
 
@@ -370,10 +368,10 @@ Some more explanation.
 
 #slide(self => {
   [
-    #waypoint(<ca>)
-    Phase A.
+    #waypoint(<ca>, advance: false)
+    Phase A. \
     #waypoint(<cb>)
-    Phase B.
+    Phase B. \
     #alternatives(at: (<ca>, <cb>))[Alt A callback.][Alt B callback.]
   ]
 })
@@ -402,7 +400,7 @@ Intro content.
 
 == Callback Item-by-item
 
-#slide(repeat: 5, self => {
+#slide(self => {
   let (uncover, only) = utils.methods(self)
   [
     Intro.
@@ -426,7 +424,7 @@ Intro content.
 == Forward Reference
 
 // Title shown until the summary waypoint (forward reference)
-#uncover(until(<summary>))[Title: shown before summary.]
+#uncover(until-wp(<summary>))[Title: shown before summary.]
 
 Content.
 
@@ -434,7 +432,7 @@ Content.
 
 Summary text.
 
-#uncover(from(<summary>))[Summary visible.]
+#uncover(from-wp(<summary>))[Summary visible.]
 
 // -----------------------------------------------
 // Test 26: Inclusive bounded range with next-wp
@@ -442,7 +440,7 @@ Summary text.
 
 == Inclusive Range
 
-#waypoint(<ir-a>)
+#waypoint(<ir-a>, advance: false)
 Part A.
 
 #waypoint(<ir-b>)
@@ -451,11 +449,14 @@ Part B.
 #waypoint(<ir-c>)
 Part C.
 
-// from(<ir-a>), until(<ir-b>) = only A
-// from(<ir-a>), next-wp(until(<ir-b>)) = until(next-wp(<ir-b>)) = until(<ir-c>) → A and B
-#only((from(<ir-a>), until(<ir-b>)))[Exactly during A.]
+// from-wp(<ir-a>), until-wp(<ir-b>) = only A
+// from-wp(<ir-a>), next-wp(until-wp(<ir-b>)) = until-wp(next-wp(<ir-b>)) = until-wp(<ir-c>) → A and B
+#only((from-wp(<ir-a>), until-wp(<ir-b>)))[Exactly during A.]
 
-#only((from(<ir-a>), next-wp(until(<ir-b>))))[During A and B (inclusive of B).]
+#only((
+  from-wp(<ir-a>),
+  next-wp(until-wp(<ir-b>)),
+))[During A and B (inclusive of B).]
 
 // -----------------------------------------------
 // Test 27: prev-wp / next-wp with amount parameter
@@ -463,7 +464,7 @@ Part C.
 
 == Amount Shift
 
-#waypoint(<am-a>)
+#waypoint(<am-a>, advance: false)
 First.
 
 #waypoint(<am-b>)
@@ -481,5 +482,162 @@ Fourth.
 // prev-wp(<am-d>, amount: 2) = skip 2 backward = am-b
 #only(prev-wp(<am-d>, amount: 2))[During B (jumped backward 2 from D).]
 
-// Compose with from: from(next-wp(<am-a>, amount: 2)) = from am-c onward
-#uncover(from(next-wp(<am-a>, amount: 2)))[From C onward (amount: 2).]
+// Compose with from: from-wp(next-wp(<am-a>, amount: 2)) = from am-c onward
+#uncover(from-wp(next-wp(<am-a>, amount: 2)))[From Next^2(A): C onward (amount: 2).]
+
+// -----------------------------------------------
+// Test 28: Hierarchy — parent first, then child (two subslides)
+// -----------------------------------------------
+
+== Parent Then Child
+
+#waypoint(<top>, advance: false)
+Top content.
+
+#waypoint(<top:sub>)
+Sub content.
+
+#only(get-first(<top>))[Exactly first of top (the parent phase).]
+
+#only(get-last(<top>))[Exactly last of top: the sub phase.]
+
+#only(<top:sub>)[Only during the sub-waypoint.]
+
+// -----------------------------------------------
+// Test 29: Hierarchy — child first, parent is no-op
+// -----------------------------------------------
+
+== Child First
+
+#waypoint(<rev:child>, advance: false)
+Child content.
+
+#waypoint(<rev>)
+This is a no-op; both on same subslide.
+
+#only(<rev:child>)[During the child waypoint.]
+
+#only(<rev>)[During parent — same as child.]
+
+// -----------------------------------------------
+// Test 30: Implicit child first, then implicit parent — no-op
+// -----------------------------------------------
+
+== Implicit Child First
+
+#uncover(<ic:sub>)[Child implicit content.]
+
+#uncover(<ic>)[Parent implicit — no-op, same subslide as child.]
+
+// -----------------------------------------------
+// Test 31: Implicit parent first, then implicit child (two subslides)
+// -----------------------------------------------
+
+== Implicit Parent Then Child
+
+#uncover(<ip>)[Parent implicit content.]
+
+#uncover(<ip:sub>)[Child implicit content.]
+
+#only(get-first(<ip>))[First of parent.]
+
+#only(get-last(<ip>))[Last of parent: the child phase.]
+
+// -----------------------------------------------
+// Test 32: Deep hierarchy — three levels
+// -----------------------------------------------
+
+== Deep Hierarchy
+
+#waypoint(<d>, advance: false)
+Level 0.
+
+#waypoint(<d:a>)
+Level 1.
+
+#waypoint(<d:a:x>)
+Level 2.
+
+#only(get-first(<d>))[First of d: level 0.]
+
+#only(get-last(<d>))[Last of d: level 2.]
+
+#only(get-first(<d:a>))[First of d:a: level 1.]
+
+#only(get-last(<d:a>))[Last of d:a: level 2.]
+
+// -----------------------------------------------
+// Test 33: Mixed explicit and implicit hierarchy
+// -----------------------------------------------
+
+== Mixed Hierarchy
+
+#waypoint(<mx>, advance: false)
+Explicit parent.
+
+#uncover(<mx:detail>)[Implicit child detail.]
+
+#only(get-last(<mx>))[Last of mx: the detail phase.]
+
+// -----------------------------------------------
+// Test 34: Hierarchy with from/until
+// -----------------------------------------------
+
+== Hierarchy With From
+
+#waypoint(<hf>, advance: false)
+Phase A.
+
+#waypoint(<hf:more>)
+Phase B.
+
+#waypoint(<other>)
+Phase C.
+
+#uncover(from-wp(<hf>))[From hf onward — visible on A, B, and C.]
+
+#only((from-wp(<hf>), until-wp(<other>)))[During A and B only.]
+
+// -----------------------------------------------
+// Test 35: prev-wp / next-wp with hierarchical labels
+// -----------------------------------------------
+
+== Hierarchy Nav
+
+#waypoint(<hn:a>, advance: false)
+Part A.
+
+#waypoint(<hn:b>)
+Part B.
+
+#waypoint(<hn:c>)
+Part C.
+
+#only(next-wp(<hn:a>))[During B (next after A).]
+
+#only(prev-wp(<hn:c>))[During B (prev before C).]
+
+// -----------------------------------------------
+// Test 36: Forward reference in callback
+// -----------------------------------------------
+
+== Callback Forward Reference
+
+#slide(self => {
+  let (uncover, only) = utils.methods(self)
+  [
+    #uncover(until-wp(<cb-summary>))[Title: shown before summary.]
+
+    Content.
+
+    #waypoint(<cb-summary>)
+
+    Summary text.
+
+    #uncover(from-wp(<cb-summary>))[Summary visible.]
+
+    #only(<cb-summary>)[Only during summary.]
+  ]
+})
+
+

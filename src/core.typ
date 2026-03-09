@@ -255,9 +255,7 @@
     // Handle horizontal-line
     // split content when we have a horizontal line
     if (
-      horizontal-line-to-pagebreak
-        and horizontal-line
-        and child not in ([—], [---], [–], [--], [-])
+      horizontal-line-to-pagebreak and horizontal-line and child not in ([—], [---], [–], [--], [-])
     ) {
       slide-parts = utils.trim(slide-parts)
       (
@@ -280,9 +278,7 @@
     if utils.is-kind(child, "touying-slide-wrapper") {
       slide-parts = utils.trim(slide-parts)
       if (
-        slide-parts != ()
-          or _get-slide-fn(self + (headings: current-headings), default: none)
-            != none
+        slide-parts != () or _get-slide-fn(self + (headings: current-headings), default: none) != none
       ) {
         (
           slide-content,
@@ -384,9 +380,7 @@
       horizontal-line = true
       continue
     } else if (
-      horizontal-line-to-pagebreak
-        and horizontal-line
-        and child in ([–], [--], [-])
+      horizontal-line-to-pagebreak and horizontal-line and child in ([–], [--], [-])
     ) {
       continue
     } else if utils.is-heading(child, depth: slide-level) {
@@ -432,13 +426,10 @@
       new-start = true
 
       if (
-        not child.has("label")
-          or str(child.label) not in ("touying:hidden", "touying:skip")
+        not child.has("label") or str(child.label) not in ("touying:hidden", "touying:skip")
       ) {
         if (
-          child.depth == 1
-            and new-section-slide-fn != none
-            and not self.receive-body-for-new-section-slide-fn
+          child.depth == 1 and new-section-slide-fn != none and not self.receive-body-for-new-section-slide-fn
         ) {
           (
             slide-content,
@@ -455,9 +446,7 @@
           )
           if slide-content != none { output-slides.push(slide-content) }
         } else if (
-          child.depth == 2
-            and new-subsection-slide-fn != none
-            and not self.receive-body-for-new-subsection-slide-fn
+          child.depth == 2 and new-subsection-slide-fn != none and not self.receive-body-for-new-subsection-slide-fn
         ) {
           (
             slide-content,
@@ -514,8 +503,7 @@
         }
       }
     } else if (
-      self.at("auto-offset-for-heading", default: true)
-        and utils.is-heading(child)
+      self.at("auto-offset-for-heading", default: true) and utils.is-heading(child)
     ) {
       let fields = child.fields()
       let lbl = fields.remove("label", default: none)
@@ -811,14 +799,12 @@
   if relative {
     assert(
       type(n) == int and n != 0,
-      message: "jump: n must be a non-zero integer when relative: true, got "
-        + repr(n),
+      message: "jump: n must be a non-zero integer when relative: true, got " + repr(n),
     )
   } else {
     assert(
       type(n) == int and n >= 1,
-      message: "jump: n must be a positive integer when relative: false, got "
-        + repr(n),
+      message: "jump: n must be a positive integer when relative: false, got " + repr(n),
     )
   }
   [#metadata((
@@ -884,9 +870,6 @@
     type(lbl) == label or type(lbl) == str,
     message: "waypoint: expected a label or string, got " + str(type(lbl)),
   )
-  if advance {
-    jump(1, relative: true)
-  }
   [#metadata((
     kind: "touying-waypoint",
     label: if type(lbl) == label {
@@ -894,6 +877,7 @@
     } else {
       lbl
     },
+    advance: advance,
   ))<touying-temporary-mark>]
 }
 
@@ -950,27 +934,26 @@
 }
 
 
-/// Create a "from" range starting at a waypoint (inclusive to end of slide).
+/// Create a "from-wp" range starting at a waypoint (inclusive to end of slide).
 ///
 /// Returns a range marker visible from the waypoint's first subslide onward.
 /// Does *not* create a waypoint — the referenced label must be defined
 /// elsewhere (via `#waypoint()` or an implicit waypoint in `#uncover`, etc.).
 ///
 /// Can be composed with `prev-wp` / `next-wp`:
-/// `from(next-wp(<my-label>))` starts at the waypoint after `<my-label>`.
+/// `from-wp(next-wp(<my-label>))` starts at the waypoint after `<my-label>`.
 ///
-/// Combine with `until` in an array for bounded ranges:
-/// `(from(<a>), until(<b>))` — visible from `<a>` to just before `<b>`.
+/// Combine with `until-wp` in an array for bounded ranges:
+/// `(from-wp(<a>), until-wp(<b>))` — visible from `<a>` to just before `<b>`.
 ///
 /// - wp (label | str | dictionary): A waypoint label or a shifted reference
 ///   (e.g. `next-wp(<label>)`).
 ///
 /// -> dictionary
-#let from(wp) = {
+#let from-wp(wp) = {
   assert(
     type(wp) in (label, str, dictionary),
-    message: "from: expected a label, string, or dictionary, got "
-      + str(type(wp)),
+    message: "from-wp: expected a label, string, or dictionary, got " + str(type(wp)),
   )
   (
     kind: "waypoint-from",
@@ -983,25 +966,24 @@
 }
 
 
-/// Create an "until" range ending just before a waypoint (exclusive).
+/// Create an "until-wp" range ending just before a waypoint (exclusive).
 ///
 /// Returns a range marker visible from subslide 1 up to (but not including)
 /// the waypoint's first subslide.  Does *not* create a waypoint.
 ///
 /// Can be composed with `prev-wp` / `next-wp`:
-/// `until(prev-wp(<my-label>))` ends before the waypoint preceding `<my-label>`.
+/// `until-wp(prev-wp(<my-label>))` ends before the waypoint preceding `<my-label>`.
 ///
-/// Combine with `from` in an array for bounded ranges:
-/// `(from(<a>), until(<b>))` — visible from `<a>` to just before `<b>`.
+/// Combine with `from-wp` in an array for bounded ranges:
+/// `(from-wp(<a>), until-wp(<b>))` — visible from `<a>` to just before `<b>`.
 ///
 /// - wp (label | str | dictionary): A waypoint label or a shifted reference.
 ///
 /// -> dictionary
-#let until(wp) = {
+#let until-wp(wp) = {
   assert(
     type(wp) in (label, str, dictionary),
-    message: "until: expected a label, string, or dictionary, got "
-      + str(type(wp)),
+    message: "until-wp: expected a label, string, or dictionary, got " + str(type(wp)),
   )
   (
     kind: "waypoint-until",
@@ -1020,8 +1002,8 @@
 /// before it.  `prev-wp(<c>, amount: 2)` is equivalent to
 /// `prev-wp(prev-wp(<c>))`.
 ///
-/// When applied to a `from` or `until` marker, the shift is pushed inward:
-/// `prev-wp(from(<c>))` becomes `from(prev-wp(<c>))`.
+/// When applied to a `from-wp` or `until-wp` marker, the shift is pushed inward:
+/// `prev-wp(from-wp(<c>))` becomes `from-wp(prev-wp(<c>))`.
 ///
 /// - wp (label | str | dictionary): A waypoint label or marker to shift.
 ///
@@ -1031,15 +1013,14 @@
 #let prev-wp(wp, amount: 1) = {
   assert(
     type(wp) in (label, str, dictionary),
-    message: "prev-wp: expected a label, string, or dictionary, got "
-      + str(type(wp)),
+    message: "prev-wp: expected a label, string, or dictionary, got " + str(type(wp)),
   )
   if type(wp) == label {
     (kind: "waypoint-prev", inner: str(wp), amount: amount)
   } else if type(wp) == dictionary {
     let kind = wp.at("kind", default: none)
     if kind in ("waypoint-from", "waypoint-until") {
-      // Push shift inward: prev-wp(from(<x>)) → from(prev-wp(<x>))
+      // Push shift inward: prev-wp(from-wp(<x>)) → from-wp(prev-wp(<x>))
       (..wp, inner: prev-wp(wp.inner, amount: amount))
     } else {
       (kind: "waypoint-prev", inner: wp, amount: amount)
@@ -1057,7 +1038,7 @@
 /// `next-wp(next-wp(<a>))`.
 ///
 /// When applied to a `from` or `until` marker, the shift is pushed inward:
-/// `next-wp(until(<a>))` becomes `until(next-wp(<a>))`.
+/// `next-wp(until-wp(<a>))` becomes `until-wp(next-wp(<a>))`.
 ///
 /// - wp (label | str | dictionary): A waypoint label or marker to shift.
 ///
@@ -1067,15 +1048,14 @@
 #let next-wp(wp, amount: 1) = {
   assert(
     type(wp) in (label, str, dictionary),
-    message: "next-wp: expected a label, string, or dictionary, got "
-      + str(type(wp)),
+    message: "next-wp: expected a label, string, or dictionary, got " + str(type(wp)),
   )
   if type(wp) == label {
     (kind: "waypoint-next", inner: str(wp), amount: amount)
   } else if type(wp) == dictionary {
     let kind = wp.at("kind", default: none)
     if kind in ("waypoint-from", "waypoint-until") {
-      // Push shift inward: next-wp(until(<x>)) → until(next-wp(<x>))
+      // Push shift inward: next-wp(until-wp(<x>)) → until-wp(next-wp(<x>))
       (..wp, inner: next-wp(wp.inner, amount: amount))
     } else {
       (kind: "waypoint-next", inner: wp, amount: amount)
@@ -1263,9 +1243,7 @@
   touying-fn-wrapper(
     utils.alternatives-match,
     last-subslide: if type(subslides-contents) == dictionary {
-      calc.max(..subslides-contents
-        .pairs()
-        .map(kv => utils.last-required-subslide(kv.at(0))))
+      calc.max(..subslides-contents.pairs().map(kv => utils.last-required-subslide(kv.at(0))))
     } else {
       calc.max(..subslides-contents.map(kv => utils.last-required-subslide(
         kv.at(0),
@@ -1324,11 +1302,11 @@
     )
     let subslides = at
     if repeat-last and subslides.len() > 0 {
-      // Replace last entry with a from() marker so it shows from that
+      // Replace last entry with a from-wp() marker so it shows from that
       // waypoint onward (not just within its bounded range).
       let last-entry = subslides.last()
       subslides.at(-1) = if type(last-entry) == label {
-        from(last-entry)
+        from-wp(last-entry)
       } else {
         last-entry
       }
@@ -1466,7 +1444,7 @@
 /// subslide starting from wherever the slide's animation has reached.
 ///
 /// `start` also accepts a waypoint label (e.g. `<my-wp>`) or any waypoint
-/// marker (`from(<wp>)`, `get-first(<wp>)`, etc.) to anchor the reveal
+/// marker (`from-wp(<wp>)`, `get-first(<wp>)`, etc.) to anchor the reveal
 /// sequence to a named position.
 ///
 /// == Examples
@@ -2072,10 +2050,7 @@
     let result-lines = ()
     let lines = it.split("\n")
     for line in lines {
-      let meaningful = line
-        .matches(meaningful-chars-pattern)
-        .map(m => m.text)
-        .join("")
+      let meaningful = line.matches(meaningful-chars-pattern).map(m => m.text).join("")
       if meaningful == "pause" {
         repetitions += 1
       } else if meaningful == "meanwhile" {
@@ -2123,9 +2098,7 @@
   let hidden-parts = ()
   for child in reducer.args.flatten() {
     if (
-      type(child) == content
-        and child.func() == metadata
-        and type(child.value) == dictionary
+      type(child) == content and child.func() == metadata and type(child.value) == dictionary
     ) {
       let kind = child.value.at("kind", default: none)
       if kind == "touying-jump" {
@@ -2199,6 +2172,17 @@
 /// Waypoint Collection
 /// ------------------------------------------------
 
+/// Check whether a waypoint label is already known — either exactly or
+/// because a child in the hierarchy was registered earlier (e.g. `<top:sub>`
+/// makes `<top>` known without storing a synthetic parent entry).
+#let _waypoint-known(waypoints, lbl) = {
+  if lbl in waypoints {
+    return true
+  }
+  let prefix = lbl + ":"
+  waypoints.keys().any(k => k.starts-with(prefix))
+}
+
 /// Walk content children to collect waypoint declarations and track pause
 /// positions. Returns `(repetitions, waypoints-dict)` where
 /// `waypoints-dict` maps label strings to their raw subslide numbers.
@@ -2214,9 +2198,7 @@
         waypoints,
       )
     } else if (
-      type(child) == content
-        and child.func() == metadata
-        and type(child.value) == dictionary
+      type(child) == content and child.func() == metadata and type(child.value) == dictionary
     ) {
       let kind = child.value.at("kind", default: none)
       if kind == "touying-jump" {
@@ -2226,11 +2208,14 @@
           repetitions = child.value.n
         }
       } else if kind == "touying-waypoint" {
-        if child.value.label not in waypoints {
+        if not _waypoint-known(waypoints, child.value.label) {
+          if child.value.at("advance", default: true) {
+            repetitions += 1
+          }
           waypoints.insert(child.value.label, repetitions)
         }
       } else if kind == "touying-implicit-waypoint" {
-        if child.value.label not in waypoints {
+        if not _waypoint-known(waypoints, child.value.label) {
           repetitions += 1
           waypoints.insert(child.value.label, repetitions)
         }
@@ -2259,9 +2244,7 @@
     ) {
       // Handle table/grid cells that may wrap jump or waypoint metadata
       if (
-        type(child.body) == content
-          and child.body.func() == metadata
-          and type(child.body.value) == dictionary
+        type(child.body) == content and child.body.func() == metadata and type(child.body.value) == dictionary
       ) {
         let kind = child.body.value.at("kind", default: none)
         if kind == "touying-jump" {
@@ -2271,11 +2254,14 @@
             repetitions = child.body.value.n
           }
         } else if kind == "touying-waypoint" {
-          if child.body.value.label not in waypoints {
+          if not _waypoint-known(waypoints, child.body.value.label) {
+            if child.body.value.at("advance", default: true) {
+              repetitions += 1
+            }
             waypoints.insert(child.body.value.label, repetitions)
           }
         } else if kind == "touying-implicit-waypoint" {
-          if child.body.value.label not in waypoints {
+          if not _waypoint-known(waypoints, child.body.value.label) {
             repetitions += 1
             waypoints.insert(child.body.value.label, repetitions)
           }
@@ -2511,9 +2497,7 @@
     // This is a workaround for syntax like #table([A], pause, [B])
     if type(it) == content and it.func() in (table.cell, grid.cell) {
       if (
-        type(it.body) == content
-          and it.body.func() == metadata
-          and type(it.body.value) == dictionary
+        type(it.body) == content and it.body.func() == metadata and type(it.body.value) == dictionary
       ) {
         let kind = it.body.value.at("kind", default: none)
         if kind == "touying-jump" {
@@ -2547,9 +2531,7 @@
     // Process each child element for animation markers and content types
     for child in children {
       if (
-        type(child) == content
-          and child.func() == metadata
-          and type(child.value) == dictionary
+        type(child) == content and child.func() == metadata and type(child.value) == dictionary
       ) {
         let kind = child.value.at("kind", default: none)
         if kind == "touying-jump" {
@@ -2717,8 +2699,18 @@
             note-cont,
           ))
         } else if kind == "touying-waypoint" {
-          // Waypoint marker: already collected in the pre-pass; skip during rendering.
-          // Do not push to result or hidden-parts — produces no visible output.
+          // Waypoint marker: advance repetitions if this is the defining occurrence.
+          // The defining occurrence is identified by checking whether the waypoint's
+          // first subslide matches the next repetition value (repetitions + 1).
+          let wp = self.at("waypoints", default: (:))
+          let lbl = child.value.label
+          if (
+            child.value.at("advance", default: true) and lbl in wp and wp.at(lbl).first == repetitions + 1
+          ) {
+            repetitions += 1
+            max-repetitions = calc.max(max-repetitions, repetitions)
+          }
+          // No visible output.
         } else if kind == "touying-implicit-waypoint" {
           // Implicit waypoint: advance repetitions if this is the defining occurrence.
           // The defining occurrence is identified by checking whether the waypoint's
@@ -2836,9 +2828,7 @@
           max-repetitions = calc.max(max-repetitions, repetitions)
         }
         if (
-          force-to-result
-            or calc.min(repetitions, final-repetitions) <= index
-            or not need-cover
+          force-to-result or calc.min(repetitions, final-repetitions) <= index or not need-cover
         ) {
           result.push(reconstructed)
         } else {
@@ -2879,9 +2869,7 @@
           max-repetitions = calc.max(max-repetitions, repetitions)
         }
         if (
-          force-to-result
-            or calc.min(repetitions, final-repetitions) <= index
-            or not need-cover
+          force-to-result or calc.min(repetitions, final-repetitions) <= index or not need-cover
         ) {
           result.push(reconstructed)
         } else {
@@ -2987,9 +2975,7 @@
           max-repetitions = calc.max(max-repetitions, repetitions)
         }
         if (
-          force-to-result
-            or calc.min(repetitions, final-repetitions) <= index
-            or not need-cover
+          force-to-result or calc.min(repetitions, final-repetitions) <= index or not need-cover
         ) {
           result.push(reconstructed)
         } else {
@@ -3024,9 +3010,7 @@
           max-repetitions = calc.max(max-repetitions, repetitions)
         }
         if (
-          force-to-result
-            or calc.min(repetitions, final-repetitions) <= index
-            or not need-cover
+          force-to-result or calc.min(repetitions, final-repetitions) <= index or not need-cover
         ) {
           result.push(reconstructed)
         } else {
@@ -3256,10 +3240,7 @@
 #let _get-negative-pad(self) = {
   let margin = self.page.margin
   if (
-    type(margin) != dictionary
-      and type(margin) != length
-      and type(margin) != relative
-      and type(margin) != ratio
+    type(margin) != dictionary and type(margin) != length and type(margin) != relative and type(margin) != ratio
   ) {
     return it => it
   }
@@ -3348,9 +3329,7 @@
     let margin = self.page.margin
     let (page-width, page-height) = utils.get-page-dimensions(self)
     if (
-      type(margin) != dictionary
-        and type(margin) != length
-        and type(margin) != relative
+      type(margin) != dictionary and type(margin) != length and type(margin) != relative
     ) {
       return (:)
     }
@@ -3681,16 +3660,13 @@
   // preamble for the subslides
   let subslide-preamble(self) = {
     if (
-      (self.handout and not self.at("_handout-secondary", default: false))
-        or self.subslide == 1
+      (self.handout and not self.at("_handout-secondary", default: false)) or self.subslide == 1
     ) {
       slide-preamble(self)
     }
     [#metadata((kind: "touying-new-subslide")) <touying-metadata>]
     if (
-      self.at("enable-frozen-states-and-counters", default: true)
-        and not self.handout
-        and self.repeat > 1
+      self.at("enable-frozen-states-and-counters", default: true) and not self.handout and self.repeat > 1
     ) {
       if self.subslide == 1 {
         context {
@@ -3718,8 +3694,7 @@
     // 1. slide counter part
     //    if freeze-slide-counter is false, then update the slide-counter
     if (
-      (self.handout and not self.at("_handout-secondary", default: false))
-        or self.subslide == 1
+      (self.handout and not self.at("_handout-secondary", default: false)) or self.subslide == 1
     ) {
       if not self.at("freeze-slide-counter", default: false) {
         utils.slide-counter.step()
@@ -3826,14 +3801,11 @@
         result.push({
           set page(
             ..(
-              subslide-self.page
-                + page-extra-args
-                + (header: new-header, footer: footer-i)
+              subslide-self.page + page-extra-args + (header: new-header, footer: footer-i)
             ),
           )
           body-transform-i(setting-fn(
-            subslide-preamble(subslide-self)
-              + composer-with-side-by-side(..conts),
+            subslide-preamble(subslide-self) + composer-with-side-by-side(..conts),
           ))
         })
       }
@@ -3844,11 +3816,7 @@
     let i = self._recall-subslide
     assert(
       i >= 1 and i <= repeat,
-      message: "subslide "
-        + str(i)
-        + " is out of range (1.."
-        + str(repeat)
-        + ")",
+      message: "subslide " + str(i) + " is out of range (1.." + str(repeat) + ")",
     )
     self.subslide = i
     let (header, footer, body-transform) = _get-header-footer(self)
