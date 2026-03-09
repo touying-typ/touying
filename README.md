@@ -64,7 +64,7 @@ Touying supports incremental reveal with `#pause` and `#meanwhile`, math equatio
 |:---:|:---:|:---:|
 | ![pause animation](https://github.com/touying-typ/touying/assets/34951714/24ca19a3-b27c-4d31-ab75-09c37911e6ac) | ![math animation](https://github.com/touying-typ/touying/assets/34951714/8640fe0a-95e4-46ac-b570-c8c79f993de4) | ![cetz fletcher animation](https://github.com/touying-typ/touying/assets/34951714/9ba71f54-2a5d-4144-996c-4a42833cc5cc) |
 
-For the full feature set — cover mode, callback-style animations, `#uncover`, `#only`, `#alternatives` — see the [documentation](https://touying-typ.github.io/docs/dynamic/simple).
+For the full feature set — cover mode, callback-style animations, `#uncover`, `#only`, `#alternatives` — see the [documentation](https://touying-typ.github.io/docs/tutorials/dynamic/simple).
 
 
 ## Full Example

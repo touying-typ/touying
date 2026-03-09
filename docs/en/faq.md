@@ -1,5 +1,5 @@
 ---
-sidebar_position: 6
+sidebar_position: 7
 ---
 
 # FAQ
@@ -28,6 +28,24 @@ Use `config-page(fill: ...)` inside your theme setup:
 Hello, Touying!
 ```
 
+For single-page slides, use `config-common(fill: ...)`:
+
+```example
+#import "@preview/touying:0.6.2": *
+#import themes.simple: *
+
+#show: simple-theme.with(aspect-ratio: "16-9")
+
+= Title
+
+== First Slide
+
+#slide(config: config-page(fill: gray))[
+  Hello, Touying!
+]
+```
+
+
 ### How do I add a background image to my slides?
 
 Pass an `image(...)` call to `config-page(background: ...)`:
@@ -48,6 +66,22 @@ Pass an `image(...)` call to `config-page(background: ...)`:
 == Gradient Background Slide
 
 Content appears over the background.
+```
+
+For single-page slides, use `config-common(background: ...)`:
+
+```example
+#import "@preview/touying:0.6.2": *
+#import themes.simple: *
+#show: simple-theme.with(aspect-ratio: "16-9")
+
+= Title
+
+== Gradient Background Slide
+
+#slide(config: config-page(background: rect(width: 100%, height: 100%, fill: gradient.linear(blue.lighten(80%), purple.lighten(80%)))))[
+  Hello, Touying!
+]
 ```
 
 For a real image file you would write:

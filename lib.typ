@@ -8,7 +8,7 @@
 ///
 /// == Example
 ///
-/// Split slides by headings #link("https://touying-typ.github.io/docs/sections")[document]
+/// Split slides by headings #link("https://touying-typ.github.io/docs/tutorials/sections")[document]
 ///
 /// #example(````
 /// #import "@preview/touying:0.6.2": *
@@ -35,7 +35,7 @@
 ///
 /// == Example
 ///
-/// `#pause` and `#meanwhile` animations #link("https://touying-typ.github.io/docs/dynamic/simple")[document]
+/// `#pause` and `#meanwhile` animations #link("https://touying-typ.github.io/docs/tutorials/dynamic/simple")[document]
 ///
 /// #example(```
 /// #import "@preview/touying:0.6.2": *
