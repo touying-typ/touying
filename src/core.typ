@@ -2237,7 +2237,7 @@
   let max-repetitions = repetitions
 
   if kind == "touying-reducer" {
-    // Reducer: iterate positional args looking for touying-jump and touying-waypoint metadata
+    // Reducer: iterate positional args looking for touying-jump/pause/meanwhile and touying-waypoint metadata
     for child in value.args.flatten() {
       if (
         type(child) == content
@@ -2245,7 +2245,7 @@
           and type(child.value) == dictionary
       ) {
         let k = child.value.at("kind", default: none)
-        if k == "touying-jump" {
+        if k == "touying-jump/pause/meanwhile" {
           if child.value.relative {
             repetitions += child.value.n
             max-repetitions = calc.max(max-repetitions, repetitions)
@@ -2357,7 +2357,7 @@
         and type(child.value) == dictionary
     ) {
       let kind = child.value.at("kind", default: none)
-      if kind == "touying-jump" {
+      if kind == "touying-jump/pause/meanwhile" {
         if child.value.relative {
           repetitions += child.value.n
         } else {
@@ -2403,7 +2403,7 @@
               and type(inner-child.value) == dictionary
           ) {
             let ik = inner-child.value.at("kind", default: none)
-            if ik == "touying-jump" {
+            if ik == "touying-jump/pause/meanwhile" {
               if inner-child.value.relative {
                 inner-rep += inner-child.value.n
                 inner-max = calc.max(inner-max, inner-rep)
@@ -2446,7 +2446,7 @@
           and type(child.body.value) == dictionary
       ) {
         let kind = child.body.value.at("kind", default: none)
-        if kind == "touying-jump" {
+        if kind == "touying-jump/pause/meanwhile" {
           if child.body.value.relative {
             repetitions += child.body.value.n
           } else {
