@@ -135,7 +135,7 @@ This is a significant disruptive version update. Touying has removed many mistak
 A simple usage example is shown below, and more examples can be found in the `examples` directory:
 
 ```typst
-#import "@preview/touying:0.6.2": *
+#import "@preview/touying:0.6.3": *
 #import themes.university: *
 
 #show: university-theme.with(

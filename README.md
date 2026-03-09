@@ -17,7 +17,7 @@ If you like it, consider [giving a star ⭐ on GitHub](https://github.com/touyin
 
 ## Why Touying?
 
-- **Beautiful built-in themes** — Simple, Metropolis, Dewdrop, University, Aqua, Stargazer
+- **Beautiful themes** — [built-in themes](https://touying-typ.github.io/themes/) like Simple, Metropolis, Dewdrop, University, Aqua, Stargazer and [diverse themes on Typst Universe](https://typst.app/universe/search/?q=touying)
 - **Fast** — Typst compiles in milliseconds. Live previews update as you type, giving you the instant feedback.
 - **Rich animations** — `#pause`, `#meanwhile`, math equation animations, CeTZ & Fletcher support
 - **Heading-based slides** — write presentations like a document, no boilerplate
@@ -25,11 +25,12 @@ If you like it, consider [giving a star ⭐ on GitHub](https://github.com/touyin
 - **Export** — Builtin PDF export, PPTX and HTML via [touying-exporter](https://github.com/touying-typ/touying-exporter)
 - **Correct bookmarks** — proper PDF outline and page numbers out of the box
 
-## Document & Help
+## Documents & Help
 
 - [Full documentation and references](https://touying-typ.github.io/) (English & Chinese)
 - [Ask DeepWiki](https://deepwiki.com/touying-typ/touying) or [Ask Zread](https://zread.ai/touying-typ/touying) for AI-assisted help
 - [Gallery](https://github.com/touying-typ/touying/wiki) — slides made by the community
+- [Universe](https://typst.app/universe/search/?q=touying) — Diverse touying themes on Typst Universe
 - [Share slides instantly on GitHub](https://gistd.myriad-dreamin.com/touying-typ/touying/blob/main/examples/simple.typ?g-mode=slide) with [gistd](https://github.com/Myriad-Dreamin/gistd) or [export](https://github.com/touying-typ/touying-exporter) slides to PPTX and HTML formats and show presentation [online](https://touying-typ.github.io/touying-template/).
 
 
@@ -38,7 +39,7 @@ If you like it, consider [giving a star ⭐ on GitHub](https://github.com/touyin
 Make sure you have [Typst](https://typst.app/) installed, or use the [Web App](https://typst.app/) / [Tinymist for VS Code](https://marketplace.visualstudio.com/items?itemName=myriad-dreamin.tinymist).
 
 ```typst
-#import "@preview/touying:0.6.2": *
+#import "@preview/touying:0.6.3": *
 #import themes.simple: *
 
 #show: simple-theme.with(aspect-ratio: "16-9")
@@ -75,7 +76,7 @@ For the full feature set — cover mode, callback-style animations, `#uncover`, 
 For a comprehensive example showcasing university theme, theorems, CeTZ/Fletcher animations, speaker notes, and more. You can also use the `#slide[..]` format to access more powerful features provided by Touying.
 
 ```typst
-#import "@preview/touying:0.6.2": *
+#import "@preview/touying:0.6.3": *
 #import themes.university: *
 #import "@preview/cetz:0.4.2"
 #import "@preview/fletcher:0.5.8" as fletcher: node, edge

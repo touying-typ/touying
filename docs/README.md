@@ -19,7 +19,7 @@ Example:
 
 ````markdown
 ```example
-#import "@preview/touying:0.6.2": *
+#import "@preview/touying:0.6.3": *
 #import themes.simple: *
 
 #show: simple-theme.with(aspect-ratio: "16-9")
@@ -40,7 +40,7 @@ This is typically used to inject common Touying bootstrap code (imports and them
 Typical prelude:
 
 ```typst
->>> #import "@preview/touying:0.6.2": *
+>>> #import "@preview/touying:0.6.3": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
 ```

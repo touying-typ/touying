@@ -18,7 +18,7 @@ These three files are separated to allow both `main.typ` and `content.typ` to im
 
 ```typst
 // globals.typ
-#import "@preview/touying:0.6.2": *
+#import "@preview/touying:0.6.3": *
 #import themes.university: *
 
 // as well as some utility functions

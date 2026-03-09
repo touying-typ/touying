@@ -12,7 +12,7 @@ sidebar_position: 2
 我们可以使用标记风格的函数，用起来十分方便。
 
 ```example
->>> #import "@preview/touying:0.6.2": *
+>>> #import "@preview/touying:0.6.3": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
 At subslide #touying-fn-wrapper((self: none) => str(self.subslide)), we can

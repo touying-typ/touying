@@ -18,7 +18,7 @@ Touying provides a set of counters and utilities for tracking and displaying pre
 Use it in a custom footer:
 
 ```example
-#import "@preview/touying:0.6.2": *
+#import "@preview/touying:0.6.3": *
 #import themes.default: *
 
 #show: default-theme.with(
@@ -65,7 +65,7 @@ This is how the metropolis and aqua themes implement their progress bars.
 The `appendix` show rule stops the slide counter so that appendix slides do not change the total shown in the footer:
 
 ```example
-#import "@preview/touying:0.6.2": *
+#import "@preview/touying:0.6.3": *
 #import themes.simple: *
 
 #show: simple-theme

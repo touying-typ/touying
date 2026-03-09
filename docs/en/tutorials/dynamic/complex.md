@@ -12,7 +12,7 @@ Thanks to the syntax provided by [Polylux](https://polylux.dev/book/dynamic/synt
 We can use mark-style functions, which are very convenient to use.
 
 ```example
->>> #import "@preview/touying:0.6.2": *
+>>> #import "@preview/touying:0.6.3": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
 At subslide #touying-fn-wrapper((self: none) => str(self.subslide)), we can
@@ -32,7 +32,7 @@ However, this does not work in all cases, for example if you put `uncover` into 
 To overcome the limitations of layout functions mentioned earlier, Touying cleverly implements always-effective `only`, `uncover`, and `alternatives` using callback functions. Specifically, you need to introduce these three functions as follows:
 
 ```example
->>> #import "@preview/touying:0.6.2": *
+>>> #import "@preview/touying:0.6.3": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
 #slide(repeat: 3, self => [
@@ -83,7 +83,7 @@ You may also have noticed that `#pause` actually uses the `cover` function, prov
 The `alternatives` function displays a series of different content in different subslides. For example:
 
 ```example
->>> #import "@preview/touying:0.6.2": *
+>>> #import "@preview/touying:0.6.3": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
 #slide(repeat: 3, self => [

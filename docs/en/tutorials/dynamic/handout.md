@@ -15,7 +15,7 @@ config-common(handout: true)
 Place this inside your theme setup:
 
 ```example
-#import "@preview/touying:0.6.2": *
+#import "@preview/touying:0.6.3": *
 #import themes.simple: *
 
 #show: simple-theme.with(

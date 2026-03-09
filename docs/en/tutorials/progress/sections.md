@@ -29,7 +29,7 @@ utils.display-current-short-heading(level: 2)
 You can use these utilities in a custom header:
 
 ```example
-#import "@preview/touying:0.6.2": *
+#import "@preview/touying:0.6.3": *
 #import themes.default: *
 
 #show: default-theme.with(
@@ -59,7 +59,7 @@ Header updates automatically.
 `components.progressive-outline()` renders an outline that highlights the current section and grays out the rest — a common pattern in themed presentations:
 
 ```example
-#import "@preview/touying:0.6.2": *
+#import "@preview/touying:0.6.3": *
 #import themes.dewdrop: *
 
 #show: dewdrop-theme.with(aspect-ratio: "16-9")

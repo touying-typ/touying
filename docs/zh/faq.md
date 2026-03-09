@@ -13,7 +13,7 @@ sidebar_position: 7
 在主题设置中使用 `config-page(fill: ...)`：
 
 ```example
-#import "@preview/touying:0.6.2": *
+#import "@preview/touying:0.6.3": *
 #import themes.simple: *
 
 #show: simple-theme.with(
@@ -31,7 +31,7 @@ Hello, Touying!
 对于单页幻灯片，也可以使用 `config-common(fill: ...)`：
 
 ```example
-#import "@preview/touying:0.6.2": *
+#import "@preview/touying:0.6.3": *
 #import themes.simple: *
 
 #show: simple-theme.with(aspect-ratio: "16-9")
@@ -51,7 +51,7 @@ Hello, Touying!
 将 `image(...)` 调用传递给 `config-page(background: ...)`：
 
 ```example
-#import "@preview/touying:0.6.2": *
+#import "@preview/touying:0.6.3": *
 #import themes.simple: *
 
 #show: simple-theme.with(
@@ -71,7 +71,7 @@ Content appears over the background.
 对于单页幻灯片，也可以使用 `config-common(background: ...)`：
 
 ```example
-#import "@preview/touying:0.6.2": *
+#import "@preview/touying:0.6.3": *
 #import themes.simple: *
 #show: simple-theme.with(aspect-ratio: "16-9")
 
@@ -97,7 +97,7 @@ config-page(
 使用 `config-colors(primary: ...)`：
 
 ```example
-#import "@preview/touying:0.6.2": *
+#import "@preview/touying:0.6.3": *
 #import themes.metropolis: *
 
 #show: metropolis-theme.with(
@@ -122,7 +122,7 @@ The header now uses the custom primary color.
 使用带 `composer` 参数的 `slide` 将内容分成多列：
 
 ```example
->>> #import "@preview/touying:0.6.2": *
+>>> #import "@preview/touying:0.6.3": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
 #slide(composer: (1fr, 1fr))[
@@ -143,7 +143,7 @@ The header now uses the custom primary color.
 可以直接在幻灯片内容中使用 Typst 内置的 `columns` 函数：
 
 ```example
->>> #import "@preview/touying:0.6.2": *
+>>> #import "@preview/touying:0.6.3": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
 #slide[
@@ -164,7 +164,7 @@ The header now uses the custom primary color.
 使用 Typst 的 `place` 函数进行绝对定位：
 
 ```example
->>> #import "@preview/touying:0.6.2": *
+>>> #import "@preview/touying:0.6.3": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
 #slide[
@@ -181,7 +181,7 @@ The header now uses the custom primary color.
 使用 `utils.fit-to-height` 或 `utils.fit-to-width`：
 
 ```example
->>> #import "@preview/touying:0.6.2": *
+>>> #import "@preview/touying:0.6.3": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
 #slide[
@@ -202,7 +202,7 @@ The header now uses the custom primary color.
 用 `components.adaptive-columns` 包裹 Typst 内置的 `outline`：
 
 ```example
-#import "@preview/touying:0.6.2": *
+#import "@preview/touying:0.6.3": *
 #import themes.simple: *
 
 #show: simple-theme.with(aspect-ratio: "16-9")
@@ -231,7 +231,7 @@ More content here.
 结合 `numbly` 包和 `#set heading(numbering: ...)`：
 
 ```example
-#import "@preview/touying:0.6.2": *
+#import "@preview/touying:0.6.3": *
 #import themes.simple: *
 #import "@preview/numbly:0.1.0": numbly
 
@@ -257,7 +257,7 @@ More content here.
 使用 `components.progressive-outline` 高亮当前章节：
 
 ```example
-#import "@preview/touying:0.6.2": *
+#import "@preview/touying:0.6.3": *
 #import themes.dewdrop: *
 
 #show: dewdrop-theme.with(aspect-ratio: "16-9")
@@ -282,7 +282,7 @@ More content here.
 将 `bibliography(...)` 值传递给 `config-common(show-bibliography-as-footnote: ...)`：
 
 ```example
-#import "@preview/touying:0.6.2": *
+#import "@preview/touying:0.6.3": *
 #import themes.simple: *
 
 #let bib = bytes(
@@ -311,7 +311,7 @@ This is a famous book. @knuth
 使用 `magic.bibliography(...)` 显示参考文献幻灯片：
 
 ```example
-#import "@preview/touying:0.6.2": *
+#import "@preview/touying:0.6.3": *
 #import themes.simple: *
 
 #let bib = bytes(
@@ -348,7 +348,7 @@ Some cited content. @knuth
 在幻灯片的任意位置使用 `#speaker-note[...]` 函数：
 
 ```example
->>> #import "@preview/touying:0.6.2": *
+>>> #import "@preview/touying:0.6.3": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
 #slide[
@@ -408,7 +408,7 @@ pympress 同样支持读取嵌入的演讲者备注。详细信息请参阅 [pym
 使用 `utils.slide-counter.display()` 显示当前编号，`utils.last-slide-number` 显示总数：
 
 ```example
-#import "@preview/touying:0.6.2": *
+#import "@preview/touying:0.6.3": *
 #import themes.simple: *
 
 #show: simple-theme.with(
@@ -436,7 +436,7 @@ Still counting.
 将 `utils.slide-counter.display()` 与 `utils.last-slide-number` 组合：
 
 ```example
-#import "@preview/touying:0.6.2": *
+#import "@preview/touying:0.6.3": *
 #import themes.default: *
 
 #show: default-theme.with(
@@ -460,7 +460,7 @@ Custom numbering format in the footer.
 在标题上添加 `<touying:unnumbered>` 标签：
 
 ```example
->>> #import "@preview/touying:0.6.2": *
+>>> #import "@preview/touying:0.6.3": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
 = Title Slide <touying:unnumbered>
@@ -479,7 +479,7 @@ This slide is counted.
 在主要内容之后使用 `#show: appendix`。此后的幻灯片不会递增幻灯片计数器：
 
 ```example
-#import "@preview/touying:0.6.2": *
+#import "@preview/touying:0.6.3": *
 #import themes.simple: *
 
 #show: simple-theme.with(aspect-ratio: "16-9")
@@ -512,7 +512,7 @@ This slide is in the appendix and does not increment the main counter.
 在 `#slide` 内的内容块之间放置 `#pause`：
 
 ```example
->>> #import "@preview/touying:0.6.2": *
+>>> #import "@preview/touying:0.6.3": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
 #slide[
@@ -533,7 +533,7 @@ This slide is in the appendix and does not increment the main counter.
 使用 `#only("...")` 在特定子幻灯片上显示内容，或用 `#uncover("...")` 显示内容同时保留其占位空间：
 
 ```example
->>> #import "@preview/touying:0.6.2": *
+>>> #import "@preview/touying:0.6.3": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
 #slide[
@@ -548,7 +548,7 @@ This slide is in the appendix and does not increment the main counter.
 `#pause` 使用元数据注入机制，在 `context { ... }` 块内无法正常工作。请改用回调式 `slide` 来访问 `self.subslide`：
 
 ```example
->>> #import "@preview/touying:0.6.2": *
+>>> #import "@preview/touying:0.6.3": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
 #slide(self => {
@@ -610,7 +610,7 @@ This slide is in the appendix and does not increment the main counter.
 使用 `#alternatives` 在不同版本的内容之间切换：
 
 ```example
->>> #import "@preview/touying:0.6.2": *
+>>> #import "@preview/touying:0.6.3": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
 #slide[
@@ -640,7 +640,7 @@ This slide is in the appendix and does not increment the main counter.
 在主题设置之前或之后使用 `#set text(...)` 规则：
 
 ```example
-#import "@preview/touying:0.6.2": *
+#import "@preview/touying:0.6.3": *
 #import themes.metropolis: *
 
 #show: metropolis-theme.with(
@@ -680,7 +680,7 @@ Text now uses the custom font.
 使用 `#set par(justify: true)`：
 
 ```example
->>> #import "@preview/touying:0.6.2": *
+>>> #import "@preview/touying:0.6.3": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
 #set par(justify: true)
@@ -701,7 +701,7 @@ Text now uses the custom font.
 设置 `config-common(new-section-slide-fn: none)`：
 
 ```example
-#import "@preview/touying:0.6.2": *
+#import "@preview/touying:0.6.3": *
 #import themes.metropolis: *
 
 #show: metropolis-theme.with(
@@ -722,7 +722,7 @@ No automatic section slide was created for the `= Section` heading.
 在幻灯片标题上添加 `<touying:hidden>` 标签：
 
 ```example
->>> #import "@preview/touying:0.6.2": *
+>>> #import "@preview/touying:0.6.3": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
 == Visible Slide
@@ -743,7 +743,7 @@ Back to normal.
 使用 `<touying:unoutlined>` 标签：
 
 ```example
->>> #import "@preview/touying:0.6.2": *
+>>> #import "@preview/touying:0.6.3": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
 == Outline <touying:hidden>
@@ -770,7 +770,7 @@ Also appears in the outline.
 使用 `config-common(slide-level: ...)`，默认值因主题而异：
 
 ```example
-#import "@preview/touying:0.6.2": *
+#import "@preview/touying:0.6.3": *
 #import themes.simple: *
 
 #show: simple-theme.with(
@@ -796,7 +796,7 @@ Sub-subheadings do not create new slides.
 使用 `config-page(header: ..., footer: ...)`：
 
 ```example
-#import "@preview/touying:0.6.2": *
+#import "@preview/touying:0.6.3": *
 #import themes.default: *
 
 #show: default-theme.with(
@@ -825,7 +825,7 @@ Slide with a custom header and footer.
 使用 `config-info(...)`：
 
 ```example
-#import "@preview/touying:0.6.2": *
+#import "@preview/touying:0.6.3": *
 #import themes.metropolis: *
 
 #show: metropolis-theme.with(
@@ -853,7 +853,7 @@ Content here.
 使用 `touying-set-config` 包裹需要更改的内容：
 
 ```example
->>> #import "@preview/touying:0.6.2": *
+>>> #import "@preview/touying:0.6.3": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
 #slide[
@@ -893,7 +893,7 @@ typst watch slides.typ
 
 ```typst
 // main.typ
-#import "@preview/touying:0.6.2": *
+#import "@preview/touying:0.6.3": *
 #import themes.simple: *
 
 #show: simple-theme.with(aspect-ratio: "16-9")
@@ -935,7 +935,7 @@ typst watch slides.typ
 使用 `utils.display-current-heading(...)` 或 `utils.display-current-short-heading(...)`：
 
 ```example
-#import "@preview/touying:0.6.2": *
+#import "@preview/touying:0.6.3": *
 #import themes.default: *
 
 #show: default-theme.with(
@@ -959,7 +959,7 @@ The header shows the current section name.
 正常导入两个包并在幻灯片中使用 `#pin`/`#pinit-highlight`：
 
 ```typst
-#import "@preview/touying:0.6.2": *
+#import "@preview/touying:0.6.3": *
 #import "@preview/pinit:0.2.2": *
 #import themes.simple: *
 

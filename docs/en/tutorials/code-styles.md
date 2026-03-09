@@ -9,7 +9,7 @@ sidebar_position: 1
 If we just need to use it simply, we can directly input content under the title, just like writing a normal Typst document. The titles here serve to separate pages, and we can also normally use commands like `#pause` to achieve animation effects.
 
 ```example
-#import "@preview/touying:0.6.2": *
+#import "@preview/touying:0.6.3": *
 #import themes.simple: *
 
 #show: simple-theme.with(aspect-ratio: "16-9")
@@ -30,7 +30,7 @@ And you can use an empty title `== <touying:hidden>` to create a new page, which
 If we need to maintain the current title and just want to add a new page, we can use `#pagebreak()`, or directly use `---` to split the page, the latter is parsed as `#pagebreak()` in Touying.
 
 ```example
-#import "@preview/touying:0.6.2": *
+#import "@preview/touying:0.6.3": *
 #import themes.simple: *
 
 #show: simple-theme.with(aspect-ratio: "16-9")
@@ -53,7 +53,7 @@ Many times, using only the simple style cannot achieve all the functions we need
 For example, the above example can be transformed into
 
 ```example
-#import "@preview/touying:0.6.2": *
+#import "@preview/touying:0.6.3": *
 #import themes.simple: *
 
 #show: simple-theme.with(aspect-ratio: "16-9")
@@ -87,7 +87,7 @@ You may have noticed that when using the simple theme, using a first-level title
 If we do not want it to automatically create such a section slide, we can remove this method:
 
 ```example
-#import "@preview/touying:0.6.2": *
+#import "@preview/touying:0.6.3": *
 #import themes.simple: *
 
 #show: simple-theme.with(
@@ -111,7 +111,7 @@ As you can see, this will only result in two pages, and the default section slid
 Similarly, we can also register a new section slide:
 
 ```example
-#import "@preview/touying:0.6.2": *
+#import "@preview/touying:0.6.3": *
 #import themes.simple: *
 
 #show: simple-theme.with(

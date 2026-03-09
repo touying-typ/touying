@@ -11,7 +11,7 @@ sidebar_position: 5
 由于 Touying 在每个子幻灯片上都会重新渲染内容，`codly` 的每页状态必须在每张幻灯片绘制前恢复。将 codly 的初始化作为 `preamble` 传入：
 
 ```example
-#import "@preview/touying:0.6.2": *
+#import "@preview/touying:0.6.3": *
 #import themes.simple: *
 #import "@preview/codly:1.3.0": *
 #import "@preview/codly-languages:0.1.10": *
@@ -38,7 +38,7 @@ sidebar_position: 5
 你可以使用 `#pause` 或 `#only` 逐行展示代码。但请注意，`#pause` 无法直接在 `raw` 块内使用——请使用 `touying-raw` 实现动画代码：
 
 ```example
-#import "@preview/touying:0.6.2": *
+#import "@preview/touying:0.6.3": *
 #import themes.simple: *
 
 #show: simple-theme.with(aspect-ratio: "16-9")
