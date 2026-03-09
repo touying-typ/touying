@@ -1216,14 +1216,22 @@
       let sorted = waypoints.pairs().sorted(key: p => p.at(1).first)
       let labels = sorted.map(p => p.at(0))
       let idx = labels.position(l => l == base)
-      // Try hierarchical prefix match if exact label not found
+      // If no exact match, try hierarchical prefix match (e.g. <parent>
+      // when only <parent:a>, <parent:b> exist).  Directional: next-wp
+      // anchors to the last child (to skip past the group), prev-wp
+      // anchors to the first child (to land before the group).
+      // When an exact parent label exists, it is used directly.
       if idx == none {
         let prefix = base + ":"
-        let pm = labels
+        let children = labels
           .enumerate()
-          .filter(p => p.at(1) == base or p.at(1).starts-with(prefix))
-        if pm.len() > 0 {
-          idx = pm.first().at(0)
+          .filter(p => p.at(1).starts-with(prefix))
+        if children.len() > 0 {
+          idx = if kind == "waypoint-next" {
+            children.last().at(0)
+          } else {
+            children.first().at(0)
+          }
         }
       }
       if idx == none {

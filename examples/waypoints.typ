@@ -433,6 +433,53 @@ Note: Waypoints work in contexts like fletcher, but not inside text blocks like 
   Results during more.
 ]
 
+== Navigating Hierarchies with `next-wp` / `prev-wp`
+
+#slide(composer: (1fr, 1fr))[
+  #code-col(
+    "#waypoint(<before>)
+Before the group.
+#waypoint(<grp:a>)
+Part A.
+#waypoint(<grp:b>)
+Part B.
+#waypoint(<grp:c>)
+Part C.
+#waypoint(<after>)
+After the group.
+
+// Virtual parent (no <grp> waypoint):
+// next-wp → last child + 1
+#only(next-wp(<grp>))[
+  Past the group (after).
+]
+// prev-wp → first child − 1
+#only(prev-wp(<grp>))[
+  Before the group.
+]",
+  )
+
+  When `<grp>` is a _virtual_ parent (only children like `<grp:a>` etc. exist), `next-wp` anchors to the *last* child and `prev-wp` to the *first* — so they navigate _past_ or _before_ the entire group.
+
+  If an explicit `#waypoint(<grp>)` exists, it anchors to that label directly — stepping into the children from there.
+][
+  #waypoint(<hn-before>)
+  Before the group.
+  #waypoint(<hn-grp:a>)
+  Part A.
+  #waypoint(<hn-grp:b>)
+  Part B.
+  #waypoint(<hn-grp:c>)
+  Part C.
+  #waypoint(<hn-after>)
+  After the group.
+
+  #only(next-wp(<hn-grp>))[_(next-wp: past group → after)_]
+  #only(prev-wp(<hn-grp>))[_(prev-wp: before group → before)_]
+
+  You can also reach children: `next-wp(get-first(<grp>))` starts at the first child and steps forward within the group.
+]
+
 = Integration: CeTZ & Fletcher
 
 == Waypoints inside `touying-reducer`
@@ -491,7 +538,7 @@ First, set up the reducer bindings (once, at the top of your file):
   edge((0, 1), (1, 0), $tilde(f)$, \"hook-->\"),
 )
 #alternatives(
-  at: (get-first(<fl-maps>), from-wp(get-last(fl-maps)))
+  at: (get-first(<fl-maps>), from-wp(get-last(<fl-maps>)))
 )[
   $f: G -> $, $pi: G ->> $ ][
   $f: G -> im(f)$, $pi: G ->> G\/ker(f)$ ]

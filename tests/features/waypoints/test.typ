@@ -619,7 +619,10 @@ Phase C.
 
 == Hierarchy Nav
 
-#waypoint(<hn:a>, advance: false)
+#waypoint(<hn-before>, advance: false)
+Before the group.
+
+#waypoint(<hn:a>)
 Part A.
 
 #waypoint(<hn:b>)
@@ -628,9 +631,18 @@ Part B.
 #waypoint(<hn:c>)
 Part C.
 
-#only(next-wp(<hn:a>))[During B (next after A).]
+#waypoint(<hn-after>)
+After the group.
 
-#only(prev-wp(<hn:c>))[During B (prev before C).]
+// Exact child navigation (as before)
+#only(next-wp(<hn:a>))[During B (next after child A).]
+#only(prev-wp(<hn:c>))[During B (prev before child C).]
+
+// Parent navigation (no explicit <hn> waypoint — virtual parent):
+// next-wp(<hn>) anchors to last child (hn:c), steps +1 = hn-after
+#only(next-wp(<hn>))[During hn-after (next past entire group).]
+// prev-wp(<hn>) anchors to first child (hn:a), steps -1 = hn-before
+#only(prev-wp(<hn>))[During hn-before (prev before entire group).]
 
 // -----------------------------------------------
 // Test 36: Forward reference in callback
@@ -887,4 +899,5 @@ Part B.
 
 #uncover(until-wp(get-last(<gu-a>)))[Until last of A (subslide 1 only).]
 #uncover(from-wp(get-last(<gu-a>)))[From last of A onward (subslides 2-3).]
+
 
