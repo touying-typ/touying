@@ -214,10 +214,11 @@ Note: Waypoints work in contexts like fletcher, but not inside text blocks like 
 
 #slide(composer: (1fr, 1fr))[
   #text(weight: "bold")[`prev-wp` / `next-wp`]
+  #v(-0.5em)
   #code-col(
-    "#waypoint(<na>)\nSection A.\n#waypoint(<nb>)\nSection B.\n#waypoint(<nc>)\nSection C.\n#only(next-wp(<na>))[\n  During B (next after A).\n]\n#only(prev-wp(<nc>))[\n  During B (prev before C).\n]",
+    "#waypoint(<na>)\nSection A.\n#waypoint(<nb>)\nSection B.\n#waypoint(<nc>)\nSection C.\n#only(next-wp(<na>))[\n During B (next after A).\n]\n#only(prev-wp(<nc>))[\n  During B (prev before C).\n]",
   )
-  Jump to the adjacent waypoint in subslide order. \
+  Jump to the adjacent waypoint in subslide order.
   In fact you may also pass an `amount` to jump multiple waypoints: `next-wp(<lbl>, amount: 2)`.
 ][
   #waypoint(<na>)
