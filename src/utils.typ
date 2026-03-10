@@ -1816,8 +1816,25 @@
     } else {
       1
     }
+  } else if type(start) == str {
+    let parts = _parse-subslide-indices(start)
+    if parts.len() == 1 and type(parts.first()) == int {
+      parts.first()
+    } else {
+      panic(
+        "item-by-item: `start` string must be a single number (e.g. \"3\"), "
+          + "not a range or multi-value spec. Got: \""
+          + start
+          + "\".",
+      )
+    }
   } else {
-    start
+    panic(
+      "item-by-item: `start` must be an integer, a string with a single number, "
+        + "a waypoint label, or a single-position waypoint marker "
+        + "(get-first, get-last, prev-wp, next-wp). Got: "
+        + type(start),
+    )
   }
 
   if is-sequence(cont) {

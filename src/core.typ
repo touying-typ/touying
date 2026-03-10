@@ -1554,6 +1554,15 @@
 ///
 /// -> content
 #let item-by-item(start: auto, cont) = {
+  if (
+    type(start) == dictionary and start.at("kind", default: none) in ("waypoint-from", "waypoint-until")
+  ) {
+    panic(
+      "item-by-item: `start` must resolve to a single subslide position. "
+        + "`from-wp` and `until-wp` are range markers and are not supported here. "
+        + "Use a label, `get-first`, `get-last`, `prev-wp`, `next-wp` or simple slide numbers instead.",
+    )
+  }
   let num-items = if utils.is-sequence(cont) {
     cont
       .children
@@ -1584,13 +1593,49 @@
       start: start,
       cont,
     )
-  } else {
-    // Label or waypoint marker — resolved at render time.
-    // Use 1 (not 0) so the parser's escape hatch recognises this fn-wrapper
-    // when nested inside a pause zone (same reasoning as last-required-subslide).
+  } else if type(start) == str {
+    let parts = utils._parse-subslide-indices(start)
+    if parts.len() != 1 or type(parts.first()) != int {
+      panic(
+        "item-by-item: `start` string must be a single number (e.g. \"3\"), "
+          + "not a range or multi-value spec. Got: \""
+          + start
+          + "\".",
+      )
+    }
+    let n = parts.first()
     touying-fn-wrapper(
       utils.item-by-item,
-      last-subslide: 1,
+      last-subslide: n + num-items - 1,
+      start: n,
+      cont,
+    )
+  } else {
+    // Label or waypoint marker — resolved at render time.
+    // For a plain label, emit an implicit waypoint so users don't need to write
+    // a separate #waypoint(<label>) before the call.  The _waypoint-known check
+    // in the prepass ensures the waypoint is only registered once even if an
+    // explicit #waypoint(<label>) is also present.
+    // Dictionary markers (from-wp, next-wp, get-first, …) reference an existing
+    // explicit waypoint, so no implicit waypoint is needed for those.
+    if type(start) == label {
+      [#metadata((
+        kind: "touying-implicit-waypoint",
+        label: str(start),
+      ))<touying-temporary-mark>]
+    }
+    // At callback time, `repetitions` equals the waypoint's subslide number
+    // (the implicit or explicit waypoint was processed just before this wrapper).
+    // We need num-items subslides starting from there, so the last subslide
+    // needed is repetitions + num-items - 1.
+    // Return empty extra-args so the original label/marker `start` is preserved
+    // for render-time resolution via resolve-waypoints.
+    touying-fn-wrapper(
+      utils.item-by-item,
+      last-subslide: repetitions => (
+        repetitions + num-items - 1,
+        (:),
+      ),
       start: start,
       cont,
     )
