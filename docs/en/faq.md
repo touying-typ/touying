@@ -566,7 +566,7 @@ Use `#only("...")` to show content on particular subslides, or `#uncover("...")`
 Use `touying-reducer` to wrap CeTZ canvas so Touying can animate it:
 
 ```typst
-#import "@preview/cetz:0.3.4"
+#import "@preview/cetz:0.4.2"
 
 #let cetz-canvas = touying-reducer.with(
   reduce: cetz.canvas,
@@ -588,7 +588,7 @@ Use `touying-reducer` to wrap CeTZ canvas so Touying can animate it:
 Use `touying-reducer` to wrap Fletcher diagrams:
 
 ```typst
-#import "@preview/fletcher:0.5.7" as fletcher: diagram, node, edge
+#import "@preview/fletcher:0.5.8" as fletcher: diagram, node, edge
 
 #let fletcher-diagram = touying-reducer.with(
   reduce: fletcher.diagram,

@@ -566,7 +566,7 @@ This slide is in the appendix and does not increment the main counter.
 使用 `touying-reducer` 包裹 CeTZ canvas，使 Touying 能够为其添加动画：
 
 ```typst
-#import "@preview/cetz:0.3.4"
+#import "@preview/cetz:0.4.2"
 
 #let cetz-canvas = touying-reducer.with(
   reduce: cetz.canvas,
@@ -588,7 +588,7 @@ This slide is in the appendix and does not increment the main counter.
 使用 `touying-reducer` 包裹 Fletcher 图表：
 
 ```typst
-#import "@preview/fletcher:0.5.7" as fletcher: diagram, node, edge
+#import "@preview/8" as fletcher: diagram, node, edge
 
 #let fletcher-diagram = touying-reducer.with(
   reduce: fletcher.diagram,
