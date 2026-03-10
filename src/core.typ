@@ -3172,10 +3172,43 @@
         }
         found
       }
-
+      let spacing-is-auto(it) = {
+        if it.func() == list.item {
+          list.spacing == auto
+        } else if it.func() == enum.item {
+          enum.spacing == auto
+        } else if it.func() == terms.item {
+          terms.spacing == auto
+        } else {
+          false
+        }
+      }
       let covered = cover-fn(items.sum())
       if first-is-list and last-is-list {
-        context block(spacing: par.leading, covered)
+        let first-item = items.at(first-pos)
+        // construct a block around the covered content that corrects spacing. looks for auto
+        context block(
+          spacing: if spacing-is-auto(first-item) {
+            // would yield `auto` which is a par.spacing for the block.
+            if self.at("nontight-list-enum-and-terms", default: true) {
+              //cannot set list thightness via set rule somehow. if user uses magic.nontight locally we can't detect that, so we just assume he only uses the config. thus this might break.
+              par.spacing
+            } else {
+              par.leading
+            }
+          } else {
+            if first-item.func() == list.item {
+              list.spacing
+            } else if first-item.func() == enum.item {
+              enum.spacing
+            } else if first-item.func() == terms.item {
+              terms.spacing
+            } else {
+              par.spacing
+            }
+          },
+          covered,
+        )
       } else {
         covered
       }

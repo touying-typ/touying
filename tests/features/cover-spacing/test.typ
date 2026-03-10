@@ -139,6 +139,7 @@
 })[
   #align(horizon)[
     - first
+    #pause
     - second
     #pause
     normal text
@@ -228,5 +229,33 @@
     paragraph text3 #v(1em)
     - list item3 (hidden)
     paragraph again
+  ]
+]
+
+//== now some tests with nontight lists.
+//bc we do this locally this will break.
+
+#slide(
+  composer: (1fr, 1fr),
+  setting: body => {
+    place(top + left, dy: 56pt)[#line(length: 100%, stroke: .4pt + red)]
+    //locally setting lists to be nontight.
+    show list.where(tight: true): magic.nontight
+
+    body
+  },
+)[
+  #align(horizon)[
+    - first
+    #pause
+    - second
+    - third
+  ]
+][
+  #meanwhile
+  #align(horizon)[
+    - first
+    - second
+    - third
   ]
 ]
