@@ -37,7 +37,7 @@
   )
 ]
 
-== Fletcher with uncover and only
+== Fletcher with native uncover and only
 
 // Tests fn-wrappers inside the reducer: uncover uses fletcher.hide,
 // only produces no output when hidden.
@@ -50,5 +50,52 @@
     uncover("1-2", edge((0, 0), (1, 0), "-|>", stroke: blue)),
     uncover("2-", node((1, 0), [B], radius: 2em)),
     only(3, node((0, 1), [tmp], radius: 1em, fill: orange)),
+  )
+]
+
+// == Fletcher with pause after uncover
+
+// // Tests that pause lands after fn-wrapper range, not before.
+// #slide[
+//   #fletcher-diagram(
+//     node-stroke: .1em,
+//     spacing: 4em,
+//     node((0, 0), [X], radius: 2em),
+//     uncover("2-3", edge((0, 0), (1, 0), "-|>")),
+//     uncover("2-3", node((1, 0), [Y], radius: 2em)),
+//     pause,
+//     edge((1, 0), (2, 0), "-|>"),
+//     node((2, 0), [Z], radius: 2em),
+//   )
+// ]
+
+== Fletcher with waypoints
+
+// Tests waypoint labels inside the reducer with uncover/only.
+#slide[
+  #fletcher-diagram(
+    node-stroke: .1em,
+    spacing: 4em,
+    node((0, 0), [Origin], radius: 2em),
+    waypoint(<fl-step>, advance: false),
+    uncover(<fl-step>, edge((0, 0), (1, 0), "-|>")),
+    uncover(<fl-step>, node((1, 0), [W], radius: 2em)),
+    only(<fl-done>, node((1, 1), [Done], radius: 1.5em, fill: green.lighten(60%))),
+  )
+]
+
+== Fletcher with alternatives
+
+// Tests alternatives: node swaps label per subslide.
+#slide[
+  #fletcher-diagram(
+    node-stroke: .1em,
+    spacing: 4em,
+    node((0, 0), [Start], radius: 2em),
+    edge("-|>"),
+    alternatives(
+      node((1, 0), [Phase 1], radius: 2em),
+      node((1, 0), [Phase 2], radius: 2em),
+    ),
   )
 ]

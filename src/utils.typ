@@ -1497,7 +1497,7 @@
     }
   } else {
     panic(
-      "you may only provide a single integer, an array of integers, or a string",
+      "you may only provide `auto`, a single integer, an array of integers, a string or a waypoint label or marker",
     )
   }
 }

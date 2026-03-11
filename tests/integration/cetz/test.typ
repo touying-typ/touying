@@ -66,3 +66,17 @@
     (only(3, line((0, 0), (2.5, 2.5), name: "line")),)
   })
 ]
+
+
+== Cetz with native alternatives
+
+#slide[
+  #cetz-canvas({
+    import cetz.draw: *
+    rect((0, 0), (5, 5))
+
+    (alternatives(start: 1, rect((0, 0), (1, 1)), rect((1, 1), (2, 2)), rect((2, 2), (3, 3))),)
+
+    (alternatives(start: 2, line((0, 0), (2.5, 2.5), name: "line"), line((0, 5), (2.5, 2.5), name: "line-alt")),)
+  })
+]

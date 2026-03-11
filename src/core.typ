@@ -2226,9 +2226,19 @@
     ),
   )
   // parse the content
+  // Flatten content sequences so that e.g. uncover(<label>, body) which produces
+  // [implicit-waypoint-metadata + fn-wrapper-metadata] is split into separate children.
+  let flat-args = ()
+  for arg in reducer.args.flatten() {
+    if type(arg) == content and utils.is-sequence(arg) {
+      flat-args += arg.children
+    } else {
+      flat-args.push(arg)
+    }
+  }
   let result = ()
   let hidden-parts = ()
-  for child in reducer.args.flatten() {
+  for child in flat-args {
     if (
       type(child) == content and child.func() == metadata and type(child.value) == dictionary
     ) {
@@ -2314,10 +2324,17 @@
           ..child.value.args,
           ..extra-args,
         )
-        // only() returns none when hidden — don't push none to the result
+        // only() returns none when hidden — don't push none to the result.
+        // Flatten arrays (CeTZ draw commands) and content sequences (e.g.
+        // alternatives returning joined only() results) so the reduce function
+        // sees the same flat items as it would in the callback pathway.
         if fn-result != none {
           if type(fn-result) == array {
             result += fn-result
+          } else if type(fn-result) == content and utils.is-sequence(fn-result) {
+            for child in fn-result.children {
+              result.push(child)
+            }
           } else {
             result.push(fn-result)
           }
@@ -2413,8 +2430,18 @@
   if kind == "touying-reducer" {
     let last-subslide = 0
     // Reducer: iterate positional args looking for touying-jump/pause/meanwhile,
-    // touying-waypoint, and touying-fn-wrapper metadata
-    for child in value.args.flatten() {
+    // touying-waypoint, and touying-fn-wrapper metadata.
+    // Flatten content sequences so that e.g. uncover(<label>, body) which produces
+    // [implicit-waypoint-metadata + fn-wrapper-metadata] is split into separate children.
+    let flat-count-args = ()
+    for arg in value.args.flatten() {
+      if type(arg) == content and utils.is-sequence(arg) {
+        flat-count-args += arg.children
+      } else {
+        flat-count-args.push(arg)
+      }
+    }
+    for child in flat-count-args {
       if (
         type(child) == content and child.func() == metadata and type(child.value) == dictionary
       ) {
@@ -2612,7 +2639,15 @@
         let inner-rep = repetitions
         let inner-max = repetitions
         let inner-ls = last-subslide
-        for inner-child in child.value.args.flatten() {
+        let inner-flat-args = ()
+        for arg in child.value.args.flatten() {
+          if type(arg) == content and utils.is-sequence(arg) {
+            inner-flat-args += arg.children
+          } else {
+            inner-flat-args.push(arg)
+          }
+        }
+        for inner-child in inner-flat-args {
           if (
             type(inner-child) == content and inner-child.func() == metadata and type(inner-child.value) == dictionary
           ) {
