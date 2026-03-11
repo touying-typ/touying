@@ -161,19 +161,19 @@ By factorizing, we can obtain this result.
 == Pause + Uncover/Only Inline
 
 - On 1 #pause
-- On 2
+- On 2 #pause
 - #uncover("2-")[Uncover 2-]  // was hidden even on subslide 2
-- #{
-    uncover("2-")[
-      Uncover 2- in bare sequence
-    ]
-  }
-- #only(2)[Only 2] #pause           // was hidden even on subslide 2
+// - #{
+//     uncover("2-")[
+//       Uncover 2- in bare sequence
+//     ]
+//   }
+- #only(2)[Only 2]           // was hidden even on subslide 2
 - On 3
 
-#{
-  only(2)[Only 2 in bare sequence]
-}
+// #{
+//   only(2)[Only 2 in bare sequence]
+// }
 
 == Pause + Alternatives Inline
 
