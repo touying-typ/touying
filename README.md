@@ -298,6 +298,7 @@ Thanks to...
 
 - [@andreasKroepelin](https://github.com/andreasKroepelin) for the `polylux` package
 - [@enklht](https://github.com/enklht) for many fixes and improvements
+- [@zral0kh](https://github.com/zral0kh) for the waypoint feature
 - [@Enivex](https://github.com/Enivex) for the `metropolis` theme
 - [@drupol](https://github.com/drupol) for the `university` theme
 - [@pride7](https://github.com/pride7) for the `aqua` theme

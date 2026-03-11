@@ -323,10 +323,48 @@
     "methods" in self and type(self.methods) == dictionary,
     message: "self.methods must be a dictionary",
   )
+  // Animation methods that manage their own subslide visibility.
+  // In callback-style slides the parser's pause/cover logic (driven by
+  // #waypoint jumps) would incorrectly hide method-resolved content based on
+  // source position.  Wrapping the result in a fn-wrapper escapes pause zones
+  // (the parser always pushes fn-wrappers to `result`).
+  //
+  // The type check ensures non-content results (e.g. CeTZ draw-command arrays)
+  // are returned as-is so external packages keep working.
+  let animation-keys = (
+    "uncover",
+    "only",
+    "effect",
+    "alternatives",
+    "alternatives-match",
+    "alternatives-fn",
+    "alternatives-cases",
+    "item-by-item",
+  )
   let methods = (:)
   for key in self.methods.keys() {
     if type(self.methods.at(key)) == function {
-      methods.insert(key, (..args) => self.methods.at(key)(self: self, ..args))
+      if key in animation-keys {
+        methods.insert(key, (..args) => {
+          let result = self.methods.at(key)(self: self, ..args)
+          if type(result) == content {
+            [#metadata((
+              kind: "touying-fn-wrapper",
+              fn: (self: none) => result,
+              args: arguments(),
+              last-subslide: none,
+              repetitions: none,
+            ))<touying-temporary-mark>]
+          } else {
+            result
+          }
+        })
+      } else {
+        methods.insert(key, (..args) => self.methods.at(key)(
+          self: self,
+          ..args,
+        ))
+      }
     }
   }
   return methods
@@ -1137,8 +1175,294 @@
 }
 
 
+/// Look up a waypoint label (with hierarchical prefix matching).
+///
+/// When looking up `<top>`, this also matches any child labels like
+/// `<top:sub>`, `<top:sub:deep>`, etc.  The returned range spans from
+/// the earliest `first` to the latest `last` across all matches.
+///
+/// Returns `(first: int, last: int)` or `none` when the label is unknown.
+#let _lookup-waypoint-range(waypoints, lbl-str) = {
+  let prefix = lbl-str + ":"
+  let matches = waypoints
+    .pairs()
+    .filter(p => p.at(0) == lbl-str or p.at(0).starts-with(prefix))
+  if matches.len() > 0 {
+    let first = calc.min(..matches.map(p => p.at(1).first))
+    let last = calc.max(..matches.map(p => p.at(1).last))
+    (first: first, last: last)
+  } else {
+    none
+  }
+}
+
+
+/// Resolve a (possibly shifted) waypoint reference to a concrete label string.
+///
+/// Handles nested `prev-wp` / `next-wp` chains by walking to adjacent
+/// waypoints in subslide order.  Returns `none` during a waypoint pre-pass
+/// when the label cannot be resolved.
+#let _resolve-waypoint-label(waypoints, wp, prepass: false) = {
+  if type(wp) == str {
+    wp
+  } else if type(wp) == label {
+    str(wp)
+  } else if type(wp) == dictionary {
+    let kind = wp.at("kind", default: none)
+    if kind in ("waypoint-prev", "waypoint-next") {
+      let base = _resolve-waypoint-label(waypoints, wp.inner, prepass: prepass)
+      if base == none { return none }
+      // Build sorted label list by first-subslide
+      let sorted = waypoints.pairs().sorted(key: p => p.at(1).first)
+      let labels = sorted.map(p => p.at(0))
+      let idx = labels.position(l => l == base)
+      // If no exact match, try hierarchical prefix match (e.g. <parent>
+      // when only <parent:a>, <parent:b> exist).  Directional: next-wp
+      // anchors to the last child (to skip past the group), prev-wp
+      // anchors to the first child (to land before the group).
+      // When an exact parent label exists, it is used directly.
+      if idx == none {
+        let prefix = base + ":"
+        let children = labels
+          .enumerate()
+          .filter(p => p.at(1).starts-with(prefix))
+        if children.len() > 0 {
+          idx = if kind == "waypoint-next" {
+            children.last().at(0)
+          } else {
+            children.first().at(0)
+          }
+        }
+      }
+      if idx == none {
+        if prepass { return none }
+        assert(false, message: "Unknown waypoint label: <" + base + ">")
+      }
+      let amount = wp.at("amount", default: 1)
+      let step = if kind == "waypoint-prev" { -amount } else { amount }
+      let new-idx = idx + step
+      if new-idx < 0 or new-idx >= labels.len() {
+        if prepass { return none }
+        let dir = if kind == "waypoint-prev" { "previous" } else { "next" }
+        assert(
+          false,
+          message: "No "
+            + dir
+            + " waypoint "
+            + str(amount)
+            + " step(s) from <"
+            + base
+            + ">",
+        )
+      }
+      labels.at(new-idx)
+    } else if kind in ("waypoint-first", "waypoint-last") {
+      // get-first / get-last — extract embedded label
+      wp.label
+    } else if kind in ("waypoint-from", "waypoint-until") {
+      // from-wp / until-wp — recurse into inner
+      _resolve-waypoint-label(waypoints, wp.inner, prepass: prepass)
+    } else {
+      if prepass { return none }
+      panic("Cannot resolve waypoint label from " + repr(wp))
+    }
+  } else {
+    if prepass { return none }
+    panic("Cannot resolve waypoint label from " + repr(wp))
+  }
+}
+
+
+/// Resolve waypoint labels in a visible-subslides specification.
+///
+/// Recursively replaces label references and waypoint marker dictionaries
+/// (`get-first`, `get-last`, `from-wp`, `until-wp`, `prev-wp`, `next-wp`) with
+/// their resolved subslide numbers / ranges using the waypoint mapping from
+/// `self.waypoints`.
+///
+/// Supports hierarchical labels: if `<part>` is not an exact match, all
+/// waypoints whose name starts with `part:` are combined into a single range.
+///
+/// When an array contains `from-wp` / `until-wp` markers the elements are
+/// combined into a bounded range (min of beginnings, max of ends):
+/// `(from-wp(<a>), until-wp(<b>))` yields the range from `<a>` to just before `<b>`.
+///
+/// - self (dictionary): The presentation context containing `waypoints`.
+///
+/// - visible-subslides: The visible-subslides specification to resolve.
+///
+/// -> int | str | array | dictionary
+#let resolve-waypoints(self, visible-subslides) = {
+  let waypoints = self.at("waypoints", default: (:))
+  let prepass = self.at("_waypoint-prepass", default: false)
+
+  // --- label ----------------------------------------------------------
+  if type(visible-subslides) == label {
+    let lbl = str(visible-subslides)
+    let range = _lookup-waypoint-range(waypoints, lbl)
+    if range == none {
+      if prepass { return (beginning: 1, until: 1) }
+      assert(false, message: "Unknown waypoint label: <" + lbl + ">")
+    }
+    (beginning: range.first, until: range.last)
+
+    // --- dictionary (waypoint markers) ----------------------------------
+  } else if type(visible-subslides) == dictionary {
+    let kind = visible-subslides.at("kind", default: none)
+
+    if kind == "waypoint-first" {
+      let lbl = visible-subslides.label
+      let range = _lookup-waypoint-range(waypoints, lbl)
+      if range == none {
+        if prepass { return 1 }
+        assert(false, message: "Unknown waypoint label: <" + lbl + ">")
+      }
+      range.first
+    } else if kind == "waypoint-last" {
+      let lbl = visible-subslides.label
+      let range = _lookup-waypoint-range(waypoints, lbl)
+      if range == none {
+        if prepass { return 1 }
+        assert(false, message: "Unknown waypoint label: <" + lbl + ">")
+      }
+      range.last
+    } else if kind == "waypoint-from" {
+      let inner = visible-subslides.inner
+      let inner-kind = if type(inner) == dictionary {
+        inner.at("kind", default: none)
+      } else { none }
+      if inner-kind in ("waypoint-first", "waypoint-last") {
+        // Resolve get-first/get-last to a concrete subslide number
+        let resolved = resolve-waypoints(self, inner)
+        (beginning: resolved)
+      } else {
+        let lbl = _resolve-waypoint-label(
+          waypoints,
+          inner,
+          prepass: prepass,
+        )
+        if lbl == none {
+          if prepass { return (beginning: 1) }
+          assert(
+            false,
+            message: "Cannot resolve waypoint reference in from-wp()",
+          )
+        }
+        let range = _lookup-waypoint-range(waypoints, lbl)
+        if range == none {
+          if prepass { return (beginning: 1) }
+          assert(false, message: "Unknown waypoint label: <" + lbl + ">")
+        }
+        (beginning: range.first)
+      }
+    } else if kind == "waypoint-until" {
+      let inner = visible-subslides.inner
+      let inner-kind = if type(inner) == dictionary {
+        inner.at("kind", default: none)
+      } else { none }
+      if inner-kind in ("waypoint-first", "waypoint-last") {
+        // Resolve get-first/get-last to a concrete subslide number
+        let resolved = resolve-waypoints(self, inner)
+        (until: resolved - 1)
+      } else {
+        let lbl = _resolve-waypoint-label(
+          waypoints,
+          inner,
+          prepass: prepass,
+        )
+        if lbl == none {
+          if prepass { return (until: 1) }
+          assert(
+            false,
+            message: "Cannot resolve waypoint reference in until-wp()",
+          )
+        }
+        let range = _lookup-waypoint-range(waypoints, lbl)
+        if range == none {
+          if prepass { return (until: 1) }
+          assert(false, message: "Unknown waypoint label: <" + lbl + ">")
+        }
+        (until: range.first - 1)
+      }
+    } else if kind in ("waypoint-prev", "waypoint-next") {
+      let lbl = _resolve-waypoint-label(
+        waypoints,
+        visible-subslides,
+        prepass: prepass,
+      )
+      if lbl == none {
+        if prepass { return (beginning: 1, until: 1) }
+        assert(
+          false,
+          message: "Cannot resolve shifted waypoint reference",
+        )
+      }
+      let range = _lookup-waypoint-range(waypoints, lbl)
+      if range == none {
+        if prepass { return (beginning: 1, until: 1) }
+        assert(false, message: "Unknown waypoint label: <" + lbl + ">")
+      }
+      (beginning: range.first, until: range.last)
+    } else {
+      visible-subslides
+    }
+
+    // --- array ----------------------------------------------------------
+  } else if type(visible-subslides) == array {
+    // If the array contains from/until range markers, span the full range.
+    let has-range-markers = visible-subslides.any(s => (
+      type(s) == dictionary
+        and s.at("kind", default: "") in ("waypoint-from", "waypoint-until")
+    ))
+    if has-range-markers {
+      // Range construction: combine from/until markers into a single range.
+      // Multiple `from-wp`s → take earliest (min); multiple `until-wp`s → take latest (max).
+      // This spans the whole duration from the first `from-wp` to the last `until-wp`.
+      let resolved = visible-subslides.map(s => resolve-waypoints(self, s))
+      let beginning = none
+      let end = none
+      for r in resolved {
+        if type(r) == dictionary {
+          if "beginning" in r {
+            beginning = if beginning == none {
+              r.beginning
+            } else {
+              calc.min(beginning, r.beginning)
+            }
+          }
+          if "until" in r {
+            end = if end == none { r.until } else { calc.max(end, r.until) }
+          }
+        }
+      }
+      let result = (:)
+      if beginning != none {
+        result.insert("beginning", beginning)
+      }
+      if end != none {
+        result.insert("until", end)
+      }
+      result
+    } else {
+      visible-subslides.map(s => resolve-waypoints(self, s))
+    }
+
+    // --- pass-through (int, str, etc.) ----------------------------------
+  } else {
+    visible-subslides
+  }
+}
+
+
 #let last-required-subslide(visible-subslides) = {
-  if type(visible-subslides) == int {
+  if type(visible-subslides) == label {
+    // Labels are resolved at render time; the pauses that define waypoints
+    // already contribute to the repetitions count.  Return 1 (not 0) so that
+    // the parser's two-pass escape hatch (next-last-subslide > 0) recognises
+    // that a fn-wrapper exists inside a nested sequence.  A value of 1 never
+    // inflates the repeat count because repetitions is always >= 1.
+    1
+  } else if type(visible-subslides) == int {
     visible-subslides
   } else if type(visible-subslides) == array {
     calc.max(..visible-subslides.map(s => last-required-subslide(s)))
@@ -1146,14 +1470,31 @@
     let parts = _parse-subslide-indices(visible-subslides)
     last-required-subslide(parts)
   } else if type(visible-subslides) == dictionary {
-    let last = 0
-    if "beginning" in visible-subslides {
-      last = calc.max(last, visible-subslides.beginning)
+    let kind = visible-subslides.at("kind", default: none)
+    if (
+      kind
+        in (
+          "waypoint-first",
+          "waypoint-last",
+          "waypoint-from",
+          "waypoint-until",
+          "waypoint-prev",
+          "waypoint-next",
+        )
+    ) {
+      // Will be resolved at render time; pauses determine repeat count.
+      // Return 1 (not 0) so fn-wrapper escape hatch triggers (see label branch).
+      1
+    } else {
+      let last = 0
+      if "beginning" in visible-subslides {
+        last = calc.max(last, visible-subslides.beginning)
+      }
+      if "until" in visible-subslides {
+        last = calc.max(last, visible-subslides.until)
+      }
+      last
     }
-    if "until" in visible-subslides {
-      last = calc.max(last, visible-subslides.until)
-    }
-    last
   } else {
     panic(
       "you may only provide a single integer, an array of integers, or a string",
@@ -1187,6 +1528,7 @@
   if is-method {
     fn
   } else {
+    let visible-subslides = resolve-waypoints(self, visible-subslides)
     if check-visible(self.subslide, visible-subslides) {
       fn(cont)
     } else {
@@ -1226,6 +1568,7 @@
 ///
 /// -> content
 #let uncover(self: none, visible-subslides, uncover-cont, cover-fn: auto) = {
+  let visible-subslides = resolve-waypoints(self, visible-subslides)
   let cover = if cover-fn != auto { cover-fn } else {
     self.methods.cover.with(self: self)
   }
@@ -1266,6 +1609,7 @@
 ///
 /// -> content
 #let only(self: none, visible-subslides, only-cont) = {
+  let visible-subslides = resolve-waypoints(self, visible-subslides)
   if check-visible(self.subslide, visible-subslides) {
     only-cont
   }
@@ -1453,10 +1797,11 @@
 
 /// Display list, enum, or terms items one by one with animation.
 ///
-/// Each item is revealed on a successive subslide. Items before `start` appear immediately;
-/// from subslide `start`, one additional item is revealed per subslide.
+/// Each item is revealed on a successive subslide.  By default (`start: auto`),
+/// revealing is relative to the current pause position.  `start` also accepts
+/// a waypoint label or marker to anchor the reveal sequence. From the anchor one additional item is revealed per subslide.
 ///
-/// #example(
+///  #example(
 /// >>> #let is-dark = sys.inputs.at("x-color-theme", default: none) == "dark";
 /// >>> #let text-color = if is-dark { std.white } else { std.black };
 /// >>> #show: simple-theme.with(
@@ -1475,14 +1820,54 @@
 /// ]
 /// )
 ///
-/// - start (int): The subslide on which the first item appears. Default is `1`.
+/// - start (auto | int | label | dictionary): The subslide on which the first\n///   item appears.  Resolved from a waypoint when a label or marker is given.
 ///
 /// - cont (content): The content containing a list, enum, or terms element.
 ///
 /// -> content
-#let item-by-item(self: none, start, cont) = {
+#let item-by-item(self: none, start: 1, cont) = {
   let cover = self.methods.cover.with(self: self)
   let item-funcs = (list.item, enum.item, terms.item)
+
+  // Resolve waypoint-based start to a concrete subslide number.
+  let start = if type(start) == int {
+    start
+  } else if (
+    type(start) == label
+      or (
+        type(start) == dictionary and start.at("kind", default: none) != none
+      )
+  ) {
+    let resolved = resolve-waypoints(self, start)
+    if type(resolved) == int {
+      resolved
+    } else if type(resolved) == dictionary and "beginning" in resolved {
+      resolved.beginning
+    } else if type(resolved) == dictionary and "first" in resolved {
+      resolved.first
+    } else {
+      1
+    }
+  } else if type(start) == str {
+    let parts = _parse-subslide-indices(start)
+    if parts.len() == 1 and type(parts.first()) == int {
+      parts.first()
+    } else {
+      panic(
+        "item-by-item: `start` string must be a single number (e.g. \"3\"), "
+          + "not a range or multi-value spec. Got: \""
+          + start
+          + "\".",
+      )
+    }
+  } else {
+    panic(
+      "item-by-item: `start` must be an integer, a string with a single number, "
+        + "a waypoint label, or a single-position waypoint marker "
+        + "(get-first, get-last, prev-wp, next-wp). Got: "
+        + type(start),
+    )
+  }
 
   if is-sequence(cont) {
     // Markup list/enum/terms: items appear as list.item/enum.item/terms.item in a sequence

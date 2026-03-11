@@ -20,3 +20,36 @@ Recall the entire slide:
 Recall only the second subslide:
 
 #touying-recall(<animated>, subslide: 2)
+
+== Slide with waypoints <wp-slide>
+
+#waypoint(<phase-a>, advance: false)
+Phase A content
+#waypoint(<phase-b>)
+Phase B content
+#pause
+More B content
+
+== Recall auto (last subslide):
+Recall only the last subslide.
+
+#touying-recall(<animated>, subslide: auto)
+
+#touying-recall(<wp-slide>, subslide: auto)
+
+== Recall waypoints (last of each):
+Recall the last subslide of each waypoint.
+
+#touying-recall(<wp-slide>, subslide: "waypoints")
+
+== Recall waypoint range:
+
+Show only the subslides covered by `<phase-b>`:
+
+#touying-recall(<wp-slide>, subslide: <phase-b>)
+
+== Recall get-last:
+
+Show only the last subslide of `<phase-b>`:
+
+#touying-recall(<wp-slide>, subslide: get-last(<phase-b>))

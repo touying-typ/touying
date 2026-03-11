@@ -1,5 +1,4 @@
 #import "utils.typ"
-#import "utils.typ"
 #import "pdfpc.typ"
 #import "components.typ"
 
@@ -49,13 +48,40 @@
 /// Example:
 ///
 /// ```typ
-/// #touying-recall("recall")
-/// #touying-recall("recall", subslide: 2)
+/// // Recall all subslides
+/// #touying-recall(<my-slide>)
+///
+/// // Recall only a specific subslide
+/// #touying-recall(<my-slide>, subslide: 2)
+///
+/// // Recall only the last (final) subslide
+/// #touying-recall(<my-slide>, subslide: auto)
+///
+/// // Recall the last subslide of every waypoint
+/// #touying-recall(<my-slide>, subslide: "waypoints")
+///
+/// // Recall the subslides covered by a waypoint
+/// #touying-recall(<my-slide>, subslide: <my-waypoint>)
+///
+/// // Recall only the last subslide of a waypoint
+/// #touying-recall(<my-slide>, subslide: get-last(<my-waypoint>))
 /// ```
 ///
 /// - lbl (str, label): The label of the slide to recall.
 ///
-/// - subslide (none, int): The subslide index to recall. Default is `none`, which recalls all subslides.
+/// - subslide (none, auto, int, str, label, dictionary): Which subslide(s) to recall.
+///
+///   - `none` (default): recall all subslides.
+///   - `auto`: recall only the last subslide (the final animation state).
+///   - `int`: recall a specific subslide by number.
+///   - `"waypoints"`: recall one subslide per waypoint — specifically, the
+///     last subslide of each waypoint. This shows every animation phase at
+///     its final state.
+///   - `label`: recall the subslides covered by a waypoint in the original
+///     slide. E.g. `subslide: <my-waypoint>`.
+///   - Waypoint marker: `get-first(<wp>)`, `get-last(<wp>)`, `prev-wp(<wp>)`,
+///     `next-wp(<wp>)` — resolves to a single subslide or waypoint range
+///     using the recalled slide's waypoint map.
 ///
 /// -> content
 #let touying-recall(lbl, subslide: none) = [#metadata((
@@ -353,6 +379,8 @@
       if recall-subslide == none {
         output-slides.push(recall-entry.content)
       } else {
+        // Pass the raw subslide spec through to touying-slide, which will
+        // resolve it after computing `repeat` and `waypoints`.
         let recalled-self = (
           recall-entry.slide-self
             + (
@@ -840,6 +868,237 @@
 /// -> content
 #let meanwhile = jump(1)
 
+/// ------------------------------------------------
+/// Waypoints
+/// (by Zral0kh)
+/// ------------------------------------------------
+///
+/// Declare a named waypoint in the slide's subslide sequence.
+///
+/// A waypoint names a set of subslide positions so that it can be referred to
+/// by label in `uncover`, `only`, `effect`, `alternatives`, and other animation
+/// functions. This lets you avoid counting subslide numbers manually.
+///
+/// By default, a waypoint call also acts as a `#pause` (advancing to the next subslide).
+/// Set `advance: false` to mark the current position without advancing.
+///
+/// A waypoint covers all subslides from its declaration until the next waypoint
+/// is declared (or the end of the slide).
+///
+/// Note that your labels need to be slide-unique. They need not be globally
+/// unique, but must be unique within a single slide.
+///
+/// You can use hierarchical labels with `:` separators (e.g. `<part:intro>`).
+/// When referencing `<part>`, all waypoints starting with `part:` are combined.
+///
+/// Example:
+///
+/// ```typst
+/// Some content
+/// #waypoint(<reveal>)
+/// #uncover(<reveal>)[Revealed content]
+/// #waypoint(<highlight>)
+/// #effect(text.with(fill: red), <highlight>)[Highlighted]
+/// ```
+///
+/// - lbl (label): The label for this waypoint.
+///
+/// - advance (bool): If `true` (default), acts as a `#pause` before marking.
+///   If `false`, marks the current subslide position without advancing.
+///
+/// -> content
+#let waypoint(lbl, advance: true) = {
+  assert(
+    type(lbl) == label,
+    message: "waypoint: expected a label, got " + str(type(lbl)),
+  )
+  [#metadata((
+    kind: "touying-waypoint",
+    label: str(lbl),
+    advance: advance,
+  ))<touying-temporary-mark>]
+}
+
+
+/// Get the first subslide number of a waypoint.
+///
+/// Returns a marker dictionary that will be resolved automatically when used as
+/// a `visible-subslides` argument in `uncover`, `only`, `effect`, etc.
+///
+/// Example: `#only(get-first(<my-label>))[content]`
+///
+/// - lbl (label): The waypoint label.
+///
+/// -> dictionary
+#let get-first(lbl) = {
+  assert(
+    type(lbl) == label,
+    message: "get-first: expected a label, got " + str(type(lbl)),
+  )
+  (
+    kind: "waypoint-first",
+    label: str(lbl),
+  )
+}
+
+
+/// Get the last subslide number of a waypoint.
+///
+/// Returns a marker dictionary that will be resolved automatically when used as
+/// a `visible-subslides` argument in `uncover`, `only`, `effect`, etc.
+///
+/// Example: `#only(get-last(<my-label>))[content]`
+///
+/// - lbl (label): The waypoint label.
+///
+/// -> dictionary
+#let get-last(lbl) = {
+  assert(
+    type(lbl) == label,
+    message: "get-last: expected a label, got " + str(type(lbl)),
+  )
+  (
+    kind: "waypoint-last",
+    label: str(lbl),
+  )
+}
+
+
+/// Create a "from-wp" range starting at a waypoint (inclusive to end of slide).
+///
+/// Returns a range marker visible from the waypoint's first subslide onward.
+/// Does *not* create a waypoint — the referenced label must be defined
+/// elsewhere (via `#waypoint()` or an implicit waypoint in `#uncover`, etc.).
+///
+/// Can be composed with `prev-wp` / `next-wp`:
+/// `from-wp(next-wp(<my-label>))` starts at the waypoint after `<my-label>`.
+///
+/// Combine with `until-wp` in an array for bounded ranges:
+/// `(from-wp(<a>), until-wp(<b>))` — visible from `<a>` to just before `<b>`.
+///
+/// - wp (label | dictionary): A waypoint label or a shifted reference
+///   (e.g. `next-wp(<label>)`).
+///
+/// -> dictionary
+#let from-wp(wp) = {
+  assert(
+    type(wp) in (label, str, dictionary),
+    message: "from-wp: expected a label or waypoint marker, got "
+      + str(type(wp)),
+  )
+  (
+    kind: "waypoint-from",
+    inner: if type(wp) == label {
+      str(wp)
+    } else {
+      wp
+    },
+  )
+}
+
+
+/// Create an "until-wp" range ending just before a waypoint (exclusive).
+///
+/// Returns a range marker visible from subslide 1 up to (but not including)
+/// the waypoint's first subslide.  Does *not* create a waypoint.
+///
+/// Can be composed with `prev-wp` / `next-wp`:
+/// `until-wp(prev-wp(<my-label>))` ends before the waypoint preceding `<my-label>`.
+///
+/// Combine with `from-wp` in an array for bounded ranges:
+/// `(from-wp(<a>), until-wp(<b>))` — visible from `<a>` to just before `<b>`.
+///
+/// - wp (label | dictionary): A waypoint label or a shifted reference.
+///
+/// -> dictionary
+#let until-wp(wp) = {
+  assert(
+    type(wp) in (label, str, dictionary),
+    message: "until-wp: expected a label or waypoint marker, got "
+      + str(type(wp)),
+  )
+  (
+    kind: "waypoint-until",
+    inner: if type(wp) == label {
+      str(wp)
+    } else {
+      wp
+    },
+  )
+}
+
+
+/// Shift a waypoint reference to a previous waypoint in subslide order.
+///
+/// Given a waypoint label, returns a reference to the waypoint `amount` steps
+/// before it.  `prev-wp(<c>, amount: 2)` is equivalent to
+/// `prev-wp(prev-wp(<c>))`.
+///
+/// When applied to a `from-wp` or `until-wp` marker, the shift is pushed inward:
+/// `prev-wp(from-wp(<c>))` becomes `from-wp(prev-wp(<c>))`.
+///
+/// - wp (label | dictionary): A waypoint label or marker to shift.
+///
+/// - amount (int): How many waypoints to step back. Default is `1`.
+///
+/// -> dictionary
+#let prev-wp(wp, amount: 1) = {
+  assert(
+    type(wp) in (label, str, dictionary),
+    message: "prev-wp: expected a label or waypoint marker, got "
+      + str(type(wp)),
+  )
+  if type(wp) == label {
+    (kind: "waypoint-prev", inner: str(wp), amount: amount)
+  } else if type(wp) == dictionary {
+    let kind = wp.at("kind", default: none)
+    if kind in ("waypoint-from", "waypoint-until") {
+      // Push shift inward: prev-wp(from-wp(<x>)) → from-wp(prev-wp(<x>))
+      (..wp, inner: prev-wp(wp.inner, amount: amount))
+    } else {
+      (kind: "waypoint-prev", inner: wp, amount: amount)
+    }
+  } else {
+    (kind: "waypoint-prev", inner: wp, amount: amount)
+  }
+}
+
+
+/// Shift a waypoint reference to a later waypoint in subslide order.
+///
+/// Given a waypoint label, returns a reference to the waypoint `amount` steps
+/// after it.  `next-wp(<a>, amount: 2)` is equivalent to
+/// `next-wp(next-wp(<a>))`.
+///
+/// When applied to a `from` or `until` marker, the shift is pushed inward:
+/// `next-wp(until-wp(<a>))` becomes `until-wp(next-wp(<a>))`.
+///
+/// - wp (label | dictionary): A waypoint label or marker to shift.
+///
+/// - amount (int): How many waypoints to step forward. Default is `1`.
+///
+/// -> dictionary
+#let next-wp(wp, amount: 1) = {
+  assert(
+    type(wp) in (label, str, dictionary),
+    message: "next-wp: expected a label or waypoint marker, got "
+      + str(type(wp)),
+  )
+  if type(wp) == label {
+    (kind: "waypoint-next", inner: str(wp), amount: amount)
+  } else if type(wp) == dictionary {
+    let kind = wp.at("kind", default: none)
+    if kind in ("waypoint-from", "waypoint-until") {
+      // Push shift inward: next-wp(until-wp(<x>)) → until-wp(next-wp(<x>))
+      (..wp, inner: next-wp(wp.inner, amount: amount))
+    } else {
+      (kind: "waypoint-next", inner: wp, amount: amount)
+    }
+  } else {
+    (kind: "waypoint-next", inner: wp, amount: amount)
+  }
+}
+
 
 /// Take effect in some subslides.
 ///
@@ -850,18 +1109,26 @@
 /// - fn (function): The function that will be called in the subslide.
 ///      Or you can use a method function like `(self: none) => { .. }`.
 ///
-/// - visible-subslides (int, array, str): A single integer, an array of integers, or a string specifying the visible subslides.
+/// - visible-subslides (int, array, str, label, dictionary): Specifies when content is visible.
 ///
 ///    Supported formats:
 ///
 ///    - A single integer, e.g. `3` — only subslide 3.
 ///    - An array, e.g. `(1, 2, 4)` — equivalent to `"1, 2, 4"`.
 ///    - A string with ranges, e.g. `"-2, 4, 6-8, 10-"` — subslides 1, 2, 4, 6, 7, 8, 10, and all after 10.
+///    - A label, e.g. `<my-waypoint>` — creates an implicit waypoint and shows from there onward.
+///    - A waypoint marker, e.g. `from-wp(<label>)`, `until-wp(<label>)`, `get-first(<label>)`, etc.
 ///
 /// - cont (content): The content to display when visible.
 ///
 /// - is-method (bool): Whether the function is a method function. Default is `false`.
 #let effect(fn, visible-subslides, cont, is-method: false) = {
+  if type(visible-subslides) == label {
+    [#metadata((
+      kind: "touying-implicit-waypoint",
+      label: str(visible-subslides),
+    ))<touying-temporary-mark>]
+  }
   touying-fn-wrapper(
     utils.effect,
     last-subslide: utils.last-required-subslide(visible-subslides),
@@ -890,13 +1157,15 @@
 /// #uncover("2-")[Only visible from subslide 2]
 /// )
 ///
-/// - visible-subslides (int, array, str): A single integer, an array of integers, or a string specifying the visible subslides.
+/// - visible-subslides (int, array, str, label, dictionary): Specifies when content is visible.
 ///
 ///    Supported formats:
 ///
 ///    - A single integer, e.g. `3` — only subslide 3.
 ///    - An array, e.g. `(1, 2, 4)` — equivalent to `"1, 2, 4"`.
 ///    - A string with ranges, e.g. `"-2, 4, 6-8, 10-"` — subslides 1, 2, 4, 6, 7, 8, 10, and all after 10.
+///    - A label, e.g. `<my-waypoint>` — creates an implicit waypoint and shows from there onward.
+///    - A waypoint marker, e.g. `from-wp(<label>)`, `until-wp(<label>)`, `get-first(<label>)`, etc.
 ///
 /// - uncover-cont (content): The content to display when visible.
 ///
@@ -904,6 +1173,12 @@
 ///
 /// -> content
 #let uncover(visible-subslides, uncover-cont, cover-fn: auto) = {
+  if type(visible-subslides) == label {
+    [#metadata((
+      kind: "touying-implicit-waypoint",
+      label: str(visible-subslides),
+    ))<touying-temporary-mark>]
+  }
   touying-fn-wrapper(
     utils.uncover,
     last-subslide: utils.last-required-subslide(visible-subslides),
@@ -931,18 +1206,26 @@
 /// #only("2")[Only on subslide 2]
 /// )
 ///
-/// - visible-subslides (int, array, str): A single integer, an array of integers, or a string specifying the visible subslides.
+/// - visible-subslides (int, array, str, label, dictionary): Specifies when content is visible.
 ///
 ///    Supported formats:
 ///
 ///    - A single integer, e.g. `3` — only subslide 3.
 ///    - An array, e.g. `(1, 2, 4)` — equivalent to `"1, 2, 4"`.
 ///    - A string with ranges, e.g. `"-2, 4, 6-8, 10-"` — subslides 1, 2, 4, 6, 7, 8, 10, and all after 10.
+///    - A label, e.g. `<my-waypoint>` — creates an implicit waypoint and shows from there onward.
+///    - A waypoint marker, e.g. `from-wp(<label>)`, `until-wp(<label>)`, `get-first(<label>)`, etc.
 ///
 /// - only-cont (content): The content to display when visible.
 ///
 /// -> content
 #let only(visible-subslides, only-cont) = {
+  if type(visible-subslides) == label {
+    [#metadata((
+      kind: "touying-implicit-waypoint",
+      label: str(visible-subslides),
+    ))<touying-temporary-mark>]
+  }
   touying-fn-wrapper(
     utils.only,
     last-subslide: utils.last-required-subslide(visible-subslides),
@@ -997,11 +1280,39 @@
   position: bottom + left,
   stretch: false,
 ) = {
+  // Validate: alternatives-match doesn't support waypoints, only numeric subslide specs
+  let keys = if type(subslides-contents) == dictionary {
+    subslides-contents.keys()
+  } else {
+    subslides-contents.map(kv => kv.at(0))
+  }
+  for key in keys {
+    if type(key) == label {
+      panic(
+        "alternatives-match: waypoint labels are not supported. Use alternatives() with the at: parameter instead.",
+      )
+    }
+    if (
+      type(key) == dictionary
+        and "kind" in key
+        and str(key.kind).starts-with("waypoint-")
+    ) {
+      panic(
+        "alternatives-match: waypoint markers are not supported. Use alternatives() with the at: parameter instead.",
+      )
+    }
+  }
   touying-fn-wrapper(
     utils.alternatives-match,
-    last-subslide: calc.max(..subslides-contents
-      .pairs()
-      .map(kv => utils.last-required-subslide(kv.at(0)))),
+    last-subslide: if type(subslides-contents) == dictionary {
+      calc.max(..subslides-contents
+        .pairs()
+        .map(kv => utils.last-required-subslide(kv.at(0))))
+    } else {
+      calc.max(..subslides-contents.map(kv => utils.last-required-subslide(
+        kv.at(0),
+      )))
+    },
     subslides-contents,
     position: position,
     stretch: false,
@@ -1013,6 +1324,12 @@
 ///
 /// Example: `#alternatives[Ann][Bob][Christopher]` will show "Ann" in the first subslide, "Bob" in the second subslide, and "Christopher" in the third subslide.
 ///
+/// You can also use waypoint labels via the `at` parameter:
+///
+/// ```typst
+/// #alternatives(at: (<first>, <second>))[Content A][Content B]
+/// ```
+///
 /// - start (int): The starting subslide number. Default is `auto`.
 ///
 /// - repeat-last (bool): Whether the last alternative should persist on all remaining subslides. Default is `true`.
@@ -1023,35 +1340,74 @@
 ///
 ///   Important: If you use a zero-length content like a context expression, you should set `stretch: false`.
 ///
+/// - at (none | array): An array of waypoint labels (or waypoint markers like `get-first(<label>)`) or subslide specs, one per body.
+///   When provided, each body is mapped to the corresponding waypoint range.
+///   This is an alternative to the sequential `start`-based numbering.
+///
 /// -> content
 #let alternatives(
   start: auto,
   repeat-last: true,
   position: bottom + left,
   stretch: false,
+  at: none,
   ..args,
 ) = {
-  let extra = if start == auto {
-    (
-      last-subslide: repetitions => (
-        repetitions + args.pos().len() - 1,
-        (start: repetitions),
+  if at != none {
+    // Waypoint-based alternatives: map each label to its corresponding body
+    let bodies = args.pos()
+    assert(
+      at.len() == bodies.len(),
+      message: "alternatives: `at` array length ("
+        + str(at.len())
+        + ") must match number of bodies ("
+        + str(bodies.len())
+        + ")",
+    )
+    let subslides = at
+    if repeat-last and subslides.len() > 0 {
+      // Replace last entry with a from-wp() marker so it shows from that
+      // waypoint onward (not just within its bounded range).
+      let last-entry = subslides.last()
+      subslides.at(-1) = if type(last-entry) == label {
+        from-wp(last-entry)
+      } else {
+        last-entry
+      }
+    }
+    let subslides-contents = subslides.zip(bodies)
+    touying-fn-wrapper(
+      utils.alternatives-match,
+      last-subslide: calc.max(
+        ..subslides.map(s => utils.last-required-subslide(s)),
       ),
+      subslides-contents,
+      position: position,
+      stretch: stretch,
     )
   } else {
-    (
-      last-subslide: start + args.pos().len() - 1,
+    let extra = if start == auto {
+      (
+        last-subslide: repetitions => (
+          repetitions + args.pos().len() - 1,
+          (start: repetitions),
+        ),
+      )
+    } else {
+      (
+        last-subslide: start + args.pos().len() - 1,
+      )
+    }
+    touying-fn-wrapper(
+      utils.alternatives,
+      start: start,
+      repeat-last: repeat-last,
+      position: position,
+      stretch: stretch,
+      ..extra,
+      ..args,
     )
   }
-  touying-fn-wrapper(
-    utils.alternatives,
-    start: start,
-    repeat-last: repeat-last,
-    position: position,
-    stretch: stretch,
-    ..extra,
-    ..args,
-  )
 }
 
 
@@ -1081,6 +1437,26 @@
   ..kwargs,
   fn,
 ) = {
+  // Validate integer parameters
+  assert(
+    type(start) == int,
+    message: "alternatives-fn: start must be an integer, got "
+      + str(type(start)),
+  )
+  if end != none {
+    assert(
+      type(end) == int,
+      message: "alternatives-fn: end must be an integer or none, got "
+        + str(type(end)),
+    )
+  }
+  if count != none {
+    assert(
+      type(count) == int,
+      message: "alternatives-fn: count must be an integer or none, got "
+        + str(type(count)),
+    )
+  }
   let end = if end == none {
     if count == none {
       panic("You must specify either end or count.")
@@ -1133,6 +1509,23 @@
   stretch: false,
   ..kwargs,
 ) = {
+  // Validate: alternatives-cases doesn't support waypoints, only numeric subslide specs
+  for case in cases {
+    if type(case) == label {
+      panic(
+        "alternatives-cases: waypoint labels are not supported. Use alternatives() with the at: parameter instead.",
+      )
+    }
+    if (
+      type(case) == dictionary
+        and "kind" in case
+        and str(case.kind).starts-with("waypoint-")
+    ) {
+      panic(
+        "alternatives-cases: waypoint markers are not supported. Use alternatives() with the at: parameter instead.",
+      )
+    }
+  }
   touying-fn-wrapper(
     utils.alternatives-cases,
     last-subslide: calc.max(..cases.map(utils.last-required-subslide)),
@@ -1147,25 +1540,57 @@
 
 /// Display list, enum, or terms items one by one with animation.
 ///
-/// Each item is revealed on a successive subslide. Items before `start` appear immediately;
-/// from subslide `start`, one additional item is revealed per subslide.
+/// Each item is revealed on a successive subslide.  By default (`start: auto`),
+/// revealing is relative to the current pause position — items appear one per
+/// subslide starting from wherever the slide's animation has reached.
 ///
-/// Example:
+/// `start` also accepts a waypoint label (e.g. `<my-wp>`) or any waypoint
+/// marker (`from-wp(<wp>)`, `get-first(<wp>)`, etc.) to anchor the reveal
+/// sequence to a named position.
+///
+/// == Examples
 ///
 /// ```typst
-/// #item-by-item(start: 2)[
+/// // Relative (auto) — items appear after any preceding #pause
+/// #item-by-item[
 ///   - first
 ///   - second
 ///   - third
 /// ]
+///
+/// // Anchored to a waypoint
+/// #waypoint(<items>)
+/// #item-by-item(start: <items>)[
+///   - alpha
+///   - beta
+/// ]
+///
+/// // Explicit absolute subslide number (backward compatible)
+/// #item-by-item(start: 3)[
+///   - x
+///   - y
+/// ]
 /// ```
 ///
-/// - start (int): The subslide on which the first item appears. Default is `1`.
+/// - start (auto | int | label | dictionary): The subslide on which the first
+///   item appears.  `auto` (default) makes it relative to the current pause
+///   position.  An integer gives an absolute subslide number.  A label or
+///   waypoint marker resolves to the waypoint's first subslide.
 ///
 /// - cont (content): The content containing a list, enum, or terms element.
 ///
 /// -> content
-#let item-by-item(start: 1, cont) = {
+#let item-by-item(start: auto, cont) = {
+  if (
+    type(start) == dictionary
+      and start.at("kind", default: none) in ("waypoint-from", "waypoint-until")
+  ) {
+    panic(
+      "item-by-item: `start` must resolve to a single subslide position. "
+        + "`from-wp` and `until-wp` are range markers and are not supported here. "
+        + "Use a label, `get-first`, `get-last`, `prev-wp`, `next-wp` or simple slide numbers instead.",
+    )
+  }
   let num-items = if utils.is-sequence(cont) {
     cont
       .children
@@ -1178,12 +1603,71 @@
   } else {
     1
   }
-  touying-fn-wrapper(
-    utils.item-by-item,
-    last-subslide: start + num-items - 1,
-    start,
-    cont,
-  )
+  if start == auto {
+    // Relative: items start from the current pause position.
+    touying-fn-wrapper(
+      utils.item-by-item,
+      last-subslide: repetitions => (
+        repetitions + num-items - 1,
+        (start: repetitions),
+      ),
+      start: start,
+      cont,
+    )
+  } else if type(start) == int {
+    touying-fn-wrapper(
+      utils.item-by-item,
+      last-subslide: start + num-items - 1,
+      start: start,
+      cont,
+    )
+  } else if type(start) == str {
+    let parts = utils._parse-subslide-indices(start)
+    if parts.len() != 1 or type(parts.first()) != int {
+      panic(
+        "item-by-item: `start` string must be a single number (e.g. \"3\"), "
+          + "not a range or multi-value spec. Got: \""
+          + start
+          + "\".",
+      )
+    }
+    let n = parts.first()
+    touying-fn-wrapper(
+      utils.item-by-item,
+      last-subslide: n + num-items - 1,
+      start: n,
+      cont,
+    )
+  } else {
+    // Label or waypoint marker — resolved at render time.
+    // For a plain label, emit an implicit waypoint so users don't need to write
+    // a separate #waypoint(<label>) before the call.  The _waypoint-known check
+    // in the prepass ensures the waypoint is only registered once even if an
+    // explicit #waypoint(<label>) is also present.
+    // Dictionary markers (from-wp, next-wp, get-first, …) reference an existing
+    // explicit waypoint, so no implicit waypoint is needed for those.
+    if type(start) == label {
+      [#metadata((
+        kind: "touying-implicit-waypoint",
+        label: str(start),
+      ))<touying-temporary-mark>]
+    }
+    // At callback time, `repetitions` equals the waypoint's subslide number
+    // (the implicit or explicit waypoint was processed just before this wrapper).
+    // We need num-items subslides starting from there, so the last subslide
+    // needed is repetitions + num-items - 1.
+    // Return empty extra-args so the original label/marker `start` is preserved
+    // for render-time resolution via resolve-waypoints.
+    touying-fn-wrapper(
+      utils.item-by-item,
+      last-subslide: repetitions => (
+        repetitions + num-items - 1,
+        (:),
+      ),
+      start: start,
+      cont,
+    )
+  }
 }
 
 
@@ -1800,6 +2284,20 @@
           max-repetitions = calc.max(max-repetitions, repetitions)
           repetitions = child.value.n
         }
+      } else if kind == "touying-waypoint" {
+        // Waypoint inside reducer: advance repetitions if this is the defining
+        // occurrence (same logic as the outer parser). Never pushed to result
+        // or hidden-parts — it is not a draw command.
+        let wp = self.at("waypoints", default: (:))
+        let lbl = child.value.label
+        if (
+          child.value.at("advance", default: true)
+            and lbl in wp
+            and wp.at(lbl).first == repetitions + 1
+        ) {
+          repetitions += 1
+          max-repetitions = calc.max(max-repetitions, repetitions)
+        }
       } else {
         if repetitions <= index {
           result.push(child)
@@ -1836,8 +2334,413 @@
 }
 
 
+/// ------------------------------------------------
+/// Waypoint Collection
+/// ------------------------------------------------
+
+/// Check whether a waypoint label is already known — either exactly or
+/// because a child in the hierarchy was registered earlier (e.g. `<top:sub>`
+/// makes `<top>` known without storing a synthetic parent entry).
+#let _waypoint-known(waypoints, lbl) = {
+  if lbl in waypoints {
+    return true
+  }
+  let prefix = lbl + ":"
+  waypoints.keys().any(k => k.starts-with(prefix))
+}
+
+/// Count the peak repetition produced by an animated block (touying-equation,
+/// touying-mitex, touying-raw, touying-reducer). Returns the max-repetitions
+/// value, mirroring what the corresponding `_parse-touying-*` function would
+/// return without needing `self` or cover logic.
+///
+/// - kind (str): The metadata kind.
+/// - value (dictionary): The metadata value.
+/// - base (int): The starting repetition count.
+///
+/// -> int
+#let _count-animated-block-repetitions(kind, value, base) = {
+  let repetitions = base
+  let max-repetitions = repetitions
+
+  if kind == "touying-reducer" {
+    // Reducer: iterate positional args looking for touying-jump/pause/meanwhile and touying-waypoint metadata
+    for child in value.args.flatten() {
+      if (
+        type(child) == content
+          and child.func() == metadata
+          and type(child.value) == dictionary
+      ) {
+        let k = child.value.at("kind", default: none)
+        if k == "touying-jump/pause/meanwhile" {
+          if child.value.relative {
+            repetitions += child.value.n
+            max-repetitions = calc.max(max-repetitions, repetitions)
+          } else {
+            max-repetitions = calc.max(max-repetitions, repetitions)
+            repetitions = child.value.n
+          }
+        } else if k == "touying-waypoint" {
+          if child.value.at("advance", default: true) {
+            repetitions += 1
+          }
+        }
+      }
+    }
+    return calc.max(max-repetitions, repetitions)
+  }
+
+  // Text-based blocks: equation, mitex, raw
+  let body = value.body
+  if type(body) == function {
+    // Cannot evaluate callback bodies during pre-pass (no self context).
+    return base
+  }
+  if type(body) != str {
+    return base
+  }
+
+  if kind == "touying-equation" {
+    let parts = body
+      .split(regex("(#meanwhile;?)|(meanwhile)"))
+      .intersperse("touying-meanwhile")
+      .map(s => s
+        .split(regex("(#pause;?)|(pause)"))
+        .intersperse("touying-pause"))
+      .flatten()
+    for part in parts {
+      if part == "touying-pause" {
+        repetitions += 1
+      } else if part == "touying-meanwhile" {
+        max-repetitions = calc.max(max-repetitions, repetitions)
+        repetitions = 1
+      }
+    }
+  } else if kind == "touying-mitex" {
+    let parts = body
+      .split(regex("\\\\meanwhile"))
+      .intersperse("touying-meanwhile")
+      .map(s => s.split(regex("\\\\pause")).intersperse("touying-pause"))
+      .flatten()
+    for part in parts {
+      if part == "touying-pause" {
+        repetitions += 1
+      } else if part == "touying-meanwhile" {
+        max-repetitions = calc.max(max-repetitions, repetitions)
+        repetitions = 1
+      }
+    }
+  } else if kind == "touying-raw" {
+    if value.at("simple", default: false) {
+      let parts = body
+        .split(regex("#meanwhile;"))
+        .intersperse("touying-meanwhile")
+        .map(s => s.split(regex("#pause;")).intersperse("touying-pause"))
+        .flatten()
+      for part in parts {
+        if part == "touying-pause" {
+          repetitions += 1
+        } else if part == "touying-meanwhile" {
+          max-repetitions = calc.max(max-repetitions, repetitions)
+          repetitions = 1
+        }
+      }
+    } else {
+      let meaningful-chars-pattern = regex("[a-zA-Z0-9\u{4E00}-\u{9FFF}]+")
+      for line in body.split("\n") {
+        let meaningful = line
+          .matches(meaningful-chars-pattern)
+          .map(m => m.text)
+          .join("")
+        if meaningful == "pause" {
+          repetitions += 1
+        } else if meaningful == "meanwhile" {
+          max-repetitions = calc.max(max-repetitions, repetitions)
+          repetitions = 1
+        }
+      }
+    }
+  }
+  calc.max(max-repetitions, repetitions)
+}
+
+/// Walk content children to collect waypoint declarations and track pause
+/// positions. Returns `(repetitions, waypoints-dict)` where
+/// `waypoints-dict` maps label strings to their raw subslide numbers.
+///
+/// This mirrors the pause-tracking logic of `_parse-content-into-results-and-repetitions`
+/// but does NOT handle covering or visibility — it is a lightweight pre-pass.
+#let _collect-waypoints-impl(
+  children,
+  repetitions,
+  last-subslide,
+  waypoints,
+) = {
+  // Helper: register a new advancing waypoint at the correct position.
+  // Uses max(repetitions+1, last-subslide+1) so that waypoints placed after a
+  // multi-subslide fn-wrapper (e.g. item-by-item) land AFTER its full range,
+  // not just one step past the last sequential pause.
+  let register-advancing-wp(lbl, repetitions, last-subslide, waypoints) = {
+    let pos = calc.max(repetitions + 1, last-subslide + 1)
+    repetitions = pos
+    last-subslide = calc.max(last-subslide, pos)
+    waypoints.insert(lbl, pos)
+    (repetitions, last-subslide, waypoints)
+  }
+
+  for child in children {
+    if utils.is-sequence(child) {
+      (repetitions, last-subslide, waypoints) = _collect-waypoints-impl(
+        child.children,
+        repetitions,
+        last-subslide,
+        waypoints,
+      )
+    } else if (
+      type(child) == content
+        and child.func() == metadata
+        and type(child.value) == dictionary
+    ) {
+      let kind = child.value.at("kind", default: none)
+      if kind == "touying-jump/pause/meanwhile" {
+        if child.value.relative {
+          // Snap past any preceding fn-wrapper range before applying the
+          // relative jump, so pauses after e.g. item-by-item land correctly.
+          repetitions = calc.max(repetitions, last-subslide) + child.value.n
+        } else {
+          repetitions = child.value.n
+        }
+      } else if kind == "touying-waypoint" {
+        if not _waypoint-known(waypoints, child.value.label) {
+          if child.value.at("advance", default: true) {
+            (repetitions, last-subslide, waypoints) = register-advancing-wp(
+              child.value.label,
+              repetitions,
+              last-subslide,
+              waypoints,
+            )
+          } else {
+            waypoints.insert(child.value.label, repetitions)
+          }
+        }
+      } else if kind == "touying-implicit-waypoint" {
+        if not _waypoint-known(waypoints, child.value.label) {
+          (repetitions, last-subslide, waypoints) = register-advancing-wp(
+            child.value.label,
+            repetitions,
+            last-subslide,
+            waypoints,
+          )
+        }
+      } else if kind == "touying-set-config" {
+        let inner = if utils.is-sequence(child.value.body) {
+          child.value.body.children
+        } else {
+          (child.value.body,)
+        }
+        (repetitions, last-subslide, waypoints) = _collect-waypoints-impl(
+          inner,
+          repetitions,
+          last-subslide,
+          waypoints,
+        )
+      } else if kind in ("touying-equation", "touying-mitex", "touying-raw") {
+        repetitions = _count-animated-block-repetitions(
+          kind,
+          child.value,
+          repetitions,
+        )
+      } else if kind == "touying-reducer" {
+        // Recurse into the reducer's positional args to find waypoints and track pauses.
+        let inner-rep = repetitions
+        let inner-max = repetitions
+        for inner-child in child.value.args.flatten() {
+          if (
+            type(inner-child) == content
+              and inner-child.func() == metadata
+              and type(inner-child.value) == dictionary
+          ) {
+            let ik = inner-child.value.at("kind", default: none)
+            if ik == "touying-jump/pause/meanwhile" {
+              if inner-child.value.relative {
+                inner-rep += inner-child.value.n
+                inner-max = calc.max(inner-max, inner-rep)
+              } else {
+                inner-max = calc.max(inner-max, inner-rep)
+                inner-rep = inner-child.value.n
+              }
+            } else if ik == "touying-waypoint" {
+              if not _waypoint-known(waypoints, inner-child.value.label) {
+                if inner-child.value.at("advance", default: true) {
+                  inner-rep += 1
+                }
+                waypoints.insert(inner-child.value.label, inner-rep)
+              }
+            } else if ik == "touying-implicit-waypoint" {
+              if not _waypoint-known(waypoints, inner-child.value.label) {
+                inner-rep += 1
+                waypoints.insert(inner-child.value.label, inner-rep)
+              }
+            }
+          }
+        }
+        repetitions = calc.max(inner-max, inner-rep)
+      } else if kind == "touying-fn-wrapper" {
+        // fn-wrappers can span multiple subslides via their last-subslide field.
+        // Update last-subslide so that subsequent waypoints are placed AFTER
+        // this fn-wrapper's full animation range, not just at repetitions+1.
+        let ls = child.value.at("last-subslide", default: none)
+        if ls != none {
+          if type(ls) == function {
+            let (callback-ls, _) = ls(repetitions)
+            last-subslide = calc.max(last-subslide, callback-ls)
+          } else if type(ls) == int {
+            last-subslide = calc.max(last-subslide, ls)
+          }
+        }
+      }
+    } else if utils.is-styled(child) {
+      (repetitions, last-subslide, waypoints) = _collect-waypoints-impl(
+        (child.child,),
+        repetitions,
+        last-subslide,
+        waypoints,
+      )
+    } else if (
+      type(child) == content and child.func() in (table.cell, grid.cell)
+    ) {
+      // Handle table/grid cells that may wrap jump or waypoint metadata
+      if (
+        type(child.body) == content
+          and child.body.func() == metadata
+          and type(child.body.value) == dictionary
+      ) {
+        let kind = child.body.value.at("kind", default: none)
+        if kind == "touying-jump/pause/meanwhile" {
+          if child.body.value.relative {
+            repetitions = (
+              calc.max(repetitions, last-subslide) + child.body.value.n
+            )
+          } else {
+            repetitions = child.body.value.n
+          }
+        } else if kind == "touying-waypoint" {
+          if not _waypoint-known(waypoints, child.body.value.label) {
+            if child.body.value.at("advance", default: true) {
+              (repetitions, last-subslide, waypoints) = register-advancing-wp(
+                child.body.value.label,
+                repetitions,
+                last-subslide,
+                waypoints,
+              )
+            } else {
+              waypoints.insert(child.body.value.label, repetitions)
+            }
+          }
+        } else if kind == "touying-implicit-waypoint" {
+          if not _waypoint-known(waypoints, child.body.value.label) {
+            (repetitions, last-subslide, waypoints) = register-advancing-wp(
+              child.body.value.label,
+              repetitions,
+              last-subslide,
+              waypoints,
+            )
+          }
+        }
+      } else {
+        // Cell body is not a direct metadata wrapper — recurse into it
+        // to find any embedded waypoints/pauses.
+        let body = child.at("body", default: none)
+        if body != none {
+          let inner = if utils.is-sequence(body) {
+            body.children
+          } else {
+            (body,)
+          }
+          (repetitions, last-subslide, waypoints) = _collect-waypoints-impl(
+            inner,
+            repetitions,
+            last-subslide,
+            waypoints,
+          )
+        }
+      }
+    } else if type(child) == content {
+      // Recurse into content with a body field
+      let body = child.at("body", default: none)
+      if body != none {
+        let inner = if utils.is-sequence(body) {
+          body.children
+        } else {
+          (body,)
+        }
+        (repetitions, last-subslide, waypoints) = _collect-waypoints-impl(
+          inner,
+          repetitions,
+          last-subslide,
+          waypoints,
+        )
+      }
+      // Recurse into children (table, grid, stack, etc.)
+      if child.has("children") {
+        let ch = child.at("children", default: none)
+        if ch != none and type(ch) == array {
+          (repetitions, last-subslide, waypoints) = _collect-waypoints-impl(
+            ch,
+            repetitions,
+            last-subslide,
+            waypoints,
+          )
+        }
+      }
+    }
+  }
+  (repetitions, last-subslide, waypoints)
+}
 
 
+/// Collect all waypoint labels from slide bodies.
+///
+/// Returns a dictionary mapping label strings to their raw subslide numbers.
+///
+/// - bodies (content): The content bodies to scan.
+///
+/// -> dictionary
+#let _collect-waypoints(..bodies) = {
+  let (_, _, waypoints) = _collect-waypoints-impl(bodies.pos(), 1, 0, (:))
+  waypoints
+}
+
+
+/// Compute waypoint ranges from raw waypoint positions.
+///
+/// Each waypoint covers subslides from its declared position until the next
+/// waypoint starts (or the end of the slide for the last one).
+///
+/// - raw-waypoints (dictionary): Map of label → subslide number.
+///
+/// - total-repeat (int): Total number of subslides in the slide.
+///
+/// -> dictionary
+#let _compute-waypoint-ranges(raw-waypoints, total-repeat) = {
+  if raw-waypoints.len() == 0 {
+    return (:)
+  }
+  // Sort waypoints by subslide number, then by insertion order for ties
+  let sorted = raw-waypoints.pairs().sorted(key: p => p.at(1))
+  let result = (:)
+  for (i, (lbl, first)) in sorted.enumerate() {
+    let last = if i + 1 < sorted.len() {
+      sorted.at(i + 1).at(1) - 1
+    } else {
+      total-repeat
+    }
+    // Ensure last >= first (can happen if two waypoints share the same subslide)
+    let last = calc.max(first, last)
+    result.insert(lbl, (first: first, last: last))
+  }
+  result
+}
 
 
 ///
@@ -1857,6 +2760,7 @@
   self: none,
   need-cover: true,
   base: 1,
+  base-last-subslide: 0,
   index: 1,
   show-delayed-wrapper: false,
   ..bodies,
@@ -1884,6 +2788,7 @@
     child,
     body-field,
     repetitions,
+    last-subslide,
     index,
     need-cover,
     reconstruct-fn,
@@ -1898,10 +2803,12 @@
       inner-max-repetitions,
       next-last-subslide,
       final-repetitions,
+      inner-has-fn-wrapper,
     ) = _parse-content-into-results-and-repetitions(
       self: self,
       need-cover: repetitions <= index,
       base: repetitions,
+      base-last-subslide: last-subslide,
       index: index,
       body-content,
     )
@@ -1909,23 +2816,21 @@
     // Two-pass: if fn-wrappers are present inside a pause zone, re-run the inner parse
     // with the outer need-cover so that fn-wrappers handle their own visibility and
     // non-fn-wrapper content is properly covered by the inner mechanism.
-    //
-    // `next-last-subslide > 0` indicates that at least one touying-fn-wrapper was found
-    // inside the container (fn-wrappers set last-subslide to the max subslide they cover,
-    // which is always >= 1 -- see uncover/only/alternatives implementations).
     let would-be-hidden = not (
       calc.min(repetitions, final-repetitions) <= index or not need-cover
     )
-    if would-be-hidden and next-last-subslide > 0 {
+    if would-be-hidden and inner-has-fn-wrapper {
       let (
         conts2,
         inner-max-repetitions2,
+        _,
         _,
         _,
       ) = _parse-content-into-results-and-repetitions(
         self: self,
         need-cover: need-cover,
         base: repetitions,
+        base-last-subslide: last-subslide,
         index: index,
         body-content,
       )
@@ -1982,16 +2887,22 @@
   // repetitions
   let repetitions = base
   let max-repetitions = repetitions
-  // last-subslide by touying-fn-wrapper
-  let last-subslide = 0
+  // last-subslide by touying-fn-wrapper — inherit outer context so waypoints
+  // placed after multi-subslide fn-wrappers fire correctly inside sub-sequences.
+  let last-subslide = base-last-subslide
+  // Whether any touying-fn-wrapper was found in this parse (directly or via
+  // recursive calls).  Used by the two-pass escape hatch so that fn-wrappers
+  // inside a pause zone can handle their own visibility.
+  let has-fn-wrapper = false
   // get cover function from self
   let cover = self.methods.cover.with(self: self)
 
   // Main parsing loop: process each content item and handle animations
   for item in bodies {
     let it = item
-    // Special handling for table/grid cells containing pause/meanwhile markers
+    // Special handling for table/grid cells containing pause/meanwhile/waypoint markers
     // This is a workaround for syntax like #table([A], pause, [B])
+    // Waypoints and implicit waypoints are also stripped so they don't occupy a cell slot.
     if type(it) == content and it.func() in (table.cell, grid.cell) {
       if (
         type(it.body) == content
@@ -2001,11 +2912,43 @@
         let kind = it.body.value.at("kind", default: none)
         if kind == "touying-jump/pause/meanwhile" {
           if it.body.value.relative {
-            repetitions += it.body.value.n
+            repetitions = calc.max(repetitions, last-subslide) + it.body.value.n
           } else {
             // absolute jump
             max-repetitions = calc.max(max-repetitions, repetitions)
             repetitions = it.body.value.n
+          }
+          continue
+        } else if kind == "touying-waypoint" {
+          // Advance repetitions if this is the defining occurrence.
+          // Fires on the standard sequential trigger (first == repetitions+1) OR
+          // when a preceding fn-wrapper pushed last-subslide forward and this
+          // waypoint sits immediately after it (first == last-subslide+1).
+          let wp = self.at("waypoints", default: (:))
+          let lbl = it.body.value.label
+          if it.body.value.at("advance", default: true) and lbl in wp {
+            let first = wp.at(lbl).first
+            if (
+              first == repetitions + 1
+                or (first == last-subslide + 1 and first > repetitions)
+            ) {
+              repetitions = first
+              max-repetitions = calc.max(max-repetitions, repetitions)
+            }
+          }
+          continue
+        } else if kind == "touying-implicit-waypoint" {
+          let wp = self.at("waypoints", default: (:))
+          let lbl = it.body.value.label
+          if lbl in wp {
+            let first = wp.at(lbl).first
+            if (
+              first == repetitions + 1
+                or (first == last-subslide + 1 and first > repetitions)
+            ) {
+              repetitions = first
+              max-repetitions = calc.max(max-repetitions, repetitions)
+            }
           }
           continue
         }
@@ -2037,7 +2980,10 @@
         let kind = child.value.at("kind", default: none)
         if kind == "touying-jump/pause/meanwhile" {
           if child.value.relative {
-            repetitions += child.value.n // relative: advance by n (pause = jump(1, relative: true))
+            // Snap past any preceding fn-wrapper range before applying the
+            // relative jump, so that a #pause after e.g. item-by-item lands
+            // after the full animation, not after its first subslide.
+            repetitions = calc.max(repetitions, last-subslide) + child.value.n
             // Track the peak repetitions so that a subsequent negative jump doesn't
             // cause the slide count to be underestimated
             max-repetitions = calc.max(max-repetitions, repetitions)
@@ -2123,6 +3069,7 @@
           // Handle function wrappers (uncover, only, alternatives, etc.)
           // These always escape the pause zone: they handle their own subslide
           // visibility internally, so they must never be pushed to hidden-parts.
+          has-fn-wrapper = true
           let nextrepetitions = repetitions
           let extra-args = (:)
           if child.value.last-subslide != none {
@@ -2169,6 +3116,7 @@
             note-max-rep,
             _,
             _,
+            _,
           ) = _parse-content-into-results-and-repetitions(
             self: note-self,
             need-cover: true,
@@ -2199,6 +3147,42 @@
             subslide: effective-subslide,
             note-cont,
           ))
+        } else if kind == "touying-waypoint" {
+          // Waypoint marker: advance repetitions if this is the defining occurrence.
+          // Fires on the standard sequential trigger (first == repetitions+1) OR
+          // when a preceding fn-wrapper pushed last-subslide forward and this
+          // waypoint sits immediately after it (first == last-subslide+1).
+          let wp = self.at("waypoints", default: (:))
+          let lbl = child.value.label
+          if child.value.at("advance", default: true) and lbl in wp {
+            let first = wp.at(lbl).first
+            if (
+              first == repetitions + 1
+                or (first == last-subslide + 1 and first > repetitions)
+            ) {
+              repetitions = first
+              max-repetitions = calc.max(max-repetitions, repetitions)
+            }
+          }
+          // No visible output.
+        } else if kind == "touying-implicit-waypoint" {
+          // Implicit waypoint: advance repetitions if this is the defining occurrence.
+          // Fires on the standard sequential trigger (first == repetitions+1) OR
+          // when a preceding fn-wrapper pushed last-subslide forward and this
+          // waypoint sits immediately after it (first == last-subslide+1).
+          let wp = self.at("waypoints", default: (:))
+          let lbl = child.value.label
+          if lbl in wp {
+            let first = wp.at(lbl).first
+            if (
+              first == repetitions + 1
+                or (first == last-subslide + 1 and first > repetitions)
+            ) {
+              repetitions = first
+              max-repetitions = calc.max(max-repetitions, repetitions)
+            }
+          }
+          // No visible output.
         } else if kind == "touying-delayed-wrapper" {
           if show-delayed-wrapper {
             if repetitions <= index or not need-cover {
@@ -2228,30 +3212,35 @@
           inner-max-repetitions,
           next-last-subslide,
           final-repetitions,
+          inner-has-fn-wrapper,
         ) = _parse-content-into-results-and-repetitions(
           self: self,
           need-cover: repetitions <= index,
           base: repetitions,
+          base-last-subslide: last-subslide,
           index: index,
           child,
         )
+        has-fn-wrapper = has-fn-wrapper or inner-has-fn-wrapper
         // Two-pass: if fn-wrappers are present and sequence would be hidden,
         // re-run with outer need-cover so fn-wrappers handle their own visibility.
         let would-be-hidden = not (
           calc.min(repetitions, final-repetitions) <= index or not need-cover
         )
         let (cont, inner-max-repetitions) = if (
-          would-be-hidden and next-last-subslide > 0
+          would-be-hidden and inner-has-fn-wrapper
         ) {
           let (
             conts2,
             inner-max-repetitions2,
             _,
             _,
+            _,
           ) = _parse-content-into-results-and-repetitions(
             self: self,
             need-cover: need-cover,
             base: repetitions,
+            base-last-subslide: last-subslide,
             index: index,
             child,
           )
@@ -2268,7 +3257,7 @@
           max-repetitions = calc.max(max-repetitions, repetitions)
         }
         if (
-          would-be-hidden and next-last-subslide > 0
+          would-be-hidden and inner-has-fn-wrapper
             or calc.min(repetitions, final-repetitions) <= index
             or not need-cover
         ) {
@@ -2292,6 +3281,7 @@
           child,
           "child",
           repetitions,
+          last-subslide,
           index,
           need-cover,
           (child, cont) => utils.typst-builtin-styled(cont, child.styles),
@@ -2331,6 +3321,7 @@
           child,
           "body",
           repetitions,
+          last-subslide,
           index,
           need-cover,
           (child, cont) => utils.reconstruct(
@@ -2368,30 +3359,35 @@
           inner-max-repetitions,
           next-last-subslide,
           final-repetitions,
+          inner-has-fn-wrapper,
         ) = _parse-content-into-results-and-repetitions(
           self: self,
           need-cover: repetitions <= index,
           base: repetitions,
+          base-last-subslide: last-subslide,
           index: index,
           ..child.children,
         )
+        has-fn-wrapper = has-fn-wrapper or inner-has-fn-wrapper
         // Two-pass: if fn-wrappers are present and container would be hidden,
         // re-run with outer need-cover so fn-wrappers handle their own visibility.
         let would-be-hidden = not (
           calc.min(repetitions, final-repetitions) <= index or not need-cover
         )
         let (conts, inner-max-repetitions) = if (
-          would-be-hidden and next-last-subslide > 0
+          would-be-hidden and inner-has-fn-wrapper
         ) {
           let (
             conts2,
             inner-max-repetitions2,
             _,
             _,
+            _,
           ) = _parse-content-into-results-and-repetitions(
             self: self,
             need-cover: need-cover,
             base: repetitions,
+            base-last-subslide: last-subslide,
             index: index,
             ..child.children,
           )
@@ -2413,7 +3409,7 @@
           conts,
         )
         if (
-          would-be-hidden and next-last-subslide > 0
+          would-be-hidden and inner-has-fn-wrapper
             or calc.min(repetitions, final-repetitions) <= index
             or not need-cover
         ) {
@@ -2438,6 +3434,7 @@
           child,
           "body-or-none",
           repetitions,
+          last-subslide,
           index,
           need-cover,
           (child, cont) => utils.reconstruct(
@@ -2480,6 +3477,7 @@
           child,
           "description",
           repetitions,
+          last-subslide,
           index,
           need-cover,
           (child, cont) => terms.item(child.term, cont),
@@ -2511,13 +3509,16 @@
           inner-max-repetitions,
           next-last-subslide,
           final-repetitions,
+          inner-has-fn-wrapper,
         ) = _parse-content-into-results-and-repetitions(
           self: self,
           need-cover: repetitions <= index,
           base: repetitions,
+          base-last-subslide: last-subslide,
           index: index,
           child.body,
         )
+        has-fn-wrapper = has-fn-wrapper or inner-has-fn-wrapper
         let args = if child.has("gutter") {
           (gutter: child.gutter)
         }
@@ -2532,17 +3533,19 @@
           calc.min(repetitions, final-repetitions) <= index or not need-cover
         )
         let (cont, inner-max-repetitions) = if (
-          would-be-hidden and next-last-subslide > 0
+          would-be-hidden and inner-has-fn-wrapper
         ) {
           let (
             conts2,
             inner-max-repetitions2,
             _,
             _,
+            _,
           ) = _parse-content-into-results-and-repetitions(
             self: self,
             need-cover: need-cover,
             base: repetitions,
+            base-last-subslide: last-subslide,
             index: index,
             child.body,
           )
@@ -2559,7 +3562,7 @@
           max-repetitions = calc.max(max-repetitions, repetitions)
         }
         if (
-          would-be-hidden and next-last-subslide > 0
+          would-be-hidden and inner-has-fn-wrapper
             or calc.min(repetitions, final-repetitions) <= index
             or not need-cover
         ) {
@@ -2577,13 +3580,16 @@
           inner-max-repetitions,
           next-last-subslide,
           final-repetitions,
+          inner-has-fn-wrapper,
         ) = _parse-content-into-results-and-repetitions(
           self: self,
           need-cover: repetitions <= index,
           base: repetitions,
+          base-last-subslide: last-subslide,
           index: index,
           child.body,
         )
+        has-fn-wrapper = has-fn-wrapper or inner-has-fn-wrapper
         let fields = child.fields()
         let _ = fields.remove("alignment", default: none)
         let _ = fields.remove("body", default: none)
@@ -2598,17 +3604,19 @@
           calc.min(repetitions, final-repetitions) <= index or not need-cover
         )
         let (cont, inner-max-repetitions) = if (
-          would-be-hidden and next-last-subslide > 0
+          would-be-hidden and inner-has-fn-wrapper
         ) {
           let (
             conts2,
             inner-max-repetitions2,
             _,
             _,
+            _,
           ) = _parse-content-into-results-and-repetitions(
             self: self,
             need-cover: need-cover,
             base: repetitions,
+            base-last-subslide: last-subslide,
             index: index,
             child.body,
           )
@@ -2625,7 +3633,7 @@
           max-repetitions = calc.max(max-repetitions, repetitions)
         }
         if (
-          would-be-hidden and next-last-subslide > 0
+          would-be-hidden and inner-has-fn-wrapper
             or calc.min(repetitions, final-repetitions) <= index
             or not need-cover
         ) {
@@ -2643,13 +3651,16 @@
           inner-max-repetitions,
           next-last-subslide,
           final-repetitions,
+          inner-has-fn-wrapper,
         ) = _parse-content-into-results-and-repetitions(
           self: self,
           need-cover: repetitions <= index,
           base: repetitions,
+          base-last-subslide: last-subslide,
           index: index,
           child.body,
         )
+        has-fn-wrapper = has-fn-wrapper or inner-has-fn-wrapper
         let fields = child.fields()
         let _ = fields.remove("angle", default: none)
         let _ = fields.remove("body", default: none)
@@ -2664,17 +3675,19 @@
           calc.min(repetitions, final-repetitions) <= index or not need-cover
         )
         let (cont, inner-max-repetitions) = if (
-          would-be-hidden and next-last-subslide > 0
+          would-be-hidden and inner-has-fn-wrapper
         ) {
           let (
             conts2,
             inner-max-repetitions2,
             _,
             _,
+            _,
           ) = _parse-content-into-results-and-repetitions(
             self: self,
             need-cover: need-cover,
             base: repetitions,
+            base-last-subslide: last-subslide,
             index: index,
             child.body,
           )
@@ -2691,7 +3704,7 @@
           max-repetitions = calc.max(max-repetitions, repetitions)
         }
         if (
-          would-be-hidden and next-last-subslide > 0
+          would-be-hidden and inner-has-fn-wrapper
             or calc.min(repetitions, final-repetitions) <= index
             or not need-cover
         ) {
@@ -2718,7 +3731,13 @@
     parsed-results.push(result.sum(default: []))
   }
   max-repetitions = calc.max(max-repetitions, repetitions)
-  return (parsed-results, max-repetitions, last-subslide, repetitions)
+  return (
+    parsed-results,
+    max-repetitions,
+    last-subslide,
+    repetitions,
+    has-fn-wrapper,
+  )
 }
 
 // get negative pad for header and footer
@@ -3203,12 +4222,28 @@
   }
 
   self.subslide = 1
+  // Pre-collect waypoints so label resolution works during the initial parse pass.
+  // If any body is a function (callback-style slide), call it with the current self
+  // to materialise content. The global #waypoint/#uncover/#only functions only emit
+  // metadata and do not rely on self.waypoints, so this is safe.
+  let self-for-prepass = self + (_waypoint-prepass: true)
+  let resolved-bodies = bodies.map(b => if type(b) == function {
+    b(self-for-prepass)
+  } else { b })
+  // Set preliminary single-point ranges (first == last == raw subslide number);
+  // proper ranges are computed after `repeat` is known.
+  let raw-waypoints = _collect-waypoints(..resolved-bodies)
+  self.waypoints = (:)
+  for (lbl, sub) in raw-waypoints.pairs() {
+    self.waypoints.insert(lbl, (first: sub, last: sub))
+  }
   // for single page slide, get the repetitions
   if repeat == auto {
     let (
       _,
       repetitions,
       last-subslide,
+      _,
       _,
     ) = _parse-content-into-results-and-repetitions(
       self: self,
@@ -3220,6 +4255,8 @@
   }
   assert(type(repeat) == int, message: "The repeat should be an integer")
   self.repeat = repeat
+  // Recompute waypoint ranges with the actual repeat count
+  self.waypoints = _compute-waypoint-ranges(raw-waypoints, repeat)
   // page header and footer
   let (header, footer, body-transform) = _get-header-footer(self)
   let page-extra-args = _get-page-extra-args(self)
@@ -3229,7 +4266,7 @@
     if handout-subslides == none {
       // Original behavior: render only the last subslide
       self.subslide = repeat
-      let (conts, _, _, _) = _parse-content-into-results-and-repetitions(
+      let (conts, _, _, _, _) = _parse-content-into-results-and-repetitions(
         self: self,
         index: repeat,
         show-delayed-wrapper: true,
@@ -3268,7 +4305,7 @@
         let (header-i, footer-i, body-transform-i) = _get-header-footer(
           subslide-self,
         )
-        let (conts, _, _, _) = _parse-content-into-results-and-repetitions(
+        let (conts, _, _, _, _) = _parse-content-into-results-and-repetitions(
           self: subslide-self,
           index: i,
           show-delayed-wrapper: is-last,
@@ -3292,31 +4329,84 @@
       result.sum(default: none)
     }
   } else if self.at("_recall-subslide", default: none) != none {
-    // render only the specific subslide requested by touying-recall
-    let i = self._recall-subslide
-    assert(
-      i >= 1 and i <= repeat,
-      message: "subslide "
-        + str(i)
-        + " is out of range (1.."
-        + str(repeat)
-        + ")",
-    )
-    self.subslide = i
-    let (header, footer, body-transform) = _get-header-footer(self)
-    let (conts, _, _, _) = _parse-content-into-results-and-repetitions(
-      self: self,
-      index: i,
-      show-delayed-wrapper: i == repeat,
-      ..bodies,
-    )
-    let new-header = page-preamble(self) + header
-    set page(
-      ..(self.page + page-extra-args + (header: new-header, footer: footer)),
-    )
-    body-transform(setting-fn(
-      subslide-preamble(self) + composer-with-side-by-side(..conts),
-    ))
+    // Render specific subslide(s) requested by touying-recall.
+    // The spec is resolved here because `repeat` and `self.waypoints`
+    // are only available after the pre-pass above.
+    let recall-spec = self._recall-subslide
+    let recall-indices = if recall-spec == auto {
+      // auto → last subslide only
+      (repeat,)
+    } else if type(recall-spec) == int {
+      // Explicit single subslide
+      (recall-spec,)
+    } else if type(recall-spec) == str and recall-spec == "waypoints" {
+      // "waypoints" → last subslide of every waypoint
+      let wp-map = self.at("waypoints", default: (:))
+      if wp-map.len() == 0 {
+        (repeat,)
+      } else {
+        let sorted = wp-map.pairs().sorted(key: p => p.at(1).first)
+        sorted.map(p => p.at(1).last).dedup()
+      }
+    } else if type(recall-spec) == label or type(recall-spec) == dictionary {
+      // Waypoint label or marker — resolve using the slide's waypoint map
+      let resolved = utils.resolve-waypoints(self, recall-spec)
+      if type(resolved) == int {
+        (resolved,)
+      } else if type(resolved) == dictionary {
+        let first = resolved.at("beginning", default: resolved.at(
+          "first",
+          default: 1,
+        ))
+        let last = resolved.at("until", default: resolved.at(
+          "last",
+          default: repeat,
+        ))
+        range(first, last + 1)
+      } else {
+        panic(
+          "touying-recall: unexpected resolved waypoint type: "
+            + repr(resolved),
+        )
+      }
+    } else {
+      panic(
+        "touying-recall: subslide must be none, auto, int, \"waypoints\", label, or waypoint marker, got "
+          + str(type(recall-spec)),
+      )
+    }
+    // Validate and render each requested subslide
+    let result = ()
+    for i in recall-indices {
+      assert(
+        i >= 1 and i <= repeat,
+        message: "touying-recall: subslide "
+          + str(i)
+          + " is out of range (1.."
+          + str(repeat)
+          + ")",
+      )
+      self.subslide = i
+      let (header, footer, body-transform) = _get-header-footer(self)
+      let (conts, _, _, _, _) = _parse-content-into-results-and-repetitions(
+        self: self,
+        index: i,
+        show-delayed-wrapper: i == repeat,
+        ..bodies,
+      )
+      let new-header = page-preamble(self) + header
+      result.push({
+        set page(
+          ..(
+            self.page + page-extra-args + (header: new-header, footer: footer)
+          ),
+        )
+        body-transform(setting-fn(
+          subslide-preamble(self) + composer-with-side-by-side(..conts),
+        ))
+      })
+    }
+    result.sum()
   } else {
     // render all the subslides
     let result = ()
@@ -3326,7 +4416,7 @@
       let delayed-args = if i == repeat {
         (show-delayed-wrapper: true)
       }
-      let (conts, _, _, _) = _parse-content-into-results-and-repetitions(
+      let (conts, _, _, _, _) = _parse-content-into-results-and-repetitions(
         self: self,
         index: i,
         ..delayed-args,
