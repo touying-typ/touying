@@ -61,7 +61,7 @@ For more control, use waypoint markers to reference specific parts of a waypoint
 
 | Marker | Meaning |
 |---|---|
-| `from-wp(<label>)` | All subslides following the first sublide of the waypoint.
+| `from-wp(<label>)` | All subslides following the first subslide of the waypoint. |
 | `until-wp(<label>)` | All subslides until the last subslide of the waypoint's range. |
 | `get-first(<label>)` | The first subslide of the waypoint's range. |
 | `get-last(<label>)` | The last subslide of the waypoint's range. |
