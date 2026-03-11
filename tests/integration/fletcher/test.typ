@@ -36,3 +36,19 @@
     edge((0, 0), (2, 0), `close()`, "-|>", bend: -40deg),
   )
 ]
+
+== Fletcher with uncover and only
+
+// Tests fn-wrappers inside the reducer: uncover uses fletcher.hide,
+// only produces no output when hidden.
+#slide[
+  #fletcher-diagram(
+    node-stroke: .1em,
+    spacing: 4em,
+    node((0, 0), [A], radius: 2em),
+    pause,
+    uncover("1-2", edge((0, 0), (1, 0), "-|>", stroke: blue)),
+    uncover("2-", node((1, 0), [B], radius: 2em)),
+    only(3, node((0, 1), [tmp], radius: 1em, fill: orange)),
+  )
+]
