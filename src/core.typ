@@ -2428,12 +2428,25 @@
 ///
 /// This mirrors the pause-tracking logic of `_parse-content-into-results-and-repetitions`
 /// but does NOT handle covering or visibility — it is a lightweight pre-pass.
-#let _collect-waypoints-impl(children, repetitions, waypoints) = {
+#let _collect-waypoints-impl(children, repetitions, last-subslide, waypoints) = {
+  // Helper: register a new advancing waypoint at the correct position.
+  // Uses max(repetitions+1, last-subslide+1) so that waypoints placed after a
+  // multi-subslide fn-wrapper (e.g. item-by-item) land AFTER its full range,
+  // not just one step past the last sequential pause.
+  let register-advancing-wp(lbl, repetitions, last-subslide, waypoints) = {
+    let pos = calc.max(repetitions + 1, last-subslide + 1)
+    repetitions = pos
+    last-subslide = calc.max(last-subslide, pos)
+    waypoints.insert(lbl, pos)
+    (repetitions, last-subslide, waypoints)
+  }
+
   for child in children {
     if utils.is-sequence(child) {
-      (repetitions, waypoints) = _collect-waypoints-impl(
+      (repetitions, last-subslide, waypoints) = _collect-waypoints-impl(
         child.children,
         repetitions,
+        last-subslide,
         waypoints,
       )
     } else if (
@@ -2442,21 +2455,33 @@
       let kind = child.value.at("kind", default: none)
       if kind == "touying-jump/pause/meanwhile" {
         if child.value.relative {
-          repetitions += child.value.n
+          // Snap past any preceding fn-wrapper range before applying the
+          // relative jump, so pauses after e.g. item-by-item land correctly.
+          repetitions = calc.max(repetitions, last-subslide) + child.value.n
         } else {
           repetitions = child.value.n
         }
       } else if kind == "touying-waypoint" {
         if not _waypoint-known(waypoints, child.value.label) {
           if child.value.at("advance", default: true) {
-            repetitions += 1
+            (repetitions, last-subslide, waypoints) = register-advancing-wp(
+              child.value.label,
+              repetitions,
+              last-subslide,
+              waypoints,
+            )
+          } else {
+            waypoints.insert(child.value.label, repetitions)
           }
-          waypoints.insert(child.value.label, repetitions)
         }
       } else if kind == "touying-implicit-waypoint" {
         if not _waypoint-known(waypoints, child.value.label) {
-          repetitions += 1
-          waypoints.insert(child.value.label, repetitions)
+          (repetitions, last-subslide, waypoints) = register-advancing-wp(
+            child.value.label,
+            repetitions,
+            last-subslide,
+            waypoints,
+          )
         }
       } else if kind == "touying-set-config" {
         let inner = if utils.is-sequence(child.value.body) {
@@ -2464,9 +2489,10 @@
         } else {
           (child.value.body,)
         }
-        (repetitions, waypoints) = _collect-waypoints-impl(
+        (repetitions, last-subslide, waypoints) = _collect-waypoints-impl(
           inner,
           repetitions,
+          last-subslide,
           waypoints,
         )
       } else if kind in ("touying-equation", "touying-mitex", "touying-raw") {
@@ -2508,13 +2534,25 @@
           }
         }
         repetitions = calc.max(inner-max, inner-rep)
+      } else if kind == "touying-fn-wrapper" {
+        // fn-wrappers can span multiple subslides via their last-subslide field.
+        // Update last-subslide so that subsequent waypoints are placed AFTER
+        // this fn-wrapper's full animation range, not just at repetitions+1.
+        let ls = child.value.at("last-subslide", default: none)
+        if ls != none {
+          if type(ls) == function {
+            let (callback-ls, _) = ls(repetitions)
+            last-subslide = calc.max(last-subslide, callback-ls)
+          } else if type(ls) == int {
+            last-subslide = calc.max(last-subslide, ls)
+          }
+        }
       }
-      // touying-fn-wrapper and other unknown kinds don't affect the outer
-      // repetition counter, so we skip them.
     } else if utils.is-styled(child) {
-      (repetitions, waypoints) = _collect-waypoints-impl(
+      (repetitions, last-subslide, waypoints) = _collect-waypoints-impl(
         (child.child,),
         repetitions,
+        last-subslide,
         waypoints,
       )
     } else if (
@@ -2527,21 +2565,31 @@
         let kind = child.body.value.at("kind", default: none)
         if kind == "touying-jump/pause/meanwhile" {
           if child.body.value.relative {
-            repetitions += child.body.value.n
+            repetitions = calc.max(repetitions, last-subslide) + child.body.value.n
           } else {
             repetitions = child.body.value.n
           }
         } else if kind == "touying-waypoint" {
           if not _waypoint-known(waypoints, child.body.value.label) {
             if child.body.value.at("advance", default: true) {
-              repetitions += 1
+              (repetitions, last-subslide, waypoints) = register-advancing-wp(
+                child.body.value.label,
+                repetitions,
+                last-subslide,
+                waypoints,
+              )
+            } else {
+              waypoints.insert(child.body.value.label, repetitions)
             }
-            waypoints.insert(child.body.value.label, repetitions)
           }
         } else if kind == "touying-implicit-waypoint" {
           if not _waypoint-known(waypoints, child.body.value.label) {
-            repetitions += 1
-            waypoints.insert(child.body.value.label, repetitions)
+            (repetitions, last-subslide, waypoints) = register-advancing-wp(
+              child.body.value.label,
+              repetitions,
+              last-subslide,
+              waypoints,
+            )
           }
         }
       } else {
@@ -2554,9 +2602,10 @@
           } else {
             (body,)
           }
-          (repetitions, waypoints) = _collect-waypoints-impl(
+          (repetitions, last-subslide, waypoints) = _collect-waypoints-impl(
             inner,
             repetitions,
+            last-subslide,
             waypoints,
           )
         }
@@ -2570,9 +2619,10 @@
         } else {
           (body,)
         }
-        (repetitions, waypoints) = _collect-waypoints-impl(
+        (repetitions, last-subslide, waypoints) = _collect-waypoints-impl(
           inner,
           repetitions,
+          last-subslide,
           waypoints,
         )
       }
@@ -2580,16 +2630,17 @@
       if child.has("children") {
         let ch = child.at("children", default: none)
         if ch != none and type(ch) == array {
-          (repetitions, waypoints) = _collect-waypoints-impl(
+          (repetitions, last-subslide, waypoints) = _collect-waypoints-impl(
             ch,
             repetitions,
+            last-subslide,
             waypoints,
           )
         }
       }
     }
   }
-  (repetitions, waypoints)
+  (repetitions, last-subslide, waypoints)
 }
 
 
@@ -2601,7 +2652,7 @@
 ///
 /// -> dictionary
 #let _collect-waypoints(..bodies) = {
-  let (_, waypoints) = _collect-waypoints-impl(bodies.pos(), 1, (:))
+  let (_, _, waypoints) = _collect-waypoints-impl(bodies.pos(), 1, 0, (:))
   waypoints
 }
 
@@ -2654,6 +2705,7 @@
   self: none,
   need-cover: true,
   base: 1,
+  base-last-subslide: 0,
   index: 1,
   show-delayed-wrapper: false,
   ..bodies,
@@ -2681,6 +2733,7 @@
     child,
     body-field,
     repetitions,
+    last-subslide,
     index,
     need-cover,
     reconstruct-fn,
@@ -2695,10 +2748,12 @@
       inner-max-repetitions,
       next-last-subslide,
       final-repetitions,
+      inner-has-fn-wrapper,
     ) = _parse-content-into-results-and-repetitions(
       self: self,
       need-cover: repetitions <= index,
       base: repetitions,
+      base-last-subslide: last-subslide,
       index: index,
       body-content,
     )
@@ -2706,23 +2761,21 @@
     // Two-pass: if fn-wrappers are present inside a pause zone, re-run the inner parse
     // with the outer need-cover so that fn-wrappers handle their own visibility and
     // non-fn-wrapper content is properly covered by the inner mechanism.
-    //
-    // `next-last-subslide > 0` indicates that at least one touying-fn-wrapper was found
-    // inside the container (fn-wrappers set last-subslide to the max subslide they cover,
-    // which is always >= 1 -- see uncover/only/alternatives implementations).
     let would-be-hidden = not (
       calc.min(repetitions, final-repetitions) <= index or not need-cover
     )
-    if would-be-hidden and next-last-subslide > 0 {
+    if would-be-hidden and inner-has-fn-wrapper {
       let (
         conts2,
         inner-max-repetitions2,
+        _,
         _,
         _,
       ) = _parse-content-into-results-and-repetitions(
         self: self,
         need-cover: need-cover,
         base: repetitions,
+        base-last-subslide: last-subslide,
         index: index,
         body-content,
       )
@@ -2779,8 +2832,13 @@
   // repetitions
   let repetitions = base
   let max-repetitions = repetitions
-  // last-subslide by touying-fn-wrapper
-  let last-subslide = 0
+  // last-subslide by touying-fn-wrapper — inherit outer context so waypoints
+  // placed after multi-subslide fn-wrappers fire correctly inside sub-sequences.
+  let last-subslide = base-last-subslide
+  // Whether any touying-fn-wrapper was found in this parse (directly or via
+  // recursive calls).  Used by the two-pass escape hatch so that fn-wrappers
+  // inside a pause zone can handle their own visibility.
+  let has-fn-wrapper = false
   // get cover function from self
   let cover = self.methods.cover.with(self: self)
 
@@ -2797,7 +2855,7 @@
         let kind = it.body.value.at("kind", default: none)
         if kind == "touying-jump/pause/meanwhile" {
           if it.body.value.relative {
-            repetitions += it.body.value.n
+            repetitions = calc.max(repetitions, last-subslide) + it.body.value.n
           } else {
             // absolute jump
             max-repetitions = calc.max(max-repetitions, repetitions)
@@ -2806,21 +2864,28 @@
           continue
         } else if kind == "touying-waypoint" {
           // Advance repetitions if this is the defining occurrence.
+          // Fires on the standard sequential trigger (first == repetitions+1) OR
+          // when a preceding fn-wrapper pushed last-subslide forward and this
+          // waypoint sits immediately after it (first == last-subslide+1).
           let wp = self.at("waypoints", default: (:))
           let lbl = it.body.value.label
-          if (
-            it.body.value.at("advance", default: true) and lbl in wp and wp.at(lbl).first == repetitions + 1
-          ) {
-            repetitions += 1
-            max-repetitions = calc.max(max-repetitions, repetitions)
+          if it.body.value.at("advance", default: true) and lbl in wp {
+            let first = wp.at(lbl).first
+            if first == repetitions + 1 or (first == last-subslide + 1 and first > repetitions) {
+              repetitions = first
+              max-repetitions = calc.max(max-repetitions, repetitions)
+            }
           }
           continue
         } else if kind == "touying-implicit-waypoint" {
           let wp = self.at("waypoints", default: (:))
           let lbl = it.body.value.label
-          if lbl in wp and wp.at(lbl).first == repetitions + 1 {
-            repetitions += 1
-            max-repetitions = calc.max(max-repetitions, repetitions)
+          if lbl in wp {
+            let first = wp.at(lbl).first
+            if first == repetitions + 1 or (first == last-subslide + 1 and first > repetitions) {
+              repetitions = first
+              max-repetitions = calc.max(max-repetitions, repetitions)
+            }
           }
           continue
         }
@@ -2850,7 +2915,10 @@
         let kind = child.value.at("kind", default: none)
         if kind == "touying-jump/pause/meanwhile" {
           if child.value.relative {
-            repetitions += child.value.n // relative: advance by n (pause = jump(1, relative: true))
+            // Snap past any preceding fn-wrapper range before applying the
+            // relative jump, so that a #pause after e.g. item-by-item lands
+            // after the full animation, not after its first subslide.
+            repetitions = calc.max(repetitions, last-subslide) + child.value.n
             // Track the peak repetitions so that a subsequent negative jump doesn't
             // cause the slide count to be underestimated
             max-repetitions = calc.max(max-repetitions, repetitions)
@@ -2936,6 +3004,7 @@
           // Handle function wrappers (uncover, only, alternatives, etc.)
           // These always escape the pause zone: they handle their own subslide
           // visibility internally, so they must never be pushed to hidden-parts.
+          has-fn-wrapper = true
           let nextrepetitions = repetitions
           let extra-args = (:)
           if child.value.last-subslide != none {
@@ -2982,6 +3051,7 @@
             note-max-rep,
             _,
             _,
+            _,
           ) = _parse-content-into-results-and-repetitions(
             self: note-self,
             need-cover: true,
@@ -3014,26 +3084,32 @@
           ))
         } else if kind == "touying-waypoint" {
           // Waypoint marker: advance repetitions if this is the defining occurrence.
-          // The defining occurrence is identified by checking whether the waypoint's
-          // first subslide matches the next repetition value (repetitions + 1).
+          // Fires on the standard sequential trigger (first == repetitions+1) OR
+          // when a preceding fn-wrapper pushed last-subslide forward and this
+          // waypoint sits immediately after it (first == last-subslide+1).
           let wp = self.at("waypoints", default: (:))
           let lbl = child.value.label
-          if (
-            child.value.at("advance", default: true) and lbl in wp and wp.at(lbl).first == repetitions + 1
-          ) {
-            repetitions += 1
-            max-repetitions = calc.max(max-repetitions, repetitions)
+          if child.value.at("advance", default: true) and lbl in wp {
+            let first = wp.at(lbl).first
+            if first == repetitions + 1 or (first == last-subslide + 1 and first > repetitions) {
+              repetitions = first
+              max-repetitions = calc.max(max-repetitions, repetitions)
+            }
           }
           // No visible output.
         } else if kind == "touying-implicit-waypoint" {
           // Implicit waypoint: advance repetitions if this is the defining occurrence.
-          // The defining occurrence is identified by checking whether the waypoint's
-          // first subslide matches the next repetition value (repetitions + 1).
+          // Fires on the standard sequential trigger (first == repetitions+1) OR
+          // when a preceding fn-wrapper pushed last-subslide forward and this
+          // waypoint sits immediately after it (first == last-subslide+1).
           let wp = self.at("waypoints", default: (:))
           let lbl = child.value.label
-          if lbl in wp and wp.at(lbl).first == repetitions + 1 {
-            repetitions += 1
-            max-repetitions = calc.max(max-repetitions, repetitions)
+          if lbl in wp {
+            let first = wp.at(lbl).first
+            if first == repetitions + 1 or (first == last-subslide + 1 and first > repetitions) {
+              repetitions = first
+              max-repetitions = calc.max(max-repetitions, repetitions)
+            }
           }
           // No visible output.
         } else if kind == "touying-delayed-wrapper" {
@@ -3065,30 +3141,35 @@
           inner-max-repetitions,
           next-last-subslide,
           final-repetitions,
+          inner-has-fn-wrapper,
         ) = _parse-content-into-results-and-repetitions(
           self: self,
           need-cover: repetitions <= index,
           base: repetitions,
+          base-last-subslide: last-subslide,
           index: index,
           child,
         )
+        has-fn-wrapper = has-fn-wrapper or inner-has-fn-wrapper
         // Two-pass: if fn-wrappers are present and sequence would be hidden,
         // re-run with outer need-cover so fn-wrappers handle their own visibility.
         let would-be-hidden = not (
           calc.min(repetitions, final-repetitions) <= index or not need-cover
         )
         let (cont, inner-max-repetitions) = if (
-          would-be-hidden and next-last-subslide > 0
+          would-be-hidden and inner-has-fn-wrapper
         ) {
           let (
             conts2,
             inner-max-repetitions2,
             _,
             _,
+            _,
           ) = _parse-content-into-results-and-repetitions(
             self: self,
             need-cover: need-cover,
             base: repetitions,
+            base-last-subslide: last-subslide,
             index: index,
             child,
           )
@@ -3105,7 +3186,7 @@
           max-repetitions = calc.max(max-repetitions, repetitions)
         }
         if (
-          would-be-hidden and next-last-subslide > 0
+          would-be-hidden and inner-has-fn-wrapper
             or calc.min(repetitions, final-repetitions) <= index
             or not need-cover
         ) {
@@ -3129,6 +3210,7 @@
           child,
           "child",
           repetitions,
+          last-subslide,
           index,
           need-cover,
           (child, cont) => utils.typst-builtin-styled(cont, child.styles),
@@ -3166,6 +3248,7 @@
           child,
           "body",
           repetitions,
+          last-subslide,
           index,
           need-cover,
           (child, cont) => utils.reconstruct(
@@ -3201,30 +3284,35 @@
           inner-max-repetitions,
           next-last-subslide,
           final-repetitions,
+          inner-has-fn-wrapper,
         ) = _parse-content-into-results-and-repetitions(
           self: self,
           need-cover: repetitions <= index,
           base: repetitions,
+          base-last-subslide: last-subslide,
           index: index,
           ..child.children,
         )
+        has-fn-wrapper = has-fn-wrapper or inner-has-fn-wrapper
         // Two-pass: if fn-wrappers are present and container would be hidden,
         // re-run with outer need-cover so fn-wrappers handle their own visibility.
         let would-be-hidden = not (
           calc.min(repetitions, final-repetitions) <= index or not need-cover
         )
         let (conts, inner-max-repetitions) = if (
-          would-be-hidden and next-last-subslide > 0
+          would-be-hidden and inner-has-fn-wrapper
         ) {
           let (
             conts2,
             inner-max-repetitions2,
             _,
             _,
+            _,
           ) = _parse-content-into-results-and-repetitions(
             self: self,
             need-cover: need-cover,
             base: repetitions,
+            base-last-subslide: last-subslide,
             index: index,
             ..child.children,
           )
@@ -3246,7 +3334,7 @@
           conts,
         )
         if (
-          would-be-hidden and next-last-subslide > 0
+          would-be-hidden and inner-has-fn-wrapper
             or calc.min(repetitions, final-repetitions) <= index
             or not need-cover
         ) {
@@ -3271,6 +3359,7 @@
           child,
           "body-or-none",
           repetitions,
+          last-subslide,
           index,
           need-cover,
           (child, cont) => utils.reconstruct(
@@ -3311,6 +3400,7 @@
           child,
           "description",
           repetitions,
+          last-subslide,
           index,
           need-cover,
           (child, cont) => terms.item(child.term, cont),
@@ -3340,13 +3430,16 @@
           inner-max-repetitions,
           next-last-subslide,
           final-repetitions,
+          inner-has-fn-wrapper,
         ) = _parse-content-into-results-and-repetitions(
           self: self,
           need-cover: repetitions <= index,
           base: repetitions,
+          base-last-subslide: last-subslide,
           index: index,
           child.body,
         )
+        has-fn-wrapper = has-fn-wrapper or inner-has-fn-wrapper
         let args = if child.has("gutter") {
           (gutter: child.gutter)
         }
@@ -3361,17 +3454,19 @@
           calc.min(repetitions, final-repetitions) <= index or not need-cover
         )
         let (cont, inner-max-repetitions) = if (
-          would-be-hidden and next-last-subslide > 0
+          would-be-hidden and inner-has-fn-wrapper
         ) {
           let (
             conts2,
             inner-max-repetitions2,
             _,
             _,
+            _,
           ) = _parse-content-into-results-and-repetitions(
             self: self,
             need-cover: need-cover,
             base: repetitions,
+            base-last-subslide: last-subslide,
             index: index,
             child.body,
           )
@@ -3388,7 +3483,7 @@
           max-repetitions = calc.max(max-repetitions, repetitions)
         }
         if (
-          would-be-hidden and next-last-subslide > 0
+          would-be-hidden and inner-has-fn-wrapper
             or calc.min(repetitions, final-repetitions) <= index
             or not need-cover
         ) {
@@ -3406,13 +3501,16 @@
           inner-max-repetitions,
           next-last-subslide,
           final-repetitions,
+          inner-has-fn-wrapper,
         ) = _parse-content-into-results-and-repetitions(
           self: self,
           need-cover: repetitions <= index,
           base: repetitions,
+          base-last-subslide: last-subslide,
           index: index,
           child.body,
         )
+        has-fn-wrapper = has-fn-wrapper or inner-has-fn-wrapper
         let fields = child.fields()
         let _ = fields.remove("alignment", default: none)
         let _ = fields.remove("body", default: none)
@@ -3427,17 +3525,19 @@
           calc.min(repetitions, final-repetitions) <= index or not need-cover
         )
         let (cont, inner-max-repetitions) = if (
-          would-be-hidden and next-last-subslide > 0
+          would-be-hidden and inner-has-fn-wrapper
         ) {
           let (
             conts2,
             inner-max-repetitions2,
             _,
             _,
+            _,
           ) = _parse-content-into-results-and-repetitions(
             self: self,
             need-cover: need-cover,
             base: repetitions,
+            base-last-subslide: last-subslide,
             index: index,
             child.body,
           )
@@ -3454,7 +3554,7 @@
           max-repetitions = calc.max(max-repetitions, repetitions)
         }
         if (
-          would-be-hidden and next-last-subslide > 0
+          would-be-hidden and inner-has-fn-wrapper
             or calc.min(repetitions, final-repetitions) <= index
             or not need-cover
         ) {
@@ -3472,13 +3572,16 @@
           inner-max-repetitions,
           next-last-subslide,
           final-repetitions,
+          inner-has-fn-wrapper,
         ) = _parse-content-into-results-and-repetitions(
           self: self,
           need-cover: repetitions <= index,
           base: repetitions,
+          base-last-subslide: last-subslide,
           index: index,
           child.body,
         )
+        has-fn-wrapper = has-fn-wrapper or inner-has-fn-wrapper
         let fields = child.fields()
         let _ = fields.remove("angle", default: none)
         let _ = fields.remove("body", default: none)
@@ -3493,17 +3596,19 @@
           calc.min(repetitions, final-repetitions) <= index or not need-cover
         )
         let (cont, inner-max-repetitions) = if (
-          would-be-hidden and next-last-subslide > 0
+          would-be-hidden and inner-has-fn-wrapper
         ) {
           let (
             conts2,
             inner-max-repetitions2,
             _,
             _,
+            _,
           ) = _parse-content-into-results-and-repetitions(
             self: self,
             need-cover: need-cover,
             base: repetitions,
+            base-last-subslide: last-subslide,
             index: index,
             child.body,
           )
@@ -3520,7 +3625,7 @@
           max-repetitions = calc.max(max-repetitions, repetitions)
         }
         if (
-          would-be-hidden and next-last-subslide > 0
+          would-be-hidden and inner-has-fn-wrapper
             or calc.min(repetitions, final-repetitions) <= index
             or not need-cover
         ) {
@@ -3547,7 +3652,7 @@
     parsed-results.push(result.sum(default: []))
   }
   max-repetitions = calc.max(max-repetitions, repetitions)
-  return (parsed-results, max-repetitions, last-subslide, repetitions)
+  return (parsed-results, max-repetitions, last-subslide, repetitions, has-fn-wrapper)
 }
 
 // get negative pad for header and footer
@@ -4045,6 +4150,7 @@
       repetitions,
       last-subslide,
       _,
+      _,
     ) = _parse-content-into-results-and-repetitions(
       self: self,
       base: 1,
@@ -4066,7 +4172,7 @@
     if handout-subslides == none {
       // Original behavior: render only the last subslide
       self.subslide = repeat
-      let (conts, _, _, _) = _parse-content-into-results-and-repetitions(
+      let (conts, _, _, _, _) = _parse-content-into-results-and-repetitions(
         self: self,
         index: repeat,
         show-delayed-wrapper: true,
@@ -4105,7 +4211,7 @@
         let (header-i, footer-i, body-transform-i) = _get-header-footer(
           subslide-self,
         )
-        let (conts, _, _, _) = _parse-content-into-results-and-repetitions(
+        let (conts, _, _, _, _) = _parse-content-into-results-and-repetitions(
           self: subslide-self,
           index: i,
           show-delayed-wrapper: is-last,
@@ -4180,7 +4286,7 @@
       )
       self.subslide = i
       let (header, footer, body-transform) = _get-header-footer(self)
-      let (conts, _, _, _) = _parse-content-into-results-and-repetitions(
+      let (conts, _, _, _, _) = _parse-content-into-results-and-repetitions(
         self: self,
         index: i,
         show-delayed-wrapper: i == repeat,
@@ -4208,7 +4314,7 @@
       let delayed-args = if i == repeat {
         (show-delayed-wrapper: true)
       }
-      let (conts, _, _, _) = _parse-content-into-results-and-repetitions(
+      let (conts, _, _, _, _) = _parse-content-into-results-and-repetitions(
         self: self,
         index: i,
         ..delayed-args,

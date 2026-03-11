@@ -350,9 +350,11 @@ Note: Waypoints work in contexts like fletcher, but not inside text blocks like 
 #slide(composer: (1fr, 1fr))[
   #text(weight: "bold")[`item-by-item` — relative (auto)]
   #code-col(
-    "Text before.\n#pause\nAfter first pause.\n#item-by-item[\n  - First item\n  - Second item\n  - Third item\n]",
+    "Text before.\n#pause\nAfter first pause.\n#item-by-item[\n  - First item\n  - Second item\n  - Third item\n]\n#pause\nAfter second pause.",
   )
   With `start: auto` (default), items continue from the current pause position.
+
+  They always stay for the remainder of the slide.
 ][
   Text before.
   #pause
@@ -362,14 +364,16 @@ Note: Waypoints work in contexts like fletcher, but not inside text blocks like 
     - Second item
     - Third item
   ]
+  #pause
+  After second pause.
 ]
 
 #slide(composer: (1fr, 1fr))[
   #text(weight: "bold")[`item-by-item` with waypoint start]
   #code-col(
-    "#waypoint(<list-wp>)\n#item-by-item(start: <list-wp>)[\n  - Alpha\n  - Beta\n  - Gamma\n]\n#uncover(<list-wp>)[\n  List revealed above.\n]",
+    "#waypoint(<list-wp>)\n#item-by-item(start: <list-wp>)[\n  - Alpha\n  - Beta\n  - Gamma\n]\n#uncover(from-wp(<list-wp>))[\n  List revealed above.\n]\n#only(<final>)[\n  Finally after the list.\n]",
   )
-  Anchor the item reveal to a named waypoint.
+  Anchor the item reveal to a named waypoint (implicit also possible).
 ][
   #waypoint(<list-wp>)
   #item-by-item(start: <list-wp>)[
@@ -377,7 +381,10 @@ Note: Waypoints work in contexts like fletcher, but not inside text blocks like 
     - Beta
     - Gamma
   ]
-  #uncover(<list-wp>)[List revealed above.]
+  #uncover(from-wp(<list-wp>))[List revealed above.]
+
+  // #waypoint(<final>, advance:false)
+  #only(<final>)[Finally after the list.]
 ]
 
 == Callback style
@@ -439,7 +446,7 @@ Note: Waypoints work in contexts like fletcher, but not inside text blocks like 
 #slide(composer: (1fr, 1fr))[
   #v(-1em)
   #code-col(
-    "#waypoint(<before>)
+    "#waypoint(<before>, advance: false)
 Before the group.
 #waypoint(<grp:a>)
 Part A.
@@ -451,7 +458,7 @@ After the group.
 // next-wp → last child + 1
 #only(next-wp(<grp>))[Past the group (after).]
 // prev-wp → first child − 1
-#only(prev-wp(<grp>))[ Before the group.]
+#only(prev-wp(<grp>))[Before the group (prev)]
 ",
   )
   #v(-0.8em)
@@ -459,7 +466,7 @@ After the group.
 
 ][
 
-  #waypoint(<hn-before>)
+  #waypoint(<hn-before>, advance: false)
   Before the group.
   #waypoint(<hn-grp:a>)
   Part A.
@@ -468,8 +475,8 @@ After the group.
   #waypoint(<hn-after>)
   After the group.
 
-  #only(next-wp(<hn-grp>))[_(next-wp: past group → after)_]
-  #only(prev-wp(<hn-grp>))[_(prev-wp: before group → before)_]
+  #only(next-wp(<hn-grp>))[Past the group (after).]
+  #only(prev-wp(<hn-grp>))[Before the group (prev)]
 
   #uncover("0-")[#place(
     bottom,
