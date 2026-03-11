@@ -281,9 +281,7 @@
     // Handle horizontal-line
     // split content when we have a horizontal line
     if (
-      horizontal-line-to-pagebreak
-        and horizontal-line
-        and child not in ([—], [---], [–], [--], [-])
+      horizontal-line-to-pagebreak and horizontal-line and child not in ([—], [---], [–], [--], [-])
     ) {
       slide-parts = utils.trim(slide-parts)
       (
@@ -306,9 +304,7 @@
     if utils.is-kind(child, "touying-slide-wrapper") {
       slide-parts = utils.trim(slide-parts)
       if (
-        slide-parts != ()
-          or _get-slide-fn(self + (headings: current-headings), default: none)
-            != none
+        slide-parts != () or _get-slide-fn(self + (headings: current-headings), default: none) != none
       ) {
         (
           slide-content,
@@ -412,9 +408,7 @@
       horizontal-line = true
       continue
     } else if (
-      horizontal-line-to-pagebreak
-        and horizontal-line
-        and child in ([–], [--], [-])
+      horizontal-line-to-pagebreak and horizontal-line and child in ([–], [--], [-])
     ) {
       continue
     } else if utils.is-heading(child, depth: slide-level) {
@@ -460,13 +454,10 @@
       new-start = true
 
       if (
-        not child.has("label")
-          or str(child.label) not in ("touying:hidden", "touying:skip")
+        not child.has("label") or str(child.label) not in ("touying:hidden", "touying:skip")
       ) {
         if (
-          child.depth == 1
-            and new-section-slide-fn != none
-            and not self.receive-body-for-new-section-slide-fn
+          child.depth == 1 and new-section-slide-fn != none and not self.receive-body-for-new-section-slide-fn
         ) {
           (
             slide-content,
@@ -483,9 +474,7 @@
           )
           if slide-content != none { output-slides.push(slide-content) }
         } else if (
-          child.depth == 2
-            and new-subsection-slide-fn != none
-            and not self.receive-body-for-new-subsection-slide-fn
+          child.depth == 2 and new-subsection-slide-fn != none and not self.receive-body-for-new-subsection-slide-fn
         ) {
           (
             slide-content,
@@ -542,8 +531,7 @@
         }
       }
     } else if (
-      self.at("auto-offset-for-heading", default: true)
-        and utils.is-heading(child)
+      self.at("auto-offset-for-heading", default: true) and utils.is-heading(child)
     ) {
       let fields = child.fields()
       let lbl = fields.remove("label", default: none)
@@ -839,14 +827,12 @@
   if relative {
     assert(
       type(n) == int and n != 0,
-      message: "jump: n must be a non-zero integer when relative: true, got "
-        + repr(n),
+      message: "jump: n must be a non-zero integer when relative: true, got " + repr(n),
     )
   } else {
     assert(
       type(n) == int and n >= 1,
-      message: "jump: n must be a positive integer when relative: false, got "
-        + repr(n),
+      message: "jump: n must be a positive integer when relative: false, got " + repr(n),
     )
   }
   [#metadata((
@@ -983,8 +969,7 @@
 #let from-wp(wp) = {
   assert(
     type(wp) in (label, str, dictionary),
-    message: "from-wp: expected a label or waypoint marker, got "
-      + str(type(wp)),
+    message: "from-wp: expected a label or waypoint marker, got " + str(type(wp)),
   )
   (
     kind: "waypoint-from",
@@ -1014,8 +999,7 @@
 #let until-wp(wp) = {
   assert(
     type(wp) in (label, str, dictionary),
-    message: "until-wp: expected a label or waypoint marker, got "
-      + str(type(wp)),
+    message: "until-wp: expected a label or waypoint marker, got " + str(type(wp)),
   )
   (
     kind: "waypoint-until",
@@ -1045,8 +1029,7 @@
 #let prev-wp(wp, amount: 1) = {
   assert(
     type(wp) in (label, str, dictionary),
-    message: "prev-wp: expected a label or waypoint marker, got "
-      + str(type(wp)),
+    message: "prev-wp: expected a label or waypoint marker, got " + str(type(wp)),
   )
   if type(wp) == label {
     (kind: "waypoint-prev", inner: str(wp), amount: amount)
@@ -1081,8 +1064,7 @@
 #let next-wp(wp, amount: 1) = {
   assert(
     type(wp) in (label, str, dictionary),
-    message: "next-wp: expected a label or waypoint marker, got "
-      + str(type(wp)),
+    message: "next-wp: expected a label or waypoint marker, got " + str(type(wp)),
   )
   if type(wp) == label {
     (kind: "waypoint-next", inner: str(wp), amount: amount)
@@ -1293,9 +1275,7 @@
       )
     }
     if (
-      type(key) == dictionary
-        and "kind" in key
-        and str(key.kind).starts-with("waypoint-")
+      type(key) == dictionary and "kind" in key and str(key.kind).starts-with("waypoint-")
     ) {
       panic(
         "alternatives-match: waypoint markers are not supported. Use alternatives() with the at: parameter instead.",
@@ -1305,9 +1285,7 @@
   touying-fn-wrapper(
     utils.alternatives-match,
     last-subslide: if type(subslides-contents) == dictionary {
-      calc.max(..subslides-contents
-        .pairs()
-        .map(kv => utils.last-required-subslide(kv.at(0))))
+      calc.max(..subslides-contents.pairs().map(kv => utils.last-required-subslide(kv.at(0))))
     } else {
       calc.max(..subslides-contents.map(kv => utils.last-required-subslide(
         kv.at(0),
@@ -1440,21 +1418,18 @@
   // Validate integer parameters
   assert(
     type(start) == int,
-    message: "alternatives-fn: start must be an integer, got "
-      + str(type(start)),
+    message: "alternatives-fn: start must be an integer, got " + str(type(start)),
   )
   if end != none {
     assert(
       type(end) == int,
-      message: "alternatives-fn: end must be an integer or none, got "
-        + str(type(end)),
+      message: "alternatives-fn: end must be an integer or none, got " + str(type(end)),
     )
   }
   if count != none {
     assert(
       type(count) == int,
-      message: "alternatives-fn: count must be an integer or none, got "
-        + str(type(count)),
+      message: "alternatives-fn: count must be an integer or none, got " + str(type(count)),
     )
   }
   let end = if end == none {
@@ -1517,9 +1492,7 @@
       )
     }
     if (
-      type(case) == dictionary
-        and "kind" in case
-        and str(case.kind).starts-with("waypoint-")
+      type(case) == dictionary and "kind" in case and str(case.kind).starts-with("waypoint-")
     ) {
       panic(
         "alternatives-cases: waypoint markers are not supported. Use alternatives() with the at: parameter instead.",
@@ -1582,8 +1555,7 @@
 /// -> content
 #let item-by-item(start: auto, cont) = {
   if (
-    type(start) == dictionary
-      and start.at("kind", default: none) in ("waypoint-from", "waypoint-until")
+    type(start) == dictionary and start.at("kind", default: none) in ("waypoint-from", "waypoint-until")
   ) {
     panic(
       "item-by-item: `start` must resolve to a single subslide position. "
@@ -2197,10 +2169,7 @@
     let result-lines = ()
     let lines = it.split("\n")
     for line in lines {
-      let meaningful = line
-        .matches(meaningful-chars-pattern)
-        .map(m => m.text)
-        .join("")
+      let meaningful = line.matches(meaningful-chars-pattern).map(m => m.text).join("")
       if meaningful == "pause" {
         repetitions += 1
       } else if meaningful == "meanwhile" {
@@ -2261,9 +2230,7 @@
   let hidden-parts = ()
   for child in reducer.args.flatten() {
     if (
-      type(child) == content
-        and child.func() == metadata
-        and type(child.value) == dictionary
+      type(child) == content and child.func() == metadata and type(child.value) == dictionary
     ) {
       let kind = child.value.at("kind", default: none)
       if kind == "touying-jump/pause/meanwhile" {
@@ -2306,8 +2273,7 @@
         let wp = self.at("waypoints", default: (:))
         let lbl = child.value.label
         if (
-          child.value.at("advance", default: true)
-            and lbl in wp
+          child.value.at("advance", default: true) and lbl in wp
         ) {
           let first = wp.at(lbl).first
           if first == repetitions + 1 or (first == last-subslide + 1 and first > repetitions) {
@@ -2350,7 +2316,11 @@
         )
         // only() returns none when hidden — don't push none to the result
         if fn-result != none {
-          result.push(fn-result)
+          if type(fn-result) == array {
+            result += fn-result
+          } else {
+            result.push(fn-result)
+          }
         }
       } else {
         if repetitions <= index {
@@ -2383,9 +2353,7 @@
   // catches anything, it indicates a bug in the reducer's metadata handling.
   let leaked = result.filter(child => {
     if not (
-      type(child) == content
-        and child.func() == metadata
-        and type(child.value) == dictionary
+      type(child) == content and child.func() == metadata and type(child.value) == dictionary
     ) {
       return false
     }
@@ -2448,9 +2416,7 @@
     // touying-waypoint, and touying-fn-wrapper metadata
     for child in value.args.flatten() {
       if (
-        type(child) == content
-          and child.func() == metadata
-          and type(child.value) == dictionary
+        type(child) == content and child.func() == metadata and type(child.value) == dictionary
       ) {
         let k = child.value.at("kind", default: none)
         if k == "touying-jump/pause/meanwhile" {
@@ -2501,9 +2467,7 @@
     let parts = body
       .split(regex("(#meanwhile;?)|(meanwhile)"))
       .intersperse("touying-meanwhile")
-      .map(s => s
-        .split(regex("(#pause;?)|(pause)"))
-        .intersperse("touying-pause"))
+      .map(s => s.split(regex("(#pause;?)|(pause)")).intersperse("touying-pause"))
       .flatten()
     for part in parts {
       if part == "touying-pause" {
@@ -2545,10 +2509,7 @@
     } else {
       let meaningful-chars-pattern = regex("[a-zA-Z0-9\u{4E00}-\u{9FFF}]+")
       for line in body.split("\n") {
-        let meaningful = line
-          .matches(meaningful-chars-pattern)
-          .map(m => m.text)
-          .join("")
+        let meaningful = line.matches(meaningful-chars-pattern).map(m => m.text).join("")
         if meaningful == "pause" {
           repetitions += 1
         } else if meaningful == "meanwhile" {
@@ -2594,9 +2555,7 @@
         waypoints,
       )
     } else if (
-      type(child) == content
-        and child.func() == metadata
-        and type(child.value) == dictionary
+      type(child) == content and child.func() == metadata and type(child.value) == dictionary
     ) {
       let kind = child.value.at("kind", default: none)
       if kind == "touying-jump/pause/meanwhile" {
@@ -2655,9 +2614,7 @@
         let inner-ls = last-subslide
         for inner-child in child.value.args.flatten() {
           if (
-            type(inner-child) == content
-              and inner-child.func() == metadata
-              and type(inner-child.value) == dictionary
+            type(inner-child) == content and inner-child.func() == metadata and type(inner-child.value) == dictionary
           ) {
             let ik = inner-child.value.at("kind", default: none)
             if ik == "touying-jump/pause/meanwhile" {
@@ -2734,9 +2691,7 @@
     ) {
       // Handle table/grid cells that may wrap jump or waypoint metadata
       if (
-        type(child.body) == content
-          and child.body.func() == metadata
-          and type(child.body.value) == dictionary
+        type(child.body) == content and child.body.func() == metadata and type(child.body.value) == dictionary
       ) {
         let kind = child.body.value.at("kind", default: none)
         if kind == "touying-jump/pause/meanwhile" {
@@ -3029,9 +2984,7 @@
     // Waypoints and implicit waypoints are also stripped so they don't occupy a cell slot.
     if type(it) == content and it.func() in (table.cell, grid.cell) {
       if (
-        type(it.body) == content
-          and it.body.func() == metadata
-          and type(it.body.value) == dictionary
+        type(it.body) == content and it.body.func() == metadata and type(it.body.value) == dictionary
       ) {
         let kind = it.body.value.at("kind", default: none)
         if kind == "touying-jump/pause/meanwhile" {
@@ -3054,8 +3007,7 @@
           if it.body.value.at("advance", default: true) and lbl in wp {
             let first = wp.at(lbl).first
             if (
-              first == repetitions + 1
-                or (first == last-subslide + 1 and first > repetitions)
+              first == repetitions + 1 or (first == last-subslide + 1 and first > repetitions)
             ) {
               repetitions = first
               max-repetitions = calc.max(max-repetitions, repetitions)
@@ -3068,8 +3020,7 @@
           if lbl in wp {
             let first = wp.at(lbl).first
             if (
-              first == repetitions + 1
-                or (first == last-subslide + 1 and first > repetitions)
+              first == repetitions + 1 or (first == last-subslide + 1 and first > repetitions)
             ) {
               repetitions = first
               max-repetitions = calc.max(max-repetitions, repetitions)
@@ -3098,9 +3049,7 @@
     // Process each child element for animation markers and content types
     for child in children {
       if (
-        type(child) == content
-          and child.func() == metadata
-          and type(child.value) == dictionary
+        type(child) == content and child.func() == metadata and type(child.value) == dictionary
       ) {
         let kind = child.value.at("kind", default: none)
         if kind == "touying-jump/pause/meanwhile" {
@@ -3283,8 +3232,7 @@
           if child.value.at("advance", default: true) and lbl in wp {
             let first = wp.at(lbl).first
             if (
-              first == repetitions + 1
-                or (first == last-subslide + 1 and first > repetitions)
+              first == repetitions + 1 or (first == last-subslide + 1 and first > repetitions)
             ) {
               repetitions = first
               max-repetitions = calc.max(max-repetitions, repetitions)
@@ -3301,8 +3249,7 @@
           if lbl in wp {
             let first = wp.at(lbl).first
             if (
-              first == repetitions + 1
-                or (first == last-subslide + 1 and first > repetitions)
+              first == repetitions + 1 or (first == last-subslide + 1 and first > repetitions)
             ) {
               repetitions = first
               max-repetitions = calc.max(max-repetitions, repetitions)
@@ -3421,9 +3368,7 @@
           max-repetitions = calc.max(max-repetitions, repetitions)
         }
         if (
-          force-to-result
-            or calc.min(repetitions, final-repetitions) <= index
-            or not need-cover
+          force-to-result or calc.min(repetitions, final-repetitions) <= index or not need-cover
         ) {
           result.push(reconstructed)
         } else {
@@ -3466,9 +3411,7 @@
           max-repetitions = calc.max(max-repetitions, repetitions)
         }
         if (
-          force-to-result
-            or calc.min(repetitions, final-repetitions) <= index
-            or not need-cover
+          force-to-result or calc.min(repetitions, final-repetitions) <= index or not need-cover
         ) {
           result.push(reconstructed)
         } else {
@@ -3581,9 +3524,7 @@
           max-repetitions = calc.max(max-repetitions, repetitions)
         }
         if (
-          force-to-result
-            or calc.min(repetitions, final-repetitions) <= index
-            or not need-cover
+          force-to-result or calc.min(repetitions, final-repetitions) <= index or not need-cover
         ) {
           result.push(reconstructed)
         } else {
@@ -3620,9 +3561,7 @@
           max-repetitions = calc.max(max-repetitions, repetitions)
         }
         if (
-          force-to-result
-            or calc.min(repetitions, final-repetitions) <= index
-            or not need-cover
+          force-to-result or calc.min(repetitions, final-repetitions) <= index or not need-cover
         ) {
           result.push(reconstructed)
         } else {
@@ -3874,10 +3813,7 @@
 #let _get-negative-pad(self) = {
   let margin = self.page.margin
   if (
-    type(margin) != dictionary
-      and type(margin) != length
-      and type(margin) != relative
-      and type(margin) != ratio
+    type(margin) != dictionary and type(margin) != length and type(margin) != relative and type(margin) != ratio
   ) {
     return it => it
   }
@@ -3966,9 +3902,7 @@
     let margin = self.page.margin
     let (page-width, page-height) = utils.get-page-dimensions(self)
     if (
-      type(margin) != dictionary
-        and type(margin) != length
-        and type(margin) != relative
+      type(margin) != dictionary and type(margin) != length and type(margin) != relative
     ) {
       return (:)
     }
@@ -4299,16 +4233,13 @@
   // preamble for the subslides
   let subslide-preamble(self) = {
     if (
-      (self.handout and not self.at("_handout-secondary", default: false))
-        or self.subslide == 1
+      (self.handout and not self.at("_handout-secondary", default: false)) or self.subslide == 1
     ) {
       slide-preamble(self)
     }
     [#metadata((kind: "touying-new-subslide")) <touying-metadata>]
     if (
-      self.at("enable-frozen-states-and-counters", default: true)
-        and not self.handout
-        and self.repeat > 1
+      self.at("enable-frozen-states-and-counters", default: true) and not self.handout and self.repeat > 1
     ) {
       if self.subslide == 1 {
         context {
@@ -4336,8 +4267,7 @@
     // 1. slide counter part
     //    if freeze-slide-counter is false, then update the slide-counter
     if (
-      (self.handout and not self.at("_handout-secondary", default: false))
-        or self.subslide == 1
+      (self.handout and not self.at("_handout-secondary", default: false)) or self.subslide == 1
     ) {
       if not self.at("freeze-slide-counter", default: false) {
         utils.slide-counter.step()
@@ -4445,14 +4375,11 @@
         result.push({
           set page(
             ..(
-              subslide-self.page
-                + page-extra-args
-                + (header: new-header, footer: footer-i)
+              subslide-self.page + page-extra-args + (header: new-header, footer: footer-i)
             ),
           )
           body-transform-i(setting-fn(
-            subslide-preamble(subslide-self)
-              + composer-with-side-by-side(..conts),
+            subslide-preamble(subslide-self) + composer-with-side-by-side(..conts),
           ))
         })
       }
@@ -4495,8 +4422,7 @@
         range(first, last + 1)
       } else {
         panic(
-          "touying-recall: unexpected resolved waypoint type: "
-            + repr(resolved),
+          "touying-recall: unexpected resolved waypoint type: " + repr(resolved),
         )
       }
     } else {
@@ -4510,11 +4436,7 @@
     for i in recall-indices {
       assert(
         i >= 1 and i <= repeat,
-        message: "touying-recall: subslide "
-          + str(i)
-          + " is out of range (1.."
-          + str(repeat)
-          + ")",
+        message: "touying-recall: subslide " + str(i) + " is out of range (1.." + str(repeat) + ")",
       )
       self.subslide = i
       let (header, footer, body-transform) = _get-header-footer(self)

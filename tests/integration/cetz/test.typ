@@ -26,7 +26,7 @@
 
 == only and uncover in Cetz (callback style)
 
-#slide(repeat: 2, self => [
+#slide(repeat: 3, self => [
   #let (uncover, only) = utils.methods(self)
 
   #cetz.canvas({
@@ -38,8 +38,14 @@
     let (uncover,) = utils.methods(self)
 
     rect((0, 0), (5, 5))
-    uncover("2-", rect((0, 0), (1, 1)))
-    only(2, line((0, 0), (2.5, 2.5), name: "line"))
+
+    uncover("2-3", {
+      rect((0, 0), (1, 1))
+      rect((1, 1), (2, 2))
+      rect((2, 2), (3, 3))
+    })
+
+    only(3, line((0, 0), (2.5, 2.5), name: "line"))
   })
 ])
 
@@ -50,7 +56,13 @@
   #cetz-canvas({
     import cetz.draw: *
     rect((0, 0), (5, 5))
-    (uncover("2-", rect((0, 0), (1, 1))),)
-    (only(2, line((0, 0), (2.5, 2.5), name: "line")),)
+    (
+      uncover("2-3", {
+        rect((0, 0), (1, 1))
+        rect((1, 1), (2, 2))
+        rect((2, 2), (3, 3))
+      }),
+    )
+    (only(3, line((0, 0), (2.5, 2.5), name: "line")),)
   })
 ]
