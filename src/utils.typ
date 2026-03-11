@@ -1125,8 +1125,13 @@
   } else if type(visible-subslides) == array {
     visible-subslides.any(s => check-visible(idx, s))
   } else if type(visible-subslides) == str {
-    let parts = _parse-subslide-indices(visible-subslides)
-    check-visible(idx, parts)
+    if visible-subslides.starts-with("!") {
+      // Negation: "!2-4" means everything except subslides 2-4
+      not check-visible(idx, visible-subslides.slice(1))
+    } else {
+      let parts = _parse-subslide-indices(visible-subslides)
+      check-visible(idx, parts)
+    }
   } else if (
     type(visible-subslides) == content and visible-subslides.has("text")
   ) {
@@ -1435,8 +1440,13 @@
   } else if type(visible-subslides) == array {
     calc.max(..visible-subslides.map(s => last-required-subslide(s)))
   } else if type(visible-subslides) == str {
-    let parts = _parse-subslide-indices(visible-subslides)
-    last-required-subslide(parts)
+    if visible-subslides.starts-with("!") {
+      // Negation cannot introduce new subslides, only use existing ones.
+      0
+    } else {
+      let parts = _parse-subslide-indices(visible-subslides)
+      last-required-subslide(parts)
+    }
   } else if type(visible-subslides) == dictionary {
     let kind = visible-subslides.at("kind", default: none)
     if (

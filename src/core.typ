@@ -1082,6 +1082,22 @@
 }
 
 
+// Helper: check if a subslide spec string contains "h" (here marker)
+// that needs deferred resolution to the current repetitions counter.
+#let _has-here-marker(visible-subslides) = (
+  type(visible-subslides) == str and visible-subslides.contains("h")
+)
+
+// Helper: create a last-subslide callback that resolves "h" in a string
+// to the current repetitions counter at placement time.
+#let _here-last-subslide(visible-subslides) = {
+  repetitions => {
+    let resolved = visible-subslides.replace("h", str(repetitions))
+    (utils.last-required-subslide(resolved), (resolved-subslides: resolved))
+  }
+}
+
+
 /// Take effect in some subslides.
 ///
 /// Example: `#effect(text.with(fill: red), "2-")[Something]` will display `[Something]` if the current slide is 2 or later.
@@ -1112,6 +1128,16 @@
       last-subslide: repetitions => (repetitions, (resolved-subslides: repetitions)),
       fn,
       auto,
+      is-method: is-method,
+      cont,
+    )
+  } else if _has-here-marker(visible-subslides) {
+    // "h" marker: deferred resolution of "h" to current repetitions.
+    touying-fn-wrapper(
+      utils.effect,
+      last-subslide: _here-last-subslide(visible-subslides),
+      fn,
+      visible-subslides,
       is-method: is-method,
       cont,
     )
@@ -1176,6 +1202,15 @@
       uncover-cont,
       cover-fn: cover-fn,
     )
+  } else if _has-here-marker(visible-subslides) {
+    // "h" marker: deferred resolution of "h" to current repetitions.
+    touying-fn-wrapper(
+      utils.uncover,
+      last-subslide: _here-last-subslide(visible-subslides),
+      visible-subslides,
+      uncover-cont,
+      cover-fn: cover-fn,
+    )
   } else {
     if type(visible-subslides) == label {
       [#metadata((
@@ -1231,6 +1266,14 @@
       utils.only,
       last-subslide: repetitions => (repetitions, (resolved-subslides: repetitions)),
       auto,
+      only-cont,
+    )
+  } else if _has-here-marker(visible-subslides) {
+    // "h" marker: deferred resolution of "h" to current repetitions.
+    touying-fn-wrapper(
+      utils.only,
+      last-subslide: _here-last-subslide(visible-subslides),
+      visible-subslides,
       only-cont,
     )
   } else {
