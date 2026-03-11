@@ -2,7 +2,7 @@
 sidebar_position: 7
 ---
 
-# 路标（Waypoints）
+# 路标
 
 路标允许你为幻灯片动画时间线中的位置命名，并通过标签引用它们，而不是使用硬编码的 subslide 编号。这使得动画更容易维护——在路标之前插入 pause 或新项目时，后续内容会自动调整位置。再也不需要自己数 subslide 了。
 
@@ -20,11 +20,11 @@ sidebar_position: 7
 ]
 ```
 
-每个前进型路标（默认行为）会创建一个新的 subslide。这里 `<step-a>` 在 subslide 2 触发，`<step-b>` 在 subslide 3 触发。
+每个前向路标（默认行为）会创建一个新的 subslide。这里 `<step-a>` 在 subslide 2 触发，`<step-b>` 在 subslide 3 触发。
 
 ## 隐式路标
 
-当你直接将标签传递给 `#uncover`、`#only` 或 `#item-by-item` 时，会自动生成一个隐式路标——无需单独调用 `#waypoint`：
+当你直接将一个新标签传递给 `#uncover`、`#only` 或 `#item-by-item` 时，会自动生成一个隐式路标——无需单独调用 `#waypoint`：
 
 ```typst
 #slide[
@@ -78,7 +78,7 @@ sidebar_position: 7
 ]
 ```
 
-## 非前进型路标
+## 非前向路标
 
 默认情况下，路标会推进 subslide 计数器。使用 `advance: false` 可以标记位置而不创建新的 subslide：
 

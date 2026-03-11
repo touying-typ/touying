@@ -24,7 +24,7 @@ Each advancing waypoint (the default) creates a new subslide. Here `<step-a>` fi
 
 ## Implicit Waypoints
 
-When you pass a label directly to `#uncover`, `#only`, or `#item-by-item`, an implicit waypoint is emitted automatically — no separate `#waypoint` call needed:
+When you pass a new label directly to `#uncover`, `#only`, or `#item-by-item`, an implicit waypoint is emitted automatically — no separate `#waypoint` call needed:
 
 ```typst
 #slide[
