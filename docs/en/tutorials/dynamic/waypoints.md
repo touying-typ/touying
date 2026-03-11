@@ -112,4 +112,4 @@ As previously hinted, waypoints can capture a range of subslides following them 
 
 ## More Examples
 
-For a comprehensive set of examples covering all waypoint features — including callback-style slides, integration to CeTZ and Fletcher, `recall-subslide`, and edge cases — see [`examples/waypoints.typ`](../../../../examples/waypoints.typ).
+For a comprehensive set of examples covering all waypoint features — including callback-style slides, integration to CeTZ and Fletcher, `recall-subslide`, and edge cases — see [`examples/waypoints.typ`](https://github.com/touying-typ/touying/blob/main/examples/waypoints.typ).

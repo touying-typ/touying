@@ -114,4 +114,4 @@ sidebar_position: 7
 
 ## 更多示例
 
-有关路标功能的完整示例——包括回调风格的幻灯片、与 CeTZ 和 Fletcher 的集成、`recall-subslide` 以及边界情况——请参阅 [`examples/waypoints.typ`](../../../../examples/waypoints.typ)。
+有关路标功能的完整示例——包括回调风格的幻灯片、与 CeTZ 和 Fletcher 的集成、`recall-subslide` 以及边界情况——请参阅 [`examples/waypoints.typ`](https://github.com/touying-typ/touying/blob/main/examples/waypoints.typ)。
