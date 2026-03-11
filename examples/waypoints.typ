@@ -672,9 +672,11 @@ Then use `(waypoint(<lbl>),)` for CeTZ or `waypoint(<lbl>)` for Fletcher inside 
   [`get-last(<lbl>)`], [Last subslide of the range],
   [`from-wp(<lbl>)`], [From waypoint to end of slide],
   [`until-wp(<lbl>)`], [Before waypoint (exclusive)],
-  [`next-wp(<lbl>, amount:1)`], [Adjacent waypoint (forward), allows `amount` to skip multiple],
+  [`next-wp(<lbl>, amount:1)`],
+  [Adjacent waypoint (forward), allows `amount` to skip multiple],
 
-  [`prev-wp(<lbl>, amount:1)`], [Adjacent waypoint (backward), allows `amount` to skip multiple],
+  [`prev-wp(<lbl>, amount:1)`],
+  [Adjacent waypoint (backward), allows `amount` to skip multiple],
 
   [`(from-wp(<a>), until-wp(<b>))`], [Bounded range: `<a>` to before `<b>`],
   [`#alternatives(at: (..))[..][..]`], [Named alternative mapping],
@@ -683,7 +685,9 @@ Then use `(waypoint(<lbl>),)` for CeTZ or `waypoint(<lbl>)` for Fletcher inside 
   [`<label:sublabel>`],
   [Hierarchical waypoint. The parent (e.g. `<label>`) refers to all its children (e.g. `<label:sublabel>`).],
 
-  [`(waypoint(<lbl>),)` inside CeTZ], [Waypoint inside `touying-reducer` (CeTZ). Wrap in tuple like `(pause,)`.],
+  [`(waypoint(<lbl>),)` inside CeTZ],
+  [Waypoint inside `touying-reducer` (CeTZ). Wrap in tuple like `(pause,)`.],
 
-  [`waypoint(<lbl>)` inside Fletcher], [Waypoint inside `touying-reducer` (Fletcher). No tuple needed.],
+  [`waypoint(<lbl>)` inside Fletcher],
+  [Waypoint inside `touying-reducer` (Fletcher). No tuple needed.],
 )
