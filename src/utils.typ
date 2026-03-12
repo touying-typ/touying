@@ -1138,19 +1138,25 @@
     let parts = _parse-subslide-indices(visible-subslides.text)
     check-visible(idx, parts)
   } else if type(visible-subslides) == dictionary {
-    let lower-okay = if "beginning" in visible-subslides {
-      visible-subslides.beginning <= idx
+    let kind = visible-subslides.at("kind", default: none)
+    if kind == "not" {
+      // Negation: visible everywhere except where inner is visible.
+      not check-visible(idx, visible-subslides.inner)
     } else {
-      true
-    }
+      let lower-okay = if "beginning" in visible-subslides {
+        visible-subslides.beginning <= idx
+      } else {
+        true
+      }
 
-    let upper-okay = if "until" in visible-subslides {
-      visible-subslides.until >= idx
-    } else {
-      true
-    }
+      let upper-okay = if "until" in visible-subslides {
+        visible-subslides.until >= idx
+      } else {
+        true
+      }
 
-    lower-okay and upper-okay
+      lower-okay and upper-okay
+    }
   } else {
     panic(
       "you may only provide a single integer, an array of integers, or a string",
@@ -1377,6 +1383,30 @@
         assert(false, message: "Unknown waypoint label: <" + lbl + ">")
       }
       (beginning: range.first, until: range.last)
+    } else if kind == "waypoint-not" {
+      // Negate: resolve inner waypoint to a range, then wrap for check-visible.
+      let inner = visible-subslides.inner
+      let inner-kind = if type(inner) == dictionary {
+        inner.at("kind", default: none)
+      } else { none }
+      if inner-kind != none {
+        // Inner is another waypoint marker — resolve it first.
+        let resolved = resolve-waypoints(self, inner)
+        (kind: "not", inner: resolved)
+      } else {
+        // Inner is a plain label string — look up its range directly.
+        let lbl = _resolve-waypoint-label(waypoints, inner, prepass: prepass)
+        if lbl == none {
+          if prepass { return (kind: "not", inner: (beginning: 1, until: 1)) }
+          assert(false, message: "Cannot resolve waypoint reference in not-wp()")
+        }
+        let range = _lookup-waypoint-range(waypoints, lbl)
+        if range == none {
+          if prepass { return (kind: "not", inner: (beginning: 1, until: 1)) }
+          assert(false, message: "Unknown waypoint label: <" + lbl + ">")
+        }
+        (kind: "not", inner: (beginning: range.first, until: range.last))
+      }
     } else {
       visible-subslides
     }
@@ -1458,6 +1488,7 @@
           "waypoint-until",
           "waypoint-prev",
           "waypoint-next",
+          "waypoint-not",
         )
     ) {
       // Will be resolved at render time; pauses determine repeat count.

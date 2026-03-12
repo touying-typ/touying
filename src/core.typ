@@ -1082,6 +1082,35 @@
 }
 
 
+/// Negate a waypoint marker — visible on all subslides *except* the referenced ones.
+///
+/// Works with bare labels, `from-wp`, `until-wp`, `prev-wp`, `next-wp`,
+/// `get-first`, `get-last`, or any other waypoint marker.
+///
+/// Like the `"!"` prefix for strings, `not-wp` cannot introduce new subslides —
+/// it only masks existing ones.
+///
+/// Example: `#only(not-wp(<my-label>))[hidden during my-label]`
+///
+/// - wp (label | dictionary): A waypoint label or marker to negate.
+///
+/// -> dictionary
+#let not-wp(wp) = {
+  assert(
+    type(wp) in (label, str, dictionary),
+    message: "not-wp: expected a label or waypoint marker, got " + str(type(wp)),
+  )
+  (
+    kind: "waypoint-not",
+    inner: if type(wp) == label {
+      str(wp)
+    } else {
+      wp
+    },
+  )
+}
+
+
 // Helper: check if a subslide spec string contains "h" (here marker)
 // that needs deferred resolution to the current repetitions counter.
 #let _has-here-marker(visible-subslides) = (
