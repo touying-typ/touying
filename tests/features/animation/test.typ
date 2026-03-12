@@ -168,7 +168,7 @@ By factorizing, we can obtain this result.
 //       Uncover 2- in bare sequence
 //     ]
 //   }
-- #effect(text.with(size:14pt))[Only 2]           // was hidden even on subslide 2
+- #only(2)[Only 2]           // was hidden even on subslide 2
 - On 3
 
 // #{
