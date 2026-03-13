@@ -145,6 +145,24 @@ Note: Waypoints work in contexts like fletcher, but not inside text blocks like 
   #uncover(<here>)[Visible immediately.]
 ]
 
+#slide(composer: (1fr, 1fr))[
+  #text(weight: "bold")[Explicit Start Index]
+  #code-col(
+    "#waypoint(<end>, start: 3)\nEnds at subslide 3.\n#v(4em)\n#waypoint(<start>, start:1)\nWe start down here.\n#pause\nAnd will continue further up.",
+  )
+  `start: int` starts the waypoint at a specific subslide index. `start: <lbl>` starts it at another waypoint's position.
+][
+  #waypoint(<end>, start: 3)
+  Ends at subslide 3.
+
+  #v(4em)
+
+  #waypoint(<start>, start: 1)
+  We start down here.\
+  #pause
+  And will continue further up.
+]
+
 = Querying Waypoints
 
 #slide(composer: (1fr, 1fr))[
@@ -192,6 +210,35 @@ Note: Waypoints work in contexts like fletcher, but not inside text blocks like 
   Phase 2 content.
   #uncover(until-wp(<phase-2>))[Before phase 2.]
   #uncover(from-wp(<phase-2>))[Only from phase 2.]
+]
+
+#slide(composer: (1fr, 1fr))[
+  #text(weight: "bold")[Inverted waypoints]
+  #code-col(
+    "Base Content
+#waypoint(<middle>)
+Middle - 1
+#pause
+Middle - 2
+#waypoint(<end>)
+End Content
+
+#alternatives(at: (not-wp(<middle>), <middle>)\n)[Not during middle.][During middle.]",
+  )
+  Similar to "!" for string ranges, we can use `<not-wp>` to invert the selection based on a waypoint.
+][
+  Base Content\
+  #waypoint(<middle>)
+  Middle - 1\
+  #pause
+  Middle - 2\
+  #waypoint(<end>)
+  End Content\
+
+  #alternatives(at: (
+    not-wp(<middle>),
+    <middle>,
+  ))[Not during middle.][During middle.]
 ]
 
 = Ranges & Navigation
@@ -665,6 +712,9 @@ Then use `(waypoint(<lbl>),)` for CeTZ or `waypoint(<lbl>)` for Fletcher inside 
   table.header[*Syntax*][*Effect*],
   [`#waypoint(<lbl>)`], [Named `#pause` — marks + advances],
   [`#waypoint(<lbl>, advance: false)`], [Marks without advancing],
+  [`#waypoint(<lbl>, start:int|<lbl>)`],
+  [Starts the waypoint at a specific subslide],
+
   [`#uncover(<lbl>)[...]`], [Show during waypoint range (implicit)],
   [`#only(<lbl>)[...]`], [Show only during range (implicit)],
   [`#effect(fn, <lbl>)[...]`], [Apply style during range (implicit)],
@@ -679,7 +729,8 @@ Then use `(waypoint(<lbl>),)` for CeTZ or `waypoint(<lbl>)` for Fletcher inside 
   [Adjacent waypoint (backward), allows `amount` to skip multiple],
 
   [`(from-wp(<a>), until-wp(<b>))`], [Bounded range: `<a>` to before `<b>`],
-  [`#alternatives(at: (..))[..][..]`], [Named alternative mapping],
+  [`not-wp(<lbl>)`], [Inverted range: not during `<lbl>`],
+  [`#alternatives(at: (..,))[..][..]`], [Named alternative mapping],
   [`#item-by-item[...]`], [Relative item reveal (auto from pause)],
   [`#item-by-item(start: <wp>)[...]`], [Waypoint-anchored item reveal],
   [`<label:sublabel>`],
