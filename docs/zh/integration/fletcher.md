@@ -62,3 +62,30 @@ Touying 提供了 `touying-reducer`，它能为 fletcher 加入 `pause` 和 `mea
   )
 ]
 ```
+
+一个 callback-style 的例子：
+
+```example
+#import "@preview/touying:0.6.1": *
+#import "@preview/fletcher:0.5.8" as fletcher: diagram, edge, node
+#show: themes.simple.simple-theme.with(aspect-ratio: "16-9")
+
+#let diagram = touying-reducer.with(reduce: fletcher.diagram, cover: fletcher.hide)
+
+#slide(repeat: 6, self => {
+  let (uncover, only, alternatives) = utils.methods(self)
+  let uncover = uncover.with(cover-fn: fletcher.hide)
+  diagram(
+    node((0, 0), name: <A>)[$A$],
+    pause,
+    edge("->"),
+    node((1, 0), name: <B>)[$B$],
+    pause,
+    edge("->"),
+    node((2, 0), name: <C>)[$C$],
+    uncover("4,6", edge(<A>, "~", <B>, bend: 40deg, stroke: red)),
+    only("5,6", edge(<B>, "~", <C>, bend: 40deg, stroke: green)),
+    only("6", edge(<C>, "~", <A>, bend: 40deg, stroke: blue)),
+  )
+})
+```
