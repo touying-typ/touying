@@ -5,7 +5,7 @@
 
 = Animations with `auto`, "h" (here)
 
-== auto 
+== auto
 
 Part A.
 #pause
