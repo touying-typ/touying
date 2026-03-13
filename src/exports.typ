@@ -1,11 +1,7 @@
 #import "core.typ": (
   alert, alternatives, alternatives-cases, alternatives-fn, alternatives-match,
   appendix, effect, empty-slide, from-wp, get-first, get-last, handout-only,
-<<<<<<< HEAD
-  item-by-item, jump, meanwhile, next-wp, only, pause, prev-wp, slide,
-=======
   item-by-item, jump, meanwhile, next-wp, not-wp, only, pause, prev-wp, slide,
->>>>>>> main
   speaker-note, touying-equation, touying-fn-wrapper, touying-mitex,
   touying-raw, touying-recall, touying-reducer, touying-set-config,
   touying-slide, touying-slide-wrapper, uncover, until-wp, waypoint,

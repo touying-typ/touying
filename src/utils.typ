@@ -1414,8 +1414,6 @@
         assert(false, message: "Unknown waypoint label: <" + lbl + ">")
       }
       (beginning: range.first, until: range.last)
-<<<<<<< HEAD
-=======
     } else if kind == "waypoint-not" {
       // Negate: resolve inner waypoint to a range, then wrap for check-visible.
       let inner = visible-subslides.inner
@@ -1443,7 +1441,6 @@
         }
         (kind: "not", inner: (beginning: range.first, until: range.last))
       }
->>>>>>> main
     } else {
       visible-subslides
     }
@@ -1526,10 +1523,7 @@
           "waypoint-until",
           "waypoint-prev",
           "waypoint-next",
-<<<<<<< HEAD
-=======
           "waypoint-not",
->>>>>>> main
         )
     ) {
       // Will be resolved at render time; pauses determine repeat count.
@@ -1585,12 +1579,9 @@
   if is-method {
     fn
   } else {
-<<<<<<< HEAD
-=======
     let visible-subslides = if resolved-subslides != none {
       resolved-subslides
     } else { visible-subslides }
->>>>>>> main
     let visible-subslides = resolve-waypoints(self, visible-subslides)
     if check-visible(self.subslide, visible-subslides) {
       fn(cont)
@@ -1630,9 +1621,6 @@
 /// - cover-fn (function, auto): An optional cover function to use instead of the default cover method from the theme. Useful when using `uncover` inside external package integrations (e.g. `fletcher.hide` for fletcher diagrams).
 ///
 /// -> content
-<<<<<<< HEAD
-#let uncover(self: none, visible-subslides, uncover-cont, cover-fn: auto) = {
-=======
 #let uncover(
   self: none,
   visible-subslides,
@@ -1643,7 +1631,6 @@
   let visible-subslides = if resolved-subslides != none {
     resolved-subslides
   } else { visible-subslides }
->>>>>>> main
   let visible-subslides = resolve-waypoints(self, visible-subslides)
   let cover = if cover-fn != auto { cover-fn } else {
     self.methods.cover.with(self: self)
@@ -1684,9 +1671,6 @@
 /// - only-cont (content): The content to display when visible.
 ///
 /// -> content
-<<<<<<< HEAD
-#let only(self: none, visible-subslides, only-cont) = {
-=======
 #let only(
   self: none,
   visible-subslides,
@@ -1696,7 +1680,6 @@
   let visible-subslides = if resolved-subslides != none {
     resolved-subslides
   } else { visible-subslides }
->>>>>>> main
   let visible-subslides = resolve-waypoints(self, visible-subslides)
   if check-visible(self.subslide, visible-subslides) {
     only-cont
@@ -1721,6 +1704,8 @@
     cont
   }
 }
+
+
 
 
 /// `#alternatives` has a couple of "cousins" that might be more convenient in some situations. The first one is `#alternatives-match` that has a name inspired by match-statements in many functional programming languages. The idea is that you give it a dictionary mapping from subslides to content:
@@ -1755,28 +1740,43 @@
     subslides-contents
   }
 
-  let subslides = subslides-contents.map(it => it.first())
   let contents = subslides-contents.map(it => it.last())
+
+  // Pre-resolve all subslide specs (handles waypoint labels, markers, etc.)
+  let resolved = subslides-contents.map(((s, _)) => resolve-waypoints(self, s))
+
   if stretch {
     context {
       let sizes = contents.map(c => measure(c))
       let max-width = calc.max(..sizes.map(sz => sz.width))
       let max-height = calc.max(..sizes.map(sz => sz.height))
-      for (subslides, content) in subslides-contents {
-        only(
-          self: self,
-          subslides,
+      for (i, (_, content)) in subslides-contents.enumerate() {
+        // First-match-wins: skip if an earlier entry already matches this subslide
+        let earlier-match = resolved
+          .slice(0, i)
+          .any(
+            s => check-visible(self.subslide, s),
+          )
+        if not earlier-match and check-visible(self.subslide, resolved.at(i)) {
           box(
             width: max-width,
             height: max-height,
             align(position, content),
-          ),
-        )
+          )
+        }
       }
     }
   } else {
-    for (subslides, content) in subslides-contents {
-      only(self: self, subslides, content)
+    for (i, (_, content)) in subslides-contents.enumerate() {
+      // First-match-wins: skip if an earlier entry already matches this subslide
+      let earlier-match = resolved
+        .slice(0, i)
+        .any(
+          s => check-visible(self.subslide, s),
+        )
+      if not earlier-match and check-visible(self.subslide, resolved.at(i)) {
+        content
+      }
     }
   }
 }
