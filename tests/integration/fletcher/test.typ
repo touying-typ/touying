@@ -80,7 +80,12 @@
     waypoint(<fl-step>, advance: false),
     uncover(<fl-step>, edge((0, 0), (1, 0), "-|>")),
     uncover(<fl-step>, node((1, 0), [W], radius: 2em)),
-    only(<fl-done>, node((1, 1), [Done], radius: 1.5em, fill: green.lighten(60%))),
+    only(<fl-done>, node(
+      (1, 1),
+      [Done],
+      radius: 1.5em,
+      fill: green.lighten(60%),
+    )),
   )
 ]
 
