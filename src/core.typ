@@ -3140,7 +3140,12 @@
 
     // Helper: is this content element a list/enum/terms item?
     let _is-list-item(it) = (
-      type(it) == content and (it.func() == list.item or it.func() == enum.item or it.func() == terms.item)
+      type(it) == content
+        and (
+          it.func() == list.item
+            or it.func() == enum.item
+            or it.func() == terms.item
+        )
     )
 
     /// Flush the hidden-parts buffer as covered content.  `last-result` is the
@@ -3151,8 +3156,12 @@
     /// default paragraph spacing is correct.
     let cover-hidden(cover-fn, items, last-result) = {
       // First non-space hidden element
-      let first-pos = items.position(item => not (type(item) == content and item.func() == _space-func))
-      let first-is-list = first-pos != none and _is-list-item(items.at(first-pos))
+      let first-pos = items.position(item => {
+        not (type(item) == content and item.func() == _space-func)
+      })
+      let first-is-list = (
+        first-pos != none and _is-list-item(items.at(first-pos))
+      )
 
       // Last non-space visible element (walk result backwards).
       // We only skip space nodes — parbreaks and linebreaks are meaningful
