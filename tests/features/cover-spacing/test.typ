@@ -264,7 +264,10 @@
 
 #slide(
   composer: (1fr, 1fr),
-  config: config-methods(cover: utils.cover-with-rect.with(fill: rgb(255, 0, 0, 20%), stroke: none)),
+  config: config-methods(cover: utils.cover-with-rect.with(
+    fill: rgb(255, 0, 0, 20%),
+    stroke: none,
+  )),
   setting: body => {
     place(top + left, dy: 56pt)[#line(length: 100%, stroke: .4pt + red)]
     body
