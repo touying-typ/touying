@@ -60,7 +60,7 @@ Here's an interesting fact: the `self.subslide` of type int indicates the curren
 
 :::warning[Warning]
 
-We manually specify the `repeat: 3` parameter, indicating the display of 3 subslides. We need to do this manually because Touying cannot infer how many subslides `only`, `uncover`, and `alternatives` should display.
+We manually specify the `repeat: 3` parameter, indicating the display of 3 subslides. We need to do this manually because Touying cannot infer how many subslides `only`, `uncover`, and `alternatives` should display when we use the bindings via utils.
 
 :::
 
@@ -70,11 +70,17 @@ The `only` function means it "appears" only on selected subslides. If it doesn't
 
 The index can be an int type or a str type like `"2-"` or `"2-3"`. For more usage, refer to [Polylux](https://polylux.dev/book/dynamic/complex.html).
 
+For more convenience we also support `auto`, which uses the current subslide position when `only` is encountered; `"h"` which does the same, but is a string, and derivations of that: `"h-"` and `"-h"`.
+Furthermore we allow the use of the inversion via `"!"`. Simply write `"!h"` or `"!2-4"` to get all but those subslides. Contrary to normal indices, the inversion does not increment subslide count.
+
+For how to use waypoints, please see the dedicated section on [waypoints](./waypoints.md).
+
 ## uncover
 
 The `uncover` function means it "displays" only on selected subslides; otherwise, it will be covered by the `cover` function but still occupies the original space. In other words, `#uncover(index, body)` is either `body` or `cover(body)`.
 
-The index can be an int type or a str type like `"2-"` or `"2-3"`. For more usage, refer to [Polylux](https://polylux.dev/book/dynamic/complex.html).
+The index can be an int type or a str type like `"2-"` or `"2-3"`. For more usage, refer to [Polylux](https://polylux.dev/book/dynamic/complex.html). \
+But you can also use the other options you saw for `only` above.
 
 You may also have noticed that `#pause` actually uses the `cover` function, providing a more convenient syntax. In reality, their effects are almost identical.
 

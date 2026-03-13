@@ -1100,6 +1100,52 @@
 }
 
 
+/// Negate a waypoint marker — visible on all subslides *except* the referenced ones.
+///
+/// Works with bare labels, `from-wp`, `until-wp`, `prev-wp`, `next-wp`,
+/// `get-first`, `get-last`, or any other waypoint marker.
+///
+/// Like the `"!"` prefix for strings, `not-wp` cannot introduce new subslides —
+/// it only masks existing ones.
+///
+/// Example: `#only(not-wp(<my-label>))[hidden during my-label]`
+///
+/// - wp (label | dictionary): A waypoint label or marker to negate.
+///
+/// -> dictionary
+#let not-wp(wp) = {
+  assert(
+    type(wp) in (label, str, dictionary),
+    message: "not-wp: expected a label or waypoint marker, got "
+      + str(type(wp)),
+  )
+  (
+    kind: "waypoint-not",
+    inner: if type(wp) == label {
+      str(wp)
+    } else {
+      wp
+    },
+  )
+}
+
+
+// Helper: check if a subslide spec string contains "h" (here marker)
+// that needs deferred resolution to the current repetitions counter.
+#let _has-here-marker(visible-subslides) = (
+  type(visible-subslides) == str and visible-subslides.contains("h")
+)
+
+// Helper: create a last-subslide callback that resolves "h" in a string
+// to the current repetitions counter at placement time.
+#let _here-last-subslide(visible-subslides) = {
+  repetitions => {
+    let resolved = visible-subslides.replace("h", str(repetitions))
+    (utils.last-required-subslide(resolved), (resolved-subslides: resolved))
+  }
+}
+
+
 /// Take effect in some subslides.
 ///
 /// Example: `#effect(text.with(fill: red), "2-")[Something]` will display `[Something]` if the current slide is 2 or later.
@@ -1123,20 +1169,45 @@
 ///
 /// - is-method (bool): Whether the function is a method function. Default is `false`.
 #let effect(fn, visible-subslides, cont, is-method: false) = {
-  if type(visible-subslides) == label {
-    [#metadata((
-      kind: "touying-implicit-waypoint",
-      label: str(visible-subslides),
-    ))<touying-temporary-mark>]
+  if visible-subslides == auto {
+    // auto: resolve to current repetitions at placement time, no advance.
+    touying-fn-wrapper(
+      utils.effect,
+      last-subslide: repetitions => (
+        repetitions,
+        (resolved-subslides: repetitions),
+      ),
+      fn,
+      auto,
+      is-method: is-method,
+      cont,
+    )
+  } else if _has-here-marker(visible-subslides) {
+    // "h" marker: deferred resolution of "h" to current repetitions.
+    touying-fn-wrapper(
+      utils.effect,
+      last-subslide: _here-last-subslide(visible-subslides),
+      fn,
+      visible-subslides,
+      is-method: is-method,
+      cont,
+    )
+  } else {
+    if type(visible-subslides) == label {
+      [#metadata((
+        kind: "touying-implicit-waypoint",
+        label: str(visible-subslides),
+      ))<touying-temporary-mark>]
+    }
+    touying-fn-wrapper(
+      utils.effect,
+      last-subslide: utils.last-required-subslide(visible-subslides),
+      fn,
+      visible-subslides,
+      is-method: is-method,
+      cont,
+    )
   }
-  touying-fn-wrapper(
-    utils.effect,
-    last-subslide: utils.last-required-subslide(visible-subslides),
-    fn,
-    visible-subslides,
-    is-method: is-method,
-    cont,
-  )
 }
 
 
@@ -1173,19 +1244,42 @@
 ///
 /// -> content
 #let uncover(visible-subslides, uncover-cont, cover-fn: auto) = {
-  if type(visible-subslides) == label {
-    [#metadata((
-      kind: "touying-implicit-waypoint",
-      label: str(visible-subslides),
-    ))<touying-temporary-mark>]
+  if visible-subslides == auto {
+    // auto: resolve to current repetitions at placement time, no advance.
+    touying-fn-wrapper(
+      utils.uncover,
+      last-subslide: repetitions => (
+        repetitions,
+        (resolved-subslides: repetitions),
+      ),
+      auto,
+      uncover-cont,
+      cover-fn: cover-fn,
+    )
+  } else if _has-here-marker(visible-subslides) {
+    // "h" marker: deferred resolution of "h" to current repetitions.
+    touying-fn-wrapper(
+      utils.uncover,
+      last-subslide: _here-last-subslide(visible-subslides),
+      visible-subslides,
+      uncover-cont,
+      cover-fn: cover-fn,
+    )
+  } else {
+    if type(visible-subslides) == label {
+      [#metadata((
+        kind: "touying-implicit-waypoint",
+        label: str(visible-subslides),
+      ))<touying-temporary-mark>]
+    }
+    touying-fn-wrapper(
+      utils.uncover,
+      last-subslide: utils.last-required-subslide(visible-subslides),
+      visible-subslides,
+      uncover-cont,
+      cover-fn: cover-fn,
+    )
   }
-  touying-fn-wrapper(
-    utils.uncover,
-    last-subslide: utils.last-required-subslide(visible-subslides),
-    visible-subslides,
-    uncover-cont,
-    cover-fn: cover-fn,
-  )
 }
 
 
@@ -1220,18 +1314,39 @@
 ///
 /// -> content
 #let only(visible-subslides, only-cont) = {
-  if type(visible-subslides) == label {
-    [#metadata((
-      kind: "touying-implicit-waypoint",
-      label: str(visible-subslides),
-    ))<touying-temporary-mark>]
+  if visible-subslides == auto {
+    // auto: resolve to current repetitions at placement time, no advance.
+    touying-fn-wrapper(
+      utils.only,
+      last-subslide: repetitions => (
+        repetitions,
+        (resolved-subslides: repetitions),
+      ),
+      auto,
+      only-cont,
+    )
+  } else if _has-here-marker(visible-subslides) {
+    // "h" marker: deferred resolution of "h" to current repetitions.
+    touying-fn-wrapper(
+      utils.only,
+      last-subslide: _here-last-subslide(visible-subslides),
+      visible-subslides,
+      only-cont,
+    )
+  } else {
+    if type(visible-subslides) == label {
+      [#metadata((
+        kind: "touying-implicit-waypoint",
+        label: str(visible-subslides),
+      ))<touying-temporary-mark>]
+    }
+    touying-fn-wrapper(
+      utils.only,
+      last-subslide: utils.last-required-subslide(visible-subslides),
+      visible-subslides,
+      only-cont,
+    )
   }
-  touying-fn-wrapper(
-    utils.only,
-    last-subslide: utils.last-required-subslide(visible-subslides),
-    visible-subslides,
-    only-cont,
-  )
 }
 
 
@@ -2316,7 +2431,9 @@
         let wp = self.at("waypoints", default: (:))
         let lbl = child.value.label
         if (
-          child.value.at("advance", default: true) and lbl in wp
+          child.value.at("advance", default: true)
+            and lbl in wp
+            and wp.at(lbl).first == repetitions + 1
         ) {
           let first = wp.at(lbl).first
           if (

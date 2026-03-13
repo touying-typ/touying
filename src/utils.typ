@@ -1146,27 +1146,38 @@
   } else if type(visible-subslides) == array {
     visible-subslides.any(s => check-visible(idx, s))
   } else if type(visible-subslides) == str {
-    let parts = _parse-subslide-indices(visible-subslides)
-    check-visible(idx, parts)
+    if visible-subslides.starts-with("!") {
+      // Negation: "!2-4" means everything except subslides 2-4
+      not check-visible(idx, visible-subslides.slice(1))
+    } else {
+      let parts = _parse-subslide-indices(visible-subslides)
+      check-visible(idx, parts)
+    }
   } else if (
     type(visible-subslides) == content and visible-subslides.has("text")
   ) {
     let parts = _parse-subslide-indices(visible-subslides.text)
     check-visible(idx, parts)
   } else if type(visible-subslides) == dictionary {
-    let lower-okay = if "beginning" in visible-subslides {
-      visible-subslides.beginning <= idx
+    let kind = visible-subslides.at("kind", default: none)
+    if kind == "not" {
+      // Negation: visible everywhere except where inner is visible.
+      not check-visible(idx, visible-subslides.inner)
     } else {
-      true
-    }
+      let lower-okay = if "beginning" in visible-subslides {
+        visible-subslides.beginning <= idx
+      } else {
+        true
+      }
 
-    let upper-okay = if "until" in visible-subslides {
-      visible-subslides.until >= idx
-    } else {
-      true
-    }
+      let upper-okay = if "until" in visible-subslides {
+        visible-subslides.until >= idx
+      } else {
+        true
+      }
 
-    lower-okay and upper-okay
+      lower-okay and upper-okay
+    }
   } else {
     panic(
       "you may only provide a single integer, an array of integers, or a string",
@@ -1403,6 +1414,33 @@
         assert(false, message: "Unknown waypoint label: <" + lbl + ">")
       }
       (beginning: range.first, until: range.last)
+    } else if kind == "waypoint-not" {
+      // Negate: resolve inner waypoint to a range, then wrap for check-visible.
+      let inner = visible-subslides.inner
+      let inner-kind = if type(inner) == dictionary {
+        inner.at("kind", default: none)
+      } else { none }
+      if inner-kind != none {
+        // Inner is another waypoint marker — resolve it first.
+        let resolved = resolve-waypoints(self, inner)
+        (kind: "not", inner: resolved)
+      } else {
+        // Inner is a plain label string — look up its range directly.
+        let lbl = _resolve-waypoint-label(waypoints, inner, prepass: prepass)
+        if lbl == none {
+          if prepass { return (kind: "not", inner: (beginning: 1, until: 1)) }
+          assert(
+            false,
+            message: "Cannot resolve waypoint reference in not-wp()",
+          )
+        }
+        let range = _lookup-waypoint-range(waypoints, lbl)
+        if range == none {
+          if prepass { return (kind: "not", inner: (beginning: 1, until: 1)) }
+          assert(false, message: "Unknown waypoint label: <" + lbl + ">")
+        }
+        (kind: "not", inner: (beginning: range.first, until: range.last))
+      }
     } else {
       visible-subslides
     }
@@ -1467,8 +1505,13 @@
   } else if type(visible-subslides) == array {
     calc.max(..visible-subslides.map(s => last-required-subslide(s)))
   } else if type(visible-subslides) == str {
-    let parts = _parse-subslide-indices(visible-subslides)
-    last-required-subslide(parts)
+    if visible-subslides.starts-with("!") {
+      // Negation cannot introduce new subslides, only use existing ones.
+      0
+    } else {
+      let parts = _parse-subslide-indices(visible-subslides)
+      last-required-subslide(parts)
+    }
   } else if type(visible-subslides) == dictionary {
     let kind = visible-subslides.at("kind", default: none)
     if (
@@ -1480,6 +1523,7 @@
           "waypoint-until",
           "waypoint-prev",
           "waypoint-next",
+          "waypoint-not",
         )
     ) {
       // Will be resolved at render time; pauses determine repeat count.
@@ -1524,10 +1568,20 @@
 /// - is-method (bool): Whether the function is a method function. Default is `false`.
 ///
 /// -> content
-#let effect(self: none, fn, visible-subslides, cont, is-method: false) = {
+#let effect(
+  self: none,
+  fn,
+  visible-subslides,
+  cont,
+  is-method: false,
+  resolved-subslides: none,
+) = {
   if is-method {
     fn
   } else {
+    let visible-subslides = if resolved-subslides != none {
+      resolved-subslides
+    } else { visible-subslides }
     let visible-subslides = resolve-waypoints(self, visible-subslides)
     if check-visible(self.subslide, visible-subslides) {
       fn(cont)
@@ -1567,7 +1621,16 @@
 /// - cover-fn (function, auto): An optional cover function to use instead of the default cover method from the theme. Useful when using `uncover` inside external package integrations (e.g. `fletcher.hide` for fletcher diagrams).
 ///
 /// -> content
-#let uncover(self: none, visible-subslides, uncover-cont, cover-fn: auto) = {
+#let uncover(
+  self: none,
+  visible-subslides,
+  uncover-cont,
+  cover-fn: auto,
+  resolved-subslides: none,
+) = {
+  let visible-subslides = if resolved-subslides != none {
+    resolved-subslides
+  } else { visible-subslides }
   let visible-subslides = resolve-waypoints(self, visible-subslides)
   let cover = if cover-fn != auto { cover-fn } else {
     self.methods.cover.with(self: self)
@@ -1608,7 +1671,15 @@
 /// - only-cont (content): The content to display when visible.
 ///
 /// -> content
-#let only(self: none, visible-subslides, only-cont) = {
+#let only(
+  self: none,
+  visible-subslides,
+  only-cont,
+  resolved-subslides: none,
+) = {
+  let visible-subslides = if resolved-subslides != none {
+    resolved-subslides
+  } else { visible-subslides }
   let visible-subslides = resolve-waypoints(self, visible-subslides)
   if check-visible(self.subslide, visible-subslides) {
     only-cont

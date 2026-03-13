@@ -55,9 +55,20 @@ This produces 4 subslides: items appear on 2, 3, 4 (the implicit `<list>` waypoi
 
 Note: Waypoints capture all subslides into their range until a new waypoint follows.
 
+## Non-advancing Waypoints
+
+By default, waypoints advance the subslide counter. Use `advance: false` on explicit waypoints to mark a position without creating a new subslide:
+
+```typst
+#slide[
+  #waypoint(<here>, advance: false)
+  Content at the current position.
+]
+```
+
 ## Waypoint Markers
 
-For more control, use waypoint markers to reference specific parts of a waypoint's range:
+For more control, use waypoint markers (`wp-m`) to reference specific parts of a waypoint's range:
 
 | Marker | Meaning |
 |---|---|
@@ -67,6 +78,7 @@ For more control, use waypoint markers to reference specific parts of a waypoint
 | `get-last(<label>)` | The last subslide of the waypoint's range. |
 | `prev-wp(<label>)` | The previous waypoint to the given one. |
 | `next-wp(<label>)` | The next waypoint to the given one. |
+| `not-wp(<label>)`  | All subslides not in the waypoint's range. |
 
 ```typst
 #slide[
@@ -78,16 +90,23 @@ For more control, use waypoint markers to reference specific parts of a waypoint
 ]
 ```
 
-## Non-advancing Waypoints
-
-By default, waypoints advance the subslide counter. Use `advance: false` to mark a position without creating a new subslide:
+You may even combine waypoint markers to specify the exact behaviour you need:
 
 ```typst
 #slide[
-  #waypoint(<here>, advance: false)
-  Content at the current position.
+  #waypoint(<mid>, advance:false)
+  #uncover(<mid>)[Visible during mid.]
+  #pause
+  Second mid.
+  #waypoint(<end>)
+  End.
+
+  #only(not-wp(get-first(<mid>)))[Soon finished.]
 ]
 ```
+
+
+
 
 ## Complex Example
 As previously hinted, waypoints can capture a range of subslides following them and you can reuse them later to refer to a whole range.

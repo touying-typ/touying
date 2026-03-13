@@ -169,6 +169,20 @@ Section C.
 
 #only(prev-wp(<nav-c>))[This shows during B (prev before C).]
 
+// ------------------------------------------------
+// Test 9.5: not-wp
+// ------------------------------------------------
+
+== Not WP
+#waypoint(<not-a>, advance: false)
+#uncover(<not-a>)[Visible during A.]
+#pause
+A-2.
+#waypoint(<not-b>)
+B.
+
+#only(not-wp(get-first(<not-a>)))[Nearing B.]
+
 // -----------------------------------------------
 // Test 10: from-wp(next-wp()) and until-wp(prev-wp()) composition
 // -----------------------------------------------
