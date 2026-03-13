@@ -55,9 +55,20 @@ sidebar_position: 7
 
 注意：路标会捕获其后的所有 subslides 直到下一个路标出现。
 
+## 非前向路标
+
+默认情况下，路标会推进 subslide 计数器。使用 `advance: false` 可以标记位置而不创建新的 subslide：
+
+```typst
+#slide[
+  #waypoint(<here>, advance: false)
+  Content at the current position.
+]
+```
+
 ## 路标标记
 
-如需更精细的控制，可以使用路标标记 (`wp-m`) 来引用路标范围的特定部分：
+如需更精细的控制，可以使用路标标记（`wp-m`）来引用路标范围的特定部分：
 
 | 标记 | 含义 |
 |---|---|
@@ -94,20 +105,9 @@ sidebar_position: 7
 ]
 ```
 
-## 非前向路标
-
-默认情况下，路标会推进 subslide 计数器。使用 `advance: false` 可以标记位置而不创建新的 subslide：
-
-```typst
-#slide[
-  #waypoint(<here>, advance: false)
-  Content at the current position.
-]
-```
-
 ## 综合示例
 
-如前所述，路标可以捕获其后的一系列 subslides，并且你可以在之后引用整个范围。
+如前所述，路标可以捕获其后的一系列 subslides，你也可以在之后引用整个范围。
 
 ```typst
 #slide(composer: (1fr, 1fr))[

@@ -51,6 +51,10 @@ The implicit waypoint is only registered once per label (the first occurrence wi
 ]
 ```
 
+This produces 4 subslides: items appear on 2, 3, 4 (the implicit `<list>` waypoint advances to subslide 2), and `<done>` fires on subslide 5. 
+
+Note: Waypoints capture all subslides into their range until a new waypoint follows.
+
 ## Non-advancing Waypoints
 
 By default, waypoints advance the subslide counter. Use `advance: false` on explicit waypoints to mark a position without creating a new subslide:
@@ -61,10 +65,6 @@ By default, waypoints advance the subslide counter. Use `advance: false` on expl
   Content at the current position.
 ]
 ```
-
-This produces 4 subslides: items appear on 2, 3, 4 (the implicit `<list>` waypoint advances to subslide 2), and `<done>` fires on subslide 5. 
-
-Note: Waypoints capture all subslides into their range until a new waypoint follows.
 
 ## Waypoint Markers
 
