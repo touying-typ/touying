@@ -28,6 +28,12 @@ sidebar_position: 1
 
 两种方式均会自动从 Typst 包注册表下载 Touying，无需单独安装。
 
+## Universe
+
+厌倦了[内置主题](https://touying-typ.github.io/themes/)？
+
+[Typst Universe](https://typst.app/universe/search/?q=touying) 上有着 Touying 用户上传的多种多样的主题，多浏览一下，说不定你会喜欢。
+
 ## 画廊
 
 Touying 提供了一个[画廊](https://github.com/touying-typ/touying/wiki)，社区成员可在此分享自己的幻灯片。欢迎你贡献自己的作品！

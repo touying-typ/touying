@@ -4,6 +4,71 @@ sidebar_position: 8
 
 # Changelog
 
+## v0.6.3
+
+A major bugfix release, fixing many long-standing bugs and introducing many practical features.
+
+### Features
+
+- **feat: add `#jump(n, relative: bool)` as unified animation control; redefine `#pause`/`#meanwhile` as sugar**
+- feat: add `#handout-only` for inline content and `<touying:handout>` label for handout-exclusive slides ([#286](https://github.com/touying-typ/touying/pull/286))
+- feat: add `handout-subslides` to control which subslides appear in handout mode ([#288](https://github.com/touying-typ/touying/pull/288))
+- feat: add `#touying-raw` for animated code block reveals ([#283](https://github.com/touying-typ/touying/pull/283))
+- feat: add full-screen speaker notes mode with slide thumbnail (`show-only-notes`) ([#281](https://github.com/touying-typ/touying/pull/281))
+- feat: support arbitrary aspect ratios (e.g. 16-10) across all themes and speaker-note second screen ([#280](https://github.com/touying-typ/touying/pull/280))
+- feat: add `#item-by-item` animation for list, enum, and terms ([#278](https://github.com/touying-typ/touying/pull/278))
+- feat(recall): add subslide parameter to `#touying-recall` ([#285](https://github.com/touying-typ/touying/pull/285))
+- feat: add `default-composer` to config-common for global slide layout configuration ([#284](https://github.com/touying-typ/touying/pull/284))
+- feat: add `cover-fn` parameter to `uncover` for external package integration (e.g. Fletcher) ([#267](https://github.com/touying-typ/touying/pull/267))
+- feat: minislides can be displayed inline ([#228](https://github.com/touying-typ/touying/pull/228))
+- theme: improve appearance of long author lists in university and stargazer theme ([#242](https://github.com/touying-typ/touying/pull/242))
+- theme(simple): make simple-theme respect color configuration for deco-format ([#252](https://github.com/touying-typ/touying/pull/252))
+- theme(aqua,stargazer): add extra parameter to title-slide ([#291](https://github.com/touying-typ/touying/pull/291))
+
+### Fixes
+
+- fix: prevent ghost-slide blank pages from `touying-set-config` anchor regression ([#289](https://github.com/touying-typ/touying/pull/289))
+- fix: styled content on first slide no longer creates extra slides ([#287](https://github.com/touying-typ/touying/pull/287))
+- fix: remove unoutlined headings from navigation
+- fix: fix `#meanwhile` being ignored inside grid cells, boxes, and other containers ([#274](https://github.com/touying-typ/touying/pull/274))
+- fix: fix `config: parameter` silently ignored across all themes ([#273](https://github.com/touying-typ/touying/pull/273))
+- fix: fix slides after `#show`/`#set` rules not rendering subsequent slides ([#268](https://github.com/touying-typ/touying/pull/268))
+- fix: fix title page PDF page label causing pdfpc presenter notes mismatch ([#277](https://github.com/touying-typ/touying/pull/277))
+- fix: fix duplicate label error for labeled footnotes with `#pause` animations ([#275](https://github.com/touying-typ/touying/pull/275))
+- fix: fix `#pause` inside `#speaker-note` body (nested list items) ([#282](https://github.com/touying-typ/touying/pull/282))
+- theme(dewdrop): fix body content under level-1 heading was silently dropped ([#279](https://github.com/touying-typ/touying/pull/279))
+- theme(stargazer): update stargazer theme margins and fix [#259](https://github.com/touying-typ/touying/pull/259)
+
+### Documentation
+
+- **docs(BIG CHANGE): refactor docs website and add references page**
+- docs: reduce README noise, improve first impression ([#297](https://github.com/touying-typ/touying/pull/297))
+- docs: restructure docs + add docs-preview CI for PRs ([#296](https://github.com/touying-typ/touying/pull/296))
+- docs: comprehensive docstring improvements across all source files ([#294](https://github.com/touying-typ/touying/pull/294))
+
+### Theme Migration Guide
+
+**For theme developers upgrading to v0.6.3:**
+
+1. **Move `config` to the last position in `utils.merge-dicts`** to allow user overrides:
+   ```typst
+   // Before
+   self = utils.merge-dicts(self, config, config-page(...))
+   
+   // After
+   self = utils.merge-dicts(self, config-page(...), config)
+   ```
+
+2. **Replace `paper` with `utils.page-args-from-aspect-ratio`** to support arbitrary aspect ratios:
+   ```typst
+   // Before
+   config-page(paper: "presentation-" + aspect-ratio, ...)
+   
+   // After
+   config-page(..utils.page-args-from-aspect-ratio(aspect-ratio), ...)
+   ```
+
+
 ## v0.6.2
 
 ### Features

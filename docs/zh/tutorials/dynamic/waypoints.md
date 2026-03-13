@@ -55,6 +55,7 @@ sidebar_position: 7
 
 注意：路标会捕获其后的所有 subslides 直到下一个路标出现。
 
+<<<<<<< HEAD
 ## 路标标记
 
 如需更精细的控制，可以使用路标标记来引用路标范围的特定部分：
@@ -78,6 +79,8 @@ sidebar_position: 7
 ]
 ```
 
+=======
+>>>>>>> main
 ## 非前向路标
 
 默认情况下，路标会推进 subslide 计数器。使用 `advance: false` 可以标记位置而不创建新的 subslide：
@@ -89,9 +92,54 @@ sidebar_position: 7
 ]
 ```
 
+<<<<<<< HEAD
 ## 综合示例
 
 如前所述，路标可以捕获其后的一系列 subslides，并且你可以在之后引用整个范围。
+=======
+## 路标标记
+
+如需更精细的控制，可以使用路标标记（`wp-m`）来引用路标范围的特定部分：
+
+| 标记 | 含义 |
+|---|---|
+| `from-wp(<label>)` | 从路标的第一个 subslide 之后的所有 subslides。|
+| `until-wp(<label>)` | 直到路标范围最后一个 subslide 的所有 subslides。|
+| `get-first(<label>)` | 路标范围的第一个 subslide。|
+| `get-last(<label>)` | 路标范围的最后一个 subslide。|
+| `prev-wp(<label>)` | 给定路标的前一个路标。|
+| `next-wp(<label>)` | 给定路标的后一个路标。|
+| `not-wp(<label>)` | 不在路标范围内的所有 subslides。|
+
+```typst
+#slide[
+  #waypoint(<mid>)
+  #uncover(<mid>)[Visible during mid.]
+  #waypoint(<end>)
+  #uncover(from-wp(<mid>))[From mid onward.]
+  #only(prev-wp(<end>))[Only before end starts.]
+]
+```
+
+你甚至可以组合使用路标标记来指定确切的行为：
+
+```typst
+#slide[
+  #waypoint(<mid>, advance:false)
+  #uncover(<mid>)[Visible during mid.]
+  #pause
+  Second mid.
+  #waypoint(<end>)
+  End.
+
+  #only(not-wp(get-first(<mid>)))[Soon finished.]
+]
+```
+
+## 综合示例
+
+如前所述，路标可以捕获其后的一系列 subslides，你也可以在之后引用整个范围。
+>>>>>>> main
 
 ```typst
 #slide(composer: (1fr, 1fr))[
@@ -114,4 +162,8 @@ sidebar_position: 7
 
 ## 更多示例
 
+<<<<<<< HEAD
 有关路标功能的完整示例——包括回调风格的幻灯片、与 CeTZ 和 Fletcher 的集成、`recall-subslide` 以及边界情况——请参阅 [`examples/waypoints.typ`](https://github.com/touying-typ/touying/blob/main/examples/waypoints.typ)。
+=======
+有关路标功能的完整示例——包括回调风格的幻灯片、与 CeTZ 和 Fletcher 的集成、`recall-subslide` 以及边界情况——请参阅 [`examples/waypoints.typ`](https://github.com/touying-typ/touying/blob/main/examples/waypoints.typ)。
+>>>>>>> main

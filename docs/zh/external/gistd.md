@@ -2,9 +2,9 @@
 sidebar_position: 2
 ---
 
-# [Gistd](https://github.com/Myriad-Dreamin/gistd)
+# Gistd
 
-即时分享 [typst](https://typst.app) 文档到 Git 和其他网络存储。最重要的特性是它基于 typst.ts 来编译 typst 文档，你可以选择并复制文本！
+[Gistd](https://github.com/Myriad-Dreamin/gistd) 即时分享 [typst](https://typst.app) 文档到 Git 和其他网络存储。最重要的特性是它基于 typst.ts 来编译 typst 文档，你可以选择并复制文本！
 
 - [全球节点 (Cloudflare CDN)](https://gistd.myriad-dreamin.com)
 - [亚洲区域 (镜像)](https://gistd-cn.myriad-dreamin.com)

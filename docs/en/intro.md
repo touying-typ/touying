@@ -28,6 +28,13 @@ You have two main options:
 
 Both options automatically download Touying from the Typst package registry — no separate installation step is required.
 
+## Universe
+
+Tired of [built-in themes](https://touying-typ.github.io/themes/)?
+
+[Typst Universe](https://typst.app/universe/search/?q=touying) has a wide variety of themes uploaded by touying users, take a look, maybe you'll like it.
+
+
 ## Gallery
 
 Touying provides [a gallery](https://github.com/touying-typ/touying/wiki) where community members share their slides. You are encouraged to contribute your own work!

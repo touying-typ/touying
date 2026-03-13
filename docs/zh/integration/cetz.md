@@ -77,14 +77,13 @@ Touying 提供了 `touying-reducer`，它能为 cetz 与 fletcher 加入 `pause`
 #show: simple-theme.with(aspect-ratio: "16-9")
 
 #slide(repeat: 3, self => [
-  #let (uncover, only) = utils.methods(self)
+  #let (uncover, only, alternatives) = utils.methods(self)
 
   Cetz in Touying in subslide #self.subslide:
 
   #cetz.canvas({
     import cetz.draw: *
-    let self = (self.methods.update-cover)(self: self, hide.with(bounds: true))
-    let (uncover,) = utils.methods(self)
+    let uncover = uncover.with(cover-fn: hide.with(bounds: true))
     
     rect((0,0), (5,5))
 

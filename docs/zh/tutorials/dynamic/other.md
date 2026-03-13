@@ -4,7 +4,7 @@ sidebar_position: 5
 
 # 其他动画
 
-Touying 还提供了 `touying-reducer`，它能为 cetz 与 fletcher 加入 `pause` 和 `meanwhile` 动画。
+Touying 还提供了 `touying-reducer`，它能让所有动画在 CeTZ 和 Fletcher 中原生工作。
 
 ## 简单动画
 
@@ -65,10 +65,53 @@ Touying 还提供了 `touying-reducer`，它能为 cetz 与 fletcher 加入 `pau
 ]
 ```
 
+## `only`、`uncover` 和 `alternatives`
 
-## only 与 uncover
+事实上，我们也可以在 CeTZ 和 Fletcher 内部使用 `only`、`uncover` 甚至 `alternatives`，使用相同的语法。由于 CeTZ 和 Fletcher 通常是基于位置的，不同命令得到图表看起来是一样的，但在底层它们的工作方式不同。`only` 会丢弃绘制命令，而 `uncover` 会使用包里的 `hide` 来隐藏。
 
-事实上，我们也可以在 cetz 内部使用 `only` 和 `uncover`，只是需要一点技巧：
+```typst
+//imports, bindings and theme
+
+#slide[
+  Cetz in Touying:
+
+  #cetz-canvas({
+    import cetz.draw: *
+    
+    rect((0,0), (5,5))
+    (pause,)
+
+    rect((0,0), (1,1))
+
+    (uncover(3, {
+      rect((1,1), (2,2))
+      rect((2,2), (3,3)) 
+    }),)
+
+    (only(3, line((0,0), (2.5, 2.5), name: "line") ),)
+  })
+]
+
+#slide[
+  Fletcher in Touying:
+
+  #fletcher-diagram(
+    node-stroke: .1em,
+    spacing: 4em,
+    node((0, 0), [A], radius: 2em),
+    pause,
+    uncover("1-2", edge((0, 0), (1, 0), "-|>", stroke: blue)),
+    uncover("2-", node((1, 0), [B], radius: 2em)),
+    only(3, node((0, 1), [tmp], radius: 1em, fill: orange)),
+  )
+]
+```
+
+注意，像 `effect` 和 `item-by-item` 这样的命令可能无法按预期工作。
+
+## 回调式绑定
+
+如果你不想为 CeTZ 编写数组语法 `(anim-cmd(), )`，你可以在 canvas 中通过 utils 本地重新定义你需要的命令。这样它们就会输出 CeTZ 原生理解的格式。但是，你需要通过 `repeat` 手动计算子幻灯片的数量！
 
 ```example
 #import "@preview/touying:0.6.3": *
@@ -77,18 +120,13 @@ Touying 还提供了 `touying-reducer`，它能为 cetz 与 fletcher 加入 `pau
 #show: simple-theme.with(aspect-ratio: "16-9")
 
 #slide(repeat: 3, self => [
-  #let (uncover, only) = utils.methods(self)
+  #let (uncover, only, alternatives) = utils.methods(self)
 
   Cetz in Touying in subslide #self.subslide:
 
   #cetz.canvas({
     import cetz.draw: *
-    let self = utils.merge-dicts(
-      self,
-      config-methods(cover: utils.method-wrapper(hide.with(bounds: true))),
-    )
-    let (uncover,) = utils.methods(self)
-    // let uncover = uncover.with(cover-fn: hide.with(bounds: true))
+    let uncover = uncover.with(cover-fn: hide.with(bounds: true))
     
     rect((0,0), (5,5))
 
@@ -102,3 +140,5 @@ Touying 还提供了 `touying-reducer`，它能为 cetz 与 fletcher 加入 `pau
   })
 ])
 ```
+
+（这也适用于 Fletcher，但实际上没有理由使用它。）

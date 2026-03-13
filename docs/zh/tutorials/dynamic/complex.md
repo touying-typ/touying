@@ -57,7 +57,7 @@ use #only("2-")[`#only` function] for not reserving space,
 
 :::warning[警告]
 
-我们手动指定了参数 `repeat: 3`，这代表着显示 3 张 subslides，我们需要手动指定是因为 Touying 无法探知 `only`、`uncover` 和 `alternatives` 需要显示多少张 subslides。
+我们手动指定了参数 `repeat: 3`，这代表着显示 3 张 subslides，我们需要手动指定是因为 Touying 无法探知回调风格 `only`、`uncover` 和 `alternatives` 需要显示多少张 subslides。
 
 :::
 
@@ -67,12 +67,17 @@ use #only("2-")[`#only` function] for not reserving space,
 
 其中 index 可以是 int 类型，也可以是 `"2-"` 或 `"2-3"` 这样的 str 类型，更多用法可以参考 [Polylux](https://polylux.dev/book/dynamic/complex.html)。
 
+为方便使用，我们还支持 `auto`，它使用遇到 `only` 时的当前 subslide 位置；`"h"` 也是如此，但它是字符串，以及其派生形式：`"h-"` 和 `"-h"`。
+此外，我们还允许通过 `"!"` 进行反转。只需写 `"!h"` 或 `"!2-4"` 即可获取除这些 subslides 外的所有 subslides。与正常索引相反，反转不会增加 subslide 计数。
+
+关于如何使用路标，请参阅关于[路标](./waypoints.md)的专门章节。
 
 ## uncover
 
 `uncover` 函数表示只在选定的 subslides 中「显示」，否则会被 `cover` 函数遮挡，但仍会占据原有。也即 `#uncover(index, body)` 要么为 `body` 要么为 `cover(body)`。
 
-其中 index 可以是 int 类型，也可以是 `"2-"` 或 `"2-3"` 这样的 str 类型，更多用法可以参考 [Polylux](https://polylux.dev/book/dynamic/complex.html)。
+其中 index 可以是 int 类型，也可以是 `"2-"` 或 `"2-3"` 这样的 str 类型，更多用法可以参考 [Polylux](https://polylux.dev/book/dynamic/complex.html)。\
+但您也可以使用上面为 `only` 展示的其他选项。
 
 您应该也注意到了，事实上 `#pause` 也使用了 `cover` 函数，只是提供了更便利的写法，实际上它们的效果基本上是一致的。
 
