@@ -107,18 +107,13 @@ By factorizing, we can obtain this result.
 == only and uncover in Cetz
 
 #slide(repeat: 3, self => [
-  #let (uncover, only) = utils.methods(self)
+  #let (uncover, only, alternatives) = utils.methods(self)
 
   Cetz in Touying in subslide #self.subslide:
 
   #cetz.canvas({
     import cetz.draw: *
-    let self = utils.merge-dicts(
-      self,
-      config-methods(cover: utils.method-wrapper(hide.with(bounds: true))),
-    )
-    let (uncover,) = utils.methods(self)
-    // let uncover = uncover.with(cover-fn: hide.with(bounds: true))
+    let uncover = uncover.with(cover-fn: hide.with(bounds: true))
 
     rect((0, 0), (5, 5))
 
