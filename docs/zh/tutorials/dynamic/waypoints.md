@@ -57,7 +57,7 @@ sidebar_position: 7
 
 ## 路标标记
 
-如需更精细的控制，可以使用路标标记来引用路标范围的特定部分：
+如需更精细的控制，可以使用路标标记 (`wp-m`) 来引用路标范围的特定部分：
 
 | 标记 | 含义 |
 |---|---|
@@ -67,6 +67,7 @@ sidebar_position: 7
 | `get-last(<label>)` | 路标范围的最后一个 subslide。|
 | `prev-wp(<label>)` | 给定路标的前一个路标。|
 | `next-wp(<label>)` | 给定路标的后一个路标。|
+| `not-wp(<label>)` | 不在路标范围内的所有 subslides。|
 
 ```typst
 #slide[
@@ -75,6 +76,21 @@ sidebar_position: 7
   #waypoint(<end>)
   #uncover(from-wp(<mid>))[From mid onward.]
   #only(prev-wp(<end>))[Only before end starts.]
+]
+```
+
+你甚至可以组合使用路标标记来指定确切的行为：
+
+```typst
+#slide[
+  #waypoint(<mid>, advance:false)
+  #uncover(<mid>)[Visible during mid.]
+  #pause
+  Second mid.
+  #waypoint(<end>)
+  End.
+
+  #only(not-wp(get-first(<mid>)))[Soon finished.]
 ]
 ```
 
