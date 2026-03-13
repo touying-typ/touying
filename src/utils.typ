@@ -1706,6 +1706,8 @@
 }
 
 
+
+
 /// `#alternatives` has a couple of "cousins" that might be more convenient in some situations. The first one is `#alternatives-match` that has a name inspired by match-statements in many functional programming languages. The idea is that you give it a dictionary mapping from subslides to content:
 ///
 /// Example:
@@ -1738,28 +1740,43 @@
     subslides-contents
   }
 
-  let subslides = subslides-contents.map(it => it.first())
   let contents = subslides-contents.map(it => it.last())
+
+  // Pre-resolve all subslide specs (handles waypoint labels, markers, etc.)
+  let resolved = subslides-contents.map(((s, _)) => resolve-waypoints(self, s))
+
   if stretch {
     context {
       let sizes = contents.map(c => measure(c))
       let max-width = calc.max(..sizes.map(sz => sz.width))
       let max-height = calc.max(..sizes.map(sz => sz.height))
-      for (subslides, content) in subslides-contents {
-        only(
-          self: self,
-          subslides,
+      for (i, (_, content)) in subslides-contents.enumerate() {
+        // First-match-wins: skip if an earlier entry already matches this subslide
+        let earlier-match = resolved
+          .slice(0, i)
+          .any(
+            s => check-visible(self.subslide, s),
+          )
+        if not earlier-match and check-visible(self.subslide, resolved.at(i)) {
           box(
             width: max-width,
             height: max-height,
             align(position, content),
-          ),
-        )
+          )
+        }
       }
     }
   } else {
-    for (subslides, content) in subslides-contents {
-      only(self: self, subslides, content)
+    for (i, (_, content)) in subslides-contents.enumerate() {
+      // First-match-wins: skip if an earlier entry already matches this subslide
+      let earlier-match = resolved
+        .slice(0, i)
+        .any(
+          s => check-visible(self.subslide, s),
+        )
+      if not earlier-match and check-visible(self.subslide, resolved.at(i)) {
+        content
+      }
     }
   }
 }
