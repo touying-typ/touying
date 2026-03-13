@@ -904,7 +904,13 @@
 /// - body (content): The content to cover.
 ///
 /// -> content
-#let cover-with-rect(self:none, ..cover-args, fill: auto, inline: true, body) = {
+#let cover-with-rect(
+  self: none,
+  ..cover-args,
+  fill: auto,
+  inline: true,
+  body,
+) = {
   if fill == auto {
     panic(
       "`auto` fill value is not supported until typst provides utilities to"
