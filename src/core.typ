@@ -3193,6 +3193,13 @@
         }
       }
       let covered = cover-fn(items.sum())
+      //decrease below spacing for rect cover functions
+      // if type(cover-fn) == function and (
+      //   cover-fn==utils.cover-with-rect or 
+      //   cover-fn==utils.semi-transparent-cover
+      // ){
+      //   covered // does not fix it, but does not hurt: problem stems from box itself causing later content to be shifted? idk
+      // }else 
       if first-is-list and last-is-list {
         let first-item = items.at(first-pos)
         // construct a block around the covered content that corrects spacing. looks for auto

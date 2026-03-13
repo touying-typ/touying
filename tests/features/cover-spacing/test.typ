@@ -246,6 +246,106 @@
   },
 )[
   #align(horizon)[
+    - should break
+    #pause
+    - second
+    - third
+  ]
+][
+  #meanwhile
+  #align(horizon)[
+    - should break
+    - second
+    - third
+  ]
+]
+
+== Rect Cover
+
+#slide(
+  composer: (1fr, 1fr),
+  config: config-methods(cover: utils.cover-with-rect.with(fill: rgb(255, 0, 0, 20%), stroke: none)),
+  setting: body => {
+    place(top + left, dy: 56pt)[#line(length: 100%, stroke: .4pt + red)]
+    body
+  },
+)[
+  #align(horizon)[
+    - first
+    #pause
+    - second
+    - third
+  ]
+][
+  #meanwhile
+  #align(horizon)[
+    - first
+    - second #uncover("2-")[inline cover]
+    - third
+  ]
+]
+
+== Semi-transparent Cover
+
+#slide(
+  composer: (1fr, 1fr),
+  config: config-methods(cover: utils.semi-transparent-cover),
+  setting: body => {
+    place(top + left, dy: 56pt)[#line(length: 100%, stroke: .4pt + red)]
+    body
+  },
+)[
+  #align(horizon)[
+    - first
+    #pause
+    - second
+    - third
+  ]
+][
+  #meanwhile
+  #align(horizon)[
+    - first
+    - second #uncover("2-")[inline cover]
+    - third
+  ]
+]
+
+== Color Changing Cover
+
+#slide(
+  composer: (1fr, 1fr),
+  config: config-methods(cover: utils.color-changing-cover),
+  setting: body => {
+    place(top + left, dy: 56pt)[#line(length: 100%, stroke: .4pt + red)]
+    body
+  },
+)[
+  #align(horizon)[
+    - first
+    #pause
+    - second
+    - third
+  ]
+][
+  #meanwhile
+  #align(horizon)[
+    - first
+    - second
+    - third
+  ]
+]
+
+== Alpha Changing Cover
+
+#slide(
+  composer: (1fr, 1fr),
+  config: config-methods(cover: utils.alpha-changing-cover),
+  setting: body => {
+    place(top + left, dy: 56pt)[#line(length: 100%, stroke: .4pt + red)]
+    body
+  },
+)[
+  #align(horizon)[
     - first
     #pause
     - second
