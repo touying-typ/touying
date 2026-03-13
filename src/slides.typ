@@ -118,7 +118,11 @@
 
   show: init
 
-  show: core.split-content-into-slides.with(self: self, is-first-slide: true)
-
-  body
+  if self.at("document-mode", default: false) {
+    show: core.render-content-as-document.with(self: self)
+    body
+  } else {
+    show: core.split-content-into-slides.with(self: self, is-first-slide: true)
+    body
+  }
 }

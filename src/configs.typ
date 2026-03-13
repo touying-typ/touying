@@ -269,6 +269,8 @@
   show-hide-set-list-marker-none: _default,
   show-bibliography-as-footnote: _default,
   default-composer: _default,
+  document-mode: _default,
+  document-wrap-images: _default,
   ..args,
 ) = {
   assert(args.pos().len() == 0, message: "Unexpected positional arguments.")
@@ -321,6 +323,8 @@
       show-hide-set-list-marker-none: show-hide-set-list-marker-none,
       show-bibliography-as-footnote: show-bibliography-as-footnote,
       default-composer: default-composer,
+      document-mode: document-mode,
+      document-wrap-images: document-wrap-images,
     ))
       + args.named()
   )
@@ -725,6 +729,8 @@
     scale-list-items: none,
     show-hide-set-list-marker-none: true,
     show-bibliography-as-footnote: none,
+    document-mode: false,
+    document-wrap-images: true,
     enable-frozen-states-and-counters: true,
     frozen-states: (),
     default-frozen-states: _default-frozen-states,

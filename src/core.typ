@@ -1011,6 +1011,143 @@
   }
 }
 
+// Render content as a continuous document instead of splitting into slides.
+//
+// In document mode, headings remain normal headings, slide wrappers render
+// their body inline (no page breaks), and animation primitives (pause,
+// meanwhile, uncover, only, etc.) show the final state.
+//
+// - self (dictionary): The presentation context (must have document-mode: true)
+// - body (content): The content to render
+//
+// -> content
+// Wrap a subsection's items with meander if it has collected images.
+// Images are placed top+right; non-image content flows around them.
+#let _meander-wrap-section(items, images) = {
+  if images.len() == 0 {
+    return items.sum(default: none)
+  }
+
+  import "@preview/meander:0.4.1"
+
+  let text-content = items.sum(default: none)
+
+  meander.reflow({
+    import meander: *
+    opt.placement.spacing(below: 0.65em)
+    for img-info in images {
+      placed(top + right, box(width: img-info.width, {
+        // Image fills the box; box width controls actual size
+        set image(width: 100%)
+        img-info.img
+      }))
+    }
+    container()
+    content[#text-content]
+  })
+}
+
+#let render-content-as-document(self: none, body) = {
+  let children = if utils.is-sequence(body) {
+    body.children
+  } else {
+    (body,)
+  }
+  // Flatten nested sequences
+  let sequence-to-array(it) = {
+    if utils.is-sequence(it) {
+      it.children.map(sequence-to-array)
+    } else {
+      it
+    }
+  }
+  children = children.map(sequence-to-array).flatten()
+
+  let wrap-images = self.at("document-wrap-images", default: true)
+  // Enable image extraction in slides when wrap-images is on
+  let extract-self = if wrap-images {
+    self + (document-extract-images: true)
+  } else {
+    self
+  }
+
+  // Process a single child, returning (items: array, images: array)
+  let _process-child(self, extract-self, child) = {
+    if utils.is-kind(child, "touying-slide-wrapper") {
+      let slide-result = (child.value.fn)(extract-self)
+      if wrap-images and type(slide-result) == dictionary {
+        // Got structured result with extracted images
+        return (items: (block(slide-result.content),), images: slide-result.images)
+      }
+      // Plain content (no extraction or no images)
+      let cont = if type(slide-result) == dictionary { slide-result.content } else { slide-result }
+      return (items: (block(cont),), images: ())
+    } else if utils.is-kind(child, "touying-fn-wrapper") {
+      let wrapper = child.value
+      let last = if wrapper.last-subslide != none and type(wrapper.last-subslide) == int {
+        wrapper.last-subslide
+      } else {
+        9999
+      }
+      let doc-self = self + (subslide: last, handout: true)
+      return (items: ((wrapper.fn)(self: doc-self, ..wrapper.args),), images: ())
+    } else if utils.is-kind(child, "touying-jump/pause/meanwhile") {
+      return (items: (), images: ())
+    } else if utils.is-kind(child, "touying-set-config") {
+      let new-self = utils.merge-dicts(self, child.value.config)
+      return (items: (render-content-as-document(self: new-self, child.value.body),), images: ())
+    } else if utils.is-kind(child, "touying-slide-recaller") {
+      return (items: (), images: ())
+    } else if utils.is-styled(child) {
+      let inner = render-content-as-document(self: self, child.child)
+      return (items: (utils.reconstruct-styled(child, inner),), images: ())
+    } else {
+      return (items: (child,), images: ())
+    }
+  }
+
+  if not wrap-images {
+    // Simple path: no image wrapping
+    let result = ()
+    for child in children {
+      let r = _process-child(self, self, child)
+      result += r.items
+    }
+    return result.sum(default: none)
+  }
+
+  // Image-wrapping path: group by subsection headings and wrap each with meander
+  let sections = ()
+  let current-items = ()
+  let current-images = ()
+
+  for child in children {
+    // Any heading at any depth starts a new section for image/block grouping
+    let is-section-heading = (
+      type(child) == content
+      and child.func() == heading
+    )
+
+    if is-section-heading and current-items.len() > 0 {
+      // Flush previous section
+      sections.push(_meander-wrap-section(current-items, current-images))
+      current-items = ()
+      current-images = ()
+    }
+
+    let r = _process-child(self, extract-self, child)
+    current-items += r.items
+    current-images += r.images
+  }
+  // Flush last section
+  if current-items.len() > 0 {
+    sections.push(_meander-wrap-section(current-items, current-images))
+  }
+
+  sections.join()
+}
+
+
 /// ------------------------------------------------
 /// Slide
 /// ------------------------------------------------
@@ -5070,6 +5207,74 @@
   }
 }
 
+// Extract an image from content (direct image, figure containing one,
+// or a sequence/block whose only meaningful child is an image).
+// Returns the image element or none.
+#let _extract-image(cont) = {
+  if cont == none { return none }
+  if type(cont) != content { return none }
+  if cont.func() == image { return cont }
+  if cont.func() == figure {
+    let body = cont.at("body", default: none)
+    if body != none and type(body) == content and body.func() == image {
+      return body
+    }
+  }
+  // Sequence or block: dig into children to find a single image
+  let children = if utils.is-sequence(cont) {
+    cont.children.filter(c => c != [ ] and c != parbreak())
+  } else if cont.func() == block {
+    let body = cont.at("body", default: none)
+    if body != none { (body,) } else { () }
+  } else {
+    ()
+  }
+  if children.len() == 1 {
+    return _extract-image(children.first())
+  }
+  return none
+}
+
+// Linearize multiple slide bodies for document mode.
+//
+// In presentation mode, multiple bodies are composed side-by-side. In document
+// mode, they are stacked sequentially. If `document-wrap-images` is enabled,
+// image bodies are placed using meander so that text flows around them.
+//
+// - self (dictionary): The presentation context
+// - composer (auto, array, function): The composer spec from the slide
+// - conts (array): The content bodies from the slide
+//
+// -> content
+// Linearize multiple slide bodies for document mode.
+//
+// Returns a dictionary:
+// - content: the text/non-image bodies joined as content
+// - images: array of (img: content, width: length) dictionaries
+#let _document-linearize(self, composer, conts) = {
+  let wrap-images = self.at("document-wrap-images", default: true)
+
+  if not wrap-images {
+    return (content: conts.map(c => block(c)).join(), images: ())
+  }
+
+  let images = ()
+  let text-parts = ()
+
+  for cont in conts {
+    let img = _extract-image(cont)
+    if img != none {
+      let img-width = img.at("width", default: 100%)
+      images.push((img: img, width: img-width))
+    } else {
+      text-parts.push(cont)
+    }
+  }
+
+  (content: text-parts.map(c => block(c)).join(), images: images)
+}
+
+
 
 #let _parse-negative-subslide-indices(self, idx) = {
   if type(idx) == int and idx < 0 {
@@ -5308,6 +5513,28 @@
   // page header and footer
   let (header, footer, body-transform) = _get-header-footer(self)
   let page-extra-args = _get-page-extra-args(self)
+
+  if self.at("document-mode", default: false) {
+    // Document mode: render last subslide inline, no page breaks, no preambles.
+    self.subslide = repeat
+    let (conts, _, _, _, _) = _parse-content-into-results-and-repetitions(
+      self: self,
+      index: repeat,
+      show-delayed-wrapper: true,
+      ..bodies,
+    )
+    // Linearize: returns (content: .., images: ..)
+    let result = _document-linearize(self, composer, conts)
+    // If called with document-extract-images, return the full dict
+    // so render-content-as-document can collect images at subsection level.
+    if self.at("document-extract-images", default: false) and result.images.len() > 0 {
+      return (content: setting-fn(result.content), images: result.images)
+    }
+    {
+      let n-bodies = if type(bodies) == arguments { bodies.pos().len() } else { -1 }
+      return setting-fn(result.content + [ DEBUG: #(conts.len()) conts, #n-bodies bodies, imgs=#(result.images.len()), types=#(conts.map(c => repr(c.func())).join(", "))])
+    }
+  }
 
   let _resolve-handout-waypoint(self, lbl) = {
     let resolved = utils.resolve-waypoints(self, lbl)
