@@ -120,7 +120,7 @@ Touying 还提供了 `touying-reducer`，它能让所有动画在 CeTZ 和 Fletc
 #show: simple-theme.with(aspect-ratio: "16-9")
 
 #slide(repeat: 3, self => [
-  #let (uncover, only) = utils.methods(self)
+  #let (uncover, only, alternatives) = utils.methods(self)
 
   Cetz in Touying in subslide #self.subslide:
 

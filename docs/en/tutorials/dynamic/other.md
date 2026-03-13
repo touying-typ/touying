@@ -120,18 +120,13 @@ If you don't want to have to write the array syntax `(anim-cmd(), )` for CeTZ, y
 #show: simple-theme.with(aspect-ratio: "16-9")
 
 #slide(repeat: 3, self => [
-  #let (uncover, only) = utils.methods(self)
+  #let (uncover, only, alternatives) = utils.methods(self)
 
   Cetz in Touying in subslide #self.subslide:
 
   #cetz.canvas({
     import cetz.draw: *
-    let self = utils.merge-dicts(
-      self,
-      config-methods(cover: utils.method-wrapper(hide.with(bounds: true))),
-    )
-    let (uncover,) = utils.methods(self)
-    // let uncover = uncover.with(cover-fn: hide.with(bounds: true))
+    let uncover = uncover.with(cover-fn: hide.with(bounds: true))
     
     rect((0,0), (5,5))
 

@@ -27,15 +27,11 @@
 == only and uncover in Cetz (callback style)
 
 #slide(repeat: 3, self => [
-  #let (uncover, only) = utils.methods(self)
+  #let (uncover, only, alternatives) = utils.methods(self)
 
   #cetz.canvas({
     import cetz.draw: *
-    let self = utils.merge-dicts(
-      self,
-      config-methods(cover: utils.method-wrapper(hide.with(bounds: true))),
-    )
-    let (uncover,) = utils.methods(self)
+    let uncover = uncover.with(cover-fn: hide.with(bounds: true))
 
     rect((0, 0), (5, 5))
 
