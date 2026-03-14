@@ -1,14 +1,32 @@
 #import "/lib.typ": *
-#import themes.document: *
 
-#show: document-theme.with(
+
+#import themes.dual: *
+#import themes.simple: simple-theme
+#import themes.document: document-theme
+
+#import "@preview/edgeframe:0.3.0": ef-document
+
+#show: dual-theme.with(
+  slide-theme: simple-theme,
+  document-theme: ef-document.with(), //numbering: "1.1"
+  export: "document",
   config-info(
     title: [Document Mode Test],
     author: [Test Author],
   ),
-  numbering: "1.1",
-  wrap-images: true,
+  config-document(wrap-images: true, wrap-figures: true),
 )
+
+// #import themes.simple: *
+// #show: simple-theme.with(
+//   config-common(
+//     show-hide-set-list-marker-none: true,
+//   ),
+//   config-info(
+//     title: [Document Mode Test],
+//   )
+// )
 
 = Introduction
 
@@ -72,9 +90,11 @@ More text here. #lorem(15)
 == Image Content
 
 #slide(composer: (1fr, 1fr))[
-  Here is some text alongside an image. The image should be wrapped to the side in document mode when `wrap-images` is enabled. #lorem(40)
+  Here is some text alongside an image. The image should be wrapped to the side in document mode when
+  
+   `wrap-images` is enabled. #lorem(80)
 ][
-  #image("image.png", width: 40%)
+  #image("./image.png", width: 80%)
 ]
 
 == Animated CeTZ Canvas
@@ -111,6 +131,81 @@ More text here. #lorem(15)
 ][
   Some text next to the table. #lorem(15)
 ]
+
+== Figure with Image
+
+#slide(composer: (1fr, 1fr))[
+  This section tests a figure containing an image. It should behave identically to a raw image — wrapped to the side via meander with text flowing around it. #lorem(40)
+][
+  #figure(
+    image("./image.png", width: 80%),
+    caption: [A test figure with an image.],
+  )
+]
+
+== Figure with Table
+
+#slide(composer: (1fr, 1fr))[
+  #figure(
+    table(
+      columns: 3,
+      [A], [B], [C],
+      [1], [2], [3],
+      [4], [5], [6],
+    ),
+    caption: [A table inside a figure.],
+  )
+][
+  This tests a figure wrapping a table. It should be centered at the end of the subsection, just like a bare table. #lorem(20)
+]
+
+== Document Text
+
+#slide[
+  - Key finding A
+  - Key finding B
+  - Key finding C
+]
+
+#document-text[
+  This prose only appears in document mode. It replaces the terse bullet points
+  above with a longer discussion suitable for a written report. #lorem(30)
+
+  #figure(
+    image("./image.png", width: 60%),
+    caption: [A placed figure inside document-text.],
+    placement: top,
+  )
+
+  #lorem(40)
+]
+
+== Slide-Only Content
+
+#slide-only[
+  _This content only appears in the presentation — live demo cue._
+]
+
+Some text visible in both modes. #lorem(15)
+
+== Document-Only Content
+
+#document-only[
+  === Extended Methodology
+
+  This methodology section only appears in the document output. It provides
+  additional detail that would be too verbose for a presentation. #lorem(40)
+]
+
+== Document-Only Section via Label <touying:document>
+
+This entire section only appears in document mode. It is hidden in both
+presentation and handout modes. #lorem(20)
+
+== Handout+Document Section <touying:handout-document>
+
+This section appears in handout and document modes, but is hidden during
+a live presentation. #lorem(15)
 
 == Conclusion
 

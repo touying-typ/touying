@@ -249,9 +249,17 @@
     recaller-map,
   ) = {
     let last-heading-label = _get-last-heading-label(self.headings)
-    // Skip handout-only slides when not in handout mode
-    if last-heading-label == "touying:handout" and not self.handout {
-      return (none, recaller-map, (), (), true, false)
+    // Skip sections with mode-specific labels when not in that mode
+    if last-heading-label != none and last-heading-label.starts-with("touying:") {
+      let parts = last-heading-label.slice("touying:".len()).split("-")
+      let dominated-by-mode = "handout" in parts or "document" in parts
+      if dominated-by-mode {
+        let dominated-handout = "handout" in parts and self.handout
+        let dominated-document = "document" in parts and self.at("document-mode", default: false)
+        if not dominated-handout and not dominated-document {
+          return (none, recaller-map, (), (), true, false)
+        }
+      }
     }
     let (slide-content, callable) = if already-slide-wrapper {
       (slide-fn(self), slide-fn)
@@ -643,7 +651,7 @@
             inner-body,
           ),
         )
-      } else {
+      } else { // now the big complicated logic ...
         slide-parts = utils.trim(slide-parts)
         let is-deferred = child.value.at("defer", default: false)
         // In probe mode (is-new-start=false), slide-parts starts empty by
@@ -822,6 +830,22 @@
           }
         }
       }
+    } else if utils.is-kind(child, "touying-document-text") or utils.is-kind(child, "touying-document-only") {
+      // Document-only content — silently skip here, as this is not reachable in document mode
+      continue
+    } else if utils.is-kind(child, "touying-slide-only") {
+      // Presentation-only content — inline the body in presentation mode
+      let (inner-start-part, slide-content-part) = split-content-into-slides(
+        self: self,
+        recaller-map: recaller-map,
+        new-start: false,
+        child.value.body,
+      )
+      if inner-start-part != none {
+        start-part += inner-start-part
+      }
+      slide-contents += slide-content-part
+      continue
     } else if utils.is-styled(child) {
       // When absorbing leading preamble and no heading seen yet, recurse into
       // the styled node with absorb-leading-preamble: true. The set/show rules
@@ -1021,29 +1045,173 @@
 // - body (content): The content to render
 //
 // -> content
-// Wrap a subsection's items with meander if it has collected images.
-// Images are placed top+right; non-image content flows around them.
-#let _meander-wrap-section(items, images) = {
-  if images.len() == 0 {
-    return items.sum(default: none)
+// Assemble a subsection's content with optional wrapping.
+//
+// - items: text/heading content
+// - images: array of (element, width, is-figure) dicts
+// - blocks: array of block-level content (tables, canvases, etc.)
+// - wrap-images: wrap raw images via wrap-it (default: true)
+// - wrap-figures: wrap figures via wrap-it (default: false)
+// - wrap-graphics: wrap block graphics (default: false)
+#let _wrap-section(
+  items, images, blocks,
+  wrap-images: true,
+  wrap-figures: false,
+  wrap-graphics: false,
+) = {
+  import "@preview/wrap-it:0.1.1": wrap-content
+
+  // Flatten content to plain text — wrap-it needs splittable text
+  let _to-text(c) = {
+    if c == none { return "" }
+    if type(c) == str { return c }
+    if type(c) != content { return "" }
+    if c.has("text") { return c.text }
+    if c.has("children") { return c.children.map(_to-text).join("") }
+    if c.has("body") { return _to-text(c.body) }
+    if c.has("child") { return _to-text(c.child) }
+    ""
   }
 
-  import "@preview/meander:0.4.1"
+  // Scale an image element using layout + measure for exact sizing.
+  // `img-el` is the raw image element (used for measuring).
+  // `display-el` is what gets rendered (the raw image, or the full figure with caption).
+  // Returns content wrapped in layout() that overlays the scaled image on a hidden
+  // box at col-fraction width, with the correct measured height.
+  // content-width is resolved via layout at the top level, before wrap-it
+  // narrows the container — so it reflects the true content area width.
+  let _scale-image(img-el, display-el, col-fraction, content-width) = {
+    let obstacle-width = (col-fraction * 1pt).pt() * content-width
 
-  let text-content = items.sum(default: none)
-
-  meander.reflow({
-    import meander: *
-    opt.placement.spacing(below: 0.65em)
-    for img-info in images {
-      placed(top + right, box(width: img-info.width, {
-        // Image fills the box; box width controls actual size
-        set image(width: 100%)
-        img-info.img
-      }))
+    let img-width = img-el.fields().at("width", default: none)
+    let p = if img-width != none and type(img-width) == relative {
+      (img-width.ratio * 1pt).pt()
+    } else if img-width != none and type(img-width) == ratio {
+      (img-width * 1pt).pt()
+    } else {
+      1.0
     }
-    container()
-    content[#text-content]
+    let inv = if p > 0 { 1.0 / p } else { 1.0 }
+
+    let overlay(..args) = {
+      box(place(top + left, ..args))
+      sym.wj
+      h(0pt, weak: true)
+    }
+
+    let visible-width = obstacle-width * inv * 0.95
+    let dx-offset = obstacle-width * inv * 0.025
+    let img-size = measure(display-el, width: visible-width)
+
+    stack(
+      spacing: -par.leading,
+      overlay(
+        box(width: visible-width, display-el),
+        dy: -par.leading,
+        dx: dx-offset,
+      ),
+      hide(box(width: obstacle-width, height: img-size.height)),
+    )
+  }
+
+  // For figures: scale the image with inv (via _scale-image), then render
+  // the caption separately below at obstacle-width so it doesn't overflow.
+  let _scale-figure(fig-el, img-el, col-fraction, content-width) = {
+    let obstacle-width = (col-fraction * 1pt).pt() * content-width
+    let scaled-img = _scale-image(img-el, img-el, col-fraction, content-width)
+    let caption = fig-el.at("caption", default: none)
+
+    stack(
+      spacing: 0.5em,
+      scaled-img,
+      if caption != none {
+        box(width: obstacle-width, align(center, caption))
+      },
+    )
+  }
+
+  // Resolve content width via layout at the top level — before wrap-it
+  // narrows the container — so _scale-image gets the true content area width.
+  layout(size => {
+    let content-width = size.width
+
+    let raw-images = images.filter(i => not i.is-figure)
+    let figure-images = images.filter(i => i.is-figure)
+
+    // Collect all elements to wrap via wrap-it
+    let to-wrap = ()
+    if wrap-images {
+      to-wrap += raw-images.map(i => _scale-image(i.element, i.element, i.col-fraction, content-width))
+    }
+    if wrap-figures {
+      to-wrap += figure-images.map(i => {
+        let img = i.element.at("body", default: none)
+        if img != none and img.func() == image {
+          _scale-figure(i.element, img, i.col-fraction, content-width)
+        } else {
+          i.element
+        }
+      })
+    }
+    if wrap-graphics {
+      to-wrap += blocks
+    }
+
+    let result = ()
+
+    if to-wrap.len() > 0 {
+      // Separate headings from wrappable content — wrap-it can't split headings.
+      let headings = items.filter(r => type(r) == content and r.func() == heading)
+      let body-parts = items.filter(r => not (type(r) == content and r.func() == heading))
+      // Unwrap single-child blocks to expose splittable text to wrap-it
+      let unwrapped = body-parts.map(r => {
+        if type(r) == content and r.func() == block {
+          let body = r.at("body", default: none)
+          if body != none { body } else { r }
+        } else {
+          r
+        }
+      })
+
+      result += headings
+      let text = unwrapped.sum(default: none)
+      let plain = _to-text(text)
+
+      // Wrap each element around the text
+      for (idx, el) in to-wrap.enumerate() {
+        if idx < to-wrap.len() - 1 {
+          result.push(wrap-content(el, plain, align: right))
+          plain = ""
+        } else {
+          result.push(wrap-content(el, plain, align: right))
+        }
+      }
+    } else {
+      result += items
+    }
+
+    // Non-wrapped raw images → centered at end
+    if not wrap-images {
+      for img in raw-images {
+        result.push(align(center, img.element))
+      }
+    }
+
+    // Non-wrapped figures → centered at end
+    if not wrap-figures {
+      for fig in figure-images {
+        result.push(align(center, fig.element))
+      }
+    }
+
+    // Non-wrapped block content → centered at end
+    if not wrap-graphics {
+      for b in blocks {
+        result.push(align(center, b))
+      }
+    }
+
+    result.sum(default: none)
   })
 }
 
@@ -1063,25 +1231,35 @@
   }
   children = children.map(sequence-to-array).flatten()
 
-  let wrap-images = self.at("document-wrap-images", default: true)
-  // Enable image extraction in slides when wrap-images is on
-  let extract-self = if wrap-images {
-    self + (document-extract-images: true)
+  let doc-cfg = self.at("document", default: (:))
+  let wrap-images = doc-cfg.at("wrap-images", default: true)
+  let wrap-figures = doc-cfg.at("wrap-figures", default: false)
+  let wrap-graphics = doc-cfg.at("wrap-graphics", default: false)
+  let any-wrapping = wrap-images or wrap-figures or wrap-graphics
+  // Enable content extraction in slides when any wrapping is on
+  let extract-self = if any-wrapping {
+    self + (document-extract-content: true)
   } else {
     self
   }
 
-  // Process a single child, returning (items: array, images: array)
+  // Process a single child, returning (items: array, images: array, blocks: array)
+  let _empty = (items: (), images: (), blocks: ())
   let _process-child(self, extract-self, child) = {
     if utils.is-kind(child, "touying-slide-wrapper") {
       let slide-result = (child.value.fn)(extract-self)
-      if wrap-images and type(slide-result) == dictionary {
-        // Got structured result with extracted images
-        return (items: (block(slide-result.content),), images: slide-result.images)
+      if any-wrapping and type(slide-result) == dictionary {
+        // Got structured result with extracted images/blocks
+        let items = if slide-result.content != none { (block(slide-result.content),) } else { () }
+        return (
+          items: items,
+          images: slide-result.at("images", default: ()),
+          blocks: slide-result.at("blocks", default: ()),
+        )
       }
-      // Plain content (no extraction or no images)
+      // Plain content (no extraction or nothing extracted)
       let cont = if type(slide-result) == dictionary { slide-result.content } else { slide-result }
-      return (items: (block(cont),), images: ())
+      return (items: (block(cont),), images: (), blocks: ())
     } else if utils.is-kind(child, "touying-fn-wrapper") {
       let wrapper = child.value
       let last = if wrapper.last-subslide != none and type(wrapper.last-subslide) == int {
@@ -1090,58 +1268,84 @@
         9999
       }
       let doc-self = self + (subslide: last, handout: true)
-      return (items: ((wrapper.fn)(self: doc-self, ..wrapper.args),), images: ())
+      return (items: ((wrapper.fn)(self: doc-self, ..wrapper.args),), images: (), blocks: ())
+    } else if utils.is-kind(child, "touying-document-text") {
+      // Handled specially in the main loop (replaces preceding text)
+      return _empty
+    } else if utils.is-kind(child, "touying-document-only") {
+      // Standalone document-mode content — emit inline
+      return (items: (child.value.body,), images: (), blocks: ())
+    } else if utils.is-kind(child, "touying-slide-only") {
+      // Presentation-only content — strip in document mode
+      return _empty
     } else if utils.is-kind(child, "touying-jump/pause/meanwhile") {
-      return (items: (), images: ())
+      return _empty
     } else if utils.is-kind(child, "touying-set-config") {
       let new-self = utils.merge-dicts(self, child.value.config)
-      return (items: (render-content-as-document(self: new-self, child.value.body),), images: ())
+      return (items: (render-content-as-document(self: new-self, child.value.body),), images: (), blocks: ())
     } else if utils.is-kind(child, "touying-slide-recaller") {
-      return (items: (), images: ())
+      return _empty
     } else if utils.is-styled(child) {
       let inner = render-content-as-document(self: self, child.child)
-      return (items: (utils.reconstruct-styled(child, inner),), images: ())
+      return (items: (utils.reconstruct-styled(child, inner),), images: (), blocks: ())
     } else {
-      return (items: (child,), images: ())
+      return (items: (child,), images: (), blocks: ())
     }
   }
 
-  if not wrap-images {
-    // Simple path: no image wrapping
+  if not any-wrapping {
+    // Simple path: no wrapping or block extraction
     let result = ()
     for child in children {
+      if utils.is-kind(child, "touying-document-text") {
+        // Replace preceding non-heading items with document-text body
+        let headings = result.filter(r => type(r) == content and r.func() == heading)
+        result = headings
+        result.push(child.value.body)
+        continue
+      }
       let r = _process-child(self, self, child)
       result += r.items
     }
     return result.sum(default: none)
   }
 
-  // Image-wrapping path: group by subsection headings and wrap each with meander
+  // Content-extraction path: group by headings, wrap images with meander,
+  // and place block-level content (tables, canvases) centered at section end.
   let sections = ()
   let current-items = ()
   let current-images = ()
+  let current-blocks = ()
 
   for child in children {
-    // Any heading at any depth starts a new section for image/block grouping
     let is-section-heading = (
       type(child) == content
       and child.func() == heading
     )
 
     if is-section-heading and current-items.len() > 0 {
-      // Flush previous section
-      sections.push(_meander-wrap-section(current-items, current-images))
+      sections.push(_wrap-section(current-items, current-images, current-blocks, wrap-images: wrap-images, wrap-figures: wrap-figures, wrap-graphics: wrap-graphics))
       current-items = ()
       current-images = ()
+      current-blocks = ()
+    }
+
+    if utils.is-kind(child, "touying-document-text") {
+      // Replace preceding non-heading items with document-text body,
+      // but keep headings and extracted images/blocks from slides.
+      let headings = current-items.filter(r => type(r) == content and r.func() == heading)
+      current-items = headings
+      current-items.push(child.value.body)
+      continue
     }
 
     let r = _process-child(self, extract-self, child)
     current-items += r.items
     current-images += r.images
+    current-blocks += r.blocks
   }
-  // Flush last section
   if current-items.len() > 0 {
-    sections.push(_meander-wrap-section(current-items, current-images))
+    sections.push(_wrap-section(current-items, current-images, current-blocks, wrap-images: wrap-images, wrap-figures: wrap-figures, wrap-graphics: wrap-graphics))
   }
 
   sections.join()
@@ -1214,6 +1418,81 @@
 #let touying-slide-wrapper(fn) = [#metadata((
   kind: "touying-slide-wrapper",
   fn: fn,
+))<touying-temporary-mark>]
+
+
+/// Content that only appears in document mode.
+///
+/// In presentation mode this is silently stripped. In document mode the body
+/// is rendered inline, allowing users to provide long-form prose (with refs,
+/// citations, etc.) that supplements or replaces the terse slide bullets.
+///
+/// Example:
+///
+/// ```typst
+/// #slide[
+///   - Key finding 1
+///   - Key finding 2
+/// ]
+///
+/// #document-text[
+///   The results in @fig:results show a clear trend …
+/// ]
+/// ```
+///
+/// - body (content): The document-only content.
+///
+/// -> content
+#let document-text(body) = [#metadata((
+  kind: "touying-document-text",
+  body: body,
+))<touying-temporary-mark>]
+
+
+/// Content that only appears in slide/presentation mode.
+///
+/// In document mode this content is stripped entirely. Use this for
+/// visual-only elements that don't make sense in a written document
+/// (e.g., decorative graphics, audience prompts, transition animations).
+///
+/// Example:
+///
+/// ```typst
+/// #slide-only[
+///   _Live demo here — see the code repository._
+/// ]
+/// ```
+///
+/// - body (content): The presentation-only content.
+///
+/// -> content
+#let slide-only(body) = [#metadata((
+  kind: "touying-slide-only",
+  body: body,
+))<touying-temporary-mark>]
+
+
+/// Content that only appears in document mode.
+///
+/// Unlike `document-text`, this does NOT replace a preceding slide's content.
+/// Use this for standalone sections that should only exist in the document
+/// output (e.g., appendices, methodology, acknowledgements, extended discussion).
+///
+/// Example:
+///
+/// ```typst
+/// #document-only[
+///   == Acknowledgements
+///   We thank the reviewers for their helpful feedback. #lorem(20)
+/// ]
+/// ```
+///
+/// - body (content): The document-only content.
+///
+/// -> content
+#let document-only(body) = [#metadata((
+  kind: "touying-document-only",
+  body: body,
 ))<touying-temporary-mark>]
 
 
@@ -5209,15 +5488,18 @@
 
 // Extract an image from content (direct image, figure containing one,
 // or a sequence/block whose only meaningful child is an image).
-// Returns the image element or none.
+// Returns a dictionary (element: content, img: image-element) or none.
+// `element` is what should be displayed (figure with caption, or raw image).
+// `img` is the raw image element (for reading width).
 #let _extract-image(cont) = {
   if cont == none { return none }
   if type(cont) != content { return none }
-  if cont.func() == image { return cont }
+  if cont.func() == image { return (element: cont, img: cont, is-figure: false) }
   if cont.func() == figure {
     let body = cont.at("body", default: none)
     if body != none and type(body) == content and body.func() == image {
-      return body
+      // Preserve the whole figure (including caption) as the display element
+      return (element: cont, img: body, is-figure: true)
     }
   }
   // Sequence or block: dig into children to find a single image
@@ -5235,43 +5517,97 @@
   return none
 }
 
-// Linearize multiple slide bodies for document mode.
-//
-// In presentation mode, multiple bodies are composed side-by-side. In document
-// mode, they are stacked sequentially. If `document-wrap-images` is enabled,
-// image bodies are placed using meander so that text flows around them.
-//
-// - self (dictionary): The presentation context
-// - composer (auto, array, function): The composer spec from the slide
-// - conts (array): The content bodies from the slide
-//
-// -> content
-// Linearize multiple slide bodies for document mode.
+// Check if content is block-level (table, grid, figure without image,
+// box with explicit dimensions, or a block/sequence whose only meaningful
+// child is block-level).
+// These should be centered at the end of their subsection in document mode.
+#let _is-block-content(cont) = {
+  if cont == none or type(cont) != content { return false }
+  let f = cont.func()
+  if f == table or f == grid { return true }
+  // Figure that does NOT contain an image (e.g. wrapping a canvas or table)
+  if f == figure {
+    let body = cont.at("body", default: none)
+    if body == none or body.func() != image { return true }
+    return false
+  }
+  // Box with explicit dimensions (e.g. cetz canvas output)
+  if f == box {
+    let w = cont.at("width", default: auto)
+    let h = cont.at("height", default: auto)
+    if w != auto or h != auto { return true }
+  }
+  // A bare `context` element as the sole body content is typically a computed
+  // visual element (e.g. cetz canvas, styled block), not flowing text.
+  if [#f].text == "context" { return true }
+  // Block wrapping block-level content
+  if f == block {
+    let body = cont.at("body", default: none)
+    if body != none { return _is-block-content(body) }
+  }
+  // Sequence with a single meaningful child — filter out spaces, parbreaks, and
+  // other whitespace-like elements to find the "real" content.
+  if utils.is-sequence(cont) {
+    let _space-func = [#"a" b].children.at(1).func()
+    let meaningful = cont.children.filter(c => {
+      if c == [ ] or c == parbreak() { return false }
+      if type(c) == content and c.func() == _space-func { return false }
+      true
+    })
+    if meaningful.len() == 1 {
+      return _is-block-content(meaningful.first())
+    }
+  }
+  false
+}
+
+// Linearize slide bodies for document mode.
 //
 // Returns a dictionary:
-// - content: the text/non-image bodies joined as content
-// - images: array of (img: content, width: length) dictionaries
+// - content: the text bodies joined as content
+// - images: array of (img: content, width: length) for meander wrapping
+// - blocks: array of block-level content (tables, canvases, non-image figures)
+//           to be centered at the end of the subsection
 #let _document-linearize(self, composer, conts) = {
-  let wrap-images = self.at("document-wrap-images", default: true)
+  let doc-cfg = self.at("document", default: (:))
+  let any-wrapping = (
+    doc-cfg.at("wrap-images", default: true)
+    or doc-cfg.at("wrap-figures", default: false)
+    or doc-cfg.at("wrap-graphics", default: false)
+  )
 
-  if not wrap-images {
-    return (content: conts.map(c => block(c)).join(), images: ())
+  if not any-wrapping {
+    return (content: conts.map(c => block(c)).join(), images: (), blocks: ())
+  }
+
+  // Compute column fractions from composer to scale images correctly.
+  // E.g. (1fr, 1fr) → each column is 50% of page width.
+  let col-fractions = ()
+  if type(composer) == array and composer.len() == conts.len() {
+    let total = composer.fold(0fr, (acc, c) => if type(c) == fraction { acc + c } else { acc })
+    if total > 0fr {
+      col-fractions = composer.map(c => if type(c) == fraction { c / total * 100% } else { 100% })
+    }
   }
 
   let images = ()
   let text-parts = ()
+  let block-parts = ()
 
-  for cont in conts {
-    let img = _extract-image(cont)
-    if img != none {
-      let img-width = img.at("width", default: 100%)
-      images.push((img: img, width: img-width))
+  for (i, cont) in conts.enumerate() {
+    let extracted = _extract-image(cont)
+    if extracted != none {
+      let col-frac = if col-fractions.len() > i { col-fractions.at(i) } else { 100% }
+      // Store the display element (figure with caption, or raw image)
+      images.push((element: extracted.element, col-fraction: col-frac, is-figure: extracted.is-figure))
+    } else if _is-block-content(cont) {
+      block-parts.push(cont)
     } else {
       text-parts.push(cont)
     }
   }
 
-  (content: text-parts.map(c => block(c)).join(), images: images)
+  (content: text-parts.map(c => block(c)).join(), images: images, blocks: block-parts)
 }
 
 
@@ -5523,17 +5859,17 @@
       show-delayed-wrapper: true,
       ..bodies,
     )
-    // Linearize: returns (content: .., images: ..)
+    // Linearize: returns (content: .., images: .., blocks: ..)
     let result = _document-linearize(self, composer, conts)
-    // If called with document-extract-images, return the full dict
-    // so render-content-as-document can collect images at subsection level.
-    if self.at("document-extract-images", default: false) and result.images.len() > 0 {
-      return (content: setting-fn(result.content), images: result.images)
+    // If extracting, return the full dict so render-content-as-document
+    // can collect images/blocks at subsection level.
+    let has-extracted = result.images.len() > 0 or result.blocks.len() > 0
+    if self.at("document-extract-content", default: false) and has-extracted {
+      // If all content was extracted, don't emit an empty wrapper
+      let content = if result.content != none { setting-fn(result.content) } else { none }
+      return (content: content, images: result.images, blocks: result.blocks)
     }
-    {
-      let n-bodies = if type(bodies) == arguments { bodies.pos().len() } else { -1 }
-      return setting-fn(result.content + [ DEBUG: #(conts.len()) conts, #n-bodies bodies, imgs=#(result.images.len()), types=#(conts.map(c => repr(c.func())).join(", "))])
-    }
+    return setting-fn(result.content)
   }
 
   let _resolve-handout-waypoint(self, lbl) = {

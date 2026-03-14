@@ -270,7 +270,7 @@
   show-bibliography-as-footnote: _default,
   default-composer: _default,
   document-mode: _default,
-  document-wrap-images: _default,
+  export-mode: _default,
   ..args,
 ) = {
   assert(args.pos().len() == 0, message: "Unexpected positional arguments.")
@@ -324,7 +324,7 @@
       show-bibliography-as-footnote: show-bibliography-as-footnote,
       default-composer: default-composer,
       document-mode: document-mode,
-      document-wrap-images: document-wrap-images,
+      export-mode: export-mode,
     ))
       + args.named()
   )
@@ -692,6 +692,35 @@
 }
 
 
+/// Document-mode configuration.
+///
+/// Controls how slide content is rendered when using document mode via the
+/// dual theme. These settings are consumed by `render-content-as-document`
+/// and `_wrap-section` in core.typ.
+///
+/// - wrap-images (bool): Wrap raw images to the side via wrap-it. Default is `true`.
+/// - wrap-figures (bool): Wrap figures (image + caption) to the side via wrap-it. Default is `false`.
+/// - wrap-graphics (bool): Wrap block graphics (cetz canvases, etc.) to the side. Default is `false`.
+///
+/// -> dictionary
+#let config-document(
+  wrap-images: _default,
+  wrap-figures: _default,
+  wrap-graphics: _default,
+  ..args,
+) = {
+  assert(args.pos().len() == 0, message: "Unexpected positional arguments.")
+  return (
+    document: _get-dict-without-default((
+      wrap-images: wrap-images,
+      wrap-figures: wrap-figures,
+      wrap-graphics: wrap-graphics,
+    ))
+      + args.named(),
+  )
+}
+
+
 /// The default configuration values used when no explicit configuration is provided.
 #let default-config = utils.merge-dicts(
   config-common(
@@ -730,7 +759,7 @@
     show-hide-set-list-marker-none: true,
     show-bibliography-as-footnote: none,
     document-mode: false,
-    document-wrap-images: true,
+    export-mode: "presentation",
     enable-frozen-states-and-counters: true,
     frozen-states: (),
     default-frozen-states: _default-frozen-states,

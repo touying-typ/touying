@@ -6,3 +6,4 @@
 #import "aqua.typ"
 #import "stargazer.typ"
 #import "document.typ"
+#import "dual.typ"
