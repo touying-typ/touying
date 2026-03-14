@@ -21,6 +21,12 @@ Recall only the second subslide:
 
 #touying-recall(<animated>, subslide: 2)
 
+== Recall subslide negative:
+
+Recall the last subslide (via negative index):
+
+#touying-recall(<animated>, subslide: -1)
+
 == Slide with waypoints <wp-slide>
 
 #waypoint(<phase-a>, advance: false)
