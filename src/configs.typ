@@ -759,7 +759,7 @@
     show-hide-set-list-marker-none: true,
     show-bibliography-as-footnote: none,
     document-mode: false,
-    export-mode: "presentation",
+    export-mode: "slides",
     enable-frozen-states-and-counters: true,
     frozen-states: (),
     default-frozen-states: _default-frozen-states,

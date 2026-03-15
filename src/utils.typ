@@ -1764,6 +1764,26 @@
   }
 }
 
+/// Display content only in presentation (not handout) mode.
+/// Don't reserve space when hidden, content is completely not existing there.
+///
+/// Example:
+///
+/// ```typst
+/// #presentation-only[This content is only visible in presentation mode.]
+/// ```
+///
+/// - cont (content): The content to display in presentation mode.
+///
+/// -> content
+#let presentation-only(self: none, cont) = {
+  if not self.handout {
+    cont
+  }
+}
+
+
+
 
 
 
@@ -2224,3 +2244,36 @@
   )
   mapping.at(text.lang, default: mapping.en)
 }
+
+// *Returns input given to the compiler.* 
+// 
+// *Important*: This function uses typst `#eval` to parse your value.
+// 
+// Example:
+// `typst compile FILE --input export-mode=presentation myslide.typ` \
+// Then in the code you can do:
+// `#let export-mode = get-input("export-mode")`
+//
+// Example 2:
+// `typst compile FILE --input config='("foo": 1, "bar": [1, 2, 3], "baz": ("nested": 4))'`
+// 
+// You may also provide no key to get the entire inputs dictionary with parsed values:
+// `#let inputs = get-input()`
+// 
+// - key (str, none): The input key to retrieve. If `none`, returns the entire inputs dictionary with parsed values.
+//
+#let get-input(key:none) = {
+  if key == none { 
+    let values = (:)
+    for key in sys.inputs.keys() {
+      let value = sys.inputs.at(key, default: none)
+      values.insert(key, eval(value))
+    }
+    values
+  }else{
+    let value = sys.inputs.at(key, default: none)
+    eval(value)
+  }
+}
+
+#let dbg(val) = [#metadata(repr(val))<dbg>]

@@ -240,32 +240,59 @@
       it
     }
   }
+
+  let _check-current-mode-skip(self, lbl) = {
+    if lbl == none or not lbl.starts-with("touying:") { return false }
+
+    let parts = lbl.slice("touying:".len()).split("-")
+    // Only apply mode-filtering if the label actually names a mode.
+    // Labels like touying:hidden / touying:skip carry no mode intent.
+    let has-mode-keyword = (
+      "presentation" in parts
+        or "handout" in parts
+        or "slides" in parts
+        or "document" in parts
+    )
+    if not has-mode-keyword { return false }
+
+    let in-presentation = "presentation" in parts and not self.handout
+    let in-handout = "handout" in parts and self.handout
+    let in-slides = (
+      ("slides" in parts or in-presentation or in-handout)
+        and not self.at("document-mode", default: false)
+    )
+    let in-document = "document" in parts and self.at("document-mode", default: false)
+
+    not in-slides and not in-document
+  }
+
   children = children.map(sequence-to-array).flatten()
   let call-slide-fn-and-reset(
     self,
-    already-slide-wrapper: false,
     slide-fn,
     current-slide-cont,
     recaller-map,
+    already-slide-wrapper: false,
   ) = {
     let last-heading-label = _get-last-heading-label(self.headings)
+
     // Skip sections with mode-specific labels when not in that mode
-    if last-heading-label != none and last-heading-label.starts-with("touying:") {
-      let parts = last-heading-label.slice("touying:".len()).split("-")
-      let dominated-by-mode = "handout" in parts or "document" in parts
-      if dominated-by-mode {
-        let dominated-handout = "handout" in parts and self.handout
-        let dominated-document = "document" in parts and self.at("document-mode", default: false)
-        if not dominated-handout and not dominated-document {
-          return (none, recaller-map, (), (), true, false)
-        }
-      }
+    if _check-current-mode-skip(self, last-heading-label) {
+      // Return early without the slide.
+      return (none, recaller-map, (), (), true, false)
     }
     let (slide-content, callable) = if already-slide-wrapper {
       (slide-fn(self), slide-fn)
     } else {
       _call-slide-fn(self, slide-fn, current-slide-cont)
     }
+    //debug
+    let dbg-node = [#metadata((
+      fn: "inside-wrapper",
+      self-headings: self.headings,
+    ))<dbg>]
+    slide-content = dbg-node + slide-content
+
     if last-heading-label != none {
       recaller-map.insert(last-heading-label, (
         content: slide-content,
@@ -275,6 +302,7 @@
     }
     (slide-content, recaller-map, (), (), true, false)
   }
+
   // The empty content list
   let empty-content-types = ([], [ ], parbreak(), linebreak())
   // The headings that we currently have
@@ -338,7 +366,7 @@
     if utils.is-kind(child, "touying-slide-wrapper") {
       slide-parts = utils.trim(slide-parts)
       if (
-        slide-parts != ()
+        slide-parts != () 
           or _get-slide-fn(self + (headings: current-headings), default: none)
             != none
       ) {
@@ -366,9 +394,26 @@
         )
         if slide-content != none { output-slides.push(slide-content) }
       }
+
       let slide-self = (
         self + (headings: current-headings, is-first-slide: is-first-slide)
       )
+
+      //debug
+      output-slides.push([#metadata((
+        fn: "before-wrapper-call",
+        current-headings: current-headings,
+        ))<dbg>])
+
+      // honor uses wishes like <touying:handout> etc. by skipping depending on the mode. Same as for the heading-based skipping logic.
+      // we allow multiple: e.g. <touying:handout-presentation>, or even <touying:presentation-document>, you may write <touying:slides> as a short for <touying:presentation-handout>
+      if child.has("label") {
+        let slide_label = str(child.label)
+        if _check-current-mode-skip(self, slide_label) {
+          continue
+        }
+      }
+      
       (
         slide-content,
         recaller-map,
@@ -378,10 +423,10 @@
         is-first-slide,
       ) = call-slide-fn-and-reset(
         slide-self,
-        already-slide-wrapper: true,
         child.value.fn,
         none,
         recaller-map,
+        already-slide-wrapper: true,
       )
       if child.has("label") and child.label != <touying-temporary-mark> {
         recaller-map.insert(str(child.label), (
@@ -833,8 +878,10 @@
     } else if utils.is-kind(child, "touying-document-text") or utils.is-kind(child, "touying-document-only") {
       // Document-only content — silently skip here, as this is not reachable in document mode
       continue
-    } else if utils.is-kind(child, "touying-slide-only") {
-      // Presentation-only content — inline the body in presentation mode
+    } else if utils.is-kind(child, "touying-slides-only") { //for presentation, handout and both
+      //debug
+      let _ = [slides-only body: #repr(child.value.body)]
+      // Slides-only content — inline the body in slides mode
       let (inner-start-part, slide-content-part) = split-content-into-slides(
         self: self,
         recaller-map: recaller-map,
@@ -842,9 +889,9 @@
         child.value.body,
       )
       if inner-start-part != none {
-        start-part += inner-start-part
+        start-part.push(inner-start-part)
       }
-      slide-contents += slide-content-part
+      slide-parts.push(slide-content-part)
       continue
     } else if utils.is-styled(child) {
       // When absorbing leading preamble and no heading seen yet, recurse into
@@ -1275,8 +1322,8 @@
     } else if utils.is-kind(child, "touying-document-only") {
       // Standalone document-mode content — emit inline
       return (items: (child.value.body,), images: (), blocks: ())
-    } else if utils.is-kind(child, "touying-slide-only") {
-      // Presentation-only content — strip in document mode
+    } else if utils.is-kind(child, "touying-slides-only") { // for presentation, handout and both
+      // Slides-only content — strip in document mode
       return _empty
     } else if utils.is-kind(child, "touying-jump/pause/meanwhile") {
       return _empty
@@ -1421,26 +1468,32 @@
 ))<touying-temporary-mark>]
 
 
-/// Content that only appears in document mode.
-///
-/// In presentation mode this is silently stripped. In document mode the body
-/// is rendered inline, allowing users to provide long-form prose (with refs,
-/// citations, etc.) that supplements or replaces the terse slide bullets.
+/// Content that replaces the slide content when in document mode. Place it after your slide, before the next one.
+/// 
+/// You can use this to write a prose alternative to your slides' bullet points,
+/// and even properly use figures etc which will be rendered in the document normally.
 ///
 /// Example:
 ///
 /// ```typst
+/// == My Section
 /// #slide[
 ///   - Key finding 1
 ///   - Key finding 2
+/// ][
+///  #image("my-figure.png")
 /// ]
-///
+/// 
 /// #document-text[
+///   #figure(placement: top
+///    #image("my-figure.png")
+///    #caption("Figure 1: An important result.")
+///   )<fig:results>
 ///   The results in @fig:results show a clear trend …
 /// ]
 /// ```
 ///
-/// - body (content): The document-only content.
+/// - body (content): The document-text content.
 ///
 /// -> content
 #let document-text(body) = [#metadata((
@@ -1449,34 +1502,52 @@
 ))<touying-temporary-mark>]
 
 
-/// Content that only appears in slide/presentation mode.
-///
-/// In document mode this content is stripped entirely. Use this for
-/// visual-only elements that don't make sense in a written document
-/// (e.g., decorative graphics, audience prompts, transition animations).
+/// Display content only in handout mode. (not presentation)
+/// Don't reserve space when hidden, content is completely not existing there.
 ///
 /// Example:
 ///
 /// ```typst
-/// #slide-only[
-///   _Live demo here — see the code repository._
-/// ]
+/// #handout-only[This content is only visible in handout mode.]
 /// ```
 ///
-/// - body (content): The presentation-only content.
+/// - body (content): The content to display in handout mode.
 ///
 /// -> content
-#let slide-only(body) = [#metadata((
-  kind: "touying-slide-only",
-  body: body,
+#let handout-only(body) = [#metadata((
+  kind: "touying-slides-only",
+  body: touying-fn-wrapper(
+    utils.handout-only,
+    body,
+  )
+))<touying-temporary-mark>]
+
+/// Display content only in presentation mode. (not handout)
+/// Don't reserve space when hidden, content is completely not existing there.
+/// 
+/// Example:
+/// 
+/// ```typst
+/// #presentation-only[This content is only visible in presentation mode.]
+/// ```
+/// 
+/// - body (content): The content to display in presentation mode.
+/// 
+/// -> content
+#let presentation-only(body) = [#metadata((
+  kind: "touying-slides-only",
+  body: touying-fn-wrapper(
+    utils.presentation-only,
+    body,
+  )
 ))<touying-temporary-mark>]
 
 
 /// Content that only appears in document mode.
 ///
 /// Unlike `document-text`, this does NOT replace a preceding slide's content.
-/// Use this for standalone sections that should only exist in the document
-/// output (e.g., appendices, methodology, acknowledgements, extended discussion).
+/// Use this for standalone sections or inline content that should only exist in the document
+/// output (e.g., inline: footnotes, remarks; sections: appendices, methodology, acknowledgements, extended discussion).
 ///
 /// Example:
 ///
@@ -1492,6 +1563,28 @@
 /// -> content
 #let document-only(body) = [#metadata((
   kind: "touying-document-only",
+  body: body,
+))<touying-temporary-mark>]
+
+/// Content that only appears in handout or presentation (slides) mode.
+///
+/// In document mode this content is stripped entirely. Use this for
+/// visual-only elements that don't make sense in a written document
+/// (e.g., decorative graphics, audience prompts, transition animations).
+///
+/// Example:
+///
+/// ```typst
+/// #slides-only[
+///   _Live demo here — see the code repository._
+/// ]
+/// ```
+///
+/// - body (content): The slides-only content.
+///
+/// -> content
+#let slides-only(body) = [#metadata((
+  kind: "touying-slides-only",
   body: body,
 ))<touying-temporary-mark>]
 
@@ -2063,26 +2156,6 @@
       only-cont,
     )
   }
-}
-
-
-/// Display content only in handout mode.
-/// Don't reserve space when hidden, content is completely not existing there.
-///
-/// Example:
-///
-/// ```typst
-/// #handout-only[This content is only visible in handout mode.]
-/// ```
-///
-/// - cont (content): The content to display in handout mode.
-///
-/// -> content
-#let handout-only(cont) = {
-  touying-fn-wrapper(
-    utils.handout-only,
-    cont,
-  )
 }
 
 

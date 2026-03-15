@@ -51,7 +51,7 @@
 /// - document-theme (function, auto): The document theme function. Default is
 ///   the built-in `document-theme`. Any function `(body) => content` works.
 /// - args: Config overrides forwarded to both themes. Use `config-common(export-mode: ...)`
-///   to set the output mode (`"presentation"`, `"handout"`, or `"document"`).
+///   to set the output mode (`"presentation"`, `"handout"`, `"slides"`, or `"document"`). Setting `"slides"` chooses "handout" or "presentation" mode based on `"handout-mode"`.
 ///   Also accepts `config-info(...)`, `config-document(...)`, etc.
 /// - body (content): The document content.
 #let dual-theme(
@@ -60,6 +60,18 @@
   ..args,
   body,
 ) = {
+
+  //get compiler input
+  let comp_args = utils.get-input()
+  let comp_slide-theme = comp_args.remove("slide-theme", default: none)
+  let comp_document-theme = comp_args.remove("document-theme", default: none)
+  if comp_slide-theme != none {
+    slide-theme = comp_slide-theme
+  }
+  if comp_document-theme != none {
+    document-theme = comp_document-theme
+  }
+
   assert(
     slide-theme != none,
     message: "dual-theme requires a slide-theme (e.g., simple-theme)",
@@ -68,12 +80,12 @@
   let doc-theme = if document-theme == auto { _default-document-theme } else { document-theme }
 
   // Resolve export-mode from the merged configs
-  let merged = utils.merge-dicts(default-config, ..args.pos())
+  let merged = utils.merge-dicts(default-config, ..args.pos(), comp_args)
   let export-mode = merged.at("export-mode", default: "presentation")
 
   assert(
-    export-mode in ("presentation", "handout", "document"),
-    message: "export-mode must be \"presentation\", \"handout\", or \"document\"",
+    export-mode in ("presentation", "handout", "slides", "document"),
+    message: "export-mode must be \"presentation\", \"handout\", \"slides\", or \"document\"",
   )
 
   if export-mode == "document" {
@@ -110,9 +122,14 @@
     // Forward all configs to slide theme, adding handout: true
     show: slide-theme.with(..args, config-common(handout: true))
     body
-  } else {
+  } else if export-mode == "presentation" {
     // Forward all configs to slide theme as-is
-    show: slide-theme.with(..args)
+    show: slide-theme.with(..args, config-common(handout: false))
+    body
+  }else { // export-mode == "slides"
+    show: slide-theme.with(
+      ..args, // the boolean `handout-mode` on config-common will determine whether presentation or handout mode is used
+    )
     body
   }
 }

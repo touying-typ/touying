@@ -9,13 +9,20 @@
 
 #show: dual-theme.with(
   slide-theme: simple-theme,
-  document-theme: ef-document.with(), //numbering: "1.1"
-  export: "document",
+  document-theme: document-theme.with(numbering:"1.1"), //numbering: "1.1"
+  config-common(
+    export-mode: "presentation",
+    handout-mode: false,
+    show-hide-set-list-marker-none: true,
+  ),
   config-info(
     title: [Document Mode Test],
     author: [Test Author],
   ),
-  config-document(wrap-images: true, wrap-figures: true),
+  config-document(
+    wrap-images: true, 
+    wrap-figures: true
+  ),
 )
 
 // #import themes.simple: *
@@ -49,7 +56,6 @@ First part of the content. #lorem(10)
 Second part — in document mode this should appear directly (no animation). #lorem(10)
 
 == With Explicit Slide
-
 #slide[
   This content is inside an explicit `slide` call.
   It should render inline in the document. #lorem(15)
@@ -88,7 +94,6 @@ More text here. #lorem(15)
 #lorem(20)
 
 == Image Content
-
 #slide(composer: (1fr, 1fr))[
   Here is some text alongside an image. The image should be wrapped to the side in document mode when
   
@@ -115,9 +120,11 @@ More text here. #lorem(15)
     (pause,)
     line((0, 0), (4, 3), stroke: 2pt + green)
   })
+
+  #lorem(25)
 ]
 
-#lorem(25)
+
 
 == Table Content
 
@@ -169,7 +176,7 @@ More text here. #lorem(15)
 
 #document-text[
   This prose only appears in document mode. It replaces the terse bullet points
-  above with a longer discussion suitable for a written report. #lorem(30)
+  in the slides with a longer discussion suitable for a written report. #lorem(30)
 
   #figure(
     image("./image.png", width: 60%),
@@ -182,14 +189,22 @@ More text here. #lorem(15)
 
 == Slide-Only Content
 
-#slide-only[
-  _This content only appears in the presentation — live demo cue._
+#slides-only[
+  _This content only appears in the presentation or handout._
 ]
 
-Some text visible in both modes. #lorem(15)
+#presentation-only[
+  _This content only appears during the live presentation, not in handouts._
+]
+
+#handout-only[
+  _This content only appears in handouts, not during the live presentation._
+]
+
+Some text visible in all modes. #lorem(15)
 
 == Document-Only Content
-
+Next section is only visible in document mode, hidden in slides (presentation and handout).
 #document-only[
   === Extended Methodology
 

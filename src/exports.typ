@@ -2,7 +2,7 @@
   alert, alternatives, alternatives-cases, alternatives-fn, alternatives-match,
   appendix, document-only, document-text, effect, empty-slide, from-wp, get-first, get-last,
   handout-only, item-by-item, jump, meanwhile, next-wp, not-wp, only, pause,
-  prev-wp, slide, slide-only, speaker-note, touying-equation, touying-fn-wrapper,
+  prev-wp, presentation-only, slide, slides-only, speaker-note, touying-equation, touying-fn-wrapper,
   touying-mitex, touying-raw, touying-recall, touying-reducer,
   touying-set-config, touying-slide, touying-slide-wrapper, uncover, until-wp,
   waypoint,

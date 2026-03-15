@@ -33,6 +33,12 @@
   composer: auto,
   ..bodies,
 ) = touying-slide-wrapper(self => {
+  let dbg-node = [#metadata((
+    fn: "slide-fn",
+    self-headings: self.headings,
+    bodies: repr(bodies),  // or however your slide-fn receives content
+  ))<dbg>]
+
   let deco-format(it) = text(size: .6em, fill: self.colors.neutral-light, it)
   let header(self) = deco-format(
     components.left-and-right(

@@ -27,6 +27,11 @@
   let args = (configs.default-config,) + args.pos()
   let self = utils.merge-dicts(..args)
 
+  // get compiler args
+  let comp_args = utils.get-input()
+  self = utils.merge-dicts(self, comp_args)
+
+
   // set the document
   set document(
     ..(
