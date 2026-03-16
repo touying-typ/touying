@@ -1082,29 +1082,24 @@
   }
 }
 
-// Render content as a continuous document instead of splitting into slides.
-//
-// In document mode, headings remain normal headings, slide wrappers render
-// their body inline (no page breaks), and animation primitives (pause,
-// meanwhile, uncover, only, etc.) show the final state.
-//
-// - self (dictionary): The presentation context (must have document-mode: true)
-// - body (content): The content to render
-//
-// -> content
+
 // Assemble a subsection's content with optional wrapping.
 //
 // - items: text/heading content
 // - images: array of (element, width, is-figure) dicts
 // - blocks: array of block-level content (tables, canvases, etc.)
 // - wrap-images: wrap raw images via wrap-it (default: true)
-// - wrap-figures: wrap figures via wrap-it (default: false)
-// - wrap-graphics: wrap block graphics (default: false)
+// - wrap-image-figures: wrap image figures via wrap-it (default: false)
+// - wrap-other-figures: wrap other figures via wrap-it (default: false)
+// - wrap-other: wrap other content via wrap-it (default: false)
+// - wrap-align-direction: direction to align wrapped content (default: right)
 #let _wrap-section(
   items, images, blocks,
   wrap-images: true,
-  wrap-figures: false,
-  wrap-graphics: false,
+  wrap-image-figures: false,
+  wrap-other-figures: false,
+  wrap-other: false,
+  wrap-align-direction: right,
 ) = {
   import "@preview/wrap-it:0.1.1": wrap-content
 
@@ -1127,9 +1122,10 @@
   // box at col-fraction width, with the correct measured height.
   // content-width is resolved via layout at the top level, before wrap-it
   // narrows the container — so it reflects the true content area width.
-  let _scale-image(img-el, display-el, col-fraction, content-width) = {
+  let _scale-image(img-el, display-el, col-fraction, content-width, align-direction) = {
     let obstacle-width = (col-fraction * 1pt).pt() * content-width
 
+    //invert the image width to rescale into new container (normally given as a fraction or a percentage)
     let img-width = img-el.fields().at("width", default: none)
     let p = if img-width != none and type(img-width) == relative {
       (img-width.ratio * 1pt).pt()
@@ -1140,8 +1136,8 @@
     }
     let inv = if p > 0 { 1.0 / p } else { 1.0 }
 
-    let overlay(..args) = {
-      box(place(top + left, ..args))
+    let overlay(..args) = { // see the typst docs for layout. We wrap place in an inline box to remove margins and then join the content with 0pt spacing via the join character `sym.wj`
+      box(place(top + (if align-direction == right { left } else {right}), ..args))
       sym.wj
       h(0pt, weak: true)
     }
@@ -1149,23 +1145,24 @@
     let visible-width = obstacle-width * inv * 0.95
     let dx-offset = obstacle-width * inv * 0.025
     let img-size = measure(display-el, width: visible-width)
+    let other-direction = if align-direction == right { 1 } else { -1 }
 
     stack(
       spacing: -par.leading,
-      overlay(
+      overlay( //overlaying the image but scaled and shifted to account for the scaling we got from the slides.
         box(width: visible-width, display-el),
         dy: -par.leading,
-        dx: dx-offset,
+        dx: dx-offset * other-direction,
       ),
-      hide(box(width: obstacle-width, height: img-size.height)),
+      hide(box(width: obstacle-width, height: img-size.height)), // the effective container that preserves the space
     )
   }
 
   // For figures: scale the image with inv (via _scale-image), then render
   // the caption separately below at obstacle-width so it doesn't overflow.
-  let _scale-figure(fig-el, img-el, col-fraction, content-width) = {
+  let _scale-img-figure(fig-el, img-el, col-fraction, content-width, align-direction) = {
     let obstacle-width = (col-fraction * 1pt).pt() * content-width
-    let scaled-img = _scale-image(img-el, img-el, col-fraction, content-width)
+    let scaled-img = _scale-image(img-el, img-el, col-fraction, content-width, align-direction)
     let caption = fig-el.at("caption", default: none)
 
     stack(
@@ -1188,19 +1185,19 @@
     // Collect all elements to wrap via wrap-it
     let to-wrap = ()
     if wrap-images {
-      to-wrap += raw-images.map(i => _scale-image(i.element, i.element, i.col-fraction, content-width))
+      to-wrap += raw-images.map(i => _scale-image(i.element, i.element, i.col-fraction, content-width, wrap-align-direction))
     }
-    if wrap-figures {
+    if wrap-image-figures {
       to-wrap += figure-images.map(i => {
         let img = i.element.at("body", default: none)
         if img != none and img.func() == image {
-          _scale-figure(i.element, img, i.col-fraction, content-width)
+          _scale-img-figure(i.element, img, i.col-fraction, content-width, wrap-align-direction)
         } else {
           i.element
         }
       })
     }
-    if wrap-graphics {
+    if wrap-other {
       to-wrap += blocks
     }
 
@@ -1227,10 +1224,10 @@
       // Wrap each element around the text
       for (idx, el) in to-wrap.enumerate() {
         if idx < to-wrap.len() - 1 {
-          result.push(wrap-content(el, plain, align: right))
+          result.push(wrap-content(el, plain, align: wrap-align-direction))
           plain = ""
         } else {
-          result.push(wrap-content(el, plain, align: right))
+          result.push(wrap-content(el, plain, align: wrap-align-direction))
         }
       }
     } else {
@@ -1245,14 +1242,14 @@
     }
 
     // Non-wrapped figures → centered at end
-    if not wrap-figures {
+    if not wrap-image-figures {
       for fig in figure-images {
         result.push(align(center, fig.element))
       }
     }
 
     // Non-wrapped block content → centered at end
-    if not wrap-graphics {
+    if not wrap-other {
       for b in blocks {
         result.push(align(center, b))
       }
@@ -1262,6 +1259,16 @@
   })
 }
 
+// Render content as a continuous document instead of splitting into slides.
+//
+// In document mode, headings remain normal headings, slide wrappers render
+// their body inline (no page breaks), and animation primitives (pause,
+// meanwhile, uncover, only, etc.) show the final state.
+//
+// - self (dictionary): The presentation context (must have document-mode: true)
+// - body (content): The content to render
+//
+// -> content
 #let render-content-as-document(self: none, body) = {
   let children = if utils.is-sequence(body) {
     body.children
@@ -1280,9 +1287,11 @@
 
   let doc-cfg = self.at("document", default: (:))
   let wrap-images = doc-cfg.at("wrap-images", default: true)
-  let wrap-figures = doc-cfg.at("wrap-figures", default: false)
-  let wrap-graphics = doc-cfg.at("wrap-graphics", default: false)
-  let any-wrapping = wrap-images or wrap-figures or wrap-graphics
+  let wrap-image-figures = doc-cfg.at("wrap-image-figures", default: false)
+  let wrap-other-figures = doc-cfg.at("wrap-other-figures", default: false)
+  let wrap-other = doc-cfg.at("wrap-other", default: false)
+  let wrap-align-direction = doc-cfg.at("wrap-align-direction", default: right)
+  let any-wrapping = wrap-images or wrap-image-figures or wrap-other-figures or wrap-other
   // Enable content extraction in slides when any wrapping is on
   let extract-self = if any-wrapping {
     self + (document-extract-content: true)
@@ -1371,7 +1380,7 @@
     )
 
     if is-section-heading and current-items.len() > 0 {
-      sections.push(_wrap-section(current-items, current-images, current-blocks, wrap-images: wrap-images, wrap-figures: wrap-figures, wrap-graphics: wrap-graphics))
+      sections.push(_wrap-section(current-items, current-images, current-blocks, wrap-images: wrap-images, wrap-image-figures: wrap-image-figures, wrap-other-figures: wrap-other-figures, wrap-other: wrap-other, wrap-align-direction: wrap-align-direction))
       current-items = ()
       current-images = ()
       current-blocks = ()
@@ -1392,7 +1401,7 @@
     current-blocks += r.blocks
   }
   if current-items.len() > 0 {
-    sections.push(_wrap-section(current-items, current-images, current-blocks, wrap-images: wrap-images, wrap-figures: wrap-figures, wrap-graphics: wrap-graphics))
+    sections.push(_wrap-section(current-items, current-images, current-blocks, wrap-images: wrap-images, wrap-image-figures: wrap-image-figures, wrap-other-figures: wrap-other-figures, wrap-other: wrap-other, wrap-align-direction: wrap-align-direction))
   }
 
   sections.join()

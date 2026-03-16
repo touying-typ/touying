@@ -40,7 +40,7 @@
 ///   slide-theme: simple-theme,
 ///   config-common(export-mode: "document"),
 ///   config-info(title: [My Talk]),
-///   config-document(wrap-images: true, wrap-figures: true),
+///   config-document(wrap-images: true, wrap-image-figures: true),
 /// )
 ///
 /// = Introduction

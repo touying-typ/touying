@@ -2250,7 +2250,7 @@
 // *Important*: This function uses typst `#eval` to parse your value.
 // 
 // Example:
-// `typst compile FILE --input export-mode=presentation myslide.typ` \
+// `typst compile FILE --input export-mode=\"presentation\" myslide.typ` \
 // Then in the code you can do:
 // `#let export-mode = get-input("export-mode")`
 //

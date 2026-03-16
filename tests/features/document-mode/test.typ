@@ -9,7 +9,7 @@
 
 #show: dual-theme.with(
   slide-theme: simple-theme,
-  document-theme: document-theme.with(numbering:"1.1"), //numbering: "1.1"
+  document-theme: ef-document, //numbering: "1.1"
   config-common(
     export-mode: "presentation",
     handout-mode: false,
@@ -21,7 +21,7 @@
   ),
   config-document(
     wrap-images: true, 
-    wrap-figures: true
+    wrap-image-figures: true
   ),
 )
 

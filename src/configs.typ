@@ -699,22 +699,29 @@
 /// and `_wrap-section` in core.typ.
 ///
 /// - wrap-images (bool): Wrap raw images to the side via wrap-it. Default is `true`.
-/// - wrap-figures (bool): Wrap figures (image + caption) to the side via wrap-it. Default is `false`.
-/// - wrap-graphics (bool): Wrap block graphics (cetz canvases, etc.) to the side. Default is `false`.
+/// - wrap-image-figures (bool): Wrap image figures (image + caption) to the side via wrap-it. Default is `false`.
+/// - wrap-other-figures (bool): Wrap other figures (block + caption) to the side via wrap-it. Default is `false`.
+/// - wrap-other (bool): Wrap blocks (cetz canvases, tables, etc.) to the side. Default is `false`.
+/// - wrap-align-direction (str): The direction to wrap the content when `wrap-images`, `wrap-image-figures`, `wrap-other-figures`, or `wrap-other` is true. It can be either `"left"` or `"right"`. Default is `"right"`.
 ///
 /// -> dictionary
 #let config-document(
   wrap-images: _default,
-  wrap-figures: _default,
-  wrap-graphics: _default,
+  wrap-image-figures: _default,
+  wrap-other-figures: _default,
+  wrap-other: _default,
+  wrap-align-direction: _default,
   ..args,
 ) = {
   assert(args.pos().len() == 0, message: "Unexpected positional arguments.")
   return (
     document: _get-dict-without-default((
       wrap-images: wrap-images,
-      wrap-figures: wrap-figures,
-      wrap-graphics: wrap-graphics,
+      wrap-image-figures: wrap-image-figures,
+      wrap-other-figures: wrap-other-figures,
+      wrap-other: wrap-other,
+      wrap-align-direction: wrap-align-direction,
+
     ))
       + args.named(),
   )
@@ -841,6 +848,13 @@
     footer: none,
     margin: (x: 3em, y: 2.8em),
     numbering: "1",
+  ),
+  config-document(
+    wrap-images: true,
+    wrap-image-figures: false,
+    wrap-other-figures: false,
+    wrap-other: false,
+    wrap-align-direction: "right",
   ),
   config-store(),
 )
