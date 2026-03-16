@@ -13,7 +13,7 @@
   cover: fletcher.hide,
 )
 
-#show: simple-theme.with()
+#show: simple-theme.with(footer-right: []) //don't display slide number anymore
 
 // -----------------------------------------------
 // Test 1: Explicit waypoint with uncover

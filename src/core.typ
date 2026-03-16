@@ -930,6 +930,18 @@
   ))<touying-temporary-mark>]
 }
 
+#let waypoint-kinds = (
+  "waypoint",
+  "implicit-waypoint",
+  "waypoint-first",
+  "waypoint-last",
+  "waypoint-from",
+  "waypoint-until",
+  "waypoint-prev",
+  "waypoint-next",
+  "waypoint-not",
+).map(el => "touying-" + el)
+
 
 /// Get the first subslide number of a waypoint.
 ///
@@ -947,7 +959,7 @@
     message: "get-first: expected a label, got " + str(type(lbl)),
   )
   (
-    kind: "waypoint-first",
+    kind: "touying-waypoint-first",
     label: str(lbl),
   )
 }
@@ -969,7 +981,7 @@
     message: "get-last: expected a label, got " + str(type(lbl)),
   )
   (
-    kind: "waypoint-last",
+    kind: "touying-waypoint-last",
     label: str(lbl),
   )
 }
@@ -998,7 +1010,7 @@
       + str(type(wp)),
   )
   (
-    kind: "waypoint-from",
+    kind: "touying-waypoint-from",
     inner: if type(wp) == label {
       str(wp)
     } else {
@@ -1029,7 +1041,7 @@
       + str(type(wp)),
   )
   (
-    kind: "waypoint-until",
+    kind: "touying-waypoint-until",
     inner: if type(wp) == label {
       str(wp)
     } else {
@@ -1060,17 +1072,17 @@
       + str(type(wp)),
   )
   if type(wp) == label {
-    (kind: "waypoint-prev", inner: str(wp), amount: amount)
+    (kind: "touying-waypoint-prev", inner: str(wp), amount: amount)
   } else if type(wp) == dictionary {
     let kind = wp.at("kind", default: none)
-    if kind in ("waypoint-from", "waypoint-until") {
+    if kind in ("touying-waypoint-from", "touying-waypoint-until") {
       // Push shift inward: prev-wp(from-wp(<x>)) → from-wp(prev-wp(<x>))
       (..wp, inner: prev-wp(wp.inner, amount: amount))
     } else {
-      (kind: "waypoint-prev", inner: wp, amount: amount)
+      (kind: "touying-waypoint-prev", inner: wp, amount: amount)
     }
   } else {
-    (kind: "waypoint-prev", inner: wp, amount: amount)
+    (kind: "touying-waypoint-prev", inner: wp, amount: amount)
   }
 }
 
@@ -1096,17 +1108,17 @@
       + str(type(wp)),
   )
   if type(wp) == label {
-    (kind: "waypoint-next", inner: str(wp), amount: amount)
+    (kind: "touying-waypoint-next", inner: str(wp), amount: amount)
   } else if type(wp) == dictionary {
     let kind = wp.at("kind", default: none)
-    if kind in ("waypoint-from", "waypoint-until") {
+    if kind in ("touying-waypoint-from", "touying-waypoint-until") {
       // Push shift inward: next-wp(until-wp(<x>)) → until-wp(next-wp(<x>))
       (..wp, inner: next-wp(wp.inner, amount: amount))
     } else {
-      (kind: "waypoint-next", inner: wp, amount: amount)
+      (kind: "touying-waypoint-next", inner: wp, amount: amount)
     }
   } else {
-    (kind: "waypoint-next", inner: wp, amount: amount)
+    (kind: "touying-waypoint-next", inner: wp, amount: amount)
   }
 }
 
@@ -1131,7 +1143,7 @@
       + str(type(wp)),
   )
   (
-    kind: "waypoint-not",
+    kind: "touying-waypoint-not",
     inner: if type(wp) == label {
       str(wp)
     } else {
@@ -1709,7 +1721,8 @@
 #let item-by-item(start: auto, cont) = {
   if (
     type(start) == dictionary
-      and start.at("kind", default: none) in ("waypoint-from", "waypoint-until")
+      and start.at("kind", default: none)
+        in ("touying-waypoint-from", "touying-waypoint-until")
   ) {
     panic(
       "item-by-item: `start` must resolve to a single subslide position. "
@@ -2436,6 +2449,7 @@
           last-subslide = 0
         }
       } else if kind == "touying-waypoint" {
+        //support only implicit or explicit waypoints in reducer, no waypoint markers for now
         // Waypoint inside reducer: never pushed to result or hidden-parts.
         let wp = self.at("waypoints", default: (:))
         let lbl = child.value.label
@@ -2508,21 +2522,6 @@
           } else {
             result.push(fn-result)
           }
-        }
-      } else if kind == "touying-waypoint" {
-        let wp = self.at("waypoints", default: (:))
-        let lbl = child.value.label
-        let wp-start = child.value.at("start", default: auto)
-        if wp-start != auto and lbl in wp {
-          max-repetitions = calc.max(max-repetitions, repetitions)
-          repetitions = wp.at(lbl).first
-        } else if (
-          child.value.at("advance", default: true)
-            and lbl in wp
-            and wp.at(lbl).first == repetitions + 1
-        ) {
-          repetitions += 1
-          max-repetitions = calc.max(max-repetitions, repetitions)
         }
       } else {
         if repetitions <= index {
@@ -4876,6 +4875,29 @@
   let (header, footer, body-transform) = _get-header-footer(self)
   let page-extra-args = _get-page-extra-args(self)
 
+  let _resolve-handout-waypoint(self, lbl) = {
+    let resolved = utils.resolve-waypoints(self, lbl)
+    if type(resolved) == int {
+      (resolved,)
+    } else if type(resolved) == dictionary {
+      // resolve waypoint to the first subslide. This is how waypoints are always resolved for single integer application like some `start`field.
+      let first = resolved.at("beginning", default: resolved.at(
+        "first",
+        default: 1,
+      ))
+      // let last = resolved.at("until", default: resolved.at(
+      //   "last",
+      //   default: repeat,
+      // ))
+      (first,)
+    } else {
+      panic(
+        "touying-slide: unexpected resolved waypoint type for handout-subslides: "
+          + repr(resolved),
+      )
+    }
+  }
+
   if self.handout {
     let handout-subslides = self.at("handout-subslides", default: none)
     if handout-subslides == none {
@@ -4888,61 +4910,88 @@
         ..bodies,
       )
       header = page-preamble(self) + header
-      set page(
-        ..(self.page + page-extra-args + (header: header, footer: footer)),
-      )
-      body-transform(setting-fn(
-        subslide-preamble(self) + composer-with-side-by-side(..conts),
-      ))
-    } else {
-      // Render only the subslides that match handout-subslides
-      let handout-subslide-indices = range(1, repeat + 1).filter(
-        i => utils.check-visible(i, handout-subslides),
-      )
-      // Fall back to the last subslide if none match
-      if handout-subslide-indices.len() == 0 {
-        handout-subslide-indices = (repeat,)
-      }
-      let result = ()
-      for (pos, i) in handout-subslide-indices.enumerate() {
-        let is-first = pos == 0
-        let is-last = pos == handout-subslide-indices.len() - 1
-        let subslide-self = self
-        subslide-self.subslide = i
-        // Disable frozen states for handout multi-subslide rendering
-        subslide-self.enable-frozen-states-and-counters = false
-        // For non-first subslides, mark as a secondary handout page so that
-        // slide/page preambles and the slide counter are not repeated, while
-        // keeping handout: true so that handout-only content remains visible.
-        if not is-first {
-          subslide-self._handout-secondary = true
-        }
-        let (header-i, footer-i, body-transform-i) = _get-header-footer(
-          subslide-self,
+
+      return {
+        set page(
+          ..(self.page + page-extra-args + (header: header, footer: footer)),
         )
-        let (conts, _, _, _, _) = _parse-content-into-results-and-repetitions(
-          self: subslide-self,
-          index: i,
-          show-delayed-wrapper: is-last,
-          ..bodies,
-        )
-        let new-header = page-preamble(subslide-self) + header-i
-        result.push({
-          set page(
-            ..(
-              subslide-self.page
-                + page-extra-args
-                + (header: new-header, footer: footer-i)
-            ),
-          )
-          body-transform-i(setting-fn(
-            subslide-preamble(subslide-self)
-              + composer-with-side-by-side(..conts),
-          ))
-        })
+        body-transform(setting-fn(
+          subslide-preamble(self) + composer-with-side-by-side(..conts),
+        ))
       }
-      result.sum(default: none)
     }
+
+    if type(handout-subslides) == array {
+      for (i, subslide-idx) in handout-subslides.enumerate() {
+        if (
+          type(subslide-idx) == label
+            or (
+              type(subslide-idx) == dictionary
+                and subslide-idx.at("kind", default: "") in waypoint-kinds
+            )
+        ) {
+          handout-subslides[i] = _resolve-handout-waypoint(self, subslide-idx) //resolve waypoint labels to first subslide, only for handout
+        } else if type(subslide-idx) == int or type(subslide-idx) == str {
+          // do nothing
+        } else {
+          panic(
+            "touying-slide: if handout-subslides is an array, it must be integers, strings, or waypoint labels/markers, got type "
+              + str(type(subslide-idx))
+              + " for element "
+              + repr(subslide-idx),
+          )
+        }
+      }
+    }
+
+    // Render only the subslides that match handout-subslides
+    let handout-subslide-indices = range(1, repeat + 1).filter(
+      i => utils.check-visible(i, handout-subslides),
+    )
+    // Fall back to the last subslide if none match
+    if handout-subslide-indices.len() == 0 {
+      handout-subslide-indices = (repeat,)
+    }
+    let result = ()
+    for (pos, i) in handout-subslide-indices.enumerate() {
+      let is-first = pos == 0
+      let is-last = pos == handout-subslide-indices.len() - 1
+      let subslide-self = self
+      subslide-self.subslide = i
+      // Disable frozen states for handout multi-subslide rendering
+      subslide-self.enable-frozen-states-and-counters = false
+      // For non-first subslides, mark as a secondary handout page so that
+      // slide/page preambles and the slide counter are not repeated, while
+      // keeping handout: true so that handout-only content remains visible.
+      if not is-first {
+        subslide-self._handout-secondary = true
+      }
+      let (header-i, footer-i, body-transform-i) = _get-header-footer(
+        subslide-self,
+      )
+      let (conts, _, _, _, _) = _parse-content-into-results-and-repetitions(
+        self: subslide-self,
+        index: i,
+        show-delayed-wrapper: is-last,
+        ..bodies,
+      )
+      let new-header = page-preamble(subslide-self) + header-i
+      result.push({
+        set page(
+          ..(
+            subslide-self.page
+              + page-extra-args
+              + (header: new-header, footer: footer-i)
+          ),
+        )
+        body-transform-i(setting-fn(
+          subslide-preamble(subslide-self)
+            + composer-with-side-by-side(..conts),
+        ))
+      })
+    }
+
+    result.sum(default: none)
   } else if self.at("_recall-subslide", default: none) != none {
     // Render specific subslide(s) requested by touying-recall.
     // The spec is resolved here because `repeat` and `self.waypoints`
@@ -4969,6 +5018,7 @@
       if type(resolved) == int {
         (resolved,)
       } else if type(resolved) == dictionary {
+        //waypoints resolve to the whole animation sequence. If specific slides are needed use the waypoint marker functions.
         let first = resolved.at("beginning", default: resolved.at(
           "first",
           default: 1,
