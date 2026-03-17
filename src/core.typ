@@ -4347,6 +4347,17 @@
   }
 }
 
+
+#let _parse-negative-subslide-indices(self, idx) = {
+  if type(idx) == int and idx < 0 {
+    idx = self.repeat + idx + 1
+  }
+  if type(idx) == array {
+    idx = idx.map(i => if i < 0 { self.repeat + i + 1 } else { i })
+  }
+  idx
+}
+
 // Internal slide rendering function. Called by theme slide functions via `touying-slide-wrapper`.
 // See the public `slide` function for parameter documentation.
 #let touying-slide(
@@ -4573,6 +4584,11 @@
         subslide-preamble(self) + composer-with-side-by-side(..conts),
       ))
     } else {
+      //negative indices in string not defined/supported, and they can even have ! for inversion.
+      let handout-subslides = _parse-negative-subslide-indices(
+        self,
+        handout-subslides,
+      )
       // Render only the subslides that match handout-subslides
       let handout-subslide-indices = range(1, repeat + 1).filter(
         i => utils.check-visible(i, handout-subslides),
@@ -4631,7 +4647,7 @@
       (repeat,)
     } else if type(recall-spec) == int {
       // Explicit single subslide
-      (recall-spec,)
+      (_parse-negative-subslide-indices(self, recall-spec),)
     } else if type(recall-spec) == str and recall-spec == "waypoints" {
       // "waypoints" → last subslide of every waypoint
       let wp-map = self.at("waypoints", default: (:))

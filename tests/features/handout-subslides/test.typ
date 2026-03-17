@@ -37,3 +37,14 @@
 
   #only(3)[Subslide 3 content (should appear in handout).]
 ]
+
+
+== Negative Handout Subslide Indices
+// Slide 5: negative handout subslide indices (should render subslides 2 and 3)
+#slide(config: config-common(handout-subslides: (-2, -1)))[
+  #only(1)[Subslide 1 content (should NOT appear in handout).]
+
+  #only(2)[Subslide 2 content (should appear in handout).]
+
+  #only(3)[Subslide 3 content (should appear in handout).]
+]
