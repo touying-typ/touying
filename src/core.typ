@@ -3252,8 +3252,7 @@
     let hidden-parts = ()
 
     // Reference element for detecting space nodes in the content tree.
-    // [#"a" b] forces a sequence (text + space + text) so .children works.
-    let _space-func = [#"a" b].children.at(1).func()
+    let _space-func = [ ].func()
 
     // Helper: is this content element a list/enum/terms item?
     let _is-list-item(it) = (

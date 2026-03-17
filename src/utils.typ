@@ -201,7 +201,7 @@
 }
 
 
-#let typst-builtin-sequence = ([A] + [ ] + [B]).func()
+#let typst-builtin-sequence = [].func()
 
 /// Determine if a content is a sequence (i.e. created by concatenating content with `+` or implicit adjacency).
 ///
@@ -215,7 +215,7 @@
 }
 
 
-#let typst-builtin-styled = [#set text(fill: red)].func()
+#let typst-builtin-styled = text(red)[].func()
 
 /// Determine if a content is styled (i.e. wrapped by Typst's internal styled element when `set` or `show` rules are applied).
 ///
