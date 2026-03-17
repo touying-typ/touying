@@ -4348,7 +4348,7 @@
 }
 
 
-#let _parse_negative_subslide_indices(self, idx) = {
+#let _parse-negative-subslide-indices(self, idx) = {
   if type(idx) == int and idx < 0 {
     idx = self.repeat + idx + 1
   }
@@ -4585,7 +4585,7 @@
       ))
     } else {
       //negative indices in string not defined/supported, and they can even have ! for inversion.
-      let handout-subslides = _parse_negative_subslide_indices(
+      let handout-subslides = _parse-negative-subslide-indices(
         self,
         handout-subslides,
       )
@@ -4647,7 +4647,7 @@
       (repeat,)
     } else if type(recall-spec) == int {
       // Explicit single subslide
-      (_parse_negative_subslide_indices(self, recall-spec),)
+      (_parse-negative-subslide-indices(self, recall-spec),)
     } else if type(recall-spec) == str and recall-spec == "waypoints" {
       // "waypoints" → last subslide of every waypoint
       let wp-map = self.at("waypoints", default: (:))
