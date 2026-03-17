@@ -4765,15 +4765,27 @@
   composer: auto,
   ..bodies,
 ) = touying-slide-wrapper(self => {
-  touying-slide(
-    self: self,
-    config: config,
-    repeat: repeat,
-    setting: setting,
-    composer: composer,
-    ..bodies,
-  )
+  if self.slide-fn != slide {
+    let wrapper = (self.slide-fn)(
+      config: config,
+      repeat: repeat,
+      setting: setting,
+      composer: composer,
+      ..bodies,
+    )
+    (wrapper.value.fn)(self)
+  } else {
+    touying-slide(
+      self: self,
+      config: config,
+      repeat: repeat,
+      setting: setting,
+      composer: composer,
+      ..bodies,
+    )
+  }
 })
+
 
 
 /// Empty slide with no default heading or section context.
