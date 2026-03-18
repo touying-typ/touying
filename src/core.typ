@@ -782,6 +782,23 @@
   repetitions: repetitions,
 ))<touying-temporary-mark>]
 
+// A raw version of `touying-fn-wrapper` that does not support `last-subslide` and `repetitions`. 
+// It is for wrapping functions that should be affected by the repetition counter surrounding them.
+// e.g. `utils.alert`
+// 
+// - fn (function): The function that will be called like `(self: none, ..args) => { .. }`.
+// 
+// - args: The arguments to pass to the function. E.g. content
+// 
+// -> content
+#let touying-fn-wrapper-raw(
+  fn, 
+  ..args,
+) = [#metadata((
+  kind: "touying-fn-wrapper-raw",
+  fn: fn,
+  args: args,
+))<touying-temporary-mark>]
 /// Wrapper for a slide function to make it can receive `self` as an argument.
 ///
 /// Notice: This function is necessary for the slide function to work in Touying.
@@ -1825,7 +1842,7 @@
 /// Alert is a way to display a message to the audience. It can be used to draw attention to important information or to provide instructions.
 ///
 /// -> content
-#let alert(body) = touying-fn-wrapper(utils.alert, body)
+#let alert(body) = touying-fn-wrapper-raw(utils.alert, body)
 
 
 /// Animated math equation. Use `pause` and `meanwhile` inside the equation body to reveal terms step by step.
@@ -2497,7 +2514,7 @@
             result.push(fn-result)
           }
         }
-      } else {
+      } else { //automatically collects raw fn wrapper
         if repetitions <= index {
           result.push(child)
         } else {
@@ -3472,6 +3489,19 @@
             ..extra-args,
           ))
           repetitions = nextrepetitions
+        } else if kind == "touying-fn-wrapper-raw" {
+          // Handle raw function wrappers (e.g., #alert)
+          if repetitions <= index or not need-cover {
+            result.push((child.value.fn)(
+              self: self,
+              ..child.value.args,
+            ))
+          } else {
+            hidden-parts.push((child.value.fn)(
+              self: self,
+              ..child.value.args,
+            ))
+          }
         } else if kind == "touying-speaker-note" {
           // Handle speaker notes with optional #pause markers inside the note body.
           // Speaker notes always escape the pause zone (like fn-wrappers): they emit
@@ -3570,7 +3600,7 @@
               hidden-parts.push(child.value.body)
             }
           }
-        } else {
+        } else { 
           if repetitions <= index or not need-cover {
             result.push(child)
           } else {
