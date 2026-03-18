@@ -178,6 +178,7 @@
 // - recaller-map (dictionary): Map of slide labels to their content for recall functionality
 // - new-start (bool): Whether this is the start of a new slide section
 // - is-first-slide (bool): Whether this is the first slide of the presentation
+// - absorb-leading-preamble (bool): Whether to include the preamble content from before the next split
 // - body (content): The content to be split into slides
 //
 // -> content
@@ -186,6 +187,7 @@
   recaller-map: (:),
   new-start: true,
   is-first-slide: false,
+  absorb-leading-preamble: false,
   body,
 ) = {
   // Extract arguments
@@ -273,6 +275,8 @@
   let start-part = ()
   // result
   let output-slides = ()
+  // leading preamble to collect content from before the slide break
+  let leading-preamble = ()
 
   // Is we have a horizontal line
   let horizontal-line = false
@@ -286,30 +290,11 @@
         and child not in ([—], [---], [–], [--], [-])
     ) {
       slide-parts = utils.trim(slide-parts)
-      (
-        slide-content,
-        recaller-map,
-        current-headings,
-        slide-parts,
-        new-start,
-        is-first-slide,
-      ) = call-slide-fn-and-reset(
-        self + (headings: current-headings, is-first-slide: is-first-slide),
-        slide-fn,
-        slide-parts.sum(default: none),
-        recaller-map,
-      )
-      if slide-content != none { output-slides.push(slide-content) }
-      horizontal-line = false
-    }
-    // Main logic
-    if utils.is-kind(child, "touying-slide-wrapper") {
-      slide-parts = utils.trim(slide-parts)
-      if (
-        slide-parts != ()
-          or _get-slide-fn(self + (headings: current-headings), default: none)
-            != none
-      ) {
+      if slide-parts != () or current-headings != () {
+        let flush-content = (
+          leading-preamble.sum(default: none) + slide-parts.sum(default: none)
+        )
+        leading-preamble = ()
         (
           slide-content,
           recaller-map,
@@ -320,7 +305,36 @@
         ) = call-slide-fn-and-reset(
           self + (headings: current-headings, is-first-slide: is-first-slide),
           slide-fn,
-          slide-parts.sum(default: none),
+          flush-content,
+          recaller-map,
+        )
+        if slide-content != none { output-slides.push(slide-content) }
+      }
+      horizontal-line = false
+    }
+    // Main logic
+    if utils.is-kind(child, "touying-slide-wrapper") {
+      slide-parts = utils.trim(slide-parts)
+      if (
+        slide-parts != ()
+          or _get-slide-fn(self + (headings: current-headings), default: none)
+            != none
+      ) {
+        let flush-content = (
+          leading-preamble.sum(default: none) + slide-parts.sum(default: none)
+        )
+        leading-preamble = ()
+        (
+          slide-content,
+          recaller-map,
+          current-headings,
+          slide-parts,
+          new-start,
+          is-first-slide,
+        ) = call-slide-fn-and-reset(
+          self + (headings: current-headings, is-first-slide: is-first-slide),
+          slide-fn,
+          flush-content,
           recaller-map,
         )
         if slide-content != none { output-slides.push(slide-content) }
@@ -353,6 +367,10 @@
     } else if utils.is-kind(child, "touying-slide-recaller") {
       slide-parts = utils.trim(slide-parts)
       if slide-parts != () or current-headings != () {
+        let flush-content = (
+          leading-preamble.sum(default: none) + slide-parts.sum(default: none)
+        )
+        leading-preamble = ()
         (
           slide-content,
           recaller-map,
@@ -363,7 +381,7 @@
         ) = call-slide-fn-and-reset(
           self + (headings: current-headings, is-first-slide: is-first-slide),
           slide-fn,
-          slide-parts.sum(default: none),
+          flush-content,
           recaller-map,
         )
         if slide-content != none { output-slides.push(slide-content) }
@@ -394,20 +412,26 @@
     } else if child in (pagebreak(), pagebreak(weak: true)) {
       // split content when we have a pagebreak
       slide-parts = utils.trim(slide-parts)
-      (
-        slide-content,
-        recaller-map,
-        current-headings,
-        slide-parts,
-        new-start,
-        is-first-slide,
-      ) = call-slide-fn-and-reset(
-        self + (headings: current-headings, is-first-slide: is-first-slide),
-        slide-fn,
-        slide-parts.sum(default: none),
-        recaller-map,
-      )
-      if slide-content != none { output-slides.push(slide-content) }
+      if slide-parts != () or current-headings != () {
+        let flush-content = (
+          leading-preamble.sum(default: none) + slide-parts.sum(default: none)
+        )
+        leading-preamble = ()
+        (
+          slide-content,
+          recaller-map,
+          current-headings,
+          slide-parts,
+          new-start,
+          is-first-slide,
+        ) = call-slide-fn-and-reset(
+          self + (headings: current-headings, is-first-slide: is-first-slide),
+          slide-fn,
+          flush-content,
+          recaller-map,
+        )
+        if slide-content != none { output-slides.push(slide-content) }
+      }
     } else if horizontal-line-to-pagebreak and child in ([—], [---]) {
       horizontal-line = true
       continue
@@ -428,17 +452,17 @@
           != none
           or child.depth <= last-heading-depth
           or slide-parts != ()
-          or (
-            child.depth == 1 and new-section-slide-fn != none
-          )
+          or (child.depth == 1 and new-section-slide-fn != none)
           or (child.depth == 2 and new-subsection-slide-fn != none)
-          or (
-            child.depth == 3 and new-subsubsection-slide-fn != none
-          )
+          or (child.depth == 3 and new-subsubsection-slide-fn != none)
           or (child.depth == 4 and new-subsubsubsection-slide-fn != none)
       ) {
         slide-parts = utils.trim(slide-parts)
         if slide-parts != () or current-headings != () {
+          let flush-content = (
+            leading-preamble.sum(default: none) + slide-parts.sum(default: none)
+          )
+          leading-preamble = ()
           (
             slide-content,
             recaller-map,
@@ -449,7 +473,7 @@
           ) = call-slide-fn-and-reset(
             self + (headings: current-headings, is-first-slide: is-first-slide),
             slide-fn,
-            slide-parts.sum(default: none),
+            flush-content,
             recaller-map,
           )
           if slide-content != none { output-slides.push(slide-content) }
@@ -564,12 +588,11 @@
       if slide-parts != () {
         // Flush the current slide only when there is actual body content.
         // If slide-parts is empty but current-headings is not, we skip
-        // the empty-body flush to avoid creating ghost pages (invisible
-        // slides that only contain hidden headings with no visible content).
-        // The pending headings are instead forwarded into the recursive
-        // processing by prepending them to the config body, so they are
-        // correctly associated with the first real content inside the
-        // touying-set-config block.
+        // the empty-body flush to avoid creating ghost pages.
+        let flush-content = (
+          leading-preamble.sum(default: none) + slide-parts.sum(default: none)
+        )
+        leading-preamble = ()
         (
           slide-content,
           recaller-map,
@@ -580,7 +603,7 @@
         ) = call-slide-fn-and-reset(
           self + (headings: current-headings, is-first-slide: is-first-slide),
           slide-fn,
-          slide-parts.sum(default: none),
+          flush-content,
           recaller-map,
         )
         if slide-content != none { output-slides.push(slide-content) }
@@ -596,12 +619,15 @@
       } else {
         child.value.body
       }
-      // Process the content with the new configuration
+      // Process the content with the new configuration.
+      // absorb-leading-preamble: true so that counter-updates/metadata before
+      // the first heading inside the config body are deferred, not ghost-flushed.
       output-slides.push(
         split-content-into-slides(
           self: utils.merge-dicts(self, child.value.config),
           recaller-map: recaller-map,
           new-start: true,
+          absorb-leading-preamble: true,
           recursive-body,
         ),
       )
@@ -618,12 +644,19 @@
           // The styled node contains slide-breaking content (e.g., headings that
           // trigger new slides).
           if is-first-slide {
-            // On the first slide, calling with new-start: false causes content after
-            // headings to land in start-part instead of slide-parts, resulting in
-            // slides with missing bodies. Re-call with new-start: true to build
-            // slides correctly, and flush any accumulated content beforehand.
+            // On the first slide, calling with new-start: false causes
+            // content after headings to land in start-part instead of slide-parts,
+            // resulting in slides with missing bodies. Re-call with new-start: true
+            // to build slides correctly, and flush any accumulated content beforehand.
+            // There is no previous slide to reconcile inner-start-part onto, so we
+            // do NOT attempt to reconcile it here.
             slide-parts = utils.trim(slide-parts)
             if slide-parts != () or current-headings != () {
+              let flush-content = (
+                leading-preamble.sum(default: none)
+                  + slide-parts.sum(default: none)
+              )
+              leading-preamble = ()
               (
                 slide-content,
                 recaller-map,
@@ -638,7 +671,7 @@
                     is-first-slide: is-first-slide,
                   ),
                 slide-fn,
-                slide-parts.sum(default: none),
+                flush-content,
                 recaller-map,
               )
               if slide-content != none { output-slides.push(slide-content) }
@@ -670,9 +703,13 @@
                 start-part.push(styled-start)
               }
             }
-            // Flush the current slide before adding new slides
             slide-parts = utils.trim(slide-parts)
             if slide-parts != () or current-headings != () {
+              let flush-content = (
+                leading-preamble.sum(default: none)
+                  + slide-parts.sum(default: none)
+              )
+              leading-preamble = ()
               (
                 slide-content,
                 recaller-map,
@@ -687,7 +724,7 @@
                     is-first-slide: is-first-slide,
                   ),
                 slide-fn,
-                slide-parts.sum(default: none),
+                flush-content,
                 recaller-map,
               )
               if slide-content != none { output-slides.push(slide-content) }
@@ -715,8 +752,12 @@
           }
         }
       } else {
-        if new-start {
-          // Add the child to the current slide
+        if absorb-leading-preamble and current-headings == () {
+          // Before any heading is seen, accumulate as preamble to inject into
+          // the first real slide's content — avoids ghost slides from counter-updates
+          // and metadata injected by touying-set-config bodies.
+          leading-preamble.push(child)
+        } else if new-start {
           slide-parts.push(child)
         } else {
           start-part.push(child)
@@ -728,6 +769,10 @@
   // Handle the last slide
   slide-parts = utils.trim(slide-parts)
   if slide-parts != () or current-headings != () {
+    let flush-content = (
+      leading-preamble.sum(default: none) + slide-parts.sum(default: none)
+    )
+    leading-preamble = ()
     (
       slide-content,
       recaller-map,
@@ -738,7 +783,7 @@
     ) = call-slide-fn-and-reset(
       self + (headings: current-headings, is-first-slide: is-first-slide),
       slide-fn,
-      slide-parts.sum(default: none),
+      flush-content,
       recaller-map,
     )
     if slide-content != none { output-slides.push(slide-content) }
