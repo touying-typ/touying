@@ -229,6 +229,20 @@
 }
 
 
+#let typst-builtin-space = [ ].func()
+
+/// Determine if a content is a space (i.e. created by using whitespace in source code).
+///
+/// Example: `is-styled([ ])` returns `true`
+///
+/// - it (content): The content to check.
+///
+/// -> bool
+#let is-space(it) = {
+  type(it) == content and it.func() == typst-builtin-space
+}
+
+
 /// Reconstruct a styled content with a new body.
 ///
 /// - it (content): The content to reconstruct.
