@@ -570,6 +570,7 @@
         // processing by prepending them to the config body, so they are
         // correctly associated with the first real content inside the
         // touying-set-config block.
+        let headings-before-flush = current-headings
         (
           slide-content,
           recaller-map,
@@ -584,6 +585,37 @@
           recaller-map,
         )
         if slide-content != none { output-slides.push(slide-content) }
+        // After flushing, current-headings is reset to ().  When the config
+        // body starts with inline content (e.g. #pause) rather than a heading,
+        // restore the heading context from before the flush.  Without this, the
+        // config body has no heading to trigger new-start=true inside the
+        // recursive split-content-into-slides call, causing any #pause marks
+        // to land in start-part and be pushed to output-slides as raw content —
+        // leaving unconsumed touying-temporary-mark labels in the document and
+        // triggering an "Unsupported mark" panic from _default-preamble.
+        // When the config body starts with a heading instead (e.g. the appendix
+        // use case `#show: appendix` where the body begins with `= Appendix`),
+        // keep the reset headings: prepending the flushed heading to such a body
+        // would create a ghost empty slide for that heading.
+        let config-body = child.value.body
+        let config-body-children = if utils.is-sequence(config-body) {
+          config-body.children
+        } else {
+          (config-body,)
+        }
+        let config-body-starts-with-heading = {
+          let result = false
+          for c in config-body-children {
+            if c not in empty-content-types {
+              result = utils.is-heading(c, depth: slide-level)
+              break
+            }
+          }
+          result
+        }
+        if not config-body-starts-with-heading {
+          current-headings = headings-before-flush
+        }
       }
       // Forward any pending headings (accumulated before the touying-set-config
       // with no body content between them) into the recursive body so they are
@@ -664,7 +696,10 @@
               child.child,
             )
             if styled-preamble != none {
-              output-slides.push(utils.reconstruct-styled(child, styled-preamble))
+              output-slides.push(utils.reconstruct-styled(
+                child,
+                styled-preamble,
+              ))
             }
             if styled-slides != none {
               output-slides.push(utils.reconstruct-styled(child, styled-slides))
