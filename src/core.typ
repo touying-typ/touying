@@ -596,15 +596,25 @@
       } else {
         child.value.body
       }
-      // Process the content with the new configuration
-      output-slides.push(
-        split-content-into-slides(
-          self: utils.merge-dicts(self, child.value.config),
-          recaller-map: recaller-map,
-          new-start: true,
-          recursive-body,
-        ),
+      // Process the content with the new configuration.
+      // Use new-start: false so that any content appearing before the first
+      // heading inside the config block (e.g. counter resets like
+      // `#counter(heading).update(0)`) is collected into start-part rather
+      // than slide-parts.  With new-start: true such content would accumulate
+      // in slide-parts, and the subsequent heading flush would emit a ghost
+      // slide containing only that invisible preamble content.
+      let (config-preamble, config-slides) = split-content-into-slides(
+        self: utils.merge-dicts(self, child.value.config),
+        recaller-map: recaller-map,
+        new-start: false,
+        recursive-body,
       )
+      if config-preamble != none {
+        output-slides.push(config-preamble)
+      }
+      if config-slides != none {
+        output-slides.push(config-slides)
+      }
     } else {
       if utils.is-styled(child) {
         // Split the content into slides recursively for styled content
@@ -618,10 +628,7 @@
           // The styled node contains slide-breaking content (e.g., headings that
           // trigger new slides).
           if is-first-slide {
-            // On the first slide, calling with new-start: false causes content after
-            // headings to land in start-part instead of slide-parts, resulting in
-            // slides with missing bodies. Re-call with new-start: true to build
-            // slides correctly, and flush any accumulated content beforehand.
+            // Flush any accumulated content before the styled node as a new slide.
             slide-parts = utils.trim(slide-parts)
             if slide-parts != () or current-headings != () {
               (
@@ -643,18 +650,25 @@
               )
               if slide-content != none { output-slides.push(slide-content) }
             }
-            output-slides.push(
-              utils.reconstruct-styled(
-                child,
-                split-content-into-slides(
-                  self: self,
-                  recaller-map: recaller-map,
-                  new-start: true,
-                  is-first-slide: is-first-slide,
-                  child.child,
-                ),
-              ),
+            // Re-process the styled child with new-start: false so that any
+            // content before the first heading (e.g. counter resets) is
+            // collected into start-part rather than slide-parts.  Using
+            // new-start: true caused such pre-heading content to accumulate
+            // in slide-parts, and the subsequent heading flush would produce
+            // a ghost slide containing only that preamble content.
+            let (styled-preamble, styled-slides) = split-content-into-slides(
+              self: self,
+              recaller-map: recaller-map,
+              new-start: false,
+              is-first-slide: is-first-slide,
+              child.child,
             )
+            if styled-preamble != none {
+              output-slides.push(utils.reconstruct-styled(child, styled-preamble))
+            }
+            if styled-slides != none {
+              output-slides.push(utils.reconstruct-styled(child, styled-slides))
+            }
           } else {
             // Add the pre-heading content to the current slide, then flush and
             // emit the new slides directly instead of using _delayed-wrapper,
