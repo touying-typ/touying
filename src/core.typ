@@ -586,34 +586,33 @@
         )
         if slide-content != none { output-slides.push(slide-content) }
         // After flushing, current-headings is reset to ().  When the config
-        // body starts with inline content (e.g. #pause) rather than a heading,
-        // restore the heading context from before the flush.  Without this, the
-        // config body has no heading to trigger new-start=true inside the
-        // recursive split-content-into-slides call, causing any #pause marks
-        // to land in start-part and be pushed to output-slides as raw content —
-        // leaving unconsumed touying-temporary-mark labels in the document and
-        // triggering an "Unsupported mark" panic from _default-preamble.
-        // When the config body starts with a heading instead (e.g. the appendix
-        // use case `#show: appendix` where the body begins with `= Appendix`),
-        // keep the reset headings: prepending the flushed heading to such a body
-        // would create a ghost empty slide for that heading.
+        // body contains NO slide-level heading at all (e.g. the body is purely
+        // inline animation content like `#pause ... more content`), restore the
+        // heading context from before the flush.  Without this, the config body
+        // has no heading to trigger new-start=true inside the recursive
+        // split-content-into-slides call, causing any #pause marks to land in
+        // start-part and be pushed to output-slides as raw content — leaving
+        // unconsumed touying-temporary-mark labels in the document and triggering
+        // an "Unsupported mark" panic from _default-preamble.
+        // When the config body does contain at least one slide-level heading
+        // (e.g. `#show: appendix` where the body eventually contains `= Appendix`
+        // or a counter reset before a heading), do NOT restore: prepending the
+        // flushed heading to such a body would cause that heading to re-appear,
+        // and the subsequent slide-level heading in the body would flush it again
+        // as a ghost empty slide.
         let config-body = child.value.body
-        let config-body-children = if utils.is-sequence(config-body) {
-          config-body.children
-        } else {
-          (config-body,)
-        }
-        let config-body-starts-with-heading = {
-          let result = false
-          for c in config-body-children {
-            if c not in empty-content-types {
-              result = utils.is-heading(c, depth: slide-level)
-              break
-            }
+        let config-body-flat = {
+          let config-children = if utils.is-sequence(config-body) {
+            config-body.children
+          } else {
+            (config-body,)
           }
-          result
+          config-children.map(sequence-to-array).flatten()
         }
-        if not config-body-starts-with-heading {
+        let config-body-contains-heading = config-body-flat.any(c => (
+          utils.is-heading(c, depth: slide-level)
+        ))
+        if not config-body-contains-heading {
           current-headings = headings-before-flush
         }
       }
