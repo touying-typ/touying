@@ -3251,10 +3251,6 @@
     let result = ()
     let hidden-parts = ()
 
-    // Reference element for detecting space nodes in the content tree.
-    // [#"a" b] forces a sequence (text + space + text) so .children works.
-    let _space-func = [#"a" b].children.at(1).func()
-
     // Helper: is this content element a list/enum/terms item?
     let _is-list-item(it) = (
       type(it) == content
@@ -3273,9 +3269,7 @@
     /// default paragraph spacing is correct.
     let cover-hidden(cover-fn, items, last-result) = {
       // First non-space hidden element
-      let first-pos = items.position(item => {
-        not (type(item) == content and item.func() == _space-func)
-      })
+      let first-pos = items.position(item => not utils.is-space(item))
       let first-is-list = (
         first-pos != none and _is-list-item(items.at(first-pos))
       )
@@ -3289,7 +3283,7 @@
         let found = false
         for i in range(last-result.len()) {
           let item = last-result.at(last-result.len() - 1 - i)
-          if type(item) == content and item.func() == _space-func {
+          if utils.is-space(item) {
             // skip space nodes only
           } else {
             found = _is-list-item(item)
