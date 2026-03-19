@@ -273,6 +273,12 @@
   let start-part = ()
   // result
   let output-slides = ()
+  // Track whether at least one slide-flush (or pagebreak-flush) has already occurred.
+  // Used to distinguish pre-first-heading setup content (counter updates, show/set rules)
+  // from post-pagebreak continuation content.  Pre-first-heading content must not trigger
+  // a ghost slide when the first real heading arrives.
+  // See: https://github.com/touying-typ/touying/issues/312
+  let had-flush = false
 
   // Is we have a horizontal line
   let horizontal-line = false
@@ -301,6 +307,7 @@
       )
       if slide-content != none { output-slides.push(slide-content) }
       horizontal-line = false
+      had-flush = true
     }
     // Main logic
     if utils.is-kind(child, "touying-slide-wrapper") {
@@ -324,6 +331,7 @@
           recaller-map,
         )
         if slide-content != none { output-slides.push(slide-content) }
+        had-flush = true
       }
       let slide-self = (
         self + (headings: current-headings, is-first-slide: is-first-slide)
@@ -350,6 +358,7 @@
         ))
       }
       if slide-content != none { output-slides.push(slide-content) }
+      had-flush = true
     } else if utils.is-kind(child, "touying-slide-recaller") {
       slide-parts = utils.trim(slide-parts)
       if slide-parts != () or current-headings != () {
@@ -367,6 +376,7 @@
           recaller-map,
         )
         if slide-content != none { output-slides.push(slide-content) }
+        had-flush = true
       }
       let lbl = child.value.label
       assert(
@@ -408,6 +418,7 @@
         recaller-map,
       )
       if slide-content != none { output-slides.push(slide-content) }
+      had-flush = true
     } else if horizontal-line-to-pagebreak and child in ([—], [---]) {
       horizontal-line = true
       continue
@@ -438,7 +449,22 @@
           or (child.depth == 4 and new-subsubsubsection-slide-fn != none)
       ) {
         slide-parts = utils.trim(slide-parts)
-        if slide-parts != () or current-headings != () {
+        // Flush only when there is already a heading in progress, or when
+        // at least one slide/pagebreak flush has previously occurred.
+        //
+        // The second condition (had-flush) handles post-pagebreak continuation
+        // content: after a pagebreak the state is reset (current-headings = ())
+        // but the content that follows is still part of the running slide and
+        // must be emitted before the next section heading takes over.
+        //
+        // The first condition (current-headings != ()) guards against creating
+        // a ghost slide for invisible pre-first-heading content such as
+        // #counter(heading).update(0) placed immediately after #show: appendix.
+        // In that situation had-flush is still false so the flush is skipped and
+        // the invisible element is carried forward into the first real slide.
+        //
+        // See: https://github.com/touying-typ/touying/issues/312
+        if current-headings != () or (slide-parts != () and had-flush) {
           (
             slide-content,
             recaller-map,
@@ -453,6 +479,7 @@
             recaller-map,
           )
           if slide-content != none { output-slides.push(slide-content) }
+          had-flush = true
         }
       }
 
@@ -482,6 +509,7 @@
             recaller-map,
           )
           if slide-content != none { output-slides.push(slide-content) }
+          had-flush = true
         } else if (
           child.depth == 2
             and new-subsection-slide-fn != none
@@ -501,6 +529,7 @@
             recaller-map,
           )
           if slide-content != none { output-slides.push(slide-content) }
+          had-flush = true
         } else if (
           child.depth == 3
             and new-subsubsection-slide-fn != none
@@ -520,6 +549,7 @@
             recaller-map,
           )
           if slide-content != none { output-slides.push(slide-content) }
+          had-flush = true
         } else if (
           child.depth == 4
             and new-subsubsubsection-slide-fn != none
@@ -539,6 +569,7 @@
             recaller-map,
           )
           if slide-content != none { output-slides.push(slide-content) }
+          had-flush = true
         }
       }
     } else if (
@@ -584,6 +615,7 @@
           recaller-map,
         )
         if slide-content != none { output-slides.push(slide-content) }
+        had-flush = true
       }
       // Forward any pending headings (accumulated before the touying-set-config
       // with no body content between them) into the recursive body so they are
@@ -642,6 +674,7 @@
                 recaller-map,
               )
               if slide-content != none { output-slides.push(slide-content) }
+              had-flush = true
             }
             output-slides.push(
               utils.reconstruct-styled(
@@ -691,6 +724,7 @@
                 recaller-map,
               )
               if slide-content != none { output-slides.push(slide-content) }
+              had-flush = true
             }
             // Add new slides, wrapped in the same styled node so that the
             // show/set rules cascade to subsequent slides (matching Typst semantics)
