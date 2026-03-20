@@ -1430,7 +1430,7 @@
     },
     subslides-contents,
     position: position,
-    stretch: false,
+    stretch: stretch,
   )
 }
 
