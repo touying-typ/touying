@@ -21,9 +21,10 @@
 /// - body (content): The content of the slide.
 ///
 /// -> content
-#let touying-set-config(config, body) = [#metadata((
+#let touying-set-config(config, body, defer: false) = [#metadata((
   kind: "touying-set-config",
   config: config,
+  defer: defer,
   body: body,
 ))<touying-temporary-mark>]
 
@@ -40,6 +41,7 @@
 #let appendix(body) = touying-set-config(
   (appendix: true),
   body,
+  defer: true,
 )
 
 
@@ -291,9 +293,7 @@
     ) {
       slide-parts = utils.trim(slide-parts)
       if slide-parts != () or current-headings != () {
-        let flush-content = (
-          leading-preamble.sum(default: none) + slide-parts.sum(default: none)
-        )
+        let flush-self = self + (headings: current-headings, is-first-slide: is-first-slide, leading-preamble: leading-preamble)
         leading-preamble = ()
         (
           slide-content,
@@ -303,9 +303,9 @@
           new-start,
           is-first-slide,
         ) = call-slide-fn-and-reset(
-          self + (headings: current-headings, is-first-slide: is-first-slide),
+          flush-self,
           slide-fn,
-          flush-content,
+          slide-parts.sum(default: none),
           recaller-map,
         )
         if slide-content != none { output-slides.push(slide-content) }
@@ -320,9 +320,7 @@
           or _get-slide-fn(self + (headings: current-headings), default: none)
             != none
       ) {
-        let flush-content = (
-          leading-preamble.sum(default: none) + slide-parts.sum(default: none)
-        )
+        let flush-self = self + (headings: current-headings, is-first-slide: is-first-slide, leading-preamble: leading-preamble)
         leading-preamble = ()
         (
           slide-content,
@@ -332,9 +330,9 @@
           new-start,
           is-first-slide,
         ) = call-slide-fn-and-reset(
-          self + (headings: current-headings, is-first-slide: is-first-slide),
+          flush-self,
           slide-fn,
-          flush-content,
+          slide-parts.sum(default: none),
           recaller-map,
         )
         if slide-content != none { output-slides.push(slide-content) }
@@ -367,9 +365,7 @@
     } else if utils.is-kind(child, "touying-slide-recaller") {
       slide-parts = utils.trim(slide-parts)
       if slide-parts != () or current-headings != () {
-        let flush-content = (
-          leading-preamble.sum(default: none) + slide-parts.sum(default: none)
-        )
+        let flush-self = self + (headings: current-headings, is-first-slide: is-first-slide, leading-preamble: leading-preamble)
         leading-preamble = ()
         (
           slide-content,
@@ -379,9 +375,9 @@
           new-start,
           is-first-slide,
         ) = call-slide-fn-and-reset(
-          self + (headings: current-headings, is-first-slide: is-first-slide),
+          flush-self,
           slide-fn,
-          flush-content,
+          slide-parts.sum(default: none),
           recaller-map,
         )
         if slide-content != none { output-slides.push(slide-content) }
@@ -413,9 +409,7 @@
       // split content when we have a pagebreak
       slide-parts = utils.trim(slide-parts)
       if slide-parts != () or current-headings != () {
-        let flush-content = (
-          leading-preamble.sum(default: none) + slide-parts.sum(default: none)
-        )
+        let flush-self = self + (headings: current-headings, is-first-slide: is-first-slide, leading-preamble: leading-preamble)
         leading-preamble = ()
         (
           slide-content,
@@ -425,9 +419,9 @@
           new-start,
           is-first-slide,
         ) = call-slide-fn-and-reset(
-          self + (headings: current-headings, is-first-slide: is-first-slide),
+          flush-self,
           slide-fn,
-          flush-content,
+          slide-parts.sum(default: none),
           recaller-map,
         )
         if slide-content != none { output-slides.push(slide-content) }
@@ -459,9 +453,7 @@
       ) {
         slide-parts = utils.trim(slide-parts)
         if slide-parts != () or current-headings != () {
-          let flush-content = (
-            leading-preamble.sum(default: none) + slide-parts.sum(default: none)
-          )
+          let flush-self = self + (headings: current-headings, is-first-slide: is-first-slide, leading-preamble: leading-preamble)
           leading-preamble = ()
           (
             slide-content,
@@ -471,9 +463,9 @@
             new-start,
             is-first-slide,
           ) = call-slide-fn-and-reset(
-            self + (headings: current-headings, is-first-slide: is-first-slide),
+            flush-self,
             slide-fn,
-            flush-content,
+            slide-parts.sum(default: none),
             recaller-map,
           )
           if slide-content != none { output-slides.push(slide-content) }
@@ -584,55 +576,216 @@
         start-part.push(new-heading)
       }
     } else if utils.is-kind(child, "touying-set-config") {
-      slide-parts = utils.trim(slide-parts)
-      if slide-parts != () {
-        // Flush the current slide only when there is actual body content.
-        // If slide-parts is empty but current-headings is not, we skip
-        // the empty-body flush to avoid creating ghost pages.
-        let flush-content = (
-          leading-preamble.sum(default: none) + slide-parts.sum(default: none)
-        )
+      // When absorbing leading preamble and no heading seen yet, recurse into
+      // the styled node with absorb-leading-preamble: true. The set/show rules
+      // will propagate via reconstruct-styled on the output.
+      if absorb-leading-preamble and current-headings == () {
+        let inner-body = if leading-preamble != () {
+          leading-preamble.sum(default: none) + child.child
+        } else {
+          child.child
+        }
         leading-preamble = ()
-        (
-          slide-content,
-          recaller-map,
-          current-headings,
-          slide-parts,
-          new-start,
-          is-first-slide,
-        ) = call-slide-fn-and-reset(
-          self + (headings: current-headings, is-first-slide: is-first-slide),
-          slide-fn,
-          flush-content,
-          recaller-map,
-        )
-        if slide-content != none { output-slides.push(slide-content) }
-      }
-      // Forward any pending headings (accumulated before the touying-set-config
-      // with no body content between them) into the recursive body so they are
-      // associated with the first content inside the config block.
-      let pending-headings = current-headings
-      current-headings = ()
-      slide-parts = ()
-      let recursive-body = if pending-headings != () {
-        pending-headings.sum(default: none) + child.value.body
-      } else {
-        child.value.body
-      }
-      // Process the content with the new configuration.
-      // absorb-leading-preamble: true so that counter-updates/metadata before
-      // the first heading inside the config body are deferred, not ghost-flushed.
-      output-slides.push(
-        split-content-into-slides(
-          self: utils.merge-dicts(self, child.value.config),
+        let inner-result = split-content-into-slides(
+          self: self,
           recaller-map: recaller-map,
           new-start: true,
+          is-first-slide: is-first-slide,
           absorb-leading-preamble: true,
-          recursive-body,
-        ),
-      )
-    } else {
-      if utils.is-styled(child) {
+          inner-body,
+        )
+        output-slides.push(utils.reconstruct-styled(child, inner-result))
+      } else {
+        slide-parts = utils.trim(slide-parts)
+        let is-deferred = child.value.at("defer", default: false)
+        if is-deferred or slide-parts == () {
+          // Deferred path: flush current slide (if any body content), then
+          // recursively process the config body as a fresh start with
+          // absorb-leading-preamble so counter-updates/metadata before the
+          // first heading are deferred, not ghost-flushed.
+          if slide-parts != () {
+            let flush-self = self + (headings: current-headings, is-first-slide: is-first-slide, leading-preamble: leading-preamble)
+            leading-preamble = ()
+            (
+              slide-content,
+              recaller-map,
+              current-headings,
+              slide-parts,
+              new-start,
+              is-first-slide,
+            ) = call-slide-fn-and-reset(
+              flush-self,
+              slide-fn,
+              slide-parts.sum(default: none),
+              recaller-map,
+            )
+            if slide-content != none { output-slides.push(slide-content) }
+          }
+          // Forward any pending headings into the recursive body so they are
+          // associated with the first content inside the config block.
+          let pending-headings = current-headings
+          current-headings = ()
+          slide-parts = ()
+          let recursive-body = if pending-headings != () {
+            pending-headings.sum(default: none) + child.value.body
+          } else {
+            child.value.body
+          }
+          output-slides.push(
+            split-content-into-slides(
+              self: utils.merge-dicts(self, child.value.config),
+              recaller-map: recaller-map,
+              new-start: true,
+              absorb-leading-preamble: true,
+              recursive-body,
+            ),
+          )
+        } else {
+          // Immediate path: slide-parts is non-empty and defer is false.
+          // Handle like styled content — split the config body, recombine
+          // pre-break content with the current slide, and emit the rest.
+          // This keeps mid-slide config changes (e.g. cover method) on the
+          // current slide so that #pause / #meanwhile still work.
+          let merged-self = utils.merge-dicts(self, child.value.config)
+          // Do NOT forward pending headings — they belong to the current
+          // slide and will be used when flushing.  Only use the raw config
+          // body for the probe so that start-part captures pre-break content.
+          // Probe the body for slide breaks.
+          let (inner-start-part, slide-content-part) = split-content-into-slides(
+            self: merged-self,
+            recaller-map: recaller-map,
+            new-start: false,
+            child.value.body,
+          )
+          if slide-content-part != none {
+            // The config body contains slide-breaking content.
+            if is-first-slide {
+              // First-slide: flush accumulated content, then re-split with
+              // new-start: true (mirrors styled handler first-slide logic).
+              slide-parts = utils.trim(slide-parts)
+              if slide-parts != () or current-headings != () {
+                let flush-self = merge-self + (headings: current-headings, is-first-slide: is-first-slide, leading-preamble: leading-preamble)
+                (
+                  slide-content,
+                  recaller-map,
+                  current-headings,
+                  slide-parts,
+                  new-start,
+                  is-first-slide,
+                ) = call-slide-fn-and-reset(
+                  flush-self,
+                  slide-fn,
+                  slide-parts.sum(default: none),
+                  recaller-map,
+                )
+                if slide-content != none { output-slides.push(slide-content) }
+              }
+              // For the re-split, forward pending headings into the body
+              // so they are associated with the first content inside.
+              let headed-body = if current-headings != () {
+                current-headings.sum(default: none) + child.value.body
+              } else {
+                child.value.body
+              }
+              current-headings = ()
+              slide-parts = ()
+              output-slides.push(
+                split-content-into-slides(
+                  self: merged-self,
+                  recaller-map: recaller-map,
+                  new-start: true,
+                  is-first-slide: is-first-slide,
+                  headed-body,
+                ),
+              )
+            } else {
+              // Non-first-slide: recombine pre-break content with current
+              // slide, flush, then emit the remaining slides.
+              if inner-start-part != none {
+                slide-parts.push(inner-start-part)
+              }
+              slide-parts = utils.trim(slide-parts)
+              if slide-parts != () or current-headings != () {
+                let flush-self = merged-self + (headings: current-headings, is-first-slide: is-first-slide, leading-preamble: leading-preamble)
+                (
+                  slide-content,
+                  recaller-map,
+                  current-headings,
+                  slide-parts,
+                  new-start,
+                  is-first-slide,
+                ) = call-slide-fn-and-reset(
+                  flush-self,
+                  slide-fn,
+                  slide-parts.sum(default: none),
+                  recaller-map,
+                )
+                if slide-content != none { output-slides.push(slide-content) }
+              }
+              current-headings = ()
+              slide-parts = ()
+              output-slides.push(slide-content-part)
+            }
+          } else {
+            // No slide breaks in the config body — all content stays on the
+            // current slide.  Flush immediately with the merged config since
+            // the config body wraps all remaining content (show-rule
+            // semantics) and the for-loop has no more children after this.
+            if inner-start-part != none {
+              slide-parts.push(inner-start-part)
+            }
+            slide-parts = utils.trim(slide-parts)
+            if slide-parts != () or current-headings != () {
+              let flush-content = (
+                leading-preamble.sum(default: none)
+                  + slide-parts.sum(default: none)
+              )
+              leading-preamble = ()
+              (
+                slide-content,
+                recaller-map,
+                current-headings,
+                slide-parts,
+                new-start,
+                is-first-slide,
+              ) = call-slide-fn-and-reset(
+                merged-self
+                  + (
+                    headings: current-headings,
+                    is-first-slide: is-first-slide,
+                  ),
+                slide-fn,
+                flush-content,
+                recaller-map,
+              )
+              if slide-content != none { output-slides.push(slide-content) }
+            }
+            current-headings = ()
+            slide-parts = ()
+          }
+        }
+      }
+    } else if utils.is-styled(child) {
+      // When absorbing leading preamble and no heading seen yet, recurse into
+      // the styled node with absorb-leading-preamble: true. The set/show rules
+      // will propagate via reconstruct-styled on the output.
+      if absorb-leading-preamble and current-headings == () {
+        let inner-body = if leading-preamble != () {
+          leading-preamble.sum(default: none) + child.child
+        } else {
+          child.child
+        }
+        leading-preamble = ()
+        let inner-result = split-content-into-slides(
+          self: self,
+          recaller-map: recaller-map,
+          new-start: true,
+          is-first-slide: is-first-slide,
+          absorb-leading-preamble: true,
+          inner-body,
+        )
+        output-slides.push(utils.reconstruct-styled(child, inner-result))
+      } else {
         // Split the content into slides recursively for styled content
         let (inner-start-part, slide-content-part) = split-content-into-slides(
           self: self,
@@ -652,10 +805,7 @@
             // do NOT attempt to reconcile it here.
             slide-parts = utils.trim(slide-parts)
             if slide-parts != () or current-headings != () {
-              let flush-content = (
-                leading-preamble.sum(default: none)
-                  + slide-parts.sum(default: none)
-              )
+              let flush-self = self + (headings: current-headings, is-first-slide: is-first-slide, leading-preamble: leading-preamble)
               leading-preamble = ()
               (
                 slide-content,
@@ -665,13 +815,9 @@
                 new-start,
                 is-first-slide,
               ) = call-slide-fn-and-reset(
-                self
-                  + (
-                    headings: current-headings,
-                    is-first-slide: is-first-slide,
-                  ),
+                flush-self,
                 slide-fn,
-                flush-content,
+                slide-parts.sum(default: none),
                 recaller-map,
               )
               if slide-content != none { output-slides.push(slide-content) }
@@ -705,10 +851,7 @@
             }
             slide-parts = utils.trim(slide-parts)
             if slide-parts != () or current-headings != () {
-              let flush-content = (
-                leading-preamble.sum(default: none)
-                  + slide-parts.sum(default: none)
-              )
+              let flush-self = self + (headings: current-headings, is-first-slide: is-first-slide, leading-preamble: leading-preamble)
               leading-preamble = ()
               (
                 slide-content,
@@ -718,13 +861,9 @@
                 new-start,
                 is-first-slide,
               ) = call-slide-fn-and-reset(
-                self
-                  + (
-                    headings: current-headings,
-                    is-first-slide: is-first-slide,
-                  ),
+                flush-self,
                 slide-fn,
-                flush-content,
+                slide-parts.sum(default: none),
                 recaller-map,
               )
               if slide-content != none { output-slides.push(slide-content) }
@@ -751,17 +890,17 @@
             start-part.push(styled-child)
           }
         }
+      }
+    } else {
+      if absorb-leading-preamble and current-headings == () {
+        // Before any heading is seen, accumulate as preamble to inject into
+        // the first real slide's content — avoids ghost slides from counter-updates
+        // and metadata injected by touying-set-config bodies.
+        leading-preamble.push(child)
+      } else if new-start {
+        slide-parts.push(child)
       } else {
-        if absorb-leading-preamble and current-headings == () {
-          // Before any heading is seen, accumulate as preamble to inject into
-          // the first real slide's content — avoids ghost slides from counter-updates
-          // and metadata injected by touying-set-config bodies.
-          leading-preamble.push(child)
-        } else if new-start {
-          slide-parts.push(child)
-        } else {
-          start-part.push(child)
-        }
+        start-part.push(child)
       }
     }
   }
@@ -769,9 +908,7 @@
   // Handle the last slide
   slide-parts = utils.trim(slide-parts)
   if slide-parts != () or current-headings != () {
-    let flush-content = (
-      leading-preamble.sum(default: none) + slide-parts.sum(default: none)
-    )
+    let flush-self = self + (headings: current-headings, is-first-slide: is-first-slide, leading-preamble: leading-preamble)
     leading-preamble = ()
     (
       slide-content,
@@ -781,9 +918,9 @@
       new-start,
       is-first-slide,
     ) = call-slide-fn-and-reset(
-      self + (headings: current-headings, is-first-slide: is-first-slide),
+      flush-self,
       slide-fn,
-      flush-content,
+      slide-parts.sum(default: none),
       recaller-map,
     )
     if slide-content != none { output-slides.push(slide-content) }
@@ -4558,6 +4695,11 @@
 
   // Slide and subslide preamble functions for setup and metadata
   let slide-preamble(self) = {
+    // do the leading function calls first
+    let leading-preamble = self.at("leading-preamble", default: ()).sum(default:none)
+    utils.call-or-display(self, leading-preamble)
+
+
     if self.at("is-first-slide", default: false) {
       utils.call-or-display(self, self.at("preamble", default: none))
       utils.call-or-display(self, self.at("default-preamble", default: none))
