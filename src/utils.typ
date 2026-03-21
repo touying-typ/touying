@@ -1,5 +1,35 @@
 #import "pdfpc.typ"
 
+/// Add page margin dictionary to another page margin dictionary.
+///
+/// Example: `add-page-margin-dicts((top: 1cm, x: 2cm), (y: 3em))` returns `(x: 2cm, y: 3em)`
+///
+/// - dict-a (dictionary): The base dictionary.
+///
+/// - dict-b (dictionary): The dictionary to merge into `dict-a`.
+///
+/// -> dictionary
+#let add-page-margin-dicts(dict-a, dict-b) = {
+  // Possible keys: top, right, bottom, left, inside, outside, x, y, rest.
+  // Source: https://github.com/typst/typst/blob/e7256a6361f3181bac6d61cfd31935a443109bfb/crates/typst-library/src/layout/page.rs#L128-L139
+  let res = dict-a
+  let sides = ("top", "right", "bottom", "left")
+  let res-has-sides = res.keys().any(k => k in sides)
+  // `rest` only works as expected with its context, i.e., `dict-b`.
+  if "rest" in dict-b { return dict-b }
+  if not res-has-sides { return res + dict-b }
+  // Assuming `inside`/`outside` just takes precedence over `x`/`left`/`right`.
+  if "x" in dict-b {
+    if "left" in res { _ = res.remove("left") }
+    if "right" in res { _ = res.remove("right") }
+  }
+  if "y" in dict-b {
+    if "top" in res { _ = res.remove("top") }
+    if "bottom" in res { _ = res.remove("bottom") }
+  }
+  return res + dict-b
+}
+
 /// Add a dictionary to another dictionary recursively.
 ///
 /// Example: `add-dicts((a: (b: 1)), (a: (c: 2)))` returns `(a: (b: 1, c: 2))`
@@ -17,7 +47,12 @@
         and type(res.at(key)) == dictionary
         and type(dict-b.at(key)) == dictionary
     ) {
-      res.insert(key, add-dicts(res.at(key), dict-b.at(key)))
+      if key == "margin" {
+        // Assuming `margin` can only be in the `config-page`.
+        res.insert(key, add-page-margin-dicts(res.at(key), dict-b.at(key)))
+      } else {
+        res.insert(key, add-dicts(res.at(key), dict-b.at(key)))
+      }
     } else {
       res.insert(key, dict-b.at(key))
     }
