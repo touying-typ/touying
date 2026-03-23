@@ -37,7 +37,7 @@
 
 /// Begin the appendix of the presentation. The slide counter is frozen at the last non-appendix slide, so appendix slides do not affect the total slide count shown in footers.
 ///
-/// Equivalent to `#show: touying-set-config.with((appendix: true))`.
+/// Equivalent to `#show: touying-set-config.with((appendix: true), defer: true)`.
 ///
 /// Example: `#show: appendix`
 ///
@@ -737,7 +737,7 @@
               slide-parts = utils.trim(slide-parts)
               if slide-parts != () or current-headings != () {
                 let flush-self = (
-                  merge-self
+                  merged-self
                     + (
                       headings: current-headings,
                       is-first-slide: is-first-slide,
