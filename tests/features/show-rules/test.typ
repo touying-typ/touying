@@ -15,11 +15,13 @@
 #set heading(numbering: "1.1")
 #show heading.where(level: 1): set heading(numbering: "1.")
 
-= Content
-
 == First Slide
 
 First
+#show: touying-set-config.with(config-methods(
+  cover: utils.method-wrapper(hide),
+))
+
 #pause
 #show par: set text(2em)
 
@@ -46,7 +48,6 @@ Third
 
 #set heading(numbering: "A.1")
 #counter(heading).update((1, 0))
-// Case 1 (Bug 1 fix): config in absorbing context, no leading-preamble before it.
 // The cover change must take effect on the appendix slides.
 #show: touying-set-config.with(config-methods(
   cover: utils.method-wrapper(hide),
@@ -108,3 +109,18 @@ And this too.
 Content after explicit pagebreak must be visible.
 #pause
 And this too.
+
+== Seventh Appendix
+// Case 8 (Fix 1): deferred config appears immediately after a heading with NO body
+// content (slide-parts == ()).  == Seventh Appendix must flush as its own empty slide.
+// The config body begins fresh on the next slide — NOT as part of == Seventh Appendix.
+#show: touying-set-config.with(
+  config-methods(
+    cover: utils.method-wrapper(hide),
+  ),
+  defer: true,
+)
+== Eighth Appendix
+Eighth appendix content — heading above must be on a SEPARATE preceding slide.
+#pause
+Hidden pause (hide cover must apply here).
