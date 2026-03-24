@@ -76,7 +76,7 @@ However you may also set this locally for individual slides, see below.
 You can override any configuration for all following slides and the current one, using `#show: touying-set-config.with(...)`, just like you would write a `show`/`set`-rule normally.
 
 ```example
-#import "../lib.typ": *
+#import "@preview/touying:0.6.3": *
 #import themes.simple: *
 
 #show: simple-theme.with(aspect-ratio: "16-9")
