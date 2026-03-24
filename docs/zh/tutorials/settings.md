@@ -8,7 +8,7 @@ sidebar_position: 3
 
 对 Touying 而言，全局样式即为需要应用到所有地方的 set rules 或 show rules，例如 `#set text(size: 20pt)`。
 
-其中，Touying 的主题会封装一些自己的全局样式，他们会被放在 `#self.methods.init` 中，例如 simple 主题就封装了
+其中，Touying 的主题会封装一些自己的全局样式，他们会被放在 `#self.methods.init` 中，例如 simple 主题就封装了：
 
 ```typst
 config-methods(
@@ -31,7 +31,6 @@ config-methods(
 #set strong(delta: 100)
 #set par(justify: true)
 ```
-
 
 ## 全局信息
 
@@ -73,12 +72,14 @@ config-common(datetime-format: "[year]-[month]-[day]")
 )
 ```
 
-## 单张幻灯片配置覆盖
+你也可以针对单张幻灯片局部设置此选项，详见下文。
 
-你可以使用 `#show: touying-set-config.with(...)` 为单张幻灯片或一段幻灯片覆盖任意配置：
+## 全局配置覆盖（Show-Rule）
+
+你可以使用 `#show: touying-set-config.with(...)` 覆盖当前及其后所有幻灯片的任意配置，用法与普通的 `show`/`set` 规则相同：
 
 ```example
-#import "@preview/touying:0.6.3": *
+#import "../lib.typ": *
 #import themes.simple: *
 
 #show: simple-theme.with(aspect-ratio: "16-9")
@@ -87,17 +88,62 @@ config-common(datetime-format: "[year]-[month]-[day]")
 
 This slide uses the default settings.
 
-#show: touying-set-config.with(config-page(fill: blue.lighten(80%)))
+
 
 == Blue Background Slide
-
+#show: touying-set-config.with(config-page(fill: blue.lighten(80%)))
 This slide has a blue background applied via `touying-set-config`.
 
-#show: touying-set-config.with(config-colors(primary: red))
-
 == Red Accent Slide
+#show: touying-set-config.with(config-colors(primary: red))
+This slide uses a red primary color, e.g. in `#alert` boxes.
 
-This slide uses a red primary color.
+#alert[This is an alert box with red accent color.]
+
+== Changed Cover
+Initial Content.
+
+#pause
+
+Content that appears with a semi-transparent cover effect.
+#show: touying-set-config.with(config-methods(
+  cover: utils.semi-transparent-cover,
+))
+```
+
+## 局部配置覆盖
+
+如果你只想影响某一张幻灯片，可以通过 `#slide(config: ...)[...]` 局部设置配置：
+
+```example
+>>> #import "../lib.typ": *
+>>> #import themes.simple: *
+
+>>> #show: simple-theme.with(aspect-ratio: "16-9")
+== Local Config 
+#slide(config:config-page(fill: purple.lighten(90%)))[
+Only this slide has a light purple background, but the next slide goes back being light blue.
+]
+```
+
+## 延迟配置（Deferred Config Show Rules）
+
+你也可以将配置变更推迟到下一张幻灯片开始时生效。`show: appendix` 正是通过此机制实现的，同样适用于需要在幻灯片内容之外生效的自定义前言等场景。（注意 `config-common` 在此处无效，你也可以不使用它直接书写配置。）
+
+```example
+>>> #import "../lib.typ": *
+>>> #import themes.simple: *
+
+>>> #show: simple-theme.with(aspect-ratio: "16-9")
+== Content Slide
+Some content.
+#show: touying-set-config.with(defer:true, config-common(appendix:true))
+// you can just write `show: appendix`
+== Appendix
+Page counter does no longer increase.
+#show: touying-set-config.with(defer:true, (preamble:{codly(languages: codly-languages)}))
+== Deferred Config Change
+Now we have codly available.
 ```
 
 ## 冻结计数器

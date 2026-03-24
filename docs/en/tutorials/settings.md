@@ -2,7 +2,7 @@
 sidebar_position: 3
 ---
 
-# Global Settings
+# Settings and Config
 
 ## Global Styles
 
@@ -69,13 +69,14 @@ The `config-common(preamble: ...)` option lets you run setup code on every slide
   }),
 )
 ```
+However you may also set this locally for individual slides, see below.
 
-## Per-slide Config Overrides
+## Show-Rule Config Overrides
 
-You can override any configuration for a single slide or a range of slides using `#show: touying-set-config.with(...)`:
+You can override any configuration for all following slides and the current one, using `#show: touying-set-config.with(...)`, just like you would write a `show`/`set`-rule normally.
 
 ```example
-#import "@preview/touying:0.6.3": *
+#import "../lib.typ": *
 #import themes.simple: *
 
 #show: simple-theme.with(aspect-ratio: "16-9")
@@ -84,17 +85,60 @@ You can override any configuration for a single slide or a range of slides using
 
 This slide uses the default settings.
 
-#show: touying-set-config.with(config-page(fill: blue.lighten(80%)))
+
 
 == Blue Background Slide
-
+#show: touying-set-config.with(config-page(fill: blue.lighten(80%)))
 This slide has a blue background applied via `touying-set-config`.
 
-#show: touying-set-config.with(config-colors(primary: red))
-
 == Red Accent Slide
+#show: touying-set-config.with(config-colors(primary: red))
+This slide uses a red primary color, e.g. in `#alert` boxes.
 
-This slide uses a red primary color.
+#alert[This is an alert box with red accent color.]
+
+== Changed Cover
+#show: touying-set-config.with(config-methods(
+  cover: utils.semi-transparent-cover,
+))
+Initial Content.
+
+#pause
+
+Content that appears with a semi-transparent cover effect.
+```
+
+## Local Config Overrides
+If you want to affect only one specific slide, you can set the config locally via `#slide(config: ...)[...]`.
+```example
+>>> #import "../lib.typ": *
+>>> #import themes.simple: *
+
+>>> #show: simple-theme.with(aspect-ratio: "16-9")
+== Local Config 
+#slide(config:config-page(fill: purple.lighten(90%)))[
+Only this slide has a light purple background, but the next slide goes back being light blue.
+]
+```
+
+## Deferred Config Show Rules
+You may even defer a config change to the beginning of the next slide.
+This is also how `show: appendix` works, but also useful for setting a custom preamble or similar that affects not just the slide's content. (Note that config-common has no effect, you can also write your config dict without it.)
+
+```example
+>>> #import "../lib.typ": *
+>>> #import themes.simple: *
+
+>>> #show: simple-theme.with(aspect-ratio: "16-9")
+== Content Slide
+Some content.
+#show: touying-set-config.with(defer:true, config-common(appendix:true))
+// you can just write `show: appendix`
+== Appendix
+Page counter does no longer increase.
+#show: touying-set-config.with(defer:true, (preamble:{codly(languages: codly-languages)}))
+== Deferred Config Change
+Now we have codly available.
 ```
 
 ## Frozen Counters

@@ -45,7 +45,6 @@ Third
 
 #show: appendix
 
-
 #set heading(numbering: "A.1")
 #counter(heading).update((1, 0))
 // The cover change must take effect on the appendix slides.
