@@ -782,17 +782,17 @@
   repetitions: repetitions,
 ))<touying-temporary-mark>]
 
-// A raw version of `touying-fn-wrapper` that does not support `last-subslide` and `repetitions`. 
+// A raw version of `touying-fn-wrapper` that does not support `last-subslide` and `repetitions`.
 // It is for wrapping functions that should be affected by the repetition counter surrounding them.
 // e.g. `utils.alert`
-// 
+//
 // - fn (function): The function that will be called like `(self: none, ..args) => { .. }`.
-// 
+//
 // - args: The arguments to pass to the function. E.g. content
-// 
+//
 // -> content
 #let touying-fn-wrapper-raw(
-  fn, 
+  fn,
   ..args,
 ) = [#metadata((
   kind: "touying-fn-wrapper-raw",
@@ -2514,7 +2514,8 @@
             result.push(fn-result)
           }
         }
-      } else { //automatically collects raw fn wrapper
+      } else {
+        //automatically collects raw fn wrapper
         if repetitions <= index {
           result.push(child)
         } else {
@@ -3483,9 +3484,32 @@
               last-subslide = calc.max(last-subslide, child.value.last-subslide)
             }
           }
+          //check child.value.args for touying-fn-wrapper-raw. may only be in content, which always is positional
+          let pos-args = child
+            .value
+            .args
+            .pos()
+            .map(c => {
+              if (
+                type(c) == content
+                  and c.func() == metadata
+                  and type(c.value) == dictionary
+                  and c.value.at("kind", default: none)
+                    == "touying-fn-wrapper-raw"
+              ) {
+                (c.value.fn)(
+                  self: self,
+                  ..c.value.args,
+                )
+              } else {
+                c
+              }
+            })
+
           result.push((child.value.fn)(
             self: self,
-            ..child.value.args,
+            ..pos-args,
+            ..child.value.args.named(),
             ..extra-args,
           ))
           repetitions = nextrepetitions
@@ -3600,7 +3624,7 @@
               hidden-parts.push(child.value.body)
             }
           }
-        } else { 
+        } else {
           if repetitions <= index or not need-cover {
             result.push(child)
           } else {
