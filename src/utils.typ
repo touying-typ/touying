@@ -1235,7 +1235,8 @@
     }
   } else {
     panic(
-      "you may only provide a single integer, an array of integers, or a string",
+      "you may only provide a single integer, an array of integers, or a string, got:"
+        + repr(visible-subslides),
     )
   }
 }
