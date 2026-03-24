@@ -11,13 +11,15 @@
   slide-theme: simple-theme,
   document-theme: ef-document, //numbering: "1.1"
   config-common(
-    export-mode: "presentation",
+    export-mode: "document",
     handout-mode: false,
     show-hide-set-list-marker-none: true,
   ),
   config-info(
     title: [Document Mode Test],
     author: [Test Author],
+    subtitle: [Testing Touying's Document Mode],
+    date: datetime.today(),
   ),
   config-document(
     wrap-images: true, 
@@ -187,10 +189,10 @@ More text here. #lorem(15)
   #lorem(40)
 ]
 
-== Slide-Only Content
+== Slide/Presentation/Handout-Only Content
 
 #slides-only[
-  _This content only appears in the presentation or handout._
+  _This content only appears in the presentation or handout, not in the document._
 ]
 
 #presentation-only[

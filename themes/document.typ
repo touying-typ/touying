@@ -25,12 +25,20 @@
 /// - justify (bool): Whether to justify paragraphs. Default is `true`.
 /// - body (content): The document content.
 #let document-theme(
+  title: "Title",
+  subtitle: none,
+  author: "Author Name",
+  date: datetime.today(),
+  date-format: "[day].[month].[year]",
+  institution: none,
+  logo: none,
   text-size: 12pt,
   font: auto,
   numbering: none,
   paper: "a4",
   margin: (x: 2.5cm, y: 2.5cm),
   justify: true,
+  ..args,
   body,
 ) = {
   set text(size: text-size)
@@ -39,6 +47,28 @@
   set heading(numbering: numbering) if numbering != none
   set page(paper: paper, margin: margin)
   show figure.where(kind: table): set figure.caption(position: top)
+
+  // write header
+  align(center, block({
+    if logo != none {
+      image(logo, width: 1.5cm, height: 1.5cm)
+    }
+    block([
+      #std.title(title)
+
+      #let subtitle = if subtitle != none {text(subtitle, weight: "bold")} else {none}
+      #subtitle
+
+      #author
+
+      #institution 
+
+      #date.display(date-format)
+      ],
+      spacing: 0.2em
+    )},
+    spacing: 0.5em,
+  ))
 
   body
 }

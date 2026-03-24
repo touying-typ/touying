@@ -2266,6 +2266,7 @@
   if key == none { 
     let values = (:)
     for key in sys.inputs.keys() {
+      if key == "x-preview" {continue} // skip tinymist preview input
       let value = sys.inputs.at(key, default: none)
       values.insert(key, eval(value))
     }

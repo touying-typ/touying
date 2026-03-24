@@ -89,8 +89,9 @@
   )
 
   if export-mode == "document" {
+    let info = merged.at("info", default: (:))
     // Apply the document theme for styling (page, text, etc.)
-    show: doc-theme
+    show: doc-theme.with(..info)
 
     // Extract document config from merged configs
     let doc-cfg = merged.at("document", default: (:))
