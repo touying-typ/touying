@@ -3225,6 +3225,7 @@
 /// resolves them in topological order (roots first). Waypoints with
 /// `start: int` are resolved directly. Waypoints with `start: <label>`
 /// inherit the position of the referenced waypoint.
+/// Calling a non-existant parent of a hierarchical label will yield the position of the first child.
 ///
 /// Panics on circular dependencies.
 ///
@@ -3254,6 +3255,11 @@
       pending.insert(lbl, start)
     }
   }
+  //returns true if parent is an ancestor of child, i.e. if child starts with parent + ":"
+  let _check_parent_label(parent, child) = {
+    let prefix = parent + ":"
+    return child.starts-with(prefix)
+  }
 
   let max-iterations = pending.len() + 1
   let iteration = 0
@@ -3267,12 +3273,16 @@
     }
     let still-pending = (:)
     for (lbl, ref) in pending.pairs() {
-      if ref not in pending {
-        // The referenced waypoint is already resolved
+      let resolved-child = raw-waypoints.keys().sorted(key: k => raw-waypoints.at(k)).find(child => _check_parent_label(ref, child))
+      if ref not in pending or resolved-child != none {
+        // The referenced waypoint, or a child is already resolved
         assert(
-          ref in raw-waypoints,
+          ref in raw-waypoints or resolved-child != none,
           message: "waypoint start: references unknown waypoint <" + ref + ">",
         )
+        if resolved-child != none {
+          ref = resolved-child
+        }
         raw-waypoints.insert(lbl, raw-waypoints.at(ref))
       } else {
         still-pending.insert(lbl, ref)
