@@ -12,25 +12,32 @@
   body: body,
 ))<touying-temporary-mark>]
 
-/// Inject configuration changes into a block of content. Changes take effect only within `body`. Useful for implementing features like `#show: appendix`.
+/// Inject configuration changes into a block of content. Changes take effect only within `body`. Useful for implementing features like `#show: appendix` or changing the cover method on the fly.
 ///
-/// Example: `#let appendix(body) = touying-set-config((appendix: true), body)` and you can use `#show: appendix` to set the appendix for the presentation.
+/// Example: `#let appendix(body) = touying-set-config((appendix: true), defer:true, body)` and you can use `#show: appendix` to set the appendix for the presentation.
+///
+/// The keyword `defer` is useful for features like `appendix`, which should not take effect until the next slide starts. All following content is also then wrapped into the preamble, e.g. `counter-update`, set or other show rules. Putting content after a deferred config show rule will not render it visibly in the document.
+/// You may even use `#show: touying-set-config.with((preamble: fn), defer:true)` to set a preamble function for the next slide or do similar config changes without calling the `slide` function explicitly.
+/// Just relying on the deferred config change's ability to capture functions and running them also in the preamble is considered an antipattern.
 ///
 /// - config (dictionary): The new configurations for the presentation.
+///
+/// - defer (bool): Whether to defer applying the config changes until the next slides preamble. Default is false (apply immediately).
 ///
 /// - body (content): The content of the slide.
 ///
 /// -> content
-#let touying-set-config(config, body) = [#metadata((
+#let touying-set-config(config, defer: false, body) = [#metadata((
   kind: "touying-set-config",
   config: config,
+  defer: defer,
   body: body,
 ))<touying-temporary-mark>]
 
 
 /// Begin the appendix of the presentation. The slide counter is frozen at the last non-appendix slide, so appendix slides do not affect the total slide count shown in footers.
 ///
-/// Equivalent to `#show: touying-set-config.with((appendix: true))`.
+/// Equivalent to `#show: touying-set-config.with((appendix: true), defer: true)`.
 ///
 /// Example: `#show: appendix`
 ///
@@ -40,6 +47,7 @@
 #let appendix(body) = touying-set-config(
   (appendix: true),
   body,
+  defer: true,
 )
 
 
@@ -178,6 +186,7 @@
 // - recaller-map (dictionary): Map of slide labels to their content for recall functionality
 // - new-start (bool): Whether this is the start of a new slide section
 // - is-first-slide (bool): Whether this is the first slide of the presentation
+// - absorb-leading-preamble (bool): Whether to include the preamble content from before the next split
 // - body (content): The content to be split into slides
 //
 // -> content
@@ -186,6 +195,7 @@
   recaller-map: (:),
   new-start: true,
   is-first-slide: false,
+  absorb-leading-preamble: false,
   body,
 ) = {
   // Extract arguments
@@ -273,6 +283,8 @@
   let start-part = ()
   // result
   let output-slides = ()
+  // leading preamble to collect content from before the slide break
+  let leading-preamble = ()
 
   // Is we have a horizontal line
   let horizontal-line = false
@@ -286,21 +298,33 @@
         and child not in ([—], [---], [–], [--], [-])
     ) {
       slide-parts = utils.trim(slide-parts)
-      (
-        slide-content,
-        recaller-map,
-        current-headings,
-        slide-parts,
-        new-start,
-        is-first-slide,
-      ) = call-slide-fn-and-reset(
-        self + (headings: current-headings, is-first-slide: is-first-slide),
-        slide-fn,
-        slide-parts.sum(default: none),
-        recaller-map,
-      )
-      if slide-content != none { output-slides.push(slide-content) }
+      if slide-parts != () or current-headings != () {
+        let flush-self = (
+          self
+            + (
+              headings: current-headings,
+              is-first-slide: is-first-slide,
+              leading-preamble: leading-preamble,
+            )
+        )
+        leading-preamble = ()
+        (
+          slide-content,
+          recaller-map,
+          current-headings,
+          slide-parts,
+          new-start,
+          is-first-slide,
+        ) = call-slide-fn-and-reset(
+          flush-self,
+          slide-fn,
+          slide-parts.sum(default: none),
+          recaller-map,
+        )
+        if slide-content != none { output-slides.push(slide-content) }
+      }
       horizontal-line = false
+      absorb-leading-preamble = false
     }
     // Main logic
     if utils.is-kind(child, "touying-slide-wrapper") {
@@ -310,6 +334,15 @@
           or _get-slide-fn(self + (headings: current-headings), default: none)
             != none
       ) {
+        let flush-self = (
+          self
+            + (
+              headings: current-headings,
+              is-first-slide: is-first-slide,
+              leading-preamble: leading-preamble,
+            )
+        )
+        leading-preamble = ()
         (
           slide-content,
           recaller-map,
@@ -318,7 +351,7 @@
           new-start,
           is-first-slide,
         ) = call-slide-fn-and-reset(
-          self + (headings: current-headings, is-first-slide: is-first-slide),
+          flush-self,
           slide-fn,
           slide-parts.sum(default: none),
           recaller-map,
@@ -350,9 +383,19 @@
         ))
       }
       if slide-content != none { output-slides.push(slide-content) }
+      absorb-leading-preamble = false
     } else if utils.is-kind(child, "touying-slide-recaller") {
       slide-parts = utils.trim(slide-parts)
       if slide-parts != () or current-headings != () {
+        let flush-self = (
+          self
+            + (
+              headings: current-headings,
+              is-first-slide: is-first-slide,
+              leading-preamble: leading-preamble,
+            )
+        )
+        leading-preamble = ()
         (
           slide-content,
           recaller-map,
@@ -361,7 +404,7 @@
           new-start,
           is-first-slide,
         ) = call-slide-fn-and-reset(
-          self + (headings: current-headings, is-first-slide: is-first-slide),
+          flush-self,
           slide-fn,
           slide-parts.sum(default: none),
           recaller-map,
@@ -391,23 +434,36 @@
         )
         output-slides.push((recall-entry.callable)(recalled-self))
       }
+      absorb-leading-preamble = false
     } else if child in (pagebreak(), pagebreak(weak: true)) {
       // split content when we have a pagebreak
       slide-parts = utils.trim(slide-parts)
-      (
-        slide-content,
-        recaller-map,
-        current-headings,
-        slide-parts,
-        new-start,
-        is-first-slide,
-      ) = call-slide-fn-and-reset(
-        self + (headings: current-headings, is-first-slide: is-first-slide),
-        slide-fn,
-        slide-parts.sum(default: none),
-        recaller-map,
-      )
-      if slide-content != none { output-slides.push(slide-content) }
+      if slide-parts != () or current-headings != () {
+        let flush-self = (
+          self
+            + (
+              headings: current-headings,
+              is-first-slide: is-first-slide,
+              leading-preamble: leading-preamble,
+            )
+        )
+        leading-preamble = ()
+        (
+          slide-content,
+          recaller-map,
+          current-headings,
+          slide-parts,
+          new-start,
+          is-first-slide,
+        ) = call-slide-fn-and-reset(
+          flush-self,
+          slide-fn,
+          slide-parts.sum(default: none),
+          recaller-map,
+        )
+        if slide-content != none { output-slides.push(slide-content) }
+      }
+      absorb-leading-preamble = false
     } else if horizontal-line-to-pagebreak and child in ([—], [---]) {
       horizontal-line = true
       continue
@@ -428,17 +484,22 @@
           != none
           or child.depth <= last-heading-depth
           or slide-parts != ()
-          or (
-            child.depth == 1 and new-section-slide-fn != none
-          )
+          or (child.depth == 1 and new-section-slide-fn != none)
           or (child.depth == 2 and new-subsection-slide-fn != none)
-          or (
-            child.depth == 3 and new-subsubsection-slide-fn != none
-          )
+          or (child.depth == 3 and new-subsubsection-slide-fn != none)
           or (child.depth == 4 and new-subsubsubsection-slide-fn != none)
       ) {
         slide-parts = utils.trim(slide-parts)
         if slide-parts != () or current-headings != () {
+          let flush-self = (
+            self
+              + (
+                headings: current-headings,
+                is-first-slide: is-first-slide,
+                leading-preamble: leading-preamble,
+              )
+          )
+          leading-preamble = ()
           (
             slide-content,
             recaller-map,
@@ -447,7 +508,7 @@
             new-start,
             is-first-slide,
           ) = call-slide-fn-and-reset(
-            self + (headings: current-headings, is-first-slide: is-first-slide),
+            flush-self,
             slide-fn,
             slide-parts.sum(default: none),
             recaller-map,
@@ -458,6 +519,7 @@
 
       current-headings.push(child)
       new-start = true
+      absorb-leading-preamble = false
 
       if (
         not child.has("label")
@@ -560,53 +622,227 @@
         start-part.push(new-heading)
       }
     } else if utils.is-kind(child, "touying-set-config") {
-      slide-parts = utils.trim(slide-parts)
-      if slide-parts != () {
-        // Flush the current slide only when there is actual body content.
-        // If slide-parts is empty but current-headings is not, we skip
-        // the empty-body flush to avoid creating ghost pages (invisible
-        // slides that only contain hidden headings with no visible content).
-        // The pending headings are instead forwarded into the recursive
-        // processing by prepending them to the config body, so they are
-        // correctly associated with the first real content inside the
-        // touying-set-config block.
-        (
-          slide-content,
-          recaller-map,
-          current-headings,
-          slide-parts,
-          new-start,
-          is-first-slide,
-        ) = call-slide-fn-and-reset(
-          self + (headings: current-headings, is-first-slide: is-first-slide),
-          slide-fn,
-          slide-parts.sum(default: none),
-          recaller-map,
+      // When absorbing leading preamble and no heading seen yet, recurse with
+      // the merged config applied to self and the leading preamble prepended.
+      // Unlike styled nodes, config nodes have no .child — use .value.body.
+      // There is also nothing to reconstruct-styled: the config cascades via self.
+      if absorb-leading-preamble and current-headings == () {
+        let inner-body = if leading-preamble != () {
+          leading-preamble.sum(default: none) + child.value.body
+        } else {
+          child.value.body
+        }
+        leading-preamble = ()
+        output-slides.push(
+          split-content-into-slides(
+            self: utils.merge-dicts(self, child.value.config),
+            recaller-map: recaller-map,
+            new-start: true,
+            is-first-slide: is-first-slide,
+            absorb-leading-preamble: true,
+            inner-body,
+          ),
         )
-        if slide-content != none { output-slides.push(slide-content) }
-      }
-      // Forward any pending headings (accumulated before the touying-set-config
-      // with no body content between them) into the recursive body so they are
-      // associated with the first content inside the config block.
-      let pending-headings = current-headings
-      current-headings = ()
-      slide-parts = ()
-      let recursive-body = if pending-headings != () {
-        pending-headings.sum(default: none) + child.value.body
       } else {
-        child.value.body
+        slide-parts = utils.trim(slide-parts)
+        let is-deferred = child.value.at("defer", default: false)
+        // In probe mode (is-new-start=false), slide-parts starts empty by
+        // design — that alone must not trigger deferred. Only explicit
+        // defer:true, or actual-split mode (is-new-start) with no accumulated
+        // content, goes through the deferred path.
+        if is-deferred or (is-new-start and slide-parts == ()) {
+          // Deferred path: flush current slide (if any body content), then
+          // recursively process the config body as a fresh start with
+          // absorb-leading-preamble so counter-updates/metadata before the
+          // first heading are deferred, not ghost-flushed.
+          // For explicitly-deferred configs (e.g. appendix), also flush when
+          // current-headings is non-empty so the heading becomes a regular
+          // slide instead of leaking into the appendix body.
+          // For non-deferred configs that fire because slide-parts=(), do NOT
+          // flush the heading — it belongs to the config body and goes into
+          // pending-headings below.
+          if slide-parts != () or (is-deferred and current-headings != ()) {
+            let flush-self = (
+              self
+                + (
+                  headings: current-headings,
+                  is-first-slide: is-first-slide,
+                  leading-preamble: leading-preamble,
+                )
+            )
+            leading-preamble = ()
+            (
+              slide-content,
+              recaller-map,
+              current-headings,
+              slide-parts,
+              new-start,
+              is-first-slide,
+            ) = call-slide-fn-and-reset(
+              flush-self,
+              slide-fn,
+              slide-parts.sum(default: none),
+              recaller-map,
+            )
+            if slide-content != none { output-slides.push(slide-content) }
+          }
+          // Forward any pending headings and any accumulated leading-preamble
+          // into the recursive body so counter-updates and state changes that
+          // arrived before the first heading are not silently dropped.
+          // (When slide-parts was non-empty the flush above already cleared
+          // leading-preamble; when slide-parts was empty it was not cleared.)
+          let pending-headings = current-headings
+          current-headings = ()
+          slide-parts = ()
+          let recursive-body = {
+            let parts = ()
+            if leading-preamble != () {
+              parts.push(leading-preamble.sum(default: none))
+            }
+            if pending-headings != () {
+              parts.push(pending-headings.sum(default: none))
+            }
+            parts.push(child.value.body)
+            parts.sum(default: none)
+          }
+          leading-preamble = ()
+          output-slides.push(
+            split-content-into-slides(
+              self: utils.merge-dicts(self, child.value.config),
+              recaller-map: recaller-map,
+              new-start: true,
+              absorb-leading-preamble: true,
+              recursive-body,
+            ),
+          )
+        } else {
+          // Immediate path: slide-parts is non-empty and defer is false.
+          // Handle like styled content — split the config body, recombine
+          // pre-break content with the current slide, and emit the rest.
+          // This keeps mid-slide config changes (e.g. cover method) on the
+          // current slide so that #pause / #meanwhile still work.
+          let merged-self = utils.merge-dicts(self, child.value.config)
+          // Do NOT forward pending headings — they belong to the current
+          // slide and will be used when flushing.  Only use the raw config
+          // body for the probe so that start-part captures pre-break content.
+          // Probe the body for slide breaks.
+          let (
+            inner-start-part,
+            slide-content-part,
+          ) = split-content-into-slides(
+            self: merged-self,
+            recaller-map: recaller-map,
+            new-start: false,
+            child.value.body,
+          )
+          if slide-content-part != none {
+            // The config body contains slide-breaking content.
+            // Recombine pre-break content (inner-start-part) with the current
+            // slide, flush, then emit the remaining slides.
+            // In probe mode (new-start=false) push to start-part so the
+            // caller can collect it; in actual-split push to slide-parts.
+            // no is-first-slide branch needed here, unlike style nodes. is-first-slide already there from outside.
+            if inner-start-part != none {
+              if new-start {
+                slide-parts.push(inner-start-part)
+              } else {
+                start-part.push(inner-start-part)
+              }
+            }
+            slide-parts = utils.trim(slide-parts)
+            if slide-parts != () or current-headings != () {
+              let flush-self = (
+                merged-self
+                  + (
+                    headings: current-headings,
+                    is-first-slide: is-first-slide,
+                    leading-preamble: leading-preamble,
+                  )
+              )
+              (
+                slide-content,
+                recaller-map,
+                current-headings,
+                slide-parts,
+                new-start,
+                is-first-slide,
+              ) = call-slide-fn-and-reset(
+                flush-self,
+                slide-fn,
+                slide-parts.sum(default: none),
+                recaller-map,
+              )
+              if slide-content != none { output-slides.push(slide-content) }
+            }
+            current-headings = ()
+            slide-parts = ()
+            output-slides.push(slide-content-part)
+          } else {
+            // No slide breaks in the config body — all content stays on the
+            // current slide.  Flush immediately with the merged config since
+            // the config body wraps all remaining content (show-rule
+            // semantics) and the for-loop has no more children after this.
+            // In probe mode (new-start=false) push to start-part; in
+            // actual-split push to slide-parts.
+            if inner-start-part != none {
+              if new-start {
+                slide-parts.push(inner-start-part)
+              } else {
+                start-part.push(inner-start-part)
+              }
+            }
+            slide-parts = utils.trim(slide-parts)
+            if slide-parts != () or current-headings != () {
+              let flush-self = (
+                merged-self
+                  + (
+                    headings: current-headings,
+                    is-first-slide: is-first-slide,
+                    leading-preamble: leading-preamble,
+                  )
+              )
+              leading-preamble = ()
+              (
+                slide-content,
+                recaller-map,
+                current-headings,
+                slide-parts,
+                new-start,
+                is-first-slide,
+              ) = call-slide-fn-and-reset(
+                flush-self,
+                slide-fn,
+                slide-parts.sum(default: none),
+                recaller-map,
+              )
+              if slide-content != none { output-slides.push(slide-content) }
+            }
+            current-headings = ()
+            slide-parts = ()
+          }
+        }
       }
-      // Process the content with the new configuration
-      output-slides.push(
-        split-content-into-slides(
-          self: utils.merge-dicts(self, child.value.config),
+    } else if utils.is-styled(child) {
+      // When absorbing leading preamble and no heading seen yet, recurse into
+      // the styled node with absorb-leading-preamble: true. The set/show rules
+      // will propagate via reconstruct-styled on the output.
+      if absorb-leading-preamble and current-headings == () {
+        let inner-body = if leading-preamble != () {
+          leading-preamble.sum(default: none) + child.child
+        } else {
+          child.child
+        }
+        leading-preamble = ()
+        let inner-result = split-content-into-slides(
+          self: self,
           recaller-map: recaller-map,
           new-start: true,
-          recursive-body,
-        ),
-      )
-    } else {
-      if utils.is-styled(child) {
+          is-first-slide: is-first-slide,
+          absorb-leading-preamble: true,
+          inner-body,
+        )
+        output-slides.push(utils.reconstruct-styled(child, inner-result))
+      } else {
         // Split the content into slides recursively for styled content
         let (inner-start-part, slide-content-part) = split-content-into-slides(
           self: self,
@@ -618,12 +854,23 @@
           // The styled node contains slide-breaking content (e.g., headings that
           // trigger new slides).
           if is-first-slide {
-            // On the first slide, calling with new-start: false causes content after
-            // headings to land in start-part instead of slide-parts, resulting in
-            // slides with missing bodies. Re-call with new-start: true to build
-            // slides correctly, and flush any accumulated content beforehand.
+            // On the first slide, calling with new-start: false causes
+            // content after headings to land in start-part instead of slide-parts,
+            // resulting in slides with missing bodies. Re-call with new-start: true
+            // to build slides correctly, and flush any accumulated content beforehand.
+            // There is no previous slide to reconcile inner-start-part onto, so we
+            // do NOT attempt to reconcile it here.
             slide-parts = utils.trim(slide-parts)
             if slide-parts != () or current-headings != () {
+              let flush-self = (
+                self
+                  + (
+                    headings: current-headings,
+                    is-first-slide: is-first-slide,
+                    leading-preamble: leading-preamble,
+                  )
+              )
+              leading-preamble = ()
               (
                 slide-content,
                 recaller-map,
@@ -632,11 +879,7 @@
                 new-start,
                 is-first-slide,
               ) = call-slide-fn-and-reset(
-                self
-                  + (
-                    headings: current-headings,
-                    is-first-slide: is-first-slide,
-                  ),
+                flush-self,
                 slide-fn,
                 slide-parts.sum(default: none),
                 recaller-map,
@@ -670,9 +913,17 @@
                 start-part.push(styled-start)
               }
             }
-            // Flush the current slide before adding new slides
             slide-parts = utils.trim(slide-parts)
             if slide-parts != () or current-headings != () {
+              let flush-self = (
+                self
+                  + (
+                    headings: current-headings,
+                    is-first-slide: is-first-slide,
+                    leading-preamble: leading-preamble,
+                  )
+              )
+              leading-preamble = ()
               (
                 slide-content,
                 recaller-map,
@@ -681,11 +932,7 @@
                 new-start,
                 is-first-slide,
               ) = call-slide-fn-and-reset(
-                self
-                  + (
-                    headings: current-headings,
-                    is-first-slide: is-first-slide,
-                  ),
+                flush-self,
                 slide-fn,
                 slide-parts.sum(default: none),
                 recaller-map,
@@ -714,13 +961,17 @@
             start-part.push(styled-child)
           }
         }
+      }
+    } else {
+      if absorb-leading-preamble and current-headings == () {
+        // Before any heading is seen, accumulate as preamble to inject into
+        // the first real slide's content — avoids ghost slides from counter-updates
+        // and metadata injected by touying-set-config bodies.
+        leading-preamble.push(child)
+      } else if new-start {
+        slide-parts.push(child)
       } else {
-        if new-start {
-          // Add the child to the current slide
-          slide-parts.push(child)
-        } else {
-          start-part.push(child)
-        }
+        start-part.push(child)
       }
     }
   }
@@ -728,6 +979,15 @@
   // Handle the last slide
   slide-parts = utils.trim(slide-parts)
   if slide-parts != () or current-headings != () {
+    let flush-self = (
+      self
+        + (
+          headings: current-headings,
+          is-first-slide: is-first-slide,
+          leading-preamble: leading-preamble,
+        )
+    )
+    leading-preamble = ()
     (
       slide-content,
       recaller-map,
@@ -736,7 +996,7 @@
       new-start,
       is-first-slide,
     ) = call-slide-fn-and-reset(
-      self + (headings: current-headings, is-first-slide: is-first-slide),
+      flush-self,
       slide-fn,
       slide-parts.sum(default: none),
       recaller-map,
@@ -782,6 +1042,23 @@
   repetitions: repetitions,
 ))<touying-temporary-mark>]
 
+// A raw version of `touying-fn-wrapper` that does not support `last-subslide` and `repetitions`.
+// It is for wrapping functions that should be affected by the repetition counter surrounding them.
+// e.g. `utils.alert`
+//
+// - fn (function): The function that will be called like `(self: none, ..args) => { .. }`.
+//
+// - args: The arguments to pass to the function. E.g. content
+//
+// -> content
+#let touying-fn-wrapper-raw(
+  fn,
+  ..args,
+) = [#metadata((
+  kind: "touying-fn-wrapper-raw",
+  fn: fn,
+  args: args,
+))<touying-temporary-mark>]
 /// Wrapper for a slide function to make it can receive `self` as an argument.
 ///
 /// Notice: This function is necessary for the slide function to work in Touying.
@@ -1453,7 +1730,7 @@
     },
     subslides-contents,
     position: position,
-    stretch: false,
+    stretch: stretch,
   )
 }
 
@@ -1849,7 +2126,7 @@
 /// Alert is a way to display a message to the audience. It can be used to draw attention to important information or to provide instructions.
 ///
 /// -> content
-#let alert(body) = touying-fn-wrapper(utils.alert, body)
+#let alert(body) = touying-fn-wrapper-raw(utils.alert, body)
 
 
 /// Animated math equation. Use `pause` and `meanwhile` inside the equation body to reveal terms step by step.
@@ -2524,6 +2801,7 @@
           }
         }
       } else {
+        //automatically collects raw fn wrapper
         if repetitions <= index {
           result.push(child)
         } else {
@@ -3568,6 +3846,96 @@
     let result = ()
     let hidden-parts = ()
 
+    // Helper: is this content element a list/enum/terms item?
+    let _is-list-item(it) = (
+      type(it) == content
+        and (
+          it.func() == list.item
+            or it.func() == enum.item
+            or it.func() == terms.item
+        )
+    )
+
+    /// Flush the hidden-parts buffer as covered content.  `last-result` is the
+    /// current visible result array at the flush point.  We only wrap in
+    /// `block(spacing: par.leading)` when the last visible element AND the first
+    /// hidden element are both list/enum/terms items — i.e. a list interrupted
+    /// by `#pause`.  In all other cases (text→list, list→text, text→text) the
+    /// default paragraph spacing is correct.
+    let cover-hidden(cover-fn, items, last-result) = {
+      // First non-space hidden element
+      let first-pos = items.position(item => not utils.is-space(item))
+      let first-is-list = (
+        first-pos != none and _is-list-item(items.at(first-pos))
+      )
+
+      // Last non-space visible element (walk result backwards).
+      // We only skip space nodes — parbreaks and linebreaks are meaningful
+      // separators.  A parbreak between the last visible list item and the
+      // hidden zone means the user broke the implicit list with a blank line,
+      // so paragraph spacing should be used instead of list spacing.
+      let last-is-list = {
+        let found = false
+        for i in range(last-result.len()) {
+          let item = last-result.at(last-result.len() - 1 - i)
+          if utils.is-space(item) {
+            // skip space nodes only
+          } else {
+            found = _is-list-item(item)
+            break
+          }
+        }
+        found
+      }
+      let spacing-is-auto(it) = {
+        if it.func() == list.item {
+          list.spacing == auto
+        } else if it.func() == enum.item {
+          enum.spacing == auto
+        } else if it.func() == terms.item {
+          terms.spacing == auto
+        } else {
+          false
+        }
+      }
+      let covered = cover-fn(items.sum())
+      //decrease below spacing for rect cover functions
+      // if type(cover-fn) == function and (
+      //   cover-fn==utils.cover-with-rect or
+      //   cover-fn==utils.semi-transparent-cover
+      // ){
+      //   covered // does not fix it, but does not hurt: problem stems from box itself causing later content to be shifted? idk
+      // }else
+      if first-is-list and last-is-list {
+        let first-item = items.at(first-pos)
+        // construct a block around the covered content that corrects spacing. looks for auto
+        context block(
+          spacing: if spacing-is-auto(first-item) {
+            // would yield `auto` which is a par.spacing for the block.
+            if self.at("nontight-list-enum-and-terms", default: true) {
+              //cannot set list thightness via set rule somehow. if user uses magic.nontight locally we can't detect that, so we just assume he only uses the config. thus this might break.
+              par.spacing
+            } else {
+              par.leading
+            }
+          } else {
+            if first-item.func() == list.item {
+              list.spacing
+            } else if first-item.func() == enum.item {
+              enum.spacing
+            } else if first-item.func() == terms.item {
+              terms.spacing
+            } else {
+              par.spacing
+            }
+          },
+          covered,
+        )
+      } else {
+        covered
+      }
+    }
+
     // Flatten sequences and handle each child element
     let children = if utils.is-sequence(it) {
       it.children
@@ -3595,13 +3963,13 @@
             // If we jumped back into the visible zone, flush hidden-parts in order
             // (so they appear before subsequent visible content, not after it)
             if hidden-parts.len() != 0 and repetitions <= index {
-              result.push(cover(hidden-parts.sum()))
+              result.push(cover-hidden(cover, hidden-parts, result))
               hidden-parts = ()
             }
           } else {
             // absolute: reveal all hidden content then jump to target subslide
             if hidden-parts.len() != 0 {
-              result.push(cover(hidden-parts.sum()))
+              result.push(cover-hidden(cover, hidden-parts, result))
               hidden-parts = ()
             }
             max-repetitions = calc.max(max-repetitions, repetitions)
@@ -3693,12 +4061,48 @@
               last-subslide = calc.max(last-subslide, child.value.last-subslide)
             }
           }
+          //check child.value.args for touying-fn-wrapper-raw. may only be in content, which always is positional
+          let pos-args = child
+            .value
+            .args
+            .pos()
+            .map(c => {
+              if (
+                type(c) == content
+                  and c.func() == metadata
+                  and type(c.value) == dictionary
+                  and c.value.at("kind", default: none)
+                    == "touying-fn-wrapper-raw"
+              ) {
+                (c.value.fn)(
+                  self: self,
+                  ..c.value.args,
+                )
+              } else {
+                c
+              }
+            })
+
           result.push((child.value.fn)(
             self: self,
-            ..child.value.args,
+            ..pos-args,
+            ..child.value.args.named(),
             ..extra-args,
           ))
           repetitions = nextrepetitions
+        } else if kind == "touying-fn-wrapper-raw" {
+          // Handle raw function wrappers (e.g., #alert)
+          if repetitions <= index or not need-cover {
+            result.push((child.value.fn)(
+              self: self,
+              ..child.value.args,
+            ))
+          } else {
+            hidden-parts.push((child.value.fn)(
+              self: self,
+              ..child.value.args,
+            ))
+          }
         } else if kind == "touying-speaker-note" {
           // Handle speaker notes with optional #pause markers inside the note body.
           // Speaker notes always escape the pause zone (like fn-wrappers): they emit
@@ -3809,7 +4213,7 @@
       } else if child == linebreak() or child == parbreak() {
         // clear the hidden-parts when encounter linebreak or parbreak
         if hidden-parts.len() != 0 {
-          result.push(cover(hidden-parts.sum()))
+          result.push(cover-hidden(cover, hidden-parts, result))
           hidden-parts = ()
         }
         result.push(child)
@@ -3859,7 +4263,7 @@
         // Propagate meanwhile effect from inside the sequence
         if final-repetitions < repetitions {
           if hidden-parts.len() != 0 {
-            result.push(cover(hidden-parts.sum()))
+            result.push(cover-hidden(cover, hidden-parts, result))
             hidden-parts = ()
           }
           max-repetitions = calc.max(max-repetitions, repetitions)
@@ -3897,7 +4301,7 @@
         // Propagate meanwhile effect from inside the styled element
         if final-repetitions < repetitions {
           if hidden-parts.len() != 0 {
-            result.push(cover(hidden-parts.sum()))
+            result.push(cover-hidden(cover, hidden-parts, result))
             hidden-parts = ()
           }
           max-repetitions = calc.max(max-repetitions, repetitions)
@@ -3942,7 +4346,7 @@
         // Propagate meanwhile effect from inside the list item
         if final-repetitions < repetitions {
           if hidden-parts.len() != 0 {
-            result.push(cover(hidden-parts.sum()))
+            result.push(cover-hidden(cover, hidden-parts, result))
             hidden-parts = ()
           }
           max-repetitions = calc.max(max-repetitions, repetitions)
@@ -4008,7 +4412,7 @@
         // Propagate meanwhile effect from inside the table/grid/stack
         if final-repetitions < repetitions {
           if hidden-parts.len() != 0 {
-            result.push(cover(hidden-parts.sum()))
+            result.push(cover-hidden(cover, hidden-parts, result))
             hidden-parts = ()
           }
           max-repetitions = calc.max(max-repetitions, repetitions)
@@ -4057,7 +4461,7 @@
         // Propagate meanwhile effect from inside the reconstructable element
         if final-repetitions < repetitions {
           if hidden-parts.len() != 0 {
-            result.push(cover(hidden-parts.sum()))
+            result.push(cover-hidden(cover, hidden-parts, result))
             hidden-parts = ()
           }
           max-repetitions = calc.max(max-repetitions, repetitions)
@@ -4096,7 +4500,7 @@
         // Propagate meanwhile effect from inside the terms item
         if final-repetitions < repetitions {
           if hidden-parts.len() != 0 {
-            result.push(cover(hidden-parts.sum()))
+            result.push(cover-hidden(cover, hidden-parts, result))
             hidden-parts = ()
           }
           max-repetitions = calc.max(max-repetitions, repetitions)
@@ -4168,7 +4572,7 @@
         // Propagate meanwhile effect from inside the columns
         if final-repetitions < repetitions {
           if hidden-parts.len() != 0 {
-            result.push(cover(hidden-parts.sum()))
+            result.push(cover-hidden(cover, hidden-parts, result))
             hidden-parts = ()
           }
           max-repetitions = calc.max(max-repetitions, repetitions)
@@ -4239,7 +4643,7 @@
         // Propagate meanwhile effect from inside the place
         if final-repetitions < repetitions {
           if hidden-parts.len() != 0 {
-            result.push(cover(hidden-parts.sum()))
+            result.push(cover-hidden(cover, hidden-parts, result))
             hidden-parts = ()
           }
           max-repetitions = calc.max(max-repetitions, repetitions)
@@ -4310,7 +4714,7 @@
         // Propagate meanwhile effect from inside the rotate
         if final-repetitions < repetitions {
           if hidden-parts.len() != 0 {
-            result.push(cover(hidden-parts.sum()))
+            result.push(cover-hidden(cover, hidden-parts, result))
             hidden-parts = ()
           }
           max-repetitions = calc.max(max-repetitions, repetitions)
@@ -4337,7 +4741,7 @@
     }
     // clear the hidden-parts when end
     if hidden-parts.len() != 0 {
-      result.push(cover(hidden-parts.sum()))
+      result.push(cover-hidden(cover, hidden-parts, result))
       hidden-parts = ()
     }
     parsed-results.push(result.sum(default: []))
@@ -4666,6 +5070,17 @@
   }
 }
 
+
+#let _parse-negative-subslide-indices(self, idx) = {
+  if type(idx) == int and idx < 0 {
+    idx = self.repeat + idx + 1
+  }
+  if type(idx) == array {
+    idx = idx.map(i => if i < 0 { self.repeat + i + 1 } else { i })
+  }
+  idx
+}
+
 // Internal slide rendering function. Called by theme slide functions via `touying-slide-wrapper`.
 // See the public `slide` function for parameter documentation.
 #let touying-slide(
@@ -4725,6 +5140,12 @@
 
   // Slide and subslide preamble functions for setup and metadata
   let slide-preamble(self) = {
+    // do the leading function calls first
+    let leading-preamble = self
+      .at("leading-preamble", default: ())
+      .sum(default: none)
+    utils.call-or-display(self, leading-preamble)
+
     if self.at("is-first-slide", default: false) {
       utils.call-or-display(self, self.at("preamble", default: none))
       utils.call-or-display(self, self.at("default-preamble", default: none))
@@ -4923,10 +5344,48 @@
         ..bodies,
       )
       header = page-preamble(self) + header
-
-      return {
-        set page(
-          ..(self.page + page-extra-args + (header: header, footer: footer)),
+      set page(
+        ..(self.page + page-extra-args + (header: header, footer: footer)),
+      )
+      body-transform(setting-fn(
+        subslide-preamble(self) + composer-with-side-by-side(..conts),
+      ))
+    } else {
+      //negative indices in string not defined/supported, and they can even have ! for inversion.
+      let handout-subslides = _parse-negative-subslide-indices(
+        self,
+        handout-subslides,
+      )
+      // Render only the subslides that match handout-subslides
+      let handout-subslide-indices = range(1, repeat + 1).filter(
+        i => utils.check-visible(i, handout-subslides),
+      )
+      // Fall back to the last subslide if none match
+      if handout-subslide-indices.len() == 0 {
+        handout-subslide-indices = (repeat,)
+      }
+      let result = ()
+      for (pos, i) in handout-subslide-indices.enumerate() {
+        let is-first = pos == 0
+        let is-last = pos == handout-subslide-indices.len() - 1
+        let subslide-self = self
+        subslide-self.subslide = i
+        // Disable frozen states for handout multi-subslide rendering
+        subslide-self.enable-frozen-states-and-counters = false
+        // For non-first subslides, mark as a secondary handout page so that
+        // slide/page preambles and the slide counter are not repeated, while
+        // keeping handout: true so that handout-only content remains visible.
+        if not is-first {
+          subslide-self._handout-secondary = true
+        }
+        let (header-i, footer-i, body-transform-i) = _get-header-footer(
+          subslide-self,
+        )
+        let (conts, _, _, _, _) = _parse-content-into-results-and-repetitions(
+          self: subslide-self,
+          index: i,
+          show-delayed-wrapper: is-last,
+          ..bodies,
         )
         body-transform(setting-fn(
           subslide-preamble(self) + composer-with-side-by-side(..conts),
@@ -5015,7 +5474,7 @@
       (repeat,)
     } else if type(recall-spec) == int {
       // Explicit single subslide
-      (recall-spec,)
+      (_parse-negative-subslide-indices(self, recall-spec),)
     } else if type(recall-spec) == str and recall-spec == "waypoints" {
       // "waypoints" → last subslide of every waypoint
       let wp-map = self.at("waypoints", default: (:))
@@ -5150,15 +5609,27 @@
   composer: auto,
   ..bodies,
 ) = touying-slide-wrapper(self => {
-  touying-slide(
-    self: self,
-    config: config,
-    repeat: repeat,
-    setting: setting,
-    composer: composer,
-    ..bodies,
-  )
+  if self.slide-fn != slide {
+    let wrapper = (self.slide-fn)(
+      config: config,
+      repeat: repeat,
+      setting: setting,
+      composer: composer,
+      ..bodies,
+    )
+    (wrapper.value.fn)(self)
+  } else {
+    touying-slide(
+      self: self,
+      config: config,
+      repeat: repeat,
+      setting: setting,
+      composer: composer,
+      ..bodies,
+    )
+  }
 })
+
 
 
 /// Empty slide with no default heading or section context.

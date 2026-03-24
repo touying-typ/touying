@@ -144,7 +144,7 @@
       {
         components.left-and-right(
           {
-            text(size: 1.3em, text(weight: "medium", info.title))
+            text(size: 1.3em, weight: "medium", info.title)
             if info.subtitle != none {
               linebreak()
               text(size: 0.9em, info.subtitle)
