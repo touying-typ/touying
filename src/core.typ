@@ -3273,7 +3273,10 @@
     }
     let still-pending = (:)
     for (lbl, ref) in pending.pairs() {
-      let resolved-child = raw-waypoints.keys().sorted(key: k => raw-waypoints.at(k)).find(child => _check_parent_label(ref, child))
+      let resolved-child = raw-waypoints
+        .keys()
+        .sorted(key: k => raw-waypoints.at(k))
+        .find(child => _check_parent_label(ref, child))
       if ref not in pending or resolved-child != none {
         // The referenced waypoint, or a child is already resolved
         assert(
