@@ -1,6 +1,6 @@
 #import "/lib.typ": *
 #import themes.university: *
-#import "@preview/theorion:0.4.1": *
+#import "@preview/theorion:0.5.0": *
 #import cosmos.clouds: *
 #show: show-theorion
 
