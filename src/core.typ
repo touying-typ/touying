@@ -892,8 +892,27 @@
         panic("touying-slides-only: only-content should not contain slide breaking elements." + repr(slide-content-part))
       }
       slide-parts.push(inner-start-part)
-    } else {
-      if utils.is-styled(child) {
+    } else if utils.is-styled(child) {
+      // When absorbing leading preamble and no heading seen yet, recurse into
+      // the styled node with absorb-leading-preamble: true. The set/show rules
+      // will propagate via reconstruct-styled on the output.
+      if absorb-leading-preamble and current-headings == () {
+        let inner-body = if leading-preamble != () {
+          leading-preamble.sum(default: none) + child.child
+        } else {
+          child.child
+        }
+        leading-preamble = ()
+        let inner-result = split-content-into-slides(
+          self: self,
+          recaller-map: recaller-map,
+          new-start: true,
+          is-first-slide: is-first-slide,
+          absorb-leading-preamble: true,
+          inner-body,
+        )
+        output-slides.push(utils.reconstruct-styled(child, inner-result))
+      } else {
         // Split the content into slides recursively for styled content
         let (inner-start-part, slide-content-part) = split-content-into-slides(
           self: self,
