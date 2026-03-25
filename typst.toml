@@ -2,7 +2,7 @@
 name = "touying"
 version = "0.6.3"
 entrypoint = "lib.typ"
-authors = ["OrangeX4", "enklht", "zral0kh", "Andreas Kröpelin", "ntjess", "Enivex", "Pol Dellaiera", "pride7", "Coekjan"]
+authors = ["OrangeX4", "zral0kh", "enklht", "Andreas Kröpelin", "ntjess", "Enivex", "Pol Dellaiera", "pride7", "Coekjan"]
 license = "MIT"
 description = "A powerful package for creating presentation slides in Typst."
 repository = "https://github.com/touying-typ/touying"
