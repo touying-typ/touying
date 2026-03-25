@@ -4,6 +4,7 @@
   handout-only, item-by-item, jump, meanwhile, next-wp, not-wp, only, pause,
   prev-wp, presentation-only, slide, slides-only, speaker-note, touying-equation, touying-fn-wrapper,
   touying-mitex, touying-raw, touying-recall, touying-reducer,
+  touying-block-recall,
   touying-set-config, touying-slide, touying-slide-wrapper, uncover, until-wp,
   waypoint,
 )

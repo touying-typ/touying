@@ -702,7 +702,7 @@
 /// - wrap-image-figures (bool): Wrap image figures (image + caption) to the side via wrap-it. Default is `false`.
 /// - wrap-other-figures (bool): Wrap other figures (block + caption) to the side via wrap-it. Default is `false`.
 /// - wrap-other (bool): Wrap blocks (cetz canvases, tables, etc.) to the side. Default is `false`.
-/// - wrap-align-direction (str): The direction to wrap the content when `wrap-images`, `wrap-image-figures`, `wrap-other-figures`, or `wrap-other` is true. It can be either `"left"` or `"right"`. Default is `"right"`.
+/// - wrap-align-direction (direction): The direction to wrap the content when `wrap-images`, `wrap-image-figures`, `wrap-other-figures`, or `wrap-other` is true. It can be either `left` or `right`. Default is `right`.
 ///
 /// -> dictionary
 #let config-document(
@@ -854,7 +854,7 @@
     wrap-image-figures: false,
     wrap-other-figures: false,
     wrap-other: false,
-    wrap-align-direction: "right",
+    wrap-align-direction: right,
   ),
   config-store(),
 )

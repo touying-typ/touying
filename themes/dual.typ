@@ -51,7 +51,7 @@
 /// - document-theme (function, auto): The document theme function. Default is
 ///   the built-in `document-theme`. Any function `(body) => content` works.
 /// - args: Config overrides forwarded to both themes. Use `config-common(export-mode: ...)`
-///   to set the output mode (`"presentation"`, `"handout"`, `"slides"`, or `"document"`). Setting `"slides"` chooses "handout" or "presentation" mode based on `"handout-mode"`.
+///   to set the output mode (`"presentation"`, `"handout"`, `"slides"`, or `"document"`). Setting `"slides"` chooses "handout" or "presentation" based on `"handout-mode"`.
 ///   Also accepts `config-info(...)`, `config-document(...)`, etc.
 /// - body (content): The document content.
 #let dual-theme(
@@ -81,8 +81,8 @@
 
   // Resolve export-mode from the merged configs
   let merged = utils.merge-dicts(default-config, ..args.pos(), comp_args)
-  let export-mode = merged.at("export-mode", default: "presentation")
-
+  let export-mode = merged.at("export-mode", default: "slides")
+  // panic(merged)
   assert(
     export-mode in ("presentation", "handout", "slides", "document"),
     message: "export-mode must be \"presentation\", \"handout\", \"slides\", or \"document\"",

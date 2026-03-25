@@ -1,4 +1,4 @@
-#import "/lib.typ": *
+#import "../../../lib.typ": *
 
 
 #import themes.dual: *
@@ -9,10 +9,11 @@
 
 #show: dual-theme.with(
   slide-theme: simple-theme,
-  document-theme: ef-document, //numbering: "1.1"
+  // document-theme: ef-document, //numbering: "1.1"
+  document-theme: document-theme.with(numbering: "1.1"),
   config-common(
     export-mode: "document",
-    handout-mode: false,
+    handout: true,
     show-hide-set-list-marker-none: true,
   ),
   config-info(
@@ -101,32 +102,52 @@ More text here. #lorem(15)
   
    `wrap-images` is enabled. #lorem(80)
 ][
-  #image("./image.png", width: 80%)
+  #image("./image.png", width: 80%)<my-img>
 ]
 
 == Animated CeTZ Canvas
 
+//import and bindings
 #import "@preview/cetz:0.4.2"
 
 #let cetz-canvas = touying-reducer.with(
   reduce: cetz.canvas,
   cover: cetz.draw.hide.with(bounds: true),
 )
+//actual content
 
-#slide[
-  #cetz-canvas({
-    import cetz.draw: *
-    rect((0, 0), (4, 3), fill: blue.lighten(80%), stroke: blue)
-    (pause,)
-    circle((2, 1.5), radius: 0.8, fill: red.lighten(60%), stroke: red)
-    (pause,)
-    line((0, 0), (4, 3), stroke: 2pt + green)
-  })
+#lorem(25)
+#cetz-canvas(label: "doc-test-diagram",{
+  import cetz.draw: *
+  rect((0, 0), (4, 3), fill: blue.lighten(80%), stroke: blue)
+  (pause,)
+  circle((2, 1.5), radius: 0.8, fill: red.lighten(60%), stroke: red)
+  (pause,)
+  line((0, 0), (4, 3), stroke: 2pt + green)
+  (waypoint(<final>, advance:false),)
+})
 
-  #lorem(25)
+#document-text[
+
+  The animated CeTZ diagram is recalled at specific stages below inside this document-text.
+
+  Stage 1 (rectangle only):
+  #touying-block-recall(<doc-test-diagram>, subslides: 1)
+
+  Stage 2 (rectangle and circle):
+  #touying-block-recall(
+    <doc-test-diagram>,
+    subslides: 2,
+    supplement: [Graphic],
+  )<fig:cetz-stage2>
+
+  Final state (all elements):
+  #touying-block-recall(<doc-test-diagram>, subslides:<final>)
+
+  See @fig:cetz-stage2 for stage 2 of the animated diagram.
+
+  Also see #touying-block-recall(<my-img>)
 ]
-
-
 
 == Table Content
 
@@ -203,7 +224,7 @@ More text here. #lorem(15)
   _This content only appears in handouts, not during the live presentation._
 ]
 
-Some text visible in all modes. #lorem(15)
+Some text visible in all modes. Above we have content only in slides,presentation, or handout.
 
 == Document-Only Content
 Next section is only visible in document mode, hidden in slides (presentation and handout).
