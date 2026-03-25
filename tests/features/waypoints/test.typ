@@ -13,7 +13,7 @@
   cover: fletcher.hide,
 )
 
-#show: simple-theme.with()
+#show: simple-theme.with(footer-right: []) //don't display slide number anymore
 
 // -----------------------------------------------
 // Test 1: Explicit waypoint with uncover
@@ -182,6 +182,7 @@ A-2.
 B.
 
 #only(not-wp(get-first(<not-a>)))[Nearing B.]
+
 
 // -----------------------------------------------
 // Test 10: from-wp(next-wp()) and until-wp(prev-wp()) composition
@@ -914,4 +915,121 @@ Part B.
 #uncover(until-wp(get-last(<gu-a>)))[Until last of A (subslide 1 only).]
 #uncover(from-wp(get-last(<gu-a>)))[From last of A onward (subslides 2-3).]
 
+// -----------------------------------------------
+// Test 48: Waypoint with start: int
+// -----------------------------------------------
 
+== Start Int
+
+// Without start, waypoints land sequentially.
+// With start: 5, the waypoint is placed at subslide 5 regardless of position.
+
+#waypoint(<si-a>, advance: false)
+Phase A.
+
+#waypoint(<si-jump>, start: 3)
+Jumped to subslide 3.
+
+#only(<si-a>)[During A (subslides 1-2).]
+#only(<si-jump>)[During jump (subslide 3).]
+#only(get-first(<si-a>))[Exactly subslide 1.]
+#only(get-first(<si-jump>))[Exactly subslide 3.]
+
+// -----------------------------------------------
+// Test 50: Waypoint with start: <label>
+// -----------------------------------------------
+
+== Start Label
+
+// <sl-ref> is declared normally at subslide 2.
+// <sl-alias> uses start: <sl-ref> to share the same starting subslide.
+
+#waypoint(<sl-a>, advance: false)
+Phase A.
+
+#waypoint(<sl-ref>)
+Reference phase.
+
+#waypoint(<sl-alias>, start: <sl-ref>)
+ALIAS: With reference start.
+
+#only(<sl-a>)[During A (subslide 1).]
+#only(<sl-ref>)[During ref (subslide 2).]
+#only(get-first(<sl-alias>))[Alias first = ref first (subslide 2).]
+
+// -----------------------------------------------
+// Test 51: Waypoint start: <label> chain
+// -----------------------------------------------
+
+== Start Label Chain
+
+// <ch-a> is auto at subslide 2.
+// <ch-b> references <ch-a>, so also at subslide 2.
+// <ch-c> references <ch-b>, so also at subslide 2.
+Intro.
+#pause
+Content on subslide 2.
+
+#waypoint(<ch-a>, advance: false)
+A content.
+#waypoint(<ch-c>, start: <ch-b>)
+C content.
+#pause
+C continued.
+#waypoint(<ch-b>, start: <ch-a>)
+B content.
+
+#only(get-first(<ch-a>))[A first = 2.]
+#only(get-first(<ch-b>))[B first = 2 (via A).]
+#only(<ch-c>)[C = 2,3 (via B via A).]
+
+// -----------------------------------------------
+// Test 52: Waypoint start: int backward jump
+// -----------------------------------------------
+
+== Start Int/Label Backward
+
+// A waypoint can jump backward to an earlier subslide.
+
+#waypoint(<bk-a>, advance: false)
+Phase A.
+
+#pause
+Subslide 2.
+
+#pause
+Subslide 3.
+
+#waypoint(<bk-back>, start: 1)
+Back to 1. (with A)
+
+#pause
+Now at 2.
+
+#waypoint(<bk-again>, start: <bk-a>)
+1. #pause 2. #pause 3.
+
+#only(<bk-back>)[During first back (1,2).]
+#only(get-first(<bk-back>))[Back-jump lands on subslide 1.]
+
+== Test Alternatives with overlapping waypoints
+
+#waypoint(<alt-a>, advance: false)
+Phase A1.
+#pause
+Phase A2.
+
+#waypoint(<alt-b>, start: 2)
+Phase B1 (at A2).
+#pause
+Phase B2.
+#pause
+Phase B3.
+
+
+
+#only(<alt-a>)[Only during A.]
+
+#only(<alt-b>)[Only during B.]
+
+#alternatives(at: (<alt-a>, <alt-b>))[Alt A][Alt B]

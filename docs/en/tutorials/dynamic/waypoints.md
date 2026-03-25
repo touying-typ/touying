@@ -53,7 +53,7 @@ The implicit waypoint is only registered once per label (the first occurrence wi
 
 This produces 4 subslides: items appear on 2, 3, 4 (the implicit `<list>` waypoint advances to subslide 2), and `<done>` fires on subslide 5. 
 
-Note: Waypoints capture all subslides into their range until a new waypoint follows.
+> Note: Waypoints capture all subslides into their range until a new waypoint follows.
 
 ## Non-advancing Waypoints
 
@@ -106,10 +106,8 @@ You may even combine waypoint markers to specify the exact behaviour you need:
 ```
 
 
-
-
 ## Complex Example
-As previously hinted, waypoints can capture a range of subslides following them and you can reuse them later to refer to a whole range.
+As previously hinted, waypoints capture the range of subslides following them and you can reuse waypoints later to refer to a whole range.
 ```typst
 #slide(composer: (1fr, 1fr))[
   #item-by-item(start: <steps>)[
@@ -128,6 +126,28 @@ As previously hinted, waypoints can capture a range of subslides following them 
   ]
 ]
 ```
+
+## Explicit Waypoint Starts
+You may even set explicit start values for waypoints, both subslide indexes and other waypoints are possible.
+
+```typst
+#slide(composer: (1fr, 1fr))[
+  #item-by-item(start: <steps>)[
+    - Step one
+    - Step two
+    - Step three
+  ]
+  #pause
+  Some remark.
+  #uncover(<done>, start: 4)[All done, even before the remark!]
+][
+  #waypoint(<parallel>, start: <done>)
+  Explaining stuff.
+  #pause
+  More explanation.
+]
+```
+
 
 ## More Examples
 

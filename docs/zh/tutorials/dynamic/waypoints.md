@@ -53,7 +53,7 @@ sidebar_position: 7
 
 这将产生 4 个 subslides：项目分别出现在 2、3、4（隐式 `<list>` 路标前进到 subslide 2），`<done>` 在 subslide 5 触发。
 
-注意：路标会捕获其后的所有 subslides 直到下一个路标出现。
+> 注意：路标会捕获其后的所有 subslides 直到下一个路标出现。
 
 ## 非前向路标
 
@@ -107,7 +107,7 @@ sidebar_position: 7
 
 ## 综合示例
 
-如前所述，路标可以捕获其后的一系列 subslides，你也可以在之后引用整个范围。
+如前所述，路标会捕获其后的一系列 subslides，你也可以复用路标来引用整个范围。
 
 ```typst
 #slide(composer: (1fr, 1fr))[
@@ -125,6 +125,28 @@ sidebar_position: 7
   ][
     _Complete!_
   ]
+]
+```
+
+## 显式路标起点
+
+你还可以为路标设置显式的起点值，既可以使用 subslide 索引，也可以使用其他路标：
+
+```typst
+#slide(composer: (1fr, 1fr))[
+  #item-by-item(start: <steps>)[
+    - Step one
+    - Step two
+    - Step three
+  ]
+  #pause
+  Some remark.
+  #uncover(<done>, start: 4)[All done, even before the remark!]
+][
+  #waypoint(<parallel>, start: <done>)
+  Explaining stuff.
+  #pause
+  More explanation.
 ]
 ```
 
