@@ -1194,6 +1194,23 @@
 ///    - An array, e.g. `(1, 2, 4)` — equivalent to `"1, 2, 4"`.
 ///    - A string with ranges, e.g. `"-2, 4, 6-8, 10-"` — subslides 1, 2, 4, 6, 7, 8, 10, and all after 10.
 ///
+/// Resolve negative subslide indices relative to a total repeat count.
+/// E.g. `-1` becomes the last subslide, `-2` the second-to-last.
+///
+/// - repeat (int): Total number of subslides.
+/// - idx (int, array): A subslide index or array of indices.
+///
+/// -> int or array
+#let resolve-negative-subslides(repeat, idx) = {
+  if type(idx) == int and idx < 0 {
+    repeat + idx + 1
+  } else if type(idx) == array {
+    idx.map(i => if type(i) == int and i < 0 { repeat + i + 1 } else { i })
+  } else {
+    idx
+  }
+}
+
 /// -> bool
 #let check-visible(idx, visible-subslides) = {
   if type(visible-subslides) == int {

@@ -13,7 +13,7 @@
   document-theme: document-theme.with(numbering: "1.1"),
   config-common(
     export-mode: "document",
-    handout: true,
+    handout: false,
     show-hide-set-list-marker-none: true,
   ),
   config-info(
@@ -117,49 +117,69 @@ More text here. #lorem(15)
 //actual content
 
 #lorem(25)
-#cetz-canvas(label: "doc-test-diagram",{
+#pause
+#let ccanvas = cetz-canvas(label: "doc-test-diagram",{
   import cetz.draw: *
   rect((0, 0), (4, 3), fill: blue.lighten(80%), stroke: blue)
   (pause,)
   circle((2, 1.5), radius: 0.8, fill: red.lighten(60%), stroke: red)
   (pause,)
-  line((0, 0), (4, 3), stroke: 2pt + green)
+  (only(4, line((0, 0), (4, 3), stroke: 2pt + green)),)
   (waypoint(<final>, advance:false),)
-})
+}, length: 30pt)
+#ccanvas
+
 
 #document-text[
 
   The animated CeTZ diagram is recalled at specific stages below inside this document-text.
 
   Stage 1 (rectangle only):
-  #touying-block-recall(<doc-test-diagram>, subslides: 1)
+  #touying-block-recall(<doc-test-diagram>, subslide: 1)
 
   Stage 2 (rectangle and circle):
-  #touying-block-recall(
-    <doc-test-diagram>,
-    subslides: 2,
+  #figure(
+    scale(20%, reflow:true)[#touying-block-recall(
+      <doc-test-diagram>,
+      subslide: 2,
+      base: 2, //accounts for the outer context
+    )],
     supplement: [Graphic],
   )<fig:cetz-stage2>
 
   Final state (all elements):
-  #touying-block-recall(<doc-test-diagram>, subslides:<final>)
+  #touying-block-recall(<doc-test-diagram>, subslide:4, base:2)
 
   See @fig:cetz-stage2 for stage 2 of the animated diagram.
+  Also see #lorem(20)
+  // #align(center)
+  #rotate(45deg)[#align(center)[#block(width: (1./0.8)*100%, touying-block-recall(<my-img>))]] 
+  and 
+  #touying-block-recall(<my-table>, subslide: 1) for recalls of the image and table used in this document.
+  // #lorem(10)
+  // #image("./image.png", width: 100%)<my-img2>
 
-  Also see #touying-block-recall(<my-img>)
+
+  And here again the canvas via variable based subslide render: 
+  #touying-render(ccanvas, subslide:1)
 ]
 
 == Table Content
-
+// #show: touying-set-config.with(config-methods(
+//     cover: utils.method-wrapper((body)=>{if body.func() == table.cell { [] } else { hide(body) }}),
+//   ))
 #slide(composer: (1fr, 1fr))[
+  
   #table(
     columns: 2,
-    [Header 1], [Header 2],
-    [Cell 1], [Cell 2],
+    [Header 1], [Header 2], pause,
+    [Cell 1], [Cell 2], pause,
     [Cell 3], [Cell 4],
   )
+  <my-table>
 ][
   Some text next to the table. #lorem(15)
+  #image("./image.png", width: 20%)<small-img>
 ]
 
 == Figure with Image
