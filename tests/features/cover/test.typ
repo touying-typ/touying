@@ -20,19 +20,25 @@ Regular content here.#pause This content appears |with semi-transparent cover ef
 
 == Text Blocks with Semi-transparent Cover
 
-#figure(
-  rect(fill: red, height: 1pt),
-  caption: [A red rectangle.],
-)
+// #figure(
+//   rect(fill: red, height: 1pt),
+//   caption: [A red rectangle.],
+// )
+#skew[Normal text block]
+// Normal Text
 #pause
 #show skew: set text(2em)
-#skew(ax: 0deg)[Block Text]
+
+#{
+  show par: set text(2em)
+  align(center)[Big ff text]
+}
 #pause
+
+#skew(ax: 0deg)[Big ff text.]
+#pause
+
 #rotate(0deg)[Not Rotated]
-
-#rotate(0deg)[Not Rotated 2]
-
-#rotate(0deg)[Not Rotated 3]
 
 
 
@@ -104,7 +110,7 @@ More semi-transparent text.
   cover: utils.alpha-changing-cover.with(
     alpha: 25%,
     fallback-hide: utils.semi-transparent-cover,
-    fallback-hide-args: (alpha: 40%),
+    fallback-hide-args: (alpha: 75%),
   ),
 ))
 

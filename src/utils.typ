@@ -1004,6 +1004,7 @@
   ..cover-args,
   fill: auto,
   inline: auto,
+  is-first: false,
   body,
 ) = {
   if fill == auto {
@@ -1042,13 +1043,15 @@
   if body.func() == typst-builtin-sequence {
     let bodies = body.children
     return bodies
-      .map(b => cover-with-rect(
-        self: self,
-        ..cover-args,
-        fill: fill,
-        inline: inline,
-        b,
-      ))
+      .map(b => {
+        cover-with-rect(
+          self: self,
+          ..cover-args,
+          fill: fill,
+          inline: inline,
+          b,
+        )
+      })
       .sum(default: none)
   }
 
@@ -1091,9 +1094,19 @@
     // a single box won't cause overflow issues.  strike doesn't work on math.
     let to-display = layout(layout-size => {
       context {
-        let body-size = measure(body)
+        let new-body-func = if not body.func() in (align, math.equation) {
+          (body.func())
+        } else {
+          par
+        }
+
+        let m-body = body
+        if body.func() == align {
+          m-body = par(body.body)
+        }
+        let body-size = measure(m-body)
         let bounding-width = calc.min(body-size.width, layout-size.width)
-        let wrapped-body-size = measure(box(body, width: bounding-width))
+        let wrapped-body-size = measure(box(m-body, width: bounding-width))
 
         let named = cover-args.named()
         if "width" not in named {
@@ -1105,11 +1118,13 @@
         if "outset" not in named {
           // Inline math needs extra outset for superscripts/limits (top)
           // and subscripts with descenders like g, y, p (bottom)
-          let top-outset = if inline { 0.35 * text.size } else {
-            0.15 * text.size
+          // let math-text-size = measure($X g$).height
+          let real-text-size = measure(new-body-func([Xg])).height
+          let top-outset = if inline { 0.35 * real-text-size } else {
+            0.15 * real-text-size
           }
-          let bottom-outset = if inline { 0.4 * text.size } else {
-            0.25 * text.size
+          let bottom-outset = if inline { 0.65 * real-text-size } else {
+            0.45 * real-text-size
           }
           named.insert("outset", (top: top-outset, bottom: bottom-outset))
         }
@@ -1117,36 +1132,56 @@
           named.at("width") = layout-size.width
         }
 
-        //calculate the extra required padding on top and bottom bc the non-covered text gives this to the layout, but stack kills it.
-        let extra-spacing = if body.has("body") and body.body.func() == text {
-          (
-            ((1.6 * measure((body.func())[Xg]).height / text.size) - 1)
-              * par.spacing
-          )
-        } else { 0pt }
+        //calculate the extra required padding on top and bottom bc the non-covered text gives this to the layout, but wrapping text twice in a box kills it.
+        // this is required when you switch between non-text block to text block or the size changes, but somehow the spacing gets eaten when two large text blocks follow each other, then this is wrong. but we cannot detect that.
+        let extra = if (
+          (body.has("body") and body.body.func() == text)
+            or body.func() in (align, math.equation)
+        ) {
+          ((1.52 * measure(new-body-func([Xg])).height / text.size) - 1)
+        } else { 0 }
+        let extra-top = (
+          extra * if block.above == auto { par.spacing } else { block.above }
+        )
+        let extra-bottom = (
+          extra * if block.below == auto { par.spacing } else { block.below }
+        )
 
         stack(
           spacing: -wrapped-body-size.height,
-          pad(top: extra-spacing, body),
-          pad(bottom: extra-spacing, rect(
-            fill: fill,
-            ..named,
-            ..cover-args.pos(),
-          )),
+          if body.func() in (align, place) {
+            pad(top: extra-top, {
+              body
+              v(0pt)
+            }) //somehow the v element allows text to be the true height even when wrapped in pad.
+          } else {
+            pad(top: extra-top, body)
+          },
+          {
+            pad(
+              rect(
+                fill: fill,
+                ..named,
+                ..cover-args.pos(),
+              ),
+              bottom: extra-bottom,
+            )
+          },
         )
-        // let on-top(inline: false, ..args) = {
-        //   if inline {box(place(..args))} else {place(..args)}
-        //   sym.wj
-        //   h(0pt, weak:true)
-        // }
-        // {
-        //   pdf.artifact(on-top(
+        //debug
+        // [#metadata(
+        //   (
+        //     func: "cover-with-rect",
+        //     pos: cover-args.pos(),
+        //     named: cover-args.named(),
+        //     body-func: body.func(),
+        //     body-type: type(body),
         //     inline: inline,
-        //     rect(fill: fill, ..named, ..cover-args.pos(), ..cover-args.named()),
-        //     dy: if inline {-wrapped-body-size.height} else {wrapped-body-size.height},
-        //   ))
-        //   body
-        // }
+        //     repr: repr(body),
+        //     height: wrapped-body-size.height,
+        //     extra: extra,
+        //   ),
+        // )<dbg>]
       }
     })
     if inline {
@@ -1157,18 +1192,6 @@
       // so it preserves native spacing (e.g. skew, figure, etc.).
       to-display
     }
-    //debug
-    [#metadata(
-      (
-        func: "cover-with-rect",
-        pos: cover-args.pos(),
-        named: cover-args.named(),
-        body-func: body.func(),
-        body-type: type(body),
-        inline: inline,
-        repr: repr(body),
-      ),
-    )<dbg>]
   }
 }
 
@@ -1260,7 +1283,6 @@
   if fallback-hide == none {
     _fallback-hide = it => it
   }
-  show regex(".+"): set text(color)
   if not _contains-text(it, transparentize-table) {
     if _fallback-hide in (semi-transparent-cover, cover-with-rect) {
       _fallback-hide(self: self, it, ..fallback-hide-args)
@@ -1268,6 +1290,7 @@
       _fallback-hide(it)
     }
   } else {
+    show regex(".+"): set text(color)
     it
   }
 }
@@ -1300,9 +1323,7 @@
   if fallback-hide == none {
     _fallback-hide = it => it
   }
-  show regex(".+"): el => context {
-    text(update-alpha(text.fill, alpha), el)
-  }
+
   if not _contains-text(it, transparentize-table) {
     if _fallback-hide in (semi-transparent-cover, cover-with-rect) {
       _fallback-hide(self: self, it, ..fallback-hide-args)
@@ -1310,6 +1331,9 @@
       _fallback-hide(it)
     }
   } else {
+    show regex(".+"): el => context {
+      text(update-alpha(text.fill, alpha), el)
+    }
     it
   }
 }
