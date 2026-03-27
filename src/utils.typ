@@ -213,7 +213,6 @@
   }
 }
 
-
 /// Reconstruct a table-like content with new children.
 ///
 /// - named (bool): Whether to pass fields as named arguments. Default is `true`.
@@ -939,20 +938,50 @@
   })
 }
 /// true for all typst content that is not inline.
-#let is-block(it) = { // whenever sth is wrapped in a box it is automatically inlined.
-  //first get the variable stuff 
+#let is-block(it) = {
+  // whenever sth is wrapped in a box it is automatically inlined.
+  //first get the variable stuff
   if it.func() in (math.equation, raw, quote) {
     return it.block
   }
-  it.func() in (
-    // model stuff
-    figure, footnote.entry, heading, enum, list, terms, par, table, title,
-    // text stuff already checked above, as can be both
-    // layout stuff
-    align, block, columns, grid, move, pad, place, repeat, rotate, scale, skew, stack,
-    // visual stuff, 
-    // (path is deprecated)
-    circle, curve, ellipse, image, line, polygon, rect, square,
+  (
+    it.func()
+      in (
+        // model stuff
+        figure,
+        footnote.entry,
+        heading,
+        enum,
+        list,
+        terms,
+        par,
+        table,
+        title,
+        // text stuff already checked above, as can be both
+        // layout stuff
+        align,
+        block,
+        columns,
+        grid,
+        move,
+        pad,
+        place,
+        repeat,
+        rotate,
+        scale,
+        skew,
+        stack,
+        // visual stuff,
+        // (path is deprecated)
+        circle,
+        curve,
+        ellipse,
+        image,
+        line,
+        polygon,
+        rect,
+        square,
+      )
   )
 }
 
@@ -986,7 +1015,25 @@
   if type(fill) == str {
     fill = rgb(fill)
   }
-
+  if body == none {
+    return []
+  }
+  //handle all sorts of weird wrappers and space-like content
+  if body.func() == typst-builtin-styled {
+    // unwrap styled content and re-apply style after covering, to avoid the
+    // cover rect being wrapped in the styled element which can cause issues
+    // with certain styles (e.g. `set text-color(red)` would make the rect red)
+    return reconstruct-styled(
+      body,
+      cover-with-rect(
+        self: self,
+        ..cover-args,
+        fill: fill,
+        inline: inline,
+        body.child,
+      ),
+    )
+  }
   //skip space/empty content
   if body.func() in (parbreak, linebreak, typst-builtin-space, h, v) {
     return body
@@ -994,32 +1041,49 @@
   // split up sequences to find actual content types
   if body.func() == typst-builtin-sequence {
     let bodies = body.children
-    return bodies.map(b => cover-with-rect(
-      self: self,
-      ..cover-args,
-      fill: fill,
-      inline: inline,
-      b,
-    )).sum(default: none)
+    return bodies
+      .map(b => cover-with-rect(
+        self: self,
+        ..cover-args,
+        fill: fill,
+        inline: inline,
+        b,
+      ))
+      .sum(default: none)
   }
 
   if inline == auto {
     inline = not is-block(body)
   }
 
+  //debug colors keep these!!!
+  // fill = if body.func() == math.equation {
+  //   rgb(0, 0, 255, 50%)
+  // } else if inline {
+  //   rgb(0, 255, 0, 50%)
+  // } else {
+  //   rgb(255, 0, 0, 50%)
+  // }
   if inline and body.func() != math.equation {
     // For inline content, use strike with a thick stroke to overlay a colored
     // bar per line fragment.  strike is line-break-aware: it renders per
     // fragment during layout, so text wraps naturally (no rigid box).
-    // The stroke thickness covers the full text height plus ascender/descender
-    // margins so the entire line fragment is covered.
+    // Measure body wrapped in par() to pick up show rules like
+    // `show par: set text(2em)` that affect the actual rendered size.
     context {
+      // Measure a reference character wrapped in par() to pick up show rules
+      // like `show par: set text(2em)` that affect rendered text size.
+      let h = measure(par[Xg]).height
       strike(
-        stroke: 1.1 * text.size + fill,
-        offset: -0.2 * text.size,
-        extent: 0.05 * text.size,
+        stroke: 1.6 * h + fill,
+        offset: -0.35 * h,
+        extent: 0.05 * h,
         body,
       )
+      //debug
+      // [#metadata(
+      //   (func: "cover-with-rect/inline", pos: cover-args.pos(), named: cover-args.named(), body-func: body.func(), body-type: type(body), inline: inline, repr: repr(body), height: h),
+      // )<dbg>]
     }
   } else {
     // For block content and inline math, measure and overlay with stack.
@@ -1030,6 +1094,7 @@
         let body-size = measure(body)
         let bounding-width = calc.min(body-size.width, layout-size.width)
         let wrapped-body-size = measure(box(body, width: bounding-width))
+
         let named = cover-args.named()
         if "width" not in named {
           named.insert("width", wrapped-body-size.width)
@@ -1040,25 +1105,70 @@
         if "outset" not in named {
           // Inline math needs extra outset for superscripts/limits (top)
           // and subscripts with descenders like g, y, p (bottom)
-          let top-outset = if inline { 0.35 * text.size } else { 0.15 * text.size }
-          let bottom-outset = if inline { 0.4 * text.size } else { 0.25 * text.size }
+          let top-outset = if inline { 0.35 * text.size } else {
+            0.15 * text.size
+          }
+          let bottom-outset = if inline { 0.4 * text.size } else {
+            0.25 * text.size
+          }
           named.insert("outset", (top: top-outset, bottom: bottom-outset))
         }
         if not inline {
           named.at("width") = layout-size.width
         }
+
+        //calculate the extra required padding on top and bottom bc the non-covered text gives this to the layout, but stack kills it.
+        let extra-spacing = if body.has("body") and body.body.func() == text {
+          (
+            ((1.6 * measure((body.func())[Xg]).height / text.size) - 1)
+              * par.spacing
+          )
+        } else { 0pt }
+
         stack(
           spacing: -wrapped-body-size.height,
-          body,
-          rect(fill: fill, ..named, ..cover-args.pos()),
+          pad(top: extra-spacing, body),
+          pad(bottom: extra-spacing, rect(
+            fill: fill,
+            ..named,
+            ..cover-args.pos(),
+          )),
         )
+        // let on-top(inline: false, ..args) = {
+        //   if inline {box(place(..args))} else {place(..args)}
+        //   sym.wj
+        //   h(0pt, weak:true)
+        // }
+        // {
+        //   pdf.artifact(on-top(
+        //     inline: inline,
+        //     rect(fill: fill, ..named, ..cover-args.pos(), ..cover-args.named()),
+        //     dy: if inline {-wrapped-body-size.height} else {wrapped-body-size.height},
+        //   ))
+        //   body
+        // }
       }
     })
-    if inline { //inline math comes here, as strike doesn't work on math content
+    if inline {
+      //inline math comes here, as strike doesn't work on math content
       box(to-display)
     } else {
+      // Reconstruct the original block element around the covered content
+      // so it preserves native spacing (e.g. skew, figure, etc.).
       to-display
     }
+    //debug
+    [#metadata(
+      (
+        func: "cover-with-rect",
+        pos: cover-args.pos(),
+        named: cover-args.named(),
+        body-func: body.func(),
+        body-type: type(body),
+        inline: inline,
+        repr: repr(body),
+      ),
+    )<dbg>]
   }
 }
 
@@ -1085,8 +1195,9 @@
 /// - body (content): The content to cover.
 ///
 /// -> content
-#let semi-transparent-cover(self: none, alpha: 85%, body) = {
+#let semi-transparent-cover(self: none, alpha: 85%, ..cover-args, body) = {
   cover-with-rect(
+    ..cover-args,
     fill: update-alpha(
       self.page.at("fill", default: rgb("#ffffff")),
       alpha,
@@ -1133,7 +1244,7 @@
 /// - transparentize-table (bool): Whether to transparentize table content. Default is `false`.
 ///
 /// - it (content): The content to cover.
-/// 
+///
 /// - fallback-hide-args (dict): The named arguments to pass to the fallback hide function if the content does not contain text.
 ///
 /// -> content
@@ -1146,13 +1257,13 @@
   it,
 ) = {
   let _fallback-hide = fallback-hide
-  if fallback-hide==none {
+  if fallback-hide == none {
     _fallback-hide = it => it
   }
   show regex(".+"): set text(color)
   if not _contains-text(it, transparentize-table) {
     if _fallback-hide in (semi-transparent-cover, cover-with-rect) {
-      _fallback-hide(self:self, it, ..fallback-hide-args)
+      _fallback-hide(self: self, it, ..fallback-hide-args)
     } else {
       _fallback-hide(it)
     }
@@ -1173,7 +1284,7 @@
 /// - transparentize-table (bool): Whether to transparentize table content. Default is `false`.
 ///
 /// - it (content): The content to cover.
-/// 
+///
 /// - fallback-hide-args (args): The arguments to pass to the fallback hide function if the content does not contain text.
 ///
 /// -> content
@@ -1194,7 +1305,7 @@
   }
   if not _contains-text(it, transparentize-table) {
     if _fallback-hide in (semi-transparent-cover, cover-with-rect) {
-      _fallback-hide(self:self, it, ..fallback-hide-args)
+      _fallback-hide(self: self, it, ..fallback-hide-args)
     } else {
       _fallback-hide(it)
     }
