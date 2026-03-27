@@ -938,6 +938,23 @@
     }
   })
 }
+/// true for all typst content that is not inline.
+#let is-block(it) = { // whenever sth is wrapped in a box it is automatically inlined.
+  //first get the variable stuff 
+  if it.func() in (math.equation, raw, quote) {
+    return it.block
+  }
+  it.func() in (
+    // model stuff
+    figure, footnote.entry, heading, enum, list, terms, par, table, title,
+    // text stuff already checked above, as can be both
+    // layout stuff
+    align, block, columns, grid, move, pad, place, repeat, rotate, scale, skew, stack,
+    // visual stuff, 
+    // (path is deprecated)
+    circle, curve, ellipse, image, line, polygon, rect, square,
+  )
+}
 
 
 /// Cover content with a rectangle of a specified color. If you set the fill to the background color of the page, you can use this to create a semi-transparent overlay.
@@ -948,7 +965,7 @@
 ///
 /// - fill (color): The color to fill the rectangle with.
 ///
-/// - inline (bool): Indicates whether the content should be displayed inline. Default is `true`.
+/// - inline (bool): Indicates whether the content should be displayed inline. Default is `auto`. It is determined based on content type, not inline for block content and inline for inline content.
 ///
 /// - body (content): The content to cover.
 ///
@@ -957,7 +974,7 @@
   self: none,
   ..cover-args,
   fill: auto,
-  inline: true,
+  inline: auto,
   body,
 ) = {
   if fill == auto {
@@ -970,39 +987,78 @@
     fill = rgb(fill)
   }
 
-  let to-display = layout(layout-size => {
+  //skip space/empty content
+  if body.func() in (parbreak, linebreak, typst-builtin-space, h, v) {
+    return body
+  }
+  // split up sequences to find actual content types
+  if body.func() == typst-builtin-sequence {
+    let bodies = body.children
+    return bodies.map(b => cover-with-rect(
+      self: self,
+      ..cover-args,
+      fill: fill,
+      inline: inline,
+      b,
+    )).sum(default: none)
+  }
+
+  if inline == auto {
+    inline = not is-block(body)
+  }
+
+  if inline and body.func() != math.equation {
+    // For inline content, use strike with a thick stroke to overlay a colored
+    // bar per line fragment.  strike is line-break-aware: it renders per
+    // fragment during layout, so text wraps naturally (no rigid box).
+    // The stroke thickness covers the full text height plus ascender/descender
+    // margins so the entire line fragment is covered.
     context {
-      let body-size = measure(body)
-      let bounding-width = calc.min(body-size.width, layout-size.width)
-      let wrapped-body-size = measure(box(body, width: bounding-width))
-      let named = cover-args.named()
-      if "width" not in named {
-        named.insert("width", wrapped-body-size.width)
-      }
-      if "height" not in named {
-        named.insert("height", wrapped-body-size.height)
-      }
-      if "outset" not in named {
-        // This outset covers the tops of tall letters and the bottoms of letters with
-        // descenders. Alternatively, we could use
-        // `set text(top-edge: "bounds", bottom-edge: "bounds")` to get the same effect,
-        // but this changes text alignment and also misaligns bullets in enums/lists.
-        // In contrast, `outset` preserves spacing and alignment at the cost of adding
-        // a slight, visible border when the covered object is right next to the edge
-        // of a color change.
-        named.insert("outset", (top: 0.15em, bottom: 0.25em))
-      }
-      stack(
-        spacing: -wrapped-body-size.height,
+      strike(
+        stroke: 1.1 * text.size + fill,
+        offset: -0.2 * text.size,
+        extent: 0.05 * text.size,
         body,
-        rect(fill: fill, ..named, ..cover-args.pos()),
       )
     }
-  })
-  if inline {
-    box(to-display)
   } else {
-    to-display
+    // For block content and inline math, measure and overlay with stack.
+    // Blocks don't need to line-wrap, and inline math is short enough that
+    // a single box won't cause overflow issues.  strike doesn't work on math.
+    let to-display = layout(layout-size => {
+      context {
+        let body-size = measure(body)
+        let bounding-width = calc.min(body-size.width, layout-size.width)
+        let wrapped-body-size = measure(box(body, width: bounding-width))
+        let named = cover-args.named()
+        if "width" not in named {
+          named.insert("width", wrapped-body-size.width)
+        }
+        if "height" not in named {
+          named.insert("height", wrapped-body-size.height)
+        }
+        if "outset" not in named {
+          // Inline math needs extra outset for superscripts/limits (top)
+          // and subscripts with descenders like g, y, p (bottom)
+          let top-outset = if inline { 0.35 * text.size } else { 0.15 * text.size }
+          let bottom-outset = if inline { 0.4 * text.size } else { 0.25 * text.size }
+          named.insert("outset", (top: top-outset, bottom: bottom-outset))
+        }
+        if not inline {
+          named.at("width") = layout-size.width
+        }
+        stack(
+          spacing: -wrapped-body-size.height,
+          body,
+          rect(fill: fill, ..named, ..cover-args.pos()),
+        )
+      }
+    })
+    if inline { //inline math comes here, as strike doesn't work on math content
+      box(to-display)
+    } else {
+      to-display
+    }
   }
 }
 
@@ -1072,23 +1128,34 @@
 ///
 /// - color (color): The color to apply to text when covered. Default is `gray`.
 ///
-/// - fallback-hide (bool): Whether to hide the content if it does not contain text. Default is `true`.
+/// - fallback-hide (func): The function to use to hide the content if it does not contain text. Default is typst's own `hide`. You may pass `none` to not hide non-text content. To hide content with a semi-transparent/color overlay, you can pass in `semi-transparent-cover`/`cover-with-rect.with(fill: ...)`.
 ///
 /// - transparentize-table (bool): Whether to transparentize table content. Default is `false`.
 ///
 /// - it (content): The content to cover.
+/// 
+/// - fallback-hide-args (dict): The named arguments to pass to the fallback hide function if the content does not contain text.
 ///
 /// -> content
 #let color-changing-cover(
   self: none,
   color: gray,
-  fallback-hide: true,
+  fallback-hide: hide,
   transparentize-table: false,
+  fallback-hide-args: (:),
   it,
 ) = {
+  let _fallback-hide = fallback-hide
+  if fallback-hide==none {
+    _fallback-hide = it => it
+  }
   show regex(".+"): set text(color)
   if not _contains-text(it, transparentize-table) {
-    hide(it)
+    if _fallback-hide in (semi-transparent-cover, cover-with-rect) {
+      _fallback-hide(self:self, it, ..fallback-hide-args)
+    } else {
+      _fallback-hide(it)
+    }
   } else {
     it
   }
@@ -1101,25 +1168,36 @@
 ///
 /// - alpha (ratio): The opacity to apply to text colors when covered. Default is `25%`.
 ///
-/// - fallback-hide (bool): Whether to hide the content if it does not contain text. Default is `true`.
+/// - fallback-hide (func): The function to use to hide the content if it does not contain text. Default is typst's own `hide`. You may pass `none` to not hide non-text content. To hide content with a semi-transparent/color overlay, you can pass in `semi-transparent-cover`/`cover-with-rect.with(fill: ...)`.
 ///
 /// - transparentize-table (bool): Whether to transparentize table content. Default is `false`.
 ///
 /// - it (content): The content to cover.
+/// 
+/// - fallback-hide-args (args): The arguments to pass to the fallback hide function if the content does not contain text.
 ///
 /// -> content
 #let alpha-changing-cover(
   self: none,
   alpha: 25%,
-  fallback-hide: true,
+  fallback-hide: hide,
   transparentize-table: false,
+  fallback-hide-args: (:),
   it,
 ) = context {
-  show regex(".+"): it => context {
-    text(update-alpha(text.fill, alpha), it)
+  let _fallback-hide = fallback-hide
+  if fallback-hide == none {
+    _fallback-hide = it => it
+  }
+  show regex(".+"): el => context {
+    text(update-alpha(text.fill, alpha), el)
   }
   if not _contains-text(it, transparentize-table) {
-    hide(it)
+    if _fallback-hide in (semi-transparent-cover, cover-with-rect) {
+      _fallback-hide(self:self, it, ..fallback-hide-args)
+    } else {
+      _fallback-hide(it)
+    }
   } else {
     it
   }
