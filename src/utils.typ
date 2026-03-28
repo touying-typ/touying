@@ -641,11 +641,9 @@
 
         let current-level = current-heading.level
         if current-level == 1 {
-          setting-args-named = merge-dicts(_setting-args, (
+          setting-args-named = merge-dicts(setting-args-named, (
             setting: text.with(.715em),
           ))
-          // } else if current-level == 2 {
-          //   setting-args-named = merge-dicts(_setting-args, (setting: text.with(.835em)))
         } //else do nothing
       }
       _style(..setting-args-named, ..setting-args.pos(), current-heading)
