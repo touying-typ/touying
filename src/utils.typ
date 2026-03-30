@@ -318,7 +318,7 @@
 }
 
 
-/// Determine if a content is a heading in a specific depth.
+/// Determine if a content is a heading up to specific depth.
 ///
 /// - it (content): The content to check.
 ///
@@ -543,6 +543,34 @@
   }
 }
 
+#let reconstruct-heading(it, new-body, ..args) = {
+  assert(
+    type(it) == content and it.func() == heading,
+    message: "it must be a heading",
+  )
+  let heading-args = (
+    numbering: it.numbering,
+    bookmarked: it.bookmarked,
+    depth: it.depth,
+    offset: it.offset,
+    outlined: it.outlined,
+    hanging-indent: it.hanging-indent,
+    supplement: it.supplement,
+  )
+  if args != (:) { heading-args = merge-dicts(heading-args, args.named()) }
+
+  if it.has("label") {
+    return [#heading(
+        ..heading-args,
+        new-body,
+      )#it.label]
+  }
+  heading(
+    ..heading-args,
+    new-body,
+  )
+}
+
 
 /// Display the current heading on the page.
 ///
@@ -588,19 +616,37 @@
     )
     if current-heading != none {
       if style == none {
-        current-heading
-      } else if style == auto {
+        return current-heading
+      }
+
+      let setting-args-named = setting-args.named()
+      let _style = style
+      if style == auto {
+        _style = (
+          setting: body => body,
+          numbered: true,
+          current-heading,
+        ) => setting({
+          if numbered and current-heading.numbering != none {
+            (
+              std.numbering(
+                current-heading.numbering,
+                ..counter(heading).at(current-heading.location()),
+              )
+                + h(.3em)
+            )
+          }
+          current-heading.body
+        })
+
         let current-level = current-heading.level
         if current-level == 1 {
-          text(.715em, current-heading)
-        } else if current-level == 2 {
-          text(.835em, current-heading)
-        } else {
-          current-heading
-        }
-      } else {
-        style(..setting-args, current-heading)
+          setting-args-named = merge-dicts(setting-args-named, (
+            setting: text.with(.715em),
+          ))
+        } //else do nothing
       }
+      _style(..setting-args-named, ..setting-args.pos(), current-heading)
     }
   }
 )
