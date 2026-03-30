@@ -6,6 +6,7 @@
 #import "parser.typ": (
   _collect-waypoints, _find-reducer-meta,
   _parse-content-into-results-and-repetitions, _parse-touying-reducer,
+  _prepare-render-context, _render-at-subslide,
 )
 
 /// Content that replaces the slide content when in document mode. Place it after your slide, before the next one.
@@ -617,53 +618,31 @@
       )
     } else if utils.is-kind(child, "touying-slide-recaller") {
       return _empty
+    } else if utils.is-kind(child, "touying-block-recall") {
+      panic(
+        "touying-block-recall can only be used inside document-text or document-only blocks. "
+          + "It appeared at the top level of the document. "
+          + "Wrap it in #document-text[...] or #document-only[...].",
+      )
     } else if utils.is-kind(child, "touying-render") {
       let v = child.value
       let render-base = if v.at("base", default: auto) == auto { 1 } else {
         v.at("base")
       }
-      let inline-content = v.content
-      let reducer-data = _find-reducer-meta(inline-content)
-      let (raw-wp, so, dr) = _collect-waypoints(inline-content)
-      let resolved-wp = _resolve-waypoint-forest(raw-wp, so)
-      let max-rep-raw = if reducer-data != none {
-        let (_, mrr) = _parse-touying-reducer(
-          self: self + (waypoints: (:), subslide: 9999),
-          base: render-base,
-          index: 9999,
-          reducer-data,
-        )
-        mrr
-      } else {
-        let (_, mrr, _, _, _) = _parse-content-into-results-and-repetitions(
-          self: self + (waypoints: (:), subslide: 9999),
-          base: render-base,
-          index: 9999,
-          inline-content,
-        )
-        mrr
-      }
-      let repeat = calc.max(max-rep-raw, ..resolved-wp.values(), 1)
-      let cwp = _compute-waypoint-ranges(resolved-wp, repeat, so, dr)
+      let (reducer-data, cwp, repeat, _) = _prepare-render-context(
+        self,
+        v.content,
+        render-base,
+      )
       let target = if v.subslide == auto { repeat } else { v.subslide }
-      let render-self = self + (waypoints: cwp, subslide: target)
-      let cont = if reducer-data != none {
-        let (r, _) = _parse-touying-reducer(
-          self: render-self,
-          base: render-base,
-          index: target,
-          reducer-data,
-        )
-        r.sum(default: none)
-      } else {
-        let (conts, _, _, _, _) = _parse-content-into-results-and-repetitions(
-          self: render-self,
-          base: render-base,
-          index: target,
-          inline-content,
-        )
-        conts.sum(default: none)
-      }
+      let cont = _render-at-subslide(
+        self,
+        v.content,
+        reducer-data,
+        cwp,
+        render-base,
+        target,
+      )
       return (
         items: if cont != none { (cont,) } else { () },
         images: (),
@@ -874,43 +853,6 @@
       return subslide-indices.map(i => render-at(i)).sum(default: none)
     }
 
-    // Prepare content + waypoints + repeat from inline content (for touying-render).
-    let _prepare-inline-content(inline-content) = {
-      let reducer-data = _find-reducer-meta(inline-content)
-      let (raw-waypoints, start-overrides, decl-reps) = _collect-waypoints(
-        inline-content,
-      )
-      let resolved-waypoints = _resolve-waypoint-forest(
-        raw-waypoints,
-        start-overrides,
-      )
-      let max-rep-raw = if reducer-data != none {
-        let (_, mrr) = _parse-touying-reducer(
-          self: self + (waypoints: (:), subslide: 9999),
-          base: 1,
-          index: 9999,
-          reducer-data,
-        )
-        mrr
-      } else {
-        let (_, mrr, _, _, _) = _parse-content-into-results-and-repetitions(
-          self: self + (waypoints: (:), subslide: 9999),
-          base: 1,
-          index: 9999,
-          inline-content,
-        )
-        mrr
-      }
-      let repeat = calc.max(max-rep-raw, ..resolved-waypoints.values(), 1)
-      let content-waypoints = _compute-waypoint-ranges(
-        resolved-waypoints,
-        repeat,
-        start-overrides,
-        decl-reps,
-      )
-      (inline-content, content-waypoints, repeat)
-    }
-
     if type(body) != content { return body }
 
     // touying-block-recall: look up label in block-recall-map, then delegate to _render-content
@@ -952,20 +894,22 @@
         and body.value.at("kind", default: none) == "touying-render"
     ) {
       let v = body.value
-      let render-base = v.at("base", default: auto)
-      // In document mode, auto resolves to 1 (no slide context)
-      let render-base = if render-base == auto { 1 } else { render-base }
-      let (inline-content, content-waypoints, repeat) = _prepare-inline-content(
+      let render-base = if v.at("base", default: auto) == auto { 1 } else {
+        v.at("base")
+      }
+      let (reducer-data, cwp, repeat, _) = _prepare-render-context(
+        self,
         v.content,
+        render-base,
       )
-      let reducer-data = _find-reducer-meta(v.content)
-      return _render-content(
-        inline-content,
+      let target = if v.subslide == auto { repeat } else { v.subslide }
+      return _render-at-subslide(
+        self,
+        v.content,
         reducer-data,
-        content-waypoints,
-        repeat,
-        v.subslide,
-        base: render-base,
+        cwp,
+        render-base,
+        target,
       )
     }
     // Recurse into sequences

@@ -1587,69 +1587,15 @@
           let render-base = if use-slide-context { repetitions } else {
             child.value.base
           }
-          let reducer-data = _find-reducer-meta(inline-content)
-          // When using slide context (auto), use the slide's waypoints;
-          // otherwise collect waypoints from the inline content.
-          // content-mrr: max repetitions from the inline content's own animation
-          // (used to update outer repetitions when subslide: auto).
-          let (cwp, rp, content-mrr) = if use-slide-context {
-            let max-rep-raw = if reducer-data != none {
-              let (_, mrr) = _parse-touying-reducer(
-                self: self + (waypoints: (:), subslide: 9999),
-                base: render-base,
-                index: 9999,
-                reducer-data,
-              )
-              mrr
-            } else {
-              let (
-                _,
-                mrr,
-                _,
-                _,
-                _,
-              ) = _parse-content-into-results-and-repetitions(
-                self: self + (waypoints: (:), subslide: 9999),
-                base: render-base,
-                index: 9999,
-                inline-content,
-              )
-              mrr
-            }
-            (
-              self.at("waypoints", default: (:)),
-              self.at("repeat", default: 1),
-              max-rep-raw,
-            )
+          let (reducer-data, content-cwp, content-repeat, content-mrr) = (
+            _prepare-render-context(self, inline-content, render-base)
+          )
+          // When using slide context (auto), use the slide's waypoints
+          // for target resolution; otherwise use the content's own waypoints.
+          let (cwp, rp) = if use-slide-context {
+            (self.at("waypoints", default: (:)), self.at("repeat", default: 1))
           } else {
-            let (raw-wp, so, dr) = _collect-waypoints(inline-content)
-            let resolved-wp = _resolve-waypoint-forest(raw-wp, so)
-            let max-rep-raw = if reducer-data != none {
-              let (_, mrr) = _parse-touying-reducer(
-                self: self + (waypoints: (:), subslide: 9999),
-                base: render-base,
-                index: 9999,
-                reducer-data,
-              )
-              mrr
-            } else {
-              let (
-                _,
-                mrr,
-                _,
-                _,
-                _,
-              ) = _parse-content-into-results-and-repetitions(
-                self: self + (waypoints: (:), subslide: 9999),
-                base: render-base,
-                index: 9999,
-                inline-content,
-              )
-              mrr
-            }
-            let rp = calc.max(max-rep-raw, ..resolved-wp.values(), 1)
-            let cwp = _compute-waypoint-ranges(resolved-wp, rp, so, dr)
-            (cwp, rp, max-rep-raw)
+            (content-cwp, content-repeat)
           }
           let target = if subslide-spec == auto { index } else {
             let spec = subslide-spec
@@ -1674,30 +1620,14 @@
               utils.resolve-negative-subslides(rp, spec)
             } else { rp }
           }
-          let render-self = self + (waypoints: cwp, subslide: target)
-          let cont = if reducer-data != none {
-            let (r, _) = _parse-touying-reducer(
-              self: render-self,
-              base: render-base,
-              index: target,
-              reducer-data,
-            )
-            r.sum(default: none)
-          } else {
-            let (
-              conts,
-              _,
-              _,
-              _,
-              _,
-            ) = _parse-content-into-results-and-repetitions(
-              self: render-self,
-              base: render-base,
-              index: target,
-              inline-content,
-            )
-            conts.sum(default: none)
-          }
+          let cont = _render-at-subslide(
+            self,
+            inline-content,
+            reducer-data,
+            cwp,
+            render-base,
+            target,
+          )
           if cont != none {
             result.push(cont)
           }
@@ -1862,6 +1792,11 @@
             }
           }
           // No visible output.
+        } else if kind == "touying-block-recall" {
+          panic(
+            "touying-block-recall can only be used inside document-text or document-only blocks. "
+              + "Use touying-render instead to render animated content in slides.",
+          )
         } else if kind == "touying-delayed-wrapper" {
           if show-delayed-wrapper {
             if repetitions <= index or not need-cover {
@@ -2421,5 +2356,65 @@
     repetitions,
     has-fn-wrapper,
   )
+}
+
+
+/// Prepare the rendering context for a touying-render node.
+/// Computes waypoints, max repetitions, and reducer metadata from inline content.
+///
+/// Returns: `(reducer-data, cwp, repeat, max-rep-raw)`
+/// - `reducer-data`: reducer metadata dict if content is a reducer, else `none`
+/// - `cwp`: computed waypoint ranges
+/// - `repeat`: max repetitions (including waypoints)
+/// - `max-rep-raw`: raw max repetitions from the content's animation (before waypoints)
+#let _prepare-render-context(self, inline-content, render-base) = {
+  let reducer-data = _find-reducer-meta(inline-content)
+  let (raw-wp, so, dr) = _collect-waypoints(inline-content)
+  let resolved-wp = _resolve-waypoint-forest(raw-wp, so)
+  let max-rep-raw = if reducer-data != none {
+    let (_, mrr) = _parse-touying-reducer(
+      self: self + (waypoints: (:), subslide: 9999),
+      base: render-base,
+      index: 9999,
+      reducer-data,
+    )
+    mrr
+  } else {
+    let (_, mrr, _, _, _) = _parse-content-into-results-and-repetitions(
+      self: self + (waypoints: (:), subslide: 9999),
+      base: render-base,
+      index: 9999,
+      inline-content,
+    )
+    mrr
+  }
+  let repeat = calc.max(max-rep-raw, ..resolved-wp.values(), 1)
+  let cwp = _compute-waypoint-ranges(resolved-wp, repeat, so, dr)
+  (reducer-data, cwp, repeat, max-rep-raw)
+}
+
+
+/// Render inline content at a specific target subslide.
+///
+/// Returns: rendered content (or `none`)
+#let _render-at-subslide(self, inline-content, reducer-data, cwp, render-base, target) = {
+  let render-self = self + (waypoints: cwp, subslide: target)
+  if reducer-data != none {
+    let (r, _) = _parse-touying-reducer(
+      self: render-self,
+      base: render-base,
+      index: target,
+      reducer-data,
+    )
+    r.sum(default: none)
+  } else {
+    let (conts, _, _, _, _) = _parse-content-into-results-and-repetitions(
+      self: render-self,
+      base: render-base,
+      index: target,
+      inline-content,
+    )
+    conts.sum(default: none)
+  }
 }
 

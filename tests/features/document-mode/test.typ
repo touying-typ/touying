@@ -129,7 +129,6 @@ More text here. #lorem(15)
 }, length: 30pt)
 #ccanvas
 
-#touying-block-recall(<doc-test-diagram>, subslide: 1, base: 2)
 #document-text[
 
   The animated CeTZ diagram is recalled at specific stages below inside this document-text.
