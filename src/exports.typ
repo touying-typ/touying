@@ -2,9 +2,10 @@
   alert, alternatives, alternatives-cases, alternatives-fn, alternatives-match,
   appendix, effect, empty-slide, from-wp, get-first, get-last, handout-only,
   item-by-item, jump, meanwhile, next-wp, not-wp, only, pause, prev-wp, slide,
-  speaker-note, touying-equation, touying-fn-wrapper, touying-mitex,
-  touying-raw, touying-recall, touying-reducer, touying-set-config,
-  touying-slide, touying-slide-wrapper, uncover, until-wp, waypoint,
+  speaker-note, touying-equation, touying-fn-wrapper, touying-get-config,
+  touying-mitex, touying-raw, touying-recall, touying-reducer,
+  touying-set-config, touying-slide, touying-slide-wrapper, uncover, until-wp,
+  waypoint,
 )
 #import "configs.typ": (
   config-colors, config-common, config-info, config-methods, config-page,
