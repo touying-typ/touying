@@ -860,12 +860,13 @@
 #let _size-to-pt(size, container-dimension) = {
   let to-convert = size
   if type(size) == fraction {
-    let fr = repr(size*1000000) //avoid capped precision
-    to-convert = float(fr.slice(0, fr.len()-2)) / 1000000
+    let fr = repr(size * 1000000) //avoid capped precision
+    to-convert = float(fr.slice(0, fr.len() - 2)) / 1000000
   }
-  if type(to-convert) in (int, float, ratio) { //nice just a multiplication
-    to-convert = container-dimension * to-convert 
-  }else {
+  if type(to-convert) in (int, float, ratio) {
+    //nice just a multiplication
+    to-convert = container-dimension * to-convert
+  } else {
     to-convert = measure(v(to-convert)).height //get in pt if em
   }
   to-convert
@@ -933,7 +934,7 @@
       let h-ratio = available-height / size.height
       let w-ratio = mutable-width / size.width
       let ratio = calc.min(h-ratio, w-ratio) * 100%
-      
+
       if ((shrink and (ratio < 100%)) or (grow and (ratio > 100%))) {
         let new-width = size.width * ratio
         scale(
