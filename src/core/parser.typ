@@ -1762,7 +1762,7 @@
         } else if kind == "touying-block-recall" {
           panic(
             "touying-block-recall can only be used inside document-text or document-only blocks. "
-              + "Use touying-render instead to render animated content in slides.",
+              + "Use touying-render instead to render animated blocks at specific subslides.",
           )
         } else if kind == "touying-delayed-wrapper" {
           if show-delayed-wrapper {

@@ -242,14 +242,7 @@
   } else {
     (body,)
   }
-  // convert all sequence to array recursively, and then flatten the array
-  let sequence-to-array(it) = {
-    if utils.is-sequence(it) {
-      it.children.map(sequence-to-array)
-    } else {
-      it
-    }
-  }
+  
 
   let _check-current-mode-skip(self, lbl) = {
     if lbl == none or not lbl.starts-with("touying:") { return false }
@@ -278,7 +271,7 @@
     not in-slides and not in-document
   }
 
-  children = children.map(sequence-to-array).flatten()
+  children = children.map(utils.sequence-to-array).flatten()
   let call-slide-fn-and-reset(
     self,
     slide-fn,
@@ -895,10 +888,8 @@
       // Document-only content — silently skip here, as this is not reachable in document mode
       continue
     } else if utils.is-kind(child, "touying-slides-only") {
-      //for presentation, handout and both
-      //debug
-      let _ = [slides-only body: #repr(child.value.body)]
       // Slides-only content — inline the body in slides mode
+      //for presentation, handout and both
       let (inner-start-part, slide-content-part) = split-content-into-slides(
         self: self,
         recaller-map: recaller-map,
