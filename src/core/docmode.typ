@@ -497,15 +497,7 @@
   } else {
     (body,)
   }
-  // Flatten nested sequences
-  let sequence-to-array(it) = {
-    if utils.is-sequence(it) {
-      it.children.map(sequence-to-array)
-    } else {
-      it
-    }
-  }
-  children = children.map(sequence-to-array).flatten()
+  children = children.map(utils.sequence-to-array).flatten()
 
   let doc-cfg = self.at("document", default: (:))
   let wrap-images = doc-cfg.at("wrap-images", default: true)
