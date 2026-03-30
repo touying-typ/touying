@@ -859,10 +859,16 @@
 
 #let _size-to-pt(size, container-dimension) = {
   let to-convert = size
-  if type(size) == ratio {
-    to-convert = container-dimension * size
+  if type(size) == fraction {
+    let fr = repr(size*1000000) //avoid capped precision
+    to-convert = float(fr.slice(0, fr.len()-2)) / 1000000
   }
-  measure(v(to-convert)).height
+  if type(to-convert) in (int, float, ratio) { //nice just a multiplication
+    to-convert = container-dimension * to-convert 
+  }else {
+    to-convert = measure(v(to-convert)).height //get in pt if em
+  }
+  to-convert
 }
 
 #let _limit-content-width(width: none, body, container-size) = {
@@ -888,7 +894,7 @@
 ///
 /// - shrink (bool): Indicates whether the content should be scaled down if it is larger than the available height. Default is `true`.
 ///
-/// - height (length): The height to fit the content to.
+/// - height (length, fraction, float, relative): The height to fit the content to.
 ///
 /// - body (content): The content to fit.
 ///
@@ -927,12 +933,11 @@
       let h-ratio = available-height / size.height
       let w-ratio = mutable-width / size.width
       let ratio = calc.min(h-ratio, w-ratio) * 100%
-
+      
       if ((shrink and (ratio < 100%)) or (grow and (ratio > 100%))) {
         let new-width = size.width * ratio
         scale(
-          x: ratio,
-          y: ratio,
+          ratio,
           origin: top + left,
           boxed-content,
           reflow: true,
