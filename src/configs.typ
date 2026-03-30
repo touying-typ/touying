@@ -1,7 +1,8 @@
 #import "pdfpc.typ"
 #import "utils.typ"
 #import "magic.typ"
-#import "core.typ": slide, touying-slide, touying-slide-wrapper
+#import "core/slides.typ": slide, touying-slide
+#import "core/animation.typ": touying-slide-wrapper
 
 #let _default = metadata((kind: "touying-default"))
 
@@ -721,7 +722,6 @@
       wrap-other-figures: wrap-other-figures,
       wrap-other: wrap-other,
       wrap-align-direction: wrap-align-direction,
-
     ))
       + args.named(),
   )

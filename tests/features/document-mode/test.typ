@@ -124,12 +124,12 @@ More text here. #lorem(15)
   (pause,)
   circle((2, 1.5), radius: 0.8, fill: red.lighten(60%), stroke: red)
   (pause,)
-  (only(4, line((0, 0), (4, 3), stroke: 2pt + green)),)
+  line((0, 0), (4, 3), stroke: 2pt + green)
   (waypoint(<final>, advance:false),)
 }, length: 30pt)
 #ccanvas
 
-
+#touying-block-recall(<doc-test-diagram>, subslide: 1, base: 2)
 #document-text[
 
   The animated CeTZ diagram is recalled at specific stages below inside this document-text.
@@ -139,7 +139,7 @@ More text here. #lorem(15)
 
   Stage 2 (rectangle and circle):
   #figure(
-    scale(20%, reflow:true)[#touying-block-recall(
+    scale(40%, reflow:true)[#touying-block-recall(
       <doc-test-diagram>,
       subslide: 2,
       base: 2, //accounts for the outer context
@@ -151,18 +151,20 @@ More text here. #lorem(15)
   #touying-block-recall(<doc-test-diagram>, subslide:4, base:2)
 
   See @fig:cetz-stage2 for stage 2 of the animated diagram.
-  Also see #lorem(20)
-  // #align(center)
-  #rotate(45deg)[#align(center)[#block(width: (1./0.8)*100%, touying-block-recall(<my-img>))]] 
-  and 
-  #touying-block-recall(<my-table>, subslide: 1) for recalls of the image and table used in this document.
-  // #lorem(10)
-  // #image("./image.png", width: 100%)<my-img2>
-
-
-  And here again the canvas via variable based subslide render: 
-  #touying-render(ccanvas, subslide:1)
 ]
+
+== Render and Block Recall
+We can also render a block saved in a variable directly at some specific subslide via `touying-render`, even in handout or presentation mode. 
+#touying-render(ccanvas, subslide:2)
+
+Block Recall only works in document only or document text however. this allows arbitrary placing of previous images but you will need to rescale them yourself.
+#document-only[
+#rotate(45deg)[#align(center)[#block(clip:true, width: (1./0.8)*40%, touying-block-recall(<my-img>))]] 
+We can even recall a table that is defined in a later slide at one of its subslides.
+#touying-block-recall(<my-table>, subslide: 1)
+]
+
+
 
 == Table Content
 // #show: touying-set-config.with(config-methods(
@@ -179,7 +181,6 @@ More text here. #lorem(15)
   <my-table>
 ][
   Some text next to the table. #lorem(15)
-  #image("./image.png", width: 20%)<small-img>
 ]
 
 == Figure with Image

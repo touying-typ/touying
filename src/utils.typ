@@ -2262,10 +2262,10 @@
   mapping.at(text.lang, default: mapping.en)
 }
 
-// *Returns input given to the compiler.* 
-// 
+// *Returns input given to the compiler.*
+//
 // *Important*: This function uses typst `#eval` to parse your value.
-// 
+//
 // Example:
 // `typst compile FILE --input export-mode=\"presentation\" myslide.typ` \
 // Then in the code you can do:
@@ -2273,24 +2273,90 @@
 //
 // Example 2:
 // `typst compile FILE --input config='("foo": 1, "bar": [1, 2, 3], "baz": ("nested": 4))'`
-// 
+//
 // You may also provide no key to get the entire inputs dictionary with parsed values:
 // `#let inputs = get-input()`
-// 
+//
 // - key (str, none): The input key to retrieve. If `none`, returns the entire inputs dictionary with parsed values.
 //
-#let get-input(key:none) = {
-  if key == none { 
+#let get-input(key: none) = {
+  if key == none {
     let values = (:)
     for key in sys.inputs.keys() {
-      if key == "x-preview" {continue} // skip tinymist preview input
+      if key == "x-preview" { continue } // skip tinymist preview input
       let value = sys.inputs.at(key, default: none)
       values.insert(key, eval(value))
     }
     values
-  }else{
+  } else {
     let value = sys.inputs.at(key, default: none)
     eval(value)
+  }
+}
+
+
+/// Rescale an image element to fit within a column-fraction of the available content width.
+///
+/// Used by `_wrap-section` in document mode to resize slide images so they fit alongside
+/// wrapped text. Can also be called directly when you need to place a slide image at a
+/// proportionally correct size in a document.
+///
+/// - img-el (content): The raw image element — used only for measuring its declared `width`.
+/// - display-el (content): The element that is actually rendered (may be `img-el` itself, or a figure containing it).
+/// - col-fraction (ratio): Fraction of `container-width` this image should occupy (e.g. `40%` → `0.4`).
+/// - container-width (none, length): The available content-area width in points. When `none` (default), it is measured automatically via `layout()`.
+/// - align-direction (alignment): `left` or `right` — which side the image is placed on.
+///
+/// -> content
+#let rescale-image(
+  img-el,
+  display-el,
+  col-fraction,
+  align-direction,
+  container-width: none,
+) = {
+  let _render(cw) = {
+    let obstacle-width = (col-fraction * 1pt).pt() * cw
+
+    let img-width = img-el.fields().at("width", default: none)
+    let p = if img-width != none and type(img-width) == relative {
+      (img-width.ratio * 1pt).pt()
+    } else if img-width != none and type(img-width) == ratio {
+      (img-width * 1pt).pt()
+    } else {
+      1.0
+    }
+    let inv = if p > 0 { 1.0 / p } else { 1.0 }
+
+    let overlay(..args) = {
+      box(place(
+        top + (if align-direction == right { left } else { right }),
+        ..args,
+      ))
+      sym.wj
+      h(0pt, weak: true)
+    }
+
+    let visible-width = obstacle-width * inv * 0.95
+    let dx-offset = obstacle-width * inv * 0.025
+    let img-size = measure(display-el, width: visible-width)
+    let other-direction = if align-direction == right { 1 } else { -1 }
+
+    stack(
+      spacing: -par.leading,
+      overlay(
+        box(width: visible-width, display-el),
+        dy: -par.leading,
+        dx: dx-offset * other-direction,
+      ),
+      hide(box(width: obstacle-width, height: img-size.height)),
+    )
+  }
+
+  if container-width != none {
+    _render(container-width)
+  } else {
+    layout(size => _render(size.width))
   }
 }
 

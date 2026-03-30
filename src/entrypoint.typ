@@ -1,6 +1,7 @@
 #import "utils.typ"
 #import "configs.typ"
-#import "core.typ"
+#import "core/docmode.typ": render-content-as-document
+#import "core/slides.typ": split-content-into-slides
 #import "magic.typ"
 
 /// Touying slides function.
@@ -30,7 +31,6 @@
   // get compiler args
   let comp_args = utils.get-input()
   self = utils.merge-dicts(self, comp_args)
-
 
   // set the document
   set document(
@@ -124,10 +124,10 @@
   show: init
 
   if self.at("document-mode", default: false) {
-    show: core.render-content-as-document.with(self: self)
+    show: render-content-as-document.with(self: self)
     body
   } else {
-    show: core.split-content-into-slides.with(self: self, is-first-slide: true)
+    show: split-content-into-slides.with(self: self, is-first-slide: true)
     body
   }
 }
