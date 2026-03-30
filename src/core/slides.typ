@@ -8,6 +8,7 @@
 #import "parser.typ": (
   _collect-waypoints, _count-animated-block-repetitions, _find-reducer-meta,
   _parse-content-into-results-and-repetitions, _parse-touying-reducer,
+  _resolve-waypoint-to-int,
 )
 #import "animation.typ": touying-slide-wrapper
 #import "docmode.typ": (
@@ -1719,29 +1720,6 @@
     )
   }
 
-  let _resolve-handout-waypoint(self, lbl) = {
-    let resolved = utils.resolve-waypoints(self, lbl)
-    if type(resolved) == int {
-      (resolved,)
-    } else if type(resolved) == dictionary {
-      // resolve waypoint to the first subslide. This is how waypoints are always resolved for single integer application like some `start`field.
-      let first = resolved.at("beginning", default: resolved.at(
-        "first",
-        default: 1,
-      ))
-      // let last = resolved.at("until", default: resolved.at(
-      //   "last",
-      //   default: repeat,
-      // ))
-      (first,)
-    } else {
-      panic(
-        "touying-slide: unexpected resolved waypoint type for handout-subslides: "
-          + repr(resolved),
-      )
-    }
-  }
-
   if self.handout {
     let handout-subslides = self.at("handout-subslides", default: none)
     if handout-subslides == none {
@@ -1773,7 +1751,9 @@
                 and subslide-idx.at("kind", default: "") in waypoint-kinds
             )
         ) {
-          handout-subslides[i] = _resolve-handout-waypoint(self, subslide-idx) //resolve waypoint labels to first subslide, only for handout
+          handout-subslides[i] = (
+            _resolve-waypoint-to-int(self, subslide-idx),
+          ) //resolve waypoint labels to first subslide, only for handout
         } else if type(subslide-idx) == int or type(subslide-idx) == str {
           // do nothing
         } else {

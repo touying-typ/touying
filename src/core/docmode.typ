@@ -6,7 +6,7 @@
 #import "parser.typ": (
   _collect-waypoints, _find-reducer-meta,
   _parse-content-into-results-and-repetitions, _parse-touying-reducer,
-  _prepare-render-context, _render-at-subslide,
+  _prepare-render-context, _render-at-subslide, _resolve-waypoint-to-int,
 )
 
 /// Content that replaces the slide content when in document mode. Place it after your slide, before the next one.
@@ -338,43 +338,51 @@
 
 
 
-#let _scan-content-for-labeled-reducers(body) = {
+// Generic content scanner. Walks the content tree and collects matches.
+// `match-fn`: called on each node, returns `none` (no match) or a `(key, value)` pair.
+// `deep`: when true, recurse into `.body` and `.children` fields (deep scan);
+//         when false, only recurse into sequences and styled nodes (shallow scan).
+#let _scan-content(body, match-fn, deep: true) = {
   if type(body) != content { return () }
-  if body.func() == metadata and type(body.value) == dictionary {
-    let v = body.value
+  let matched = match-fn(body)
+  if matched != none { return (matched,) }
+  if utils.is-sequence(body) {
+    let result = ()
+    for child in body.children {
+      result += _scan-content(child, match-fn, deep: deep)
+    }
+    return result
+  }
+  if utils.is-styled(body) {
+    return _scan-content(body.child, match-fn, deep: deep)
+  }
+  if deep {
+    if body.has("body") {
+      return _scan-content(body.body, match-fn, deep: deep)
+    }
+    if body.has("children") {
+      let result = ()
+      for child in body.children {
+        result += _scan-content(child, match-fn, deep: deep)
+      }
+      return result
+    }
+  }
+  ()
+}
+
+#let _scan-content-for-labeled-reducers(body) = _scan-content(body, c => {
+  if c.func() == metadata and type(c.value) == dictionary {
+    let v = c.value
     if (
       v.at("kind", default: none) == "touying-reducer"
         and v.at("label", default: none) != none
     ) {
-      return ((str(v.label), v),)
+      return (str(v.label), v)
     }
-    return ()
   }
-  if utils.is-sequence(body) {
-    let result = ()
-    for child in body.children {
-      result += _scan-content-for-labeled-reducers(child)
-    }
-    return result
-  }
-  // Recurse into styled nodes (show-rule wrappers)
-  if utils.is-styled(body) {
-    return _scan-content-for-labeled-reducers(body.child)
-  }
-  // Recurse into content elements with a .body field (headings, figures, blocks, etc.)
-  if body.has("body") {
-    return _scan-content-for-labeled-reducers(body.body)
-  }
-  // Recurse into content elements with a .children field (tables, grids, etc.)
-  if body.has("children") {
-    let result = ()
-    for child in body.children {
-      result += _scan-content-for-labeled-reducers(child)
-    }
-    return result
-  }
-  ()
-}
+  none
+})
 
 
 #let _collect-labeled-reducers(..bodies) = {
@@ -387,36 +395,20 @@
 }
 
 
-// Scan content for labeled non-reducer block elements.
-// Returns an array of (label-string, content) pairs for any labeled block
-// element that is NOT a touying-reducer (those are handled separately).
-// Shallow scan: only finds top-level labeled elements, not nested ones.
-#let _scan-content-for-labeled-blocks(body) = {
-  if type(body) != content { return () }
-  // Skip touying metadata nodes (reducers, pauses, etc.)
-  if body.func() == metadata { return () }
-  // Check if this element has a non-temporary label
-  let lbl = body.fields().at("label", default: none)
-  if (
-    lbl != none and str(lbl) != "touying-temporary-mark" and str(lbl) != ""
-  ) {
-    return ((str(lbl), body),)
-  }
-  // Recurse into sequences
-  if utils.is-sequence(body) {
-    let result = ()
-    for child in body.children {
-      result += _scan-content-for-labeled-blocks(child)
+// Shallow scan: only finds top-level labeled elements (not nested in body/children).
+#let _scan-content-for-labeled-blocks(body) = _scan-content(
+  body,
+  c => {
+    // Skip touying metadata nodes
+    if c.func() == metadata { return none }
+    let lbl = c.fields().at("label", default: none)
+    if lbl != none and str(lbl) != "touying-temporary-mark" and str(lbl) != "" {
+      return (str(lbl), c)
     }
-    return result
-  }
-  // Recurse into styled nodes
-  if utils.is-styled(body) {
-    return _scan-content-for-labeled-blocks(body.child)
-  }
-  // Do NOT recurse deeper: we want top-level labeled elements only
-  ()
-}
+    none
+  },
+  deep: false,
+)
 
 
 #let _collect-labeled-blocks(..bodies) = {
@@ -753,28 +745,8 @@
     // Fast path: nothing to resolve
     if block-recall-map.len() == 0 { return body }
 
-    let _resolve-br-waypoint(self, lbl) = {
-      let resolved = utils.resolve-waypoints(self, lbl)
-      if type(resolved) == int {
-        (resolved,)
-      } else if type(resolved) == dictionary {
-        let first = resolved.at("beginning", default: resolved.at(
-          "first",
-          default: 1,
-        ))
-        (first,)
-      } else {
-        panic(
-          "touying-slide: unexpected resolved waypoint type for handout-subslides: "
-            + repr(resolved),
-        )
-      }
-    }
-
-    // Core rendering: given content, its waypoints, and a subslide spec,
-    // render the content at the requested subslide(s).
-    // `reducer-data` is the reducer metadata dict if this is a reducer, or none for plain content.
-    // `base`: starting repetition counter for pause numbering.
+    // Render content at one or more subslides, resolving waypoint and negative-index specs.
+    // Uses shared _render-at-subslide from parser.typ for the actual rendering.
     let _render-content(
       inline-content,
       reducer-data,
@@ -783,32 +755,18 @@
       subslide-spec,
       base: 1,
     ) = {
-      let render-at(i) = {
-        let render-self = self + (waypoints: content-waypoints, subslide: i)
-        if reducer-data != none {
-          let (r, _) = _parse-touying-reducer(
-            self: render-self,
-            base: base,
-            index: i,
-            reducer-data,
-          )
-          r.sum(default: none)
-        } else {
-          let (conts, _, _, _, _) = _parse-content-into-results-and-repetitions(
-            self: render-self,
-            base: base,
-            index: i,
-            inline-content,
-          )
-          conts.sum(default: none)
-        }
-      }
-
       if subslide-spec == auto {
-        return render-at(repeat)
+        return _render-at-subslide(
+          self,
+          inline-content,
+          reducer-data,
+          content-waypoints,
+          base,
+          repeat,
+        )
       }
 
-      // Resolve waypoint labels/markers
+      // Resolve waypoint labels/markers to ints
       let wp-self = self + (waypoints: content-waypoints)
       let subslide-spec = subslide-spec
       if type(subslide-spec) == array {
@@ -820,7 +778,7 @@
                   and idx.at("kind", default: "") in waypoint-kinds
               )
           ) {
-            subslide-spec.at(i) = _resolve-br-waypoint(wp-self, idx)
+            subslide-spec.at(i) = (_resolve-waypoint-to-int(wp-self, idx),)
           }
         }
       } else if (
@@ -830,7 +788,7 @@
               and subslide-spec.at("kind", default: "") in waypoint-kinds
           )
       ) {
-        subslide-spec = _resolve-br-waypoint(wp-self, subslide-spec)
+        subslide-spec = (_resolve-waypoint-to-int(wp-self, subslide-spec),)
       }
 
       // Resolve negative indices (e.g. -1 = last subslide)
@@ -840,7 +798,14 @@
       )
 
       if type(subslide-spec) == int {
-        return render-at(subslide-spec)
+        return _render-at-subslide(
+          self,
+          inline-content,
+          reducer-data,
+          content-waypoints,
+          base,
+          subslide-spec,
+        )
       }
 
       // Array or range spec: render matching subslides
@@ -850,7 +815,16 @@
       if subslide-indices.len() == 0 {
         subslide-indices = (repeat,)
       }
-      return subslide-indices.map(i => render-at(i)).sum(default: none)
+      subslide-indices
+        .map(i => _render-at-subslide(
+          self,
+          inline-content,
+          reducer-data,
+          content-waypoints,
+          base,
+          i,
+        ))
+        .sum(default: none)
     }
 
     if type(body) != content { return body }

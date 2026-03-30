@@ -1515,41 +1515,16 @@
             repetitions = child.value.n
             last-subslide = 0
           }
-        } else if kind == "touying-equation" {
-          // Handle animated equations with pause/meanwhile markers
-          let (conts, nextrepetitions) = _parse-touying-equation(
-            self: self,
-            need-cover: repetitions <= index,
-            base: repetitions,
-            index: index,
-            child,
-          )
-          let cont = conts.first()
-          if repetitions <= index or not need-cover {
-            result.push(cont)
+        } else if kind in ("touying-equation", "touying-mitex", "touying-raw") {
+          // Handle animated equation/mitex/raw blocks with pause/meanwhile markers
+          let parse-fn = if kind == "touying-equation" {
+            _parse-touying-equation
+          } else if kind == "touying-mitex" {
+            _parse-touying-mitex
           } else {
-            hidden-parts.push(cont)
+            _parse-touying-raw
           }
-          repetitions = nextrepetitions
-        } else if kind == "touying-mitex" {
-          // Handle animated MiTeX equations with pause/meanwhile markers
-          let (conts, nextrepetitions) = _parse-touying-mitex(
-            self: self,
-            need-cover: repetitions <= index,
-            base: repetitions,
-            index: index,
-            child,
-          )
-          let cont = conts.first()
-          if repetitions <= index or not need-cover {
-            result.push(cont)
-          } else {
-            hidden-parts.push(cont)
-          }
-          repetitions = nextrepetitions
-        } else if kind == "touying-raw" {
-          // Handle animated raw code blocks with pause/meanwhile markers
-          let (conts, nextrepetitions) = _parse-touying-raw(
+          let (conts, nextrepetitions) = parse-fn(
             self: self,
             need-cover: repetitions <= index,
             base: repetitions,
@@ -1607,15 +1582,7 @@
                     and spec.at("kind", default: "") in waypoint-kinds
                 )
             ) {
-              let resolved = utils.resolve-waypoints(wp-self, spec)
-              if type(resolved) == int { resolved } else if (
-                type(resolved) == dictionary
-              ) {
-                resolved.at("beginning", default: resolved.at(
-                  "first",
-                  default: 1,
-                ))
-              } else { rp }
+              _resolve-waypoint-to-int(wp-self, spec)
             } else if type(spec) == int {
               utils.resolve-negative-subslides(rp, spec)
             } else { rp }
@@ -2394,10 +2361,31 @@
 }
 
 
+/// Resolve a waypoint label or dictionary marker to a single integer subslide index.
+/// Extracts the "beginning" (or "first") value from resolved waypoint dictionaries.
+#let _resolve-waypoint-to-int(self, spec) = {
+  let resolved = utils.resolve-waypoints(self, spec)
+  if type(resolved) == int {
+    resolved
+  } else if type(resolved) == dictionary {
+    resolved.at("beginning", default: resolved.at("first", default: 1))
+  } else {
+    panic("unexpected resolved waypoint type: " + repr(resolved))
+  }
+}
+
+
 /// Render inline content at a specific target subslide.
 ///
 /// Returns: rendered content (or `none`)
-#let _render-at-subslide(self, inline-content, reducer-data, cwp, render-base, target) = {
+#let _render-at-subslide(
+  self,
+  inline-content,
+  reducer-data,
+  cwp,
+  render-base,
+  target,
+) = {
   let render-self = self + (waypoints: cwp, subslide: target)
   if reducer-data != none {
     let (r, _) = _parse-touying-reducer(
