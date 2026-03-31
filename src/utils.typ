@@ -906,7 +906,8 @@
   prescale-width: none,
   grow: true,
   shrink: true,
-  reflow: true,
+  reflow: false,
+  force-height: false,
   height,
   body,
 ) = {
@@ -940,32 +941,78 @@
       let mutable-width = width
       if width == none or width == auto{
         mutable-width = container-size.width
-      // } else if width == auto {
-        
-      //   let scaled-width = (1/h-ratio) * size.width
-        
-      //   boxed-content = _limit-content-width(
-      //     width: scaled-width,
-      //     body,
-      //     container-size,
-      //   )
-      //   size = measure(boxed-content)
-      //   mutable-width = calc.min(container-size.width, size.width)
       }
       mutable-width = _size-to-pt(mutable-width, container-size.width)
 
       let w-ratio = mutable-width / size.width
       let ratio = calc.min(h-ratio, w-ratio) * 100%
+
       if width == auto and reflow {
-        //one iteration of refinement, could do more for better fit.
-        ratio = calc.sqrt(float(ratio)) * 100%
-        boxed-content = _limit-content-width(
-          width: size.width / float(ratio),
-          if reflow {body} else {boxed-content},
-          container-size,
-        )
+        //height is good rn, but width may be too small. 
+        // get the current ratio of used/available width and scale such that we fill it. use sqrt trick to allow good flow.
+        // then height may again be slightly too small. repeat that.
+
+        let adjust-width(ratio, body, boxed-content, size) = {
+          let w-ratio = measure(scale(
+            ratio,
+            boxed-content,
+            origin: top + left,
+            reflow: true,
+          )).width / size.width
+
+          let _boxed-content = block( stroke:1pt,
+            width: size.width / calc.sqrt(w-ratio), //increase width by sqrt of w-ratio
+            body,
+          )
+          ratio = calc.sqrt(w-ratio) * 100%
+          return (ratio, _boxed-content)
+        }
+
+        let adjust-height(ratio, body, boxed-content, size) = {
+          let h-ratio = measure(scale(
+            ratio,
+            boxed-content,
+            origin: top + left,
+            reflow: true,
+          )).height / size.height
+
+          let _boxed-content = block( stroke:1pt,
+            width: size.width / float(ratio) * calc.sqrt(h-ratio), //reduce width by sqrt of h-ratio
+            body,
+          )
+          ratio *= calc.sqrt(1/h-ratio)
+
+          h-ratio = measure(scale(
+            ratio,
+            _boxed-content,
+            origin: top + left,
+            reflow: true,
+          )).height / size.height
+          ratio /= h-ratio
+
+          return (ratio, _boxed-content)
+        }
+
+        //improve iteratively, 2 seems enough.
+        for i in range(2) {
+          (ratio, boxed-content) = adjust-width(ratio, body, boxed-content, (width: mutable-width, height: available-height))
+          (ratio, boxed-content) = adjust-height(ratio, body, boxed-content, (width: mutable-width, height: available-height))
+        }
+        if not force-height {
+          //fix the width one last time linearly.
+          let scaled-width = measure(scale(
+            ratio,
+            boxed-content,
+            origin: top + left,
+            reflow: true,
+          )).width
+          let current-box-width = measure(boxed-content).width
+          boxed-content = box(
+            width: current-box-width * (mutable-width / scaled-width),
+            body,
+          )
+        }
       }
-      
       if ((shrink and (ratio < 100%)) or (grow and (ratio > 100%))) {
         let new-width = size.width * ratio
         scale(
