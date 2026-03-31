@@ -717,6 +717,29 @@ Set `config-common(new-section-slide-fn: none)`:
 No automatic section slide was created for the `= Section` heading.
 ```
 
+### How do I write content for sections that have section slides?
+
+Use `pagebreak()` or `---` to force a new page for that section and write there.
+
+```example
+>>>#import "@preview/touying:0.6.3": *
+>>>#import themes.metropolis: *
+>>>
+>>>#show: metropolis-theme.with(
+>>>  aspect-ratio: "16-9",
+>>>  config-info(title: [content slides next to section slides]),
+>>>)
+
+= Section
+---
+Here is my content for this section.
+
+== Slide
+And this works normally.
+```
+
+You may also set `config-common(receive-body-for-new-section-slide-fn: false)`. This however will prevent you from writing speaker-notes for the section slide.
+
 ### How do I hide a slide from the presentation output entirely?
 
 Add the `<touying:hidden>` label to the slide heading:

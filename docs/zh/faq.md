@@ -717,6 +717,28 @@ Text now uses the custom font.
 No automatic section slide was created for the `= Section` heading.
 ```
 
+### 如何为带有章节幻灯片的章节添加内容？
+
+使用 `pagebreak()` 或 `---` 强制新建一页，然后在该页编写内容。
+```example
+>>>#import "@preview/touying:0.6.3": *
+>>>#import themes.metropolis: *
+>>>
+>>>#show: metropolis-theme.with(
+>>>  aspect-ratio: "16-9",
+>>>  config-info(title: [content slides next to section slides]),
+>>>)
+
+= Section
+---
+Here is my content for this section.
+
+== Slide
+And this works normally.
+```
+
+你也可以设置 `config-common(receive-body-for-new-section-slide-fn: false)`。但这样会导致无法为章节幻灯片编写演讲者备注。
+
 ### 如何完全隐藏一张幻灯片？
 
 在幻灯片标题上添加 `<touying:hidden>` 标签：
