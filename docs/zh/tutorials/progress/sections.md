@@ -29,7 +29,7 @@ utils.display-current-short-heading(level: 2)
 你可以在自定义页眉中使用这些工具函数：
 
 ```example
-#import "@preview/touying:0.6.3": *
+#import "@preview/touying:0.7.0": *
 #import themes.default: *
 
 #show: default-theme.with(
@@ -59,7 +59,7 @@ Header updates automatically.
 `components.progressive-outline()` 渲染一个高亮当前章节、灰显其他章节的目录——这是主题演示文稿中的常见模式：
 
 ```example
-#import "@preview/touying:0.6.3": *
+#import "@preview/touying:0.7.0": *
 #import themes.dewdrop: *
 
 #show: dewdrop-theme.with(aspect-ratio: "16-9")

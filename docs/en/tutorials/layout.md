@@ -118,7 +118,7 @@ With this approach, we can also query the current page parameters in real-time u
 If you need to divide a page into two or three columns, you can use the `composer` feature provided by the default `slide` function in Touying. The simplest example is as follows:
 
 ```example
->>> #import "@preview/touying:0.6.3": *
+>>> #import "@preview/touying:0.7.0": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
 #slide[
@@ -131,7 +131,7 @@ If you need to divide a page into two or three columns, you can use the `compose
 If you need to change the way columns are divided, you can modify the `composer` parameter of `slide`, where the default parameter is `components.side-by-side.with(columns: auto, gutter: 1em)`. If we want the left column to take up the remaining width, we can use:
 
 ```example
->>> #import "@preview/touying:0.6.3": *
+>>> #import "@preview/touying:0.7.0": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
 #slide(composer: (1fr, auto))[

@@ -9,7 +9,7 @@ sidebar_position: 1
 如果我们只是需要简单使用，我们可以直接在标题下输入内容，就像是在编写正常 Typst 文档一样。这里的标题有着分割页面的作用，同时我们也能正常地使用 `#pause` 等命令实现动画效果。
 
 ```example
-#import "@preview/touying:0.6.3": *
+#import "@preview/touying:0.7.0": *
 #import themes.simple: *
 
 #show: simple-theme.with(aspect-ratio: "16-9")
@@ -30,7 +30,7 @@ Hello, Typst!
 如果我们需要维持当前标题，仅仅是想加入一个新页，我们可以使用 `#pagebreak()`，亦或者直接使用 `---` 来分割页面，后者在 Touying 中被解析为 `#pagebreak()`。
 
 ```example
-#import "@preview/touying:0.6.3": *
+#import "@preview/touying:0.7.0": *
 #import themes.simple: *
 
 #show: simple-theme.with(aspect-ratio: "16-9")
@@ -53,7 +53,7 @@ Hello, Typst!
 例如上面的例子就可以改造成
 
 ```example
-#import "@preview/touying:0.6.3": *
+#import "@preview/touying:0.7.0": *
 #import themes.simple: *
 
 #show: simple-theme.with(aspect-ratio: "16-9")
@@ -88,7 +88,7 @@ Hello, Typst!
 如果我们不希望它自动创建这样一个 section slide，我们可以将这个方法删除：
 
 ```example
-#import "@preview/touying:0.6.3": *
+#import "@preview/touying:0.7.0": *
 #import themes.simple: *
 
 #show: simple-theme.with(
@@ -112,7 +112,7 @@ Hello, Typst!
 同理，我们也可以注册一个新的 section slide：
 
 ```example
-#import "@preview/touying:0.6.3": *
+#import "@preview/touying:0.7.0": *
 #import themes.simple: *
 
 #show: simple-theme.with(

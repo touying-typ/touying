@@ -13,7 +13,7 @@ Considered a relatively straightforward theme, you can use it to create simple s
 You can initialize it using the following code:
 
 ```typst
-#import "@preview/touying:0.6.3": *
+#import "@preview/touying:0.7.0": *
 #import themes.simple: *
 
 #show: simple-theme.with(
@@ -84,7 +84,7 @@ Used to draw attention, it optionally accepts a foreground color (defaulting to 
 ## Example
 
 ```example
-#import "@preview/touying:0.6.3": *
+#import "@preview/touying:0.7.0": *
 #import themes.simple: *
 
 #show: simple-theme.with(

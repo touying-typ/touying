@@ -18,7 +18,7 @@ Touying 提供了一组计数器和工具函数，用于追踪和显示演示文
 在自定义页脚中使用：
 
 ```example
-#import "@preview/touying:0.6.3": *
+#import "@preview/touying:0.7.0": *
 #import themes.default: *
 
 #show: default-theme.with(
@@ -65,7 +65,7 @@ metropolis 和 aqua 主题的进度条即以此方式实现。
 `appendix` show 规则会停止幻灯片计数器，使附录幻灯片不改变页脚中显示的总数：
 
 ```example
-#import "@preview/touying:0.6.3": *
+#import "@preview/touying:0.7.0": *
 #import themes.simple: *
 
 #show: simple-theme

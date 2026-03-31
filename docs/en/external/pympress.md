@@ -10,7 +10,7 @@ sidebar_position: 3
 ## Speaker Notes
 
 ```typst
-#import "@preview/touying:0.6.3": *
+#import "@preview/touying:0.7.0": *
 #import themes.university: *
 
 #show: university-theme.with(

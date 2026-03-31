@@ -9,7 +9,7 @@ Before you begin, make sure you have the Typst environment installed. If not, yo
 To use Touying, you just need to include the following in your document:
 
 ```example
-#import "@preview/touying:0.6.3": *
+#import "@preview/touying:0.7.0": *
 #import themes.simple: *
 
 #show: simple-theme.with(aspect-ratio: "16-9")
@@ -36,7 +36,7 @@ In fact, Touying provides various styles for slide writing. You can also use the
 Touying offers many built-in themes to easily create beautiful slides. For example, in this case:
 
 ```example
-#import "@preview/touying:0.6.3": *
+#import "@preview/touying:0.7.0": *
 #import themes.university: *
 #import "@preview/cetz:0.4.2"
 #import "@preview/fletcher:0.5.8" as fletcher: node, edge
@@ -249,4 +249,4 @@ Fletcher Animation in Touying:
 Please pay attention to the current slide number.
 ```
 
-For more detailed tutorials on themes, you can refer to the following sections.
+Touying offers many built-in themes to easily create beautiful slides. For example, `#show: university-theme.with()` uses the university theme. For more detailed tutorials on themes, you can refer to the following sections.

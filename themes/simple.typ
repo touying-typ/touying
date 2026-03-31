@@ -134,7 +134,7 @@
 /// Example:
 ///
 /// ```typst
-/// #show: simple-theme.with(aspect-ratio: "16-9", config-colors(primary: blue))`
+/// #show: simple-theme.with(aspect-ratio: "16-9", config-colors(primary: blue))
 /// ```
 ///
 /// The default colors:

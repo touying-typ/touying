@@ -11,7 +11,7 @@ sidebar_position: 5
 Because Touying re-renders content on every subslide, `codly`'s per-page state must be restored before each slide is drawn. Pass the codly initialization as a `preamble`:
 
 ```example
-#import "@preview/touying:0.6.3": *
+#import "@preview/touying:0.7.0": *
 #import themes.simple: *
 #import "@preview/codly:1.3.0": *
 #import "@preview/codly-languages:0.1.10": *
@@ -38,7 +38,7 @@ Because Touying re-renders content on every subslide, `codly`'s per-page state m
 You can reveal code line-by-line using `#pause` or `#only`. However, remember that `#pause` does not work inside a `raw` block directly — use `touying-raw` for animated code:
 
 ```example
-#import "@preview/touying:0.6.3": *
+#import "@preview/touying:0.7.0": *
 #import themes.simple: *
 
 #show: simple-theme.with(aspect-ratio: "16-9")

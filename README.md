@@ -1,4 +1,4 @@
-# ![logo](https://github.com/user-attachments/assets/58a91b14-ae1a-49e2-a3e7-5e3a148e2ba5)
+# ![Touying logo - a presentation slides package for Typst](https://github.com/user-attachments/assets/58a91b14-ae1a-49e2-a3e7-5e3a148e2ba5)
 
 [Touying](https://github.com/touying-typ/touying) (投影 in Chinese, /tóuyǐng/, meaning projection) is a user-friendly, powerful, and efficient package for creating presentation slides in [Typst](https://typst.app/).
 
@@ -7,9 +7,9 @@ If you like it, consider [giving a star ⭐ on GitHub](https://github.com/touyin
 [![Typst Universe](https://img.shields.io/badge/dynamic/xml?url=https%3A%2F%2Ftypst.app%2Funiverse%2Fpackage%2Ftouying&query=%2Fhtml%2Fbody%2Fdiv%2Fmain%2Fdiv%5B2%5D%2Faside%2Fsection%5B2%5D%2Fdl%2Fdd%5B3%5D&logo=typst&label=universe&color=%2339cccc)](https://typst.app/universe/package/touying)
 [![Book badge](https://img.shields.io/badge/docs-book-green)](https://touying-typ.github.io/)
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/touying-typ/touying)
-[![zread](https://img.shields.io/badge/Ask_Zread-_.svg?style=flat&color=00b0aa&labelColor=000000&logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTQuOTYxNTYgMS42MDAxSDIuMjQxNTZDMS44ODgxIDEuNjAwMSAxLjYwMTU2IDEuODg2NjQgMS42MDE1NiAyLjI0MDFWNC45NjAxQzEuNjAxNTYgNS4zMTM1NiAxLjg4ODEgNS42MDAxIDIuMjQxNTYgNS42MDAxSDQuOTYxNTZDNS4zMTUwMiA1LjYwMDEgNS42MDE1NiA1LjMxMzU2IDUuNjAxNTYgNC45NjAxVjIuMjQwMUM1LjYwMTU2IDEuODg2NjQgNS4zMTUwMiAxLjYwMDEgNC45NjE1NiAxLjYwMDFaIiBmaWxsPSIjZmZmIi8%2BCjxwYXRoIGQ9Ik00Ljk2MTU2IDEwLjM5OTlIMi4yNDE1NkMxLjg4ODEgMTAuMzk5OSAxLjYwMTU2IDEwLjY4NjQgMS42MDE1NiAxMS4wMzk5VjEzLjc1OTlDMS42MDE1NiAxNC4xMTM0IDEuODg4MSAxNC4zOTk5IDIuMjQxNTYgMTQuMzk5OUg0Ljk2MTU2QzUuMzE1MDIgMTQuMzk5OSA1LjYwMTU2IDE0LjExMzQgNS42MDE1NiAxMy43NTk5VjExLjAzOTlDNS42MDE1NiAxMC42ODY0IDUuMzE1MDIgMTAuMzk5OSA0Ljk2MTU2IDEwLjM5OTlaIiBmaWxsPSIjZmZmIi8%2BCjxwYXRoIGQ9Ik0xMy43NTg0IDEuNjAwMUgxMS4wMzg0QzEwLjY4NSAxLjYwMDEgMTAuMzk4NCAxLjg4NjY0IDEwLjM5ODQgMi4yNDAxVjQuOTYwMUMxMC4zOTg0IDUuMzEzNTYgMTAuNjg1IDUuNjAwMSAxMS4wMzg0IDUuNjAwMUgxMy43NTg0QzE0LjExMTkgNS42MDAxIDE0LjM5ODQgNS4zMTM1NiAxNC4zOTg0IDQuOTYwMVYyLjI0MDFDMTQuMzk4NCAxLjg4NjY0IDE0LjExMTkgMS42MDAxIDEzLjc1ODQgMS42MDAxWiIgZmlsbD0iI2ZmZiIvPgo8cGF0aCBkPSJNNCAxMkwxMiA0TDQgMTJaIiBmaWxsPSIjZmZmIi8%2BCjxwYXRoIGQ9Ik00IDEyTDEyIDQiIHN0cm9rZT0iI2ZmZiIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8L3N2Zz4K&logoColor=ffffff)](https://zread.ai/touying-typ/touying)
+[![Ask Zread for AI-assisted help with Touying](https://img.shields.io/badge/Ask_Zread-_.svg?style=flat&color=00b0aa&labelColor=000000&logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTQuOTYxNTYgMS42MDAxSDIuMjQxNTZDMS44ODgxIDEuNjAwMSAxLjYwMTU2IDEuODg2NjQgMS42MDE1NiAyLjI0MDFWNC45NjAxQzEuNjAxNTYgNS4zMTM1NiAxLjg4ODEgNS42MDAxIDIuMjQxNTYgNS42MDAxSDQuOTYxNTZDNS4zMTUwMiA1LjYwMDEgNS42MDE1NiA1LjMxMzU2IDUuNjAxNTYgNC45NjAxVjIuMjQwMUM1LjYwMTU2IDEuODg2NjQgNS4zMTUwMiAxLjYwMDEgNC45NjE1NiAxLjYwMDFaIiBmaWxsPSIjZmZmIi8%2BCjxwYXRoIGQ9Ik00Ljk2MTU2IDEwLjM5OTlIMi4yNDE1NkMxLjg4ODEgMTAuMzk5OSAxLjYwMTU2IDEwLjY4NjQgMS42MDE1NiAxMS4wMzk5VjEzLjc1OTlDMS42MDE1NiAxNC4xMTM0IDEuODg4MSAxNC4zOTk5IDIuMjQxNTYgMTQuMzk5OUg0Ljk2MTU2QzUuMzE1MDIgMTQuMzk5OSA1LjYwMTU2IDE0LjExMzQgNS42MDE1NiAxMy43NTk5VjExLjAzOTlDNS42MDE1NiAxMC42ODY0IDUuMzE1MDIgMTAuMzk5OSA0Ljk2MTU2IDEwLjM5OTlaIiBmaWxsPSIjZmZmIi8%2BCjxwYXRoIGQ9Ik0xMy43NTg0IDEuNjAwMUgxMS4wMzg0QzEwLjY4NSAxLjYwMDEgMTAuMzk4NCAxLjg4NjY0IDEwLjM5ODQgMi4yNDAxVjQuOTYwMUMxMC4zOTg0IDUuMzEzNTYgMTAuNjg1IDUuNjAwMSAxMS4wMzg0IDUuNjAwMUgxMy43NTg0QzE0LjExMTkgNS42MDAxIDE0LjM5ODQgNS4zMTM1NiAxNC4zOTg0IDQuOTYwMVYyLjI0MDFDMTQuMzk4NCAxLjg4NjY0IDE0LjExMTkgMS42MDAxIDEzLjc1ODQgMS42MDAxWiIgZmlsbD0iI2ZmZiIvPgo8cGF0aCBkPSJNNCAxMkwxMiA0TDQgMTJaIiBmaWxsPSIjZmZmIi8%2BCjxwYXRoIGQ9Ik00IDEyTDEyIDQiIHN0cm9rZT0iI2ZmZiIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8L3N2Zz4K&logoColor=ffffff)](https://zread.ai/touying-typ/touying)
 [![Gallery badge](https://img.shields.io/badge/demo-gallery-red)](https://github.com/touying-typ/touying/wiki)
-![GitHub](https://img.shields.io/github/license/touying-typ/touying)
+![GitHub License](https://img.shields.io/github/license/touying-typ/touying)
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/touying-typ/touying)
 ![GitHub Repo stars](https://img.shields.io/github/stars/touying-typ/touying)
 ![Themes badge](https://img.shields.io/badge/themes-6-aqua)
@@ -39,7 +39,7 @@ If you like it, consider [giving a star ⭐ on GitHub](https://github.com/touyin
 Make sure you have [Typst](https://typst.app/) installed, or use the [Web App](https://typst.app/) / [Tinymist for VS Code](https://marketplace.visualstudio.com/items?itemName=myriad-dreamin.tinymist).
 
 ```typst
-#import "@preview/touying:0.6.3": *
+#import "@preview/touying:0.7.0": *
 #import themes.simple: *
 
 #show: simple-theme.with(aspect-ratio: "16-9")
@@ -55,7 +55,7 @@ Hello, Touying!
 Hello, Typst!
 ```
 
-![image](https://github.com/touying-typ/touying/assets/34951714/f5bdbf8f-7bf9-45fd-9923-0fa5d66450b2)
+![Screenshot of a simple Touying slide showing Hello Touying and Hello Typst](https://github.com/touying-typ/touying/assets/34951714/f5bdbf8f-7bf9-45fd-9923-0fa5d66450b2)
 
 Congratulations on creating your first Touying slide! 🎉
 
@@ -76,7 +76,7 @@ For the full feature set — cover mode, callback-style animations, `#uncover`, 
 For a comprehensive example showcasing university theme, theorems, CeTZ/Fletcher animations, speaker notes, and more. You can also use the `#slide[..]` format to access more powerful features provided by Touying.
 
 ```typst
-#import "@preview/touying:0.6.3": *
+#import "@preview/touying:0.7.0": *
 #import themes.university: *
 #import "@preview/cetz:0.4.2"
 #import "@preview/fletcher:0.5.8" as fletcher: node, edge
@@ -289,7 +289,7 @@ Fletcher Animation in Touying:
 Please pay attention to the current slide number.
 ```
 
-![image](https://github.com/user-attachments/assets/b1dfc4d9-e263-46ff-8588-a0635870e370)
+![Screenshot of a full example using the university theme with animations and theorems](https://github.com/user-attachments/assets/b1dfc4d9-e263-46ff-8588-a0635870e370)
 
 
 ## Acknowledgements
@@ -308,7 +308,7 @@ Thanks to...
 
 ## Poster
 
-![poster](https://github.com/user-attachments/assets/e1ddb672-8e8f-472d-b364-b8caed1da16b)
+![Touying poster example](https://github.com/user-attachments/assets/e1ddb672-8e8f-472d-b364-b8caed1da16b)
 
 [View Code](https://github.com/touying-typ/touying-poster)
 

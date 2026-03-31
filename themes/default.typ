@@ -46,7 +46,7 @@
 /// Example:
 ///
 /// ```typst
-/// #show: default-theme.with(aspect-ratio: "16-9", config-colors(primary: blue))`
+/// #show: default-theme.with(aspect-ratio: "16-9", config-colors(primary: blue))
 /// ```
 ///
 /// - aspect-ratio (string): The aspect ratio of the slides. Default is `16-9`.

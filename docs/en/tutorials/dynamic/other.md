@@ -11,7 +11,7 @@ Touying also provides `touying-reducer`, which allows all animations to work nat
 Here's an example:
 
 ```example
-#import "@preview/touying:0.6.3": *
+#import "@preview/touying:0.7.0": *
 #import themes.university: *
 #import "@preview/cetz:0.4.2"
 #import "@preview/fletcher:0.5.8" as fletcher: node, edge
@@ -114,7 +114,7 @@ Note that commands like `effect` and `item-by-item` might not work as expected.
 If you don't want to have to write the array syntax `(anim-cmd(), )` for CeTZ, you can redefine the commands you need via utils locally in the canvas. This way they output the format CeTZ understands natively. However, then you need to manually count your subslides via `repeat`! 
 
 ```example
-#import "@preview/touying:0.6.3": *
+#import "@preview/touying:0.7.0": *
 #import "@preview/cetz:0.4.2"
 #import themes.simple: *
 #show: simple-theme.with(aspect-ratio: "16-9")
