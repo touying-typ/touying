@@ -871,6 +871,25 @@ Use `touying-set-config` around the content you want to change:
 ]
 ```
 
+
+### How do I access global or slide config information?
+
+Use `touying-get-config` at the position you want to know the config. The config is only accessible during `context` time, thus computing with this may lead to problems.
+> Note, that the information is stored at slide level, meaning the config you set specifically for the slide you write this function in will be accessed, not the global config, outside of the slide.
+
+```example
+>>> #import "@preview/touying:0.6.3": *
+#import themes.simple: *
+#show: simple-theme.with(
+  config-info(author: "Beautiful Name")
+)
+#slide(config:config-colors(primary: rgb("ABCDEF")))[
+  #touying-get-config("info.author")
+  
+  #touying-get-config("colors.primary")
+]
+```
+
 ### How do I compile my Touying presentation?
 
 Touying is a pure Typst package — there is no separate build step:

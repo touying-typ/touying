@@ -154,3 +154,15 @@ This is especially useful when working with the [Theorion](../integration/theori
 ```typst
 config-common(frozen-counters: (theorem-counter,))
 ```
+
+
+## Accessing Config Information
+
+As of touying 0.7.1, you may use `touying-get-config` to access a the stored config for a slide. This will be the global config up to the overrides you made for that slide.
+
+Note that it is evaluated at `context` time and parsed into the document flow where you request it, thus it is only available as content.
+
+```typst
+touying-get-config("info.date")
+```
+
