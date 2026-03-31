@@ -913,12 +913,12 @@
 ) = {
   context {
     let layout-content(
-      width:auto, 
-      prescale-width:none, 
-      grow:true, 
-      shrink:true, 
-      height, 
-      body
+      width: auto,
+      prescale-width: none,
+      grow: true,
+      shrink: true,
+      height,
+      body,
     ) = layout(container-size => {
       let available-height = _size-to-pt(height, container-size.height)
       // Provide a sensible initial width, which will define initial scale parameters.
@@ -939,7 +939,7 @@
 
       // post-scaling width
       let mutable-width = width
-      if width == none or width == auto{
+      if width == none or width == auto {
         mutable-width = container-size.width
       }
       mutable-width = _size-to-pt(mutable-width, container-size.width)
@@ -948,19 +948,23 @@
       let ratio = calc.min(h-ratio, w-ratio) * 100%
 
       if width == auto and reflow {
-        //height is good rn, but width may be too small. 
+        //height is good rn, but width may be too small.
         // get the current ratio of used/available width and scale such that we fill it. use sqrt trick to allow good flow.
         // then height may again be slightly too small. repeat that.
 
         let adjust-width(ratio, body, boxed-content, size) = {
-          let w-ratio = measure(scale(
-            ratio,
-            boxed-content,
-            origin: top + left,
-            reflow: true,
-          )).width / size.width
+          let w-ratio = (
+            measure(scale(
+              ratio,
+              boxed-content,
+              origin: top + left,
+              reflow: true,
+            )).width
+              / size.width
+          )
 
-          let _boxed-content = block( stroke:1pt,
+          let _boxed-content = block(
+            stroke: 1pt,
             width: size.width / calc.sqrt(w-ratio), //increase width by sqrt of w-ratio
             body,
           )
@@ -969,25 +973,32 @@
         }
 
         let adjust-height(ratio, body, boxed-content, size) = {
-          let h-ratio = measure(scale(
-            ratio,
-            boxed-content,
-            origin: top + left,
-            reflow: true,
-          )).height / size.height
+          let h-ratio = (
+            measure(scale(
+              ratio,
+              boxed-content,
+              origin: top + left,
+              reflow: true,
+            )).height
+              / size.height
+          )
 
-          let _boxed-content = block( stroke:1pt,
+          let _boxed-content = block(
+            stroke: 1pt,
             width: size.width / float(ratio) * calc.sqrt(h-ratio), //reduce width by sqrt of h-ratio
             body,
           )
-          ratio *= calc.sqrt(1/h-ratio)
+          ratio *= calc.sqrt(1 / h-ratio)
 
-          h-ratio = measure(scale(
-            ratio,
-            _boxed-content,
-            origin: top + left,
-            reflow: true,
-          )).height / size.height
+          h-ratio = (
+            measure(scale(
+              ratio,
+              _boxed-content,
+              origin: top + left,
+              reflow: true,
+            )).height
+              / size.height
+          )
           ratio /= h-ratio
 
           return (ratio, _boxed-content)
@@ -995,8 +1006,14 @@
 
         //improve iteratively, 2 seems enough.
         for i in range(2) {
-          (ratio, boxed-content) = adjust-width(ratio, body, boxed-content, (width: mutable-width, height: available-height))
-          (ratio, boxed-content) = adjust-height(ratio, body, boxed-content, (width: mutable-width, height: available-height))
+          (ratio, boxed-content) = adjust-width(ratio, body, boxed-content, (
+            width: mutable-width,
+            height: available-height,
+          ))
+          (ratio, boxed-content) = adjust-height(ratio, body, boxed-content, (
+            width: mutable-width,
+            height: available-height,
+          ))
         }
         if not force-height {
           //fix the width one last time linearly.
@@ -1024,27 +1041,27 @@
       } else {
         body
       }
-  })
+    })
     if type(height) == fraction {
       block(
-        height:height,
+        height: height,
         layout-content(
-          width:width, 
-          prescale-width:prescale-width, 
-          grow:grow, 
-          shrink:shrink, 
-          height, 
-          body
-        )
+          width: width,
+          prescale-width: prescale-width,
+          grow: grow,
+          shrink: shrink,
+          height,
+          body,
+        ),
       )
     } else {
       layout-content(
-        width:width, 
-        prescale-width:prescale-width, 
-        grow:grow, 
-        shrink:shrink, 
-        height, 
-        body
+        width: width,
+        prescale-width: prescale-width,
+        grow: grow,
+        shrink: shrink,
+        height,
+        body,
       )
     }
   }
