@@ -896,20 +896,29 @@
 /// - shrink (bool): Indicates whether the content should be scaled down if it is larger than the available height. Default is `true`.
 ///
 /// - height (length, fraction, float, relative): The height to fit the content to.
+/// - reflow (bool): Whether to allow reflow when scaling with auto width. Default is `true`. Only works when `width` is `auto`.
 ///
 /// - body (content): The content to fit.
 ///
 /// -> content
 #let fit-to-height(
-  width: none,
+  width: auto,
   prescale-width: none,
   grow: true,
   shrink: true,
+  reflow: true,
   height,
   body,
 ) = {
   context {
-    layout(container-size => {
+    let layout-content(
+      width:auto, 
+      prescale-width:none, 
+      grow:true, 
+      shrink:true, 
+      height, 
+      body
+    ) = layout(container-size => {
       let available-height = _size-to-pt(height, container-size.height)
       // Provide a sensible initial width, which will define initial scale parameters.
       // Note this is different from the post-scale width, which is a limiting factor
@@ -920,21 +929,43 @@
         container-size,
       )
 
-      // post-scaling width
-      let mutable-width = width
-      if width == none {
-        mutable-width = container-size.width
-      }
-      mutable-width = _size-to-pt(mutable-width, container-size.width)
-
+      //get size of the content when boxed to the prescale width, which is the initial size before scaling, may be different from the container-width
       let size = measure(boxed-content)
       if size.height == 0pt or size.width == 0pt {
         return body
       }
       let h-ratio = available-height / size.height
+
+      // post-scaling width
+      let mutable-width = width
+      if width == none or width == auto{
+        mutable-width = container-size.width
+      // } else if width == auto {
+        
+      //   let scaled-width = (1/h-ratio) * size.width
+        
+      //   boxed-content = _limit-content-width(
+      //     width: scaled-width,
+      //     body,
+      //     container-size,
+      //   )
+      //   size = measure(boxed-content)
+      //   mutable-width = calc.min(container-size.width, size.width)
+      }
+      mutable-width = _size-to-pt(mutable-width, container-size.width)
+
       let w-ratio = mutable-width / size.width
       let ratio = calc.min(h-ratio, w-ratio) * 100%
-
+      if width == auto and reflow {
+        //one iteration of refinement, could do more for better fit.
+        ratio = calc.sqrt(float(ratio)) * 100%
+        boxed-content = _limit-content-width(
+          width: size.width / float(ratio),
+          if reflow {body} else {boxed-content},
+          container-size,
+        )
+      }
+      
       if ((shrink and (ratio < 100%)) or (grow and (ratio > 100%))) {
         let new-width = size.width * ratio
         scale(
@@ -946,7 +977,29 @@
       } else {
         body
       }
-    })
+  })
+    if type(height) == fraction {
+      block(
+        height:height,
+        layout-content(
+          width:width, 
+          prescale-width:prescale-width, 
+          grow:grow, 
+          shrink:shrink, 
+          height, 
+          body
+        )
+      )
+    } else {
+      layout-content(
+        width:width, 
+        prescale-width:prescale-width, 
+        grow:grow, 
+        shrink:shrink, 
+        height, 
+        body
+      )
+    }
   }
 }
 
