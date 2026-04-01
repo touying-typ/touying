@@ -16,6 +16,16 @@
     series={International series of monographs on physics},
     year={1981},
     publisher={Clarendon Press},
+  }
+  @article{einstein,
+    title={Zur Elektrodynamik bewegter Körper},
+    author={Albert Einstein},
+    journal={Annalen der Physik},
+    volume={322},
+    number={10},
+    pages={891--921},
+    year={1905},
+    publisher={Wiley Online Library},
   }",
 )
 
@@ -24,7 +34,7 @@
     export-mode: "document",
     // document-theme: ef-document, //external theme
     document-theme: document-theme.with(numbering: "1.1"), // touying default document theme
-    show-bibliography-as-footnote: bibliography(bib), //bib for slides mode. disabled in document mode, just goes to final state with all viisble directly.
+    show-bibliography-as-footnote: true, 
     show-hide-set-list-marker-none: true,
   ),
   config-info(
@@ -54,7 +64,7 @@ Some background information here. #lorem(20) @dirac
 
 === Details
 
-More detailed information. #lorem(15)
+More detailed information. #lorem(15) @einstein
 
 == With Pause
 
@@ -67,7 +77,7 @@ Second part — in document mode this should appear directly (no animation). #lo
 == With Explicit Slide
 #slide[
   This content is inside an explicit `slide` call.
-  It should render inline in the document. #lorem(15)
+  It should render inline in the document. #lorem(15) 
 ]
 
 == With Uncover

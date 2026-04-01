@@ -149,7 +149,6 @@
 // Bibliography
 // ---------------------------------------------------------------------
 
-#let bibliography-state = state("footer-bibliography-state", ())
 #let bibliography-visited = state("footer-bibliography-visited", ())
 
 /// Display bibliography citations as footnotes. Place `#place(hide(bibliography(...)))` at the end of the document to register the bibliography entries.
@@ -158,12 +157,13 @@
 ///
 /// - numbering (str): The numbering format for footnote citations. Default is `"[1]"`.
 ///
-/// - bibliography (bibliography): The bibliography element, e.g. `bibliography("ref.bib")`.
+/// - footnote-style (dict): A dictionary of style properties to apply to the footnotes containing bibliography entries. These are the markers in the text not the entries, see #link("https://typst.app/docs/reference/model/footnote/") and #link("https://typst.app/docs/reference/text/super/") for how to style them.
+///  Default is `(typographic: false, baseline: 0em, size:1em)`, which makes the bibliography markers appear like normal text.
 ///
 /// -> content
 #let bibliography-as-footnote(
   numbering: "[1]",
-  bibliography,
+  footnote-style: (typographic: false, baseline: 0em, size:1em),
   body,
 ) = {
   show cite.where(form: "normal"): it => (
@@ -177,13 +177,14 @@
         cite(it.key, form: "full")
       }
       if it.key not in bibliography-visited.get() {
-        bibliography-state.update(x => (..x, bibitem))
         bibliography-visited.update(visited => visited + (it.key,))
       }
       box({
         if query(selector(label(label-str)).before(here())).len() > 0 {
-          [#footnote(label(label-str), numbering: numbering)]
+          set super(typographic: false, baseline: 0em, size:1em)
+          footnote(label(label-str), numbering: numbering)
         } else {
+          set super(typographic: false, baseline: 0em, size:1em)
           [#footnote(numbering: numbering, bibitem)#label(label-str)]
         }
       })
@@ -193,35 +194,35 @@
   body
 }
 
-/// Display the collected bibliography entries. Avoids the "multiple bibliographies are not yet supported" error by rendering entries gathered by `bibliography-as-footnote`.
-///
-/// Usage: `#magic.bibliography()`
-///
-/// - title (str, auto, none): The heading for the bibliography section. When `auto`, uses a language-appropriate title. When `none`, no heading is shown. Default is `auto`.
-///
-/// -> content
-#let bibliography(title: auto) = {
-  context {
-    let title = title
-    let bibitems = bibliography-state.final()
-    if title == auto {
-      if text.lang == "zh" {
-        title = "参考文献"
-      } else {
-        title = "Bibliography"
-      }
-    }
-    if title != none {
-      heading(title)
-      v(.45em)
-    }
-    grid(
-      columns: (auto, 1fr),
-      column-gutter: .7em,
-      row-gutter: 1.2em,
-      ..range(bibitems.len())
-        .map(i => (numbering("[1]", i + 1), bibitems.at(i)))
-        .flatten(),
-    )
-  }
-}
+// /// Display the collected bibliography entries. Avoids the "multiple bibliographies are not yet supported" error by rendering entries gathered by `bibliography-as-footnote`.
+// ///
+// /// Usage: `#magic.bibliography()`
+// ///
+// /// - title (str, auto, none): The heading for the bibliography section. When `auto`, uses a language-appropriate title. When `none`, no heading is shown. Default is `auto`.
+// ///
+// /// -> content
+// #let bibliography(title: auto) = {
+//   context {
+//     let title = title
+//     let bibitems = bibliography-state.final()
+//     if title == auto {
+//       if text.lang == "zh" {
+//         title = "参考文献"
+//       } else {
+//         title = "Bibliography"
+//       }
+//     }
+//     if title != none {
+//       heading(title)
+//       v(.45em)
+//     }
+//     grid(
+//       columns: (auto, 1fr),
+//       column-gutter: .7em,
+//       row-gutter: 1.2em,
+//       ..range(bibitems.len())
+//         .map(i => (numbering("[1]", i + 1), bibitems.at(i)))
+//         .flatten(),
+//     )
+//   }
+// }

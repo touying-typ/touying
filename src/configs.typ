@@ -73,15 +73,6 @@
   if self.at("enable-pdfpc", default: true) {
     context pdfpc.pdfpc-file(here())
   }
-  if self.at("show-bibliography-as-footnote", default: none) != none {
-    let args = self.at("show-bibliography-as-footnote", default: none)
-    let bibliography = if type(args) == dictionary {
-      args.at("bibliography")
-    } else {
-      args
-    }
-    place(hide(bibliography))
-  }
 }
 
 #let _default-page-preamble = self => {
@@ -185,9 +176,7 @@
 ///
 /// - show-hide-set-list-marker-none (bool): Whether to set the list marker to none for hide function. Default is `true`.
 ///
-/// - show-bibliography-as-footnote (bool): Whether to show the bibliography as footnote. Default is `none`.
-///
-///   It receives a bibliography function like `bibliography(title: none, "ref.bib")`, or a dict like `(numbering: "[1]", bibliography: bibliography(title: none, "ref.bib"))`.
+/// - show-bibliography-as-footnote (bool): Whether to show the bibliography as footnote. Default is `false`.
 ///
 /// - frozen-states (array): The frozen states for the frozen states and counters. Default is `()`.
 ///
@@ -806,7 +795,7 @@
     align-enum-marker-with-baseline: false,
     scale-list-items: none,
     show-hide-set-list-marker-none: true,
-    show-bibliography-as-footnote: none,
+    show-bibliography-as-footnote: false,
     document-mode: false,
     export-mode: "slides",
     document-theme: auto,
