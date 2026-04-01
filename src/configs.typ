@@ -216,9 +216,14 @@
 /// - default-page-preamble (function): The default preamble for each page. Default is a function to reset the footnote number per slide and reset the page counter to the slide counter.
 ///
 /// - default-composer (auto, function, array): The default composer for slides. It is used when the `composer` argument of the `slide` function is `auto`. Default is `auto`, which falls back to using `components.side-by-side`.
-///
 ///   For example, `config-common(default-composer: components.side-by-side.with(gutter: 2em))` sets the default gutter between columns to `2em` for all slides.
+/// 
+/// - document-mode (bool): Whether to enable the document mode. In document mode, the content will flow continuously without page breaks between slides, and some slide-specific features will be disabled. Default is `false`. Rather than using this flag, use the export-mode flag instead.
+/// 
+/// - export-mode (str): The export mode for the presentation. It can be `slides`, `document`, `presentation`, `handout`. Default is `slides`. In case of `slides` the `handout`-flag determines whether to render a presentation or a handout.
 ///
+/// - document-theme (theme): The theme to use when rendering in document mode. Can be an arbitrary theme but whether it works correctly is not guaranteed. Default is `auto`, in which case we use touying's builtin document theme.
+/// 
 /// -> dictionary
 #let config-common(
   handout: _default,
@@ -272,6 +277,7 @@
   default-composer: _default,
   document-mode: _default,
   export-mode: _default,
+  document-theme: _default,
   ..args,
 ) = {
   assert(args.pos().len() == 0, message: "Unexpected positional arguments.")
@@ -326,6 +332,7 @@
       default-composer: default-composer,
       document-mode: document-mode,
       export-mode: export-mode,
+      document-theme: document-theme,
     ))
       + args.named()
   )
@@ -699,6 +706,37 @@
 /// dual theme. These settings are consumed by `render-content-as-document`
 /// and `_wrap-section` in core.typ.
 ///
+/// When you pass `auto` to the `title-block-fn` it will show
+/// ```typc
+/// (..args) => context{
+///   let title = document.title
+///   let authors = document.author
+///   if type(authors) == array {
+///     authors = authors.reduce((a, b) => a + " and " + b)
+///   }
+///   let date = document.date
+///   let description = document.description
+///   let keywords = document.keywords
+///   if type(keywords) == array {
+///     keywords = keywords.reduce((a, b) => a + ", " + b)
+///   }
+///   align(center, block[
+///     #std.title(title)
+///
+///     *#authors*
+///
+///     #date.display()
+///
+///     #v(1em)
+///
+///     #block(width:page.width*0.6, text(style:"italic", description))
+///
+///     #text(weight:"semibold", style:"italic", tracking:0.5pt, keywords)
+///   ])
+/// },
+/// ```
+/// - available-fields (dict): The fields from the config to pass to the document-theme. A dict mapping config to the theme fields. E.g. (the-title: "info.title", the-author: "info.author") will pass the config-info fields `title` and `author` in the config to the theme as `the-title` and `the-author`. Default is (:), which passes no fields.
+/// - title-block-fn (function): A function returning the title block to show at the beginning of the rendered document. If your theme has an automatic function for this you don't need it. And you can always use `#document-only` before the first slide to show your custom title block. Default is `none`.
 /// - wrap-images (bool): Wrap raw images to the side via wrap-it. Default is `true`.
 /// - wrap-image-figures (bool): Wrap image figures (image + caption) to the side via wrap-it. Default is `false`.
 /// - wrap-other-figures (bool): Wrap other figures (block + caption) to the side via wrap-it. Default is `false`.
@@ -707,6 +745,8 @@
 ///
 /// -> dictionary
 #let config-document(
+  available-fields: _default,
+  title-block-fn: _default,
   wrap-images: _default,
   wrap-image-figures: _default,
   wrap-other-figures: _default,
@@ -717,6 +757,8 @@
   assert(args.pos().len() == 0, message: "Unexpected positional arguments.")
   return (
     document: _get-dict-without-default((
+      available-fields: available-fields,
+      title-block-fn: title-block-fn,
       wrap-images: wrap-images,
       wrap-image-figures: wrap-image-figures,
       wrap-other-figures: wrap-other-figures,
@@ -767,6 +809,7 @@
     show-bibliography-as-footnote: none,
     document-mode: false,
     export-mode: "slides",
+    document-theme: auto,
     enable-frozen-states-and-counters: true,
     frozen-states: (),
     default-frozen-states: _default-frozen-states,
@@ -850,6 +893,8 @@
     numbering: "1",
   ),
   config-document(
+    available-fields: (),
+    title-block-fn: none,
     wrap-images: true,
     wrap-image-figures: false,
     wrap-other-figures: false,

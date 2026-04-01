@@ -1162,6 +1162,20 @@
   return (parsed-results, max-repetitions)
 }
 
+/// Resolve a waypoint label or dictionary marker to a single integer subslide index.
+/// Extracts the "beginning" (or "first") value from resolved waypoint dictionaries.
+#let _resolve-waypoint-to-int(self, spec) = {
+  let resolved = utils.resolve-waypoints(self, spec)
+  if type(resolved) == int {
+    resolved
+  } else if type(resolved) == dictionary {
+    resolved.at("beginning", default: resolved.at("first", default: 1))
+  } else {
+    panic("unexpected resolved waypoint type: " + repr(resolved))
+  }
+}
+
+
 ///
 /// This is the core parsing function that handles all types of content including
 /// animations, pauses, meanwhile markers, and various content types. It recursively
@@ -1562,8 +1576,33 @@
           let render-base = if use-slide-context { repetitions } else {
             child.value.base
           }
-          let (reducer-data, content-cwp, content-repeat, content-mrr) = (
-            _prepare-render-context(self, inline-content, render-base)
+          // Compute render context (inlined from _prepare-render-context)
+          let reducer-data = _find-reducer-meta(inline-content)
+          let (raw-wp, so, dr) = _collect-waypoints(inline-content)
+          let resolved-wp = _resolve-waypoint-forest(raw-wp, so)
+          let content-mrr = if reducer-data != none {
+            let (_, mrr) = _parse-touying-reducer(
+              self: self + (waypoints: (:), subslide: 9999),
+              base: render-base,
+              index: 9999,
+              reducer-data,
+            )
+            mrr
+          } else {
+            let (_, mrr, _, _, _) = _parse-content-into-results-and-repetitions(
+              self: self + (waypoints: (:), subslide: 9999),
+              base: render-base,
+              index: 9999,
+              inline-content,
+            )
+            mrr
+          }
+          let content-repeat = calc.max(content-mrr, ..resolved-wp.values(), 1)
+          let content-cwp = _compute-waypoint-ranges(
+            resolved-wp,
+            content-repeat,
+            so,
+            dr,
           )
           // When using slide context (auto), use the slide's waypoints
           // for target resolution; otherwise use the content's own waypoints.
@@ -1587,14 +1626,31 @@
               utils.resolve-negative-subslides(rp, spec)
             } else { rp }
           }
-          let cont = _render-at-subslide(
-            self,
-            inline-content,
-            reducer-data,
-            cwp,
-            render-base,
-            target,
-          )
+          // Render at target (inlined from _render-at-subslide)
+          let render-self = self + (waypoints: cwp, subslide: target)
+          let cont = if reducer-data != none {
+            let (r, _) = _parse-touying-reducer(
+              self: render-self,
+              base: render-base,
+              index: target,
+              reducer-data,
+            )
+            r.sum(default: none)
+          } else {
+            let (
+              conts,
+              _,
+              _,
+              _,
+              _,
+            ) = _parse-content-into-results-and-repetitions(
+              self: render-self,
+              base: render-base,
+              index: target,
+              inline-content,
+            )
+            conts.sum(default: none)
+          }
           if cont != none {
             result.push(cont)
           }
@@ -2358,20 +2414,6 @@
   let repeat = calc.max(max-rep-raw, ..resolved-wp.values(), 1)
   let cwp = _compute-waypoint-ranges(resolved-wp, repeat, so, dr)
   (reducer-data, cwp, repeat, max-rep-raw)
-}
-
-
-/// Resolve a waypoint label or dictionary marker to a single integer subslide index.
-/// Extracts the "beginning" (or "first") value from resolved waypoint dictionaries.
-#let _resolve-waypoint-to-int(self, spec) = {
-  let resolved = utils.resolve-waypoints(self, spec)
-  if type(resolved) == int {
-    resolved
-  } else if type(resolved) == dictionary {
-    resolved.at("beginning", default: resolved.at("first", default: 1))
-  } else {
-    panic("unexpected resolved waypoint type: " + repr(resolved))
-  }
 }
 
 

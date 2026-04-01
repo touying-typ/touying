@@ -156,15 +156,6 @@
   arr.slice(i, j + 1)
 }
 
-// convert all sequence to array recursively, and then flatten the array
-let sequence-to-array(it) = {
-if utils.is-sequence(it) {
-it.children.map(sequence-to-array)
-} else {
-it
-}
-}
-
 
 /// Add a label to a content.
 ///
@@ -351,6 +342,15 @@ it
     it = it(self)
   }
   return [#it]
+}
+
+// convert all sequence to array recursively, and then flatten the array
+#let sequence-to-array(it) = {
+  if is-sequence(it) {
+    it.children.map(sequence-to-array)
+  } else {
+    it
+  }
 }
 
 

@@ -242,7 +242,6 @@
   } else {
     (body,)
   }
-  
 
   let _check-current-mode-skip(self, lbl) = {
     if lbl == none or not lbl.starts-with("touying:") { return false }
@@ -1689,26 +1688,40 @@
     }
     // Linearize: returns (content: .., images: .., blocks: ..)
     let result = _document-linearize(self, composer, conts)
-    // If extracting, return the full dict so render-content-as-document
-    // can collect images/blocks at subsection level.
-    let has-extracted = result.images.len() > 0 or result.blocks.len() > 0
-    if self.at("document-extract-content", default: false) and has-extracted {
-      let content = if result.content != none {
-        setting-fn(result.content)
-      } else { none }
-      return (
-        content: content,
-        images: result.images,
-        blocks: result.blocks,
-        block-recall-map: block-recall-map,
-        waypoint-map: self.waypoints,
-      )
+    // Document-specific setting function: only preserves semantic styling
+    // (strong→alert), drops slide-specific rules (heading offset, layout anchor).
+    let document-setting-fn(body) = {
+      show: body => {
+        if self.at("show-strong-with-alert", default: true) {
+          show strong: self.methods.alert.with(self: self)
+          body
+        } else {
+          body
+        }
+      }
+      body
     }
-    return (
-      content: setting-fn(result.content),
+    // Return everything inside a metadata element so theme styling
+    // (set text, set page, etc.) applied by the caller doesn't affect
+    // the content. The document renderer extracts this metadata.
+    // We pack everything (content, images, blocks, maps) into the metadata
+    // value because returning a dictionary gets converted to content
+    // by Typst when set rules are active in the calling scope.
+    let has-extracted = result.images.len() > 0 or result.blocks.len() > 0
+    let content = if result.content != none {
+      document-setting-fn(result.content)
+    } else { none }
+    let payload = (
+      kind: "touying-document-raw",
+      content: content,
       block-recall-map: block-recall-map,
       waypoint-map: self.waypoints,
     )
+    if self.at("document-extract-content", default: false) and has-extracted {
+      payload.insert("images", result.images)
+      payload.insert("blocks", result.blocks)
+    }
+    return [#metadata(payload) <touying-document-wrapper>]
   }
 
   if self.handout {

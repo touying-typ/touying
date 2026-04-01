@@ -38,6 +38,32 @@
 ))<touying-temporary-mark>]
 
 
+/// Extract the payload dictionary from a touying-document-raw metadata wrapper.
+/// In document mode, touying-slide wraps its result (content + maps) in metadata
+/// so that theme styling (set text, set page, etc.) doesn't leak into the document.
+/// This walks through styled wrappers and sequences to find and extract the payload.
+///
+/// Returns: the full payload dictionary (with body, block-recall-map, waypoint-map, etc.)
+#let _unwrap-document-raw(cont) = {
+  if cont == none { return }
+  // This is where we stop unwrapping, finanly found our payload!
+  if utils.is-kind(cont, "touying-document-raw") {
+    return cont.value
+  }
+  //unwrap all sorts of wrappers.
+  if utils.is-styled(cont) {
+    return _unwrap-document-raw(cont.child)
+  }
+  if type(cont) == content and cont.has("body") {
+    return _unwrap-document-raw(cont.body)
+  }
+  // Sequence - look into children
+  if utils.is-sequence(cont) {
+    return cont.children.map(_unwrap-document-raw).sum(default: [])
+  }
+}
+
+
 #let _wrap-section(
   items,
   images,
@@ -526,31 +552,31 @@
   let _process-child(self, extract-self, child) = {
     if utils.is-kind(child, "touying-slide-wrapper") {
       let slide-result = (child.value.fn)(extract-self)
-      let (brm, wpm) = if type(slide-result) == dictionary {
-        (
-          slide-result.at("block-recall-map", default: (:)),
-          slide-result.at("waypoint-map", default: (:)),
-        )
-      } else { ((:), (:)) }
-      if any-wrapping and type(slide-result) == dictionary {
+      // touying-slide returns content containing a touying-document-raw metadata
+      // element. Extract the payload, stripping any theme styling wrappers.
+      let payload = _unwrap-document-raw(slide-result)
+      // panic(slide-result, payload)
+      let brm = payload.at("block-recall-map", default: (:))
+      let wpm = payload.at("waypoint-map", default: (:))
+      let raw-content = payload.at("content", default: none)
+      let images = payload.at("images", default: ())
+      let blocks = payload.at("blocks", default: ())
+      if any-wrapping and (images.len() > 0 or blocks.len() > 0) {
         // Got structured result with extracted images/blocks
-        let items = if slide-result.content != none {
-          (block(slide-result.content),)
+        let items = if raw-content != none {
+          (block(raw-content),)
         } else { () }
         return (
           items: items,
-          images: slide-result.at("images", default: ()),
-          blocks: slide-result.at("blocks", default: ()),
+          images: images,
+          blocks: blocks,
           block-recall-map: brm,
           waypoint-map: wpm,
         )
       }
       // Plain content (no extraction or nothing extracted)
-      let cont = if type(slide-result) == dictionary {
-        slide-result.content
-      } else { slide-result }
       return (
-        items: (block(cont),),
+        items: if raw-content != none { (block(raw-content),) } else { () },
         images: (),
         blocks: (),
         block-recall-map: brm,

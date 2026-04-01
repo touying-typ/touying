@@ -1,19 +1,30 @@
-#import "../../../lib.typ": *
+#import "/lib.typ": *
 
-
-#import themes.dual: *
-#import themes.simple: simple-theme
 #import themes.document: document-theme
+#import themes.simple: *
 
 #import "@preview/edgeframe:0.3.0": ef-document
 
-#show: dual-theme.with(
-  slide-theme: simple-theme,
-  // document-theme: ef-document, //numbering: "1.1"
-  document-theme: document-theme.with(numbering: "1.1"),
+// this will be used when the title-block-fn is set to `auto`.
+#set document(description: lorem(20), keywords:("lorem", "ipsum", "dolor"))
+
+// bibliography data for testing bib 
+#let bib = bytes(
+  "@book{dirac,
+    title={The Principles of Quantum Mechanics},
+    author={Paul Adrien Maurice Dirac},
+    series={International series of monographs on physics},
+    year={1981},
+    publisher={Clarendon Press},
+  }",
+)
+
+#show: simple-theme.with(
   config-common(
     export-mode: "document",
-    handout: false,
+    // document-theme: ef-document, //external theme
+    document-theme: document-theme.with(numbering: "1.1"), // touying default document theme
+    show-bibliography-as-footnote: bibliography(bib), //bib for slides mode. disabled in document mode, just goes to final state with all viisble directly.
     show-hide-set-list-marker-none: true,
   ),
   config-info(
@@ -22,21 +33,16 @@
     subtitle: [Testing Touying's Document Mode],
     date: datetime.today(),
   ),
-  config-document(
-    wrap-images: true, 
-    wrap-image-figures: true
+  config-document( //general document mode config, nothing theme specific here. those stuff should be put into the theme via `.with` when specifiying it above.
+    wrap-images: true,
+    wrap-image-figures: true,
+    // title-block-fn: auto, //if you use ef-document for rendering, you can employ the auto title-block, or write a new one. 
+    available-fields: ( // don't pass if you use ef-document for rendering as it does not have those fields.
+      title: "info.title",
+      subtitle: "common.export-mode"
+    )
   ),
 )
-
-// #import themes.simple: *
-// #show: simple-theme.with(
-//   config-common(
-//     show-hide-set-list-marker-none: true,
-//   ),
-//   config-info(
-//     title: [Document Mode Test],
-//   )
-// )
 
 = Introduction
 
@@ -44,7 +50,7 @@ This is the introduction section. Content should flow continuously without page 
 
 == Background
 
-Some background information here. #lorem(20)
+Some background information here. #lorem(20) @dirac
 
 === Details
 
@@ -83,6 +89,11 @@ Normal text after uncover. #lorem(20)
 #only("2-")[This text uses only — should be visible in document mode.]
 
 More text here. #lorem(15)
+
+== Focus Slide
+#focus-slide[
+  This is a focus slide. In document mode, it should just render inline with the rest of the content. #lorem(20)
+]
 
 == Lists and Items
 
@@ -166,9 +177,7 @@ We can even recall a table that is defined in a later slide at one of its subsli
 
 
 == Table Content
-// #show: touying-set-config.with(config-methods(
-//     cover: utils.method-wrapper((body)=>{if body.func() == table.cell { [] } else { hide(body) }}),
-//   ))
+
 #slide(composer: (1fr, 1fr))[
   
   #table(
@@ -244,7 +253,7 @@ We can even recall a table that is defined in a later slide at one of its subsli
   _This content only appears in handouts, not during the live presentation._
 ]
 
-Some text visible in all modes. Above we have content only in slides,presentation, or handout.
+Some text visible in all modes. Above we have content only in slides, presentation, or handout.
 
 == Document-Only Content
 Next section is only visible in document mode, hidden in slides (presentation and handout).
@@ -268,3 +277,6 @@ a live presentation. #lorem(15)
 == Conclusion
 
 This is the conclusion. The document should be continuous A4 with no slide boundaries. #lorem(30)
+
+// #magic.bibliography()
+#bibliography(bib)

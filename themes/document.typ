@@ -3,7 +3,7 @@
 /// This is a plain document theme with no presentation framework dependency.
 /// It can be used standalone for papers, reports, etc., or paired with a
 /// slide theme via `dual-theme` for single-source presentation + document output.
-/// 
+///
 /// It serves as an example, you may pass any document theme to the dual theme.
 ///
 /// Example (standalone):
@@ -23,10 +23,11 @@
 /// - paper (str): Paper size. Default is `"a4"`.
 /// - margin (length, dictionary): Page margins. Default is `(x: 2.5cm, y: 2.5cm)`.
 /// - justify (bool): Whether to justify paragraphs. Default is `true`.
+/// - title-block-fn (function): A function returning the title block to show at the beginning of the rendered document. If your theme has an automatic function for this you don't need it. And you can always use `#document-only` before the first slide to show your custom title block.
 /// - body (content): The document content.
 #let document-theme(
   title: "Title",
-  subtitle: none,
+  subtitle: "Hey a subtitle!!!",
   author: "Author Name",
   date: datetime.today(),
   date-format: "[day].[month].[year]",
@@ -38,6 +39,35 @@
   paper: "a4",
   margin: (x: 2.5cm, y: 2.5cm),
   justify: true,
+  title-block-fn: (..args) => {
+    // default title block ignores subtitle and institution, you can customize it by passing a different function
+    let kwargs = args.named()
+    align(center, block(
+      {
+        if kwargs.logo != none {
+          place(top + right, image(kwargs.logo, width: 1.5cm, height: 1.5cm))
+        }
+        block(
+          [
+            #std.title(kwargs.title)
+
+            #let subtitle = if kwargs.subtitle != none {
+              text(kwargs.subtitle, weight: "bold")
+            } else { none }
+            #subtitle
+
+            #kwargs.author
+
+            #kwargs.institution
+
+            #kwargs.date.display(kwargs.date-format)
+          ],
+          spacing: 0.2em,
+        )
+      },
+      spacing: 0.5em,
+    ))
+  },
   ..args,
   body,
 ) = {
@@ -48,27 +78,21 @@
   set page(paper: paper, margin: margin)
   show figure.where(kind: table): set figure.caption(position: top)
 
-  // write header
-  align(center, block({
-    if logo != none {
-      image(logo, width: 1.5cm, height: 1.5cm)
-    }
-    block([
-      #std.title(title)
-
-      #let subtitle = if subtitle != none {text(subtitle, weight: "bold")} else {none}
-      #subtitle
-
-      #author
-
-      #institution 
-
-      #date.display(date-format)
-      ],
-      spacing: 0.2em
-    )},
-    spacing: 0.5em,
-  ))
+  // write title header
+  assert(
+    type(title-block-fn) == function,
+    message: "title-block-fn must be a function",
+  )
+  title-block-fn(
+    title: title,
+    subtitle: subtitle,
+    author: author,
+    institution: institution,
+    date: date,
+    date-format: date-format,
+    logo: logo,
+    ..args,
+  )
 
   body
 }

@@ -33,11 +33,13 @@
   composer: auto,
   ..bodies,
 ) = touying-slide-wrapper(self => {
-  let dbg-node = [#metadata((
-    fn: "slide-fn",
-    self-headings: self.headings,
-    bodies: repr(bodies),  // or however your slide-fn receives content
-  ))<dbg>]
+  // no headings available when rendering in document mode
+  // you cannot debug your slide theme when rendering in document mode, as some stuff may not be populated since we don't need it.
+  // let dbg-node = [#metadata((
+  //   fn: "slide-fn",
+  //   self-headings: self.headings,
+  //   bodies: repr(bodies),  // or however your slide-fn receives content
+  // ))<dbg>]
 
   let deco-format(it) = text(size: .6em, fill: self.colors.neutral-light, it)
   let header(self) = deco-format(
@@ -78,10 +80,13 @@
 ///
 /// - config (dictionary): The configuration of the slide. You can use `config-xxx` to set the configuration of the slide. For more several configurations, you can use `utils.merge-dicts` to merge them.
 #let centered-slide(config: (:), ..args) = touying-slide-wrapper(self => {
-  touying-slide(self: self, ..args.named(), config: config, align(
-    center + horizon,
+  touying-slide(
+    self: self, 
+    ..args.named(), 
+    config: config, 
+    setting: align.with(center + horizon),
     args.pos().sum(default: none),
-  ))
+  )
 })
 
 
@@ -131,7 +136,12 @@
     }),
   )
   set text(fill: foreground, size: 1.5em)
-  touying-slide(self: self, config: config, align(center + horizon, body))
+  touying-slide(
+    self: self,
+    config: config,
+    setting: align.with(center + horizon),
+    body,
+  )
 })
 
 
