@@ -290,12 +290,6 @@
     } else {
       _call-slide-fn(self, slide-fn, current-slide-cont)
     }
-    //debug
-    let dbg-node = [#metadata((
-      fn: "inside-wrapper",
-      self-headings: self.headings,
-    ))<dbg>]
-    slide-content = dbg-node + slide-content
 
     if last-heading-label != none {
       recaller-map.insert(last-heading-label, (
