@@ -576,7 +576,7 @@ No automatic section slide was created for the `= Section` heading.
 Use `pagebreak()` or `---` to force a new page for that section and write there.
 
 ```example
->>>#import "@preview/touying:0.6.3": *
+>>>#import "@preview/touying:0.7.0": *
 >>>#import themes.metropolis: *
 >>>
 >>>#show: metropolis-theme.with(
@@ -696,6 +696,43 @@ Slide with a custom header and footer.
 ---
 
 ## config-common Reference
+
+### How do I prevent slide content from overflowing to the next page?
+
+Use `config-common(breakable: false)` to prevent slide content from automatically overflowing to the next page. By default (`breakable: true`), content that exceeds the slide height creates new pages. When set to `false`, content is constrained to a single page using a non-breakable block, which is useful for ensuring a strict one-to-one mapping between source slides and output pages — especially in agentic workflows where an agent needs to reason about slide boundaries.
+
+Related parameters:
+
+- **`clip`** (default `false`): When `true`, content that exceeds the slide height is visually truncated.
+- **`detect-overflow`** (default `true`): When `true`, a layout measurement is performed and `panic()` is called if the content height exceeds the available slide height, making it easy to catch overflow early. Set to `false` to avoid the extra layout overhead.
+
+```typst
+// Prevent overflow, panic on overflow (default behavior when breakable: false)
+#show: simple-theme.with(
+  config-common(breakable: false),
+)
+
+// Prevent overflow and visually clip overflowing content
+#show: simple-theme.with(
+  config-common(breakable: false, clip: true),
+)
+
+// Prevent overflow, disable overflow detection (performance-first)
+#show: simple-theme.with(
+  config-common(breakable: false, detect-overflow: false),
+)
+```
+
+You can also switch these settings mid-presentation using `touying-set-config`:
+
+```typst
+== This slide's overflow will be clipped
+
+// Enable clipping for a specific slide
+#show: touying-set-config.with(config-common(clip: true))
+
+#lorem(500)
+```
 
 ### How do I use a semi-transparent cover instead of fully hiding content?
 

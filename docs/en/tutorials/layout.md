@@ -140,3 +140,48 @@ If you need to change the way columns are divided, you can modify the `composer`
   Second column.
 ]
 ```
+
+## Preventing Content Overflow
+
+By default, when slide content exceeds the page height, Touying automatically overflows the excess content to the next page. This is reasonable in most cases, but in scenarios that require strict control over page mapping — such as agentic workflows where an agent needs to reason about slide boundaries — you may want to disable this behavior.
+
+Use `config-common(breakable: false)` to prevent content from overflowing:
+
+```typst
+// Prevent overflow, panic on overflow (default behavior when breakable: false)
+#show: simple-theme.with(
+  config-common(breakable: false),
+)
+
+// Prevent overflow and visually clip overflowing content
+#show: simple-theme.with(
+  config-common(breakable: false, clip: true),
+)
+
+// Prevent overflow, disable overflow detection (performance-first)
+#show: simple-theme.with(
+  config-common(breakable: false, detect-overflow: false),
+)
+```
+
+Related parameters:
+
+- **`clip`** (default `false`): When `true`, content that exceeds the slide height is visually truncated.
+- **`detect-overflow`** (default `true`): When `true`, a layout measurement is performed and `panic()` is called if the content height exceeds the available slide height, making it easy to catch overflow early. Set to `false` to avoid the extra layout overhead.
+
+:::note[Note]
+
+`clip` and `detect-overflow` only take effect when `breakable: false`.
+
+:::
+
+You can also dynamically switch these settings mid-presentation using `touying-set-config`:
+
+```typst
+== This slide's overflow will be clipped
+
+// Enable clipping for a specific slide
+#show: touying-set-config.with(config-common(clip: true))
+
+#lorem(500)
+```

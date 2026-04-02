@@ -67,6 +67,46 @@ The header now uses the custom primary color.
 | `new-section-slide-fn` | `none` | 章节幻灯片函数 |
 | `freeze-slide-counter` | `false` | 冻结幻灯片计数器 |
 | `enable-pdfpc` | `true` | 启用 pdfpc 支持 |
+| `breakable` | `true` | 是否允许幻灯片内容溢出到下一页 |
+| `clip` | `false` | 是否裁剪溢出内容（仅在 `breakable: false` 时生效） |
+| `detect-overflow` | `true` | 是否检测溢出并报错（仅在 `breakable: false` 时生效） |
+
+### 如何防止幻灯片内容溢出到下一页？
+
+使用 `config-common(breakable: false)` 可以防止幻灯片内容自动溢出到下一页。默认情况下（`breakable: true`），超出幻灯片高度的内容会自动创建新页面；设置为 `false` 后，内容将被限制在单页内，这对于需要保证源码与输出页面一一对应的场景（如 AI 智能体工作流）非常有用。
+
+配合使用的参数：
+
+- **`clip`**（默认 `false`）：设为 `true` 时，超出幻灯片高度的内容会被视觉截断。
+- **`detect-overflow`**（默认 `true`）：设为 `true` 时，会通过布局测量检测溢出，一旦内容高度超出幻灯片高度则直接 `panic()` 报错，便于及早发现问题；设为 `false` 可避免额外的布局开销。
+
+```typst
+// Prevent overflow, panic on overflow (default behavior when breakable: false)
+#show: simple-theme.with(
+  config-common(breakable: false),
+)
+
+// Prevent overflow and visually clip overflowing content
+#show: simple-theme.with(
+  config-common(breakable: false, clip: true),
+)
+
+// Prevent overflow, disable overflow detection (performance-first)
+#show: simple-theme.with(
+  config-common(breakable: false, detect-overflow: false),
+)
+```
+
+也可以在演示文稿中途通过 `touying-set-config` 切换：
+
+```typst
+== This slide's overflow will be clipped
+
+// Enable clipping for a specific slide
+#show: touying-set-config.with(config-common(clip: true))
+
+#lorem(500)
+```
 
 ### 如何使用半透明遮罩替代完全隐藏？
 
@@ -640,7 +680,7 @@ No automatic section slide was created for the `= Section` heading.
 
 使用 `pagebreak()` 或 `---` 强制新建一页，然后在该页编写内容。
 ```example
->>>#import "@preview/touying:0.6.3": *
+>>>#import "@preview/touying:0.7.0": *
 >>>#import themes.metropolis: *
 >>>
 >>>#show: metropolis-theme.with(

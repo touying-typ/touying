@@ -134,3 +134,48 @@ config-page(footer: [Custom Footer])
 ]
 ```
 
+## 防止内容溢出
+
+默认情况下，当幻灯片内容超出页面高度时，Touying 会自动将多余内容溢出到下一页。这在大多数场景下是合理的，但在某些需要严格控制页面映射关系的场景（如 AI 智能体工作流）中，你可能希望禁止这种行为。
+
+使用 `config-common(breakable: false)` 可以防止内容溢出：
+
+```typst
+// Prevent overflow, panic on overflow (default behavior when breakable: false)
+#show: simple-theme.with(
+  config-common(breakable: false),
+)
+
+// Prevent overflow and visually clip overflowing content
+#show: simple-theme.with(
+  config-common(breakable: false, clip: true),
+)
+
+// Prevent overflow, disable overflow detection (performance-first)
+#show: simple-theme.with(
+  config-common(breakable: false, detect-overflow: false),
+)
+```
+
+配合使用的参数：
+
+- **`clip`**（默认 `false`）：设为 `true` 时，超出幻灯片高度的内容会被视觉截断。
+- **`detect-overflow`**（默认 `true`）：设为 `true` 时，会通过布局测量检测溢出，一旦内容高度超出幻灯片高度则直接 `panic()` 报错，便于及早发现问题；设为 `false` 可避免额外的布局开销。
+
+:::note[注意]
+
+`clip`、`detect-overflow` 这两个参数仅在 `breakable: false` 时生效。
+
+:::
+
+你也可以在演示文稿中途通过 `touying-set-config` 动态切换这些配置：
+
+```typst
+== This slide's overflow will be clipped
+
+// Enable clipping for a specific slide
+#show: touying-set-config.with(config-common(clip: true))
+
+#lorem(500)
+```
+
