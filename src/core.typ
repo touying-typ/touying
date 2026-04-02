@@ -5436,13 +5436,13 @@
               + (header: new-header, footer: footer-i)
           ),
         )
-        if self.at("breakable", default: true) {
+        if subslide-self.at("breakable", default: true) {
           slide-body
         } else {
           components.page-container(
-            self: self,
-            clip: self.at("clip", default: false),
-            detect-overflow: self.at("detect-overflow", default: true),
+            self: subslide-self,
+            clip: subslide-self.at("clip", default: false),
+            detect-overflow: subslide-self.at("detect-overflow", default: true),
             slide-body,
           )
         }
