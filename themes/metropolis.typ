@@ -191,7 +191,7 @@
   numbered: true,
   body,
 ) = touying-slide-wrapper(self => {
-  let slide-body = {
+  let setting(level, numbered, body) = {
     set std.align(horizon)
     show: pad.with(20%)
     set text(size: 1.5em)
@@ -220,7 +220,12 @@
     self,
     config-page(fill: self.colors.neutral-lightest),
   )
-  touying-slide(self: self, config: config, slide-body)
+  touying-slide(
+    self: self,
+    config: config,
+    setting: setting.with(level, numbered),
+    body,
+  )
 })
 
 
@@ -242,7 +247,12 @@
     config-page(fill: self.colors.neutral-dark, margin: 2em),
   )
   set text(fill: self.colors.neutral-lightest, size: 1.5em)
-  touying-slide(self: self, config: config, std.align(align, body))
+  touying-slide(
+    self: self,
+    config: config,
+    setting: std.align.with(align),
+    body,
+  )
 })
 
 

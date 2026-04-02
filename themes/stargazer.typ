@@ -309,7 +309,12 @@
     ),
   )
   set text(fill: self.colors.neutral-lightest, weight: "bold", size: 1.5em)
-  touying-slide(self: self, config: config, std.align(align, body))
+  touying-slide(
+    self: self,
+    config: config,
+    setting: std.align.with(align),
+    body,
+  )
 })
 
 
@@ -322,7 +327,7 @@
 /// - body (array): is the content of the slide.
 #let ending-slide(config: (:), title: none, body) = touying-slide-wrapper(
   self => {
-    let content = {
+    let setting(title, body) = {
       set std.align(center + horizon)
       if title != none {
         block(
@@ -334,7 +339,12 @@
       }
       body
     }
-    touying-slide(self: self, config: config, content)
+    touying-slide(
+      self: self,
+      config: config,
+      setting: setting.with(title),
+      body,
+    )
   },
 )
 

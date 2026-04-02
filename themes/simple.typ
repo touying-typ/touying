@@ -79,12 +79,16 @@
 /// Centered slide for the presentation.
 ///
 /// - config (dictionary): The configuration of the slide. You can use `config-xxx` to set the configuration of the slide. For more several configurations, you can use `utils.merge-dicts` to merge them.
-#let centered-slide(config: (:), ..args) = touying-slide-wrapper(self => {
+#let centered-slide(
+  config: (:),
+  setting: body => body,
+  ..args,
+) = touying-slide-wrapper(self => {
   touying-slide(
-    self: self, 
-    ..args.named(), 
-    config: config, 
-    setting: align.with(center + horizon),
+    self: self,
+    ..args.named(),
+    config: config,
+    setting: body => align(center + horizon, setting(body)),
     args.pos().sum(default: none),
   )
 })
@@ -104,11 +108,22 @@
 /// New section slide for the presentation. You can update it by updating the `new-section-slide-fn` argument for `config-common` function.
 ///
 /// - config (dictionary): The configuration of the slide. You can use `config-xxx` to set the configuration of the slide. For more several configurations, you can use `utils.merge-dicts` to merge them.
-#let new-section-slide(config: (:), body) = centered-slide(config: config, [
-  #text(1.2em, weight: "bold", utils.display-current-heading(level: 1))
+// #let new-section-slide(config: (:), body) = centered-slide(config: config, [
+//   #text(1.2em, weight: "bold", utils.display-current-heading(level: 1))
 
-  #body
-])
+//   #body
+// ])
+#let new-section-slide(config: (:), body) = {
+  let setting(body) = {
+    [
+      #text(1.2em, weight: "bold", utils.display-current-heading(level: 1))
+
+      #body
+    ]
+  }
+
+  centered-slide(config: config, setting: setting, body)
+}
 
 
 /// Focus on some content.
