@@ -256,7 +256,7 @@
     } else if title-block-fn == auto {
       auto-title-block()
     } else if type(title-block-fn) == function {
-      title-block-fn.with(self: self)
+      utils.call-or-display(self, title-block-fn)
     } else {
       panic(
         "title-block-fn must be a function or auto or none. Got: "
