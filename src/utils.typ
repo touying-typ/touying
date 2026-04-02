@@ -1126,7 +1126,7 @@
 /// - shrink (bool): Indicates whether the content should be scaled down if it is larger than the available width. Default is `true`.
 ///
 /// - body (content): The content to fit.
-/// 
+///
 /// - args (arguments): For compatibility with older versions, passing in width as a positional argument is still supported, but deprecated. While the docstring does not clarify this, if two positional arguments are given, the first one is the width and the second one is the body. TODO: mention when this functionality will no longer be supported.
 ///
 /// -> content
