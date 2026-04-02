@@ -343,6 +343,37 @@
   return [#it]
 }
 
+/// recursively checks if `it` has a text in it
+///
+///
+/// - it (any): the content to check
+/// - transparentize-table (bool): Whether to assume tables contain text. If `false` tables will get searched completely for available text.
+/// ->
+#let _contains-text(it, transparentize-table) = {
+  if type(it) != content {
+    return false
+  }
+  if it.func() in (text, math.equation) {
+    return true
+  }
+  if it.has("body") {
+    return _contains-text(it.body, transparentize-table)
+  }
+  if it.has("child") {
+    return _contains-text(it.child, transparentize-table)
+  }
+  if it.has("children") {
+    if it.func() == table {
+      return transparentize-table
+    }
+    for child in it.children {
+      if _contains-text(child, transparentize-table) {
+        return true
+      }
+    }
+  }
+  return false
+}
 
 /// Wrap a function with a `self` parameter to make it callable as a method.
 ///
@@ -883,9 +914,10 @@
 }
 
 
-/// Fit content to specified height.
+/// Fit content to specified/remaining height.
 ///
-/// Example: `#utils.fit-to-height(100%)[BIG]`
+/// Example: `#utils.fit-to-height[BIG]`
+/// - height (length, fraction, relative): The height to fit the content to. For example, `height: 50%` will fit the content to half of the slide height. If given as a fraction, it will be based on the available height after everything else is evaluated, similar to how fractional lengths behave for table column widths. Default is `1fr` which means to fit the content to the full available rest height. If one positional argument is given, this will be interpreted as the height instead.
 ///
 /// - width (length, fraction, relative): Will determine the width of the content after scaling. So, if you want the scaled content to fill half of the slide width, you can use `width: 50%`.
 ///
@@ -896,21 +928,34 @@
 /// - shrink (bool): Indicates whether the content should be scaled down if it is larger than the available height. Default is `true`.
 ///
 /// - height (length, fraction, float, relative): The height to fit the content to.
-/// - reflow (bool): Whether to allow reflow when scaling with auto width. Default is `true`. Only works when `width` is `auto`.
+///
+/// - reflow (bool): Whether to allow text reflow when scaling with auto width. Default is `true`. Only works when `width` is `auto` and the body contains text.
+///
+/// - force-height (bool): Whether to force the content to occupy the full height and not have it fill the available width. Only matters when `reflow` is `true` and `width` is auto. By default `false`. When text is reflowed, it makes sense to use as much width as possible and not force the content to be as tall as possible. Lines are naturally discrete and thus so are the possible scaling factors to fit the lines to the available height. Forcing the height may lead to the text not occupying the available width.
 ///
 /// - body (content): The content to fit.
 ///
+/// - args (argumemts): May only be one positional argument. See `height` above. Overrides `height` if given.
+///
 /// -> content
 #let fit-to-height(
+  height: 1fr,
   width: auto,
   prescale-width: none,
   grow: true,
   shrink: true,
-  reflow: false,
+  reflow: true,
   force-height: false,
-  height,
   body,
+  ..args,
 ) = {
+  assert(
+    args.pos().len() <= 1,
+    message: "Only one positional argument allowed, which will be interpreted as height.",
+  )
+  if args.pos().len() == 1 {
+    height = args.pos().at(0)
+  }
   context {
     let layout-content(
       width: auto,
@@ -947,7 +992,7 @@
       let w-ratio = mutable-width / size.width
       let ratio = calc.min(h-ratio, w-ratio) * 100%
 
-      if width == auto and reflow {
+      if width == auto and reflow and _contains-text(body) {
         //height is good rn, but width may be too small.
         // get the current ratio of used/available width and scale such that we fill it. use sqrt trick to allow good flow.
         // then height may again be slightly too small. repeat that.
@@ -1072,6 +1117,8 @@
 ///
 /// Example: `#utils.fit-to-width(100%)[BIG]`
 ///
+/// - width (length, fraction, relative): The width to fit the content to. For example, `width: 50%` will fit the content to half of the slide width. If given as a fraction, it will be based on the available width after everything else is evaluated, similar to how fractional lengths behave for table column widths. Default is `1fr` which means to fit the content to the full available rest width. If one positional argument is given, this will be interpreted as the width instead.
+///
 /// - grow (bool): Indicates whether the content should be scaled up if it is smaller than the available width. Default is `true`.
 ///
 /// - shrink (bool): Indicates whether the content should be scaled down if it is larger than the available width. Default is `true`.
@@ -1081,7 +1128,15 @@
 /// - body (content): The content to fit.
 ///
 /// -> content
-#let fit-to-width(grow: true, shrink: true, width, content) = {
+#let fit-to-width(width: 1fr, grow: true, shrink: true, content, ..args) = {
+  assert(
+    args.pos().len() <= 1,
+    message: "Only one positional argument allowed, which will be interpreted as width.",
+  )
+  if args.pos().len() == 1 {
+    width = args.pos().at(0)
+  }
+
   layout(layout-size => {
     let content-width = measure(content).width
     let width = _size-to-pt(width, layout-size.width)
@@ -1396,33 +1451,6 @@
     ),
     body,
   )
-}
-
-// recursively checks if `it` has a text in it
-#let _contains-text(it, transparentize-table) = {
-  if type(it) != content {
-    return false
-  }
-  if it.func() in (text, math.equation) {
-    return true
-  }
-  if it.has("body") {
-    return _contains-text(it.body, transparentize-table)
-  }
-  if it.has("child") {
-    return _contains-text(it.child, transparentize-table)
-  }
-  if it.has("children") {
-    if it.func() == table {
-      return transparentize-table
-    }
-    for child in it.children {
-      if _contains-text(child, transparentize-table) {
-        return true
-      }
-    }
-  }
-  return false
 }
 
 /// Cover content with a text-color-changing mechanism.
