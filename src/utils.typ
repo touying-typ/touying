@@ -1,5 +1,5 @@
 #import "pdfpc.typ"
-
+#import "magic.typ"
 /// Add page margin dictionary to another page margin dictionary.
 ///
 /// Example: `add-page-margin-dicts((top: 1cm, x: 2cm), (y: 3em))` returns `(x: 2cm, y: 3em)`
@@ -952,7 +952,9 @@
     message: "Only two positional arguments allowed, which will be interpreted as height and body.",
   )
   if args.pos().len() == 1 {
-    //TODO: warning deprecated usage
+    magic.warning(
+      "Passing 'height' as a positional argument is deprecated, please use the named argument instead.",
+    )
     height = body
     body = args.pos().at(0)
   }
@@ -1136,7 +1138,9 @@
     message: "Only two positional arguments allowed, which will be interpreted as width and body.",
   )
   if args.pos().len() == 1 {
-    //TODO: warning deprecated
+    magic.warning(
+      "Passing 'width' as a positional argument is deprecated, please use the named argument instead.",
+    )
     width = body
     body = args.pos().at(0)
   }
