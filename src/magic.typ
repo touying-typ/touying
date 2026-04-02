@@ -151,13 +151,14 @@
 
 #let bibliography-visited = state("footer-bibliography-visited", ())
 
-/// Display bibliography citations as footnotes. Place `#place(hide(bibliography(...)))` at the end of the document to register the bibliography entries.
+/// Display bibliography citations as footnotes. 
+/// / Note: #[You still need to register the bibliography globally once. \ If you don't want to show the bibliography, \ use `hide(bibliography(...))` at the end of your document. ]
 ///
-/// Usage: `#show: magic.bibliography-as-footnote.with(bibliography(title: none, "ref.bib"))`
+/// Usage: `#show: magic.bibliography-as-footnote`
 ///
 /// - numbering (str): The numbering format for footnote citations. Default is `"[1]"`.
 ///
-/// - footnote-style (dict): A dictionary of style properties to apply to the footnotes containing bibliography entries. These are the markers in the text not the entries, see #link("https://typst.app/docs/reference/model/footnote/") and #link("https://typst.app/docs/reference/text/super/") for how to style them.
+/// - footnote-style (dict): A dictionary of style properties to apply to the footnotes showing citation markers. These are the markers in the text not the entries, see #link("https://typst.app/docs/reference/model/footnote/") and #link("https://typst.app/docs/reference/text/super/") for how to style them.
 ///  Default is `(typographic: false, baseline: 0em, size:1em)`, which makes the bibliography markers appear like normal text.
 ///
 /// -> content

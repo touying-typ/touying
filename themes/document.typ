@@ -16,7 +16,13 @@
 /// = Introduction
 /// Some content here.
 /// ```
-///
+/// - title (str): Document title.
+/// - subtitle (str, none): Document subtitle. Default is `none`.
+/// - author (str, array): Document author(s).
+/// - date (datetime): Document date.
+/// - date-format (str): Date format for displaying the date. Default is `"[day].[month].[year]"`.
+/// - institution (str, none): Institution or affiliation. Default is `none`.
+/// - logo (str, none): Path to a logo image to show in the title block. Default is `none`.
 /// - text-size (length): Base text size. Default is `12pt`.
 /// - font (str, auto): Font family. Default is `auto` (system default).
 /// - numbering (str, none): Heading numbering format. Default is `none`.
@@ -25,9 +31,11 @@
 /// - justify (bool): Whether to justify paragraphs. Default is `true`.
 /// - title-block-fn (function): A function returning the title block to show at the beginning of the rendered document. If your theme has an automatic function for this you don't need it. And you can always use `#document-only` before the first slide to show your custom title block.
 /// - body (content): The document content.
+/// 
+/// -> content
 #let document-theme(
   title: "Title",
-  subtitle: "Hey a subtitle!!!",
+  subtitle:none,
   author: "Author Name",
   date: datetime.today(),
   date-format: "[day].[month].[year]",

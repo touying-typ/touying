@@ -1211,10 +1211,13 @@
 ///
 /// -> int or array
 #let resolve-negative-subslides(repeat, idx) = {
-  if type(idx) == int and idx < 0 {
-    repeat + idx + 1
-  } else if type(idx) == array {
+  assert(calc.abs(idx) <= repeat, message: "idx out of bounds")
+  assert(idx!=0, message: "idx cannot be zero")
+
+  if type(idx) == array {
     idx.map(i => if type(i) == int and i < 0 { repeat + i + 1 } else { i })
+  } else if type(idx) == int and idx < 0 {
+    repeat + idx + 1
   } else {
     idx
   }

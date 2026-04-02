@@ -45,8 +45,7 @@
 ///
 /// Returns: the full payload dictionary (with body, block-recall-map, waypoint-map, etc.)
 #let _unwrap-document-raw(cont) = {
-  if cont == none { return }
-  // This is where we stop unwrapping, finanly found our payload!
+  // This is where we stop unwrapping, finally found our payload!
   if utils.is-kind(cont, "touying-document-raw") {
     return cont.value
   }
@@ -57,10 +56,16 @@
   if type(cont) == content and cont.has("body") {
     return _unwrap-document-raw(cont.body)
   }
-  // Sequence - look into children
+  // Sequence - look into children, there should only be one payload child, thus we return the first.
   if utils.is-sequence(cont) {
-    return cont.children.map(_unwrap-document-raw).sum(default: [])
+    for child in cont.children {
+      let result = _unwrap-document-raw(child)
+      if result != none {
+        return result
+      }
+    }
   }
+  //return none for all other cases
 }
 
 
@@ -74,23 +79,27 @@
   wrap-other: false,
   wrap-align-direction: right,
 ) = {
-  import "@preview/wrap-it:0.1.1": wrap-content
-
-  // Flatten content to plain text — wrap-it needs splittable text
-  let _to-text(c) = {
-    if c == none { return "" }
-    if type(c) == str { return c }
-    if type(c) != content { return "" }
-    if c.has("text") { return c.text }
-    if c.has("children") { return c.children.map(_to-text).join("") }
-    if c.has("body") { return _to-text(c.body) }
-    if c.has("child") { return _to-text(c.child) }
-    ""
+  if (wrap-images, wrap-image-figures, wrap-other-figures, wrap-other).any() {
+    import "@preview/wrap-it:0.1.1": wrap-content
+  } else {
+    // a dummy binding.
+    let wrap-content = ()=>none
   }
 
-  let _scale-image = utils.rescale-image
+  // Flatten content to plain text — wrap-it needs splittable text
+  // not used for now, maybe else
+  // let _to-text(c) = {
+  //   if c == none { return "" }
+  //   if type(c) == str { return c }
+  //   if type(c) != content { return "" }
+  //   if c.has("text") { return c.text }
+  //   if c.has("children") { return c.children.map(_to-text).join("") }
+  //   if c.has("body") { return _to-text(c.body) }
+  //   if c.has("child") { return _to-text(c.child) }
+  //   ""
+  // }
 
-  // For figures: scale the image with inv (via _scale-image), then render
+  // For figures: rescale the image with inv, then render
   // the caption separately below at obstacle-width so it doesn't overflow.
   let _scale-img-figure(
     fig-el,
@@ -100,7 +109,7 @@
     align-direction,
   ) = {
     let obstacle-width = (col-fraction * 1pt).pt() * content-width
-    let scaled-img = _scale-image(
+    let scaled-img = utils.rescale-image(
       img-el,
       img-el,
       col-fraction,
@@ -119,17 +128,19 @@
   }
 
   // Resolve content width via layout at the top level — before wrap-it
-  // narrows the container — so _scale-image gets the true content area width.
+  // narrows the container — so rescale-image gets the true content area width.
   layout(size => {
     let content-width = size.width
 
     let raw-images = images.filter(i => not i.is-figure)
     let figure-images = images.filter(i => i.is-figure)
+    let other-figures = blocks.filter(b => b.func() == figure)
+    let other-blocks = blocks.filter(b => b.func() != figure)
 
     // Collect all elements to wrap via wrap-it
     let to-wrap = ()
     if wrap-images {
-      to-wrap += raw-images.map(i => _scale-image(
+      to-wrap += raw-images.map(i => utils.rescale-image(
         i.element,
         i.element,
         i.col-fraction,
@@ -153,8 +164,11 @@
         }
       })
     }
+    if wrap-other-figures {
+      to-wrap += other-figures
+    }
     if wrap-other {
-      to-wrap += blocks
+      to-wrap += other-blocks
     }
 
     let result = ()
@@ -168,8 +182,12 @@
         not (type(r) == content and r.func() == heading)
       })
       // Unwrap single-child blocks to expose splittable text to wrap-it
+      //TODO: give option whether to unpack blocks by default true.
+      // some users might not like this.
+      // but we keep at least all inline styling.
+      // 
       let unwrapped = body-parts.map(r => {
-        if type(r) == content and r.func() == block {
+        if type(r) == content and r.func() == block { //TODO: maybe change this to a better block content check, not only check for direct blocks
           let body = r.at("body", default: none)
           if body != none { body } else { r }
         } else {
@@ -178,17 +196,13 @@
       })
 
       result += headings
-      let text = unwrapped.sum(default: none)
-      let plain = _to-text(text)
+      let body-content = unwrapped.sum(default: none)
+      body-content = if body-content == none { [] } else { body-content }
 
       // Wrap each element around the text
       for (idx, el) in to-wrap.enumerate() {
-        if idx < to-wrap.len() - 1 {
-          result.push(wrap-content(el, plain, align: wrap-align-direction))
-          plain = ""
-        } else {
-          result.push(wrap-content(el, plain, align: wrap-align-direction))
-        }
+        let wrapped-body = if idx == 0 { body-content } else { [] }
+        result.push(wrap-content(el, wrapped-body, align: wrap-align-direction))
       }
     } else {
       result += items
@@ -208,9 +222,16 @@
       }
     }
 
+    // Non-wrapped other figures → centered at end
+    if not wrap-other-figures {
+      for fig in other-figures {
+        result.push(align(center, fig))
+      }
+    }
+
     // Non-wrapped block content → centered at end
     if not wrap-other {
-      for b in blocks {
+      for b in other-blocks {
         result.push(align(center, b))
       }
     }
@@ -308,8 +329,9 @@
   let doc-cfg = self.at("document", default: (:))
   let any-wrapping = (
     doc-cfg.at("wrap-images", default: true)
-      or doc-cfg.at("wrap-figures", default: false)
-      or doc-cfg.at("wrap-graphics", default: false)
+      or doc-cfg.at("wrap-image-figures", default: false)
+      or doc-cfg.at("wrap-other-figures", default: false)
+      or doc-cfg.at("wrap-other", default: false)
   )
 
   if not any-wrapping {

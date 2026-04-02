@@ -32,26 +32,28 @@
 #let _get-available-fields(config, requested_fields) = {
   let _recursive-has(dict, path) = {
     if path == none {
-      true
-    } else {
-      let parts = path.split(".")
-      let key = parts.remove(0)
-      if key in dict {
-        _recursive-has(dict.at(key), parts.join("."))
-      } else {
-        false
-      }
+      return true
     }
+
+    let parts = path.split(".")
+    if parts.len() == 0 {
+      return true
+    } 
+
+    let key = parts.remove(0)
+    if key in dict {
+      return _recursive-has(dict.at(key), parts.join("."))
+    } 
+    false
   }
 
   let _recursive-get(dict, path) = {
     if path == none {
-      dict
-    } else {
-      let parts = path.split(".")
-      let key = parts.remove(0)
-      _recursive-get(dict.at(key), parts.join("."))
-    }
+      return dict
+    } 
+    let parts = path.split(".")
+    let key = parts.remove(0)
+    _recursive-get(dict.at(key), parts.join("."))
   }
 
   let avail_fields = (:)
