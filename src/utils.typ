@@ -345,10 +345,9 @@
 
 /// recursively checks if `it` has a text in it
 ///
-///
-/// - it (any): the content to check
+/// - it (content): the content to check
 /// - transparentize-table (bool): Whether to assume tables contain text. If `false` tables will get searched completely for available text.
-/// ->
+/// -> bool
 #let _contains-text(it, transparentize-table) = {
   if type(it) != content {
     return false
@@ -948,7 +947,7 @@
   ..args,
 ) = {
   assert(
-    args.pos().len() <= 2,
+    args.pos().len() <= 1,
     message: "Only two positional arguments allowed, which will be interpreted as height and body.",
   )
   if args.pos().len() == 1 {
@@ -1121,7 +1120,7 @@
 ///
 /// Example: `#utils.fit-to-width(100%)[BIG]`
 ///
-/// - width (length, fraction, relative): The width to fit the content to. For example, `width: 50%` will fit the content to half of the slide width. If given as a fraction, it will be based on the available width after everything else is evaluated, similar to how fractional lengths behave for table column widths. Default is `1fr` which means to fit the content to the full available rest width. If two positional arguments are given, the first one will be interpreted as width and the second one as body, for regressen purposes.
+/// - width (length, fraction, relative): The width to fit the content to. For example, `width: 50%` will fit the content to half of the slide width. If given as a fraction, it will be based on the available width after everything else is evaluated, similar to how fractional lengths behave for table column widths. Default is `1fr` which means to fit the content to the full available rest width. Passing in width as positional argument is deprecated, see below.
 ///
 /// - grow (bool): Indicates whether the content should be scaled up if it is smaller than the available width. Default is `true`.
 ///
