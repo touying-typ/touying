@@ -1,5 +1,5 @@
 #import "utils.typ"
-#import "magic.typ": magic-warning
+#import "magic.typ": warning
 
 #let cell = block.with(
   width: 100%,
@@ -676,7 +676,7 @@
 ///
 /// -> content
 #let page-container(self: none, clip: false, detect-overflow: false, body) = {
-  let default-block-args = (
+  let tight-block-args = (
     above: 0pt,
     below: 0pt,
     inset: (:),
@@ -690,14 +690,14 @@
     // Detect and warn on overflow
     layout(container-size => {
       let content-size = measure(block(
-        ..default-block-args,
+        ..tight-block-args,
         width: container-size.width,
         body,
       ))
       let content-height = content-size.height
       let available-height = container-size.height
       if content-height > available-height {
-        magic-warning(
+        warning(
           "touying: slide content overflows at page "
             + repr(here().page())
             + " (slide "
@@ -715,7 +715,7 @@
   }
   // Disable breakability to prevent overflowing content from creating new pages
   block(
-    ..default-block-args,
+    ..tight-block-args,
     breakable: false,
     clip: clip,
     height: 1fr,

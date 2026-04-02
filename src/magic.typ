@@ -8,7 +8,7 @@
 /// - message (str): The warning message.
 ///
 /// -> content
-#let magic-warning(message) = {
+#let warning(message) = {
   set text(font: "[WARNING] " + message)
 }
 
