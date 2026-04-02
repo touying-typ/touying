@@ -5355,7 +5355,10 @@
         if self.at("breakable", default: true) {
           slide-body
         } else {
-          components.page-container(clip: self.at("clip", default: false), slide-body)
+          components.page-container(
+            clip: self.at("clip", default: false),
+            slide-body,
+          )
         }
       }
     }
@@ -5421,8 +5424,7 @@
       )
       let new-header = page-preamble(subslide-self) + header-i
       let slide-body = body-transform-i(setting-fn(
-        subslide-preamble(subslide-self)
-          + composer-with-side-by-side(..conts),
+        subslide-preamble(subslide-self) + composer-with-side-by-side(..conts),
       ))
       result.push({
         set page(
@@ -5435,7 +5437,10 @@
         if self.at("breakable", default: true) {
           slide-body
         } else {
-          components.page-container(clip: self.at("clip", default: false), slide-body)
+          components.page-container(
+            clip: self.at("clip", default: false),
+            slide-body,
+          )
         }
       })
     }
@@ -5521,7 +5526,10 @@
         if self.at("breakable", default: true) {
           slide-body
         } else {
-          components.page-container(clip: self.at("clip", default: false), slide-body)
+          components.page-container(
+            clip: self.at("clip", default: false),
+            slide-body,
+          )
         }
       })
     }
@@ -5555,7 +5563,10 @@
         if self.at("breakable", default: true) {
           slide-body
         } else {
-          components.page-container(clip: self.at("clip", default: false), slide-body)
+          components.page-container(
+            clip: self.at("clip", default: false),
+            slide-body,
+          )
         }
       })
     }
