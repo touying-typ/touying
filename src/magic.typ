@@ -181,10 +181,10 @@
       }
       box({
         if query(selector(label(label-str)).before(here())).len() > 0 {
-          set super(typographic: false, baseline: 0em, size:1em)
+          set super(..footnote-style)
           footnote(label(label-str), numbering: numbering)
         } else {
-          set super(typographic: false, baseline: 0em, size:1em)
+          set super(..footnote-style)
           [#footnote(numbering: numbering, bibitem)#label(label-str)]
         }
       })
