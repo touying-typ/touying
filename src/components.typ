@@ -1,4 +1,5 @@
 #import "utils.typ"
+#import "magic.typ": magic-warning
 
 #let cell = block.with(
   width: 100%,
@@ -666,21 +667,59 @@
 /// - clip (bool): Whether to clip overflowing content. When `true`, content
 ///   that exceeds the slide height will be visually truncated. Default is `false`.
 ///
+/// - detect-overflow (bool): Whether to detect and panic on overflow. When `true`,
+///   a `layout` + `measure` check is performed and `panic()` is called if the
+///   content height exceeds the available container height. When `false`, no
+///   overflow detection is performed (avoids the `layout` overhead). Default is `false`.
+///
 /// - body (content): The slide content to constrain within a single page.
 ///
 /// -> content
-#let page-container(clip: false, body) = block(
-  breakable: false,
-  above: 0pt,
-  below: 0pt,
-  clip: clip,
-  height: 1fr,
-  width: 100%,
-  inset: (:),
-  outset: (:),
-  radius: (:),
-  spacing: 0pt,
-  sticky: false,
-  stroke: (:),
-  body,
-)
+#let page-container(self: none, clip: false, detect-overflow: false, body) = {
+  let default-block-args = (
+    above: 0pt,
+    below: 0pt,
+    inset: (:),
+    outset: (:),
+    radius: (:),
+    spacing: 0pt,
+    sticky: false,
+    stroke: (:),
+  )
+  if detect-overflow {
+    // Detect and warning on overflow
+    layout(container-size => {
+      let content-size = measure(block(
+        ..default-block-args,
+        width: container-size.width,
+        body,
+      ))
+      let content-height = content-size.height
+      let available-height = container-size.height
+      if content-height > available-height {
+        magic-warning(
+          "touying: slide content overflows at page "
+            + repr(here().page())
+            + " (slide "
+            + str(utils.slide-counter.get().last())
+            + ", subslide "
+            + str(self.subslide)
+            + ", content height: "
+            + repr(content-height)
+            + ", available height: "
+            + repr(available-height)
+            + ").",
+        )
+      }
+    })
+  }
+  // Disable breakability to prevent overflowing content from creating new pages
+  block(
+    ..default-block-args,
+    breakable: false,
+    clip: clip,
+    height: 1fr,
+    width: 100%,
+    body,
+  )
+}

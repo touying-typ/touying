@@ -5356,7 +5356,9 @@
           slide-body
         } else {
           components.page-container(
+            self: self,
             clip: self.at("clip", default: false),
+            detect-overflow: self.at("detect-overflow", default: true),
             slide-body,
           )
         }
@@ -5438,7 +5440,9 @@
           slide-body
         } else {
           components.page-container(
+            self: self,
             clip: self.at("clip", default: false),
+            detect-overflow: self.at("detect-overflow", default: true),
             slide-body,
           )
         }
@@ -5527,7 +5531,9 @@
           slide-body
         } else {
           components.page-container(
+            self: self,
             clip: self.at("clip", default: false),
+            detect-overflow: self.at("detect-overflow", default: true),
             slide-body,
           )
         }
@@ -5564,7 +5570,9 @@
           slide-body
         } else {
           components.page-container(
+            self: self,
             clip: self.at("clip", default: false),
+            detect-overflow: self.at("detect-overflow", default: true),
             slide-body,
           )
         }
