@@ -486,7 +486,7 @@
 ///
 /// -> content
 #let touying-block-recall(lbl, subslide: auto, base: auto) = {
-  let lbl-str = if type(lbl) == std.label { str(lbl) } else { str(lbl) }
+  let lbl-str = str(lbl)
   [#metadata((
     kind: "touying-block-recall",
     lbl-str: lbl-str,
