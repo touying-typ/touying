@@ -917,7 +917,7 @@
 /// Fit content to specified/remaining height.
 ///
 /// Example: `#utils.fit-to-height[BIG]`
-/// - height (length, fraction, relative): The height to fit the content to. For example, `height: 50%` will fit the content to half of the slide height. If given as a fraction, it will be based on the available height after everything else is evaluated, similar to how fractional lengths behave for table column widths. Default is `1fr` which means to fit the content to the full available rest height. If one positional argument is given, this will be interpreted as the height instead.
+/// - height (length, fraction, relative): The height to fit the content to. For example, `height: 50%` will fit the content to half of the slide height. If given as a fraction, it will be based on the available height after everything else is evaluated, similar to how fractional lengths behave for table column widths. Default is `1fr` which means to fit the content to the full available rest height. Passing in height as positional argument is deprecated, see below.
 ///
 /// - width (length, fraction, relative): Will determine the width of the content after scaling. So, if you want the scaled content to fill half of the slide width, you can use `width: 50%`.
 ///
@@ -927,15 +927,13 @@
 ///
 /// - shrink (bool): Indicates whether the content should be scaled down if it is larger than the available height. Default is `true`.
 ///
-/// - height (length, fraction, float, relative): The height to fit the content to.
-///
 /// - reflow (bool): Whether to allow text reflow when scaling with auto width. Default is `true`. Only works when `width` is `auto` and the body contains text.
 ///
 /// - force-height (bool): Whether to force the content to occupy the full height and not have it fill the available width. Only matters when `reflow` is `true` and `width` is auto. By default `false`. When text is reflowed, it makes sense to use as much width as possible and not force the content to be as tall as possible. Lines are naturally discrete and thus so are the possible scaling factors to fit the lines to the available height. Forcing the height may lead to the text not occupying the available width.
 ///
 /// - body (content): The content to fit.
 ///
-/// - args (argumemts): May only be one positional argument. See `height` above. Overrides `height` if given.
+/// - args (arguments): For compatibility with older versions, passing in height as a positional argument is still supported, but deprecated. While the docstring does not clarify this, if two positional arguments are given, the first one is the width and the second one is the body. TODO: mention when this functionality will no longer be supported.
 ///
 /// -> content
 #let fit-to-height(
@@ -950,11 +948,13 @@
   ..args,
 ) = {
   assert(
-    args.pos().len() <= 1,
-    message: "Only one positional argument allowed, which will be interpreted as height.",
+    args.pos().len() <= 2,
+    message: "Only two positional arguments allowed, which will be interpreted as height and body.",
   )
   if args.pos().len() == 1 {
-    height = args.pos().at(0)
+    //TODO: warning deprecated usage
+    height = body
+    body = args.pos().at(0)
   }
   context {
     let layout-content(
@@ -965,7 +965,12 @@
       height,
       body,
     ) = layout(container-size => {
-      let available-height = _size-to-pt(height, container-size.height)
+      let available-height = 0pt
+      if type(height) == fraction {
+        available-height = container-size.height
+      } else {
+        available-height = _size-to-pt(height, container-size.height)
+      }
       // Provide a sensible initial width, which will define initial scale parameters.
       // Note this is different from the post-scale width, which is a limiting factor
       // on the allowable scaling ratio
@@ -992,7 +997,7 @@
       let w-ratio = mutable-width / size.width
       let ratio = calc.min(h-ratio, w-ratio) * 100%
 
-      if width == auto and reflow and _contains-text(body) {
+      if width == auto and reflow and _contains-text(body, false) {
         //height is good rn, but width may be too small.
         // get the current ratio of used/available width and scale such that we fill it. use sqrt trick to allow good flow.
         // then height may again be slightly too small. repeat that.
@@ -1009,7 +1014,6 @@
           )
 
           let _boxed-content = block(
-            stroke: 1pt,
             width: size.width / calc.sqrt(w-ratio), //increase width by sqrt of w-ratio
             body,
           )
@@ -1029,7 +1033,6 @@
           )
 
           let _boxed-content = block(
-            stroke: 1pt,
             width: size.width / float(ratio) * calc.sqrt(h-ratio), //reduce width by sqrt of h-ratio
             body,
           )
@@ -1076,7 +1079,6 @@
         }
       }
       if ((shrink and (ratio < 100%)) or (grow and (ratio > 100%))) {
-        let new-width = size.width * ratio
         scale(
           ratio,
           origin: top + left,
@@ -1117,28 +1119,30 @@
 ///
 /// Example: `#utils.fit-to-width(100%)[BIG]`
 ///
-/// - width (length, fraction, relative): The width to fit the content to. For example, `width: 50%` will fit the content to half of the slide width. If given as a fraction, it will be based on the available width after everything else is evaluated, similar to how fractional lengths behave for table column widths. Default is `1fr` which means to fit the content to the full available rest width. If one positional argument is given, this will be interpreted as the width instead.
+/// - width (length, fraction, relative): The width to fit the content to. For example, `width: 50%` will fit the content to half of the slide width. If given as a fraction, it will be based on the available width after everything else is evaluated, similar to how fractional lengths behave for table column widths. Default is `1fr` which means to fit the content to the full available rest width. If two positional arguments are given, the first one will be interpreted as width and the second one as body, for regressen purposes.
 ///
 /// - grow (bool): Indicates whether the content should be scaled up if it is smaller than the available width. Default is `true`.
 ///
 /// - shrink (bool): Indicates whether the content should be scaled down if it is larger than the available width. Default is `true`.
 ///
-/// - width (length, fraction, relative): The width to fit the content to.
-///
 /// - body (content): The content to fit.
+/// 
+/// - args (arguments): For compatibility with older versions, passing in width as a positional argument is still supported, but deprecated. While the docstring does not clarify this, if two positional arguments are given, the first one is the width and the second one is the body. TODO: mention when this functionality will no longer be supported.
 ///
 /// -> content
-#let fit-to-width(width: 1fr, grow: true, shrink: true, content, ..args) = {
+#let fit-to-width(width: 1fr, grow: true, shrink: true, body, ..args) = {
   assert(
     args.pos().len() <= 1,
-    message: "Only one positional argument allowed, which will be interpreted as width.",
+    message: "Only two positional arguments allowed, which will be interpreted as width and body.",
   )
   if args.pos().len() == 1 {
-    width = args.pos().at(0)
+    //TODO: warning deprecated
+    width = body
+    body = args.pos().at(0)
   }
 
   layout(layout-size => {
-    let content-width = measure(content).width
+    let content-width = measure(body).width
     let width = _size-to-pt(width, layout-size.width)
     if (
       content-width != 0pt
@@ -1150,14 +1154,14 @@
       let ratio = width / content-width * 100%
       scale(
         // The box keeps content from prematurely wrapping
-        box(content, width: content-width),
+        box(body, width: content-width),
         origin: top + left,
         x: ratio,
         y: ratio,
         reflow: true,
       )
     } else {
-      content
+      body
     }
   })
 }
