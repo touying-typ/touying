@@ -687,7 +687,7 @@
     stroke: (:),
   )
   if detect-overflow {
-    // Detect and warning on overflow
+    // Detect and warn on overflow
     layout(container-size => {
       let content-size = measure(block(
         ..default-block-args,
