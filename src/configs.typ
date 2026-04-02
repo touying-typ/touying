@@ -112,7 +112,9 @@
 
 /// The common configurations of the slides.
 ///
-/// - breakable (bool): Whether to allow slide content to overflow to the next page. When `true` (default), content that exceeds the slide height will automatically create new pages. When `false`, content is clipped to a single page, which is useful for ensuring a strict one-to-one mapping between source slides and output pages in agentic workflows. Default is `true`.
+/// - breakable (bool): Whether to allow slide content to overflow to the next page. When `true` (default), content that exceeds the slide height will automatically create new pages. When `false`, content is constrained to a single page using a non-breakable block, which is useful for ensuring a strict one-to-one mapping between source slides and output pages in agentic workflows. Default is `true`.
+///
+/// - clip (bool): Whether to clip overflowing slide content when `breakable` is `false`. When `true`, content that exceeds the slide height will be visually truncated. When `false`, overflowing content remains visible but does not create new pages. Only takes effect when `breakable` is `false`. Default is `false`.
 ///
 /// - handout (bool): Whether to enable the handout mode. By default, it retains only the last subslide of each slide, but this can be overridden via `handout-subslides`. Default is `false`.
 ///
@@ -223,6 +225,7 @@
 /// -> dictionary
 #let config-common(
   breakable: _default,
+  clip: _default,
   handout: _default,
   handout-subslides: _default,
   slide-level: _default,
@@ -278,6 +281,7 @@
   return (
     _get-dict-without-default((
       breakable: breakable,
+      clip: clip,
       handout: handout,
       handout-subslides: handout-subslides,
       slide-level: slide-level,
@@ -696,6 +700,7 @@
 #let default-config = utils.merge-dicts(
   config-common(
     breakable: true,
+    clip: false,
     handout: false,
     handout-subslides: none,
     slide-level: 2,

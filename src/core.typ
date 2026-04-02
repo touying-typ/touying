@@ -5355,7 +5355,7 @@
         if self.at("breakable", default: true) {
           slide-body
         } else {
-          components.page-container(slide-body)
+          components.page-container(clip: self.at("clip", default: false), slide-body)
         }
       }
     }
@@ -5435,7 +5435,7 @@
         if self.at("breakable", default: true) {
           slide-body
         } else {
-          components.page-container(slide-body)
+          components.page-container(clip: self.at("clip", default: false), slide-body)
         }
       })
     }
@@ -5521,7 +5521,7 @@
         if self.at("breakable", default: true) {
           slide-body
         } else {
-          components.page-container(slide-body)
+          components.page-container(clip: self.at("clip", default: false), slide-body)
         }
       })
     }
@@ -5555,7 +5555,7 @@
         if self.at("breakable", default: true) {
           slide-body
         } else {
-          components.page-container(slide-body)
+          components.page-container(clip: self.at("clip", default: false), slide-body)
         }
       })
     }

@@ -657,20 +657,23 @@
 
 /// A non-breakable page container that prevents slide content from overflowing
 /// to the next page. When used, content that exceeds the slide height will be
-/// clipped rather than creating additional pages.
+/// constrained rather than creating additional pages.
 ///
 /// This is useful for ensuring a strict one-to-one mapping between source
 /// slides and output pages, which is important in agentic workflows where
 /// an agent needs to reason about slide boundaries.
 ///
+/// - clip (bool): Whether to clip overflowing content. When `true`, content
+///   that exceeds the slide height will be visually truncated. Default is `false`.
+///
 /// - body (content): The slide content to constrain within a single page.
 ///
 /// -> content
-#let page-container(body) = block(
+#let page-container(clip: false, body) = block(
   breakable: false,
   above: 0pt,
   below: 0pt,
-  clip: false,
+  clip: clip,
   height: 1fr,
   width: 100%,
   inset: (:),
