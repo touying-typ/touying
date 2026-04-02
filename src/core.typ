@@ -5345,13 +5345,18 @@
         ..bodies,
       )
       header = page-preamble(self) + header
+      let slide-body = body-transform(setting-fn(
+        subslide-preamble(self) + composer-with-side-by-side(..conts),
+      ))
       return {
         set page(
           ..(self.page + page-extra-args + (header: header, footer: footer)),
         )
-        body-transform(setting-fn(
-          subslide-preamble(self) + composer-with-side-by-side(..conts),
-        ))
+        if self.at("breakable", default: true) {
+          slide-body
+        } else {
+          components.page-container(slide-body)
+        }
       }
     }
 
@@ -5415,6 +5420,10 @@
         ..bodies,
       )
       let new-header = page-preamble(subslide-self) + header-i
+      let slide-body = body-transform-i(setting-fn(
+        subslide-preamble(subslide-self)
+          + composer-with-side-by-side(..conts),
+      ))
       result.push({
         set page(
           ..(
@@ -5423,10 +5432,11 @@
               + (header: new-header, footer: footer-i)
           ),
         )
-        body-transform-i(setting-fn(
-          subslide-preamble(subslide-self)
-            + composer-with-side-by-side(..conts),
-        ))
+        if self.at("breakable", default: true) {
+          slide-body
+        } else {
+          components.page-container(slide-body)
+        }
       })
     }
 
@@ -5499,15 +5509,20 @@
         ..bodies,
       )
       let new-header = page-preamble(self) + header
+      let slide-body = body-transform(setting-fn(
+        subslide-preamble(self) + composer-with-side-by-side(..conts),
+      ))
       result.push({
         set page(
           ..(
             self.page + page-extra-args + (header: new-header, footer: footer)
           ),
         )
-        body-transform(setting-fn(
-          subslide-preamble(self) + composer-with-side-by-side(..conts),
-        ))
+        if self.at("breakable", default: true) {
+          slide-body
+        } else {
+          components.page-container(slide-body)
+        }
       })
     }
     result.sum()
@@ -5528,15 +5543,20 @@
       )
       let new-header = page-preamble(self) + header
       // update the counter in the first subslide only
+      let slide-body = body-transform(setting-fn(
+        subslide-preamble(self) + composer-with-side-by-side(..conts),
+      ))
       result.push({
         set page(
           ..(
             self.page + page-extra-args + (header: new-header, footer: footer)
           ),
         )
-        body-transform(setting-fn(
-          subslide-preamble(self) + composer-with-side-by-side(..conts),
-        ))
+        if self.at("breakable", default: true) {
+          slide-body
+        } else {
+          components.page-container(slide-body)
+        }
       })
     }
     // return the result

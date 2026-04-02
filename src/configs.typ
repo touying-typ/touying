@@ -112,6 +112,8 @@
 
 /// The common configurations of the slides.
 ///
+/// - breakable (bool): Whether to allow slide content to overflow to the next page. When `true` (default), content that exceeds the slide height will automatically create new pages. When `false`, content is clipped to a single page, which is useful for ensuring a strict one-to-one mapping between source slides and output pages in agentic workflows. Default is `true`.
+///
 /// - handout (bool): Whether to enable the handout mode. By default, it retains only the last subslide of each slide, but this can be overridden via `handout-subslides`. Default is `false`.
 ///
 /// - handout-subslides (none, int, array, str): The subslides to include in handout mode. Accepts the same format as `visible-subslides` (e.g. `2`, `(1, 3)`, `"2-"`, `"1, 3-5"`). When `none`, the last subslide is used (default behavior). Default is `none`.
@@ -220,6 +222,7 @@
 ///
 /// -> dictionary
 #let config-common(
+  breakable: _default,
   handout: _default,
   handout-subslides: _default,
   slide-level: _default,
@@ -274,6 +277,7 @@
   assert(args.pos().len() == 0, message: "Unexpected positional arguments.")
   return (
     _get-dict-without-default((
+      breakable: breakable,
       handout: handout,
       handout-subslides: handout-subslides,
       slide-level: slide-level,
@@ -691,6 +695,7 @@
 /// The default configuration values used when no explicit configuration is provided.
 #let default-config = utils.merge-dicts(
   config-common(
+    breakable: true,
     handout: false,
     handout-subslides: none,
     slide-level: 2,
