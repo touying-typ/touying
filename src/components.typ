@@ -11,6 +11,58 @@
 )
 
 
+/// Create a lazy fractional vertical space that is resolved by `lazy-layout`.
+///
+/// This is a "lazy" vertical spacer: it is ignored during height measurement and only
+/// activated when rendered inside a `lazy-layout` container. This lets you push content
+/// to the bottom of a measured block without the block expanding to fill the entire
+/// available height.
+///
+/// Must be used inside `lazy-layout` to have any effect.
+///
+/// Example: `lazy-v(1fr)` inside a block wrapped with `lazy-layout`.
+///
+/// - amount (fraction): The fractional amount of space. Must be a `fraction` (e.g. `1fr`).
+///
+/// - weak (bool): Whether the space is weak (collapses with adjacent spaces). Default is `false`.
+///
+/// -> content
+#let lazy-v(amount, weak: false) = {
+  assert(
+    type(amount) == fraction,
+    message: "lazy-v: `amount` must be a fraction (e.g. 1fr), got "
+      + repr(amount),
+  )
+  [#parbreak()#metadata((
+      amount: amount,
+      weak: weak,
+    ))<touying-lazy-v>#parbreak()]
+}
+
+/// Wrap content so that any `lazy-v` calls inside are resolved correctly.
+///
+/// First measures the body height while treating every `lazy-v` marker as invisible
+/// (zero height). Then re-renders the body at that fixed height with the lazy spaces
+/// activated, so fractional spaces fill only the measured block rather than the full
+/// page height.
+///
+/// - body (content): The content that may contain `lazy-v` markers.
+///
+/// -> content
+#let lazy-layout(body) = layout(container-size => {
+  // Phase 1: measure height with all lazy-v markers hidden.
+  let measured-size = measure(block(
+    width: container-size.width,
+    body,
+  ))
+  // Phase 2: render at the measured height with lazy-v markers activated.
+  show <touying-lazy-v>: it => v(it.value.amount, weak: it.value.weak)
+  block(width: 100%, height: measured-size.height, body)
+})
+
+// Alias used inside `side-by-side` to avoid the `lazy-layout` parameter shadowing the function.
+#let _lazy-layout = lazy-layout
+
 /// A simple wrapper around `grid` that creates a single-row grid. Used as the default `composer` for multi-body slides.
 ///
 /// Example: `side-by-side[a][b][c]` will display `a`, `b`, and `c` side by side.
@@ -19,21 +71,33 @@
 ///
 /// - gutter (length): The space between columns. Default is `1em`.
 ///
+/// - lazy-layout (bool): When `true`, wraps the grid with `lazy-layout` so that
+///   `lazy-v` markers inside the bodies are resolved correctly. Default is `false`.
+///
 /// - bodies (content): The contents to display side by side.
 ///
 /// -> content
-#let side-by-side(columns: auto, gutter: 1em, ..bodies) = {
+#let side-by-side(columns: auto, gutter: 1em, lazy-layout: false, ..bodies) = {
   let args = bodies.named()
   let bodies = bodies.pos()
   if bodies.len() == 1 {
-    return bodies.first()
+    return if lazy-layout {
+      _lazy-layout(bodies.first())
+    } else {
+      bodies.first()
+    }
   }
   let columns = if columns == auto {
     (1fr,) * bodies.len()
   } else {
     columns
   }
-  grid(columns: columns, gutter: gutter, ..args, ..bodies)
+  let result = grid(columns: columns, gutter: gutter, ..args, ..bodies)
+  if lazy-layout {
+    _lazy-layout(result)
+  } else {
+    result
+  }
 }
 
 
