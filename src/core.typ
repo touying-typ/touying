@@ -1710,7 +1710,7 @@
     if (
       type(key) == dictionary
         and "kind" in key
-        and str(key.kind).starts-with("waypoint-")
+        and str(key.kind) in waypoint-kinds
     ) {
       panic(
         "alternatives-match: waypoint markers are not supported. Use alternatives() with the at: parameter instead.",
@@ -1934,7 +1934,7 @@
     if (
       type(case) == dictionary
         and "kind" in case
-        and str(case.kind).starts-with("waypoint-")
+        and str(case.kind) in waypoint-kinds
     ) {
       panic(
         "alternatives-cases: waypoint markers are not supported. Use alternatives() with the at: parameter instead.",
