@@ -916,7 +916,7 @@
 /// Fit content to specified/remaining height.
 ///
 /// Example: `#utils.fit-to-height[BIG]`
-/// - height (length, fraction, relative): The height to fit the content to. For example, `height: 50%` will fit the content to half of the slide height. If given as a fraction, it will be based on the available height after everything else is evaluated, similar to how fractional lengths behave for table column widths. Default is `1fr` which means to fit the content to the full available rest height. Passing in height as positional argument is deprecated, see below.
+/// - height (length, fraction, relative): The height to fit the content to. For example, `height: 50%` will fit the content to half of the slide height. If given as a fraction, it will be based on the available height after everything else is evaluated, similar to how fractional lengths behave for table column widths. Default is `1fr` which means to fit the content to the full available rest height.
 ///
 /// - width (length, fraction, relative): Will determine the width of the content after scaling. So, if you want the scaled content to fill half of the slide width, you can use `width: 50%`.
 ///
@@ -930,9 +930,9 @@
 ///
 /// - force-height (bool): Whether to force the content to occupy the full height and not have it fill the available width. Only matters when `reflow` is `true` and `width` is auto. By default `false`. When text is reflowed, it makes sense to use as much width as possible and not force the content to be as tall as possible. Lines are naturally discrete and thus so are the possible scaling factors to fit the lines to the available height. Forcing the height may lead to the text not occupying the available width.
 ///
-/// - body (content): The content to fit.
+/// - body (content): The content to fit. If two positional arguments are given, this will be height instead.
 ///
-/// - args (arguments): For compatibility with older versions, passing in height as a positional argument is still supported, but deprecated. While the docstring does not clarify this, if two positional arguments are given, the first one is the width and the second one is the body. TODO: mention when this functionality will no longer be supported.
+/// - args (arguments): For convenience and compatibility with older versions, passing in height as a positional argument is still supported. If two positional arguments are given, the first one is the width and the second one is the body.
 ///
 /// -> content
 #let fit-to-height(
@@ -951,9 +951,6 @@
     message: "Only two positional arguments allowed, which will be interpreted as height and body.",
   )
   if args.pos().len() == 1 {
-    magic.warning(
-      "Passing 'height' as a positional argument is deprecated, please use the named argument instead.",
-    )
     height = body
     body = args.pos().at(0)
   }
@@ -1120,15 +1117,15 @@
 ///
 /// Example: `#utils.fit-to-width(100%)[BIG]`
 ///
-/// - width (length, fraction, relative): The width to fit the content to. For example, `width: 50%` will fit the content to half of the slide width. If given as a fraction, it will be based on the available width after everything else is evaluated, similar to how fractional lengths behave for table column widths. Default is `1fr` which means to fit the content to the full available rest width. Passing in width as positional argument is deprecated, see below.
+/// - width (length, fraction, relative): The width to fit the content to. For example, `width: 50%` will fit the content to half of the slide width. If given as a fraction, it will be based on the available width after everything else is evaluated, similar to how fractional lengths behave for table column widths. Default is `1fr` which means to fit the content to the full available rest width.
 ///
 /// - grow (bool): Indicates whether the content should be scaled up if it is smaller than the available width. Default is `true`.
 ///
 /// - shrink (bool): Indicates whether the content should be scaled down if it is larger than the available width. Default is `true`.
 ///
-/// - body (content): The content to fit.
+/// - body (content): The content to fit. If two positional arguments are given, this will be width instead.
 ///
-/// - args (arguments): For compatibility with older versions, passing in width as a positional argument is still supported, but deprecated. While the docstring does not clarify this, if two positional arguments are given, the first one is the width and the second one is the body. TODO: mention when this functionality will no longer be supported.
+/// - args (arguments): For convenience and compatibility with older versions, passing in width as a positional argument is still supported. If two positional arguments are given, the first one is the width and the second one is the body. 
 ///
 /// -> content
 #let fit-to-width(width: 1fr, grow: true, shrink: true, body, ..args) = {
