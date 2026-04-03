@@ -276,13 +276,13 @@
 /// Example:
 ///
 /// ```typst
-/// #show: aqua-theme.with(aspect-ratio: "16-9", config-colors(primary: blue))`
+/// #show: aqua-theme.with(aspect-ratio: "16-9", config-colors(primary: blue))
 /// ```
 ///
 /// Consider using:
 ///
 /// ```typst
-/// #set text(font: "Fira Sans", weight: "light", size: 20pt)`
+/// #set text(font: "Fira Sans", weight: "light", size: 20pt)
 /// #show math.equation: set text(font: "Fira Math")
 /// #set strong(delta: 100)
 /// #set par(justify: true)

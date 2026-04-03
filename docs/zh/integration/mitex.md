@@ -26,7 +26,7 @@ Also block equations (this case is from #text(blue.lighten(20%), link("https://k
 Touying 也提供了一个 `touying-mitex` 函数，用法如
 
 ```example
-#import "@preview/touying:0.6.3": *
+#import "@preview/touying:0.7.0": *
 #import "@preview/mitex:0.2.6": *
 #import themes.simple: *
 #show: simple-theme

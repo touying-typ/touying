@@ -16,7 +16,7 @@ sidebar_position: 7
 对于对现有主题的微小调整，你不需要创建单独的主题文件。可以直接内联覆盖各项设置：
 
 ```example
-#import "@preview/touying:0.6.3": *
+#import "@preview/touying:0.7.0": *
 #import themes.metropolis: *
 
 #show: metropolis-theme.with(
@@ -46,11 +46,11 @@ Content with the custom color.
 若需要进行更深层的结构性修改，可以将主题源文件复制到项目中：
 
 1. 从 Touying 仓库的 `themes/` 目录下载对应文件（例如 `themes/metropolis.typ`）。
-2. 将文件顶部的导入从 `#import "../src/exports.typ": *` 改为 `#import "@preview/touying:0.6.3": *`。
+2. 将文件顶部的导入从 `#import "../src/exports.typ": *` 改为 `#import "@preview/touying:0.7.0": *`。
 3. 在项目中导入本地副本，而不是内置主题。
 
 ```typst
-#import "@preview/touying:0.6.3": *
+#import "@preview/touying:0.7.0": *
 #import "metropolis.typ": *   // your local copy
 
 #show: metropolis-theme.with(

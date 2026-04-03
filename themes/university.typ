@@ -331,7 +331,7 @@
 /// Example:
 ///
 /// ```typst
-/// #show: university-theme.with(aspect-ratio: "16-9", config-colors(primary: blue))`
+/// #show: university-theme.with(aspect-ratio: "16-9", config-colors(primary: blue))
 /// ```
 ///
 /// The default colors:

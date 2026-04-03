@@ -14,7 +14,7 @@ sidebar_position: 1
 你可以通过下面的代码来初始化：
 
 ```typst
-#import "@preview/touying:0.6.3": *
+#import "@preview/touying:0.7.0": *
 #import themes.simple: *
 
 #show: simple-theme.with(
@@ -82,7 +82,7 @@ simple 主题提供了一系列自定义 slide 函数：
 ## 示例
 
 ```example
-#import "@preview/touying:0.6.3": *
+#import "@preview/touying:0.7.0": *
 #import themes.simple: *
 
 #show: simple-theme.with(

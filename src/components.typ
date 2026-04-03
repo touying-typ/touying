@@ -375,7 +375,7 @@
                 width: 1fr,
                 inset: (x: .2em),
                 if array-at(filled, it.level - 1) {
-                  array-at(fill, level - 1)
+                  array-at(fill, it.level - 1)
                 },
               )
               if array-at(paged, it.level - 1) {

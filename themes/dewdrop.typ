@@ -295,7 +295,7 @@
 /// Example:
 ///
 /// ```typst
-/// #show: dewdrop-theme.with(aspect-ratio: "16-9", config-colors(primary: blue))`
+/// #show: dewdrop-theme.with(aspect-ratio: "16-9", config-colors(primary: blue))
 /// ```
 ///
 /// The default colors:

@@ -11,7 +11,7 @@ The Stargazer theme, originally created by [Coekjan](https://github.com/Coekjan/
 You can initialize the theme with the following code:
 
 ```typst
-#import "@preview/touying:0.6.3": *
+#import "@preview/touying:0.7.0": *
 #import themes.stargazer: *
 
 #import "@preview/numbly:0.1.0": numbly
@@ -125,7 +125,7 @@ Start a new section with the given title.
 ## Example
 
 ```example
-#import "@preview/touying:0.6.3": *
+#import "@preview/touying:0.7.0": *
 #import themes.stargazer: *
 
 #import "@preview/numbly:0.1.0": numbly

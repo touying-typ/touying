@@ -11,7 +11,7 @@ Touying 还提供了 `touying-reducer`，它能让所有动画在 CeTZ 和 Fletc
 一个例子：
 
 ```example
-#import "@preview/touying:0.6.3": *
+#import "@preview/touying:0.7.0": *
 #import themes.university: *
 #import "@preview/cetz:0.4.2"
 #import "@preview/fletcher:0.5.8" as fletcher: node, edge
@@ -114,7 +114,7 @@ Touying 还提供了 `touying-reducer`，它能让所有动画在 CeTZ 和 Fletc
 如果你不想为 CeTZ 编写数组语法 `(anim-cmd(), )`，你可以在 canvas 中通过 utils 本地重新定义你需要的命令。这样它们就会输出 CeTZ 原生理解的格式。但是，你需要通过 `repeat` 手动计算子幻灯片的数量！
 
 ```example
-#import "@preview/touying:0.6.3": *
+#import "@preview/touying:0.7.0": *
 #import "@preview/cetz:0.4.2"
 #import themes.simple: *
 #show: simple-theme.with(aspect-ratio: "16-9")

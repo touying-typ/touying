@@ -1,5 +1,29 @@
 # Changelog
 
+## v0.7.0
+
+### Features
+
+- **major feature:** a named waypoint feature ([#298](https://github.com/touying-typ/touying/pull/298))
+- feat(waypoint): start param and Waypoints in handout-subslides ([#304](https://github.com/touying-typ/touying/pull/304))
+- feat: auto, "h"-here string and inverse function for string subslide-numbers and waypoints ([#301](https://github.com/touying-typ/touying/pull/301))
+- feat: implicitly allow fn-wrapper based animation functions via reducer ([#300](https://github.com/touying-typ/touying/pull/300))
+
+### Fixes
+
+- fix: fix cover-with-rect breaking long lines of text when partially hidden and fallback functions for color/alpha cover ([#328](https://github.com/touying-typ/touying/pull/328))
+- fix: using explicit numbering in display-current-heading when style=auto ([#329](https://github.com/touying-typ/touying/pull/329))
+- fix: fix ghost slides with show rules. Fix proper consistent handling of show rules and defer keyword ([#317](https://github.com/touying-typ/touying/pull/317))
+- fix: alert not delayed ([#316](https://github.com/touying-typ/touying/pull/316))
+- fix: remove redundant nested text call ([#324](https://github.com/touying-typ/touying/pull/324))
+- fix: function alternatives-match takes into account parameter stretch ([#320](https://github.com/touying-typ/touying/pull/320))
+- fix: correctly handle page margin merge/precedence ([#322](https://github.com/touying-typ/touying/pull/322))
+- fix: fix cover spacing issues surrounding lists ([#303](https://github.com/touying-typ/touying/pull/303))
+- fix: correctly parses negative subslide indices (ints, arrays) for handout-subslides ([#307](https://github.com/touying-typ/touying/pull/307))
+- fix: slide function does not update via scoped import ([#310](https://github.com/touying-typ/touying/pull/310))
+
+Thanks for the contributions from [@zral0kh](https://github.com/zral0kh), [@Andrew15-5](https://github.com/Andrew15-5), [@navdeeprana](https://github.com/navdeeprana), and [@Cemoixerestre](https://github.com/Cemoixerestre).
+
 ## v0.6.3
 
 A major bugfix release, fixing many long-standing bugs and introducing many practical features.

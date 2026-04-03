@@ -57,7 +57,7 @@ sidebar_position: 1
 ## 实用示例：将表格适配到幻灯片
 
 ```example
->>> #import "@preview/touying:0.6.3": *
+>>> #import "@preview/touying:0.7.0": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
 #slide[
@@ -75,7 +75,7 @@ sidebar_position: 1
 ## 将标题适配到全宽
 
 ```example
->>> #import "@preview/touying:0.6.3": *
+>>> #import "@preview/touying:0.7.0": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
 #slide[

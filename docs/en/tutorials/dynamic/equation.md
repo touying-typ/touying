@@ -11,7 +11,7 @@ Touying also provides a unique and highly useful feature—math equation animati
 Let's start with an example:
 
 ```example
->>> #import "@preview/touying:0.6.3": *
+>>> #import "@preview/touying:0.7.0": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
 #slide[
@@ -37,7 +37,7 @@ As you would expect, the math equation is displayed step by step, making it suit
 In fact, we can also use `only`, `uncover`, and `alternatives`:
 
 ```example
->>> #import "@preview/touying:0.6.3": *
+>>> #import "@preview/touying:0.7.0": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
 #slide(repeat: 3, self => [
