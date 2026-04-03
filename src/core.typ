@@ -34,16 +34,7 @@
   body: body,
 ))<touying-temporary-mark>]
 
-/// Gets the current config value for the given key at the slide where this is called. This is useful for implementing features that need to read config values. The result is only available during `context` resolution, thus you should not compute with it. Just print it.
-///
-/// - key (str): The key of the configuration to retrieve.
-/// - default (any): The default value to return if the key is not found.
-/// -> any
-#let touying-get-config(key, default: none) = [#metadata((
-  kind: "touying-get-config",
-  key: key,
-  default: default,
-))<touying-temporary-mark>]
+//get-config is in src/config.typ as we need the default-config.
 
 
 /// Begin the appendix of the presentation. The slide counter is frozen at the last non-appendix slide, so appendix slides do not affect the total slide count shown in footers.
@@ -833,34 +824,6 @@
           }
         }
       }
-    } else if utils.is-kind(child, "touying-get-config") {
-      assert(
-        type(child.value.key) == str,
-        message: "The key argument of touying-get-config must be a string. e.g. \"info.date\"",
-      )
-      assert(
-        child.value.key.starts-with(
-          regex("[a-zA-Z0-9\\-]+(\\.[a-zA-Z0-9\\-]+)*$"),
-        ),
-        message: "The key argument of touying-get-config must be a dot-separated string of valid identifier parts, e.g. \"info.date\" or \"store\"",
-      )
-      let key-chain = child.value.key.split(".")
-      let default = child.value.default
-      let config-value = self
-      for key in key-chain {
-        if key in config-value {
-          config-value = config-value.at(key)
-        } else {
-          config-value = default
-          break
-        }
-      }
-      if type(config-value) != content {
-        // Convert non-content config values to strings for display, so that
-        // touying-get-config can be used in any context without type errors.
-        config-value = repr(config-value)
-      }
-      slide-parts.push(config-value)
     } else if utils.is-styled(child) {
       // When absorbing leading preamble and no heading seen yet, recurse into
       // the styled node with absorb-leading-preamble: true. The set/show rules

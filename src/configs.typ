@@ -1,7 +1,9 @@
 #import "pdfpc.typ"
 #import "utils.typ"
 #import "magic.typ"
-#import "core.typ": slide, touying-slide, touying-slide-wrapper
+#import "core.typ": (
+  slide, touying-fn-wrapper-raw, touying-slide, touying-slide-wrapper,
+)
 
 #let _default = metadata((kind: "touying-default"))
 
@@ -18,6 +20,8 @@
 /// Store theme-specific private data in the presentation context.
 ///
 /// Use this in your theme's `#show: my-theme.with(...)` to pass arbitrary key-value pairs that your theme needs internally. The stored values are accessible via `self.store.<key>` inside any theme function.
+///
+/// This also registers your theme's config to be readable by `touying-get-config`.
 ///
 /// Example:
 ///
@@ -809,3 +813,134 @@
   ),
   config-store(),
 )
+
+/// Gets the current config at the point of the call. Returns a dict with context evaluated values.
+///
+/// Usage:
+/// ```typc
+/// touying-get-config() // returns the whole config dict
+/// touying-get-config().common.handout // returns the value of the "handout" config in the "common" category
+/// touying-get-config().handout // same as above. common is also registered at the top level.
+/// touying-get-config("commmon.handout") // same as above. You can also query with a key, and you will get the subconfig or value back.
+/// ```
+///
+/// - key (str): The key of the subconfiguration to retrieve. Default `none`, returns the entire config. May also be passed in as a positional argument.
+///   Only necessary when you set custom keys into touyings' config. Theme configuration is naturally available as `touying-get-config().store.long-theme-key`
+/// - default (any): The default value to return if the key is not found.
+/// -> dict
+#let touying-get-config(key: none, default: type, ..args) = {
+  assert(
+    args.pos().len() <= 1,
+    message: "Only one positional argument is allowed.",
+  )
+  assert(
+    args.named().len() == 0,
+    message: "Unexpected named arguments: " + args.named().keys().join(", "),
+  )
+  assert(
+    type(key) == str or key == none,
+    message: "Key must be a string or none.",
+  )
+  let key_ = key
+  if args.pos().len() == 1 {
+    key_ = args.pos().first()
+  }
+
+  let rec-defer-retrieval(config, keychain, default: type) = {
+    if type(config) == dictionary {
+      let defered = (:)
+      for k in config.keys() {
+        defered.insert(k, rec-defer-retrieval(
+          config.at(k),
+          keychain + (k,),
+          default: default,
+        ))
+      }
+      return defered
+    } else {
+      //when we reached a leaf value in the config, we evaluate it at context time via keychain.
+      return touying-fn-wrapper-raw((self: none) => {
+        let value = self
+        for cur in keychain {
+          if cur not in value.keys() and default != type {
+            return default
+          }
+          value = value.at(cur)
+        }
+        return repr(value)
+      })
+    }
+  }
+
+  let rec-defer-retrieval-with-key(
+    config,
+    keychain,
+    key: none,
+    default: type,
+  ) = {
+    if type(config) == dictionary {
+      if key != none {
+        let first-dot = key.position(".")
+        let this-key = none
+        let rest-key = none
+        if first-dot == none {
+          this-key = key
+          rest-key = none
+        } else {
+          this-key = key.slice(0, first-dot)
+          rest-key = key.slice(first-dot + 1)
+        }
+        if this-key in config.keys() {
+          return rec-defer-retrieval-with-key(
+            config.at(this-key),
+            keychain + (this-key,),
+            key: rest-key,
+            default: default,
+          )
+        } else {
+          // store on keychain anyway, but set config to none,
+          // we use the fn-wrapper to try to retrieve the value instead at context time
+          // will likely break, but who knows what users do.
+          let rest-keychain = if rest-key != none {
+            rest-key.split(".")
+          } else {
+            ()
+          }
+          return rec-defer-retrieval(
+            none,
+            keychain + (this-key,) + rest-keychain,
+            default: default,
+          )
+        }
+      } else {
+        // key == none, got to the end of given key, before found a leaf value. returns the deferred unresolved config
+        return rec-defer-retrieval(config, keychain, default: default)
+      }
+    } else if key == none {
+      // found a value and key is also empty, returned deferred result
+      return rec-defer-retrieval(none, keychain, default: default)
+    } else {
+      // got a leaf value, but key is not empty.
+      if default != type {
+        return default
+      }
+      panic(
+        "Key not found in config. Resolved correctly: "
+          + keychain.join(".")
+          + ", but got unresolved part: "
+          + key,
+      )
+    }
+  }
+
+  if key_ == none {
+    return rec-defer-retrieval(default-config, (), default: default)
+  } else {
+    return rec-defer-retrieval-with-key(
+      default-config,
+      (),
+      key: key_,
+      default: default,
+    )
+  }
+}

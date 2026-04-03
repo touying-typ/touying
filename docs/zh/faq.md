@@ -872,18 +872,19 @@ Content here.
 ```
 
 ### 如何访问全局或幻灯片的配置信息？
+
 在需要获取配置的位置使用 `touying-get-config`。由于配置只能在 `context` 时机访问，因此基于此进行计算可能会导致问题。
-> 请注意，配置信息存储于幻灯片级别，即访问到的是你为当前幻灯片专门设置的配置，而非幻灯片外部的全局配置。
+> 如果在含有局部配置的幻灯片内调用此函数，返回的将是局部配置，而非全局配置。
 ```example
->>> #import "@preview/touying:0.6.3": *
+>>> #import "@preview/touying:0.7.1": *
 #import themes.simple: *
 #show: simple-theme.with(
   config-info(author: "Beautiful Name")
 )
 #slide(config:config-colors(primary: rgb("ABCDEF")))[
-  #touying-get-config("info.author")
+  #touying-get-config().info.author
   
-  #touying-get-config("colors.primary")
+  #touying-get-config().colors.primary
 ]
 ```
 
