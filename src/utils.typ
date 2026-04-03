@@ -1,5 +1,4 @@
 #import "pdfpc.typ"
-#import "magic.typ"
 /// Add page margin dictionary to another page margin dictionary.
 ///
 /// Example: `add-page-margin-dicts((top: 1cm, x: 2cm), (y: 3em))` returns `(x: 2cm, y: 3em)`
@@ -1125,7 +1124,7 @@
 ///
 /// - body (content): The content to fit. If two positional arguments are given, this will be width instead.
 ///
-/// - args (arguments): For convenience and compatibility with older versions, passing in width as a positional argument is still supported. If two positional arguments are given, the first one is the width and the second one is the body. 
+/// - args (arguments): For convenience and compatibility with older versions, passing in width as a positional argument is still supported. If two positional arguments are given, the first one is the width and the second one is the body.
 ///
 /// -> content
 #let fit-to-width(width: 1fr, grow: true, shrink: true, body, ..args) = {
@@ -1134,9 +1133,6 @@
     message: "Only two positional arguments allowed, which will be interpreted as width and body.",
   )
   if args.pos().len() == 1 {
-    magic.warning(
-      "Passing 'width' as a positional argument is deprecated, please use the named argument instead.",
-    )
     width = body
     body = args.pos().at(0)
   }
