@@ -54,10 +54,11 @@
 ]
 
 
-== side-by-side without lazy-layout (default)
+== side-by-side without lazy-layout (explicit false)
 
-// Default behaviour: lazy-layout is false, lazy-v markers are invisible.
-#components.side-by-side[
+// Opt out of lazy-layout by passing lazy-layout: false.
+// lazy-v markers are invisible and blocks are not height-equalized.
+#components.side-by-side(lazy-layout: false)[
   #block(fill: luma(220), inset: .5em, radius: .2em, width: 100%)[
     #lorem(10)
 

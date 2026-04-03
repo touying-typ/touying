@@ -1,6 +1,7 @@
 #import "pdfpc.typ"
 #import "utils.typ"
 #import "magic.typ"
+#import "components.typ"
 #import "core.typ": slide, touying-slide, touying-slide-wrapper
 
 #let _default = metadata((kind: "touying-default"))
@@ -220,9 +221,9 @@
 ///
 /// - default-page-preamble (function): The default preamble for each page. Default is a function to reset the footnote number per slide and reset the page counter to the slide counter.
 ///
-/// - default-composer (auto, function, array): The default composer for slides. It is used when the `composer` argument of the `slide` function is `auto`. Default is `auto`, which falls back to using `components.side-by-side`.
+/// - default-composer (auto, function, array): The default composer for slides. It is used when the `composer` argument of the `slide` function is `auto`. Default is `auto`, which falls back to using `components.side-by-side.with(lazy-layout: false)`.
 ///
-///   For example, `config-common(default-composer: components.side-by-side.with(gutter: 2em))` sets the default gutter between columns to `2em` for all slides.
+///   For example, `config-common(default-composer: components.side-by-side.with(lazy-layout: false, gutter: 2em))` sets the default gutter between columns to `2em` for all slides.
 ///
 /// -> dictionary
 #let config-common(
