@@ -11,16 +11,32 @@
 )
 
 
-/// Create a lazy fractional vertical space that is resolved by `lazy-layout`.
+/// Insert a deferred fractional vertical space inside a block, used together with `lazy-layout`
+/// to push content to the bottom of a block while keeping all sibling blocks at equal height.
 ///
-/// This is a "lazy" vertical spacer: it is ignored during height measurement and only
-/// activated when rendered inside a `lazy-layout` container. This lets you push content
-/// to the bottom of a measured block without the block expanding to fill the entire
-/// available height.
+/// Place `lazy-v(1fr)` between the main content and the footer content inside a block.
+/// When the block is rendered inside `lazy-layout`, the space expands to fill the remaining
+/// height of the tallest sibling block, so all blocks end up the same height and their
+/// footer content aligns at the bottom.
 ///
-/// Must be used inside `lazy-layout` to have any effect.
+/// Without `lazy-layout`, this marker has no visual effect.
 ///
-/// Example: `lazy-v(1fr)` inside a block wrapped with `lazy-layout`.
+/// Example:
+/// ```typ
+/// #components.lazy-layout(grid(
+///   columns: (1fr, 1fr),
+///   block(width: 100%)[
+///     #lorem(10)
+///     #components.lazy-v(1fr)  // pushes "Bottom left." to the bottom
+///     Bottom left.
+///   ],
+///   block(width: 100%)[
+///     #lorem(20)
+///     #components.lazy-v(1fr)  // aligns with the taller block on the right
+///     Bottom right.
+///   ],
+/// ))
+/// ```
 ///
 /// - amount (fraction): The fractional amount of space. Must be a `fraction` (e.g. `1fr`).
 ///
@@ -39,12 +55,51 @@
     ))<touying-lazy-v>#parbreak()]
 }
 
-/// Wrap content so that any `lazy-v` calls inside are resolved correctly.
+/// Equalize the heights of multiple side-by-side blocks, while keeping the overall
+/// layout height equal to the tallest block (not the full page height).
 ///
-/// First measures the body height while treating every `lazy-v` marker as invisible
-/// (zero height). Then re-renders the body at that fixed height with the lazy spaces
-/// activated, so fractional spaces fill only the measured block rather than the full
-/// page height.
+/// Wrap a multi-column layout (e.g. a `grid` or `side-by-side`) with `lazy-layout` so
+/// that `lazy-v` markers inside each block are resolved correctly. The function first
+/// measures the natural height of the content (ignoring all `lazy-v` markers), then
+/// re-renders it at that fixed height with the markers activated. This causes the `1fr`
+/// spaces to fill only the remaining room inside each block up to the tallest block's
+/// height, making all blocks the same height without the container expanding to fill
+/// the entire page.
+///
+/// Use `side-by-side(lazy-layout: true)` as a convenient shorthand, or wrap a manual
+/// `grid` directly:
+///
+/// ```typ
+/// // Shorthand via side-by-side
+/// #components.side-by-side(lazy-layout: true)[
+///   #block(width: 100%)[
+///     #lorem(10)
+///     #components.lazy-v(1fr)
+///     Bottom left.
+///   ]
+/// ][
+///   #block(width: 100%)[
+///     #lorem(20)
+///     #components.lazy-v(1fr)
+///     Bottom right.   // aligns with "Bottom left." above
+///   ]
+/// ]
+///
+/// // Manual grid
+/// #components.lazy-layout(grid(
+///   columns: (1fr, 1fr),
+///   block(width: 100%)[
+///     #lorem(10)
+///     #components.lazy-v(1fr)
+///     Bottom left.
+///   ],
+///   block(width: 100%)[
+///     #lorem(20)
+///     #components.lazy-v(1fr)
+///     Bottom right.
+///   ],
+/// ))
+/// ```
 ///
 /// - body (content): The content that may contain `lazy-v` markers.
 ///
