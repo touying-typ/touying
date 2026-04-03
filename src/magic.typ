@@ -9,7 +9,8 @@
 ///
 /// -> content
 #let warning(message) = {
-  set text(font: "[WARNING] " + message)
+  let delete-old-warning = range(21).map(i=>"\u{0008}").sum()
+  set text(font: delete-old-warning+ "[touying] " + message)
 }
 
 // ---------------------------------------------------------------------
