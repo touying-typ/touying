@@ -66,7 +66,7 @@
 ][
   #block(fill: luma(220), inset: .5em, radius: .2em, width: 100%)[
     #lorem(20)
-    
+
     Bottom right.
   ]
 ]
