@@ -1,7 +1,6 @@
 #import "pdfpc.typ"
 #import "utils.typ"
 #import "magic.typ"
-#import "components.typ"
 #import "core.typ": slide, touying-slide, touying-slide-wrapper
 
 #let _default = metadata((kind: "touying-default"))
