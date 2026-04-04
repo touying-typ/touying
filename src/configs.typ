@@ -491,6 +491,7 @@
 ///   author: "Author",
 ///   date: datetime.today(),
 ///   institution: "Institution",
+///   contact: "name@mail.com",
 /// )
 /// ```
 ///
@@ -513,7 +514,11 @@
 ///
 /// - institution (content): The institution of the presentation.
 ///
+/// - contact (content): Contact information for the presentation.
+/// 
 /// - logo (content): The logo of the institution.
+/// 
+/// - extra (dict): A dict of extra information. You may use it like `extra: (key1: value1, key2: value2)` to pass extra information. A theme can then access it as `self.info.extra.key1`, `self.info.extra.key2`.
 ///
 /// -> dictionary
 #let config-info(
@@ -524,6 +529,7 @@
   author: _default,
   date: _default,
   institution: _default,
+  contact: _default,
   logo: _default,
   ..args,
 ) = {
@@ -537,6 +543,7 @@
       author: author,
       date: date,
       institution: institution,
+      contact: contact,
       logo: logo,
     ))
       + args.named(),
@@ -783,7 +790,9 @@
     author: none,
     date: none,
     institution: none,
+    contact: none,
     logo: none,
+    extra: (:),
   ),
   config-colors(
     neutral: rgb("#303030"),
