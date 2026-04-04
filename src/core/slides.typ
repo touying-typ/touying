@@ -397,12 +397,6 @@
         self + (headings: current-headings, is-first-slide: is-first-slide)
       )
 
-      //debug
-      output-slides.push([#metadata((
-        fn: "before-wrapper-call",
-        current-headings: current-headings,
-      ))<dbg>])
-
       // honor uses wishes like <touying:handout> etc. by skipping depending on the mode. Same as for the heading-based skipping logic.
       // we allow multiple: e.g. <touying:handout-presentation>, or even <touying:presentation-document>, you may write <touying:slides> as a short for <touying:presentation-handout>
       if child.has("label") {
