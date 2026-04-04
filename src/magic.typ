@@ -8,9 +8,9 @@
 /// - message (str): The warning message.
 ///
 /// -> content
-#let warning(message) = {
+#let warning(prefix: "[touying]", message) = {
   let delete-old-warning = range(21).map(i => "\u{0008}").sum()
-  set text(font: delete-old-warning + "[touying] " + message)
+  set text(font: delete-old-warning + prefix + " " + message)
 }
 
 // ---------------------------------------------------------------------
