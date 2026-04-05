@@ -849,7 +849,7 @@ To contribute to Touying:
 
 ## Miscellaneous
 
-### How do I set the presentation title, author, and date?
+### How do I set the presentation title, author, date, etc.?
 
 Use `config-info(...)`:
 
@@ -865,6 +865,7 @@ Use `config-info(...)`:
     author: [Jane Doe],
     date: datetime.today(),
     institution: [My University],
+    contact: [contact@mail.com],
   ),
 )
 

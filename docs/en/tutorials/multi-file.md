@@ -38,6 +38,7 @@ These three files are separated to allow both `main.typ` and `content.typ` to im
     author: [Authors],
     date: datetime.today(),
     institution: [Institution],
+    contact: [contact@mail.com],
     logo: emoji.school,
   ),
 )
@@ -78,6 +79,7 @@ Implementing multiple sections is also straightforward. You only need to create 
     author: [Authors],
     date: datetime.today(),
     institution: [Institution],
+    contact: [contact@mail.com],
     logo: emoji.school,
   ),
 )

@@ -196,6 +196,10 @@
         parbreak()
         text(size: 0.7em, info.institution)
       }
+      if info.contact != none {
+        parbreak()
+        text(size: 0.7em, info.contact)
+      }
       // date
       if info.date != none {
         parbreak()

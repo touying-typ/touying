@@ -11,6 +11,7 @@
     author: [Authors],
     date: datetime.today(),
     institution: [Institution],
+    contact: [contact@mail.com],
     logo: emoji.school,
   ),
 )

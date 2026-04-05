@@ -24,6 +24,7 @@ You can initialize the theme with the following code:
     author: [Authors],
     date: datetime.today(),
     institution: [Institution],
+    contact: [contact@mail.com],
     logo: emoji.school,
   ),
 )
@@ -135,6 +136,7 @@ Refer to the [documentation](https://polylux.dev/book/themes/gallery/university.
     author: [Authors],
     date: datetime.today(),
     institution: [Institution],
+    contact: [contact@mail.com],
     logo: emoji.school,
   ),
 )

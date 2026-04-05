@@ -60,6 +60,7 @@ Touying offers many built-in themes to easily create beautiful slides. For examp
     author: [Authors],
     date: datetime.today(),
     institution: [Institution],
+    contact: [contact@mail.com],
     logo: emoji.school,
   ),
 )

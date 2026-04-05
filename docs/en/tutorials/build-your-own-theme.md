@@ -36,6 +36,7 @@ Then you can import and use the theme by:
     author: [Authors],
     date: datetime.today(),
     institution: [Institution],
+    contact: [contact@mail.com],
     logo: emoji.school,
   ),
 )
@@ -349,6 +350,9 @@ For the `new-section-slide` method, it's the same, but the only thing to note is
     if info.date != none {
       block(utils.display-info-date(self))
     }
+    if info.contact != none {
+      block(info.contact)
+    }
   }
   touying-slide(self: self, body)
 })
@@ -421,6 +425,7 @@ For the `new-section-slide` method, it's the same, but the only thing to note is
     author: [Authors],
     date: datetime.today(),
     institution: [Institution],
+    contact: [contact@mail.com],
   ),
 )
 

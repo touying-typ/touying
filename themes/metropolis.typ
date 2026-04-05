@@ -164,6 +164,9 @@
         if info.institution != none {
           block(spacing: 1em, info.institution)
         }
+        if info.contact != none {
+          block(spacing: 1em, info.contact)
+        }
         if extra != none {
           block(spacing: 1em, extra)
         }

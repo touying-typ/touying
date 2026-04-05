@@ -24,6 +24,7 @@ You can initialize the theme with the following code:
     author: [Authors],
     date: datetime.today(),
     institution: [Institution],
+    contact: [contact@mail.com],
     logo: emoji.school,
   ),
 )
@@ -138,6 +139,7 @@ Start a new section with the given title.
     author: [Authors],
     date: datetime.today(),
     institution: [Institution],
+    contact: [contact@mail.com],
     logo: emoji.school,
   ),
 )

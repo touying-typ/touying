@@ -36,7 +36,7 @@ If you are not a theme creator but simply want to add some of your own global st
 
 Like Beamer, Touying helps you better maintain global information through a unified API design, allowing you to easily switch between different themes. Global information is a typical example of this.
 
-You can set the title, subtitle, author, date, and institution information of your slides with:
+You can set the title, subtitle, author, date, institution, contact and logo information of your slides with:
 
 ```typc
 config-info(
@@ -45,8 +45,13 @@ config-info(
   author: [Authors],
   date: datetime.today(),
   institution: [Institution],
+  contact: [contact@mail.com],
+  logo: [logo.png],
+  extra: (supervisor:[Supervisor],),
 )
 ```
+
+You can even pass extra information, to maintain presentation information not covered by the other attributes.
 
 Later on, you can access them through `self.info`.
 

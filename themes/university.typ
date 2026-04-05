@@ -198,6 +198,10 @@
           parbreak()
           text(size: .9em, info.institution)
         }
+        if info.contact != none {
+          parbreak()
+          text(size: .9em, info.contact)
+        }
         if info.date != none {
           parbreak()
           text(size: .8em, utils.display-info-date(self))

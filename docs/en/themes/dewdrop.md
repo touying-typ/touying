@@ -28,6 +28,7 @@ You can initialize it using the following code:
     author: [Authors],
     date: datetime.today(),
     institution: [Institution],
+    contact: [contact@mail.com],
   ),
 )
 
@@ -123,6 +124,7 @@ Used to draw attention, with the background color set to `self.colors.primary`.
     author: [Authors],
     date: datetime.today(),
     institution: [Institution],
+    contact: [contact@mail.com],
   ),
 )
 
