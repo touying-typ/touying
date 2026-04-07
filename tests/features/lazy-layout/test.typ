@@ -71,3 +71,34 @@
     Bottom right.
   ]
 ]
+
+= Lazy Hspace
+
+== Basic: lazy-layout with lazy-h (single block)
+
+// The block should shrink to fit the content width, not expand to the full page width.
+// The 1fr lazy-h pushes "Right." to the right edge within the measured block width.
+#components.lazy-layout(
+  direction: ltr,
+  block(fill: luma(220), inset: .5em, radius: .2em, height: 2em)[
+    Left. #components.lazy-h(1fr) Right.
+  ],
+)
+
+== Basic: two blocks with lazy-h stacked (manual)
+
+// Both blocks should be the same width (matching the wider one),
+// and the overall layout should NOT fill the entire page width.
+#components.lazy-layout(
+  direction: ltr,
+  stack(
+    dir: ttb,
+    spacing: 1em,
+    block(fill: luma(220), inset: .5em, radius: .2em, height: 2em)[
+      #lorem(3) #components.lazy-h(1fr) Right label.
+    ],
+    block(fill: luma(220), inset: .5em, radius: .2em, height: 2em)[
+      #lorem(6) #components.lazy-h(1fr) Right label.
+    ],
+  ),
+)

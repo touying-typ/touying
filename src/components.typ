@@ -55,37 +55,77 @@
     ))<touying-lazy-v>#parbreak()]
 }
 
-/// Equalize the heights of multiple side-by-side blocks, while keeping the overall
-/// layout height equal to the tallest block (not the full page height).
+/// Insert a deferred fractional horizontal space inside a block, used together with
+/// `lazy-layout(direction: ltr)` (or any horizontal direction) to push content to the
+/// right edge of a block while keeping all sibling blocks at equal width.
 ///
-/// Wrap a multi-column layout (e.g. a `grid` or `side-by-side`) with `lazy-layout` so
-/// that `lazy-v` markers inside each block are resolved correctly. The function first
-/// measures the natural height of the content (ignoring all `lazy-v` markers), then
-/// re-renders it at that fixed height with the markers activated. This causes the `1fr`
-/// spaces to fill only the remaining room inside each block up to the tallest block's
-/// height, making all blocks the same height without the container expanding to fill
-/// the entire page.
+/// The horizontal counterpart of `lazy-v`. Place `lazy-h(1fr)` between the leading
+/// content and the trailing content inside a block. When the block is rendered inside
+/// a `lazy-layout` with a horizontal direction, the space expands to fill the remaining
+/// width of the widest sibling block, so all blocks end up the same width and their
+/// trailing content aligns at the right edge.
 ///
-/// Use `side-by-side(lazy-layout: true)` as a convenient shorthand, or wrap a manual
-/// `grid` directly:
+/// Without a `lazy-layout` with a matching horizontal direction, this marker has no
+/// visual effect.
+///
+/// Example:
+/// ```typ
+/// #components.lazy-layout(
+///   direction: ltr,
+///   stack(
+///     dir: ltr,
+///     block(height: 100%)[
+///       Left label. #components.lazy-h(1fr) Right label.
+///     ],
+///     block(height: 100%)[
+///       A longer left label. #components.lazy-h(1fr) Right label.
+///     ],
+///   ),
+/// )
+/// ```
+///
+/// - amount (fraction): The fractional amount of space. Must be a `fraction` (e.g. `1fr`).
+///
+/// - weak (bool): Whether the space is weak (collapses with adjacent spaces). Default is `false`.
+///
+/// -> content
+#let lazy-h(amount, weak: false) = {
+  assert(
+    type(amount) == fraction,
+    message: "lazy-h: `amount` must be a fraction (e.g. 1fr), got "
+      + repr(amount),
+  )
+  [#metadata((
+    amount: amount,
+    weak: weak,
+  ))<touying-lazy-h>]
+}
+
+/// Equalize the sizes of multiple side-by-side (or stacked) blocks along one axis,
+/// while keeping the overall container size equal to the largest block (not the full
+/// page size).
+///
+/// Wrap a multi-block layout with `lazy-layout` so that `lazy-v` or `lazy-h` markers
+/// inside each block are resolved correctly. The function first measures the natural
+/// size of the content (ignoring all lazy markers), then re-renders it at that fixed
+/// size with the markers activated. This causes the fractional spaces to fill only the
+/// remaining room inside each block up to the largest block's size, making all blocks
+/// the same size without the container growing beyond the largest block.
+///
+/// The `direction` parameter controls which axis is equalized and which lazy marker
+/// type is activated:
+/// - Vertical directions (`ttb`, `btt`): activates `lazy-v` markers, equalizes block
+///   *heights*. This is the default and matches `side-by-side(lazy-layout: true)`.
+/// - Horizontal directions (`ltr`, `rtl`): activates `lazy-h` markers, equalizes block
+///   *widths*.
+///
+/// Mixing `lazy-v` and `lazy-h` markers inside the same `lazy-layout` call will panic.
+///
+/// Use `side-by-side(lazy-layout: true)` as a convenient shorthand for the vertical
+/// case, or wrap a manual `grid` / `stack` directly:
 ///
 /// ```typ
-/// // Shorthand via side-by-side
-/// #components.side-by-side(lazy-layout: true)[
-///   #block(width: 100%)[
-///     #lorem(10)
-///     #components.lazy-v(1fr)
-///     Bottom left.
-///   ]
-/// ][
-///   #block(width: 100%)[
-///     #lorem(20)
-///     #components.lazy-v(1fr)
-///     Bottom right.   // aligns with "Bottom left." above
-///   ]
-/// ]
-///
-/// // Manual grid
+/// // Vertical (default): equalize block heights
 /// #components.lazy-layout(grid(
 ///   columns: (1fr, 1fr),
 ///   block(width: 100%)[
@@ -99,20 +139,56 @@
 ///     Bottom right.
 ///   ],
 /// ))
+///
+/// // Horizontal: equalize block widths
+/// #components.lazy-layout(
+///   direction: ltr,
+///   stack(
+///     dir: ltr,
+///     block(height: 100%)[Left. #components.lazy-h(1fr) Right.],
+///     block(height: 100%)[Longer left. #components.lazy-h(1fr) Right.],
+///   ),
+/// )
 /// ```
 ///
-/// - body (content): The content that may contain `lazy-v` markers.
+/// - direction (direction): The axis along which blocks are equalized. Accepts any
+///   Typst `direction` value (`ttb`, `btt`, `ltr`, `rtl`). Vertical directions activate
+///   `lazy-v`; horizontal directions activate `lazy-h`. Default is `ttb`.
+///
+/// - body (content): The content that may contain `lazy-v` or `lazy-h` markers.
 ///
 /// -> content
-#let lazy-layout(body) = layout(container-size => {
-  // Phase 1: measure height with all lazy-v markers hidden.
-  let measured-size = measure(block(
-    width: container-size.width,
-    body,
-  ))
-  // Phase 2: render at the measured height with lazy-v markers activated.
-  show <touying-lazy-v>: it => v(it.value.amount, weak: it.value.weak)
-  block(width: 100%, height: measured-size.height, body)
+#let lazy-layout(direction: ttb, body) = layout(container-size => {
+  let is-vertical = direction.axis() == "vertical"
+  if is-vertical {
+    // Phase 1: measure height with all lazy-v markers hidden.
+    let measured-size = measure(block(
+      width: container-size.width,
+      body,
+    ))
+    // Phase 2: render at the measured height with lazy-v markers activated.
+    // Panic if lazy-h markers are also present (mixed use is not supported).
+    show <touying-lazy-h>: it => panic(
+      "lazy-layout: found a lazy-h marker inside a vertical lazy-layout. "
+        + "Use lazy-v markers for vertical layouts, or pass direction: ltr to lazy-layout.",
+    )
+    show <touying-lazy-v>: it => v(it.value.amount, weak: it.value.weak)
+    block(height: measured-size.height, body)
+  } else {
+    // Phase 1: measure width with all lazy-h markers hidden.
+    let measured-size = measure(block(
+      height: container-size.height,
+      body,
+    ))
+    // Phase 2: render at the measured width with lazy-h markers activated.
+    // Panic if lazy-v markers are also present (mixed use is not supported).
+    show <touying-lazy-v>: it => panic(
+      "lazy-layout: found a lazy-v marker inside a horizontal lazy-layout. "
+        + "Use lazy-h markers for horizontal layouts, or pass direction: ttb to lazy-layout.",
+    )
+    show <touying-lazy-h>: it => h(it.value.amount, weak: it.value.weak)
+    block(width: measured-size.width, body)
+  }
 })
 
 // Alias used inside `side-by-side` to avoid the `lazy-layout` parameter shadowing the function.
