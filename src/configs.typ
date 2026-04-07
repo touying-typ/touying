@@ -531,6 +531,7 @@
   institution: _default,
   contact: _default,
   logo: _default,
+  extra: _default,
   ..args,
 ) = {
   assert(args.pos().len() == 0, message: "Unexpected positional arguments.")
@@ -545,6 +546,7 @@
       institution: institution,
       contact: contact,
       logo: logo,
+      extra: extra,
     ))
       + args.named(),
   )
