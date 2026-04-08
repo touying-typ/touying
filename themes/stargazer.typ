@@ -373,6 +373,8 @@
 ///
 /// - align (alignment): is the alignment of the content. The default is `horizon`.
 ///
+/// - alpha (float): the alpha of the covered headings in outlines. The default is `20%`.
+///
 /// - title (content, function): is the title in the header of the slide. The default is `self => utils.display-current-heading(depth: self.slide-level)`.
 ///
 /// - header-right (content, function): is the right part of the header. The default is `self => self.info.logo`.

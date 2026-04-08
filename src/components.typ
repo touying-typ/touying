@@ -210,7 +210,7 @@
 ///
 /// - transform (function): A function applied to each outline entry. It receives `(cover: bool, level: int, alpha: ratio, ..args, it)` where `cover` is `true` when the entry should be visually de-emphasized, `it` is the outline entry element, and `alpha` is the transparency value.
 ///
-/// - args (arguments): Additional arguments forwarded to the inner `outline()` call.
+/// - args (arguments): Additional arguments forwarded to the inner `outline()` call, see https://typst.app/docs/reference/model/outline/.
 ///
 /// -> content
 #let progressive-outline(
@@ -266,7 +266,7 @@
 ///
 /// - self (none): The self context.
 ///
-/// - alpha (ratio): The transparency of the other headings. Default is `60%`.
+/// - alpha (ratio): The transparency of the covered headings. Default is `60%`.
 ///
 /// - level (auto, int): The outline level. When `auto`, all levels up to `slide-level` are shown. Default is `auto`.
 ///
@@ -278,11 +278,7 @@
 ///
 /// - numbering (array): Per-level numbering strings or `none` overrides. Default is `()`.
 ///
-/// - text-fill (array, none): Per-level text fill colors. Default is `none` (inherits current text color).
-///
-/// - text-size (array, none): Per-level text sizes. Default is `none` (inherits current text size).
-///
-/// - text-weight (array, none): Per-level text weights. Default is `none` (inherits current text weight).
+/// - text-style (array, none): Per-level text style dicts. Default is `none` (inherits current text style). See the parameters of `text` (https://typst.app/docs/reference/text/text/).
 ///
 /// - vspace (array, none): Per-level vertical space above each heading. Default is `none`.
 ///
@@ -294,116 +290,235 @@
 ///
 /// - short-heading (bool): Whether to shorten headings that have labels using `utils.short-heading`. Default is `true`.
 ///
-/// - uncover-fn (function): A function `body => body` applied to currently-active (non-covered) headings. Default is the identity function.
+/// - show-past (array, function, none): Per-level booleans indicating whether to show headings for past sections. Default is `none`, reverts to the cover behaviour of `progressive-outline`. The last value in the array is used for all levels beyond the array length. \ If a function is provided instead, the function is used to style the outline entries and the styles passed to custom-progressive-outline are ignored. It receives `(level: int, it)` where `it` is the outline entry element and `level` is the heading level of that entry.
 ///
-/// - args (arguments): Additional arguments forwarded to the underlying `progressive-outline` call.
+/// - show-current (array, function, none): Per-level booleans. Defaul is `none`. For more info see `show-past`.
+///
+/// - show-future (array, function, none): Per-level booleans. Default is `none`. For more info see `show-past`.
+///
+/// - style-current (array): Per level text style dicts which override text styles for the non-covered headings. Default is `none`, which uses the styles from `text-style`. See `text-style` for more details.
+///
+/// - args (arguments): Additional arguments forwarded to the underlying `outline` call, see https://typst.app/docs/reference/model/outline/.
 ///
 /// -> content
 #let custom-progressive-outline(
   self: none,
   alpha: 60%,
   level: auto,
-  numbered: (false,),
+  numbered: (false,), //only applies when headings have numbering in the document
   filled: (false,),
   paged: (false,),
-  numbering: (),
-  text-fill: none,
-  text-size: none,
-  text-weight: none,
-  vspace: none,
-  title: none,
+  numbering: (), // only when numbered is true, overrides the document numbering for the outline
+  text-style: none,
+  vspace: none, // set to (0pt, ...) to linebreak the entries
+  title: none, //if set the outline will create its own top level heading
   indent: (0em,),
   fill: (repeat[.],),
   short-heading: true,
-  uncover-fn: body => body,
+  show-past: none,
+  show-current: none,
+  show-future: none,
+  style-current: none,
   ..args,
-) = progressive-outline(
-  alpha: alpha,
-  level: level,
-  transform: (cover: false, alpha: alpha, ..args, it) => {
-    let array-at(arr, idx) = arr.at(idx, default: arr.last())
-    let set-text(level, body) = {
-      set text(fill: {
-        let text-color = if type(text-fill) == array and text-fill.len() > 0 {
-          array-at(text-fill, level - 1)
-        } else {
-          text.fill
-        }
-        if cover {
-          utils.update-alpha(text-color, alpha)
-        } else {
-          text-color
-        }
-      })
-      set text(
-        size: array-at(text-size, level - 1),
-      ) if type(text-size) == array and text-size.len() > 0
-      set text(
-        weight: array-at(text-weight, level - 1),
-      ) if type(text-weight) == array and text-weight.len() > 0
-      body
+) = {
+  // panic when args has uncover-fn
+  if "uncover-fn" in args.named().keys() {
+    panic(
+      "uncover-fn is no longer supported in custom-progressive-outline, use style-current instead.",
+    )
+  }
+  let named-args = args.named()
+  //for backwards compatibility, we extract text-fill, text-size and text-weight from the args and pass it into text-style
+  let merge-dep-styles(base, override, name) = {
+    let result = if base != none { base } else { () }
+    if override.len() > result.len() {
+      result = result + (range(override.len() - result.len()).map(i => (:))) //Extend result with empty dicts
     }
-    let body = {
-      if type(vspace) == array and vspace.len() > it.level - 1 {
-        v(vspace.at(it.level - 1))
+    for i in range(override.len()) {
+      if override.at(i) != none {
+        result.at(i).insert(name, override.at(i))
       }
-      h(range(1, it.level + 1).map(level => array-at(indent, level - 1)).sum())
-      set-text(
-        it.level,
-        {
-          if array-at(numbered, it.level - 1) {
-            let current-numbering = numbering.at(
-              it.level - 1,
-              default: it.element.numbering,
-            )
-            if current-numbering != none {
-              std.numbering(
-                current-numbering,
-                ..counter(heading).at(it.element.location()),
-              )
-              h(.3em)
-            }
-          }
-          link(
-            it.element.location(),
-            {
-              if short-heading {
-                utils.short-heading(self: self, it.element)
-              } else {
-                it.element.body
-              }
-              box(
-                width: 1fr,
-                inset: (x: .2em),
-                if array-at(filled, it.level - 1) {
-                  array-at(fill, it.level - 1)
-                },
-              )
-              if array-at(paged, it.level - 1) {
-                std.numbering(
-                  if page.numbering != none {
-                    page.numbering
-                  } else {
-                    "1"
-                  },
-                  ..counter(page).at(it.element.location()),
-                )
-              }
-            },
-          )
-        },
-      )
+    }
+    result
+  }
+  let dep-text-fill = named-args.remove("text-fill", default: ())
+  let dep-text-size = named-args.remove("text-size", default: ())
+  let dep-text-weight = named-args.remove("text-weight", default: ())
+  if (
+    not dep-text-fill == ()
+      or not dep-text-size == ()
+      or not dep-text-weight == ()
+  ) {
+    warning(
+      "Passing text-fill, text-size or text-weight to custom-progressive-outline will be deprecated in some future version. Use text-style instead.",
+    )
+  }
+  text-style = merge-dep-styles(text-style, dep-text-fill, "fill")
+  text-style = merge-dep-styles(text-style, dep-text-size, "size")
+  text-style = merge-dep-styles(text-style, dep-text-weight, "weight")
+
+  // now the actualy function
+  if level == auto {
+    level = if self != none { self.at("slide-level", default: 1) } else { 1 }
+  }
+
+  let array-at(arr, idx, d: none) = arr.at(idx, default: if arr.len() > 0 {
+    arr.last()
+  } else { d }) //with last as default
+
+  let set-text(cover, level, alpha, body) = {
+    let style-at-lvl = if not cover and type(style-current) == array {
+      array-at(style-current, level - 1, d: (:))
+    } else if type(text-style) == array {
+      array-at(text-style, level - 1, d: (:))
+    } else {
+      (:)
     }
     if cover {
-      body
-    } else {
-      uncover-fn(body)
+      style-at-lvl.insert("fill", utils.update-alpha(
+        style-at-lvl.at("fill", default: text.fill),
+        alpha,
+      ))
     }
-  },
-  title: title,
-  ..args,
-)
+    set text(..style-at-lvl)
+    body
+  }
 
+  let position(level) = {
+    let start-page = 1
+    let end-page = calc.inf
+    if level != none {
+      let current-heading = utils.current-heading(level: level)
+      if current-heading != none {
+        start-page = current-heading.location().page()
+        let headings-up-to(level) = {
+          if level <= 1 {
+            return heading.where(level: level)
+          } else {
+            return heading.where(level: level).or(headings-up-to(level - 1))
+          }
+        }
+        let next-headings = query(
+          selector(headings-up-to(level)).after(
+            inclusive: false,
+            current-heading.location(),
+          ),
+        ).at(0, default: none)
+        end-page = if next-headings != none {
+          next-headings.location().page()
+        } else {
+          calc.inf
+        }
+      }
+    }
+    return (start-page, end-page)
+  }
+
+  let transform(cover: false, alpha: alpha, it) = {
+    if type(vspace) == array and vspace.len() > it.level - 1 {
+      v(vspace.at(it.level - 1))
+    }
+
+    h(
+      range(1, it.level + 1)
+        .map(level => array-at(indent, level - 1, d: 0%))
+        .sum(),
+    )
+    set-text(
+      cover,
+      it.level,
+      alpha,
+      {
+        if array-at(numbered, it.level - 1, d: false) {
+          let current-numbering = numbering.at(
+            it.level - 1,
+            default: it.element.numbering,
+          )
+          if current-numbering != none {
+            std.numbering(
+              current-numbering,
+              ..counter(heading).at(it.element.location()),
+            )
+            h(.3em)
+          }
+        }
+        link(
+          it.element.location(),
+          {
+            if short-heading {
+              utils.short-heading(self: self, it.element)
+            } else {
+              it.element.body
+            }
+            box(
+              width: 1fr,
+              inset: (x: .2em),
+              if array-at(filled, it.level - 1, d: false) {
+                array-at(fill, it.level - 1, d: repeat[.])
+              },
+            )
+            if array-at(paged, it.level - 1, d: false) {
+              std.numbering(
+                if page.numbering != none {
+                  page.numbering
+                } else {
+                  "1"
+                },
+                ..counter(page).at(it.element.location()),
+              )
+            }
+          },
+        )
+      },
+    )
+  }
+
+  context {
+    let doc-pos = position(level)
+    show outline.entry: it => {
+      let cur-pos = it.element.location().page()
+
+      if cur-pos < doc-pos.first() {
+        if type(show-past) == function {
+          return show-past(it.level, it)
+        } else if (
+          type(show-past) == array
+            and not array-at(show-past, it.level - 1, d: false)
+        ) {
+          return none
+        } else {
+          //if show or show-past is none
+          transform(cover: true, alpha: alpha, it)
+        }
+      } else if cur-pos >= doc-pos.last() {
+        if type(show-future) == function {
+          return show-future(it.level, it)
+        } else if (
+          type(show-future) == array
+            and not array-at(show-future, it.level - 1, d: false)
+        ) {
+          return none
+        } else {
+          //if show or show-future is none
+          return transform(cover: true, alpha: alpha, it)
+        }
+      } else {
+        if type(show-current) == function {
+          return show-current(it.level, it)
+        } else if (
+          type(show-current) == array
+            and not array-at(show-current, it.level - 1, d: false)
+        ) {
+          return none
+        } else {
+          //if show or show-current is none
+          return transform(cover: false, alpha: alpha, it)
+        }
+      }
+    }
+    outline(title: title, ..named-args, ..args.pos())
+  }
+}
 
 /// Section navigation component showing all sections and their per-slide progress as small filled/empty circle dots.
 ///
@@ -667,8 +782,8 @@
 /// - clip (bool): Whether to clip overflowing content. When `true`, content
 ///   that exceeds the slide height will be visually truncated. Default is `false`.
 ///
-/// - detect-overflow (bool): Whether to detect and panic on overflow. When `true`,
-///   a `layout` + `measure` check is performed and `panic()` is called if the
+/// - detect-overflow (bool): Whether to detect and warn on overflow. When `true`,
+///   a `layout` + `measure` check is performed and a warning is emitted if the
 ///   content height exceeds the available container height. When `false`, no
 ///   overflow detection is performed (avoids the `layout` overhead). Default is `false`.
 ///
@@ -698,7 +813,7 @@
       let available-height = container-size.height
       if content-height > available-height {
         warning(
-          "touying: slide content overflows at page "
+          "detecting slide content overflow at page "
             + repr(here().page())
             + " (slide "
             + str(utils.slide-counter.get().last())

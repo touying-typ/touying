@@ -1,4 +1,5 @@
 #import "pdfpc.typ"
+#import "magic.typ": warning
 /// Add page margin dictionary to another page margin dictionary.
 ///
 /// Example: `add-page-margin-dicts((top: 1cm, x: 2cm), (y: 3em))` returns `(x: 2cm, y: 3em)`
@@ -760,6 +761,87 @@
     }
   }
 )
+
+/// Get the relationship of the current section a passed in outline entry. For past sections of another top-level section it returns -2, for past section of the current top-level section it returns -1. For the current section and children it returns 0, for future sections of the current top-level section it returns 1, and for future sections of another top-level section it returns 2.
+///
+/// Usage:
+/// ```typc
+/// #{// displays all top levels and all levels of the current top-level,
+///   // with future siblings and other top levels semi-transparent
+///   // and the current entry bold
+///   show outline.entry: it => {
+///     let relationship = utils.section-relationship(it)
+///     let current = utils.current-heading()
+///     let alpha = if relationship == -2 or relationship > 0 {40%} else {100%}
+///     let weight = if relationship == 0 and current.level == it.level { "bold" } else { "regular" }
+///     if it.level > 1 and calc.abs(relationship) > 1 {
+///       none
+///       // text(fill:red, it) // this will show all non-displayed entries in red.
+///     } else {
+///       text(fill:utils.update-alpha(text.fill, alpha), weight: weight, it)
+///     }
+///   }
+///   // if title is not none, it will create a new top-level heading which interferes with the computation
+///   outline(title:none)
+/// }
+/// ```
+///
+/// - current (content, none): The current heading to compare with. Default is `auto`, which uses `utils.current-heading()`.
+/// - it (content): The outline entry to compare with.
+///
+/// -> int
+#let section-relationship(current: auto, it) = {
+  if current == auto {
+    current = current-heading()
+  }
+  let current-top-heading = current-heading(depth: 1)
+  if current-top-heading == none {
+    warning(
+      "Found no current top-level heading when trying to compute section relationship. Falling back to the current heading. This might cause problems. Problematic heading: "
+        + repr(current.body),
+    )
+    current-top-heading = current
+  }
+  let next-top-heading = query(
+    selector(heading.where(depth: 1)).after(
+      inclusive: false,
+      current-top-heading.location(),
+    ),
+  ).at(0, default: none)
+  let next-heading = query(
+    //the next non-child section heading
+    selector(heading.where(depth: current.level)).after(
+      inclusive: false,
+      current.location(),
+    ),
+  ).at(0, default: none)
+  let this-top-loc = current-top-heading.location().page()
+  let this-loc = current.location().page()
+  let next-sibling-loc = if next-heading != none {
+    next-heading.location().page()
+  } else {
+    calc.inf
+  }
+  let next-top-loc = if next-top-heading != none {
+    next-top-heading.location().page()
+  } else {
+    calc.inf
+  }
+
+  let it-location = it.element.location().page()
+
+  if it-location < this-top-loc {
+    return -2
+  } else if it-location < this-loc {
+    return -1
+  } else if it-location < next-sibling-loc and it-location < next-top-loc {
+    return 0
+  } else if it-location < next-top-loc {
+    return 1
+  } else {
+    return 2
+  }
+}
 
 
 /// Display the date from `self.info.date` formatted with `self.datetime-format`.

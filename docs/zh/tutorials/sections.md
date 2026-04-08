@@ -78,6 +78,7 @@ Hello, Touying!
 其中 `outline(indent: 1em)` 是 Typst 的原生目录函数。而 `#components.adaptive-columns()` 函数可以让目录尽可能只占据一个页面，即它会自适应分别设置 `#columns(1, body)` 或者 `#columns(2, body)`，以此类推。
 
 如果你需要一个可以显示当前进度的 `outline` 函数，你可以考虑使用 `#components.progressive-outline()` 或 `#components.custom-progressive-outline()`，就像 dewdrop 主题那样。
+或者通过操控 `outline.entry` 元素自行编写，对于某些特定效果，你可能需要用到 `#utils.section-relationship`。
 ## 特殊标题标签
 
 Touying 识别标题上的特殊标签以控制幻灯片行为：

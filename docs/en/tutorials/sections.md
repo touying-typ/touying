@@ -75,7 +75,7 @@ Displaying a table of contents in Touying is straightforward:
 
 The `outline(indent: 1em)` is a native Typst function for the table of contents. The `#components.adaptive-columns()` function ensures that the table of contents occupies only one page, adapting by setting `#columns(1, body)` or `#columns(2, body)`, and so on.
 
-If you need a `outline` function that can display the current progress, you might consider using `#components.progressive-outline()` or `#components.custom-progressive-outline()`, as seen in the dewdrop theme.
+If you need a `outline` function that can display the current progress, you might consider using `#components.progressive-outline()` or `#components.custom-progressive-outline()`, as seen in the dewdrop theme. Or write your own by manipulating the `outline.entry` elements, for certain effects you may want to use `#utils.section-relationship`.
 
 ## Special Heading Labels
 

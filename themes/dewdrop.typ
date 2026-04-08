@@ -17,8 +17,10 @@
           self: self,
           level: auto,
           alpha: self.store.alpha,
-          text-fill: (self.colors.primary, self.colors.neutral-darkest),
-          text-size: (1em, .9em),
+          text-style: (
+            (fill: self.colors.primary, size: 1em),
+            (fill: self.colors.neutral-darkest, size: .9em),
+          ),
           vspace: (-.2em,),
           indent: (0em, self.store.sidebar.at("indent", default: .5em)),
           fill: (
