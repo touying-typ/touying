@@ -2088,6 +2088,196 @@
   }
 }
 
+/// Makes the currently revealed item bold. You may pass it an optional `weight` parameter. See https://typst.app/docs/reference/text/text/#parameters-weight. Default is `"bold"`.
+///
+/// - time (int): The relative subslide index passed by item-by-item-fn.
+/// - it (content): The item passed by item-by-item-fn.
+/// - weight (str): The weight of the bold text. Default is `"bold"`.
+/// -> content
+#let current-bold(time, it, weight: "bold") = {
+  if time == 0 {
+    text(weight: weight, it)
+  } else {
+    it
+  }
+}
+/// Highlights the currently revealed item with a yellow background. You may give it an optional `style` parameter (dictionary) to customize the highlight style. See https://typst.app/docs/reference/text/highlight/.
+///
+/// - time (int): The relative subslide index passed by item-by-item-fn.
+/// - it (content): The item passed by item-by-item-fn.
+/// - style (dictionary): The style parameters for the highlight.
+/// -> content
+#let current-highlight(time, it, style: (fill: rgb("#fffd11a1"))) = {
+  if time == 0 {
+    highlight(..style, it)
+  } else {
+    it
+  }
+}
+/// Fades already revealed items by reducing their fill alpha. You may pass it an optional `alpha` parameter, default is `20%`.
+///
+/// - time (int): The relative subslide index passed by item-by-item-fn.
+/// - it (content): The item passed by item-by-item-fn.
+/// - alpha (float): The alpha value for the fade effect. Default is `20%`.
+/// -> content
+#let past-faded(time, it, alpha: 20%) = context {
+  if time < 0 {
+    text(fill: utils.update-alpha(text.fill, alpha), it)
+  } else {
+    it
+  }
+}
+/// Fades already revealed items with a progressive fade. You may pass it an optional `alpha` dict. Possible keys are `linear` and `exponential` for linear and exponential fading, respectively. The value is the fading speed. Default is `(linear: 30%)`.
+///
+/// - time (int): The relative subslide index passed by item-by-item-fn.
+/// - it (content): The item passed by item-by-item-fn.
+/// - alpha (dictionary): The fade speed and type, higher means faster fading. Either `(linear: <value>)` or `(exponential: <value>)`.  Default is `(linear: 30%)`.
+/// -> content
+#let past-progressive-faded(time, it, alpha: (linear: 30%)) = context {
+  assert(
+    type(alpha) == dictionary
+      and alpha.keys().len() == 1
+      and alpha.keys().first() in ("linear", "exponential"),
+    message: "Invalid alpha spec for past-progressive-faded. Expected {linear: <value>} or {exponential: <value>}, got "
+      + repr(alpha),
+  )
+
+  let fade = if "linear" in alpha.keys() {
+    calc.clamp(1 + time * float(alpha.linear), 0, 1)
+  } else {
+    // exponential
+    calc.clamp(calc.pow(1 - float(alpha.exponential), -time), 0, 1)
+  }
+  text(fill: utils.update-alpha(text.fill, fade * 100%), it)
+}
+/// Styling presets for item-by-item-fn. Available ones are:
+/// - `current-bold`: Makes the currently revealed item bold. You may pass it an optional `weight` parameter. See https://typst.app/docs/reference/text/text/#parameters-weight. Default is `"bold"`.
+/// - `current-highlight`: Highlights the currently revealed item with a yellow background. You may give it an optional `style` parameter (dictionary) to customize the highlight style. See https://typst.app/docs/reference/text/highlight/.
+/// - `past-faded`: Fades already revealed items by reducing their fill alpha. You may pass it an optional `alpha` parameter, default is `20%`.
+/// - `past-progressive-faded`: Fades already revealed items with a progressive fade. You may pass it an optional `alpha` dict. Possible keys are `linear` and `exponential` for linear and exponential fading, respectively. The value is the fading speed. Default is `(linear: 30%)`.
+/// See the respective functions for more details.
+///
+/// Usage:\
+/// `#item-by-item-fn("current-highlight")[ ... ]` \
+/// or if you want to customize the style: \
+/// `#item-by-item-fn(item-by-item-functions.at("current-highlight").with(style: (stroke: red)))[ ... ]` or \
+/// `#item-by-item-fn((item-by-item-functions.current-highlight).with(style: (stroke: red)))[ ... ]`
+#let item-by-item-functions = (
+  current-bold: current-bold,
+  current-highlight: current-highlight,
+  past-faded: past-faded,
+  past-progressive-faded: past-progressive-faded,
+)
+
+/// Display list, enum, or terms items one by one with animation and styling.
+/// For basic details, see `#item-by-item`, this is a more customizable version that accepts a styling function to style each item depending on whether it's being revealed, already revealed, or still hidden.
+///
+/// - start (auto | int | label | dictionary): The subslide on which the first
+///   item appears.  `auto` (default) makes it relative to the current pause
+///   position.  An integer gives an absolute subslide number.  A label or
+///   waypoint marker resolves to the waypoint's first subslide.
+///
+/// - fn (function, str): A styling function that styles each list element. It receives `(time (int), it)` where `time` is the relative subslide index, i.e. it may be negative, 0 or positive depending on whether the item was revealed, is being revealed or will be revealed in the future. If none, this defaults to the normal `item-by-item` behavior of simply revealing items without additional styling. Note that this does not interfere with the normal cover mechanism. \ We support several presets for this: `"current-bold"`, `"current-highlight"`, `"past-faded"`, `"past-progressive-faded"` available either by passing in these strings or in the dictionary `item-by-item-functions`. The latter let's you customize the presets.
+///
+/// - cont (content): The content containing a list, enum, or terms element.
+///
+/// -> content
+#let item-by-item-fn(start: auto, fn, cont) = {
+  if type(fn) == str {
+    assert(
+      fn in item-by-item-functions.keys(),
+      message: "Unknown preset for item-by-item-fn: "
+        + repr(fn)
+        + ". Available presets are: "
+        + repr(item-by-item-functions.keys()),
+    )
+    fn = item-by-item-functions.at(fn)
+  }
+  assert(
+    type(fn) in (function, type(none)),
+    message: "item-by-item-fn: `fn` must be a function or a preset name string, got "
+      + repr(type(fn)),
+  )
+
+  if (
+    type(start) == dictionary
+      and start.at("kind", default: none)
+        in ("touying-waypoint-from", "touying-waypoint-until")
+  ) {
+    panic(
+      "item-by-item-fn: `start` must resolve to a single subslide position. "
+        + "`from-wp` and `until-wp` are range markers and are not supported here. "
+        + "Use a label, `get-first`, `get-last`, `prev-wp`, `next-wp` or simple slide numbers instead.",
+    )
+  }
+  let num-items = if utils.is-sequence(cont) {
+    cont
+      .children
+      .filter(c => (
+        type(c) == content and c.func() in (list.item, enum.item, terms.item)
+      ))
+      .len()
+  } else if cont.func() in (list, enum, terms) {
+    cont.children.len()
+  } else {
+    1
+  }
+  if start == auto {
+    touying-fn-wrapper(
+      utils.item-by-item-fn,
+      last-subslide: repetitions => (
+        repetitions + num-items - 1,
+        (start: repetitions),
+      ),
+      start: start,
+      fn,
+      cont,
+    )
+  } else if type(start) == int {
+    touying-fn-wrapper(
+      utils.item-by-item-fn,
+      last-subslide: start + num-items - 1,
+      start: start,
+      fn,
+      cont,
+    )
+  } else if type(start) == str {
+    let parts = utils._parse-subslide-indices(start)
+    if parts.len() != 1 or type(parts.first()) != int {
+      panic(
+        "item-by-item-fn: `start` string must be a single number (e.g. \"3\"), "
+          + "not a range or multi-value spec. Got: \""
+          + start
+          + "\".",
+      )
+    }
+    let n = parts.first()
+    touying-fn-wrapper(
+      utils.item-by-item-fn,
+      last-subslide: n + num-items - 1,
+      start: n,
+      fn,
+      cont,
+    )
+  } else {
+    if type(start) == label {
+      [#metadata((
+        kind: "touying-implicit-waypoint",
+        label: str(start),
+      ))<touying-temporary-mark>]
+    }
+    touying-fn-wrapper(
+      utils.item-by-item-fn,
+      last-subslide: repetitions => (
+        repetitions + num-items - 1,
+        (:),
+      ),
+      start: start,
+      fn,
+      cont,
+    )
+  }
+}
 
 /// Speaker notes are a way to add additional information to your slides that is not visible to the audience. This can be useful for providing additional context or reminders to yourself.
 ///

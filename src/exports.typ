@@ -12,6 +12,8 @@
   get-last,
   handout-only,
   item-by-item,
+  item-by-item-fn,
+  item-by-item-functions,
   jump,
   meanwhile,
   next-wp,
@@ -22,12 +24,12 @@
   slide,
   speaker-note,
   touying-equation,
-  touying-fn-wrapper, // touying-get-config from configs.typ
+  touying-fn-wrapper,
   touying-mitex,
   touying-raw,
   touying-recall,
   touying-reducer,
-  touying-set-config,
+  touying-set-config, // touying-get-config from configs.typ
   touying-slide,
   touying-slide-wrapper,
   uncover,

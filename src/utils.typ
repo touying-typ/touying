@@ -2351,38 +2351,17 @@
   alternatives-match(self: self, cases.zip(contents), ..kwargs.named())
 }
 
-
-/// Display list, enum, or terms items one by one with animation.
+/// Display list, enum, or terms items one by one with animation and styling.
+/// For more details see `utils.item-by-item`.
 ///
-/// Each item is revealed on a successive subslide.  By default (`start: auto`),
-/// revealing is relative to the current pause position.  `start` also accepts
-/// a waypoint label or marker to anchor the reveal sequence. From the anchor one additional item is revealed per subslide.
-///
-///  #example(
-/// >>> #let is-dark = sys.inputs.at("x-color-theme", default: none) == "dark";
-/// >>> #let text-color = if is-dark { std.white } else { std.black };
-/// >>> #show: simple-theme.with(
-/// >>>   aspect-ratio: "16-9",
-/// >>>   config-page(width: 320pt, height: 180pt),
-/// >>>   config-colors(neutral-lightest: none, neutral-darkest: text-color),
-/// >>> )
-/// >>> #set text(.5em)
-/// <<< #show: simple-theme.with(aspect-ratio: "16-9")
-/// = Slide
-///
-/// #item-by-item[
-///   - first
-///   - second
-///   - third
-/// ]
-/// )
-///
-/// - start (auto | int | label | dictionary): The subslide on which the first\n///   item appears.  Resolved from a waypoint when a label or marker is given.
-///
-/// - cont (content): The content containing a list, enum, or terms element.
-///
+/// - start (int, label, str, dictionary): The starting subslide number or waypoint.
+/// - fn (function): A function that gets `(idx, it)` and returns the styled item content for the item at the relative index `idx` (may be negative if it was revealed already)
+/// - cont (content): The content containing the items to display.
 /// -> content
-#let item-by-item(self: none, start: 1, cont) = {
+#let item-by-item-fn(self: none, start: 1, fn, cont) = {
+  if fn == none {
+    fn = (idx, it) => it
+  }
   let cover = self.methods.cover.with(self: self)
   let item-funcs = (list.item, enum.item, terms.item)
 
@@ -2433,13 +2412,13 @@
     for child in cont.children {
       if type(child) == content and child.func() in item-funcs {
         if check-visible(self.subslide, (beginning: start + item-count)) {
-          result.push(child)
+          result.push(fn(start + item-count - self.subslide, child))
         } else {
-          result.push(cover(child))
+          result.push(fn(start + item-count - self.subslide, cover(child)))
         }
         item-count += 1
       } else {
-        result.push(child)
+        result.push(fn(start + item-count - self.subslide, child))
       }
     }
     result.sum(default: [])
@@ -2450,9 +2429,9 @@
       .enumerate()
       .map(((idx, item)) => {
         if check-visible(self.subslide, (beginning: start + idx)) {
-          item
+          fn(start + idx - self.subslide, item)
         } else {
-          reconstruct(item, cover(item.body))
+          reconstruct(item, fn(start + idx - self.subslide, cover(item.body)))
         }
       })
     reconstruct-table-like(cont, new-items)
@@ -2463,9 +2442,12 @@
       .enumerate()
       .map(((idx, item)) => {
         if check-visible(self.subslide, (beginning: start + idx)) {
-          item
+          fn(start + idx - self.subslide, item)
         } else {
-          terms.item(cover(item.term), cover(item.description))
+          terms.item(
+            fn(start + idx - self.subslide, cover(item.term)),
+            fn(start + idx - self.subslide, cover(item.description)),
+          )
         }
       })
     reconstruct-table-like(cont, new-items)
@@ -2473,6 +2455,41 @@
     // Fallback: show content as-is
     cont
   }
+}
+
+
+/// Display list, enum, or terms items one by one with animation.
+///
+/// Each item is revealed on a successive subslide.  By default (`start: auto`),
+/// revealing is relative to the current pause position.  `start` also accepts
+/// a waypoint label or marker to anchor the reveal sequence. From the anchor one additional item is revealed per subslide.
+///
+///  #example(
+/// >>> #let is-dark = sys.inputs.at("x-color-theme", default: none) == "dark";
+/// >>> #let text-color = if is-dark { std.white } else { std.black };
+/// >>> #show: simple-theme.with(
+/// >>>   aspect-ratio: "16-9",
+/// >>>   config-page(width: 320pt, height: 180pt),
+/// >>>   config-colors(neutral-lightest: none, neutral-darkest: text-color),
+/// >>> )
+/// >>> #set text(.5em)
+/// <<< #show: simple-theme.with(aspect-ratio: "16-9")
+/// = Slide
+///
+/// #item-by-item[
+///   - first
+///   - second
+///   - third
+/// ]
+/// )
+///
+/// - start (auto | int | label | dictionary): The subslide on which the first\n///   item appears.  Resolved from a waypoint when a label or marker is given.
+///
+/// - cont (content): The content containing a list, enum, or terms element.
+///
+/// -> content
+#let item-by-item(self: none, start: 1, cont) = {
+  item-by-item-fn(self: self, start: start, (idx, it) => it, cont)
 }
 
 
