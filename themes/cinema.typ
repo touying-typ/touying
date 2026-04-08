@@ -592,7 +592,7 @@ fill: gradient.linear(
 )
 
 
-/// Touying basalt theme.
+/// Touying cinema theme.
 ///
 /// Example:
 ///
