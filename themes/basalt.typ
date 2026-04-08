@@ -1,18 +1,4 @@
-// basalt.typ — A dark, layered Touying theme based on the
-// basalt-cherry-citron-high-con Helix color scheme.
-//
-// Features:
-//   • oklch-defined palette
-//   • Layered gradient backgrounds (linear + radial glow)
-//   • Diagonal stripe pattern overlays
-//   • Cycling noise image overlays per slide (with special title noise)
-//   • Gradient text fills on titles
-//   • Dashed/gradient progress bar in footer
-//   • Conic gradient decorative accents
-
 #import "../src/exports.typ": *
-
-#set text(font: "Alexandria")
 
 #let basalt-base      = oklch(14%, 0.01, 30deg)      
 #let basalt-dark      = oklch(10%, 0.01, 30deg)      
@@ -71,7 +57,7 @@
   ),
 )
 
-// ─── Helper: pick noise image from array, cycling ───────────────
+// Helper: pick noise image from array, cycling
 // noise-images: array of image paths (strings)
 // index: slide number (0-based)
 // title-noise: special noise path for title slide (or none)
@@ -98,7 +84,7 @@
     595.28pt
   }
 
-  // Layer 1: Base gradient (diagonal, dark basalt to near-black)
+  // Layer 1 is the Base gradient. Diagonal.
   if is-title {
     rect(
       width: 100%,
@@ -128,7 +114,7 @@ fill: gradient.linear(
 ),)
  }
 
-  // Layer 2: Radial glow — cherry on title, mint on normal
+  // Then Radial glow 
   if is-title {
     place(
       center + horizon,
@@ -163,7 +149,6 @@ fill: gradient.linear(
     )
   }
 
-  // Layer 3: Diagonal stripes
   if is-title {
   place(
     top + left,
@@ -171,12 +156,13 @@ fill: gradient.linear(
   )
   }
 
-  // Layer 4: Noise image overlay (if provided)
+  // Then we apply the noise overlay
   let noise-images = self.store.at("noise-images", default: ())
   let title-noise = self.store.at("title-noise", default: none)
   let slide-idx = context {
     utils.slide-counter.get().first() - 1
   }
+
   // We can't easily get the counter value at theme-build time,
   // so we always place title noise on title slides and cycle for others.
   if is-title and title-noise != none {
@@ -200,7 +186,7 @@ fill: gradient.linear(
     return
   }
 
-  // Layer 5: Decorative corner accents (conic gradient circles)
+  // In the other case, layer five is decorative corner accents (conic gradient circles)
   if not is-title {
     // Top-left small conic accent
     place(
@@ -235,7 +221,7 @@ fill: gradient.linear(
   }
 }
 
-// ─── Gradient progress bar ──────────────────────────────────────
+// A nice progress bar
 #let _basalt-progress-bar(height: 2pt) = {
   components.progress-bar(
     height: height,
@@ -243,10 +229,6 @@ fill: gradient.linear(
     basalt-soft,
   )
 }
-
-// ═══════════════════════════════════════════════════════════════════
-// SLIDE FUNCTIONS
-// ═══════════════════════════════════════════════════════════════════
 
 /// Default slide.
 #let slide(
@@ -269,7 +251,7 @@ fill: gradient.linear(
       inset: 0pt,
       clip: true,
       {
-        // Layer 1: base gradient
+        // Base 
         place(
           top + left,
           rect(
@@ -285,7 +267,7 @@ fill: gradient.linear(
           ),
         )
 
-        // Layer 2: crosshatch overlay
+        // Crosshatch
         place(
           top + left,
           rect(
@@ -296,7 +278,7 @@ fill: gradient.linear(
           ),
         )
 
-        // Layer 3: accent line pinned to bottom of block
+        // A subtle accent line
         place(
           bottom + left,
           rect(
@@ -312,7 +294,7 @@ fill: gradient.linear(
           ),
         )
 
-        // Layer 4: header text
+        // Our header text
         place(
           left + horizon,
           dx: 1.5em,
@@ -369,8 +351,6 @@ fill: gradient.linear(
 })
 
 
-/// Title slide.
-/// Title slide.
 #let title-slide(config: (:), ..args) = touying-slide-wrapper(self => {
   self = utils.merge-dicts(
     self,
@@ -390,9 +370,9 @@ fill: gradient.linear(
       width: 100%, 
       height: 100%, 
       fill: none, 
-      inset: (x: 3em, top: 3em, bottom: 3em), // Adjust 'top' to move title up/down
+      inset: (x: 3em, top: 3em, bottom: 3em), 
       {
-        // 1. Title Section (Top-Left)
+        //  Title Section (Top-Left)
         align(top + left)[
           #block(below: 1em)[
             #text(
@@ -426,8 +406,7 @@ fill: gradient.linear(
           }
         ]
 
-        // 2. Footer Section (Bottom-Center)
-        // We place this relative to the container we are in.
+        // Footer Section 
         place(bottom + center)[
           #stack(dir: ltr, spacing: 4em,
             if info.date != none {
