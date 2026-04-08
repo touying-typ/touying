@@ -1,20 +1,20 @@
 #import "../src/exports.typ": *
 
-#let basalt-base      = oklch(14%, 0.01, 30deg)      
-#let basalt-dark      = oklch(10%, 0.01, 30deg)      
-#let basalt-soft      = oklch(20%, 0.01, 30deg)      
-#let bone             = oklch(94%, 0.01, 75deg)      
-#let bone-grey        = oklch(72%, 0.01, 70deg)      
-#let warm-grey        = oklch(60%, 0.01, 55deg)      
-#let ash-grey         = oklch(42%, 0.01, 40deg)      
-#let citron-bright    = oklch(89%, 0.09, 105deg)     
-#let citron-dim       = oklch(76%, 0.07, 105deg)     
-#let champagne        = oklch(91%, 0.08, 85deg)      
-#let cherry-red       = oklch(65%, 0.22, 15deg)      
-#let cherry-soft      = oklch(55%, 0.17, 10deg)      
-#let error-red        = oklch(60%, 0.27, 20deg)      
-#let mint-silver      = oklch(88%, 0.07, 175deg)     
-#let selection-hi     = oklch(40%, 0.06, 270deg)     
+#let basalt-base = oklch(14%, 0.01, 30deg)
+#let basalt-dark = oklch(10%, 0.01, 30deg)
+#let basalt-soft = oklch(20%, 0.01, 30deg)
+#let bone = oklch(94%, 0.01, 75deg)
+#let bone-grey = oklch(72%, 0.01, 70deg)
+#let warm-grey = oklch(60%, 0.01, 55deg)
+#let ash-grey = oklch(42%, 0.01, 40deg)
+#let citron-bright = oklch(89%, 0.09, 105deg)
+#let citron-dim = oklch(76%, 0.07, 105deg)
+#let champagne = oklch(91%, 0.08, 85deg)
+#let cherry-red = oklch(65%, 0.22, 15deg)
+#let cherry-soft = oklch(55%, 0.17, 10deg)
+#let error-red = oklch(60%, 0.27, 20deg)
+#let mint-silver = oklch(88%, 0.07, 175deg)
+#let selection-hi = oklch(40%, 0.06, 270deg)
 
 #let _basalt-stripes = tiling(
   size: (12pt, 12pt),
@@ -44,17 +44,16 @@
       ),
     ),
   )
-  +
-  place(
-    line(
-      start: (0%, 100%),
-      end: (100%, 0%),
-      stroke: (
-        paint: basalt-soft.transparentize(60%),
-        thickness: 0.6pt,
+    + place(
+      line(
+        start: (0%, 100%),
+        end: (100%, 0%),
+        stroke: (
+          paint: basalt-soft.transparentize(60%),
+          thickness: 0.6pt,
+        ),
       ),
     ),
-  ),
 )
 
 // Helper: pick noise image from array, cycling
@@ -97,24 +96,25 @@
         space: oklch,
       ),
     )
-  } else if is-focus {    
-  // No-Op
+  } else if is-focus {
+    // No-Op
   } else {
     rect(
       width: 100%,
       height: 100%,
-fill: gradient.linear(
-  selection-hi,
-  basalt-soft,
-  cherry-soft.transparentize(35%),
-  citron-dim.transparentize(40%),
-  warm-grey,
-  angle: 160deg,
-  space: oklch,
-),)
- }
+      fill: gradient.linear(
+        selection-hi,
+        basalt-soft,
+        cherry-soft.transparentize(35%),
+        citron-dim.transparentize(40%),
+        warm-grey,
+        angle: 160deg,
+        space: oklch,
+      ),
+    )
+  }
 
-  // Then Radial glow 
+  // Then Radial glow
   if is-title {
     place(
       center + horizon,
@@ -130,8 +130,8 @@ fill: gradient.linear(
         ),
       ),
     )
-   } else if is-focus {
-  // no-op
+  } else if is-focus {
+    // no-op
   } else {
     place(
       center + top,
@@ -150,10 +150,10 @@ fill: gradient.linear(
   }
 
   if is-title {
-  place(
-    top + left,
-    rect(width: 100%, height: 100%, fill: _basalt-stripes),
-  )
+    place(
+      top + left,
+      rect(width: 100%, height: 100%, fill: _basalt-stripes),
+    )
   }
 
   // Then we apply the noise overlay
@@ -251,7 +251,7 @@ fill: gradient.linear(
       inset: 0pt,
       clip: true,
       {
-        // Base 
+        // Base
         place(
           top + left,
           rect(
@@ -311,7 +311,7 @@ fill: gradient.linear(
         )
       },
     )
-  v(10em)
+    v(10em)
   }
 
   let footer(self) = {
@@ -363,14 +363,14 @@ fill: gradient.linear(
     ),
   )
   let info = self.info + args.named()
-  
+
   let body = {
     // We use a full-page rect with padding to control the layout manually
     rect(
-      width: 100%, 
-      height: 100%, 
-      fill: none, 
-      inset: (x: 3em, top: 3em, bottom: 3em), 
+      width: 100%,
+      height: 100%,
+      fill: none,
+      inset: (x: 3em, top: 3em, bottom: 3em),
       {
         //  Title Section (Top-Left)
         align(top + left)[
@@ -379,17 +379,17 @@ fill: gradient.linear(
               size: 3.8em,
               weight: "extrabold",
               fill: gradient.linear(bone, citron-bright, space: oklch),
-              if info.title != none { info.title } else { "Title" }
+              if info.title != none { info.title } else { "Title" },
             )
           ]
-          
+
           #if info.subtitle != none {
             block(below: 0.8em)[
               #text(
                 size: 2.2em,
                 weight: "regular",
                 fill: champagne.transparentize(20%),
-                info.subtitle
+                info.subtitle,
               )
             ]
           }
@@ -397,18 +397,20 @@ fill: gradient.linear(
           #if info.at("description", default: none) != none {
             block(below: 0.5em)[
               #text(
-                size: 0.9em, 
-                weight: "regular", 
+                size: 0.9em,
+                weight: "regular",
                 fill: warm-grey,
-                info.description
+                info.description,
               )
             ]
           }
         ]
 
-        // Footer Section 
+        // Footer Section
         place(bottom + center)[
-          #stack(dir: ltr, spacing: 4em,
+          #stack(
+            dir: ltr,
+            spacing: 4em,
             if info.date != none {
               text(
                 size: 0.7em,
@@ -417,11 +419,11 @@ fill: gradient.linear(
               )
             },
             if info.author != none {
-               let authors = if type(info.author) == array {
-                  info.author
-                } else {
-                  (info.author,)
-                }
+              let authors = if type(info.author) == array {
+                info.author
+              } else {
+                (info.author,)
+              }
               text(
                 size: 0.8em,
                 fill: bone.transparentize(15%),
@@ -431,14 +433,14 @@ fill: gradient.linear(
             },
             if info.institution != none {
               text(
-                size: 0.7em, 
-                fill: ash-grey, 
-                info.institution
+                size: 0.7em,
+                fill: ash-grey,
+                info.institution,
               )
-            }
+            },
           )
         ]
-      }
+      },
     )
   }
   touying-slide(self: self, body)

@@ -7,9 +7,12 @@
 #import cosmos.fancy: *
 #show: show-theorion
 
-#set-primary-border-color(oklch(65%, 0.22, 15deg))      
-#set-primary-body-color(oklch(14%, 0.01, 30deg))        
-#set-primary-symbol[#text(fill: oklch(65%, 0.22, 15deg), sym.suit.diamond.filled)]
+#set-primary-border-color(oklch(65%, 0.22, 15deg))
+#set-primary-body-color(oklch(14%, 0.01, 30deg))
+#set-primary-symbol[#text(
+  fill: oklch(65%, 0.22, 15deg),
+  sym.suit.diamond.filled,
+)]
 
 // cetz and fletcher bindings for touying
 #let cetz-canvas = touying-reducer.with(
@@ -136,8 +139,8 @@ Fletcher Animation in Touying:
 #fletcher-diagram(
   node-stroke: .1em,
   node-fill: gradient.radial(
-    oklch(88%, 0.07, 175deg, 80%),  // mint-silver tinted
-    oklch(40%, 0.06, 270deg),       // selection-hi
+    oklch(88%, 0.07, 175deg, 80%), // mint-silver tinted
+    oklch(40%, 0.06, 270deg), // selection-hi
     center: (30%, 20%),
     radius: 80%,
   ),
