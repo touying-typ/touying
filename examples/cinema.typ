@@ -1,13 +1,11 @@
 #import "/lib.typ": *
-#import themes.basalt: *
+#import themes.cinema: *
 #import "@preview/cetz:0.4.1"
 #import "@preview/fletcher:0.5.8" as fletcher: edge, node
 #import "@preview/numbly:0.1.0": numbly
 #import "@preview/theorion:0.4.1": *
 #import cosmos.fancy: *
 #show: show-theorion
-
-#set text(font: "Alexandria")
 
 #set-primary-border-color(oklch(65%, 0.22, 15deg))      
 #set-primary-body-color(oklch(14%, 0.01, 30deg))        
@@ -23,15 +21,15 @@
   cover: fletcher.hide,
 )
 
-#show: basalt-theme.with(
+#show: cinema-theme.with(
   aspect-ratio: "16-9",
   noise-images: (
     "../examples/noise_waves.png",
   ),
   config-common(frozen-counters: (theorem-counter,)),
   config-info(
-    title: [Nudox],
-    subtitle: [Enclopedia for code],
+    title: [Test],
+    subtitle: [How pretty],
     author: [Authors],
     date: datetime.today(),
     institution: [Institution],

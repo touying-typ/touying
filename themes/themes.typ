@@ -1,5 +1,5 @@
 #import "default.typ"
-#import "basalt.typ"
+#import "cinema.typ"
 #import "simple.typ"
 #import "metropolis.typ"
 #import "dewdrop.typ"

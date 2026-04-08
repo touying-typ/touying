@@ -475,7 +475,6 @@ fill: gradient.linear(
       text(
         fill: gradient.linear(bone, citron-bright, space: oklch),
         size: 5em,
-        font: "Cabinet Grotesk",
         utils.display-current-heading(level: level, numbered: false),
       )
       body
@@ -626,7 +625,7 @@ fill: gradient.linear(
 /// - footer (content, function): Left footer content.
 /// - footer-right (content, function): Right footer content.
 /// - progress-bar (boolean): Show gradient progress bar. Default `true`.
-#let basalt-theme(
+#let cinema-theme(
   aspect-ratio: "16-9",
   noise-images: (),
   title-noise: none,
