@@ -20,9 +20,7 @@
 
 #title-slide()
 
-= Outline <touying:hidden>
-
-#outline(title: none, indent: 1em, depth: 1)
+#outline-slide(level: 1)
 
 = First Section
 
