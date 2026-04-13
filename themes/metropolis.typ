@@ -178,9 +178,9 @@
 
 
 /// Outline slide for the presentation.
-/// 
+///
 /// Example:
-/// 
+///
 /// ```typst
 /// #show: metropolis-theme.with(
 ///   config-info(
@@ -188,7 +188,7 @@
 ///     logo: emoji.city,
 ///   ),
 /// )
-/// 
+///
 /// #outline-slide(indent: (1em,), depth: 1, title: [Contents])
 /// ```
 ///
@@ -208,7 +208,7 @@
   let indent = if not "indent" in named-args.keys() { (1em,) } else {
     named-args.remove("indent")
   }
-  if type(indent)!=array {
+  if type(indent) != array {
     indent = (indent,)
   }
   let vspace = if not "vspace" in named-args.keys() {
