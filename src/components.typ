@@ -263,6 +263,7 @@
 /// A fully-featured progressive outline that renders headings from multiple levels with per-level styling.
 ///
 /// Uses arrays indexed by heading level (first element = level 1, second = level 2, etc.) to apply different styling to each level. Unlike `progressive-outline` (a thin wrapper around Typst's built-in `outline`), this function renders each heading manually, giving full control over numbering, indentation, fills, and typography.
+/// For styling parameters the last value in the array is used for all levels beyond the array length, it is repeated. So you can write `indent: (1em,)` to apply a `1em` indentation to all levels, or `indent: (0em, 1em)` to apply no indentation to level-1 headings and `1em` to level-2 and beyond. This is not the case for `numbering` or `vspace` nor for `filled`, `numbered`, `paged`.
 ///
 /// - self (none): The self context.
 ///
@@ -270,17 +271,17 @@
 ///
 /// - level (auto, int): The outline level. When `auto`, all levels up to `slide-level` are shown. Default is `auto`.
 ///
-/// - numbered (array): Per-level booleans indicating whether headings are numbered. Default is `(false,)`.
+/// - numbered (array): Per-level booleans indicating whether headings are numbered. Default is `(false,)`. *Last value in the array is not-repeated!*
 ///
-/// - filled (array): Per-level booleans indicating whether to show a fill between the heading and the page number. Default is `(false,)`.
+/// - filled (array): Per-level booleans indicating whether to show a fill between the heading and the page number. Default is `(false,)`. *Last value in the array is not-repeated!*
 ///
-/// - paged (array): Per-level booleans indicating whether to show the page number. Default is `(false,)`.
+/// - paged (array): Per-level booleans indicating whether to show the page number. Default is `(false,)`. *Last value in the array is not-repeated!*
 ///
-/// - numbering (array): Per-level numbering strings or `none` overrides. Default is `()`.
+/// - numbering (array): Per-level numbering strings or `none` overrides. Default is `()`. *Last value in the array is not-repeated!*
 ///
 /// - text-style (array, none): Per-level text style dicts. Default is `none` (inherits current text style). See the parameters of `text` (https://typst.app/docs/reference/text/text/).
 ///
-/// - vspace (array, none): Per-level vertical space above each heading. Default is `none`.
+/// - vspace (array, none): Per-level vertical space above each heading. Default is `none`. *Last value in the array is not-repeated!*
 ///
 /// - title (str, none): The title of the outline section. Default is `none`.
 ///
