@@ -556,7 +556,7 @@ Use `#set par(justify: true)`:
 
 ## Headings and Sections
 
-### How do I disable automatic section slides?
+### How do I prevent an highlighted table of contents page from automatically appearing before the top-level title?
 
 Set `config-common(new-section-slide-fn: none)`:
 

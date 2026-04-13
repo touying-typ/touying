@@ -692,7 +692,7 @@ Text now uses the custom font.
 
 ## 标题与章节
 
-### 如何禁用自动章节幻灯片？
+### 如何阻止一级标题前自动出现带强调的目录页？
 
 设置 `config-common(new-section-slide-fn: none)`：
 
