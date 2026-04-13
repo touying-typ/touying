@@ -121,4 +121,6 @@
   show: core.split-content-into-slides.with(self: self, is-first-slide: true)
 
   body
+
+  [#metadata(none)#label("touying-last-page")]
 }

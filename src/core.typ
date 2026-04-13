@@ -1147,6 +1147,98 @@
 /// -> content
 #let meanwhile = jump(1)
 
+
+/// Create a navigation element with links to previous/next subslide/slide and a center icon. Note that physical pages are considered subslides, thus your content breaking the slide into multiple pages will be considered as 'multiple' subslides.
+///
+/// - icon (symbol, content): The icon to display for the navigation.
+/// - nav (symbol, dictionary, content): The navigation symbols. We use filled symbols as the links to the subslides and stroked symbols as the links to the pages. You can also pass a dictionary with the structure `(filled:(left:any, right:any), stroked:(left:any, right:any))` and you may omit arbitrary fields. We try the best we can to fill the missing fields based on the values and symbols provided.
+/// - mode (str): The mode of the navigation item. Can be "both", "subslide" or "page".
+/// - show-useless (bool): Whether to show the navigation links when they are useless (e.g. on the first page, the "previous page" link is useless). Default is `true`.
+/// -> content
+#let lr-navigation(
+  icon: sym.rect.stroked.h,
+  nav: sym.triangle,
+  mode: "both",
+  show-useless: true,
+) = touying-fn-wrapper-raw((self: none) => context {
+  let nav-symbols = utils.create-nav-symbols(nav)
+
+  let current-page = here().page()
+
+  let prev-page = calc.max(1, current-page - self.subslide - 1)
+  let next-page = current-page - self.subslide + self.repeat + 1
+  let prev-subslide = calc.max(1, current-page - 1)
+  let next-subslide = current-page + 1
+
+  let x = page.width / 2
+  let y = page.height / 2
+
+  let lom = link((page: prev-page, x: x, y: y), text(
+    top-edge: "bounds",
+    bottom-edge: "bounds",
+    nav-symbols.stroked.left,
+  ))
+  let lim = link((page: prev-subslide, x: x, y: y), text(
+    top-edge: "bounds",
+    bottom-edge: "bounds",
+    nav-symbols.filled.left,
+  ))
+  let rim = link((page: next-subslide, x: x, y: y), text(
+    top-edge: "bounds",
+    bottom-edge: "bounds",
+    nav-symbols.filled.right,
+  ))
+  let rom = link((page: next-page, x: x, y: y), text(
+    top-edge: "bounds",
+    bottom-edge: "bounds",
+    nav-symbols.stroked.right,
+  ))
+  let icon = text(top-edge: "bounds", bottom-edge: "bounds", icon)
+
+  if not show-useless {
+    let last-physical-page = query(<touying-last-page>).last().location().page()
+    if current-page <= 1 {
+      lom = hide(lom)
+    }
+    if current-page - self.subslide < 1 {
+      lim = hide(lim)
+    }
+    if current-page + 1 >= last-physical-page {
+      rim = hide(rim)
+    }
+    if current-page - self.subslide + self.repeat + 1 >= last-physical-page {
+      rom = hide(rom)
+    }
+  }
+
+  if mode == "both" {
+    box(stack(
+      dir: ltr,
+      spacing: 0.05em,
+      ..(lom, lim, icon, rim, rom).map(el => align(horizon, el)),
+    ))
+  } else if mode == "subslide" {
+    box(stack(
+      dir: ltr,
+      spacing: 0.05em,
+      ..(lim, icon, rim).map(el => align(horizon, el)),
+    ))
+  } else if mode == "page" {
+    box(stack(
+      dir: ltr,
+      spacing: 0.05em,
+      ..(lom, icon, rom).map(el => align(horizon, el)),
+    ))
+  } else {
+    panic(
+      "Invalid mode for lr-navigation: "
+        + repr(mode)
+        + ". Expected 'both', 'subslide', or 'page'.",
+    )
+  }
+})
+
+
 /// ------------------------------------------------
 /// Waypoints
 /// (by Zral0kh)
