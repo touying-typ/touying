@@ -188,6 +188,7 @@
 // - recaller-map (dictionary): Map of slide labels to their content for recall functionality
 // - new-start (bool): Whether this is the start of a new slide section
 // - is-first-slide (bool): Whether this is the first slide of the presentation
+// - is-outer-call (bool): Whether this is the outermost call to the function (used for recursion)
 // - absorb-leading-preamble (bool): Whether to include the preamble content from before the next split
 // - body (content): The content to be split into slides
 //
@@ -197,6 +198,7 @@
   recaller-map: (:),
   new-start: true,
   is-first-slide: false,
+  is-outer-call: false,
   absorb-leading-preamble: false,
   body,
 ) = {
@@ -1006,6 +1008,11 @@
     if slide-content != none { output-slides.push(slide-content) }
   }
 
+  //add last page metadata to last physical page.
+  if is-outer-call {
+    output-slides.at(-1) += [#metadata(none)#label("touying-last-page")]
+  }
+
   if is-new-start {
     return output-slides.sum(default: none)
   } else {
@@ -1156,13 +1163,13 @@
 /// - show-useless (bool): Whether to show the navigation links when they are useless (e.g. on the first page, the "previous page" link is useless). Default is `true`.
 /// -> content
 #let lr-navigation(
-  self:none,
+  self: none,
   icon: sym.rect.stroked.h,
   nav: sym.triangle,
   mode: "both",
   show-useless: true,
 ) = {
-  let inner() = {
+  let inner(self) = {
     let nav-symbols = utils.create-nav-symbols(nav)
 
     let current-page = here().page()
@@ -1198,7 +1205,10 @@
     let icon = text(top-edge: "bounds", bottom-edge: "bounds", icon)
 
     if not show-useless {
-      let last-physical-page = query(<touying-last-page>).last().location().page()
+      let last-physical-page = query(<touying-last-page>)
+        .last()
+        .location()
+        .page()
       if current-page <= 1 {
         lom = hide(lom)
       }
@@ -1239,11 +1249,11 @@
       )
     }
   }
-  
+
   if self == none {
-    touying-fn-wrapper-raw((self: none) => context inner)
+    touying-fn-wrapper-raw((self: none) => context inner(self))
   } else {
-    context inner()
+    context inner(self)
   }
 }
 
