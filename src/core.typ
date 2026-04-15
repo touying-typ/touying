@@ -394,12 +394,19 @@
       while last-wrapper-info.len() > 0 { let _ = last-wrapper-info.pop() }
       last-wrapper-info.push((child.value.fn, slide-self))
       absorb-leading-preamble = false
-    } else if utils.is-kind(child, "touying-speaker-note") and last-wrapper-info.len() > 0 and utils.trim(slide-parts) == () {
+    } else if (
+      utils.is-kind(child, "touying-speaker-note")
+        and last-wrapper-info.len() > 0
+        and utils.trim(slide-parts) == ()
+    ) {
       // A speaker-note immediately after a slide-wrapper: re-generate the
       // previous slide with the note injected into self so it gets processed
       // inside the slide's subslide-preamble (within the page context).
       let (original-fn, wrapper-self) = last-wrapper-info.last()
-      let existing-notes = wrapper-self.at("attached-speaker-notes", default: ())
+      let existing-notes = wrapper-self.at(
+        "attached-speaker-notes",
+        default: (),
+      )
       existing-notes.push(child.value)
       let new-self = wrapper-self + (attached-speaker-notes: existing-notes)
       // Replace the last output slide with the new one
