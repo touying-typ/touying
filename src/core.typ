@@ -333,6 +333,16 @@
       horizontal-line = false
       absorb-leading-preamble = false
     }
+    // Clear last-wrapper-info when we encounter anything other than a
+    // speaker-note or whitespace, so that only speaker-notes *immediately*
+    // after a slide-wrapper get attached.
+    if (
+      last-wrapper-info.len() > 0
+        and not utils.is-kind(child, "touying-speaker-note")
+        and child not in ([], [ ], parbreak(), linebreak())
+    ) {
+      while last-wrapper-info.len() > 0 { let _ = last-wrapper-info.pop() }
+    }
     // Main logic
     if utils.is-kind(child, "touying-slide-wrapper") {
       slide-parts = utils.trim(slide-parts)
@@ -570,6 +580,12 @@
         not child.has("label")
           or str(child.label) not in ("touying:hidden", "touying:skip")
       ) {
+        // Helper to set last-wrapper-info after a heading-triggered slide.
+        // We extract the wrapper fn by calling the slide function with none
+        // body, which returns a touying-slide-wrapper metadata.
+        let heading-slide-self = (
+          self + (headings: current-headings, is-first-slide: is-first-slide)
+        )
         if (
           child.depth == 1
             and new-section-slide-fn != none
@@ -583,12 +599,20 @@
             new-start,
             is-first-slide,
           ) = call-slide-fn-and-reset(
-            self + (headings: current-headings, is-first-slide: is-first-slide),
+            heading-slide-self,
             new-section-slide-fn,
             none,
             recaller-map,
           )
-          if slide-content != none { output-slides.push(slide-content) }
+          if slide-content != none {
+            output-slides.push(slide-content)
+            // Track for speaker-note attachment
+            let wrapper = new-section-slide-fn(none)
+            while last-wrapper-info.len() > 0 {
+              let _ = last-wrapper-info.pop()
+            }
+            last-wrapper-info.push((wrapper.value.fn, heading-slide-self))
+          }
         } else if (
           child.depth == 2
             and new-subsection-slide-fn != none
@@ -602,12 +626,19 @@
             new-start,
             is-first-slide,
           ) = call-slide-fn-and-reset(
-            self + (headings: current-headings, is-first-slide: is-first-slide),
+            heading-slide-self,
             new-subsection-slide-fn,
             none,
             recaller-map,
           )
-          if slide-content != none { output-slides.push(slide-content) }
+          if slide-content != none {
+            output-slides.push(slide-content)
+            let wrapper = new-subsection-slide-fn(none)
+            while last-wrapper-info.len() > 0 {
+              let _ = last-wrapper-info.pop()
+            }
+            last-wrapper-info.push((wrapper.value.fn, heading-slide-self))
+          }
         } else if (
           child.depth == 3
             and new-subsubsection-slide-fn != none
@@ -621,12 +652,19 @@
             new-start,
             is-first-slide,
           ) = call-slide-fn-and-reset(
-            self + (headings: current-headings, is-first-slide: is-first-slide),
+            heading-slide-self,
             new-subsubsection-slide-fn,
             none,
             recaller-map,
           )
-          if slide-content != none { output-slides.push(slide-content) }
+          if slide-content != none {
+            output-slides.push(slide-content)
+            let wrapper = new-subsubsection-slide-fn(none)
+            while last-wrapper-info.len() > 0 {
+              let _ = last-wrapper-info.pop()
+            }
+            last-wrapper-info.push((wrapper.value.fn, heading-slide-self))
+          }
         } else if (
           child.depth == 4
             and new-subsubsubsection-slide-fn != none
@@ -640,12 +678,19 @@
             new-start,
             is-first-slide,
           ) = call-slide-fn-and-reset(
-            self + (headings: current-headings, is-first-slide: is-first-slide),
+            heading-slide-self,
             new-subsubsubsection-slide-fn,
             none,
             recaller-map,
           )
-          if slide-content != none { output-slides.push(slide-content) }
+          if slide-content != none {
+            output-slides.push(slide-content)
+            let wrapper = new-subsubsubsection-slide-fn(none)
+            while last-wrapper-info.len() > 0 {
+              let _ = last-wrapper-info.pop()
+            }
+            last-wrapper-info.push((wrapper.value.fn, heading-slide-self))
+          }
         }
       }
     } else if (
