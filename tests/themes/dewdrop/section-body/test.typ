@@ -6,7 +6,7 @@
   navigation: none,
   config-common(
     receive-body-for-new-section-slide-fn: true,
-  )
+  ),
 )
 
 = Foo
