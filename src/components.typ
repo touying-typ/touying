@@ -11,15 +11,12 @@
 )
 
 
-/// Insert a deferred fractional vertical space inside a block, used together with `lazy-layout`
-/// to push content to the bottom of a block while keeping all sibling blocks at equal height.
+/// Lazy fractional vertical space, used with `lazy-layout` to push content to the
+/// bottom of a block while keeping sibling blocks at equal height without filling the
+/// entire page.
 ///
-/// Place `lazy-v(1fr)` between the main content and the footer content inside a block.
-/// When the block is rendered inside `lazy-layout`, the space expands to fill the remaining
-/// height of the tallest sibling block, so all blocks end up the same height and their
-/// footer content aligns at the bottom.
-///
-/// Without `lazy-layout`, this marker has no visual effect.
+/// Has no visual effect without `lazy-layout`. If a column contains multiple `lazy-v`
+/// markers (stacked blocks), only the last one is activated.
 ///
 /// Example:
 /// ```typ
@@ -27,20 +24,20 @@
 ///   columns: (1fr, 1fr),
 ///   block(width: 100%)[
 ///     #lorem(10)
-///     #components.lazy-v(1fr)  // pushes "Bottom left." to the bottom
+///     #components.lazy-v(1fr)
 ///     Bottom left.
 ///   ],
 ///   block(width: 100%)[
 ///     #lorem(20)
-///     #components.lazy-v(1fr)  // aligns with the taller block on the right
+///     #components.lazy-v(1fr)
 ///     Bottom right.
 ///   ],
 /// ))
 /// ```
 ///
-/// - amount (fraction): The fractional amount of space. Must be a `fraction` (e.g. `1fr`).
+/// - amount (fraction): The fractional amount of space (e.g. `1fr`).
 ///
-/// - weak (bool): Whether the space is weak (collapses with adjacent spaces). Default is `false`.
+/// - weak (bool): Whether the space is weak. Default is `false`.
 ///
 /// -> content
 #let lazy-v(amount, weak: false) = {
@@ -55,18 +52,12 @@
     ))<touying-lazy-v>#parbreak()]
 }
 
-/// Insert a deferred fractional horizontal space inside a block, used together with
-/// `lazy-layout(direction: ltr)` (or any horizontal direction) to push content to the
-/// right edge of a block while keeping all sibling blocks at equal width.
+/// Lazy fractional horizontal space, the horizontal counterpart of `lazy-v`.
+/// Used with `lazy-layout(direction: ltr)` to push content to the right edge of a
+/// block while keeping sibling blocks at equal width without filling the entire page.
 ///
-/// The horizontal counterpart of `lazy-v`. Place `lazy-h(1fr)` between the leading
-/// content and the trailing content inside a block. When the block is rendered inside
-/// a `lazy-layout` with a horizontal direction, the space expands to fill the remaining
-/// width of the widest sibling block, so all blocks end up the same width and their
-/// trailing content aligns at the right edge.
-///
-/// Without a `lazy-layout` with a matching horizontal direction, this marker has no
-/// visual effect.
+/// Has no visual effect without a matching `lazy-layout`. If a row contains multiple
+/// `lazy-h` markers (stacked blocks), only the last one is activated.
 ///
 /// Example:
 /// ```typ
@@ -84,9 +75,9 @@
 /// )
 /// ```
 ///
-/// - amount (fraction): The fractional amount of space. Must be a `fraction` (e.g. `1fr`).
+/// - amount (fraction): The fractional amount of space (e.g. `1fr`).
 ///
-/// - weak (bool): Whether the space is weak (collapses with adjacent spaces). Default is `false`.
+/// - weak (bool): Whether the space is weak. Default is `false`.
 ///
 /// -> content
 #let lazy-h(amount, weak: false) = {
@@ -101,31 +92,18 @@
   ))<touying-lazy-h>]
 }
 
-/// Equalize the sizes of multiple side-by-side (or stacked) blocks along one axis,
-/// while keeping the overall container size equal to the largest block (not the full
-/// page size).
+/// Make multiple blocks match the size of the tallest (or widest) sibling without
+/// expanding to fill the entire page.
 ///
-/// Wrap a multi-block layout with `lazy-layout` so that `lazy-v` or `lazy-h` markers
-/// inside each block are resolved correctly. The function first measures the natural
-/// size of the content (ignoring all lazy markers), then re-renders it at that fixed
-/// size with the markers activated. This causes the fractional spaces to fill only the
-/// remaining room inside each block up to the largest block's size, making all blocks
-/// the same size without the container growing beyond the largest block.
+/// - `direction: ttb` (default): equalizes block *heights* via `lazy-v`.
+/// - `direction: ltr`: equalizes block *widths* via `lazy-h`.
 ///
-/// The `direction` parameter controls which axis is equalized and which lazy marker
-/// type is activated:
-/// - Vertical directions (`ttb`, `btt`): activates `lazy-v` markers, equalizes block
-///   *heights*. This is the default and matches `side-by-side(lazy-layout: true)`.
-/// - Horizontal directions (`ltr`, `rtl`): activates `lazy-h` markers, equalizes block
-///   *widths*.
+/// If a column (or row) contains multiple lazy markers (stacked blocks), only the last
+/// one is activated.
 ///
-/// Mixing `lazy-v` and `lazy-h` markers inside the same `lazy-layout` call will panic.
-///
-/// Use `side-by-side(lazy-layout: true)` as a convenient shorthand for the vertical
-/// case, or wrap a manual `grid` / `stack` directly:
+/// Use `side-by-side(lazy-layout: true)` as a convenient shorthand for the vertical case.
 ///
 /// ```typ
-/// // Vertical (default): equalize block heights
 /// #components.lazy-layout(grid(
 ///   columns: (1fr, 1fr),
 ///   block(width: 100%)[
@@ -139,57 +117,98 @@
 ///     Bottom right.
 ///   ],
 /// ))
-///
-/// // Horizontal: equalize block widths
-/// #components.lazy-layout(
-///   direction: ltr,
-///   stack(
-///     dir: ltr,
-///     block(height: 100%)[Left. #components.lazy-h(1fr) Right.],
-///     block(height: 100%)[Longer left. #components.lazy-h(1fr) Right.],
-///   ),
-/// )
 /// ```
 ///
-/// - direction (direction): The axis along which blocks are equalized. Accepts any
-///   Typst `direction` value (`ttb`, `btt`, `ltr`, `rtl`). Vertical directions activate
-///   `lazy-v`; horizontal directions activate `lazy-h`. Default is `ttb`.
+/// - direction (direction): The equalization axis (`ttb`/`btt` for heights, `ltr`/`rtl` for widths). Default is `ttb`.
 ///
-/// - body (content): The content that may contain `lazy-v` or `lazy-h` markers.
+/// - body (content): The content containing `lazy-v` or `lazy-h` markers.
 ///
 /// -> content
-#let lazy-layout(direction: ttb, body) = layout(container-size => {
-  let is-vertical = direction.axis() == "vertical"
-  if is-vertical {
-    // Phase 1: measure height with all lazy-v markers hidden.
-    let measured-size = measure(block(
-      width: container-size.width,
-      body,
-    ))
-    // Phase 2: render at the measured height with lazy-v markers activated.
-    // Panic if lazy-h markers are also present (mixed use is not supported).
-    show <touying-lazy-h>: it => panic(
-      "lazy-layout: found a lazy-h marker inside a vertical lazy-layout. "
-        + "Use lazy-v markers for vertical layouts, or pass direction: ltr to lazy-layout.",
-    )
-    show <touying-lazy-v>: it => v(it.value.amount, weak: it.value.weak)
-    block(height: measured-size.height, body)
-  } else {
-    // Phase 1: measure width with all lazy-h markers hidden.
-    let measured-size = measure(block(
-      height: container-size.height,
-      body,
-    ))
-    // Phase 2: render at the measured width with lazy-h markers activated.
-    // Panic if lazy-v markers are also present (mixed use is not supported).
-    show <touying-lazy-v>: it => panic(
-      "lazy-layout: found a lazy-v marker inside a horizontal lazy-layout. "
-        + "Use lazy-h markers for horizontal layouts, or pass direction: ttb to lazy-layout.",
-    )
-    show <touying-lazy-h>: it => h(it.value.amount, weak: it.value.weak)
-    block(width: measured-size.width, body)
-  }
-})
+#let lazy-layout(direction: ttb, body) = {
+  [#metadata((:))<lazy-layout-begin>]
+  layout(container-size => context {
+    // Query lazy marker positions within this lazy-layout scope.
+    let begin-loc = query(selector(<lazy-layout-begin>).before(here()))
+      .last()
+      .location()
+    let end-loc = query(selector(<lazy-layout-end>).after(here()))
+      .first()
+      .location()
+
+    let is-vertical = direction.axis() == "vertical"
+    if is-vertical {
+      // Collect positions of all lazy-v markers in this scope.
+      let lazy-v-items = query(
+        selector(<touying-lazy-v>).after(begin-loc).before(end-loc),
+      )
+      let lazy-v-positions = lazy-v-items.map(it => it.location().position())
+      // For each x coordinate, find the last marker's position (the one to activate).
+      // Group by x and keep only the last position per group.
+      let last-positions = {
+        let result = (:)
+        for pos in lazy-v-positions {
+          let key = repr(pos.x)
+          result.insert(key, pos)
+        }
+        result.values()
+      }
+
+      // Phase 1: measure height with all lazy-v markers hidden.
+      let measured-size = measure(block(
+        width: container-size.width,
+        body,
+      ))
+      // Phase 2: render at the measured height.
+      // Only the last lazy-v marker per x coordinate is activated; others stay hidden.
+      show <touying-lazy-h>: it => panic(
+        "lazy-layout: found a lazy-h marker inside a vertical lazy-layout. "
+          + "Use lazy-v markers for vertical layouts, or pass direction: ltr to lazy-layout.",
+      )
+      show <touying-lazy-v>: it => {
+        let pos = it.location().position()
+        if last-positions.any(lp => lp.x == pos.x and lp.y == pos.y) {
+          v(it.value.amount, weak: it.value.weak)
+        }
+      }
+      block(height: measured-size.height, body)
+    } else {
+      // Collect positions of all lazy-h markers in this scope.
+      let lazy-h-items = query(
+        selector(<touying-lazy-h>).after(begin-loc).before(end-loc),
+      )
+      let lazy-h-positions = lazy-h-items.map(it => it.location().position())
+      // For each y coordinate, find the last marker's position (the one to activate).
+      let last-positions = {
+        let result = (:)
+        for pos in lazy-h-positions {
+          let key = repr(pos.y)
+          result.insert(key, pos)
+        }
+        result.values()
+      }
+
+      // Phase 1: measure width with all lazy-h markers hidden.
+      let measured-size = measure(block(
+        height: container-size.height,
+        body,
+      ))
+      // Phase 2: render at the measured width.
+      // Only the last lazy-h marker per y coordinate is activated; others stay hidden.
+      show <touying-lazy-v>: it => panic(
+        "lazy-layout: found a lazy-v marker inside a horizontal lazy-layout. "
+          + "Use lazy-h markers for horizontal layouts, or pass direction: ttb to lazy-layout.",
+      )
+      show <touying-lazy-h>: it => {
+        let pos = it.location().position()
+        if last-positions.any(lp => lp.y == pos.y and lp.x == pos.x) {
+          h(it.value.amount, weak: it.value.weak)
+        }
+      }
+      block(width: measured-size.width, body)
+    }
+  })
+  [#metadata((:))<lazy-layout-end>]
+}
 
 // Alias used inside `side-by-side` to avoid the `lazy-layout` parameter shadowing the function.
 #let _lazy-layout = lazy-layout

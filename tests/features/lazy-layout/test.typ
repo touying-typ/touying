@@ -1,7 +1,7 @@
 #import "/lib.typ": *
 #import themes.simple: *
 
-#show: simple-theme
+#show: simple-theme.with(footer-right: none)
 
 = Lazy Vspace
 
@@ -68,6 +68,31 @@
   #block(fill: luma(220), inset: .5em, radius: .2em, width: 100%)[
     #lorem(20)
 
+    Bottom right.
+  ]
+]
+
+== Mixed: side-by-side with multi-blocks
+
+// Left column: a single block with more text to be taller.
+// Right column: two blocks, each with a lazy-v marker.
+// Only the last lazy-v per x-column is activated, so the bottom block on the
+// right expands to fill the remaining height, while the top block stays compact.
+#components.side-by-side[
+  #block(fill: luma(220), inset: .5em, radius: .2em, width: 100%)[
+    #lorem(30)
+    #components.lazy-v(1fr)
+    Bottom left.
+  ]
+][
+  #block(fill: luma(220), inset: .5em, radius: .2em, width: 100%)[
+    #lorem(5)
+    #components.lazy-v(1fr)
+    End of top block.
+  ]
+  #block(fill: luma(220), inset: .5em, radius: .2em, width: 100%)[
+    #lorem(5)
+    #components.lazy-v(1fr)
     Bottom right.
   ]
 ]
