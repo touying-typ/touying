@@ -35,7 +35,7 @@
   ],
 ))
 
-== side-by-side with lazy-layout: true
+== `cols` with lazy-layout: true
 
 // Both blocks should be the same height (matching the taller one),
 // and the overall layout should NOT fill the entire page height.
@@ -54,7 +54,7 @@
 ]
 
 
-== cols without lazy-layout (explicit false)
+== `cols` without lazy-layout (explicit false)
 
 // Opt out of lazy-layout by passing lazy-layout: false.
 // lazy-v markers are invisible and blocks are not height-equalized.
