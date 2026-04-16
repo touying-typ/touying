@@ -128,7 +128,7 @@ If you need to divide a page into two or three columns, you can use the `compose
 ]
 ```
 
-If you need to change the way columns are divided, you can modify the `composer` parameter of `slide`, where the default parameter is `components.side-by-side.with(columns: auto, gutter: 1em)`. If we want the left column to take up the remaining width, we can use:
+If you need to change the way columns are divided, you can modify the `composer` parameter of `slide`, where the default parameter is `cols.with(columns: auto, gutter: 1em)`. If we want the left column to take up the remaining width, we can use:
 
 ```example
 >>> #import "@preview/touying:0.7.1": *
@@ -143,31 +143,31 @@ If you need to change the way columns are divided, you can modify the `composer`
 
 ## Equalizing Column Heights with `lazy-v`
 
-When using multi-column layouts (via `side-by-side` or a manual `grid`), columns with different amounts of content will have different heights. If you want to push some "footer" content (e.g. a label or caption) to the bottom of each column and have it align across all columns, or simply want all columns to match the tallest one's height, you can use `lazy-v` together with `lazy-layout`.
+When using multi-column layouts (via `cols` or a manual `grid`), columns with different amounts of content will have different heights. If you want to push some "footer" content (e.g. a label or caption) to the bottom of each column and have it align across all columns, or simply want all columns to match the tallest one's height, you can use `lazy-v` together with `lazy-layout`.
 
 ### How It Works
 
-- **`components.lazy-v(1fr)`** — Place this between the main content and the footer content inside a block. It acts as a deferred vertical spacer that is invisible during height measurement.
+- **`lazy-v(1fr)`** — Place this between the main content and the footer content inside a block. It acts as a deferred vertical spacer that is invisible during height measurement.
 - **`lazy-layout`** — Wraps the multi-column layout. It first measures the natural height of all columns (ignoring `lazy-v` markers), then re-renders at that fixed height with the markers activated. This causes each column to stretch to match the tallest one, without the overall container expanding to fill the entire page.
 
-### Using `side-by-side` (Recommended)
+### Using `cols` (Recommended)
 
-`side-by-side` enables `lazy-layout` by default, so you just need to add `lazy-v(1fr)` inside each block:
+`cols` enables `lazy-layout` by default, so you just need to add `lazy-v(1fr)` inside each block:
 
 ```example
 >>> #import "@preview/touying:0.7.1": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
-#components.side-by-side[
+#cols[
   #block(fill: luma(220), inset: .5em, radius: .2em, width: 100%)[
     #lorem(10)
-    #components.lazy-v(1fr)
+    #lazy-v(1fr)
     Bottom left.
   ]
 ][
   #block(fill: luma(220), inset: .5em, radius: .2em, width: 100%)[
     #lorem(20)
-    #components.lazy-v(1fr)
+    #lazy-v(1fr)
     Bottom right.
   ]
 ]
@@ -176,29 +176,29 @@ Both columns will have the same height (matching the taller one), and "Bottom le
 
 :::note[Note]
 
-This is different from using `v(1fr)` inside `#slide[][]`. The `slide` composer occupies the full page height, so `v(1fr)` works directly there. `lazy-v` is designed for standalone `side-by-side` or `lazy-layout` calls where you want height equalization without full-page expansion.
+This is different from using `v(1fr)` inside `#slide[][]`. The `slide` composer occupies the full page height, so `v(1fr)` works directly there. `lazy-v` is designed for standalone `cols` or `lazy-layout` calls where you want height equalization without full-page expansion.
 
 :::
 
 ### Using a Manual Grid
 
-You can also wrap a `grid` with `components.lazy-layout` directly:
+You can also wrap a `grid` with `lazy-layout` directly:
 
 ```example
 >>> #import "@preview/touying:0.7.1": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
-#components.lazy-layout(grid(
+#lazy-layout(grid(
   columns: (1fr, 1fr),
   gutter: 1em,
   block(fill: luma(220), inset: .5em, radius: .2em, width: 100%)[
     #lorem(10)
-    #components.lazy-v(1fr)
+    #lazy-v(1fr)
     Bottom left.
   ],
   block(fill: luma(220), inset: .5em, radius: .2em, width: 100%)[
     #lorem(20)
-    #components.lazy-v(1fr)
+    #lazy-v(1fr)
     Bottom right.
   ],
 ))
@@ -206,7 +206,7 @@ You can also wrap a `grid` with `components.lazy-layout` directly:
 
 :::tip[Tip]
 
-If you don't need the height-equalizing behavior, pass `lazy-layout: false` to `side-by-side` to opt out.
+If you don't need the height-equalizing behavior, pass `lazy-layout: false` to `cols` to opt out.
 
 :::
 

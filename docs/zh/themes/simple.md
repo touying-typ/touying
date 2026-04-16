@@ -62,7 +62,7 @@ simple 主题提供了一系列自定义 slide 函数：
   config: (:),
   repeat: auto,
   setting: body => body,
-  composer: components.side-by-side,
+  composer: cols,
 )[
   ...
 ]

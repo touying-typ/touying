@@ -3,7 +3,7 @@
 
 #show: simple-theme.with(
   config-common(
-    default-composer: components.side-by-side.with(gutter: 3em),
+    default-composer: cols.with(gutter: 3em),
   ),
 )
 
@@ -19,7 +19,7 @@
 
 == Override default-composer per slide
 
-#slide(composer: components.side-by-side.with(gutter: 0.5em))[
+#slide(composer: cols.with(gutter: 0.5em))[
   Overridden gutter (0.5em). #lorem(20)
 ][
   Second column. #lorem(20)

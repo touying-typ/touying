@@ -129,7 +129,7 @@ config-page(footer: [Custom Footer])
 ]
 ```
 
-如果你需要更改分栏的方式，可以修改 `slide` 的 `composer` 参数，其中默认的参数是 `components.side-by-side.with(columns: auto, gutter: 1em)`，如果我们要让左边那一栏占据剩余宽度，可以使用
+如果你需要更改分栏的方式，可以修改 `slide` 的 `composer` 参数，其中默认的参数是 `cols.with(columns: auto, gutter: 1em)`，如果我们要让左边那一栏占据剩余宽度，可以使用
 
 ```example
 >>> #import "@preview/touying:0.7.1": *
@@ -144,31 +144,31 @@ config-page(footer: [Custom Footer])
 
 ## 使用 `lazy-v` 对齐多栏高度
 
-使用多栏布局（通过 `side-by-side` 或手动 `grid`）时，内容量不同的各栏高度会不一致。如果你希望在每栏底部放置一些"页脚"内容（如标签或说明文字），并让它们在各栏之间对齐，或者只是想让所有栏与最高栏的高度一致，可以配合使用 `lazy-v` 和 `lazy-layout`。
+使用多栏布局（通过 `cols` 或手动 `grid`）时，内容量不同的各栏高度会不一致。如果你希望在每栏底部放置一些"页脚"内容（如标签或说明文字），并让它们在各栏之间对齐，或者只是想让所有栏与最高栏的高度一致，可以配合使用 `lazy-v` 和 `lazy-layout`。
 
 ### 工作原理
 
-- **`components.lazy-v(1fr)`** — 在 block 的主要内容和底部内容之间插入此标记。它是一个延迟生效的垂直弹性空间，在高度测量阶段不可见。
+- **`lazy-v(1fr)`** — 在 block 的主要内容和底部内容之间插入此标记。它是一个延迟生效的垂直弹性空间，在高度测量阶段不可见。
 - **`lazy-layout`** — 包裹多栏布局。它先测量所有栏的自然高度（忽略 `lazy-v` 标记），然后以该固定高度重新渲染并激活标记。这样每栏都会被拉伸到与最高栏一致的高度，同时整体容器不会撑满整个页面。
 
-### 使用 `side-by-side`（推荐）
+### 使用 `cols`（推荐）
 
-`side-by-side` 默认启用 `lazy-layout`，你只需要在每个 block 内添加 `lazy-v(1fr)` 即可：
+`cols` 默认启用 `lazy-layout`，你只需要在每个 block 内添加 `lazy-v(1fr)` 即可：
 
 ```example
 >>> #import "@preview/touying:0.7.1": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
-#components.side-by-side[
+#cols[
   #block(fill: luma(220), inset: .5em, radius: .2em, width: 100%)[
     #lorem(10)
-    #components.lazy-v(1fr)
+    #lazy-v(1fr)
     Bottom left.
   ]
 ][
   #block(fill: luma(220), inset: .5em, radius: .2em, width: 100%)[
     #lorem(20)
-    #components.lazy-v(1fr)
+    #lazy-v(1fr)
     Bottom right.
   ]
 ]
@@ -178,29 +178,29 @@ config-page(footer: [Custom Footer])
 
 :::note[注意]
 
-这与在 `#slide[][]` 中使用 `v(1fr)` 不同。`slide` 的 composer 会占据整个页面高度，因此 `v(1fr)` 可以直接生效。`lazy-v` 是为独立的 `side-by-side` 或 `lazy-layout` 调用设计的，用于在不撑满整页的情况下实现高度对齐。
+这与在 `#slide[][]` 中使用 `v(1fr)` 不同。`slide` 的 composer 会占据整个页面高度，因此 `v(1fr)` 可以直接生效。`lazy-v` 是为独立的 `cols` 或 `lazy-layout` 调用设计的，用于在不撑满整页的情况下实现高度对齐。
 
 :::
 
 ### 使用手动 Grid
 
-你也可以直接用 `components.lazy-layout` 包裹一个 `grid`：
+你也可以直接用 `lazy-layout` 包裹一个 `grid`：
 
 ```example
 >>> #import "@preview/touying:0.7.1": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
-#components.lazy-layout(grid(
+#lazy-layout(grid(
   columns: (1fr, 1fr),
   gutter: 1em,
   block(fill: luma(220), inset: .5em, radius: .2em, width: 100%)[
     #lorem(10)
-    #components.lazy-v(1fr)
+    #lazy-v(1fr)
     Bottom left.
   ],
   block(fill: luma(220), inset: .5em, radius: .2em, width: 100%)[
     #lorem(20)
-    #components.lazy-v(1fr)
+    #lazy-v(1fr)
     Bottom right.
   ],
 ))
@@ -208,7 +208,7 @@ config-page(footer: [Custom Footer])
 
 :::tip[提示]
 
-如果不需要高度对齐的行为，可以给 `side-by-side` 传入 `lazy-layout: false` 来关闭。
+如果不需要高度对齐的行为，可以给 `cols` 传入 `lazy-layout: false` 来关闭。
 
 :::
 

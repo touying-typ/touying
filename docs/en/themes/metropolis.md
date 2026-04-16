@@ -83,7 +83,7 @@ The Metropolis theme provides a variety of custom slide functions:
   config: (:),
   repeat: auto,
   setting: body => body,
-  composer: components.side-by-side,
+  composer: cols,
   // metropolis theme
   title: auto,
   footer: auto,

@@ -20,16 +20,16 @@
 ///
 /// Example:
 /// ```typ
-/// #components.lazy-layout(grid(
+/// #lazy-layout(grid(
 ///   columns: (1fr, 1fr),
 ///   block(width: 100%)[
 ///     #lorem(10)
-///     #components.lazy-v(1fr)
+///     #lazy-v(1fr)
 ///     Bottom left.
 ///   ],
 ///   block(width: 100%)[
 ///     #lorem(20)
-///     #components.lazy-v(1fr)
+///     #lazy-v(1fr)
 ///     Bottom right.
 ///   ],
 /// ))
@@ -61,15 +61,15 @@
 ///
 /// Example:
 /// ```typ
-/// #components.lazy-layout(
+/// #lazy-layout(
 ///   direction: ltr,
 ///   stack(
 ///     dir: ltr,
 ///     block(height: 100%)[
-///       Left label. #components.lazy-h(1fr) Right label.
+///       Left label. #lazy-h(1fr) Right label.
 ///     ],
 ///     block(height: 100%)[
-///       A longer left label. #components.lazy-h(1fr) Right label.
+///       A longer left label. #lazy-h(1fr) Right label.
 ///     ],
 ///   ),
 /// )
@@ -101,19 +101,19 @@
 /// If a column (or row) contains multiple lazy markers (stacked blocks), only the last
 /// one is activated.
 ///
-/// Use `side-by-side(lazy-layout: true)` as a convenient shorthand for the vertical case.
+/// Use `cols(lazy-layout: true)` as a convenient shorthand for the vertical case.
 ///
 /// ```typ
-/// #components.lazy-layout(grid(
+/// #lazy-layout(grid(
 ///   columns: (1fr, 1fr),
 ///   block(width: 100%)[
 ///     #lorem(10)
-///     #components.lazy-v(1fr)
+///     #lazy-v(1fr)
 ///     Bottom left.
 ///   ],
 ///   block(width: 100%)[
 ///     #lorem(20)
-///     #components.lazy-v(1fr)
+///     #lazy-v(1fr)
 ///     Bottom right.
 ///   ],
 /// ))
@@ -210,12 +210,12 @@
   [#metadata((:))<lazy-layout-end>]
 }
 
-// Alias used inside `side-by-side` to avoid the `lazy-layout` parameter shadowing the function.
+// Alias used inside `cols` to avoid the `lazy-layout` parameter shadowing the function.
 #let _lazy-layout = lazy-layout
 
 /// A simple wrapper around `grid` that creates a single-row grid. Used as the default `composer` for multi-body slides.
 ///
-/// Example: `side-by-side[a][b][c]` will display `a`, `b`, and `c` side by side.
+/// Example: `cols[a][b][c]` will display `a`, `b`, and `c` as columns side by side.
 ///
 /// - columns (auto, array): The column widths. Default is `auto`, which creates equal-width columns matching the number of bodies.
 ///
@@ -224,10 +224,10 @@
 /// - lazy-layout (bool): When `true`, wraps the grid with `lazy-layout` so that
 ///   `lazy-v` markers inside the bodies are resolved correctly. Default is `true`.
 ///
-/// - bodies (content): The contents to display side by side.
+/// - bodies (content): The contents to display side by side as columns side by side.
 ///
 /// -> content
-#let side-by-side(columns: auto, gutter: 1em, lazy-layout: true, ..bodies) = {
+#let cols(columns: auto, gutter: 1em, lazy-layout: true, ..bodies) = {
   let args = bodies.named()
   let bodies = bodies.pos()
   if bodies.len() == 1 {
@@ -249,6 +249,23 @@
     result
   }
 }
+
+
+/// A simple wrapper around `grid` that creates a single-row grid. Used as the default `composer` for multi-body slides. Alias for `cols`.
+///
+/// Example: `side-by-side(gutter: 1em)[a][b][c]` will display `a`, `b`, and `c` side by side.
+///
+/// - columns (auto, array): The column widths. Default is `auto`, which creates equal-width columns matching the number of bodies.
+///
+/// - gutter (length): The space between columns. Default is `1em`.
+///
+/// - lazy-layout (bool): When `true`, wraps the grid with `lazy-layout` so that
+///   `lazy-v` markers inside the bodies are resolved correctly. Default is `true`.
+///
+/// - bodies (content): The contents to display side by side.
+///
+/// -> content
+#let side-by-side = cols
 
 
 /// Adaptive columns layout that automatically chooses the number of columns based on content height.

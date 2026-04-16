@@ -78,7 +78,7 @@ Display an outline slide.
 #slide(
   repeat: auto,
   setting: body => body,
-  composer: components.side-by-side,
+  composer: cols,
   // Aqua theme
   title: auto,
 )[

@@ -88,7 +88,7 @@ The `title-slide` function reads information from `self.info` for display, and y
   config: (:),
   repeat: auto,
   setting: body => body,
-  composer: components.side-by-side,
+  composer: cols,
   // university theme
   title: none,
 )[

@@ -5450,7 +5450,7 @@
     // See: https://github.com/touying-typ/touying/issues/388
     v(0pt, weak: true)
   }
-  let composer-with-side-by-side(..args) = {
+  let composer-with-cols(..args) = {
     let effective-composer = if composer != auto {
       composer
     } else {
@@ -5459,7 +5459,7 @@
     if type(effective-composer) == function {
       effective-composer(..args)
     } else {
-      components.side-by-side(
+      components.cols(
         lazy-layout: false,
         columns: effective-composer,
         ..args,
@@ -5641,7 +5641,7 @@
       )
       header = page-preamble(self) + header
       let slide-body = body-transform(setting-fn(
-        subslide-preamble(self) + composer-with-side-by-side(..conts),
+        subslide-preamble(self) + composer-with-cols(..conts),
       ))
       return {
         set page(
@@ -5721,7 +5721,7 @@
       )
       let new-header = page-preamble(subslide-self) + header-i
       let slide-body = body-transform-i(setting-fn(
-        subslide-preamble(subslide-self) + composer-with-side-by-side(..conts),
+        subslide-preamble(subslide-self) + composer-with-cols(..conts),
       ))
       result.push({
         set page(
@@ -5814,7 +5814,7 @@
       )
       let new-header = page-preamble(self) + header
       let slide-body = body-transform(setting-fn(
-        subslide-preamble(self) + composer-with-side-by-side(..conts),
+        subslide-preamble(self) + composer-with-cols(..conts),
       ))
       result.push({
         set page(
@@ -5853,7 +5853,7 @@
       let new-header = page-preamble(self) + header
       // update the counter in the first subslide only
       let slide-body = body-transform(setting-fn(
-        subslide-preamble(self) + composer-with-side-by-side(..conts),
+        subslide-preamble(self) + composer-with-cols(..conts),
       ))
       result.push({
         set page(
@@ -5891,8 +5891,8 @@
 ///
 /// - composer (function, array, int, auto): The composer arranges multiple content bodies side by side.
 ///
-///   - `auto`: use the theme default (`components.side-by-side.with(lazy-layout: false)`)
-///   - array, e.g. `(1fr, 2fr, 1fr)`: column widths for `side-by-side`
+///   - `auto`: use the theme default (`cols.with(lazy-layout: false)`)
+///   - array, e.g. `(1fr, 2fr, 1fr)`: column widths for `cols`
 ///   - int: equal columns shorthand
 ///   - function: fully custom layout, e.g. `grid.with(columns: 2)`
 ///
@@ -5943,7 +5943,7 @@
 ///
 /// - setting (function): Set/show rules to apply for the slide. Receives the composed body and returns it.
 ///
-/// - composer (function, array, int, auto): Arranges multiple body blocks side-by-side. Same semantics as `slide`.
+/// - composer (function, array, int, auto): Arranges multiple body blocks cols. Same semantics as `slide`.
 ///
 /// - bodies (arguments): The content blocks of the slide.
 ///

@@ -13,7 +13,7 @@ src/
   utils.typ          # Shared helpers (merge-dicts, display-current-heading, …)
   configs.typ        # config-common, config-colors, config-page, config-info, …
   exports.typ        # Public API surface
-  components.typ     # Reusable slide components (side-by-side, …)
+  components.typ     # Reusable slide components (cols, …)
 themes/              # 6 built-in themes: simple, metropolis, dewdrop, university, aqua, stargazer
 examples/            # Theme usage examples (excluded from package)
 tests/
