@@ -1,5 +1,5 @@
 #import "pdfpc.typ"
-#import "magic.typ": warning
+#import "extern.typ": warning
 /// Add page margin dictionary to another page margin dictionary.
 ///
 /// Example: `add-page-margin-dicts((top: 1cm, x: 2cm), (y: 3em))` returns `(x: 2cm, y: 3em)`

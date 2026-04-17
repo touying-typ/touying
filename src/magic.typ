@@ -1,23 +1,4 @@
 // ---------------------------------------------------------------------
-// Warning
-// ---------------------------------------------------------------------
-
-
-/// Display a warning message with `set text(font: ..)` magic.
-///
-/// - messages (str): The warning message. Or multiple.
-///
-/// -> content
-#let warning(prefix: "[touying] ", ..messages) = {
-  assert(
-    messages.pos().all(m => type(m) == str),
-    message: "warning messages must be strings",
-  )
-  let delete-old-warning = range(21).map(i => "\u{0008}").sum()
-  set text(font: delete-old-warning + prefix + messages.pos().join(", "))
-}
-
-// ---------------------------------------------------------------------
 // List, Enum, and Terms
 // ---------------------------------------------------------------------
 
