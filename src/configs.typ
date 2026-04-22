@@ -61,13 +61,18 @@
     let marks = query(<touying-temporary-mark>)
     if marks.len() > 0 {
       let page-num = marks.at(0).location().page()
-      let slide-name = query(selector(heading).before(marks.at(0).location())).last().body.text
+      let slide-name = query(selector(heading).before(marks.at(0).location()))
+        .last()
+        .body
+        .text
       let kind = marks.at(0).value.kind
       let fn = marks.at(0).value.fn
       let warning-msg = (
         "Unsupported mark `"
           + kind
-          + "` from `" + repr(fn) + "` at page "
+          + "` from `"
+          + repr(fn)
+          + "` at page "
           + str(page-num)
           + " in section '"
           + str(slide-name)
