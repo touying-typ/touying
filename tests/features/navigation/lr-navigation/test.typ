@@ -2,18 +2,16 @@
 #import themes.simple: *
 
 #show: simple-theme.with(
-  footer: self=>[
-    #align(center,
-      lr-navigation(
-        self: self,
-        mode: "both",
-        show-useless: false,
-        nav: (
-          filled: sym.triangle.filled,
-          stroked: sym.chevron,
-        ),
-      )
-    )
+  footer: self => [
+    #align(center, lr-navigation(
+      self: self,
+      mode: "both",
+      show-useless: false,
+      nav: (
+        filled: sym.triangle.filled,
+        stroked: sym.chevron,
+      ),
+    ))
   ],
 )
 
