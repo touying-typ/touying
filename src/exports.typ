@@ -23,11 +23,13 @@
   prev-wp,
   slide,
   speaker-note,
+  touying-diagram,
   touying-equation,
   touying-fn-wrapper,
   touying-mitex,
   touying-raw,
   touying-recall,
+  touying-reduce,
   touying-reducer,
   touying-set-config, // touying-get-config from configs.typ
   touying-slide,
