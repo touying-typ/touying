@@ -17,15 +17,16 @@ For more advanced slide themes it is common to incorporate navigation elements. 
 #show: simple-theme.with(
   footer: self=>[
     #align(center,
-    lr-navigation(
-      self: self,
-      mode: "both",
-      show-useless: false,
-      nav: (
-        filled: sym.triangle.filled,
-        stroked: sym.chevron,
-      ),
-    ))
+      lr-navigation(
+        self: self,
+        mode: "both",
+        show-useless: false,
+        nav: (
+          filled: sym.triangle.filled,
+          stroked: sym.chevron,
+        ),
+      )
+    )
   ],
 )
 
@@ -125,5 +126,5 @@ Indented subsection entries.
 
 The active section and subsection are emphasized automatically.
 ```
-If you want to copy this approach, take a look at how it is implemented for the dewdrop theme.
 
+If you want to copy this approach, take a look at how it is implemented for the dewdrop theme.

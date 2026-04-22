@@ -1157,8 +1157,19 @@
 
 /// Create a navigation element with links to previous/next subslide/slide and a center icon. Note that physical pages are considered subslides, thus your content breaking the slide into multiple pages will be considered as 'multiple' subslides.
 ///
+/// Usage:
+/// ```typst
+/// #lr-navigation(
+///   icon: sym.rect.stroked.h,
+///   nav: sym.triangle,
+///   mode: "both",
+///   show-useless: false,
+/// )
+/// ```
+///
+/// - self: The slide self. If not provided a `touying-fn-wrapper-raw` is used to retrieve it instead. This means this component does not escape the animation structure like `only`, but behaves like `alert` instead.
 /// - icon (symbol, content): The icon to display for the navigation.
-/// - nav (symbol, dictionary, content): The navigation symbols. We use filled symbols as the links to the subslides and stroked symbols as the links to the pages. You can also pass a dictionary with the structure `(filled:(left:any, right:any), stroked:(left:any, right:any))` and you may omit arbitrary fields. We try the best we can to fill the missing fields based on the values and symbols provided.
+/// - nav (symbol, dictionary, content): The navigation symbols. By default we use filled symbols as the links to the subslides and stroked symbols as the links to the slides. You can also pass a dictionary with the structure `(filled:(left:any, right:any), stroked:(left:any, right:any))` and you may omit arbitrary fields. We try the best we can to fill the missing fields based on the values and symbols provided. \ For convenvience we allow 'subslide' as a synonym for 'filled' and 'page' and 'slide' as synonyms for 'stroked', so you can also use `(subslide:(left:any, right:any), page:(left:any, right:any))` instead of the above structure.
 /// - mode (str): The mode of the navigation item. Can be "both", "subslide" or "page".
 /// - show-useless (bool): Whether to show the navigation links when they are useless (e.g. on the first page, the "previous page" link is useless). Default is `true`.
 /// -> content
