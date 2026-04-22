@@ -1016,3 +1016,25 @@ Use `config-common(frozen-counters: true)` to prevent counters from advancing be
   config-common(frozen-counters: true),
 )
 ```
+
+### How do I disable/enable warnings?
+
+Touying uses `uniwarn` for its warnings with the namespace `touying`.
+We bind the functions into touying so you can directly do
+
+```typst
+#import "@preview/touying:0.7.1": *
+
+//to disable the warnings emitted by touying
+#touying-disable-warnings
+//to reenable the warnings emitted by touying
+#touying-enable-warnings
+```
+
+But you can also do
+
+```typst
+#import "@preview/uniwarn:0.1.0"
+#uniwarn.disable-warnings("touying")
+#uniwarn.enable-warnings("touying")
+```

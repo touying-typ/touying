@@ -1021,3 +1021,26 @@ The header shows the current section name.
   config-common(frozen-counters: true),
 )
 ```
+
+### 如何禁用/启用警告？
+
+Touying 使用 `uniwarn` 来处理其命名空间为 `touying` 的警告。
+我们在 Touying 中绑定了相关函数，因此你可以直接这样做：
+
+```typst
+#import "@preview/touying:0.7.1": *
+
+// 禁用 Touying 发出的警告
+#touying-disable-warnings
+// 重新启用 Touying 发出的警告
+#touying-enable-warnings
+````
+
+你也可以这样做：
+
+```typst
+#import "@preview/uniwarn:0.1.0"
+#uniwarn.disable-warnings("touying")
+#uniwarn.enable-warnings("touying")
+```
+

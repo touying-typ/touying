@@ -1,5 +1,5 @@
 #import "utils.typ"
-#import "magic.typ": warning
+#import "extern.typ": warning
 
 #let cell = block.with(
   width: 100%,
