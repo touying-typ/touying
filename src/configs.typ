@@ -1,6 +1,6 @@
 #import "pdfpc.typ"
 #import "utils.typ"
-#import "magic.typ"
+#import "extern.typ"
 #import "core.typ": (
   slide, touying-fn-wrapper-raw, touying-slide, touying-slide-wrapper,
 )
@@ -78,7 +78,7 @@
       if self.at("enable-mark-warning", default: true) {
         panic(warning-msg)
       } else {
-        magic.warning(warning-msg)
+        extern.warning(warning-msg)
       }
     }
   }
