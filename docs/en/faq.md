@@ -429,7 +429,7 @@ Use `#only("...")` to show content on particular subslides, or `#uncover("...")`
 
 ### How do I use `#pause` inside a CeTZ drawing?
 
-Use `touying-reducer` to wrap CeTZ canvas so Touying can animate it:
+Use `touying-reduce` to wrap CeTZ canvas so Touying can animate it:
 
 ```example
 >>> #import "@preview/touying:0.7.1": *
@@ -437,10 +437,7 @@ Use `touying-reducer` to wrap CeTZ canvas so Touying can animate it:
 >>> #show: simple-theme
 #import "@preview/cetz:0.4.2"
 
-#let cetz-canvas = touying-reducer.with(
-  reduce: cetz.canvas,
-  cover: cetz.draw.hide.with(bounds: true),
-)
+#let cetz-canvas = touying-reduce.with(cetz)
 
 #slide[
   #cetz-canvas({
@@ -454,7 +451,7 @@ Use `touying-reducer` to wrap CeTZ canvas so Touying can animate it:
 
 ### How do I use `#pause` inside a Fletcher diagram?
 
-Use `touying-reducer` to wrap Fletcher diagrams:
+Use `touying-reducer` to wrap Fletcher diagrams: 
 
 ```example
 >>> #import "@preview/touying:0.7.1": *
@@ -476,6 +473,7 @@ Use `touying-reducer` to wrap Fletcher diagrams:
   )
 ]
 ```
+(we cannot provide the same easy syntax atm as fletcher does not expose its package name)
 
 ### How do I show alternative content across subslides?
 

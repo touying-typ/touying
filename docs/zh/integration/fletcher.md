@@ -4,7 +4,7 @@ sidebar_position: 4
 
 # Fletcher
 
-Touying 提供了 `touying-reducer`，它能为 fletcher 加入 `pause` 和 `meanwhile` 动画。
+Touying 提供了 `touying-reducer`，它能为 fletcher 加入 `pause`、`meanwhile` 及其他动画。
 
 一个例子：
 
@@ -15,7 +15,7 @@ Touying 提供了 `touying-reducer`，它能为 fletcher 加入 `pause` 和 `mea
 #import "@preview/fletcher:0.5.8" as fletcher: node, edge
 
 // cetz and fletcher bindings for touying
-#let cetz-canvas = touying-reducer.with(reduce: cetz.canvas, cover: cetz.draw.hide.with(bounds: true))
+#let cetz-canvas = touying-reduce.with(cetz) // 对于暴露了包名的包可使用的新语法
 #let fletcher-diagram = touying-reducer.with(reduce: fletcher.diagram, cover: fletcher.hide)
 
 #show: metropolis-theme.with(aspect-ratio: "16-9")
@@ -89,3 +89,5 @@ Touying 提供了 `touying-reducer`，它能为 fletcher 加入 `pause` 和 `mea
   )
 })
 ```
+
+从 0.7.0 版本开始，不使用 callback-style 也可以实现同样效果。

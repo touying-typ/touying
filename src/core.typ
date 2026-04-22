@@ -2627,7 +2627,7 @@
   args: args.pos(),
 ))<touying-temporary-mark>]
 
-/// Automatically reduces the content with the given package and given or predefined bindings from `extern.auto-reducer-bindings`. Only works if the package exposes its name.
+/// Automatically reduces the content with the given package and given or predefined bindings. Only works if the package exposes the bindings or its name and touying defines the bindings for the name.
 ///
 /// Usage:
 /// ```typst
@@ -2645,13 +2645,10 @@
 /// ```
 ///
 /// - package (module): The external package to integrate with touying. It should expose its name for auto-binding to work (e.g. `cetz`).
-/// - bindings (dictionary): Optional explicit bindings for the reduce and cover functions. Should be a dictionary with keys `reduce` and `cover`, where the values are paths (as arrays of strings) with a final option to the respective functions within the package. If any fields are `none`, it checks whether the package has `touying-reducer-bindings` otherwise touying will look up predefined bindings in `extern.auto-reducer-bindings` based on the package name.
+/// - bindings (dictionary): Optional explicit bindings for the reduce and cover functions. Should be a dictionary with keys `reduce` and `cover`, where the values are paths (as arrays of strings) with an optionally last entry being arguments to pass to the function. If any fields are `none`, it checks whether the package has `touying-reducer-bindings` otherwise touying will look up predefined bindings in `extern.auto-reducer-bindings` based on the package name.
 /// - args (arguments): The positional and named arguments passed to the reduce function.
 /// -> content
 #let touying-reduce(package, bindings: (reduce: none, cover: none), ..args) = {
-  if type(package) == str {
-    eval("import " + package + " as package")
-  }
   assert(
     type(package) == module,
     message: "Package for reduce() must be a module. Got: " + repr(package),
