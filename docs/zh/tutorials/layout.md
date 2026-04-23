@@ -119,7 +119,7 @@ config-page(footer: [Custom Footer])
 如果你需要将页面分为两栏或三栏，你可以使用 Touying `slide` 函数默认提供的 `composer` 功能，最简单的示例如下：
 
 ```example
->>> #import "@preview/touying:0.7.1": *
+>>> #import "@preview/touying:0.7.3": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
 #slide[
@@ -132,7 +132,7 @@ config-page(footer: [Custom Footer])
 如果你需要更改分栏的方式，可以修改 `slide` 的 `composer` 参数，其中默认的参数是 `cols.with(columns: auto, gutter: 1em)`，如果我们要让左边那一栏占据剩余宽度，可以使用
 
 ```example
->>> #import "@preview/touying:0.7.1": *
+>>> #import "@preview/touying:0.7.3": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
 #slide(composer: (1fr, auto))[
@@ -156,7 +156,7 @@ config-page(footer: [Custom Footer])
 `cols` 默认启用 `lazy-layout`，你只需要在每个 block 内添加 `lazy-v(1fr)` 即可：
 
 ```example
->>> #import "@preview/touying:0.7.1": *
+>>> #import "@preview/touying:0.7.3": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
 #cols[
@@ -187,7 +187,7 @@ config-page(footer: [Custom Footer])
 你也可以直接用 `lazy-layout` 包裹一个 `grid`：
 
 ```example
->>> #import "@preview/touying:0.7.1": *
+>>> #import "@preview/touying:0.7.3": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
 #lazy-layout(grid(
@@ -249,7 +249,7 @@ config-page(footer: [Custom Footer])
 你也可以在演示文稿中途通过 `touying-set-config` 动态切换这些配置：
 
 ```example
->>> #import "@preview/touying:0.7.1": *
+>>> #import "@preview/touying:0.7.3": *
 >>> #import themes.simple: *
 >>> #show: simple-theme.with(config-common(breakable: false))
 == This slide's overflow will be clipped

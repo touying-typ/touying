@@ -128,83 +128,90 @@
   [#metadata((:))<lazy-layout-begin>]
   layout(container-size => context {
     // Query lazy marker positions within this lazy-layout scope.
-    let begin-loc = query(selector(<lazy-layout-begin>).before(here()))
-      .last()
-      .location()
-    let end-loc = query(selector(<lazy-layout-end>).after(here()))
-      .first()
-      .location()
-
-    let is-vertical = direction.axis() == "vertical"
-    if is-vertical {
-      // Collect positions of all lazy-v markers in this scope.
-      let lazy-v-items = query(
-        selector(<touying-lazy-v>).after(begin-loc).before(end-loc),
-      )
-      let lazy-v-positions = lazy-v-items.map(it => it.location().position())
-      // For each x coordinate, find the last marker's position (the one to activate).
-      // Group by x and keep only the last position per group.
-      let last-positions = {
-        let result = (:)
-        for pos in lazy-v-positions {
-          let key = repr(pos.x)
-          result.insert(key, pos)
-        }
-        result.values()
-      }
-
-      // Phase 1: measure height with all lazy-v markers hidden.
-      let measured-size = measure(block(
-        width: container-size.width,
-        body,
-      ))
-      // Phase 2: render at the measured height.
-      // Only the last lazy-v marker per x coordinate is activated; others stay hidden.
-      show <touying-lazy-h>: it => panic(
-        "lazy-layout: found a lazy-h marker inside a vertical lazy-layout. "
-          + "Use lazy-v markers for vertical layouts, or pass direction: ltr to lazy-layout.",
-      )
-      show <touying-lazy-v>: it => {
-        let pos = it.location().position()
-        if last-positions.any(lp => lp.x == pos.x and lp.y == pos.y) {
-          v(it.value.amount, weak: it.value.weak)
-        }
-      }
-      block(height: measured-size.height, body)
+    // When lazy-layout is used inside a `measure` environment (e.g. from
+    // `page-container`'s detect-overflow), the metadata labels are not part of
+    // the real document flow, so `query` returns an empty array.  In that case
+    // we gracefully fall back to rendering the body without lazy processing.
+    let begin-candidates = query(selector(<lazy-layout-begin>).before(here()))
+    let end-candidates = query(selector(<lazy-layout-end>).after(here()))
+    if begin-candidates.len() == 0 or end-candidates.len() == 0 {
+      // Fallback: render body as-is without lazy spacing adjustments.
+      body
     } else {
-      // Collect positions of all lazy-h markers in this scope.
-      let lazy-h-items = query(
-        selector(<touying-lazy-h>).after(begin-loc).before(end-loc),
-      )
-      let lazy-h-positions = lazy-h-items.map(it => it.location().position())
-      // For each y coordinate, find the last marker's position (the one to activate).
-      let last-positions = {
-        let result = (:)
-        for pos in lazy-h-positions {
-          let key = repr(pos.y)
-          result.insert(key, pos)
-        }
-        result.values()
-      }
+      let begin-loc = begin-candidates.last().location()
+      let end-loc = end-candidates.first().location()
 
-      // Phase 1: measure width with all lazy-h markers hidden.
-      let measured-size = measure(block(
-        height: container-size.height,
-        body,
-      ))
-      // Phase 2: render at the measured width.
-      // Only the last lazy-h marker per y coordinate is activated; others stay hidden.
-      show <touying-lazy-v>: it => panic(
-        "lazy-layout: found a lazy-v marker inside a horizontal lazy-layout. "
-          + "Use lazy-h markers for horizontal layouts, or pass direction: ttb to lazy-layout.",
-      )
-      show <touying-lazy-h>: it => {
-        let pos = it.location().position()
-        if last-positions.any(lp => lp.y == pos.y and lp.x == pos.x) {
-          h(it.value.amount, weak: it.value.weak)
+      let is-vertical = direction.axis() == "vertical"
+      if is-vertical {
+        // Collect positions of all lazy-v markers in this scope.
+        let lazy-v-items = query(
+          selector(<touying-lazy-v>).after(begin-loc).before(end-loc),
+        )
+        let lazy-v-positions = lazy-v-items.map(it => it.location().position())
+        // For each x coordinate, find the last marker's position (the one to activate).
+        // Group by x and keep only the last position per group.
+        let last-positions = {
+          let result = (:)
+          for pos in lazy-v-positions {
+            let key = repr(pos.x)
+            result.insert(key, pos)
+          }
+          result.values()
         }
+
+        // Phase 1: measure height with all lazy-v markers hidden.
+        let measured-size = measure(block(
+          width: container-size.width,
+          body,
+        ))
+        // Phase 2: render at the measured height.
+        // Only the last lazy-v marker per x coordinate is activated; others stay hidden.
+        show <touying-lazy-h>: it => panic(
+          "lazy-layout: found a lazy-h marker inside a vertical lazy-layout. "
+            + "Use lazy-v markers for vertical layouts, or pass direction: ltr to lazy-layout.",
+        )
+        show <touying-lazy-v>: it => {
+          let pos = it.location().position()
+          if last-positions.any(lp => lp.x == pos.x and lp.y == pos.y) {
+            v(it.value.amount, weak: it.value.weak)
+          }
+        }
+        block(height: measured-size.height, body)
+      } else {
+        // Collect positions of all lazy-h markers in this scope.
+        let lazy-h-items = query(
+          selector(<touying-lazy-h>).after(begin-loc).before(end-loc),
+        )
+        let lazy-h-positions = lazy-h-items.map(it => it.location().position())
+        // For each y coordinate, find the last marker's position (the one to activate).
+        let last-positions = {
+          let result = (:)
+          for pos in lazy-h-positions {
+            let key = repr(pos.y)
+            result.insert(key, pos)
+          }
+          result.values()
+        }
+
+        // Phase 1: measure width with all lazy-h markers hidden.
+        let measured-size = measure(block(
+          height: container-size.height,
+          body,
+        ))
+        // Phase 2: render at the measured width.
+        // Only the last lazy-h marker per y coordinate is activated; others stay hidden.
+        show <touying-lazy-v>: it => panic(
+          "lazy-layout: found a lazy-v marker inside a horizontal lazy-layout. "
+            + "Use lazy-h markers for horizontal layouts, or pass direction: ttb to lazy-layout.",
+        )
+        show <touying-lazy-h>: it => {
+          let pos = it.location().position()
+          if last-positions.any(lp => lp.y == pos.y and lp.x == pos.x) {
+            h(it.value.amount, weak: it.value.weak)
+          }
+        }
+        block(width: measured-size.width, body)
       }
-      block(width: measured-size.width, body)
     }
   })
   [#metadata((:))<lazy-layout-end>]
