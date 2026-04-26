@@ -4,7 +4,7 @@ sidebar_position: 5
 
 # Other Animations
 
-Touying also provides `touying-reducer`, which allows all animations to work natively in CeTZ and Fletcher.
+Touying also provides `touying-reduce`(==`touying-diagram`), which allows all animations to work natively in CeTZ and Fletcher.
 
 ## Simple Animations
 

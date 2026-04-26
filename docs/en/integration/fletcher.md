@@ -4,7 +4,7 @@ sidebar_position: 4
 
 # Fletcher
 
-Touying provides the `touying-reducer`, which adds `pause`, `meanwhile` and other animations to Fletcher.
+Touying provides the `touying-diagram`/`touying-reduce` functions (synonyms), which add `pause`, `meanwhile`, and other animations to Fletcher.
 
 An example:
 

@@ -4,7 +4,7 @@ sidebar_position: 5
 
 # 其他动画
 
-Touying 还提供了 `touying-reducer`，它能让所有动画在 CeTZ 和 Fletcher 中原生工作。
+Touying 还提供了 `touying-reduce`(==`touying-diagram`)，它能让所有动画在 CeTZ 和 Fletcher 中原生工作。
 
 ## 简单动画
 

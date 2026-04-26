@@ -569,7 +569,7 @@ This slide is in the appendix and does not increment the main counter.
 
 ### 如何在 CeTZ 绘图中使用 `#pause`？
 
-使用 `touying-reducer` 包裹 CeTZ canvas，使 Touying 能够为其添加动画：
+使用 `touying-reduce` 包裹 CeTZ canvas，使 Touying 能够为其添加动画：
 
 ```example
 >>> #import "@preview/touying:0.7.3": *
