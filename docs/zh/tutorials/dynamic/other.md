@@ -18,7 +18,7 @@ Touying 还提供了 `touying-reducer`，它能让所有动画在 CeTZ 和 Fletc
 
 // cetz and fletcher bindings for touying
 #let cetz-canvas = touying-reduce.with(cetz)
-#let fletcher-diagram = touying-reducer.with(reduce: fletcher.diagram, cover: fletcher.hide)
+#let fletcher-diagram = touying-reduce.with(fletcher)
 
 #show: university-theme.with(aspect-ratio: "16-9")
 

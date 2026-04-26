@@ -459,10 +459,7 @@ Use `touying-reducer` to wrap Fletcher diagrams:
 >>> #show: simple-theme
 #import "@preview/fletcher:0.5.8" as fletcher: diagram, node, edge
 
-#let fletcher-diagram = touying-reducer.with(
-  reduce: fletcher.diagram,
-  cover: fletcher.hide,
-)
+#let fletcher-diagram = touying-reduce.with(fletcher)
 
 #slide[
   #fletcher-diagram(

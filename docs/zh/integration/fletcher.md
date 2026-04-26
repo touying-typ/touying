@@ -16,7 +16,7 @@ Touying 提供了 `touying-reducer`，它能为 fletcher 加入 `pause`、`meanw
 
 // cetz and fletcher bindings for touying
 #let cetz-canvas = touying-reduce.with(cetz) // 对于暴露了包名的包可使用的新语法
-#let fletcher-diagram = touying-reducer.with(reduce: fletcher.diagram, cover: fletcher.hide)
+#let fletcher-diagram = touying-reduce.with(fletcher)
 
 #show: metropolis-theme.with(aspect-ratio: "16-9")
 

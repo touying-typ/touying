@@ -18,7 +18,7 @@ Here's an example:
 
 // cetz and fletcher bindings for touying
 #let cetz-canvas = touying-reduce.with(cetz)
-#let fletcher-diagram = touying-reducer.with(reduce: fletcher.diagram, cover: fletcher.hide)
+#let fletcher-diagram = touying-reduce.with(fletcher)
 
 #show: university-theme.with(aspect-ratio: "16-9")
 

@@ -46,9 +46,9 @@ Touying offers many built-in themes to easily create beautiful slides. For examp
 #show: show-theorion
 
 // fletcher bindings for touying
-#let fletcher-diagram = touying-reducer.with(reduce: fletcher.diagram, cover: fletcher.hide)
+#let fletcher-diagram = touying-reduce.with(fletcher)
 
-// explicit cetz bindings no longer needed we can just write `touying-(diagram|reduce)(cetz, {...})`
+// explicit bindings no longer needed we can just write `touying-(diagram|reduce)(cetz, {...})`
 //#let cetz-canvas = touying-reducer.with(reduce: cetz.canvas, cover: cetz.draw.hide.with(bounds: true))
 #let cetz-canvas = touying-reduce.with(cetz)
 

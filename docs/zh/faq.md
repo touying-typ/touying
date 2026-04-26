@@ -577,10 +577,7 @@ This slide is in the appendix and does not increment the main counter.
 >>> #show: simple-theme
 #import "@preview/cetz:0.4.2"
 
-#let cetz-canvas = touying-reducer.with(
-  reduce: cetz.canvas,
-  cover: cetz.draw.hide.with(bounds: true),
-)
+#let cetz-canvas = touying-reduce.with(cetz)
 
 #slide[
   #cetz-canvas({
@@ -602,10 +599,7 @@ This slide is in the appendix and does not increment the main counter.
 >>> #show: simple-theme
 #import "@preview/fletcher:0.5.8" as fletcher: diagram, node, edge
 
-#let fletcher-diagram = touying-reducer.with(
-  reduce: fletcher.diagram,
-  cover: fletcher.hide,
-)
+#let fletcher-diagram = touying-reduce.with(fletcher)
 
 #slide[
   #fletcher-diagram(

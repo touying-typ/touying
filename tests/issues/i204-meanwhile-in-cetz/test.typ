@@ -6,10 +6,7 @@
 #import themes.default: *
 
 // Cetz bindings for touying.
-#let cetz-canvas = touying-reducer.with(
-  reduce: cetz.canvas,
-  cover: cetz.draw.hide.with(bounds: true),
-)
+#let cetz-canvas = touying-reduce.with(cetz)
 
 #show: default-theme.with(aspect-ratio: "16-9")
 
