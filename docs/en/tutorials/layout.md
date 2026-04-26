@@ -118,7 +118,7 @@ With this approach, we can also query the current page parameters in real-time u
 If you need to divide a page into two or three columns, you can use the `composer` feature provided by the default `slide` function in Touying. The simplest example is as follows:
 
 ```example
->>> #import "@preview/touying:0.7.1": *
+>>> #import "@preview/touying:0.7.3": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
 #slide[
@@ -131,7 +131,7 @@ If you need to divide a page into two or three columns, you can use the `compose
 If you need to change the way columns are divided, you can modify the `composer` parameter of `slide`, where the default parameter is `cols.with(columns: auto, gutter: 1em)`. If we want the left column to take up the remaining width, we can use:
 
 ```example
->>> #import "@preview/touying:0.7.1": *
+>>> #import "@preview/touying:0.7.3": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
 #slide(composer: (1fr, auto))[
@@ -155,7 +155,7 @@ When using multi-column layouts (via `cols` or a manual `grid`), columns with di
 `cols` enables `lazy-layout` by default, so you just need to add `lazy-v(1fr)` inside each block:
 
 ```example
->>> #import "@preview/touying:0.7.1": *
+>>> #import "@preview/touying:0.7.3": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
 #cols[
@@ -185,7 +185,7 @@ This is different from using `v(1fr)` inside `#slide[][]`. The `slide` composer 
 You can also wrap a `grid` with `lazy-layout` directly:
 
 ```example
->>> #import "@preview/touying:0.7.1": *
+>>> #import "@preview/touying:0.7.3": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
 #lazy-layout(grid(
@@ -247,7 +247,7 @@ Related parameters:
 You can also dynamically switch these settings mid-presentation using `touying-set-config`:
 
 ```example
->>> #import "@preview/touying:0.7.1": *
+>>> #import "@preview/touying:0.7.3": *
 >>> #import themes.simple: *
 >>> #show: simple-theme.with(config-common(breakable: false))
 == This slide's overflow will be clipped

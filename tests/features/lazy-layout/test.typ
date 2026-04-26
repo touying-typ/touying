@@ -1,7 +1,10 @@
 #import "/lib.typ": *
 #import themes.simple: *
 
-#show: simple-theme.with(footer-right: none)
+#show: simple-theme.with(
+  config-common(breakable: false),
+  footer-right: none,
+)
 
 = Lazy Vspace
 

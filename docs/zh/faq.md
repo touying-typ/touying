@@ -13,7 +13,7 @@ sidebar_position: 4
 Touying 提供多个内置主题，通过导入并应用主题函数即可切换：
 
 ```example
-#import "@preview/touying:0.7.1": *
+#import "@preview/touying:0.7.3": *
 #import themes.simple: *
 #show: simple-theme
 = Section
@@ -30,7 +30,7 @@ Using the simple theme.
 使用 `config-colors(primary: ...)` 自定义主题的主色调：
 
 ```example
-#import "@preview/touying:0.7.1": *
+#import "@preview/touying:0.7.3": *
 #import themes.metropolis: *
 #show: metropolis-theme.with(
   aspect-ratio: "16-9",
@@ -100,7 +100,7 @@ The header now uses the custom primary color.
 也可以在演示文稿中途通过 `touying-set-config` 切换：
 
 ```example
->>> #import "@preview/touying:0.7.1": *
+>>> #import "@preview/touying:0.7.3": *
 >>> #import themes.simple: *
 >>> #show: simple-theme.with(config-common(breakable: false))
 == This slide's overflow will be clipped
@@ -116,7 +116,7 @@ The header now uses the custom primary color.
 使用 `config-methods(cover: utils.semi-transparent-cover)` 配置，使被隐藏的内容以半透明形式显示：
 
 ```example
-#import "@preview/touying:0.7.1": *
+#import "@preview/touying:0.7.3": *
 #import themes.simple: *
 
 #show: simple-theme.with(
@@ -138,7 +138,7 @@ This content is shown with a semi-transparent cover.
 使用 `config-common(preamble: ...)` 在每张幻灯片前插入固定内容，`subslide-preamble` 在子幻灯片前插入：
 
 ```example
-#import "@preview/touying:0.7.1": *
+#import "@preview/touying:0.7.3": *
 #import themes.simple: *
 
 #show: simple-theme.with(
@@ -165,7 +165,7 @@ More content.
 当 `horizontal-line-to-pagebreak: true` 时，可以在标题之间使用 `---` 来创建新幻灯片：
 
 ```example
-#import "@preview/touying:0.7.1": *
+#import "@preview/touying:0.7.3": *
 #import themes.simple: *
 #show: simple-theme
 = Section
@@ -210,7 +210,7 @@ Created by `---`.
 使用带 `composer` 参数的 `slide` 将内容分成多列：
 
 ```example
-#import "@preview/touying:0.7.1": *
+#import "@preview/touying:0.7.3": *
 #import themes.simple: *
 #show: simple-theme
 #slide(composer: (1fr, 1fr))[
@@ -231,7 +231,7 @@ Created by `---`.
 使用 Typst 的 `place` 函数进行绝对定位：
 
 ```example
-#import "@preview/touying:0.7.1": *
+#import "@preview/touying:0.7.3": *
 #import themes.simple: *
 #show: simple-theme
 #slide[
@@ -248,7 +248,7 @@ Created by `---`.
 使用 `utils.fit-to-height` 或 `utils.fit-to-width`：
 
 ```example
-#import "@preview/touying:0.7.1": *
+#import "@preview/touying:0.7.3": *
 #import themes.simple: *
 #show: simple-theme
 #slide[
@@ -269,7 +269,7 @@ Created by `---`.
 用 `components.adaptive-columns` 包裹 Typst 内置的 `outline`：
 
 ```example
-#import "@preview/touying:0.7.1": *
+#import "@preview/touying:0.7.3": *
 #import themes.simple: *
 #show: simple-theme.with(aspect-ratio: "16-9")
 == Outline <touying:hidden>
@@ -296,7 +296,7 @@ More content here.
 结合 `numbly` 包和 `#set heading(numbering: ...)`：
 
 ```example
-#import "@preview/touying:0.7.1": *
+#import "@preview/touying:0.7.3": *
 #import themes.simple: *
 #import "@preview/numbly:0.1.0": numbly
 #set heading(numbering: numbly("{1}.", default: "1.1"))
@@ -319,7 +319,7 @@ More content here.
 使用 `components.progressive-outline` 高亮当前章节：
 
 ```example
-#import "@preview/touying:0.7.1": *
+#import "@preview/touying:0.7.3": *
 #import themes.dewdrop: *
 #show: dewdrop-theme.with(aspect-ratio: "16-9")
 = First Section
@@ -342,7 +342,7 @@ More content here.
 将 `bibliography(...)` 值传递给 `config-common(show-bibliography-as-footnote: ...)`：
 
 ```example
-#import "@preview/touying:0.7.1": *
+#import "@preview/touying:0.7.3": *
 #import themes.simple: *
 #let bib = bytes(
   "@book{knuth,
@@ -368,7 +368,7 @@ This is a famous book. @knuth
 使用 `magic.bibliography(...)` 显示参考文献幻灯片：
 
 ```example
-#import "@preview/touying:0.7.1": *
+#import "@preview/touying:0.7.3": *
 #import themes.simple: *
 #let bib = bytes(
   "@book{knuth,
@@ -402,7 +402,7 @@ Some cited content. @knuth
 在幻灯片的任意位置使用 `#speaker-note[...]` 函数：
 
 ```example
-#import "@preview/touying:0.7.1": *
+#import "@preview/touying:0.7.3": *
 #import themes.simple: *
 #show: simple-theme
 #slide[
@@ -442,7 +442,7 @@ Some cited content. @knuth
 使用 `utils.slide-counter.display()` 显示当前编号，`utils.last-slide-number` 显示总数：
 
 ```example
-#import "@preview/touying:0.7.1": *
+#import "@preview/touying:0.7.3": *
 #import themes.simple: *
 #show: simple-theme.with(
   aspect-ratio: "16-9",
@@ -468,7 +468,7 @@ Still counting.
 在标题上添加 `<touying:unnumbered>` 标签：
 
 ```example
-#import "@preview/touying:0.7.1": *
+#import "@preview/touying:0.7.3": *
 #import themes.simple: *
 #show: simple-theme
 = Title Slide <touying:unnumbered>
@@ -487,7 +487,7 @@ This slide is counted.
 在主要内容之后使用 `#show: appendix`。此后的幻灯片不会递增幻灯片计数器：
 
 ```example
-#import "@preview/touying:0.7.1": *
+#import "@preview/touying:0.7.3": *
 #import themes.simple: *
 #show: simple-theme.with(aspect-ratio: "16-9")
 = Main Content
@@ -518,7 +518,7 @@ This slide is in the appendix and does not increment the main counter.
 在 `#slide` 内的内容块之间放置 `#pause`：
 
 ```example
-#import "@preview/touying:0.7.1": *
+#import "@preview/touying:0.7.3": *
 #import themes.simple: *
 #show: simple-theme
 #slide[
@@ -539,7 +539,7 @@ This slide is in the appendix and does not increment the main counter.
 使用 `#only("...")` 在特定子幻灯片上显示内容，或用 `#uncover("...")` 显示内容同时保留其占位空间：
 
 ```example
-#import "@preview/touying:0.7.1": *
+#import "@preview/touying:0.7.3": *
 #import themes.simple: *
 #show: simple-theme
 #slide[
@@ -554,7 +554,7 @@ This slide is in the appendix and does not increment the main counter.
 `#pause` 使用元数据注入机制，在 `context { ... }` 块内无法正常工作。请改用回调式 `slide` 来访问 `self.subslide`：
 
 ```example
-#import "@preview/touying:0.7.1": *
+#import "@preview/touying:0.7.3": *
 #import themes.simple: *
 #show: simple-theme
 #slide(self => {
@@ -572,10 +572,10 @@ This slide is in the appendix and does not increment the main counter.
 使用 `touying-reducer` 包裹 CeTZ canvas，使 Touying 能够为其添加动画：
 
 ```example
->>> #import "@preview/touying:0.7.1": *
+>>> #import "@preview/touying:0.7.3": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
-#import "@preview/cetz:0.4.2"
+#import "@preview/cetz:0.5.0"
 
 #let cetz-canvas = touying-reduce.with(cetz)
 
@@ -594,7 +594,7 @@ This slide is in the appendix and does not increment the main counter.
 使用 `touying-reducer` 包裹 Fletcher 图表：
 
 ```example
->>> #import "@preview/touying:0.7.1": *
+>>> #import "@preview/touying:0.7.3": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
 #import "@preview/fletcher:0.5.8" as fletcher: diagram, node, edge
@@ -616,7 +616,7 @@ This slide is in the appendix and does not increment the main counter.
 使用 `#alternatives` 在不同版本的内容之间切换：
 
 ```example
-#import "@preview/touying:0.7.1": *
+#import "@preview/touying:0.7.3": *
 #import themes.simple: *
 #show: simple-theme
 #slide[
@@ -646,7 +646,7 @@ This slide is in the appendix and does not increment the main counter.
 在主题设置之前或之后使用 `#set text(...)` 规则：
 
 ```example
-#import "@preview/touying:0.7.1": *
+#import "@preview/touying:0.7.3": *
 #import themes.metropolis: *
 #show: metropolis-theme.with(
   aspect-ratio: "16-9",
@@ -671,7 +671,7 @@ Text now uses the custom font.
 使用 `#set par(justify: true)`：
 
 ```example
-#import "@preview/touying:0.7.1": *
+#import "@preview/touying:0.7.3": *
 #import themes.simple: *
 #show: simple-theme
 #set par(justify: true)
@@ -691,7 +691,7 @@ Text now uses the custom font.
 设置 `config-common(new-section-slide-fn: none)`：
 
 ```example
-#import "@preview/touying:0.7.1": *
+#import "@preview/touying:0.7.3": *
 #import themes.metropolis: *
 #show: metropolis-theme.with(
   aspect-ratio: "16-9",
@@ -709,7 +709,7 @@ No automatic section slide was created for the `= Section` heading.
 
 使用 `pagebreak()` 或 `---` 强制新建一页，然后在该页编写内容。
 ```example
->>>#import "@preview/touying:0.7.1": *
+>>>#import "@preview/touying:0.7.3": *
 >>>#import themes.metropolis: *
 >>>
 >>>#show: metropolis-theme.with(
@@ -732,7 +732,7 @@ And this works normally.
 在幻灯片标题上添加 `<touying:hidden>` 标签：
 
 ```example
-#import "@preview/touying:0.7.1": *
+#import "@preview/touying:0.7.3": *
 #import themes.simple: *
 #show: simple-theme
 == Visible Slide
@@ -753,7 +753,7 @@ Back to normal.
 使用 `<touying:unoutlined>` 标签：
 
 ```example
-#import "@preview/touying:0.7.1": *
+#import "@preview/touying:0.7.3": *
 #import themes.simple: *
 #show: simple-theme
 == Outline <touying:hidden>
@@ -780,7 +780,7 @@ Also appears in the outline.
 使用 `config-common(slide-level: ...)`，默认值因主题而异：
 
 ```example
-#import "@preview/touying:0.7.1": *
+#import "@preview/touying:0.7.3": *
 #import themes.simple: *
 #show: simple-theme.with(
   aspect-ratio: "16-9",
@@ -804,7 +804,7 @@ Sub-subheadings do not create new slides.
 使用 `config-page(header: ..., footer: ...)`：
 
 ```example
-#import "@preview/touying:0.7.1": *
+#import "@preview/touying:0.7.3": *
 #import themes.default: *
 #show: default-theme.with(
   aspect-ratio: "16-9",
@@ -870,7 +870,7 @@ tt run
 使用 `config-info(...)`：
 
 ```example
-#import "@preview/touying:0.7.1": *
+#import "@preview/touying:0.7.3": *
 #import themes.metropolis: *
 #show: metropolis-theme.with(
   aspect-ratio: "16-9",
@@ -895,7 +895,7 @@ Content here.
 使用 `touying-set-config` 包裹需要更改的内容：
 
 ```example
-#import "@preview/touying:0.7.1": *
+#import "@preview/touying:0.7.3": *
 #import themes.simple: *
 #show: simple-theme
 #slide[
@@ -918,7 +918,7 @@ Content here.
 在需要获取配置的位置使用 `touying-get-config`。由于配置只能在 `context` 时机访问，因此基于此进行计算可能会导致问题。
 > 如果在含有局部配置的幻灯片内调用此函数，返回的将是局部配置，而非全局配置。
 ```example
-#import "@preview/touying:0.7.1": *
+#import "@preview/touying:0.7.3": *
 #import themes.simple: *
 #show: simple-theme.with(
   config-info(author: "Beautiful Name")
@@ -952,7 +952,7 @@ typst watch slides.typ
 
 ```typst
 // main.typ
-#import "@preview/touying:0.7.1": *
+#import "@preview/touying:0.7.3": *
 #import themes.simple: *
 
 #show: simple-theme.with(aspect-ratio: "16-9")
@@ -969,7 +969,7 @@ typst watch slides.typ
 使用 `utils.display-current-heading(...)` 或 `utils.display-current-short-heading(...)`：
 
 ```example
-#import "@preview/touying:0.7.1": *
+#import "@preview/touying:0.7.3": *
 #import themes.default: *
 #show: default-theme.with(
   aspect-ratio: "16-9",
@@ -991,7 +991,7 @@ The header shows the current section name.
 正常导入两个包并在幻灯片中使用 `#pin`/`#pinit-highlight`：
 
 ```example
-#import "@preview/touying:0.7.1": *
+#import "@preview/touying:0.7.3": *
 #import "@preview/pinit:0.2.2": *
 #import themes.simple: *
 

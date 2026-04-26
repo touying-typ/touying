@@ -4,6 +4,32 @@ sidebar_position: 8
 
 # 更新日志
 
+## v0.7.3
+
+### Minor Breaking Changes
+
+- **feat!: always attach `#speaker-note[]` to the previous slide & default `receive-body-for-new-*-slide-fn` to `false`** ([#354](https://github.com/touying-typ/touying/pull/354))
+  - `#speaker-note[]` now always attaches to the **slide above it**, regardless of how that slide was created (explicit slide calls, heading-triggered section slides, or normal content slides). This eliminates the common pitfall where a `#speaker-note[]` placed after a slide would silently create an unwanted empty "ghost" slide.
+  - `receive-body-for-new-section-slide-fn` and its variants are now **defaulted to `false`** (previously `true`).
+
+### Migration Guide
+
+If you relied on content after `= Section` headings being absorbed into the section slide body, explicitly set `receive-body-for-new-section-slide-fn: true` in your `config-common(...)`.
+
+### Features
+
+- feat: `item-by-item-fn` and presets for it ([#347](https://github.com/touying-typ/touying/pull/347))
+- feat: improved `custom-progressive-outline` and new `section-relationship` and some other things ([#345](https://github.com/touying-typ/touying/pull/345))
+- feat: better lazy-layout for mixed layouts ([#355](https://github.com/touying-typ/touying/pull/355))
+- feat: add `cols` as alias of `side-by-side` and export some components `cols`, `lazy-xxx` to outside ([#356](https://github.com/touying-typ/touying/pull/356))
+- theme(metropolis): add outline-slide for metropolis ([#349](https://github.com/touying-typ/touying/pull/349))
+- feat: add warning for empty slide content height detection
+
+### Documentation
+
+- docs: add multiple columns example and improve docs structure
+
+
 ## v0.7.1
 
 ### Features

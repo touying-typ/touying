@@ -9,9 +9,9 @@ Touying 提供了 `touying-reducer`，它能为 fletcher 加入 `pause`、`meanw
 一个例子：
 
 ```example
-#import "@preview/touying:0.7.1": *
+#import "@preview/touying:0.7.3": *
 #import themes.metropolis: *
-#import "@preview/cetz:0.4.2"
+#import "@preview/cetz:0.5.0"
 #import "@preview/fletcher:0.5.8" as fletcher: node, edge
 
 // cetz and fletcher bindings for touying
@@ -66,7 +66,7 @@ Touying 提供了 `touying-reducer`，它能为 fletcher 加入 `pause`、`meanw
 一个 callback-style 的例子：
 
 ```example
-#import "@preview/touying:0.7.1": *
+#import "@preview/touying:0.7.3": *
 #import "@preview/fletcher:0.5.8" as fletcher: diagram, edge, node
 #show: themes.simple.simple-theme.with(aspect-ratio: "16-9")
 

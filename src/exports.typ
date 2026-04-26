@@ -26,6 +26,7 @@
   touying-diagram,
   touying-equation,
   touying-fn-wrapper,
+  touying-fn-wrapper-raw,
   touying-mitex,
   touying-raw,
   touying-recall,

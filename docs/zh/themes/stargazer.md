@@ -12,7 +12,7 @@ sidebar_position: 6
 你可以通过下面的代码来初始化：
 
 ```typst
-#import "@preview/touying:0.7.1": *
+#import "@preview/touying:0.7.3": *
 #import themes.stargazer: *
 
 #import "@preview/numbly:0.1.0": numbly
@@ -124,7 +124,7 @@ Stargazer 主题提供了一系列自定义 slide 函数：
 ## 示例
 
 ```example
-#import "@preview/touying:0.7.1": *
+#import "@preview/touying:0.7.3": *
 #import themes.stargazer: *
 
 #import "@preview/numbly:0.1.0": numbly
