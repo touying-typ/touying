@@ -9,10 +9,10 @@ Touying can work properly with the [Theorion](https://github.com/OrangeX4/typst-
 **Note: To make animation commands like `#pause` work properly with theorion, you need to use `config-common(frozen-counters: (theorem-counter,))` to bind counters that need to be frozen.**
 
 ```example
-#import "@preview/touying:0.7.1": *
+#import "@preview/touying:0.7.3": *
 #import themes.university: *
 #import "@preview/numbly:0.1.0": numbly
-#import "@preview/theorion:0.5.0": *
+#import "@preview/theorion:0.6.0": *
 #import cosmos.clouds: *
 #show: show-theorion
 

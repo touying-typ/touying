@@ -13,9 +13,9 @@ Touying 提供了 `touying-diagram`/`touying-reduce` 函数（同义），它们
 一个例子：
 
 ```example
-#import "@preview/touying:0.7.1": *
+#import "@preview/touying:0.7.3": *
 #import themes.metropolis: *
-#import "@preview/cetz:0.4.2"
+#import "@preview/cetz:0.5.0"
 #import "@preview/fletcher:0.5.8" as fletcher: node, edge
 
 // cetz and fletcher bindings for touying
@@ -73,8 +73,8 @@ Touying 提供了 `touying-diagram`/`touying-reduce` 函数（同义），它们
 事实上，我们也可以在 cetz 内部使用 `only` 和 `uncover`，只是需要一点技巧：
 
 ```example
-#import "@preview/touying:0.7.1": *
-#import "@preview/cetz:0.4.2"
+#import "@preview/touying:0.7.3": *
+#import "@preview/cetz:0.5.0"
 #import themes.simple: *
 #show: simple-theme.with(aspect-ratio: "16-9")
 
