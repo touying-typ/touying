@@ -42,8 +42,9 @@
 })
 
 == Test Fletcher
-#import "@preview/fletcher:0.5.8" as fletcher:*
-#touying-reduce(fletcher, 
+#import "@preview/fletcher:0.5.8" as fletcher: *
+#touying-reduce(
+  fletcher,
   node-stroke: .1em,
   spacing: 4em,
   node((0, 0), [A], radius: 2em),
