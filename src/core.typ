@@ -2684,21 +2684,21 @@
     // 1. in the package itself
     // 2. in the auto-reducer-bindings based on the package name
     bindings = pckg.at("touying-reducer-bindings", default: none)
-    if bindings == none {
-      assert(
-        "name" in pckg.keys(),
-        message: "Package for reduce() must expose its name for auto-binding to work. Got keys: "
-          + repr(pckg.keys()),
-      )
 
+    if bindings == none and "name" in pckg.keys() {
       bindings = extern.auto-reducer-bindings.at(pckg.name, default: none)
+    }
+
+    //last option: test if it is fletcher, using repr is not necessarily stable, but hey, works
+    if bindings == none and (repr(package) == "<module fletcher>") {
+      bindings = extern.auto-reducer-bindings.at("fletcher", default: none)
     }
 
     assert(
       bindings != none,
       message: "Package "
-        + pckg.name
-        + " is not supported by `touying-reduce()`. Make sure it either exposes `touying-reducer-bindings` or that touying supports it. Natively supported packages are: "
+        + repr(package)
+        + " is not supported by `touying-reduce()`. Make sure it either exposes `touying-reducer-bindings` or that touying supports the package and it exposes its name. Natively supported packages are: "
         + repr(extern.auto-reducer-bindings.keys()),
     )
   }

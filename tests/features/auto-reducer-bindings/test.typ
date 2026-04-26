@@ -40,3 +40,15 @@
     alch.fragment(name: "C", "C")
   })
 })
+
+== Test Fletcher
+#import "@preview/fletcher:0.5.8" as fletcher:*
+#touying-reduce(fletcher, 
+  node-stroke: .1em,
+  spacing: 4em,
+  node((0, 0), [A], radius: 2em),
+  pause,
+  uncover("1-2", edge((0, 0), (1, 0), "-|>", stroke: blue)),
+  uncover("2-", node((1, 0), [B], radius: 2em)),
+  only(3, node((0, 1), [tmp], radius: 1em, fill: orange)),
+)

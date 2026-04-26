@@ -16,7 +16,11 @@
     "reduce": ("canvas",),
     "cover": ("draw", "hide", arguments(bounds: true)),
   ),
-  "fletcher": none, //fletcher sadly does not yet expose its name
+  //fletcher does not expose its name, so we detect via repr, see core.typ
+  "fletcher": (
+    "reduce" : ("diagram",), 
+    "cover": ("hide",)
+  ), 
   "alchemist": (
     "reduce": ("skeletize",),
     "cover": ("hide",),
