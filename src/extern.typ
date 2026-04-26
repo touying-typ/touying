@@ -18,9 +18,9 @@
   ),
   //fletcher does not expose its name, so we detect via repr, see core.typ
   "fletcher": (
-    "reduce" : ("diagram",), 
-    "cover": ("hide",)
-  ), 
+    "reduce": ("diagram",),
+    "cover": ("hide",),
+  ),
   "alchemist": (
     "reduce": ("skeletize",),
     "cover": ("hide",),
