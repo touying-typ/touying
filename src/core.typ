@@ -4116,7 +4116,6 @@
   result
 }
 
-
 ///
 /// This is the core parsing function that handles all types of content including
 /// animations, pauses, meanwhile markers, and various content types. It recursively
@@ -4270,6 +4269,76 @@
   let has-fn-wrapper = false
   // get cover function from self
   let cover = self.methods.cover.with(self: self)
+
+  // helper parser for parsing touying-fn-wrapper-raw inside touying-fn-wrapper:
+  let rec-execute-raw(pos-args) = {
+    pos-args.map(c => {
+      if (
+        type(c) == content
+          and c.func() == metadata
+          and type(c.value) == dictionary
+          and c.value.at("kind", default: none) == "touying-fn-wrapper-raw"
+      ) {
+        (c.value.fn)(
+          self: self,
+          ..rec-execute-raw(c.value.args.pos()),
+          ..c.value.args.named(),
+        )
+      } else if utils.is-sequence(c) {
+        rec-execute-raw(c.children).sum(default: [])
+      } else if utils.is-styled(c) {
+        utils.typst-builtin-styled(
+          rec-execute-raw((c.child,)).first(),
+          c.styles,
+        )
+      } else if type(c) == content and c.func() in list-item-functions {
+        utils.reconstruct(
+          c,
+          labeled: labeled(c.func()),
+          rec-execute-raw((c.body,)).first(),
+        )
+      } else if (
+        type(c) == content and c.func() in table-like-functions
+      ) {
+        utils.reconstruct-table-like(
+          c,
+          labeled: labeled(c.func()),
+          rec-execute-raw(c.children),
+        )
+      } else if (
+        type(c) == content and c.func() in reconstructable-functions
+      ) {
+        utils.reconstruct(
+          named: true,
+          labeled: labeled(c.func()),
+          c,
+          rec-execute-raw((c.at("body", default: none),)).first(),
+        )
+      } else if type(c) == content and c.func() == terms.item {
+        terms.item(
+          c.term,
+          rec-execute-raw((c.description,)).first(),
+        )
+      } else if type(c) == content and c.func() == columns {
+        let fields = c.fields()
+        let _ = fields.remove("body", default: none)
+        let count = fields.remove("count", default: 2)
+        columns(count, ..fields, rec-execute-raw((c.body,)).first())
+      } else if type(c) == content and c.func() == place {
+        let fields = c.fields()
+        let _ = fields.remove("body", default: none)
+        let alignment = fields.remove("alignment", default: start)
+        place(alignment, ..fields, rec-execute-raw((c.body,)).first())
+      } else if type(c) == content and c.func() == rotate {
+        let fields = c.fields()
+        let _ = fields.remove("body", default: none)
+        let angle = fields.remove("angle", default: 0deg)
+        rotate(angle, ..fields, rec-execute-raw((c.body,)).first())
+      } else {
+        c
+      }
+    })
+  }
 
   // Main parsing loop: process each content item and handle animations
   for item in bodies {
@@ -4555,77 +4624,8 @@
               last-subslide = calc.max(last-subslide, child.value.last-subslide)
             }
           }
-          let rec-execute-raw(pos-args) = {
-            pos-args.map(c => {
-              if (
-                type(c) == content
-                  and c.func() == metadata
-                  and type(c.value) == dictionary
-                  and c.value.at("kind", default: none)
-                    == "touying-fn-wrapper-raw"
-              ) {
-                (c.value.fn)(
-                  self: self,
-                  ..rec-execute-raw(c.value.args.pos()),
-                  ..c.value.args.named(),
-                )
-              } else if utils.is-sequence(c) {
-                rec-execute-raw(c.children).sum(default: [])
-              } else if utils.is-styled(c) {
-                utils.typst-builtin-styled(
-                  rec-execute-raw((c.child,)).first(),
-                  c.styles,
-                )
-              } else if type(c) == content and c.func() in list-item-functions {
-                utils.reconstruct(
-                  c,
-                  labeled: labeled(c.func()),
-                  rec-execute-raw((c.body,)).first(),
-                )
-              } else if (
-                type(c) == content and c.func() in table-like-functions
-              ) {
-                utils.reconstruct-table-like(
-                  c,
-                  labeled: labeled(c.func()),
-                  rec-execute-raw(c.children),
-                )
-              } else if (
-                type(c) == content and c.func() in reconstructable-functions
-              ) {
-                utils.reconstruct(
-                  named: true,
-                  labeled: labeled(c.func()),
-                  c,
-                  rec-execute-raw((c.at("body", default: none),)).first(),
-                )
-              } else if type(c) == content and c.func() == terms.item {
-                terms.item(
-                  c.term,
-                  rec-execute-raw((c.description,)).first(),
-                )
-              } else if type(c) == content and c.func() == columns {
-                let fields = c.fields()
-                let _ = fields.remove("body", default: none)
-                let count = fields.remove("count", default: 2)
-                columns(count, ..fields, rec-execute-raw((c.body,)).first())
-              } else if type(c) == content and c.func() == place {
-                let fields = c.fields()
-                let _ = fields.remove("body", default: none)
-                let alignment = fields.remove("alignment", default: start)
-                place(alignment, ..fields, rec-execute-raw((c.body,)).first())
-              } else if type(c) == content and c.func() == rotate {
-                let fields = c.fields()
-                let _ = fields.remove("body", default: none)
-                let angle = fields.remove("angle", default: 0deg)
-                rotate(angle, ..fields, rec-execute-raw((c.body,)).first())
-              } else {
-                c
-              }
-            })
-          }
 
-          //check child.value.args for touying-fn-wrapper-raw. may only be in content, which always is positional
+          //check child.value.args for touying-fn-wrapper-raw recursively.
           let pos-args = rec-execute-raw(
             child.value.args.pos(),
           )
