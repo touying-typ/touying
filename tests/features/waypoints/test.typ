@@ -1,17 +1,11 @@
 #import "/lib.typ": *
 #import themes.simple: *
-#import "@preview/cetz:0.4.2"
+#import "@preview/cetz:0.5.0"
 #import "@preview/fletcher:0.5.8" as fletcher: edge, node
 
-#let cetz-canvas = touying-reducer.with(
-  reduce: cetz.canvas,
-  cover: cetz.draw.hide.with(bounds: true),
-)
+#let cetz-canvas = touying-reduce.with(cetz)
 
-#let fletcher-diagram = touying-reducer.with(
-  reduce: fletcher.diagram,
-  cover: fletcher.hide,
-)
+#let fletcher-diagram = touying-reduce.with(fletcher)
 
 #show: simple-theme.with(footer-right: []) //don't display slide number anymore
 

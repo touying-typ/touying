@@ -1,17 +1,11 @@
 #import "/lib.typ": *
 #import themes.simple: *
-#import "@preview/cetz:0.4.2"
+#import "@preview/cetz:0.5.0"
 #import "@preview/fletcher:0.5.8" as fletcher: edge, node
 
-#let cetz-canvas = touying-reducer.with(
-  reduce: cetz.canvas,
-  cover: cetz.draw.hide.with(bounds: true),
-)
+#let cetz-canvas = touying-reduce.with(cetz)
 
-#let fletcher-diagram = touying-reducer.with(
-  reduce: fletcher.diagram,
-  cover: fletcher.hide,
-)
+#let fletcher-diagram = touying-reduce.with(fletcher)
 
 #show: simple-theme.with(
   aspect-ratio: "16-9",
@@ -548,20 +542,14 @@ First, set up the reducer bindings (once, at the top of your file):
     *CeTZ:* #v(-0.5em)
     ```typst
     #import "@preview/cetz:0.4.2"
-    #let cetz-canvas = touying-reducer.with(
-      reduce: cetz.canvas,
-      cover: cetz.draw.hide.with(bounds: true),
-    )
+    #let cetz-canvas = touying-reduce.with(cetz)
     ```
   ],
   [
     *Fletcher:* #v(-0.5em)
     ```typst
     #import "@preview/fletcher:0.5.8" as fletcher: edge, node
-    #let fletcher-diagram = touying-reducer.with(
-      reduce: fletcher.diagram,
-      cover: fletcher.hide,
-    )
+    #let fletcher-diagram = touying-reduce.with(fletcher)
     ```
   ],
 )
@@ -737,7 +725,7 @@ Then use `(waypoint(<lbl>),)` for CeTZ or `waypoint(<lbl>)` for Fletcher inside 
   [Hierarchical waypoint. The parent (e.g. `<label>`) refers to all its children (e.g. `<label:sublabel>`).],
 
   [`(waypoint(<lbl>),)` inside CeTZ],
-  [Waypoint inside `touying-reducer` (CeTZ). Wrap in tuple like `(pause,)`.],
+  [Waypoint inside `touying-reducer` (CeTZ). Wrap in array like `(pause,)`.],
 
   [`waypoint(<lbl>)` inside Fletcher],
   [Waypoint inside `touying-reducer` (Fletcher). No tuple needed.],

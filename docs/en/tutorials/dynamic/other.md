@@ -4,21 +4,21 @@ sidebar_position: 5
 
 # Other Animations
 
-Touying also provides `touying-reducer`, which allows all animations to work natively in CeTZ and Fletcher.
+Touying also provides `touying-reduce`(==`touying-diagram`), which allows all animations to work natively in CeTZ and Fletcher.
 
 ## Simple Animations
 
 Here's an example:
 
 ```example
-#import "@preview/touying:0.7.1": *
+#import "@preview/touying:0.7.3": *
 #import themes.university: *
-#import "@preview/cetz:0.4.2"
+#import "@preview/cetz:0.5.0"
 #import "@preview/fletcher:0.5.8" as fletcher: node, edge
 
 // cetz and fletcher bindings for touying
-#let cetz-canvas = touying-reducer.with(reduce: cetz.canvas, cover: cetz.draw.hide.with(bounds: true))
-#let fletcher-diagram = touying-reducer.with(reduce: fletcher.diagram, cover: fletcher.hide)
+#let cetz-canvas = touying-reduce.with(cetz)
+#let fletcher-diagram = touying-reduce.with(fletcher)
 
 #show: university-theme.with(aspect-ratio: "16-9")
 
@@ -114,8 +114,8 @@ Note that commands like `effect` and `item-by-item` might not work as expected.
 If you don't want to have to write the array syntax `(anim-cmd(), )` for CeTZ, you can redefine the commands you need via utils locally in the canvas. This way they output the format CeTZ understands natively. However, then you need to manually count your subslides via `repeat`! 
 
 ```example
-#import "@preview/touying:0.7.1": *
-#import "@preview/cetz:0.4.2"
+#import "@preview/touying:0.7.3": *
+#import "@preview/cetz:0.5.0"
 #import themes.simple: *
 #show: simple-theme.with(aspect-ratio: "16-9")
 

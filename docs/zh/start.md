@@ -9,7 +9,7 @@ sidebar_position: 2
 要使用 Touying，您只需要在文档里加入
 
 ```example
-#import "@preview/touying:0.7.1": *
+#import "@preview/touying:0.7.3": *
 #import themes.simple: *
 
 #show: simple-theme.with(aspect-ratio: "16-9")
@@ -34,18 +34,21 @@ Hello, Typst!
 事实上，Touying 提供了多种 slides 编写风格，实际上您也可以使用 `#slide[..]` 的写法，以获得 Touying 提供的更多更强大的功能。
 
 ```example
-#import "@preview/touying:0.7.1": *
+#import "@preview/touying:0.7.3": *
 #import themes.university: *
-#import "@preview/cetz:0.4.2"
+#import "@preview/cetz:0.5.0"
 #import "@preview/fletcher:0.5.8" as fletcher: node, edge
 #import "@preview/numbly:0.1.0": numbly
-#import "@preview/theorion:0.5.0": *
+#import "@preview/theorion:0.6.0": *
 #import cosmos.clouds: *
 #show: show-theorion
 
-// cetz and fletcher bindings for touying
-#let cetz-canvas = touying-reducer.with(reduce: cetz.canvas, cover: cetz.draw.hide.with(bounds: true))
-#let fletcher-diagram = touying-reducer.with(reduce: fletcher.diagram, cover: fletcher.hide)
+// fletcher bindings for touying
+#let fletcher-diagram = touying-reduce.with(fletcher)
+
+// 不再需要显式的 绑定，直接写 `touying-(diagram|reduce)(cetz, {...})` 即可
+//#let cetz-canvas = touying-reducer.with(reduce: cetz.canvas, cover: cetz.draw.hide.with(bounds: true))
+#let cetz-canvas = touying-reduce.with(cetz)
 
 #show: university-theme.with(
   aspect-ratio: "16-9",
