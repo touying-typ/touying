@@ -531,6 +531,9 @@
         and child in ([–], [--], [-])
     ) {
       continue
+    } else if child.func() == hide {
+      //needs to be taken out preemptively so that hidden headings don't get weird.
+      start-part.push(child)
     } else if utils.is-heading(child, depth: slide-level) {
       let last-heading-depth = _get-last-heading-depth(current-headings)
       slide-parts = utils.trim(slide-parts)
