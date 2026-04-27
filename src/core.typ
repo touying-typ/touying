@@ -1,6 +1,7 @@
 #import "utils.typ"
 #import "pdfpc.typ"
 #import "components.typ"
+#import "extern.typ"
 
 /// ------------------------------------------------
 /// Slides
@@ -2595,16 +2596,10 @@
 ///
 /// ```typst
 /// // CeTZ
-/// #let cetz-canvas = touying-reducer.with(
-///   reduce: cetz.canvas,
-///   cover: cetz.draw.hide.with(bounds: true),
-/// )
+/// #let cetz-canvas = touying-reduce.with(cetz)
 ///
 /// // Fletcher
-/// #let fletcher-diagram = touying-reducer.with(
-///   reduce: fletcher.diagram,
-///   cover: fletcher.hide,
-/// )
+/// #let fletcher-diagram = touying-reduce.with(fletcher)
 /// ```
 ///
 /// - reduce (function): The external drawing function. It should accept an array of drawing commands and return rendered content (e.g. `cetz.canvas` or `fletcher.diagram`).
@@ -2626,6 +2621,101 @@
   args: args.pos(),
 ))<touying-temporary-mark>]
 
+/// Automatically reduces the content with the given package and given or predefined bindings. Only works if the package exposes the bindings or its name and touying defines the bindings for the name.
+///
+/// Usage:
+/// ```typst
+/// #touying-reduce(cetz, {
+///   import cetz.draw: *
+///
+///   rect((0,0), (5,5))
+///   (pause,)
+///   rect((0,0), (1,1))
+///   rect((1,1), (2,2))
+///   rect((2,2), (3,3))
+///   (pause,)
+///   line((0,0), (2.5, 2.5), name: "line")
+/// })
+/// ```
+///
+/// - package (module): The external package to integrate with touying. It should expose its name for auto-binding to work (e.g. `cetz`).
+/// - bindings (dictionary): Optional explicit bindings for the reduce and cover functions. Should be a dictionary with keys `reduce` and `cover`, where the values are paths (as arrays of strings) with an optionally last entry being arguments to pass to the function. If any fields are `none`, it checks whether the package has `touying-reducer-bindings` otherwise touying will look up predefined bindings in `extern.auto-reducer-bindings` based on the package name.
+/// - args (arguments): The positional and named arguments passed to the reduce function.
+/// -> content
+#let touying-reduce(package, bindings: (reduce: none, cover: none), ..args) = {
+  assert(
+    type(package) == module,
+    message: "Package for reduce() must be a module. Got: " + repr(package),
+  )
+  let pckg = dictionary(package)
+
+  let parse-binding(pckg, binding) = {
+    //base case without arguments
+    if binding.len() == 0 {
+      return pckg
+    }
+    let curr = binding.remove(0)
+    if type(curr) == arguments and binding.len() == 0 {
+      pckg.with(..curr)
+    } else if type(curr) == str {
+      parse-binding(dictionary(pckg).at(curr), binding)
+    } else {
+      panic(
+        "Invalid binding for reduce(): expected a path of strings leading to a function, with an optional last argument, got "
+          + repr(binding),
+      )
+    }
+  }
+  assert(
+    type(bindings) == dictionary
+      and "reduce" in bindings.keys()
+      and "cover" in bindings.keys(),
+    message: "Invalid `bindings` passed to `touying-reduce()`: expected a dictionary with keys 'reduce' and 'cover', got "
+      + repr(bindings),
+  )
+  if bindings.reduce == none or bindings.cover == none {
+    //two cases to look bindings up:
+    // 1. in the package itself
+    // 2. in the auto-reducer-bindings based on the package name
+    bindings = pckg.at("touying-reducer-bindings", default: none)
+
+    if bindings == none and "name" in pckg.keys() {
+      bindings = extern.auto-reducer-bindings.at(pckg.name, default: none)
+    }
+
+    //last option: test if it is fletcher, using repr is not necessarily stable, but hey, works
+    if bindings == none and (repr(package) == "<module fletcher>") {
+      bindings = extern.auto-reducer-bindings.at("fletcher", default: none)
+    }
+
+    assert(
+      bindings != none,
+      message: "Package "
+        + repr(package)
+        + " is not supported by `touying-reduce()`. Make sure it either exposes `touying-reducer-bindings` or that touying supports the package and it exposes its name. Natively supported packages are: "
+        + repr(extern.auto-reducer-bindings.keys()),
+    )
+  }
+
+  touying-reducer(
+    reduce: parse-binding(
+      package,
+      bindings.at("reduce"),
+    ),
+    cover: parse-binding(
+      package,
+      bindings.at("cover"),
+    ),
+    ..args,
+  )
+}
+
+/// A synonym of `touying-reduce` bc often diagrams are the things integrated via `touying-reducer`. For details see `touying-reduce` instead.
+#let touying-diagram(
+  package,
+  bindings: (reduce: none, cover: none),
+  ..args,
+) = touying-reduce(package, bindings, ..args)
 
 /// Parse touying equation content and extract animation repetitions
 ///

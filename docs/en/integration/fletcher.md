@@ -4,7 +4,7 @@ sidebar_position: 4
 
 # Fletcher
 
-Touying provides the `touying-reducer`, which adds `pause` and `meanwhile` animations to Fletcher.
+Touying provides the `touying-diagram`/`touying-reduce` functions (synonyms), which add `pause`, `meanwhile`, and other animations to Fletcher.
 
 An example:
 
@@ -15,8 +15,8 @@ An example:
 #import "@preview/fletcher:0.5.8" as fletcher: node, edge
 
 // cetz and fletcher bindings for touying
-#let cetz-canvas = touying-reducer.with(reduce: cetz.canvas, cover: cetz.draw.hide.with(bounds: true))
-#let fletcher-diagram = touying-reducer.with(reduce: fletcher.diagram, cover: fletcher.hide)
+#let cetz-canvas = touying-reduce.with(cetz) // new syntax for packages that expose their name
+#let fletcher-diagram = touying-reduce.with(fletcher)
 
 #show: metropolis-theme.with(aspect-ratio: "16-9")
 
@@ -89,3 +89,5 @@ An example with callback-style:
   )
 })
 ```
+
+The same is possible without the callback style since version 0.7.0.

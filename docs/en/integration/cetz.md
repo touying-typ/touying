@@ -4,7 +4,9 @@ sidebar_position: 3
 
 # CeTZ
 
-Touying provides the `touying-reducer`, which adds `pause` and `meanwhile` animations to CeTZ and Fletcher.
+Touying provides the `touying-diagram`/`touying-reduce` functions (synonyms), which add `pause`, `meanwhile`, and other animations to CeTZ.
+
+There also is `touying-reducer`, for which you have to specify the bindings yourself.
 
 ## Simple Animation
 
@@ -17,8 +19,8 @@ An example:
 #import "@preview/fletcher:0.5.8" as fletcher: node, edge
 
 // cetz and fletcher bindings for touying
-#let cetz-canvas = touying-reducer.with(reduce: cetz.canvas, cover: cetz.draw.hide.with(bounds: true))
-#let fletcher-diagram = touying-reducer.with(reduce: fletcher.diagram, cover: fletcher.hide)
+#let cetz-canvas = touying-reduce.with(cetz) // new syntax for packages that expose their name
+#let fletcher-diagram = touying-reduce.with(fletcher)
 
 #show: metropolis-theme.with(aspect-ratio: "16-9")
 
@@ -76,6 +78,39 @@ In fact, we can also use `only` and `uncover` within CeTZ, but it requires a bit
 #import themes.simple: *
 #show: simple-theme.with(aspect-ratio: "16-9")
 
+// cetz and fletcher bindings for touying
+#let cetz-canvas = touying-reduce.with(cetz) // new syntax for packages that expose their name
+
+== Only and Uncover in Cetz
+
+Cetz in Touying in subslide #touying-get-config("subslide")
+
+#cetz-canvas({
+  import cetz.draw: *
+  
+  rect((0,0), (5,5))
+
+  uncover("2-3", {
+    rect((0,0), (1,1))
+    rect((1,1), (2,2))
+    rect((2,2), (3,3))
+  })
+
+  only(3, line((0,0), (2.5, 2.5), name: "line"))
+})
+
+```
+
+## only and uncover with slide self
+
+We can also pass the slide self and then use the utils methods. Note: you must count your subslides for this and parse in the correct `repeat`.
+
+```example
+#import "@preview/touying:0.7.1": *
+#import "@preview/cetz:0.4.2"
+#import themes.simple: *
+#show: simple-theme.with(aspect-ratio: "16-9")
+
 #slide(repeat: 3, self => [
   #let (uncover, only, alternatives) = utils.methods(self)
 
@@ -97,3 +132,4 @@ In fact, we can also use `only` and `uncover` within CeTZ, but it requires a bit
   })
 ])
 ```
+

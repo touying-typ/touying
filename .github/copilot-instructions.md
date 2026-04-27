@@ -187,14 +187,11 @@ Configuration functions:
 - `config-methods` — animation method overrides
 - `config-page` — page layout
 
-### External package integration (touying-reducer)
+### External package integration (touying-reduce)
 
 ```typst
 // CeTZ
-#let cetz-canvas = touying-reducer.with(
-  reduce: cetz.canvas,
-  cover: cetz.draw.hide.with(bounds: true),
-)
+#let cetz-canvas = touying-reduce.with(cetz)
 #cetz-canvas({
   import cetz.draw: *
   rect((0,0), (5,5))
@@ -203,10 +200,7 @@ Configuration functions:
 })
 
 // Fletcher
-#let fletcher-diagram = touying-reducer.with(
-  reduce: fletcher.diagram,
-  cover: fletcher.hide,
-)
+#let fletcher-diagram = touying-reduce.with(fletcher)
 ```
 
 ### Speaker notes

@@ -4,7 +4,7 @@ sidebar_position: 5
 
 # 其他动画
 
-Touying 还提供了 `touying-reducer`，它能让所有动画在 CeTZ 和 Fletcher 中原生工作。
+Touying 还提供了 `touying-reduce`(==`touying-diagram`)，它能让所有动画在 CeTZ 和 Fletcher 中原生工作。
 
 ## 简单动画
 
@@ -17,8 +17,8 @@ Touying 还提供了 `touying-reducer`，它能让所有动画在 CeTZ 和 Fletc
 #import "@preview/fletcher:0.5.8" as fletcher: node, edge
 
 // cetz and fletcher bindings for touying
-#let cetz-canvas = touying-reducer.with(reduce: cetz.canvas, cover: cetz.draw.hide.with(bounds: true))
-#let fletcher-diagram = touying-reducer.with(reduce: fletcher.diagram, cover: fletcher.hide)
+#let cetz-canvas = touying-reduce.with(cetz)
+#let fletcher-diagram = touying-reduce.with(fletcher)
 
 #show: university-theme.with(aspect-ratio: "16-9")
 

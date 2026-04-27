@@ -45,9 +45,12 @@ Touying offers many built-in themes to easily create beautiful slides. For examp
 #import cosmos.clouds: *
 #show: show-theorion
 
-// cetz and fletcher bindings for touying
-#let cetz-canvas = touying-reducer.with(reduce: cetz.canvas, cover: cetz.draw.hide.with(bounds: true))
-#let fletcher-diagram = touying-reducer.with(reduce: fletcher.diagram, cover: fletcher.hide)
+// fletcher bindings for touying
+#let fletcher-diagram = touying-reduce.with(fletcher)
+
+// explicit bindings no longer needed we can just write `touying-(diagram|reduce)(cetz, {...})`
+//#let cetz-canvas = touying-reducer.with(reduce: cetz.canvas, cover: cetz.draw.hide.with(bounds: true))
+#let cetz-canvas = touying-reduce.with(cetz)
 
 #show: university-theme.with(
   aspect-ratio: "16-9",

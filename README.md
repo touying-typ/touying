@@ -86,8 +86,9 @@ For a comprehensive example showcasing university theme, theorems, CeTZ/Fletcher
 #show: show-theorion
 
 // cetz and fletcher bindings for touying
-#let cetz-canvas = touying-reducer.with(reduce: cetz.canvas, cover: cetz.draw.hide.with(bounds: true))
-#let fletcher-diagram = touying-reducer.with(reduce: fletcher.diagram, cover: fletcher.hide)
+// touying-diagram is an alias for touying-reduce, which is how it works bhd
+#let cetz-canvas = touying-diagram.with(cetz)
+#let fletcher-diagram = touying-diagram.with(fletcher)
 
 #show: university-theme.with(
   aspect-ratio: "16-9",
