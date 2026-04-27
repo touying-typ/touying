@@ -1,5 +1,5 @@
 ---
-sidebar_position: 2
+sidebar_position: 3
 ---
 # 章节工具函数
 Touying 会在每张幻灯片中注入不可见的标题，以便你随时可以通过 Typst 的 `query()` 函数查询当前章节信息。

@@ -118,7 +118,11 @@
 
   show: init
 
-  show: core.split-content-into-slides.with(self: self, is-first-slide: true)
+  show: core.split-content-into-slides.with(
+    self: self,
+    is-first-slide: true,
+    is-outer-call: true,
+  )
 
   body
 }

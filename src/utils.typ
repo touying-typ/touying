@@ -2733,3 +2733,104 @@
   )
   mapping.at(text.lang, default: mapping.en)
 }
+
+#let _parse-nav-symbol(s, target, other) = {
+  if type(s) == dictionary {
+    let d = s
+    if target in d {
+      let td = d.at(target)
+      let res = _parse-nav-symbol(td, target, other)
+      if res.left != none or res.right != none { return res }
+    }
+    if other in d {
+      let od = d.at(other)
+      let res = _parse-nav-symbol(od, target, other)
+      if res.left != none or res.right != none { return res }
+    }
+    let res = (left: none, right: none)
+    if "left" in d { res.left = d.left }
+    if "right" in d { res.right = d.right }
+    if res.left == none and res.right != none {
+      res.left = scale(x: -100%, res.right)
+    }
+    if res.right == none and res.left != none {
+      res.right = scale(x: -100%, res.left)
+    }
+    return res
+  }
+
+  if type(s) != symbol {
+    return (left: s, right: scale(x: -100%, s))
+  }
+
+  let r = repr(s)
+  let has(m) = "\"" + m + "\"" in r or "(\"" + m + "\"" in r
+
+  if target == "filled" {
+    if has("filled.l") and has("filled.r") {
+      return (left: s.filled.l, right: s.filled.r)
+    }
+    if has("l.filled") and has("r.filled") {
+      return (left: s.l.filled, right: s.r.filled)
+    }
+    if has("filled") {
+      return (left: scale(x: -100%, s.filled), right: s.filled)
+    }
+
+    if has("stroked.l") and has("stroked.r") {
+      return (left: s.stroked.l, right: s.stroked.r)
+    }
+    if has("l.stroked") and has("r.stroked") {
+      return (left: s.l.stroked, right: s.r.stroked)
+    }
+    if has("stroked") {
+      return (left: scale(x: -100%, s.stroked), right: s.stroked)
+    }
+  } else {
+    if has("stroked.l") and has("stroked.r") {
+      return (left: s.stroked.l, right: s.stroked.r)
+    }
+    if has("l.stroked") and has("r.stroked") {
+      return (left: s.l.stroked, right: s.r.stroked)
+    }
+    if has("stroked") {
+      return (left: scale(x: -100%, s.stroked), right: s.stroked)
+    }
+
+    if has("filled.l") and has("filled.r") {
+      return (left: s.filled.l, right: s.filled.r)
+    }
+    if has("l.filled") and has("r.filled") {
+      return (left: s.l.filled, right: s.r.filled)
+    }
+    if has("filled") {
+      return (left: scale(x: -100%, s.filled), right: s.filled)
+    }
+  }
+
+  if has("l") and has("r") { return (left: s.l, right: s.r) }
+
+  return (left: s, right: scale(x: -100%, s))
+}
+
+#let create-nav-symbols(symbol) = {
+  if type(symbol) == dictionary {
+    let allowed = ("filled", "stroked", "left", "right")
+    for k in symbol.keys() {
+      if k not in allowed {
+        panic(
+          "Invalid key in nav symbols dictionary: "
+            + k
+            + ". Expected 'filled', 'stroked', 'left', or 'right'.",
+        )
+      }
+    }
+  }
+
+  let nav-symbols = (
+    filled: _parse-nav-symbol(symbol, "filled", "stroked"),
+    stroked: _parse-nav-symbol(symbol, "stroked", "filled"),
+  )
+
+  return nav-symbols
+}
