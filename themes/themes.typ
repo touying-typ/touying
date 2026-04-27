@@ -1,3 +1,4 @@
+#import "custom.typ"
 #import "default.typ"
 #import "simple.typ"
 #import "metropolis.typ"

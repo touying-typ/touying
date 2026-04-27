@@ -1105,8 +1105,10 @@
 /// Slide
 /// ------------------------------------------------
 
-/// Wrapper for a function to make it can receive `self` as an argument.
+/// Wrapper for a function to make it can receive `self` as an argument. 
 /// It is useful when you want to use `self` to get current subslide index, like `uncover` and `only` functions.
+/// 
+/// This escapes the normal slide counter position and thus is not affected by the repetition counter at its invocation position. If you want to compute with `self` while being affected by the repetition counter, use `touying-fn-wrapper-raw` instead.
 ///
 /// Example: `#let alternatives = touying-fn-wrapper.with(utils.alternatives)`
 ///
@@ -1545,7 +1547,7 @@
 /// - fn (function): The function that will be called in the subslide.
 ///      Or you can use a method function like `(self: none) => { .. }`.
 ///
-/// - visible-subslides (int, array, str, label, dictionary): Specifies when content is visible.
+/// - visible-subslides (int, array, str, label, dictionary): Specifies when content is affected by the effect.
 ///
 ///    Supported formats:
 ///
@@ -1561,7 +1563,7 @@
 #let effect(fn, visible-subslides, cont, is-method: false) = {
   if visible-subslides == auto {
     // auto: resolve to current repetitions at placement time, no advance.
-    touying-fn-wrapper(
+    touying-fn-wrapper-raw(
       utils.effect,
       last-subslide: repetitions => (
         repetitions,
@@ -1574,7 +1576,7 @@
     )
   } else if _has-here-marker(visible-subslides) {
     // "h" marker: deferred resolution of "h" to current repetitions.
-    touying-fn-wrapper(
+    touying-fn-wrapper-raw(
       utils.effect,
       last-subslide: _here-last-subslide(visible-subslides),
       fn,
@@ -1589,7 +1591,7 @@
         label: str(visible-subslides),
       ))<touying-temporary-mark>]
     }
-    touying-fn-wrapper(
+    touying-fn-wrapper-raw(
       utils.effect,
       last-subslide: utils.last-required-subslide(visible-subslides),
       fn,
@@ -1603,6 +1605,7 @@
 
 /// Uncover content in some subslides. Reserved space when hidden (like `#hide()`).
 ///
+/// ```
 /// #example(
 /// >>> #let is-dark = sys.inputs.at("x-color-theme", default: none) == "dark";
 /// >>> #let text-color = if is-dark { std.white } else { std.black };
@@ -1617,6 +1620,7 @@
 ///
 /// #uncover("2-")[Only visible from subslide 2]
 /// )
+/// ```
 ///
 /// - visible-subslides (int, array, str, label, dictionary): Specifies when content is visible.
 ///
@@ -2413,6 +2417,7 @@
 ///
 /// Write the equation as a raw block (backtick string) or a plain string. Use `pause` (without backslash or `#`) as a pseudo-command inside the equation to insert a pause marker.
 ///
+/// ```
 /// #example(
 /// >>> #let is-dark = sys.inputs.at("x-color-theme", default: none) == "dark";
 /// >>> #let text-color = if is-dark { std.white } else { std.black };
@@ -2430,6 +2435,7 @@
 ///         &= pause (x + 1)^2
 /// `)
 /// )
+/// ```
 ///
 /// - block (bool): Whether the equation is a block element. Default is `true`.
 ///
@@ -2524,6 +2530,7 @@
 /// "meanwhile". For example, `// pause`, `# pause`, and `#pause` are all
 /// valid markers, while `pause = 1` or `def pause():` are not.
 ///
+/// ```
 /// #example(
 /// >>> #let is-dark = sys.inputs.at("x-color-theme", default: none) == "dark";
 /// >>> #let text-color = if is-dark { std.white } else { std.black };
@@ -2543,6 +2550,7 @@
 ///   }
 /// ```)
 /// )
+/// ``` 
 ///
 /// - block (bool): Whether the raw block is a block element. Default is `true`.
 ///

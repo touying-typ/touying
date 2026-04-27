@@ -93,6 +93,7 @@
 ///
 /// `utils.last-slide-number` gives the total slide count and can be used directly in headers or footers.
 ///
+/// ```
 /// #example(
 /// >>> #let is-dark = sys.inputs.at("x-color-theme", default: none) == "dark";
 /// >>> #let text-color = if is-dark { std.white } else { std.black };
@@ -102,13 +103,14 @@
 /// >>>   config-colors(neutral-lightest: none, neutral-darkest: text-color),
 /// >>> )
 /// >>> #set text(.5em)
-/// <<< #show: simple-theme.with(aspect-ratio: "16-9")
+/// >>> #show: simple-theme.with(aspect-ratio: "16-9")
 /// = Slide
 ///
 /// #touying-progress(ratio => {
 ///   "Progress: " + str(int(ratio * 100)) + "%"
 /// })
 /// )
+/// ```
 ///
 /// - callback (function): A function `ratio => { .. }` receiving a float between `0.0` and `1.0`.
 ///
