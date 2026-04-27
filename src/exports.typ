@@ -15,6 +15,7 @@
   item-by-item-fn,
   item-by-item-functions,
   jump,
+  lr-navigation,
   meanwhile,
   next-wp,
   not-wp,

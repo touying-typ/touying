@@ -189,6 +189,7 @@
 // - recaller-map (dictionary): Map of slide labels to their content for recall functionality
 // - new-start (bool): Whether this is the start of a new slide section
 // - is-first-slide (bool): Whether this is the first slide of the presentation
+// - is-outer-call (bool): Whether this is the outermost call to the function (used for recursion)
 // - absorb-leading-preamble (bool): Whether to include the preamble content from before the next split
 // - body (content): The content to be split into slides
 //
@@ -198,6 +199,7 @@
   recaller-map: (:),
   new-start: true,
   is-first-slide: false,
+  is-outer-call: false,
   absorb-leading-preamble: false,
   body,
 ) = {
@@ -1095,6 +1097,11 @@
     if slide-content != none { output-slides.push(slide-content) }
   }
 
+  //add last page metadata to last physical page.
+  if is-outer-call {
+    output-slides.at(-1) += [#metadata(none)#label("touying-last-page")]
+  }
+
   if is-new-start {
     return output-slides.sum(default: none)
   } else {
@@ -1237,6 +1244,121 @@
 ///
 /// -> content
 #let meanwhile = jump(1)
+
+
+/// Create a navigation element with links to previous/next subslide/slide and a center icon. Note that physical pages are considered subslides, thus your content breaking the slide into multiple pages will be considered as 'multiple' subslides.
+///
+/// Usage:
+/// ```typst
+/// #lr-navigation(
+///   icon: sym.rect.stroked.h,
+///   nav: sym.triangle,
+///   mode: "both",
+///   show-useless: false,
+/// )
+/// ```
+///
+/// - self: The slide self. If not provided a `touying-fn-wrapper-raw` is used to retrieve it instead. This means this component does not escape the animation structure like `only`, but behaves like `alert` instead.
+/// - icon (symbol, content): The icon to display for the navigation.
+/// - nav (symbol, dictionary, content): The navigation symbols. By default we use filled symbols as the links to the subslides and stroked symbols as the links to the slides. You can also pass a dictionary with the structure `(filled:(left:any, right:any), stroked:(left:any, right:any))` and you may omit arbitrary fields. We try the best we can to fill the missing fields based on the values and symbols provided. \ For convenvience we allow 'subslide' as a synonym for 'filled' and 'page' and 'slide' as synonyms for 'stroked', so you can also use `(subslide:(left:any, right:any), page:(left:any, right:any))` instead of the above structure.
+/// - mode (str): The mode of the navigation item. Can be "both", "subslide" or "page".
+/// - show-useless (bool): Whether to show the navigation links when they are useless (e.g. on the first page, the "previous page" link is useless). Default is `true`.
+/// -> content
+#let lr-navigation(
+  self: none,
+  icon: sym.rect.stroked.h,
+  nav: sym.triangle,
+  mode: "both",
+  show-useless: true,
+) = {
+  let inner(self) = {
+    let nav-symbols = utils.create-nav-symbols(nav)
+
+    let current-page = here().page()
+
+    let prev-page = calc.max(1, current-page - self.subslide - 1)
+    let next-page = current-page - self.subslide + self.repeat + 1
+    let prev-subslide = calc.max(1, current-page - 1)
+    let next-subslide = current-page + 1
+
+    let x = page.width / 2
+    let y = page.height / 2
+
+    let lom = link((page: prev-page, x: x, y: y), text(
+      top-edge: "bounds",
+      bottom-edge: "bounds",
+      nav-symbols.stroked.left,
+    ))
+    let lim = link((page: prev-subslide, x: x, y: y), text(
+      top-edge: "bounds",
+      bottom-edge: "bounds",
+      nav-symbols.filled.left,
+    ))
+    let rim = link((page: next-subslide, x: x, y: y), text(
+      top-edge: "bounds",
+      bottom-edge: "bounds",
+      nav-symbols.filled.right,
+    ))
+    let rom = link((page: next-page, x: x, y: y), text(
+      top-edge: "bounds",
+      bottom-edge: "bounds",
+      nav-symbols.stroked.right,
+    ))
+    let icon = text(top-edge: "bounds", bottom-edge: "bounds", icon)
+
+    if not show-useless {
+      let last-physical-page = query(<touying-last-page>)
+        .last()
+        .location()
+        .page()
+      if current-page <= 1 {
+        lom = hide(lom)
+      }
+      if current-page - self.subslide < 1 {
+        lim = hide(lim)
+      }
+      if current-page >= last-physical-page {
+        rim = hide(rim)
+      }
+      if current-page - self.subslide + self.repeat >= last-physical-page {
+        rom = hide(rom)
+      }
+    }
+
+    if mode == "both" {
+      box(stack(
+        dir: ltr,
+        spacing: 0.05em,
+        ..(lom, lim, icon, rim, rom).map(el => align(horizon, el)),
+      ))
+    } else if mode == "subslide" {
+      box(stack(
+        dir: ltr,
+        spacing: 0.05em,
+        ..(lim, icon, rim).map(el => align(horizon, el)),
+      ))
+    } else if mode == "page" {
+      box(stack(
+        dir: ltr,
+        spacing: 0.05em,
+        ..(lom, icon, rom).map(el => align(horizon, el)),
+      ))
+    } else {
+      panic(
+        "Invalid mode for lr-navigation: "
+          + repr(mode)
+          + ". Expected 'both', 'subslide', or 'page'.",
+      )
+    }
+  }
+
+  if self == none {
+    touying-fn-wrapper-raw((self: none) => context inner(self))
+  } else {
+    context inner(self)
+  }
+}
+
 
 /// ------------------------------------------------
 /// Waypoints
