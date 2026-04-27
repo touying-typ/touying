@@ -4625,7 +4625,7 @@
             }
           }
 
-          //check child.value.args for touying-fn-wrapper-raw recursively.
+          //check child.value.args for touying-fn-wrapper-raw recursively and inject the self.
           let pos-args = rec-execute-raw(
             child.value.args.pos(),
           )
