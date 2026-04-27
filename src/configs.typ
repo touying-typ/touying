@@ -66,19 +66,29 @@
         .body
         .text
       let kind = marks.at(0).value.kind
-      let fn = marks.at(0).value.fn
-      let warning-msg = (
+      let fn = marks.at(0).value.at("fn", default: kind)
+      let first-str-piece = if kind == "touying-jump/pause/meanwhile" {
+        "Unsupported mark `" + kind
+      } else {
         "Unsupported mark `"
-          + kind
-          + "` from `"
-          + repr(fn)
+        +kind
+        +"` from `"
+        +repr(fn)
+      }
+      let last-str-piece = if kind == "touying-jump/pause/meanwhile" {
+        "'. You can't use it inside functions that require `context`, e.g. auto-counting animation functions."
+      } else {
+        "'. You can't use it inside functions like `context`, e.g. auto-counting animation functions. You may want to use the callback-style `utils."
+        +repr(fn)
+        +"` function instead."
+      }
+      let warning-msg = (
+        first-str-piece
           + "` at page "
           + str(page-num)
           + " in section '"
           + str(slide-name)
-          + "'. You can't use it inside some functions like `context`. You may want to use the callback-style `utils."
-          + repr(fn)
-          + "` function instead."
+          + last-str-piece
       )
       if self.at("enable-mark-warning", default: true) {
         panic(warning-msg)
