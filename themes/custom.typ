@@ -1,7 +1,6 @@
 // Touyings fully customizable, user-friendly theme
 
 #import "../src/exports.typ": *
-#import "theme-components.typ"
 // ── Content-tree helpers ────────────────────────────────────────────────────
 
 // Find the first element labeled <content> (must be box/block/place/align),
@@ -12,7 +11,11 @@
   let f = template.func()
 
   // ── Placeholder found ───────────────────────────────────────────────────
-  if f in (box, block, place, align) and template.has("label") and template.label == <content> {
+  if (
+    f in (box, block, place, align)
+      and template.has("label")
+      and template.label == <content>
+  ) {
     if f == place {
       // place takes its alignment as the first *positional* argument
       let fields = template.fields()
@@ -22,7 +25,10 @@
       return (true, place(alignment, ..fields, actual))
     } else {
       // box / block / align: all constructor args are named
-      return (true, utils.reconstruct(named: true, labeled: false, template, actual))
+      return (
+        true,
+        utils.reconstruct(named: true, labeled: false, template, actual),
+      )
     }
   }
 
@@ -53,7 +59,12 @@
   // ── Any other element that carries a body ────────────────────────────────
   if template.has("body") {
     let (ok, new-body) = _inject-content(template.body, actual)
-    if ok { return (true, utils.reconstruct(named: true, labeled: true, template, new-body)) }
+    if ok {
+      return (
+        true,
+        utils.reconstruct(named: true, labeled: true, template, new-body),
+      )
+    }
   }
 
   (false, template)
@@ -126,7 +137,7 @@
     self = utils.merge-dicts(self, config)
   }
   let template = self.store.at("slide-template", default: none)
-  let wrapper  = _resolve-wrapper(template)
+  let wrapper = _resolve-wrapper(template)
   touying-slide(
     self: self,
     config: (:),
@@ -200,8 +211,12 @@
       slide-fn: _slide-fn,
       new-section-slide-fn: _make-heading-slide-fn(new-section-slide),
       new-subsection-slide-fn: _make-heading-slide-fn(new-subsection-slide),
-      new-subsubsection-slide-fn: _make-heading-slide-fn(new-subsubsection-slide),
-      new-subsubsubsection-slide-fn: _make-heading-slide-fn(new-subsubsubsection-slide),
+      new-subsubsection-slide-fn: _make-heading-slide-fn(
+        new-subsubsection-slide,
+      ),
+      new-subsubsubsection-slide-fn: _make-heading-slide-fn(
+        new-subsubsubsection-slide,
+      ),
       zero-margin-header: false,
       zero-margin-footer: false,
     ),
