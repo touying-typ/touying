@@ -279,11 +279,11 @@
 #let typst-builtin-math-symbol = ($x$).body.func()
 
 /// Determine if a content is a math symbol (i.e. wrapped by Typst's internal math symbol element when math is parsed).
-/// 
+///
 /// Example: `is-math-symbol($x$)` returns `true`
-/// 
+///
 /// - it (content): The content to check.
-/// 
+///
 /// -> bool
 #let is-math-symbol(it) = {
   type(it) == content and it.func() == typst-builtin-math-symbol
@@ -1576,44 +1576,288 @@
   )
 }
 
-/// Cover content with a text-color-changing mechanism.
+/// Cover content by forcing all colors to a single flat color — a compiler-light
+/// alternative to `alpha-changing-cover`. No `context` calls are made; every
+/// color-bearing element is simply overwritten with `color`.
 ///
 /// Example: `config-methods(cover: utils.color-changing-cover.with(color: gray))`
 ///
-/// - color (color): The color to apply to text when covered. Default is `gray`.
+/// - color (color): The color to force on all covered content. Default is `gray`.
 ///
-/// - fallback-hide (func): The function to use to hide the content if it does not contain text. Default is typst's own `hide`. You may pass `none` to not hide non-text content. To hide content with a semi-transparent/color overlay, you can pass in `semi-transparent-cover`/`cover-with-rect.with(fill: ...)`.
+/// - fallback-hide (func): Function used for truly opaque leaves (images, cetz, …)
+///   that cannot be recolored. Defaults to typst's `hide`. Pass `none` to leave
+///   them visible, or `cover-with-rect` / `semi-transparent-cover` to overlay them.
 ///
-/// - transparentize-table (bool): Whether to transparentize table content. Default is `false`.
+/// - fallback-hide-args (dict): Extra named arguments forwarded to `fallback-hide`.
 ///
 /// - it (content): The content to cover.
-///
-/// - fallback-hide-args (dict): The named arguments to pass to the fallback hide function if the content does not contain text.
 ///
 /// -> content
 #let color-changing-cover(
   self: none,
   color: gray,
   fallback-hide: hide,
-  transparentize-table: false,
-  text-blocks: true,
   fallback-hide-args: (:),
   it,
 ) = {
-  let _fallback-hide = fallback-hide
-  if fallback-hide == none {
-    _fallback-hide = it => it
+  let _fallback-hide = if fallback-hide == none { it => it } else {
+    fallback-hide
   }
-  if not _contains-text(it, transparentize-table, text-blocks) {
-    if _fallback-hide in (semi-transparent-cover, cover-with-rect) {
-      _fallback-hide(self: self, it, ..fallback-hide-args)
+
+  // Force a stroke's paint to `color`, preserving geometry (thickness, dash, …).
+  let with-color-stroke(s) = {
+    if type(s) == color { color } else if (
+      type(s) == stroke and type(s.paint) == color
+    ) {
+      let a = (paint: color)
+      if s.thickness != auto { a.insert("thickness", s.thickness) }
+      if s.cap != auto { a.insert("cap", s.cap) }
+      if s.join != auto { a.insert("join", s.join) }
+      if s.dash != auto { a.insert("dash", s.dash) }
+      if s.miter-limit != auto { a.insert("miter-limit", s.miter-limit) }
+      stroke(..a)
+    } else { s }
+  }
+
+  // Only modifies *explicit* fill/stroke on text nodes — no set-rule fallback.
+  // Used inside styled wrappers where the outer set text(fill: color) already
+  // handles inherited fills, avoiding double-application on explicit colors.
+  let explicit-only-color-method(it) = {
+    if it.func() == text {
+      let fields = it.fields()
+      let has-fill = "fill" in fields and type(fields.fill) == color
+      let has-stroke = (
+        "stroke" in fields and fields.stroke != none and fields.stroke != auto
+      )
+      if has-fill or has-stroke {
+        let label = fields.remove("label", default: none)
+        if has-fill { fields.fill = color }
+        if has-stroke { fields.stroke = with-color-stroke(fields.stroke) }
+        let result = if "body" in fields {
+          let b = fields.remove("body")
+          text(..fields, b)
+        } else { text(..fields) }
+        if label != none { [#result#label] } else { result }
+      } else { it }
+    } else { it }
+  }
+
+  let apply-cover-methods(color-method, noncolor-method, it) = {
+    if type(it) != content {
+      it
+    } else if (
+      it.func() in (text, math.equation)
+        or it.func() == typst-builtin-math-symbol
+    ) {
+      color-method(it)
+    } else if is-sequence(it) {
+      it
+        .children
+        .map(c => apply-cover-methods(color-method, noncolor-method, c))
+        .sum(default: [])
+    } else if is-styled(it) {
+      // Force color as the innermost set rule — no context read needed.
+      reconstruct-styled(it, {
+        set text(fill: color)
+        apply-cover-methods(
+          explicit-only-color-method,
+          noncolor-method,
+          it.child,
+        )
+      })
+    } else if (
+      it.func()
+        in (
+          rect,
+          square,
+          circle,
+          ellipse,
+          box,
+          block,
+          highlight,
+          underline,
+          overline,
+          strike,
+          table.cell,
+          grid.cell,
+          table.hline,
+          table.vline,
+          grid.hline,
+          grid.vline,
+          line,
+          polygon,
+          curve,
+          polygon.regular,
+          math.cancel,
+        )
+    ) {
+      let fields = it.fields()
+      let label = fields.remove("label", default: none)
+      if "fill" in fields and type(fields.fill) == color {
+        fields.fill = color
+      }
+      if (
+        "stroke" in fields and fields.stroke != none and fields.stroke != auto
+      ) {
+        fields.stroke = with-color-stroke(fields.stroke)
+      }
+      let body-content = fields.remove("body", default: none)
+      if body-content != none {
+        body-content = apply-cover-methods(
+          color-method,
+          noncolor-method,
+          body-content,
+        )
+      }
+      let result = if body-content != none {
+        (it.func())(..fields, body-content)
+      } else {
+        (it.func())(..fields)
+      }
+      if label != none { [#result#label] } else { result }
+    } else if it.func() in (table, grid) {
+      let fields = it.fields()
+      let label = fields.remove("label", default: none)
+      let children = fields.remove("children")
+      if "fill" in fields and type(fields.fill) == color {
+        fields.fill = color
+      }
+      if (
+        "stroke" in fields and fields.stroke != none and fields.stroke != auto
+      ) {
+        fields.stroke = with-color-stroke(fields.stroke)
+      }
+      let new-children = children.map(c => apply-cover-methods(
+        color-method,
+        noncolor-method,
+        c,
+      ))
+      let result = (it.func())(..fields, ..new-children)
+      if label != none { [#result#label] } else { result }
+    } else if it.func() == list.item {
+      let new-body = apply-cover-methods(
+        explicit-only-color-method,
+        noncolor-method,
+        it.body,
+      )
+      list.item(new-body)
+    } else if it.func() == terms.item {
+      terms.item(
+        apply-cover-methods(color-method, noncolor-method, it.term),
+        apply-cover-methods(color-method, noncolor-method, it.description),
+      )
+    } else if it.func() == enum.item {
+      let new-body = apply-cover-methods(
+        explicit-only-color-method,
+        noncolor-method,
+        it.body,
+      )
+      let fields = it.fields()
+      if "number" in fields { enum.item(fields.number, new-body) } else {
+        enum.item(new-body)
+      }
+    } else if it.func() == figure {
+      let fields = it.fields()
+      let label = fields.remove("label", default: none)
+      let new-body = apply-cover-methods(
+        color-method,
+        noncolor-method,
+        fields.remove("body"),
+      )
+      // Also recurse into the caption body so explicitly-colored content inside it
+      // (e.g. text(fill: red)[…]) is covered. The show rule below still handles the
+      // auto-generated "Figure N:" supplement which is never in the content tree.
+      let cap = fields.remove("caption", default: none)
+      if cap != none {
+        fields.caption = apply-cover-methods(color-method, noncolor-method, cap)
+      }
+      let result = (it.func())(..fields, new-body)
+      // No context needed: force color directly on the auto-generated caption supplement.
+      let wrapped = {
+        show figure.caption: set text(fill: color)
+        result
+      }
+      if label != none { [#wrapped#label] } else { wrapped }
+    } else if it.has("body") {
+      let fields = it.fields()
+      let label = fields.remove("label", default: none)
+      let new-body = apply-cover-methods(
+        color-method,
+        noncolor-method,
+        fields.remove("body"),
+      )
+      let result = (it.func())(..fields, new-body)
+      if label != none { [#result#label] } else { result }
+    } else if it.has("child") {
+      let new-child = apply-cover-methods(
+        color-method,
+        noncolor-method,
+        it.child,
+      )
+      reconstruct(named: true, body-name: "child", it, new-child)
+    } else if it.func() in (list, enum, terms) {
+      let fields = it.fields()
+      let label = fields.remove("label", default: none)
+      let children = fields.remove("children")
+      let new-children = children.map(c => apply-cover-methods(
+        explicit-only-color-method,
+        noncolor-method,
+        c,
+      ))
+      let result = (it.func())(..fields, ..new-children)
+      if label != none { [#result#label] } else { result }
+    } else if it.has("children") {
+      let new-children = it.children.map(c => apply-cover-methods(
+        color-method,
+        noncolor-method,
+        c,
+      ))
+      reconstruct-table-like(it, new-children)
+    } else if it.func() == raw {
+      text(fill: color, it)
+    } else if (
+      it.func() in (parbreak, linebreak) or is-space(it) or is-metadata(it)
+    ) {
+      it
     } else {
-      _fallback-hide(it)
+      noncolor-method(it)
     }
-  } else {
-    show regex(".+"): set text(color)
-    it
   }
+
+  // Outer catch-all: list/enum markers, vec/mat brackets, and any other
+  // auto-generated glyphs inherit this fill. Explicit colors set by the
+  // recursion take precedence (explicit fill > set rule in Typst).
+  set text(fill: color)
+  apply-cover-methods(
+    it => {
+      let fields = it.fields()
+      let has-fill = "fill" in fields and type(fields.fill) == color
+      let has-stroke = (
+        "stroke" in fields and fields.stroke != none and fields.stroke != auto
+      )
+      if it.func() == text and (has-fill or has-stroke) {
+        let label = fields.remove("label", default: none)
+        if has-fill { fields.fill = color }
+        if has-stroke { fields.stroke = with-color-stroke(fields.stroke) }
+        let result = if "body" in fields {
+          let b = fields.remove("body")
+          text(..fields, b)
+        } else { text(..fields) }
+        if label != none { [#result#label] } else { result }
+      } else {
+        set text(fill: color)
+        it
+      }
+    },
+    it => {
+      if _fallback-hide in (semi-transparent-cover, cover-with-rect) {
+        _fallback-hide(self: self, it, ..fallback-hide-args)
+      } else {
+        _fallback-hide(it)
+      }
+    },
+    it,
+  )
 }
 
 
@@ -1627,8 +1871,6 @@
 ///
 /// - fallback-hide (func): The function to use to hide the content if it does not contain text. Default is typst's own `hide`. You may pass `none` to not hide non-text content. To hide content with a semi-transparent/color overlay, you can pass in `semi-transparent-cover`/`cover-with-rect.with(fill: ...)`.
 ///
-/// - transparentize-table (bool): Whether to transparentize table content. Default is `false`.
-///
 /// - it (content): The content to cover.
 ///
 /// - fallback-hide-args (args): The arguments to pass to the fallback hide function if the content does not contain text.
@@ -1638,7 +1880,6 @@
   self: none,
   alpha: 25%,
   fallback-hide: auto,
-  transparentize-table: false,
   fallback-hide-args: (:),
   it,
 ) = context {
@@ -1690,6 +1931,41 @@
         if label != none { [#result#label] } else { result }
       } else { it }
     } else { it }
+  }
+
+  // Helpers to read the contextually active fill/stroke for a shape element when no
+  // explicit field is set on the element itself (i.e. it comes from an outer set rule).
+  // These closures live inside the context {} block of alpha-changing-cover so they can
+  // read contextual values directly without an extra context call.
+  let get-eff-fill(f) = {
+    if f == rect or f == square { rect.fill } else if (
+      f == circle or f == ellipse
+    ) { circle.fill } else if f == box { box.fill } else if f == block {
+      block.fill
+    } else if f == highlight { highlight.fill } else if f == table.cell {
+      table.cell.fill
+    } else if f == grid.cell { grid.cell.fill } else if (
+      f == polygon or f == curve
+    ) { polygon.fill } else { none }
+  }
+  let get-eff-stroke(f) = {
+    if f == rect or f == square { rect.stroke } else if (
+      f == circle or f == ellipse
+    ) { circle.stroke } else if f == box { box.stroke } else if f == block {
+      block.stroke
+    } else if f == line { line.stroke } else if f == underline {
+      underline.stroke
+    } else if f == overline { overline.stroke } else if f == strike {
+      strike.stroke
+    } else if f == table.cell { table.cell.stroke } else if f == grid.cell {
+      grid.cell.stroke
+    } else if f == table.hline { table.hline.stroke } else if f == table.vline {
+      table.vline.stroke
+    } else if f == grid.hline { grid.hline.stroke } else if f == grid.vline {
+      grid.vline.stroke
+    } else if f == polygon or f == curve { polygon.stroke } else if (
+      f == math.cancel
+    ) { math.cancel.stroke } else { none }
   }
 
   // Recursively traverse the content tree and apply:
@@ -1765,15 +2041,20 @@
     ) {
       let fields = it.fields()
       let label = fields.remove("label", default: none)
-      // Apply alpha to solid fill color (gradients / patterns are left alone).
-      if "fill" in fields and type(fields.fill) == color {
-        fields.fill = update-alpha(fields.fill, alpha)
+      // Apply alpha to fill: use explicit field if present, else read inherited value.
+      // Gradients / patterns / none / auto are left alone.
+      let eff-fill = if "fill" in fields { fields.fill } else {
+        get-eff-fill(it.func())
       }
-      // Apply alpha to stroke color; skip none / auto (context-inherited).
-      if (
-        "stroke" in fields and fields.stroke != none and fields.stroke != auto
-      ) {
-        fields.stroke = with-alpha-stroke(fields.stroke)
+      if type(eff-fill) == color {
+        fields.fill = update-alpha(eff-fill, alpha)
+      }
+      // Apply alpha to stroke: use explicit field if present, else read inherited value.
+      let eff-stroke = if "stroke" in fields { fields.stroke } else {
+        get-eff-stroke(it.func())
+      }
+      if eff-stroke != none and eff-stroke != auto {
+        fields.stroke = with-alpha-stroke(eff-stroke)
       }
       // Extract body so it can be passed positionally (named `body:` arg is
       // rejected by most built-in constructors like rect, box, block, …).
@@ -1839,8 +2120,8 @@
         enum.item(new-body)
       }
     } else if it.func() == figure {
-      // figure: alpha-change the body, then wrap in a show rule so the auto
-      // supplement ("Figure 1:") — generated at render time — is also covered.
+      // figure: recurse into body and caption, then wrap in a show rule so the
+      // auto-generated "Figure N:" supplement is also covered.
       let fields = it.fields()
       let label = fields.remove("label", default: none)
       let new-body = apply-cover-methods(
@@ -1848,6 +2129,13 @@
         noncolor-method,
         fields.remove("body"),
       )
+      // Also recurse into the caption body so explicitly-colored content inside it
+      // (e.g. text(fill: red)[…]) is covered. The show rule below still handles the
+      // auto-generated supplement which is never in the content tree.
+      let cap = fields.remove("caption", default: none)
+      if cap != none {
+        fields.caption = apply-cover-methods(color-method, noncolor-method, cap)
+      }
       let result = (it.func())(..fields, new-body)
       let wrapped = context {
         let alpha-fill = update-alpha(text.fill, alpha)
