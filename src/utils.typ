@@ -1446,30 +1446,52 @@
           named.insert("height", wrapped-body-size.height)
         }
         if "outset" not in named {
-          // Inline math needs extra outset for superscripts/limits (top)
-          // and subscripts with descenders like g, y, p (bottom)
-          // let math-text-size = measure($X g$).height
-          let real-text-size = if new-body-func != none {
-            measure(new-body-func([Xg])).height
+          // Only text-like content has ascenders/descenders that extend beyond
+          // the measured bounding box and need outset to be fully covered.
+          // Non-text elements (rect, block, image, …) measure to their true
+          // bounding box, so adding outset would make the cover too tall.
+          let is-text-like-body = (
+            body.func() in (text, math.equation, par, align)
+          )
+          if is-text-like-body {
+            let real-text-size = if new-body-func != none {
+              measure(new-body-func([Xg])).height
+            } else {
+              measure(body).height
+            }
+            let top-outset = if inline { 0.35 * real-text-size } else {
+              0.15 * real-text-size
+            }
+            let bottom-outset = if inline { 0.65 * real-text-size } else {
+              0.45 * real-text-size
+            }
+            named.insert("outset", (
+              top: top-outset,
+              bottom: bottom-outset,
+              left: 1pt,
+              right: 1pt,
+            ))
           } else {
-            measure(body).height
+            named.insert("outset", if inline { 1pt } else {
+              (top: 1pt, bottom: 2pt, left: 1pt, right: 1pt)
+            })
           }
-          let top-outset = if inline { 0.35 * real-text-size } else {
-            0.15 * real-text-size
-          }
-          let bottom-outset = if inline { 0.65 * real-text-size } else {
-            0.45 * real-text-size
-          }
-          named.insert("outset", (top: top-outset, bottom: bottom-outset))
         }
         if not inline {
-          named.at("width") = layout-size.width
+          // Use the measured content width when available; fall back to the full
+          // layout width when measure returns 0pt (e.g. tiling-fill elements whose
+          // relative width can't resolve inside the measurement context).
+          named.at("width") = if wrapped-body-size.width > 0pt {
+            wrapped-body-size.width
+          } else {
+            layout-size.width
+          }
         }
 
         //calculate the extra required padding on top and bottom bc the non-covered text gives this to the layout, but wrapping text twice in a box kills it.
         // this is required when you switch between non-text block to text block or the size changes, but somehow the spacing gets eaten when two large text blocks follow each other, then this is wrong. but we cannot detect that.
         let extra = if (
-          (body.has("body") and body.body.func() == text)
+          (body.has("body") and body.body != none and body.body.func() == text)
             or body.func() in (align, math.equation)
         ) {
           ((1.52 * measure(new-body-func([Xg])).height / text.size) - 1)
@@ -1481,6 +1503,8 @@
           extra * if block.below == auto { par.spacing } else { block.below }
         )
 
+        // Prevent the overlay rect from inheriting outer set rect(stroke: …) rules.
+        named.insert("stroke", none)
         stack(
           spacing: -wrapped-body-size.height,
           if body.func() in (align, place) {
@@ -1605,9 +1629,13 @@
   }
 
   // Force a stroke's paint to `color`, preserving geometry (thickness, dash, …).
+  // Handles color, gradient, and auto paint (auto defaults to black).
   let with-color-stroke(s) = {
     if type(s) == color { color } else if (
-      type(s) == stroke and type(s.paint) == color
+      type(s) == stroke
+        and (
+          s.paint == auto or type(s.paint) in (color, gradient)
+        )
     ) {
       let a = (paint: color)
       if s.thickness != auto { a.insert("thickness", s.thickness) }
@@ -1625,7 +1653,9 @@
   let explicit-only-color-method(it) = {
     if it.func() == text {
       let fields = it.fields()
-      let has-fill = "fill" in fields and type(fields.fill) == color
+      let has-fill = (
+        "fill" in fields and type(fields.fill) in (color, gradient)
+      )
       let has-stroke = (
         "stroke" in fields and fields.stroke != none and fields.stroke != auto
       )
@@ -1642,222 +1672,262 @@
     } else { it }
   }
 
-  let apply-cover-methods(color-method, noncolor-method, it) = {
-    if type(it) != content {
-      it
-    } else if (
-      it.func() in (text, math.equation)
-        or it.func() == typst-builtin-math-symbol
-    ) {
-      color-method(it)
-    } else if is-sequence(it) {
-      it
-        .children
-        .map(c => apply-cover-methods(color-method, noncolor-method, c))
-        .sum(default: [])
-    } else if is-styled(it) {
-      // Force color as the innermost set rule — no context read needed.
-      reconstruct-styled(it, {
-        set text(fill: color)
-        apply-cover-methods(
+  // _cover-fill alpha = |luma(color) - luma(text.fill)| so the white overlay
+  // fades shapes to the same effective lightness as the covered text color.
+  context {
+    let luma-of(c) = {
+      let comps = c.components(alpha: false)
+      if comps.len() == 1 {
+        comps.at(0)
+      } else {
+        0.299 * comps.at(0) + 0.587 * comps.at(1) + 0.114 * comps.at(2)
+      }
+    }
+    let _cover-fill = {
+      let normal-luma = if type(text.fill) == color {
+        luma-of(text.fill)
+      } else { 0% }
+      let cover-luma = luma-of(color)
+      update-alpha(rgb("#ffffff"), calc.abs(cover-luma - normal-luma))
+    }
+
+    let apply-cover-methods(color-method, noncolor-method, it) = {
+      if type(it) != content {
+        it
+      } else if (
+        it.func() in (text, math.equation)
+          or it.func() == typst-builtin-math-symbol
+      ) {
+        color-method(it)
+      } else if is-sequence(it) {
+        it
+          .children
+          .map(c => apply-cover-methods(color-method, noncolor-method, c))
+          .sum(default: [])
+      } else if is-styled(it) {
+        reconstruct-styled(it, {
+          set text(fill: color)
+          apply-cover-methods(
+            explicit-only-color-method,
+            noncolor-method,
+            it.child,
+          )
+        })
+      } else if it.func() == box {
+        // Gate on fill only: a box with no fill is transparent — recurse so that
+        // gradient/colored text inside is covered by normal traversal.
+        let fields = it.fields()
+        let has-fill = (
+          "fill" in fields and fields.fill != none and fields.fill != auto
+        )
+        if has-fill {
+          cover-with-rect(fill: _cover-fill, inline: true, it)
+        } else {
+          let label = fields.remove("label", default: none)
+          let b = fields.remove("body", default: none)
+          let new-b = if b != none {
+            apply-cover-methods(color-method, noncolor-method, b)
+          } else { b }
+          let result = if new-b != none { box(..fields, new-b) } else {
+            box(..fields)
+          }
+          if label != none { [#result#label] } else { result }
+        }
+      } else if it.func() == block {
+        // Same fill-only gating as box.
+        let fields = it.fields()
+        let has-fill = (
+          "fill" in fields and fields.fill != none and fields.fill != auto
+        )
+        if has-fill {
+          cover-with-rect(fill: _cover-fill, it)
+        } else {
+          let label = fields.remove("label", default: none)
+          let b = fields.remove("body", default: none)
+          let new-b = if b != none {
+            apply-cover-methods(color-method, noncolor-method, b)
+          } else { b }
+          let result = if new-b != none { block(..fields, new-b) } else {
+            block(..fields)
+          }
+          if label != none { [#result#label] } else { result }
+        }
+      } else if (
+        it.func()
+          in (
+            // Visual shapes / opaque leaves with no traversable text content — overlay directly.
+            rect,
+            square,
+            circle,
+            ellipse,
+            highlight,
+            underline,
+            overline,
+            strike,
+            math.cancel,
+            line,
+            polygon,
+            curve,
+            polygon.regular,
+            table.cell,
+            grid.cell,
+            table.hline,
+            table.vline,
+            grid.hline,
+            grid.vline,
+            image,
+          )
+      ) {
+        cover-with-rect(fill: _cover-fill, it)
+      } else if it.func() in (table, grid) {
+        // Gate on fill: a table/grid with a fill is treated as an opaque visual;
+        // without fill we recurse into cells so their text is covered normally.
+        let fields = it.fields()
+        let label = fields.remove("label", default: none)
+        let has-fill = (
+          "fill" in fields and fields.fill != none and fields.fill != auto
+        )
+        if has-fill {
+          cover-with-rect(fill: _cover-fill, it)
+        } else {
+          let children = fields.remove("children")
+          let new-children = children.map(c => apply-cover-methods(
+            color-method,
+            noncolor-method,
+            c,
+          ))
+          let result = (it.func())(..fields, ..new-children)
+          if label != none { [#result#label] } else { result }
+        }
+      } else if it.func() == figure {
+        // Traverse body and caption; body may be an image or other opaque element
+        // which noncolor-method covers, caption is always text.
+        let fields = it.fields()
+        let label = fields.remove("label", default: none)
+        let new-body = apply-cover-methods(
+          color-method,
+          noncolor-method,
+          fields.remove("body"),
+        )
+        let cap = fields.remove("caption", default: none)
+        if cap != none {
+          fields.caption = apply-cover-methods(
+            color-method,
+            noncolor-method,
+            cap,
+          )
+        }
+        let result = figure(..fields, new-body)
+        let wrapped = {
+          show figure.caption: set text(fill: color)
+          result
+        }
+        if label != none { [#wrapped#label] } else { wrapped }
+      } else if it.func() == list.item {
+        let new-body = apply-cover-methods(
           explicit-only-color-method,
+          noncolor-method,
+          it.body,
+        )
+        list.item(new-body)
+      } else if it.func() == terms.item {
+        terms.item(
+          apply-cover-methods(color-method, noncolor-method, it.term),
+          apply-cover-methods(color-method, noncolor-method, it.description),
+        )
+      } else if it.func() == enum.item {
+        let new-body = apply-cover-methods(
+          explicit-only-color-method,
+          noncolor-method,
+          it.body,
+        )
+        let fields = it.fields()
+        if "number" in fields { enum.item(fields.number, new-body) } else {
+          enum.item(new-body)
+        }
+      } else if it.has("body") {
+        let fields = it.fields()
+        let label = fields.remove("label", default: none)
+        let new-body = apply-cover-methods(
+          color-method,
+          noncolor-method,
+          fields.remove("body"),
+        )
+        let result = (it.func())(..fields, new-body)
+        if label != none { [#result#label] } else { result }
+      } else if it.has("child") {
+        let new-child = apply-cover-methods(
+          color-method,
           noncolor-method,
           it.child,
         )
-      })
-    } else if (
-      it.func()
-        in (
-          rect,
-          square,
-          circle,
-          ellipse,
-          box,
-          block,
-          highlight,
-          underline,
-          overline,
-          strike,
-          table.cell,
-          grid.cell,
-          table.hline,
-          table.vline,
-          grid.hline,
-          grid.vline,
-          line,
-          polygon,
-          curve,
-          polygon.regular,
-          math.cancel,
-        )
-    ) {
-      let fields = it.fields()
-      let label = fields.remove("label", default: none)
-      if "fill" in fields and type(fields.fill) == color {
-        fields.fill = color
-      }
-      if (
-        "stroke" in fields and fields.stroke != none and fields.stroke != auto
-      ) {
-        fields.stroke = with-color-stroke(fields.stroke)
-      }
-      let body-content = fields.remove("body", default: none)
-      if body-content != none {
-        body-content = apply-cover-methods(
+        reconstruct(named: true, body-name: "child", it, new-child)
+      } else if it.func() in (list, enum, terms) {
+        let fields = it.fields()
+        let label = fields.remove("label", default: none)
+        let children = fields.remove("children")
+        let new-children = children.map(c => apply-cover-methods(
+          explicit-only-color-method,
+          noncolor-method,
+          c,
+        ))
+        let result = (it.func())(..fields, ..new-children)
+        if label != none { [#result#label] } else { result }
+      } else if it.has("children") {
+        let new-children = it.children.map(c => apply-cover-methods(
           color-method,
           noncolor-method,
-          body-content,
-        )
-      }
-      let result = if body-content != none {
-        (it.func())(..fields, body-content)
-      } else {
-        (it.func())(..fields)
-      }
-      if label != none { [#result#label] } else { result }
-    } else if it.func() in (table, grid) {
-      let fields = it.fields()
-      let label = fields.remove("label", default: none)
-      let children = fields.remove("children")
-      if "fill" in fields and type(fields.fill) == color {
-        fields.fill = color
-      }
-      if (
-        "stroke" in fields and fields.stroke != none and fields.stroke != auto
+          c,
+        ))
+        reconstruct-table-like(it, new-children)
+      } else if it.func() == raw {
+        text(fill: color, it)
+      } else if (
+        it.func() in (parbreak, linebreak) or is-space(it) or is-metadata(it)
       ) {
-        fields.stroke = with-color-stroke(fields.stroke)
-      }
-      let new-children = children.map(c => apply-cover-methods(
-        color-method,
-        noncolor-method,
-        c,
-      ))
-      let result = (it.func())(..fields, ..new-children)
-      if label != none { [#result#label] } else { result }
-    } else if it.func() == list.item {
-      let new-body = apply-cover-methods(
-        explicit-only-color-method,
-        noncolor-method,
-        it.body,
-      )
-      list.item(new-body)
-    } else if it.func() == terms.item {
-      terms.item(
-        apply-cover-methods(color-method, noncolor-method, it.term),
-        apply-cover-methods(color-method, noncolor-method, it.description),
-      )
-    } else if it.func() == enum.item {
-      let new-body = apply-cover-methods(
-        explicit-only-color-method,
-        noncolor-method,
-        it.body,
-      )
-      let fields = it.fields()
-      if "number" in fields { enum.item(fields.number, new-body) } else {
-        enum.item(new-body)
-      }
-    } else if it.func() == figure {
-      let fields = it.fields()
-      let label = fields.remove("label", default: none)
-      let new-body = apply-cover-methods(
-        color-method,
-        noncolor-method,
-        fields.remove("body"),
-      )
-      // Also recurse into the caption body so explicitly-colored content inside it
-      // (e.g. text(fill: red)[…]) is covered. The show rule below still handles the
-      // auto-generated "Figure N:" supplement which is never in the content tree.
-      let cap = fields.remove("caption", default: none)
-      if cap != none {
-        fields.caption = apply-cover-methods(color-method, noncolor-method, cap)
-      }
-      let result = (it.func())(..fields, new-body)
-      // No context needed: force color directly on the auto-generated caption supplement.
-      let wrapped = {
-        show figure.caption: set text(fill: color)
-        result
-      }
-      if label != none { [#wrapped#label] } else { wrapped }
-    } else if it.has("body") {
-      let fields = it.fields()
-      let label = fields.remove("label", default: none)
-      let new-body = apply-cover-methods(
-        color-method,
-        noncolor-method,
-        fields.remove("body"),
-      )
-      let result = (it.func())(..fields, new-body)
-      if label != none { [#result#label] } else { result }
-    } else if it.has("child") {
-      let new-child = apply-cover-methods(
-        color-method,
-        noncolor-method,
-        it.child,
-      )
-      reconstruct(named: true, body-name: "child", it, new-child)
-    } else if it.func() in (list, enum, terms) {
-      let fields = it.fields()
-      let label = fields.remove("label", default: none)
-      let children = fields.remove("children")
-      let new-children = children.map(c => apply-cover-methods(
-        explicit-only-color-method,
-        noncolor-method,
-        c,
-      ))
-      let result = (it.func())(..fields, ..new-children)
-      if label != none { [#result#label] } else { result }
-    } else if it.has("children") {
-      let new-children = it.children.map(c => apply-cover-methods(
-        color-method,
-        noncolor-method,
-        c,
-      ))
-      reconstruct-table-like(it, new-children)
-    } else if it.func() == raw {
-      text(fill: color, it)
-    } else if (
-      it.func() in (parbreak, linebreak) or is-space(it) or is-metadata(it)
-    ) {
-      it
-    } else {
-      noncolor-method(it)
-    }
-  }
-
-  // Outer catch-all: list/enum markers, vec/mat brackets, and any other
-  // auto-generated glyphs inherit this fill. Explicit colors set by the
-  // recursion take precedence (explicit fill > set rule in Typst).
-  set text(fill: color)
-  apply-cover-methods(
-    it => {
-      let fields = it.fields()
-      let has-fill = "fill" in fields and type(fields.fill) == color
-      let has-stroke = (
-        "stroke" in fields and fields.stroke != none and fields.stroke != auto
-      )
-      if it.func() == text and (has-fill or has-stroke) {
-        let label = fields.remove("label", default: none)
-        if has-fill { fields.fill = color }
-        if has-stroke { fields.stroke = with-color-stroke(fields.stroke) }
-        let result = if "body" in fields {
-          let b = fields.remove("body")
-          text(..fields, b)
-        } else { text(..fields) }
-        if label != none { [#result#label] } else { result }
-      } else {
-        set text(fill: color)
         it
-      }
-    },
-    it => {
-      if _fallback-hide in (semi-transparent-cover, cover-with-rect) {
-        _fallback-hide(self: self, it, ..fallback-hide-args)
       } else {
-        _fallback-hide(it)
+        noncolor-method(it)
       }
-    },
-    it,
-  )
+    }
+
+    // Outer catch-all: list/enum markers, vec/mat brackets, and any other
+    // auto-generated glyphs inherit this fill. Explicit colors set by the
+    // recursion take precedence (explicit fill > set rule in Typst).
+    set text(fill: color)
+    apply-cover-methods(
+      it => {
+        let fields = it.fields()
+        let has-fill = (
+          "fill" in fields and type(fields.fill) in (color, gradient)
+        )
+        let has-stroke = (
+          "stroke" in fields and fields.stroke != none and fields.stroke != auto
+        )
+        if it.func() == text and (has-fill or has-stroke) {
+          let label = fields.remove("label", default: none)
+          if has-fill { fields.fill = color }
+          if has-stroke { fields.stroke = with-color-stroke(fields.stroke) }
+          let result = if "body" in fields {
+            let b = fields.remove("body")
+            text(..fields, b)
+          } else { text(..fields) }
+          if label != none { [#result#label] } else { result }
+        } else {
+          set text(fill: color)
+          it
+        }
+      },
+      it => {
+        if _fallback-hide in (semi-transparent-cover, cover-with-rect) {
+          _fallback-hide(self: self, it, ..fallback-hide-args)
+        } else {
+          _fallback-hide(it)
+        }
+      },
+      it,
+    )
+  }
 }
 
 
@@ -1893,21 +1963,65 @@
     _fallback-hide-args = (self: self, alpha: 100% - alpha, is-fallback: true)
   }
 
-  // Update alpha of a stroke value (color, or stroke type with a color paint).
+  // Reconstruct a gradient with alpha applied to every stop color.
+  // Decompose via stops()/space()/relative()/kind() and reconstruct from scratch
+  // since gradients have no fields() method.
+  let update-alpha-gradient(g) = {
+    let new-stops = g
+      .stops()
+      .map(s => (update-alpha(s.first(), alpha), s.last()))
+    let kind = g.kind()
+    if kind == gradient.linear {
+      gradient.linear(
+        ..new-stops,
+        space: g.space(),
+        relative: g.relative(),
+        angle: g.angle(),
+      )
+    } else if kind == gradient.radial {
+      gradient.radial(
+        ..new-stops,
+        space: g.space(),
+        relative: g.relative(),
+        center: g.center(),
+        radius: g.radius(),
+        focal-center: g.focal-center(),
+        focal-radius: g.focal-radius(),
+      )
+    } else {
+      gradient.conic(
+        ..new-stops,
+        space: g.space(),
+        relative: g.relative(),
+        angle: g.angle(),
+        center: g.center(),
+      )
+    }
+  }
+
+  // Update alpha of a stroke value — handles color, gradient, and auto paint.
+  // `auto` paint renders as black, so treat it as such.
   let with-alpha-stroke(s) = {
     if type(s) == color {
       update-alpha(s, alpha)
-    } else if type(s) == stroke and type(s.paint) == color {
-      let a = (paint: update-alpha(s.paint, alpha))
-      if s.thickness != auto { a.insert("thickness", s.thickness) }
-      if s.cap != auto { a.insert("cap", s.cap) }
-      if s.join != auto { a.insert("join", s.join) }
-      if s.dash != auto { a.insert("dash", s.dash) }
-      if s.miter-limit != auto { a.insert("miter-limit", s.miter-limit) }
-      stroke(..a)
-    } else {
-      s
-    }
+    } else if type(s) == stroke {
+      let new-paint = if s.paint == auto {
+        update-alpha(black, alpha)
+      } else if type(s.paint) == color {
+        update-alpha(s.paint, alpha)
+      } else if type(s.paint) == gradient {
+        update-alpha-gradient(s.paint)
+      } else { none }
+      if new-paint != none {
+        let a = (paint: new-paint)
+        if s.thickness != auto { a.insert("thickness", s.thickness) }
+        if s.cap != auto { a.insert("cap", s.cap) }
+        if s.join != auto { a.insert("join", s.join) }
+        if s.dash != auto { a.insert("dash", s.dash) }
+        if s.miter-limit != auto { a.insert("miter-limit", s.miter-limit) }
+        stroke(..a)
+      } else { s }
+    } else { s }
   }
 
   // Like color-method but only updates *explicit* fill/stroke on text nodes —
@@ -1916,13 +2030,19 @@
   let explicit-only-color-method(it) = {
     if it.func() == text {
       let fields = it.fields()
-      let has-fill = "fill" in fields and type(fields.fill) == color
+      let has-fill = (
+        "fill" in fields and type(fields.fill) in (color, gradient)
+      )
       let has-stroke = (
         "stroke" in fields and fields.stroke != none and fields.stroke != auto
       )
       if has-fill or has-stroke {
         let label = fields.remove("label", default: none)
-        if has-fill { fields.fill = update-alpha(fields.fill, alpha) }
+        if has-fill {
+          fields.fill = if type(fields.fill) == gradient {
+            update-alpha-gradient(fields.fill)
+          } else { update-alpha(fields.fill, alpha) }
+        }
         if has-stroke { fields.stroke = with-alpha-stroke(fields.stroke) }
         let result = if "body" in fields {
           let b = fields.remove("body")
@@ -1999,6 +2119,8 @@
       reconstruct-styled(it, context {
         let new-fill = if type(text.fill) == color {
           update-alpha(text.fill, alpha)
+        } else if type(text.fill) == gradient {
+          update-alpha-gradient(text.fill)
         } else { text.fill }
         let new-stroke = if type(text.stroke) == color {
           update-alpha(text.stroke, alpha)
@@ -2041,44 +2163,59 @@
     ) {
       let fields = it.fields()
       let label = fields.remove("label", default: none)
-      // Apply alpha to fill: use explicit field if present, else read inherited value.
-      // Gradients / patterns / none / auto are left alone.
+      // Read fill: explicit field takes priority, then contextual inherited value.
       let eff-fill = if "fill" in fields { fields.fill } else {
         get-eff-fill(it.func())
       }
-      if type(eff-fill) == color {
-        fields.fill = update-alpha(eff-fill, alpha)
-      }
-      // Apply alpha to stroke: use explicit field if present, else read inherited value.
-      let eff-stroke = if "stroke" in fields { fields.stroke } else {
-        get-eff-stroke(it.func())
-      }
-      if eff-stroke != none and eff-stroke != auto {
-        fields.stroke = with-alpha-stroke(eff-stroke)
-      }
-      // Extract body so it can be passed positionally (named `body:` arg is
-      // rejected by most built-in constructors like rect, box, block, …).
-      let body-content = fields.remove("body", default: none)
-      if body-content != none {
-        body-content = apply-cover-methods(
-          color-method,
-          noncolor-method,
-          body-content,
-        )
-      }
-      let result = if body-content != none {
-        (it.func())(..fields, body-content)
+      if type(eff-fill) == tiling {
+        // Tiling fill can't be alpha-changed. Apply noncolor-method to the original
+        // element unchanged — modifying stroke or body first would double-cover: once
+        // from the alpha change and once from the noncolor-method overlay.
+        let result = noncolor-method(it)
+        if label != none { [#result#label] } else { result }
       } else {
-        (it.func())(..fields)
+        let eff-stroke = if "stroke" in fields { fields.stroke } else {
+          get-eff-stroke(it.func())
+        }
+        if eff-stroke != none and eff-stroke != auto {
+          fields.stroke = with-alpha-stroke(eff-stroke)
+        }
+        // Extract body so it can be passed positionally (named `body:` arg is
+        // rejected by most built-in constructors like rect, box, block, …).
+        let body-content = fields.remove("body", default: none)
+        if body-content != none {
+          body-content = apply-cover-methods(
+            color-method,
+            noncolor-method,
+            body-content,
+          )
+        }
+        if type(eff-fill) == color {
+          fields.fill = update-alpha(eff-fill, alpha)
+        } else if type(eff-fill) == gradient {
+          fields.fill = update-alpha-gradient(eff-fill)
+        }
+        let result = if body-content != none {
+          (it.func())(..fields, body-content)
+        } else {
+          (it.func())(..fields)
+        }
+        if label != none { [#result#label] } else { result }
       }
-      if label != none { [#result#label] } else { result }
     } else if it.func() in (table, grid) {
       // Table / grid: alpha the table-level fill/stroke, then recurse into cells.
+      // Tiling fills can't be alpha-changed — overlay the reconstructed table instead.
       let fields = it.fields()
       let label = fields.remove("label", default: none)
       let children = fields.remove("children")
-      if "fill" in fields and type(fields.fill) == color {
-        fields.fill = update-alpha(fields.fill, alpha)
+      let has-tiling-fill = "fill" in fields and type(fields.fill) == tiling
+      if "fill" in fields {
+        if type(fields.fill) == color {
+          fields.fill = update-alpha(fields.fill, alpha)
+        } else if type(fields.fill) == gradient {
+          fields.fill = update-alpha-gradient(fields.fill)
+        }
+        // tiling: leave fill unchanged — noncolor-method overlays the result below
       }
       if (
         "stroke" in fields and fields.stroke != none and fields.stroke != auto
@@ -2091,7 +2228,8 @@
         c,
       ))
       let result = (it.func())(..fields, ..new-children)
-      if label != none { [#result#label] } else { result }
+      let final = if has-tiling-fill { noncolor-method(result) } else { result }
+      if label != none { [#final#label] } else { final }
     } else if it.func() == list.item {
       // list.item: use explicit-only for body so the outer set text(fill: alpha-fill)
       // (applied at the top level of alpha-changing-cover) handles inherited fills and
@@ -2189,7 +2327,10 @@
     } else if it.func() == raw {
       // Raw code blocks render as text with a different font — wrap in a text
       // fill override so the alpha propagates into the rendered glyphs.
-      text(fill: update-alpha(text.fill, alpha), it)
+      let raw-fill = if type(text.fill) == gradient {
+        update-alpha-gradient(text.fill)
+      } else { update-alpha(text.fill, alpha) }
+      text(fill: raw-fill, it)
     } else if (
       it.func() in (parbreak, linebreak) or is-space(it) or is-metadata(it)
     ) {
@@ -2205,7 +2346,10 @@
   // (list/enum markers, vec/mat brackets, raw glyphs, …) inherits alpha-fill
   // because it falls under this set rule. The recursion handles explicit colors
   // directly so they are not double-alpha'd by this rule (explicit wins over set).
-  set text(fill: update-alpha(text.fill, alpha))
+  let outer-fill = if type(text.fill) == gradient {
+    update-alpha-gradient(text.fill)
+  } else { update-alpha(text.fill, alpha) }
+  set text(fill: outer-fill)
 
   apply-cover-methods(
     it => {
@@ -2215,14 +2359,18 @@
       // For inherited fills (auto) and for math.equation we fall back to a
       // show rule that reads `text.fill` from the rendering context.
       let fields = it.fields()
-      let has-fill = "fill" in fields and type(fields.fill) == color
+      let has-fill = (
+        "fill" in fields and type(fields.fill) in (color, gradient)
+      )
       let has-stroke = (
         "stroke" in fields and fields.stroke != none and fields.stroke != auto
       )
       if it.func() == text and (has-fill or has-stroke) {
         let label = fields.remove("label", default: none)
         if has-fill {
-          fields.fill = update-alpha(fields.fill, alpha)
+          fields.fill = if type(fields.fill) == gradient {
+            update-alpha-gradient(fields.fill)
+          } else { update-alpha(fields.fill, alpha) }
         }
         if has-stroke {
           fields.stroke = with-alpha-stroke(fields.stroke)
@@ -2237,7 +2385,10 @@
       } else {
         // Inherited fill, math.equation, or symbol: set text fill so math-mode
         // delimiters and brackets (generated by vec, mat, etc.) are also covered.
-        set text(fill: update-alpha(text.fill, alpha))
+        let inner-fill = if type(text.fill) == gradient {
+          update-alpha-gradient(text.fill)
+        } else { update-alpha(text.fill, alpha) }
+        set text(fill: inner-fill)
         it
       }
     },
