@@ -2727,6 +2727,7 @@
     et: "Sisukord",
     fi: "Sisällys",
     ja: "目次",
+    pl: "Agenda",
     ru: "Содержание",
     zh-TW: "目錄",
     zh: "目录",
