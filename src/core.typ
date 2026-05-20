@@ -1119,6 +1119,8 @@
 /// Wrapper for a function to make it can receive `self` as an argument.
 /// It is useful when you want to use `self` to get current subslide index, like `uncover` and `only` functions.
 ///
+/// This escapes the normal slide counter position and thus is not affected by the repetition counter at its invocation position. If you want to compute with `self` while being affected by the repetition counter, use `touying-fn-wrapper-raw` instead.
+///
 /// Example: `#let alternatives = touying-fn-wrapper.with(utils.alternatives)`
 ///
 /// - fn (function): The function that will be called like `(self: none, ..args) => { .. }`.
@@ -1143,13 +1145,13 @@
   repetitions: repetitions,
 ))<touying-temporary-mark>]
 
-// A raw version of `touying-fn-wrapper` that does not support `last-subslide` and `repetitions`.
+// A raw version of `touying-fn-wrapper` that does not support `last-subslide` or `repetitions`.
 // It is for wrapping functions that should be affected by the repetition counter surrounding them.
 // e.g. `utils.alert`
 //
 // - fn (function): The function that will be called like `(self: none, ..args) => { .. }`.
 //
-// - args: The arguments to pass to the function. E.g. content
+// - args: The arguments to pass to the function. Only content is allowed as positional arguments. Other arguments should be passed via named arguments.
 //
 // -> content
 #let touying-fn-wrapper-raw(
@@ -4117,7 +4119,6 @@
   result
 }
 
-
 ///
 /// This is the core parsing function that handles all types of content including
 /// animations, pauses, meanwhile markers, and various content types. It recursively
@@ -4271,6 +4272,76 @@
   let has-fn-wrapper = false
   // get cover function from self
   let cover = self.methods.cover.with(self: self)
+
+  // helper parser for parsing touying-fn-wrapper-raw inside touying-fn-wrapper:
+  let rec-execute-raw(pos-args) = {
+    pos-args.map(c => {
+      if (
+        type(c) == content
+          and c.func() == metadata
+          and type(c.value) == dictionary
+          and c.value.at("kind", default: none) == "touying-fn-wrapper-raw"
+      ) {
+        (c.value.fn)(
+          self: self,
+          ..rec-execute-raw(c.value.args.pos()),
+          ..c.value.args.named(),
+        )
+      } else if utils.is-sequence(c) {
+        rec-execute-raw(c.children).sum(default: [])
+      } else if utils.is-styled(c) {
+        utils.typst-builtin-styled(
+          rec-execute-raw((c.child,)).first(),
+          c.styles,
+        )
+      } else if type(c) == content and c.func() in list-item-functions {
+        utils.reconstruct(
+          c,
+          labeled: labeled(c.func()),
+          rec-execute-raw((c.body,)).first(),
+        )
+      } else if (
+        type(c) == content and c.func() in table-like-functions
+      ) {
+        utils.reconstruct-table-like(
+          c,
+          labeled: labeled(c.func()),
+          rec-execute-raw(c.children),
+        )
+      } else if (
+        type(c) == content and c.func() in reconstructable-functions
+      ) {
+        utils.reconstruct(
+          named: true,
+          labeled: labeled(c.func()),
+          c,
+          rec-execute-raw((c.at("body", default: none),)).first(),
+        )
+      } else if type(c) == content and c.func() == terms.item {
+        terms.item(
+          c.term,
+          rec-execute-raw((c.description,)).first(),
+        )
+      } else if type(c) == content and c.func() == columns {
+        let fields = c.fields()
+        let _ = fields.remove("body", default: none)
+        let count = fields.remove("count", default: 2)
+        columns(count, ..fields, rec-execute-raw((c.body,)).first())
+      } else if type(c) == content and c.func() == place {
+        let fields = c.fields()
+        let _ = fields.remove("body", default: none)
+        let alignment = fields.remove("alignment", default: start)
+        place(alignment, ..fields, rec-execute-raw((c.body,)).first())
+      } else if type(c) == content and c.func() == rotate {
+        let fields = c.fields()
+        let _ = fields.remove("body", default: none)
+        let angle = fields.remove("angle", default: 0deg)
+        rotate(angle, ..fields, rec-execute-raw((c.body,)).first())
+      } else {
+        c
+      }
+    })
+  }
 
   // Main parsing loop: process each content item and handle animations
   for item in bodies {
@@ -4556,28 +4627,11 @@
               last-subslide = calc.max(last-subslide, child.value.last-subslide)
             }
           }
-          //check child.value.args for touying-fn-wrapper-raw. may only be in content, which always is positional
-          let pos-args = child
-            .value
-            .args
-            .pos()
-            .map(c => {
-              if (
-                type(c) == content
-                  and c.func() == metadata
-                  and type(c.value) == dictionary
-                  and c.value.at("kind", default: none)
-                    == "touying-fn-wrapper-raw"
-              ) {
-                (c.value.fn)(
-                  self: self,
-                  ..c.value.args,
-                )
-              } else {
-                c
-              }
-            })
 
+          //check child.value.args for touying-fn-wrapper-raw recursively and inject the self.
+          let pos-args = rec-execute-raw(
+            child.value.args.pos(),
+          )
           result.push((child.value.fn)(
             self: self,
             ..pos-args,
@@ -4586,18 +4640,79 @@
           ))
           repetitions = nextrepetitions
         } else if kind == "touying-fn-wrapper-raw" {
-          // Handle raw function wrappers (e.g., #alert)
-          if repetitions <= index or not need-cover {
+          let raw-bodies = child.value.args.pos()
+          let (
+            processed-bodies,
+            inner-max-repetitions,
+            next-last-subslide,
+            final-repetitions,
+            inner-has-fn-wrapper,
+          ) = _parse-content-into-results-and-repetitions(
+            self: self,
+            need-cover: repetitions <= index,
+            base: repetitions,
+            base-last-subslide: last-subslide,
+            index: index,
+            show-delayed-wrapper: show-delayed-wrapper,
+            ..raw-bodies,
+          )
+          let would-be-hidden = repetitions > index and need-cover
+          let meanwhile-escaped = final-repetitions < repetitions
+          // Propagate meanwhile effect from inside the fn-wrapper-raw
+          if meanwhile-escaped {
+            if hidden-parts.len() != 0 {
+              result.push(cover-hidden(cover, hidden-parts, result))
+              hidden-parts = ()
+            }
+            max-repetitions = calc.max(max-repetitions, repetitions)
+          }
+          if would-be-hidden and (inner-has-fn-wrapper or meanwhile-escaped) {
+            // Two-pass: a fn-wrapper directly inside a hidden fn-wrapper-raw must
+            // handle its own visibility.  Re-run with the outer need-cover and push
+            // to result (not hidden-parts) so the inner fn-wrapper is not double-covered.
+            // Also triggered when #meanwhile fires inside, so the inner parse uses
+            // need-cover=true and correctly covers content before the meanwhile.
+            let (
+              processed-bodies2,
+              inner-max-repetitions2,
+              _,
+              _,
+              _,
+            ) = _parse-content-into-results-and-repetitions(
+              self: self,
+              need-cover: need-cover,
+              base: repetitions,
+              base-last-subslide: last-subslide,
+              index: index,
+              show-delayed-wrapper: show-delayed-wrapper,
+              ..raw-bodies,
+            )
             result.push((child.value.fn)(
               self: self,
-              ..child.value.args,
+              ..processed-bodies2,
+              ..child.value.args.named(),
             ))
+            has-fn-wrapper = true
+            max-repetitions = calc.max(max-repetitions, inner-max-repetitions2)
           } else {
-            hidden-parts.push((child.value.fn)(
-              self: self,
-              ..child.value.args,
-            ))
+            if not would-be-hidden {
+              result.push((child.value.fn)(
+                self: self,
+                ..processed-bodies,
+                ..child.value.args.named(),
+              ))
+            } else {
+              hidden-parts.push((child.value.fn)(
+                self: self,
+                ..processed-bodies,
+                ..child.value.args.named(),
+              ))
+            }
+            if inner-has-fn-wrapper { has-fn-wrapper = true }
+            max-repetitions = calc.max(max-repetitions, inner-max-repetitions)
           }
+          repetitions = final-repetitions
+          last-subslide = calc.max(last-subslide, next-last-subslide)
         } else if kind == "touying-speaker-note" {
           // Handle speaker notes with optional #pause markers inside the note body.
           // Speaker notes always escape the pause zone (like fn-wrappers): they emit
