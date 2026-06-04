@@ -66,12 +66,15 @@
         .body
         .text
       let kind = marks.at(0).value.kind
-      let fn = marks.at(0).value.fn
+      let fn = if "fn" in marks.at(0).value { marks.at(0).value.fn } else {
+        none
+      }
       let warning-msg = (
         "Unsupported mark `"
           + kind
-          + "` from `"
-          + repr(fn)
+          + if fn != none {
+            "` from `" + repr(fn)
+          }
           + "` at page "
           + str(page-num)
           + " in section '"

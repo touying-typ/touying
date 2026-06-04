@@ -121,10 +121,12 @@
 ///
 /// - direction (direction): The equalization axis (`ttb`/`btt` for heights, `ltr`/`rtl` for widths). Default is `ttb`.
 ///
+/// - grid-size (length): The quantization unit for grouping markers into the same column (vertical mode) or row (horizontal mode). Positions are floored to the nearest multiple of `grid-size` before comparison, adding tolerance for sub-pixel differences. Default is `50pt`.
+///
 /// - body (content): The content containing `lazy-v` or `lazy-h` markers.
 ///
 /// -> content
-#let lazy-layout(direction: ttb, body) = {
+#let lazy-layout(direction: ttb, grid-size: 50pt, body) = {
   [#metadata((:))<lazy-layout-begin>]
   layout(container-size => context {
     // Query lazy marker positions within this lazy-layout scope.
@@ -149,11 +151,11 @@
         )
         let lazy-v-positions = lazy-v-items.map(it => it.location().position())
         // For each x coordinate, find the last marker's position (the one to activate).
-        // Group by x and keep only the last position per group.
+        // Group by quantized x (floored to nearest grid-size) to tolerate sub-pixel differences.
         let last-positions = {
           let result = (:)
           for pos in lazy-v-positions {
-            let key = repr(pos.x)
+            let key = repr(calc.floor(pos.x / grid-size))
             result.insert(key, pos)
           }
           result.values()
@@ -172,7 +174,10 @@
         )
         show <touying-lazy-v>: it => {
           let pos = it.location().position()
-          if last-positions.any(lp => lp.x == pos.x and lp.y == pos.y) {
+          if last-positions.any(lp => (
+            calc.floor(lp.x / grid-size) == calc.floor(pos.x / grid-size)
+              and lp.y == pos.y
+          )) {
             v(it.value.amount, weak: it.value.weak)
           }
         }
@@ -184,10 +189,11 @@
         )
         let lazy-h-positions = lazy-h-items.map(it => it.location().position())
         // For each y coordinate, find the last marker's position (the one to activate).
+        // Group by quantized y (floored to nearest grid-size) to tolerate sub-pixel differences.
         let last-positions = {
           let result = (:)
           for pos in lazy-h-positions {
-            let key = repr(pos.y)
+            let key = repr(calc.floor(pos.y / grid-size))
             result.insert(key, pos)
           }
           result.values()
@@ -206,7 +212,10 @@
         )
         show <touying-lazy-h>: it => {
           let pos = it.location().position()
-          if last-positions.any(lp => lp.y == pos.y and lp.x == pos.x) {
+          if last-positions.any(lp => (
+            calc.floor(lp.y / grid-size) == calc.floor(pos.y / grid-size)
+              and lp.x == pos.x
+          )) {
             h(it.value.amount, weak: it.value.weak)
           }
         }
