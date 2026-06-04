@@ -229,12 +229,12 @@
 /// - gutter (length): The space between columns. Default is `1em`.
 ///
 /// - lazy-layout (bool): When `true`, wraps the grid with `lazy-layout` so that
-///   `lazy-v` markers inside the bodies are resolved correctly. Default is `true`.
+///   `lazy-v` markers inside the bodies are resolved correctly. Default is `false`.
 ///
 /// - bodies (content): The contents to display side by side as columns side by side.
 ///
 /// -> content
-#let cols(columns: auto, gutter: 1em, lazy-layout: true, ..bodies) = {
+#let cols(columns: auto, gutter: 1em, lazy-layout: false, ..bodies) = {
   let args = bodies.named()
   let bodies = bodies.pos()
   if bodies.len() == 1 {

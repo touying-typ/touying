@@ -240,7 +240,7 @@ Fletcher Animation in Touying:
 
 == Multiple columns with equal height blocks
 
-#cols(columns: (1fr, 1fr), gutter: 1em)[
+#cols(columns: (1fr, 1fr), gutter: 1em, lazy-layout: true)[
   #emph-block[
     First column with equal height: #lorem(10)
     #lazy-v(1fr)

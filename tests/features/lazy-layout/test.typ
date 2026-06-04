@@ -81,7 +81,7 @@
 // Right column: two blocks, each with a lazy-v marker.
 // Only the last lazy-v per x-column is activated, so the bottom block on the
 // right expands to fill the remaining height, while the top block stays compact.
-#cols[
+#cols(lazy-layout: true)[
   #block(fill: luma(220), inset: .5em, radius: .2em, width: 100%)[
     #lorem(30)
     #lazy-v(1fr)
