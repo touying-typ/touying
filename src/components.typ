@@ -1100,3 +1100,64 @@
     body,
   )
 }
+
+
+/// A block that extends horizontally to the full page width by applying
+/// negative horizontal padding that cancels out the current page margins.
+///
+/// Useful for components like progress bars, section banners, or background
+/// fills that need to span the entire page width regardless of the slide margins.
+///
+/// Example:
+/// ```typ
+/// #full-width-block(fill: blue)[Full-width content]
+/// ```
+///
+/// - args (arguments): Named and positional arguments forwarded to the inner
+///   `block` call (e.g. `fill`, `height`, `inset`, …).
+///
+/// - body (content): The content to place inside the full-width block.
+///
+/// -> content
+#let full-width-block(..args, body) = context {
+  let page-width = page.width
+  let margin = page.margin
+  let to-abs(val) = {
+    if type(val) == ratio {
+      val * page-width
+    } else if type(val) == relative {
+      val.ratio * page-width + val.length
+    } else {
+      val
+    }
+  }
+  let pad-args = (:)
+  if type(margin) == length {
+    pad-args.x = -margin
+  } else if type(margin) == ratio or type(margin) == relative {
+    pad-args.x = -to-abs(margin)
+  } else if type(margin) == dictionary {
+    if "x" in margin {
+      pad-args.x = -to-abs(margin.x)
+    }
+    if "left" in margin {
+      pad-args.left = -to-abs(margin.left)
+    }
+    if "right" in margin {
+      pad-args.right = -to-abs(margin.right)
+    }
+    if "rest" in margin {
+      pad-args.x = -to-abs(margin.rest)
+    }
+  }
+  pad(
+    ..pad-args,
+    block(
+      width: 100%,
+      above: 0pt,
+      below: 0pt,
+      ..args.named(),
+      body,
+    ),
+  )
+}
