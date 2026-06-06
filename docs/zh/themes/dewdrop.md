@@ -37,20 +37,20 @@ sidebar_position: 3
 #outline-slide()
 ```
 
-其中 `register` 接收参数:
+其中 `dewdrop-theme` 接收参数:
 
 - `aspect-ratio`: 幻灯片的长宽比为 "16-9" 或 "4-3"，默认为 "16-9"。
 - `navigation`: 导航栏样式，可以是 `"sidebar"`、`"mini-slides"` 和 `none`，默认为 `"sidebar"`。
 - `sidebar`: 侧边导航栏设置，默认为 `(width: 10em, filled: false, numbered: false, indent: .5em, short-heading: true)`。
-- `mini-slides`: mini-slides 设置，默认为 `(height: 4em, x: 2em, display-section: false, display-subsection: true, short-heading: true)`。
-  - `height`: mini-slides 高度，默认为 `2em`。
+- `mini-slides`: mini-slides 设置，默认为 `(height: 4em, x: 2em, display-section: false, display-subsection: true, linebreaks: true, short-heading: true)`。
+  - `height`: mini-slides 高度，默认为 `4em`。
   - `x`: mini-slides 的 x 轴 padding，默认为 `2em`。
-  - `section`: 是否显示 section 之后，subsection 之前的 slides，默认为 `false`。
-  - `subsection`: 是否根据 subsection 分割 mini-slides，设置为 `false` 挤压为一行，默认为 `true`。
-- `footer`: 展示在页脚的内容，默认为 `[]`，也可以传入形如 `self => self.info.author` 的函数。
+  - `display-section`: 是否显示 section 之后、subsection 之前的 slides，默认为 `false`。
+  - `display-subsection`: 是否显示 subsection 中的 slides，默认为 `true`。
+- `footer`: 展示在页脚的内容，默认为 `none`，也可以传入形如 `self => self.info.author` 的函数。
 - `footer-right`: 展示在页脚右侧的内容，默认为 `context utils.slide-counter.display() + " / " + utils.last-slide-number`。
 - `primary`: primary 颜色，默认为 `rgb("#0c4842")`。
-- `alpha`: 透明度，默认为 `70%`。
+- `alpha`: 透明度，默认为 `60%`。
 
 并且 Dewdrop 主题会提供一个 `#alert[..]` 函数，你可以通过 `#show strong: alert` 来使用 `*alert text*` 语法。
 

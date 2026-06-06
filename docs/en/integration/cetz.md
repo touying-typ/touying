@@ -106,8 +106,8 @@ Cetz in Touying in subslide #touying-get-config("subslide")
 We can also pass the slide self and then use the utils methods. Note: you must count your subslides for this and parse in the correct `repeat`.
 
 ```example
-#import "@preview/touying:0.7.1": *
-#import "@preview/cetz:0.4.2"
+#import "@preview/touying:0.7.4": *
+#import "@preview/cetz:0.5.2"
 #import themes.simple: *
 #show: simple-theme.with(aspect-ratio: "16-9")
 

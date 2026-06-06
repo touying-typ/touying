@@ -34,7 +34,7 @@ sidebar_position: 4
 #title-slide()
 ```
 
-其中 `register` 接收参数:
+其中 `university-theme` 接收参数:
 
 - `aspect-ratio`: 幻灯片的长宽比为 "16-9" 或 "4-3"，默认为 "16-9"。
 - `progress-bar`: 是否显示 slide 顶部的进度条，默认为 `true`。

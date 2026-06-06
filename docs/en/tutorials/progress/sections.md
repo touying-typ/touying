@@ -88,7 +88,7 @@ Content.
 [`components.custom-progressive-outline()`](https://touying-typ.github.io/docs/reference/components/custom-progressive-outline) allows you to specify all sorts of styling rules for the progressive outline. This makes it much more versatile, but you need to specify everything yourself. 
 
 ```example
-#import "@preview/touying:0.7.0": *
+#import "@preview/touying:0.7.4": *
 #import themes.dewdrop: *
 
 #show: dewdrop-theme.with(aspect-ratio: "16-9")

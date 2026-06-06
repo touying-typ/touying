@@ -58,7 +58,7 @@ The header now uses the custom primary color.
 | `slide-level` | `2` | 控制哪个标题级别创建新幻灯片 |
 | `frozen-counters` | `()` | 冻结计数器列表 |
 | `show-strong-with-alert` | `true` | 粗体文本使用 alert 样式 |
-| `show-notes-on-second-screen` | `none` | 第二屏幕演讲者备注（`none`/`right`/`left`） |
+| `show-notes-on-second-screen` | `none` | 第二屏幕演讲者备注（`none`/`bottom`/`right`） |
 | `horizontal-line-to-pagebreak` | `true` | 将 `---` 水平线转换为分页符 |
 | `nontight-list-enum-and-terms` | `false` | 列表项间距控制 |
 | `show-hide-set-list-marker-none` | `true` | `#pause` 后隐藏列表标记 |
@@ -591,7 +591,7 @@ This slide is in the appendix and does not increment the main counter.
 
 ### 如何在 Fletcher 图表中使用 `#pause`？
 
-使用 `touying-reducer` 包裹 Fletcher 图表：
+使用 `touying-reduce` 包裹 Fletcher 图表，使 Touying 能够自动查找 Fletcher 的 reducer 绑定：
 
 ```example
 >>> #import "@preview/touying:0.7.4": *
@@ -727,26 +727,28 @@ And this works normally.
 
 你也可以设置 `config-common(receive-body-for-new-section-slide-fn: false)`。但这样会导致无法为章节幻灯片编写演讲者备注。
 
-### 如何完全隐藏一张幻灯片？
+### 如何隐藏章节页，或让标题不进入目录/书签？
 
-在幻灯片标题上添加 `<touying:hidden>` 标签：
+`<touying:hidden>` 并不会把对应标题下的普通幻灯片内容从 PDF 输出中删除。它的作用是让该标题生成的不可见 heading 不参与编号、目录和 PDF 书签，并且跳过由该标题自动触发的新章节页/小节页。
+
+因此，它适合用在目录页这类“需要出现在 PDF 中，但不希望进入目录/书签，也不希望额外生成章节页”的幻灯片标题上：
 
 ```example
 #import "@preview/touying:0.7.4": *
 #import themes.simple: *
 #show: simple-theme
-== Visible Slide
+== Outline <touying:hidden>
 
-This slide appears in the output.
+#components.adaptive-columns(outline(title: none, indent: 1em))
 
-== Hidden Slide <touying:hidden>
+= First Section
 
-This slide is hidden and does not appear in the output or outline.
+== First Slide
 
-== Another Visible Slide
-
-Back to normal.
+Hello, Touying!
 ```
+
+如果需要临时移除某张幻灯片，请先把对应内容从文档中删除或注释掉。
 
 ### 如何将幻灯片从目录中排除但仍然显示？
 
@@ -1008,11 +1010,11 @@ The header shows the current section name.
 
 ### 如何在子幻灯片间冻结计数器（图表、公式）？
 
-使用 `config-common(frozen-counters: true)` 防止计数器在子幻灯片之间递增：
+Touying 默认会在子幻灯片之间冻结常用计数器。如果需要额外冻结其他计数器，请把计数器数组传给 `frozen-counters`：
 
 ```typst
 #show: simple-theme.with(
-  config-common(frozen-counters: true),
+  config-common(frozen-counters: (counter("my-custom-counter"),)),
 )
 ```
 
@@ -1022,7 +1024,7 @@ Touying 使用 `uniwarn` 来处理其命名空间为 `touying` 的警告。
 我们在 Touying 中绑定了相关函数，因此你可以直接这样做：
 
 ```typst
-#import "@preview/touying:0.7.1": *
+#import "@preview/touying:0.7.4": *
 
 // 禁用 Touying 发出的警告
 #touying-disable-warnings

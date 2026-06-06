@@ -44,7 +44,7 @@ Touying 提供了若干渐进式目录工具函数，以下是最常用的几种
 
 [`components.progressive-outline()`](https://touying-typ.github.io/docs/reference/components/progressive-outline) 渲染一个高亮当前章节、灰显其他章节的目录——这是主题演示文稿中的常见模式：
 ```example
-#import "@preview/touying:0.7.0": *
+#import "@preview/touying:0.7.4": *
 #import themes.dewdrop: *
 #show: dewdrop-theme.with(aspect-ratio: "16-9")
 = Introduction

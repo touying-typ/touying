@@ -451,7 +451,7 @@ Use `touying-reduce` or the alias `touying-diagram` to wrap CeTZ canvas so Touyi
 
 ### How do I use `#pause` inside a Fletcher diagram?
 
-Use `touying-reduce` to wrap Fletcher diagrams: 
+Use `touying-reduce` to wrap Fletcher diagrams so Touying can automatically find the Fletcher reducer bindings:
 
 ```example
 >>> #import "@preview/touying:0.7.4": *
@@ -595,26 +595,28 @@ And this works normally.
 
 You may also set `config-common(receive-body-for-new-section-slide-fn: false)`. This however will prevent you from writing speaker-notes for the section slide.
 
-### How do I hide a slide from the presentation output entirely?
+### How do I hide section slides, or keep headings out of outlines/bookmarks?
 
-Add the `<touying:hidden>` label to the slide heading:
+`<touying:hidden>` does not remove the ordinary slide content under that heading from the PDF output. It makes the generated invisible heading unnumbered, unoutlined, and unbookmarked, and it skips the automatic section/subsection slide that the heading would otherwise trigger.
+
+This makes it suitable for slides such as an outline slide that should remain in the PDF, but should not appear in outlines/bookmarks or create an extra section slide:
 
 ```example
 #import "@preview/touying:0.7.4": *
 #import themes.simple: *
 #show: simple-theme
-== Visible Slide
+== Outline <touying:hidden>
 
-This slide appears in the output.
+#components.adaptive-columns(outline(title: none, indent: 1em))
 
-== Hidden Slide <touying:hidden>
+= First Section
 
-This slide is hidden and does not appear in the output or outline.
+== First Slide
 
-== Another Visible Slide
-
-Back to normal.
+Hello, Touying!
 ```
+
+If you need to temporarily remove a slide, delete or comment out the corresponding content.
 
 ### How do I exclude a slide from the outline but still show it?
 
@@ -1004,11 +1006,11 @@ For animated pin reveals, use the callback-style slide so `#pause` interacts cor
 
 ### How do I freeze counters (figures, equations) across subslides?
 
-Use `config-common(frozen-counters: true)` to prevent counters from advancing between subslides:
+Touying freezes common counters between subslides by default. To freeze additional counters, pass a counter array to `frozen-counters`:
 
 ```typst
 #show: simple-theme.with(
-  config-common(frozen-counters: true),
+  config-common(frozen-counters: (counter("my-custom-counter"),)),
 )
 ```
 
@@ -1018,7 +1020,7 @@ Touying uses `uniwarn` for its warnings with the namespace `touying`.
 We bind the functions into touying so you can directly do
 
 ```typst
-#import "@preview/touying:0.7.1": *
+#import "@preview/touying:0.7.4": *
 
 //to disable the warnings emitted by touying
 #touying-disable-warnings

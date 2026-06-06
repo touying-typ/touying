@@ -30,7 +30,7 @@ You can initialize it with the following code:
 #outline-slide()
 ```
 
-The `register` function in the Aqua theme accepts the following parameters:
+The `aqua-theme` function accepts the following parameters:
 
 - `aspect-ratio`: The aspect ratio of the slides, which can be "16-9" or "4-3", with a default of "16-9".
 - `header`: The content displayed in the header of the slides, with a default of `utils.display-current-heading()`. You can also provide a function like `self => self.info.title` to customize the header content.

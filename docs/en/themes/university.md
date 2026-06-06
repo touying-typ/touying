@@ -34,7 +34,7 @@ You can initialize the theme with the following code:
 #title-slide()
 ```
 
-The `register` function accepts the following parameters:
+The `university-theme` function accepts the following parameters:
 
 - `aspect-ratio`: The aspect ratio of the slides, either "16-9" or "4-3", with a default of "16-9".
 - `progress-bar`: Whether to display a progress bar at the top of the slide, with a default of `true`.
