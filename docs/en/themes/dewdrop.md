@@ -13,7 +13,7 @@ The Dewdrop theme features an elegantly designed navigation, including two modes
 You can initialize it using the following code:
 
 ```typst
-#import "@preview/touying:0.7.3": *
+#import "@preview/touying:0.7.4": *
 #import themes.dewdrop: *
 
 #import "@preview/numbly:0.1.0": numbly
@@ -109,7 +109,7 @@ Used to draw attention, with the background color set to `self.colors.primary`.
 ## Example
 
 ```example
-#import "@preview/touying:0.7.3": *
+#import "@preview/touying:0.7.4": *
 #import themes.dewdrop: *
 
 #import "@preview/numbly:0.1.0": numbly

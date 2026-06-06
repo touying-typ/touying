@@ -9,9 +9,9 @@ Touying provides the `touying-diagram`/`touying-reduce` functions (synonyms), wh
 An example:
 
 ```example
-#import "@preview/touying:0.7.3": *
+#import "@preview/touying:0.7.4": *
 #import themes.metropolis: *
-#import "@preview/cetz:0.5.0"
+#import "@preview/cetz:0.5.2"
 #import "@preview/fletcher:0.5.8" as fletcher: node, edge
 
 // cetz and fletcher bindings for touying
@@ -66,7 +66,7 @@ An example:
 An example with callback-style:
 
 ```example
-#import "@preview/touying:0.7.3": *
+#import "@preview/touying:0.7.4": *
 #import "@preview/fletcher:0.5.8" as fletcher: diagram, edge, node
 #show: themes.simple.simple-theme.with(aspect-ratio: "16-9")
 

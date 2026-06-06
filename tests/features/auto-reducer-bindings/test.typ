@@ -8,7 +8,7 @@
 )
 
 == Test Cetz
-#import "@preview/cetz:0.5.0"
+#import "@preview/cetz:0.5.2"
 #touying-reduce(cetz, {
   import cetz.draw: *
 

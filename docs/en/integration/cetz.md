@@ -13,9 +13,9 @@ There also is `touying-reducer`, for which you have to specify the bindings your
 An example:
 
 ```example
-#import "@preview/touying:0.7.3": *
+#import "@preview/touying:0.7.4": *
 #import themes.metropolis: *
-#import "@preview/cetz:0.5.0"
+#import "@preview/cetz:0.5.2"
 #import "@preview/fletcher:0.5.8" as fletcher: node, edge
 
 // cetz and fletcher bindings for touying
@@ -73,8 +73,8 @@ An example:
 In fact, we can also use `only` and `uncover` within CeTZ, but it requires a bit of technique:
 
 ```example
-#import "@preview/touying:0.7.3": *
-#import "@preview/cetz:0.5.0"
+#import "@preview/touying:0.7.4": *
+#import "@preview/cetz:0.5.2"
 #import themes.simple: *
 #show: simple-theme.with(aspect-ratio: "16-9")
 

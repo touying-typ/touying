@@ -29,7 +29,7 @@ utils.display-current-short-heading(level: 2)
 You can use these utilities in a custom header:
 
 ```example
-#import "@preview/touying:0.7.3": *
+#import "@preview/touying:0.7.4": *
 #import themes.default: *
 
 #show: default-theme.with(
@@ -63,7 +63,7 @@ Touying has a couple of progressive outline utilities. The easiest one is the fo
 [`components.progressive-outline()`](https://touying-typ.github.io/docs/reference/components/progressive-outline) renders an outline that highlights the current section and grays out the rest — a common pattern in themed presentations:
 
 ```example
-#import "@preview/touying:0.7.3": *
+#import "@preview/touying:0.7.4": *
 #import themes.dewdrop: *
 
 #show: dewdrop-theme.with(aspect-ratio: "16-9")
@@ -127,7 +127,7 @@ The values -1 and 1 are reserved for other headings under the same top-level hea
 
 You can e.g. use like so
 ```example
->>>#import "@preview/touying:0.7.3": *
+>>>#import "@preview/touying:0.7.4": *
 >>>#import themes.simple: *
 >>>#show: simple-theme
 >>>#set heading(numbering: "1.1")
