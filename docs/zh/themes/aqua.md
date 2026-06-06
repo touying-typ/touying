@@ -31,7 +31,7 @@ sidebar_position: 5
 #outline-slide()
 ```
 
-其中 `register` 接收参数:
+其中 `aqua-theme` 接收参数:
 
 - `aspect-ratio`: 幻灯片的长宽比为 "16-9" 或 "4-3"，默认为 "16-9"。
 - `header`: 显示在页眉的内容，默认为 `utils.display-current-heading()`，也可以传入形如 `self => self.info.title` 的函数。

@@ -106,8 +106,8 @@ Cetz in Touying in subslide #touying-get-config("subslide")
 我们也可以传入 slide 的 self，然后使用 utils 方法。注意：你必须为此正确计算子幻灯片数量，并传入正确的 `repeat`。
 
 ```example
-#import "@preview/touying:0.7.1": *
-#import "@preview/cetz:0.4.2"
+#import "@preview/touying:0.7.4": *
+#import "@preview/cetz:0.5.2"
 #import themes.simple: *
 #show: simple-theme.with(aspect-ratio: "16-9")
 

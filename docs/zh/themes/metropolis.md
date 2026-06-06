@@ -45,7 +45,7 @@ sidebar_position: 2
 - `align`: 幻灯片的对齐方式，默认为 `horizon`。
 - `header`: 显示在页眉的内容，默认为 `utils.display-current-heading(setting: utils.fit-to-width.with(grow: false, 100%))`，也可以传入形如 `self => self.info.title` 的函数。
 - `header-right`: 展示在页眉右侧的内容，默认为 `self => self.info.logo`。
-- `footer`: 展示在页脚的内容，默认为 `[]`，也可以传入形如 `self => self.info.author` 的函数。
+- `footer`: 展示在页脚的内容，默认为 `none`，也可以传入形如 `self => self.info.author` 的函数。
 - `footer-right`: 展示在页脚右侧的内容，默认为 `context utils.slide-counter.display() + " / " + utils.last-slide-number`。
 - `footer-progress`: 是否显示 slide 底部的进度条，默认为 `true`。
 
