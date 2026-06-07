@@ -80,7 +80,7 @@ Touying renders each subslide by re-evaluating slide content. Without `frozen-co
 If you also have figure counters that should be frozen:
 
 ```typst
-config-common(frozen-counters: (theorem-counter, figure.where(kind: image)))
+config-common(frozen-counters: (theorem-counter, counter(figure.where(kind: image))))
 ```
 
 ## Cosmos Styles

@@ -151,10 +151,10 @@ Now we have codly available.
 When using animation, figure and theorem counters inside a single slide keep advancing per subslide by default. To freeze a counter (so it does not change between subslides), use:
 
 ```typst
-config-common(frozen-counters: (figure.where(kind: image),))
+config-common(frozen-counters: (counter(figure.where(kind: image)),))
 ```
 
-This is especially useful when working with the [Theorion](../integration/theorion.md) package:
+For custom figure kinds, pass `counter(figure.where(kind: "Name"))` rather than the selector itself; `frozen-counters` expects counters. This is also useful when working with the [Theorion](../integration/theorion.md) package:
 
 ```typst
 config-common(frozen-counters: (theorem-counter,))

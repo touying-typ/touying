@@ -153,13 +153,13 @@ config-page(footer: [Custom Footer])
 
 ### 使用 `cols`（推荐）
 
-`cols` 默认启用 `lazy-layout`，你只需要在每个 block 内添加 `lazy-v(1fr)` 即可：
+`cols` 默认不会启用 `lazy-layout`。需要给 `cols` 传入 `lazy-layout: true`，然后在每个 block 内添加 `lazy-v(1fr)`：
 
 ```example
 >>> #import "@preview/touying:0.7.4": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
-#cols[
+#cols(lazy-layout: true)[
   #block(fill: luma(220), inset: .5em, radius: .2em, width: 100%)[
     #lorem(10)
     #lazy-v(1fr)
@@ -208,7 +208,7 @@ config-page(footer: [Custom Footer])
 
 :::tip[提示]
 
-如果不需要高度对齐的行为，可以给 `cols` 传入 `lazy-layout: false` 来关闭。
+`cols` 的默认值是 `lazy-layout: false`。只有需要高度对齐行为时才启用它。
 
 :::
 

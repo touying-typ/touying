@@ -24,7 +24,7 @@ sidebar_position: 1
 | 选项 | 说明 |
 |------|------|
 | **[Typst Web App](https://typst.app/)** | 基于浏览器的编辑器，无需安装；打开 `typst.app`，创建新项目即可开始编写。支持实时预览和协作。 |
-| **[Tinymist for VS Code](https://marketplace.visualstudio.com/items?itemName=myriad-dreamin.tinymist)** | 功能完整的 Typst LSP 扩展。提供语法高亮、自动补全、错误诊断以及内置幻灯片预览面板。 |
+| **[Tinymist LSP](https://github.com/Myriad-Dreamin/tinymist)** | 功能完整的 Typst 语言服务器，可用于支持 LSP 的编辑器。提供语法高亮、自动补全、错误诊断和幻灯片预览；同时也提供 VS Code 扩展。 |
 
 两种方式均会自动从 Typst 包注册表下载 Touying，无需单独安装。
 

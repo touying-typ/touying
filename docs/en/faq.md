@@ -44,6 +44,34 @@ Pass a `config-colors(...)` argument to your theme:
 The header now uses the custom primary color.
 ```
 
+
+### How do I access the current theme colors in slide content?
+
+Theme colors live on `self.colors`. In ordinary slide content, wrap a function with `touying-fn-wrapper` so Touying can pass the current slide context as `self`:
+
+```example
+#import "@preview/touying:0.7.4": *
+#import themes.simple: *
+
+#show: simple-theme.with(aspect-ratio: "16-9")
+
+= Section
+
+== Slide
+
+#touying-fn-wrapper((self: none) => text(fill: self.colors.primary)[
+  This text uses the current theme's primary color.
+])
+
+#touying-fn-wrapper((self: none) => rect(
+  fill: self.colors.secondary,
+  width: 4em,
+  height: 1em,
+))
+```
+
+If you are writing a theme method or callback that already receives `self`, access colors directly as `self.colors.primary`, `self.colors.neutral-lightest`, and so on.
+
 ---
 
 ## Layout and Columns
@@ -135,6 +163,33 @@ More content here.
 ```
 
 The `<touying:hidden>` label hides the outline slide from the outline itself.
+
+
+### How do I keep only the main outline and disable automatic section slides?
+
+Some themes generate an automatic section slide (often an outline or section overview) when they see a new top-level section (`=`). Disable those generated section slides with `config-common(new-section-slide-fn: none)`, then keep only the main outline slide you write yourself:
+
+```example
+#import "@preview/touying:0.7.4": *
+#import themes.metropolis: *
+
+#show: metropolis-theme.with(
+  aspect-ratio: "16-9",
+  config-common(new-section-slide-fn: none),
+)
+
+== Outline <touying:hidden>
+
+#components.adaptive-columns(outline(title: none, indent: 1em))
+
+= First Section
+
+== First Slide
+
+= Second Section
+
+== Second Slide
+```
 
 ### How do I add numbering to sections in the outline?
 

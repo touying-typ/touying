@@ -44,6 +44,33 @@ Using the simple theme.
 The header now uses the custom primary color.
 ```
 
+
+### 如何在正文中访问当前主题颜色？
+
+主题颜色保存在 `self.colors` 中。在普通幻灯片正文里，可以用 `touying-fn-wrapper` 包裹一个函数，让 Touying 把当前幻灯片上下文作为 `self` 传入：
+
+```example
+#import "@preview/touying:0.7.4": *
+#import themes.simple: *
+#show: simple-theme.with(aspect-ratio: "16-9")
+
+= Section
+
+== Slide
+
+#touying-fn-wrapper((self: none) => text(fill: self.colors.primary)[
+  This text uses the current theme's primary color.
+])
+
+#touying-fn-wrapper((self: none) => rect(
+  fill: self.colors.secondary,
+  width: 4em,
+  height: 1em,
+))
+```
+
+如果你正在编写已经接收 `self` 的主题方法或回调函数，则可以直接使用 `self.colors.primary`、`self.colors.neutral-lightest` 等颜色。
+
 ---
 
 ## config-common 配置参考
@@ -290,6 +317,32 @@ More content here.
 ```
 
 `<touying:hidden>` 标签可将目录幻灯片本身从目录中隐藏。
+
+
+### 如何只保留主目录并禁用自动章节页？
+
+有些主题在遇到新的一级章节（`=`）时，会自动生成章节页（通常是目录或章节概览）。可以用 `config-common(new-section-slide-fn: none)` 关闭这些自动章节页，然后只保留你手动编写的主目录页：
+
+```example
+#import "@preview/touying:0.7.4": *
+#import themes.metropolis: *
+#show: metropolis-theme.with(
+  aspect-ratio: "16-9",
+  config-common(new-section-slide-fn: none),
+)
+
+== Outline <touying:hidden>
+
+#components.adaptive-columns(outline(title: none, indent: 1em))
+
+= First Section
+
+== First Slide
+
+= Second Section
+
+== Second Slide
+```
 
 ### 如何为目录中的章节添加编号？
 

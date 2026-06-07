@@ -147,10 +147,10 @@ Now we have codly available.
 
 在使用动画时，单张幻灯片内的图表和定理计数器默认会随每个子幻灯片递增。若要冻结某个计数器（使其在子幻灯片之间保持不变），请使用：
 ```typst
-config-common(frozen-counters: (figure.where(kind: image),))
+config-common(frozen-counters: (counter(figure.where(kind: image)),))
 ```
 
-在使用 [Theorion](../integration/theorion.md) 包时这尤为有用：
+对于自定义 figure kind，请传入 `counter(figure.where(kind: "Name"))`，而不是 selector 本身；`frozen-counters` 需要的是 counter。在使用 [Theorion](../integration/theorion.md) 包时这也尤为有用：
 ```typst
 config-common(frozen-counters: (theorem-counter,))
 ```

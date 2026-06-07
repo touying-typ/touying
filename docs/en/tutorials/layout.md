@@ -152,13 +152,13 @@ When using multi-column layouts (via `cols` or a manual `grid`), columns with di
 
 ### Using `cols` (Recommended)
 
-`cols` enables `lazy-layout` by default, so you just need to add `lazy-v(1fr)` inside each block:
+`cols` does not enable `lazy-layout` by default. Pass `lazy-layout: true` to `cols`, then add `lazy-v(1fr)` inside each block:
 
 ```example
 >>> #import "@preview/touying:0.7.4": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
-#cols[
+#cols(lazy-layout: true)[
   #block(fill: luma(220), inset: .5em, radius: .2em, width: 100%)[
     #lorem(10)
     #lazy-v(1fr)
@@ -206,7 +206,7 @@ You can also wrap a `grid` with `lazy-layout` directly:
 
 :::tip[Tip]
 
-If you don't need the height-equalizing behavior, pass `lazy-layout: false` to `cols` to opt out.
+`cols` defaults to `lazy-layout: false`. Enable it only when you need height equalization.
 
 :::
 

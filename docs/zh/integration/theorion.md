@@ -81,7 +81,7 @@ Touying 通过重新求值幻灯片内容来渲染每个子幻灯片。若不使
 如果你还有需要冻结的图表计数器，可以这样配置：
 
 ```typst
-config-common(frozen-counters: (theorem-counter, figure.where(kind: image)))
+config-common(frozen-counters: (theorem-counter, counter(figure.where(kind: image))))
 ```
 
 ## Cosmos 样式
