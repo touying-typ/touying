@@ -4,7 +4,7 @@ sidebar_position: 2
 
 # 开始
 
-在开始之前，请确保您已经安装了 Typst 环境，如果没有，可以使用 [Web App](https://typst.app/) 或 VS Code 的 [Tinymist LSP](https://marketplace.visualstudio.com/items?itemName=myriad-dreamin.tinymist) 插件。
+在开始之前，请确保您已经安装了 Typst 环境。如果没有，可以使用 [Web App](https://typst.app/)，或在任何支持 LSP 的编辑器中安装 [Tinymist LSP](https://github.com/Myriad-Dreamin/tinymist)；Tinymist 也提供 [VS Code 扩展](https://marketplace.visualstudio.com/items?itemName=myriad-dreamin.tinymist)。
 
 要使用 Touying，您只需要在文档里加入
 

@@ -36,7 +36,7 @@ If you like it, consider [giving a star ⭐ on GitHub](https://github.com/touyin
 
 ## Quick Start
 
-Make sure you have [Typst](https://typst.app/) installed, or use the [Web App](https://typst.app/) / [Tinymist for VS Code](https://marketplace.visualstudio.com/items?itemName=myriad-dreamin.tinymist).
+Make sure you have [Typst](https://typst.app/) installed, or use the [Web App](https://typst.app/) / [Tinymist LSP](https://github.com/Myriad-Dreamin/tinymist) in an editor with LSP support (including the [VS Code extension](https://marketplace.visualstudio.com/items?itemName=myriad-dreamin.tinymist)).
 
 ```typst
 #import "@preview/touying:0.7.4": *

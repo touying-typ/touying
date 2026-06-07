@@ -4,7 +4,7 @@ sidebar_position: 2
 
 # Getting Started
 
-Before you begin, make sure you have the Typst environment installed. If not, you can use the [Web App](https://typst.app/) or install the [Tinymist LSP](https://marketplace.visualstudio.com/items?itemName=myriad-dreamin.tinymist) plugins for VS Code.
+Before you begin, make sure you have the Typst environment installed. If not, you can use the [Web App](https://typst.app/) or install [Tinymist LSP](https://github.com/Myriad-Dreamin/tinymist) in any editor with LSP support; Tinymist also provides a [VS Code extension](https://marketplace.visualstudio.com/items?itemName=myriad-dreamin.tinymist).
 
 To use Touying, you just need to include the following in your document:
 
