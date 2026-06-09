@@ -392,6 +392,13 @@
 ///
 /// Example: `#let (uncover, only) = utils.methods(self)` to get `uncover` and `only` methods.
 ///
+/// This function is primarily intended for callback-style usage inside `context` blocks or style rules, where the top-level
+/// `#uncover`/`#only` etc. functions cannot be used. Animation methods resolve waypoint labels
+/// via `self.waypoints` (populated before rendering) and check `self.subslide` directly.
+///
+/// Note: these methods do not register fn-wrappers in the touying parser, so they do not
+/// contribute to the subslide count. 
+/// 
 /// - self (dictionary): The presentation context (must have a `methods` key containing a dictionary of functions).
 ///
 /// -> dictionary
@@ -401,48 +408,10 @@
     "methods" in self and type(self.methods) == dictionary,
     message: "self.methods must be a dictionary",
   )
-  // Animation methods that manage their own subslide visibility.
-  // In callback-style slides the parser's pause/cover logic (driven by
-  // #waypoint jumps) would incorrectly hide method-resolved content based on
-  // source position.  Wrapping the result in a fn-wrapper escapes pause zones
-  // (the parser always pushes fn-wrappers to `result`).
-  //
-  // The type check ensures non-content results (e.g. CeTZ draw-command arrays)
-  // are returned as-is so external packages keep working.
-  let animation-keys = (
-    "uncover",
-    "only",
-    "effect",
-    "alternatives",
-    "alternatives-match",
-    "alternatives-fn",
-    "alternatives-cases",
-    "item-by-item",
-  )
   let methods = (:)
   for key in self.methods.keys() {
     if type(self.methods.at(key)) == function {
-      if key in animation-keys {
-        methods.insert(key, (..args) => {
-          let result = self.methods.at(key)(self: self, ..args)
-          if type(result) == content {
-            [#metadata((
-              kind: "touying-fn-wrapper",
-              fn: (self: none) => result,
-              args: arguments(),
-              last-subslide: none,
-              repetitions: none,
-            ))<touying-temporary-mark>]
-          } else {
-            result
-          }
-        })
-      } else {
-        methods.insert(key, (..args) => self.methods.at(key)(
-          self: self,
-          ..args,
-        ))
-      }
+      methods.insert(key, (..args) => self.methods.at(key)(self: self, ..args))
     }
   }
   return methods
