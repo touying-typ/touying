@@ -397,8 +397,8 @@
 /// via `self.waypoints` (populated before rendering) and check `self.subslide` directly.
 ///
 /// Note: these methods do not register fn-wrappers in the touying parser, so they do not
-/// contribute to the subslide count. 
-/// 
+/// contribute to the subslide count.
+///
 /// - self (dictionary): The presentation context (must have a `methods` key containing a dictionary of functions).
 ///
 /// -> dictionary

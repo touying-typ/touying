@@ -64,8 +64,8 @@
       let slides = query(selector(heading).before(marks.at(0).location()))
       let slide-name = if slides.len() > 0 {
         slides.last().body.at("text", default: "")
-      } else { 
-        "" 
+      } else {
+        ""
       }
       let kind = marks.at(0).value.kind
       let fn = if "fn" in marks.at(0).value { marks.at(0).value.fn } else {
