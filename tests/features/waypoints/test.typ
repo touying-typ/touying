@@ -336,7 +336,7 @@ Some more explanation.
 #only(<eq-after>)[Visible after equation explanation.]
 
 
-// No longer supported since it broke callback-style use of animation functions inside style rules and context. callback-based animations now don't escape the rep counter anymore
+// No longer supported since it broke callback-style use of animation functions inside style rules and context. callback-based animations now don't escape the rep counter anymore and should not be mixed with functions that do.
 // -----------------------------------------------
 // Test 20: Callback-style with uncover + only + effect
 // -----------------------------------------------
@@ -632,28 +632,28 @@ After the group.
 // prev-wp(<hn>) anchors to first child (hn:a), steps -1 = hn-before
 #only(prev-wp(<hn>))[During hn-before (prev before entire group).]
 
-// -----------------------------------------------
-// Test 36: Forward reference in callback
-// -----------------------------------------------
+// // -----------------------------------------------
+// // Test 36: Forward reference in callback
+// // -----------------------------------------------
 
-== Callback Forward Reference
+// == Callback Forward Reference
 
-#slide(self => {
-  let (uncover, only) = utils.methods(self)
-  [
-    #uncover(until-wp(<cb-summary>))[Title: shown before summary.]
+// #slide(self => {
+//   let (uncover, only) = utils.methods(self)
+//   [
+//     #uncover(until-wp(<cb-summary>))[Title: shown before summary.]
 
-    Content.
+//     Content.
 
-    #waypoint(<cb-summary>)
+//     #waypoint(<cb-summary>)
 
-    Summary text.
+//     Summary text.
 
-    #uncover(from-wp(<cb-summary>))[Summary visible.]
+//     #uncover(from-wp(<cb-summary>))[Summary visible.]
 
-    #only(<cb-summary>)[Only during summary.]
-  ]
-})
+//     #only(<cb-summary>)[Only during summary.]
+//   ]
+// })
 
 
 // -----------------------------------------------
