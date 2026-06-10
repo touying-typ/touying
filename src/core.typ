@@ -4265,9 +4265,11 @@
   // last-subslide by touying-fn-wrapper — inherit outer context so waypoints
   // placed after multi-subslide fn-wrappers fire correctly inside sub-sequences.
   let last-subslide = base-last-subslide
-  // Whether any touying-fn-wrapper was found in this parse (directly or via
-  // recursive calls).  Used by the two-pass escape hatch so that fn-wrappers
-  // inside a pause zone can handle their own visibility.
+  // Whether this parse contains content that can become visible before the
+  // surrounding repetition counter would normally reveal the whole container
+  // (fn-wrappers with their own visibility, or absolute jumps/meanwhile).
+  // Used by the two-pass escape hatch so such content can handle its own
+  // visibility inside a pause zone.
   let has-fn-wrapper = false
   // get cover function from self
   let cover = self.methods.cover.with(self: self)
@@ -4289,7 +4291,9 @@
           if it.body.value.relative {
             repetitions = calc.max(repetitions, last-subslide) + it.body.value.n
           } else {
-            // absolute jump
+            // absolute jump: the cell body can become visible earlier than
+            // the surrounding container, so it must escape outer hiding.
+            has-fn-wrapper = true
             max-repetitions = calc.max(max-repetitions, repetitions)
             repetitions = it.body.value.n
             last-subslide = 0
@@ -4393,7 +4397,31 @@
           false
         }
       }
-      let covered = cover-fn(items.sum())
+      let cover-item = item => {
+        // Preserve table/grid cell metadata (e.g. rowspan/colspan) while
+        // covering only the cell body. Covering the whole cell turns it into a
+        // generic hidden content node, so grid/table layout loses the cell
+        // placement information.
+        if type(item) == content and item.func() in (table.cell, grid.cell) {
+          let body = item.at("body", default: none)
+          if body != none {
+            return utils.reconstruct(
+              named: true,
+              labeled: labeled(item.func()),
+              item,
+              cover-fn(body),
+            )
+          }
+        }
+        cover-fn(item)
+      }
+      let covered = if items.all(item => (
+        type(item) == content and item.func() in (table.cell, grid.cell)
+      )) {
+        items.map(cover-item).sum(default: none)
+      } else {
+        cover-fn(items.sum())
+      }
       //decrease below spacing for rect cover functions
       // if type(cover-fn) == function and (
       //   cover-fn==utils.cover-with-rect or
@@ -4462,7 +4490,10 @@
               hidden-parts = ()
             }
           } else {
-            // absolute: reveal all hidden content then jump to target subslide
+            // absolute: reveal all hidden content then jump to target subslide.
+            // This can make later content visible before the surrounding
+            // container's original repetition, so it must escape outer hiding.
+            has-fn-wrapper = true
             if hidden-parts.len() != 0 {
               result.push(cover-hidden(cover, hidden-parts, result))
               hidden-parts = ()
