@@ -18,7 +18,7 @@
     - hi
     // callback-style uncover works here
     - #uncover("2-")[hello]
-    
+
     // using callback-style uncover in context is also broken, despite being an explicit use case for callback-style
     - #context uncover("3-", text.lang)
   ]
