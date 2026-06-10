@@ -113,7 +113,7 @@ The header now uses the custom primary color.
 
 ### 如何使用半透明遮罩替代完全隐藏？
 
-使用 `config-methods(cover: utils.semi-transparent-cover)` 配置，使被隐藏的内容以半透明形式显示：
+使用 `config-methods(cover: utils.alpha-changing-cover)` 配置，使被隐藏的内容以低透明度形式显示：
 
 ```example
 #import "@preview/touying:0.7.3": *
@@ -121,7 +121,7 @@ The header now uses the custom primary color.
 
 #show: simple-theme.with(
   aspect-ratio: "16-9",
-  config-methods(cover: utils.semi-transparent-cover),
+  config-methods(cover: alpha-changing-cover),
 )
 
 = Section
@@ -129,8 +129,7 @@ The header now uses the custom primary color.
 == Slide
 
 #pause
-
-This content is shown with a semi-transparent cover.
+This content is shown with a low alpha cover.
 ```
 
 ### 如何使用 preamble 在每张幻灯片前插入内容？

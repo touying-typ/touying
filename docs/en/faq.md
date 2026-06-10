@@ -740,7 +740,7 @@ You can also switch these settings mid-presentation using `touying-set-config`:
 
 ### How do I use a semi-transparent cover instead of fully hiding content?
 
-Use `config-methods(cover: utils.semi-transparent-cover)`:
+Use `config-methods(cover: utils.alpha-changing-cover)`:
 
 ```example
 #import "@preview/touying:0.7.3": *
@@ -748,7 +748,7 @@ Use `config-methods(cover: utils.semi-transparent-cover)`:
 
 #show: simple-theme.with(
   aspect-ratio: "16-9",
-  config-methods(cover: utils.semi-transparent-cover),
+  config-methods(cover: alpha-changing-cover),
 )
 
 = Section
@@ -756,7 +756,7 @@ Use `config-methods(cover: utils.semi-transparent-cover)`:
 == Slide
 
 #pause
-This content is shown with a semi-transparent cover.
+This content is shown with a low alpha cover.
 ```
 
 ### How do I use preamble to insert content before every slide?

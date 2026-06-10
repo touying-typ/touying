@@ -101,13 +101,13 @@ This slide uses a red primary color, e.g. in `#alert` boxes.
 
 == Changed Cover
 #show: touying-set-config.with(config-methods(
-  cover: utils.semi-transparent-cover,
+  cover: utils.alpha-changing-cover,
 ))
 Initial Content.
 
 #pause
 
-Content that appears with a semi-transparent cover effect.
+Content that is hidden by showing with low alpha value.
 ```
 
 ## 局部配置覆盖
