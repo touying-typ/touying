@@ -1100,8 +1100,10 @@
     if slide-content != none { output-slides.push(slide-content) }
   }
 
-  //add last page metadata to last physical page.
-  if is-outer-call {
+  // Add last-page metadata to the last physical page when one exists.
+  // Empty documents can legitimately produce no slides, so avoid indexing the
+  // empty output list.
+  if is-outer-call and output-slides.len() > 0 {
     output-slides.at(-1) += [#metadata(none)#label("touying-last-page")]
   }
 
