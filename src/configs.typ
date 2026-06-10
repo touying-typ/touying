@@ -61,10 +61,12 @@
     let marks = query(<touying-temporary-mark>)
     if marks.len() > 0 {
       let page-num = marks.at(0).location().page()
-      let slide-name = query(selector(heading).before(marks.at(0).location()))
-        .last()
-        .body
-        .text
+      let slides = query(selector(heading).before(marks.at(0).location()))
+      let slide-name = if slides.len() > 0 {
+        slides.last().body.at("text", default: "")
+      } else {
+        ""
+      }
       let kind = marks.at(0).value.kind
       let fn = if "fn" in marks.at(0).value { marks.at(0).value.fn } else {
         none

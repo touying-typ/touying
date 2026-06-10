@@ -336,66 +336,67 @@ Some more explanation.
 #only(<eq-after>)[Visible after equation explanation.]
 
 
+// No longer supported since it broke callback-style use of animation functions inside style rules and context. callback-based animations now don't escape the rep counter anymore and should not be mixed with functions that do.
 // -----------------------------------------------
 // Test 20: Callback-style with uncover + only + effect
 // -----------------------------------------------
 
-== Callback with Waypoints
+// == Callback with Waypoints
 
-#slide(self => {
-  let (uncover, only, effect) = utils.methods(self)
-  [
-    Base content in callback.
+// #slide(self => {
+//   let (uncover, only, effect) = utils.methods(self)
+//   [
+//     Base content in callback.
 
-    #waypoint(<cb-a>)
+//     #waypoint(<cb-a>)
+//     #uncover(from-wp(<cb-a>))[Uncovered from A onward.]
 
-    #uncover(<cb-a>)[Uncovered from cb-a.]
+//     #waypoint(<cb-b>)
 
-    #waypoint(<cb-b>)
+//     #only(<cb-b>)[Only during B.]
 
-    #only(<cb-b>)[Only during cb-b.]
+//     #effect(text.with(fill: red), <cb-a>)[Red during A.]
+//   ]
+// })
 
-    #effect(text.with(fill: red), <cb-a>)[Red during cb-a.]
-  ]
-})
+// // -----------------------------------------------
+// // Test 21: Callback-style with from-wp / until-wp / next-wp / prev-wp
+// // -----------------------------------------------
 
-// -----------------------------------------------
-// Test 21: Callback-style with get-first / get-last / from-wp
-// -----------------------------------------------
+// == Callback Get-First Get-Last
 
-== Callback Get-First Get-Last
+// #slide(repeat:3, self => {
+//   let (only,waypoint) = utils.methods(self)
+//   [
+//     #waypoint(<m1>, start:1, reach:2)
+//     Phase 1. \
+//     #pause
+//     Phase 1 continued. \
+//     #waypoint(<m2>, start:3)
+//     Phase 2. \
 
-#slide(self => {
-  let (only,) = utils.methods(self)
-  [
-    #waypoint(<m1>, advance: false)
-    Phase 1. \
-    #pause
-    Phase 1 continued. \
-    #waypoint(<m2>)
-    Phase 2. \
+//     #only(get-first(<m1>))[Exactly first of m1.]
+//     #only(get-last(<m1>))[Exactly last of m1.]
+//     #only(from-wp(<m2>))[From m2 onward.]
+//   ]
+// })
 
-    #only(get-first(<m1>))[Exactly first of m1.]
-    #only(get-last(<m1>))[Exactly last of m1.]
-    #only(from-wp(<m2>))[From m2 onward.]
-  ]
-})
+// // -----------------------------------------------
+// // Test 22: Callback-style with alternatives at:
+// // -----------------------------------------------
 
-// -----------------------------------------------
-// Test 22: Callback-style with alternatives at:
-// -----------------------------------------------
+// == Callback Alternatives
 
-== Callback Alternatives
-
-#slide(self => {
-  [
-    #waypoint(<ca>, advance: false)
-    Phase A. \
-    #waypoint(<cb>)
-    Phase B. \
-    #alternatives(at: (<ca>, <cb>))[Alt A callback.][Alt B callback.]
-  ]
-})
+// #slide(repeat:2, self => {
+//   [
+//     let (alternatives, waypoint) = utils.methods(self)
+//     #waypoint(<ca>, start:1)
+//     Phase A. \
+//     #waypoint(<cb>, start:2)
+//     Phase B. \
+//     #alternatives(at: (<ca>, <cb>))[Alt A callback.][Alt B callback.]
+//   ]
+// })
 
 // -----------------------------------------------
 // Test 23: item-by-item after explicit waypoint
@@ -415,28 +416,6 @@ Intro content.
 
 #uncover(<list-start>)[List is being revealed above.]
 
-// -----------------------------------------------
-// Test 24: Callback item-by-item with waypoint start
-// -----------------------------------------------
-
-== Callback Item-by-item
-
-#slide(self => {
-  let (uncover, only) = utils.methods(self)
-  [
-    Intro.
-
-    #waypoint(<ibi-wp>)
-
-    #item-by-item[
-      - Alpha
-      - Beta
-      - Gamma
-    ]
-
-    #only(get-last(<ibi-wp>))[All items revealed.]
-  ]
-})
 
 // -----------------------------------------------
 // Test 25: Forward reference — use waypoint before it is defined
@@ -653,28 +632,28 @@ After the group.
 // prev-wp(<hn>) anchors to first child (hn:a), steps -1 = hn-before
 #only(prev-wp(<hn>))[During hn-before (prev before entire group).]
 
-// -----------------------------------------------
-// Test 36: Forward reference in callback
-// -----------------------------------------------
+// // -----------------------------------------------
+// // Test 36: Forward reference in callback
+// // -----------------------------------------------
 
-== Callback Forward Reference
+// == Callback Forward Reference
 
-#slide(self => {
-  let (uncover, only) = utils.methods(self)
-  [
-    #uncover(until-wp(<cb-summary>))[Title: shown before summary.]
+// #slide(self => {
+//   let (uncover, only) = utils.methods(self)
+//   [
+//     #uncover(until-wp(<cb-summary>))[Title: shown before summary.]
 
-    Content.
+//     Content.
 
-    #waypoint(<cb-summary>)
+//     #waypoint(<cb-summary>)
 
-    Summary text.
+//     Summary text.
 
-    #uncover(from-wp(<cb-summary>))[Summary visible.]
+//     #uncover(from-wp(<cb-summary>))[Summary visible.]
 
-    #only(<cb-summary>)[Only during summary.]
-  ]
-})
+//     #only(<cb-summary>)[Only during summary.]
+//   ]
+// })
 
 
 // -----------------------------------------------

@@ -428,33 +428,6 @@ End Content
   #only(<final>)[Finally after the list.]
 ]
 
-== Callback style
-
-#slide(self => {
-  block(width: 50%)[
-    #code-col(
-      "#slide(self => {
-  let (uncover, only) = utils.methods(self)
-  [
-    Base content.
-    #waypoint(<cb-a>)
-    #uncover(<cb-a>)[Uncovered from cb-a.]
-    #waypoint(<cb-b>)
-    #only(<cb-b>)[Only during cb-b.]
-  ]
-})",
-    )
-  ]
-  [
-    #let (uncover, only) = utils.methods(self)
-    Base content.
-    #waypoint(<cb-a>)
-    #uncover(<cb-a>)[Uncovered from `<cb-a>`.]
-    #waypoint(<cb-b>)
-    #only(<cb-b>)[Only during `<cb-b>`.]
-  ]
-})
-
 == Hierarchical Waypoints
 
 #slide(composer: (1fr, 1fr))[
