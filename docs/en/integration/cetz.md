@@ -70,7 +70,7 @@ An example:
 
 ## only and uncover
 
-In fact, we can also use `only` and `uncover` within CeTZ, but it requires a bit of technique:
+Similarly we can also use `only` and `uncover`. Notice that for Cetz you need to wrap touying's smart animation commands in an array `(only(...),)` whereas in Fletcher you can write them natively.
 
 ```example
 #import "@preview/touying:0.7.4": *
@@ -78,8 +78,8 @@ In fact, we can also use `only` and `uncover` within CeTZ, but it requires a bit
 #import themes.simple: *
 #show: simple-theme.with(aspect-ratio: "16-9")
 
-// cetz and fletcher bindings for touying
-#let cetz-canvas = touying-reduce.with(cetz) // new syntax for packages that expose their name
+// cetz bindings for touying
+#let cetz-canvas = touying-diagram.with(cetz) // new syntax for packages that expose their name
 
 == Only and Uncover in Cetz
 
@@ -90,20 +90,21 @@ Cetz in Touying in subslide #touying-get-config("subslide")
   
   rect((0,0), (5,5))
 
-  uncover("2-3", {
+  (uncover("2-3", {
     rect((0,0), (1,1))
     rect((1,1), (2,2))
     rect((2,2), (3,3))
-  })
+  }),)
 
-  only(3, line((0,0), (2.5, 2.5), name: "line"))
+  (only(3, line((0,0), (2.5, 2.5), name: "line")),)
 })
 
 ```
 
 ## only and uncover with slide self
 
-We can also pass the slide self and then use the utils methods. Note: you must count your subslides for this and parse in the correct `repeat`.
+We can also pass the slide self and then use the utils methods. You don't need to wrap these in an array. Note: you must count your subslides for this and parse in the correct `repeat` count.
+
 
 ```example
 #import "@preview/touying:0.7.4": *
@@ -118,17 +119,17 @@ We can also pass the slide self and then use the utils methods. Note: you must c
 
   #cetz.canvas({
     import cetz.draw: *
-    let uncover = uncover.with(cover-fn: hide.with(bounds: true))
+    let uncover = uncover.with(cover-fn: hide.with(bounds: true)) //use cetz' hide function for covering
     
     rect((0,0), (5,5))
 
-    uncover("2-3", {
+    (uncover("2-3", {
       rect((0,0), (1,1))
       rect((1,1), (2,2))
       rect((2,2), (3,3))
-    })
+    }),)
 
-    only(3, line((0,0), (2.5, 2.5), name: "line"))
+    (only(3, line((0,0), (2.5, 2.5), name: "line")),)
   })
 ])
 ```

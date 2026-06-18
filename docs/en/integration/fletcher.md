@@ -70,7 +70,7 @@ An example with callback-style:
 #import "@preview/fletcher:0.5.8" as fletcher: diagram, edge, node
 #show: themes.simple.simple-theme.with(aspect-ratio: "16-9")
 
-#let diagram = touying-reducer.with(reduce: fletcher.diagram, cover: fletcher.hide)
+#let diagram = touying-diagram.with(fletcher)
 
 #slide(repeat: 6, self => {
   let (uncover, only, alternatives) = utils.methods(self)
