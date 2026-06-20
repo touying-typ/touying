@@ -56,7 +56,7 @@
     configs.config-common(freeze-slide-counter: true),
     configs.config-page(..args),
   )
-  set text(
+  let text-args = (
     fill: if foreground == none {
       default-foreground(self)
     } else {
@@ -65,8 +65,9 @@
     size: text-size,
   )
   if text-weight != none {
-    set text(weight: text-weight)
+    text-args.weight = text-weight
   }
+  set text(..text-args)
   core.touying-slide(self: self, config: config, std.align(align, body))
 })
 
