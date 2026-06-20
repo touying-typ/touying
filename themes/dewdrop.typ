@@ -284,15 +284,13 @@
 /// Example: `#focus-slide[Wake up!]`
 ///
 /// - config (dictionary): The configuration of the slide. You can use `config-xxx` to set the configuration of the slide. For more several configurations, you can use `utils.merge-dicts` to merge them.
-#let focus-slide(config: (:), body) = touying-slide-wrapper(self => {
-  self = utils.merge-dicts(
-    self,
-    config-common(freeze-slide-counter: true),
-    config-page(fill: self.colors.primary, margin: 2em),
-  )
-  set text(fill: self.colors.neutral-lightest, size: 1.5em)
-  touying-slide(self: self, config: config, align(horizon + center, body))
-})
+#let focus-slide = focus-slide.with(
+  align: horizon + center,
+  margin: 2em,
+  text-size: 1.5em,
+  default-background: self => self.colors.primary,
+  default-foreground: self => self.colors.neutral-lightest,
+)
 
 
 /// Touying dewdrop theme.

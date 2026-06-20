@@ -3,6 +3,73 @@
 #import "core.typ"
 #import "magic.typ"
 
+/// Focus slide.
+///
+/// - config (dictionary): The configuration of the slide. You can use `config-xxx` to set the configuration of the slide.
+///
+/// - background (color): Background color. `auto` uses `default-background(self)`.
+///
+/// - background-color (color): Alias for `background` if explicitly set.
+///
+/// - background-img (content): Background image content (typically `image(...)` or path string).
+///
+/// - default-background (function): Returns background color when `background` and `background-color` are both `auto`/`none`.
+///
+/// - default-foreground (function): Returns text color when `foreground` is `none`.
+///
+/// - align (alignment): The alignment of the content. Defaults to `horizon + center`.
+#let focus-slide(
+  config: (:),
+  background: auto,
+  background-color: none,
+  background-img: none,
+  align: horizon + center,
+  margin: 1em,
+  foreground: none,
+  text-size: 1.5em,
+  text-weight: none,
+  page: (:),
+  default-background: self => self.colors.primary,
+  default-foreground: self => self.colors.neutral-lightest,
+  body,
+) = core.touying-slide-wrapper(self => {
+  let background-color = if background != auto {
+    background
+  } else if background-color != none {
+    background-color
+  } else {
+    default-background(self)
+  }
+  let args = (: ..page)
+  args.margin = margin
+  if background-color != none {
+    args.fill = background-color
+  }
+  if background-img != none {
+    args.background = {
+      set image(fit: "cover", width: 100%, height: 100%)
+      background-img
+    }
+  }
+  self = utils.merge-dicts(
+    self,
+    configs.config-common(freeze-slide-counter: true),
+    configs.config-page(..args),
+  )
+  set text(
+    fill: if foreground == none {
+      default-foreground(self)
+    } else {
+      foreground
+    },
+    size: text-size,
+  )
+  if text-weight != none {
+    set text(weight: text-weight)
+  }
+  core.touying-slide(self: self, config: config, std.align(align, body))
+})
+
 /// Touying slides function.
 ///
 /// Example:

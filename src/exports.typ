@@ -44,7 +44,7 @@
   config-colors, config-common, config-info, config-methods, config-page,
   config-store, default-config, touying-get-config,
 )
-#import "slides.typ": touying-slides
+#import "slides.typ": focus-slide, touying-slides
 #import "utils.typ"
 #import "magic.typ"
 #import "pdfpc.typ"

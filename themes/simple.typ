@@ -108,25 +108,17 @@
 ///
 /// - background (color, auto): The background color of the slide. Default is `auto`, which means the primary color of the slides.
 ///
+/// - background-img (string, none): The background image of the slide. If provided, it is fitted to cover the slide while keeping aspect ratio.
+///
 /// - foreground (color): The foreground color of the slide. Default is `white`.
-#let focus-slide(
-  config: (:),
-  background: auto,
+#let focus-slide = focus-slide.with(
+  align: center + horizon,
+  margin: 1em,
   foreground: white,
-  body,
-) = touying-slide-wrapper(self => {
-  self = utils.merge-dicts(
-    self,
-    config-common(freeze-slide-counter: true),
-    config-page(fill: if background == auto {
-      self.colors.primary
-    } else {
-      background
-    }),
-  )
-  set text(fill: foreground, size: 1.5em)
-  touying-slide(self: self, config: config, align(center + horizon, body))
-})
+  text-size: 1.5em,
+  default-background: self => self.colors.primary,
+  default-foreground: self => white,
+)
 
 
 /// Touying simple theme.

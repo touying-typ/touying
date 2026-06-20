@@ -264,37 +264,14 @@
 /// - background-color (color, none): is the background color of the slide. Default is the primary color.
 ///
 /// - background-img (string, none): is the background image of the slide. Default is none.
-#let focus-slide(
-  config: (:),
-  background-color: none,
-  background-img: none,
-  body,
-) = touying-slide-wrapper(self => {
-  let background-color = if (
-    background-img == none and background-color == none
-  ) {
-    rgb(self.colors.primary)
-  } else {
-    background-color
-  }
-  let args = (:)
-  if background-color != none {
-    args.fill = background-color
-  }
-  if background-img != none {
-    args.background = {
-      set image(fit: "stretch", width: 100%, height: 100%)
-      background-img
-    }
-  }
-  self = utils.merge-dicts(
-    self,
-    config-common(freeze-slide-counter: true),
-    config-page(margin: 1em, ..args),
-  )
-  set text(fill: self.colors.neutral-lightest, weight: "bold", size: 2em)
-  touying-slide(self: self, std.align(horizon, body))
-})
+#let focus-slide = focus-slide.with(
+  align: horizon,
+  margin: 1em,
+  text-size: 2em,
+  text-weight: "bold",
+  default-background: self => self.colors.primary,
+  default-foreground: self => self.colors.neutral-lightest,
+)
 
 
 // Create a slide where the provided content blocks are displayed in a grid and coloured in a checkerboard pattern without further decoration. You can configure the grid using the rows and `columns` keyword arguments (both default to none). It is determined in the following way:
