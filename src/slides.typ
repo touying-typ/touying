@@ -40,7 +40,7 @@
   } else {
     default-background(self)
   }
-  let args = (: ..page)
+  let args = (:..page)
   args.margin = margin
   if background-color != none {
     args.fill = background-color
