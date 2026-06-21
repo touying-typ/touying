@@ -1006,16 +1006,13 @@
 /// -> content
 #let knob-marker(primary: rgb("#005bac")) = box(
   width: 0.5em,
-  place(
-    dy: 0.1em,
-    circle(
-      fill: gradient.radial(
-        primary.lighten(100%),
-        primary.darken(40%),
-        focal-center: (30%, 30%),
-      ),
-      radius: 0.25em,
+  circle(
+    fill: gradient.radial(
+      primary.lighten(100%),
+      primary.darken(40%),
+      focal-center: (30%, 30%),
     ),
+    radius: 0.25em,
   ),
 )
 
