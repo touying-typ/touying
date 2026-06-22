@@ -2842,7 +2842,7 @@
   package,
   bindings: (reduce: none, cover: none),
   ..args,
-) = touying-reduce(package, bindings:bindings, ..args)
+) = touying-reduce(package, bindings: bindings, ..args)
 
 /// Parse touying equation content and extract animation repetitions
 ///
