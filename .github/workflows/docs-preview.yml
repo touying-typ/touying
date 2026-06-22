@@ -144,8 +144,20 @@ jobs:
       #   - On close: removes pr-preview/pr-NNN/ from gh-pages and updates
       #     the comment.
       #
+      # Fork PRs receive a read-only GITHUB_TOKEN on pull_request workflows, so
+      # they can build but cannot push to gh-pages. Only deploy previews for PR
+      # branches that live in this repository.
+      #
       # Preview URL: https://touying-typ.github.io/touying/pr-preview/pr-NNN/
+      - name: Skip preview deployment for fork PR
+        if: >-
+          github.event.action != 'closed' &&
+          github.event.pull_request.head.repo.full_name != github.repository
+        run: |
+          echo "::notice::Skipping docs preview deployment because this PR comes from a fork. The docs build still ran, but fork pull_request workflows get a read-only GITHUB_TOKEN and cannot push to gh-pages."
+
       - name: Deploy / clean-up preview
+        if: github.event.pull_request.head.repo.full_name == github.repository
         uses: rossjrw/pr-preview-action@v1
         with:
           source-dir: website/build
