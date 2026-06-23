@@ -28,39 +28,23 @@ You will find that the existing cover function cannot hide the mark of enum and 
 config-methods(cover: (self: none, body) => box(scale(x: 0%, body)))
 ```
 
-## Semi-Transparent Cover Function
+## Alpha-Changing Cover Function
 
 Touying supports a semi-transparent cover function, which can be enabled by adding:
 
 ```typst
-config-methods(cover: utils.semi-transparent-cover.with(alpha: 85%))
+config-methods(cover: utils.alpha-changing-cover)
 ```
 
 You can adjust the transparency through the `alpha: ..` parameter.
 
-:::warning[Warning]
-
-Note that the `transparent-cover` here does not preserve text layout like `hide` does because it adds an extra layer of `box`, which may disrupt the original structure of the page.
-
-:::
 
 :::tip[Internals]
 
-The `utils.semi-transparent-cover` method is defined as:
+The `utils.alpha-changing-cover` method works by changing all colors it encounters to have a lower alpha value. This can be costly because we need to access typst's context at every level of nested style or context.
 
-```typst
-#let semi-transparent-cover(self: none, constructor: rgb, alpha: 85%, body) = {
-  cover-with-rect(
-    fill: update-alpha(
-      constructor: constructor,
-      self.page.fill,
-      alpha,
-    ),
-    body,
-  )
-}
-```
+If you notice your project compiling slowly you can try switching to `utils.color-changing-cover` which just makes everything grey.
 
-It creates a semi-transparent rectangular mask with the same color as the background to simulate the effect of transparent content. Here, `constructor: rgb` and `alpha: 85%` indicate the background color's construction function and transparency level, respectively.
+Both methods cannot change all colors displayed. Some contents like images or tilings cannot be interfered with. As such both methods utilize a fallback hide which aims to mimic the same effect by overlaying the content with a grey semi-transparent rectangle via `utils.semi-transparent-rect`. Using that function as default is no longer recommended as it has multiple not to be fixed bugs. 
 
 :::
