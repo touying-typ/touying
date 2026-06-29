@@ -2695,6 +2695,7 @@
     es: "Índice",
     et: "Sisukord",
     fi: "Sisällys",
+    fr: "Plan",
     ja: "目次",
     pl: "Agenda",
     ru: "Содержание",
