@@ -359,6 +359,20 @@
   left, none, right,
 )
 
+/// Place three content blocks at the left, in the middle and right edges of the available width using a five-column grid.
+///
+/// - left (content): The content of the left part.
+///
+/// - mid (content): The content of the middle part.
+///
+/// - right (content): The content of the right part.
+///
+/// -> content
+#let left-mid-right(left, mid, right) = grid(
+  columns: (auto, 1fr, auto, 1fr, auto),
+  left, none, mid, none, right,
+)
+
 
 /// Create a slide where the provided content blocks are displayed in a grid with a checkerboard color pattern.
 ///
