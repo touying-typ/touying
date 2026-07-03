@@ -164,6 +164,11 @@
   bibliography,
   body,
 ) = {
+  show hide: it => {
+    show cite.where(form: "normal"): none
+    it
+  }
+
   show cite.where(form: "normal"): it => (
     context {
       let label-str = str(here().page()) + str(it.key)
