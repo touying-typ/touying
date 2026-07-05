@@ -1577,11 +1577,17 @@
           )
           // When using slide context (auto), use the slide's waypoints
           // for target resolution; otherwise use the content's own waypoints.
-          let (cwp, rp) = if use-slide-context {
-            (self.at("waypoints", default: (:)), self.at("repeat", default: 1))
+          // The repeat bound is always the content's own repeat count
+          // (`content-repeat`, already computed with `render-base` baked in
+          // via `_parse-touying-reducer`/`_parse-content-into-results-and-repetitions`
+          // above) — `self.repeat` is the *enclosing slide's* pause count,
+          // which is unrelated to how many stages this rendered content has.
+          let cwp = if use-slide-context {
+            self.at("waypoints", default: (:))
           } else {
-            (content-cwp, content-repeat)
+            content-cwp
           }
+          let rp = content-repeat
           let target = if subslide-spec == auto { index } else {
             let spec = subslide-spec
             let wp-self = self + (waypoints: cwp)
@@ -1594,7 +1600,14 @@
             ) {
               _resolve-waypoint-to-int(wp-self, spec)
             } else if type(spec) == int {
-              utils.resolve-negative-subslides(rp, spec)
+              // `rp` is the absolute final counter value (it already
+              // includes `render-base`), so convert it to a plain stage
+              // count before resolving negative indices relative to `base`.
+              utils.resolve-negative-subslides(
+                rp - render-base + 1,
+                spec,
+                base: render-base,
+              )
             } else { rp }
           }
           // Render at target (inlined from _render-at-subslide)

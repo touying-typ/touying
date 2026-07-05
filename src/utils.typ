@@ -1667,18 +1667,36 @@
 /// Resolve negative subslide indices relative to a total repeat count.
 /// E.g. `-1` becomes the last subslide, `-2` the second-to-last.
 ///
+/// Positive indices are absolute and, when `base` is not `1` (e.g. a reducer
+/// block rendered with a custom `base` so its internal counter starts higher
+/// than 1), are valid over `base..(base + repeat - 1)` rather than `1..repeat`.
+/// Negative indices always count backward from the last subslide, so their
+/// valid magnitude range (`1..repeat`) does not depend on `base`.
+///
 /// - repeat (int): Total number of subslides.
 /// - idx (int, array): A subslide index or array of indices.
+/// - base (int): The counter value of the first subslide. Default is `1`.
 ///
 /// -> int or array
-#let resolve-negative-subslides(repeat, idx) = {
-  assert(calc.abs(idx) <= repeat, message: "idx out of bounds")
-  assert(idx!=0, message: "idx cannot be zero")
+#let resolve-negative-subslides(repeat, idx, base: 1) = {
+  let resolve-one(i) = {
+    assert(i != 0, message: "idx cannot be zero")
+    if i < 0 {
+      assert(calc.abs(i) <= repeat, message: "idx out of bounds")
+      base + repeat + i
+    } else {
+      assert(
+        i >= base and i <= base + repeat - 1,
+        message: "idx out of bounds",
+      )
+      i
+    }
+  }
 
   if type(idx) == array {
-    idx.map(i => if type(i) == int and i < 0 { repeat + i + 1 } else { i })
-  } else if type(idx) == int and idx < 0 {
-    repeat + idx + 1
+    idx.map(i => if type(i) == int { resolve-one(i) } else { i })
+  } else if type(idx) == int {
+    resolve-one(idx)
   } else {
     idx
   }

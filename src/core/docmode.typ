@@ -79,165 +79,187 @@
   wrap-other: false,
   wrap-align-direction: right,
 ) = {
-  if (wrap-images, wrap-image-figures, wrap-other-figures, wrap-other).any(x => x) {
-    import "@preview/wrap-it:0.1.1": wrap-content
+  let raw-images = images.filter(i => not i.is-figure)
+  let figure-images = images.filter(i => i.is-figure)
+  let other-figures = blocks.filter(b => b.func() == figure)
+  let other-blocks = blocks.filter(b => b.func() != figure)
+
+  let has-wrap-content = (
+    (wrap-images and raw-images.len() > 0)
+      or (wrap-image-figures and figure-images.len() > 0)
+      or (wrap-other-figures and other-figures.len() > 0)
+      or (wrap-other and other-blocks.len() > 0)
+  )
+
+  let result = ()
+
+  if has-wrap-content {
+    // Only pull in meander for sections that actually need wrapping around
+    // an obstacle — most document-mode sections have no images/blocks to
+    // wrap, and shouldn't pay for the import or the reflow layout pass.
+    import "@preview/meander:0.4.4"
+
+    // Separate headings from wrappable content — meander's container flows
+    // paragraph-like content, not headings.
+    let headings = items.filter(r => (
+      type(r) == content and r.func() == heading
+    ))
+    let body-parts = items.filter(r => {
+      not (type(r) == content and r.func() == heading)
+    })
+    // Unwrap blocks to expose the inner content directly — meander treats a
+    // `block` as an atomic, unsplittable unit, so it must not reach `content`
+    // still wrapped. Content gets nested in `block(...)` at multiple points
+    // upstream (`_document-linearize`, then again in `_process-child`), and
+    // those blocks can end up buried inside a `styled` node (from an
+    // intervening `set`/`show` rule) or a sequence, not just at the top
+    // level — so this has to walk the whole tree, not only the outermost
+    // wrapper, and rebuild `styled` nodes in place to keep their styling.
+    let _unwrap-blocks(r) = {
+      if type(r) != content { return r }
+      if r.func() == block {
+        let body = r.at("body", default: none)
+        if body == none { return r }
+        return _unwrap-blocks(body)
+      }
+      if utils.is-styled(r) {
+        return (r.func())(_unwrap-blocks(r.child), r.styles)
+      }
+      if utils.is-sequence(r) {
+        return r.children.map(_unwrap-blocks).sum(default: none)
+      }
+      r
+    }
+    let unwrapped = body-parts.map(_unwrap-blocks)
+
+    result += headings
+    let body-content = unwrapped.sum(default: none)
+    body-content = if body-content == none { [] } else { body-content }
+
+    // Meander measures each obstacle in an unbounded context to compute its
+    // page tiling, so a percentage width (e.g. `50%`) silently resolves to
+    // `0pt` there — obstacles need an absolute size. Resolve the actual
+    // content width via `layout` first and convert `col-fraction` to an
+    // absolute length, the same trick the old wrap-it-based code used.
+    result.push(layout(size => {
+      let content-width = size.width
+      let to-abs-width(col-fraction) = (col-fraction * 1pt).pt() * content-width
+
+      // An image's own explicit `width` (e.g. `width: 80%`) is relative to
+      // its column, not the full content area, so extract just the ratio
+      // part to shrink the reserved obstacle to the image's actual size —
+      // otherwise the reserved column stays at the full composer fraction
+      // and wrapped text leaves a dead gap next to a narrower image instead
+      // of flowing into the unused space.
+      let width-ratio(element) = {
+        let w = if type(element) == content {
+          element.at("width", default: auto)
+        } else {
+          auto
+        }
+        if type(w) == ratio {
+          (w * 1pt).pt()
+        } else if type(w) == relative {
+          (w.ratio * 1pt).pt()
+        } else {
+          1.0
+        }
+      }
+
+      // Images/figures often carry their own explicit width that's narrower
+      // than the obstacle column, so the element must also be aligned to
+      // `wrap-align-direction` inside the box — otherwise it sits at the
+      // box's default (left) edge, leaving a gap between it and the page
+      // margin the box is actually anchored to.
+      //
+      // The image can't just be re-boxed at its already-shrunk final width:
+      // its own ratio/relative `width` would resolve against that smaller
+      // box a second time, shrinking it again (e.g. `width: 80%` inside an
+      // 80%-sized box renders at 64%). And it can't be rebuilt without the
+      // `width` field either — `image()`'s `source` is a path that resolves
+      // lexically relative to the file it's written in, so reconstructing
+      // the element from a different file (this one) breaks relative paths.
+      // Instead, render it at its correct size inside a box matching its
+      // *own* resolving context (the full column), then crop that box down
+      // to the image's actual footprint with an aligned, clipped outer box.
+      let cropped-to-fit(element, col-width, ratio) = box(
+        width: col-width * ratio,
+        clip: true,
+        align(
+          wrap-align-direction,
+          box(width: col-width, align(wrap-align-direction, element)),
+        ),
+      )
+
+      let to-wrap = ()
+      if wrap-images {
+        to-wrap += raw-images.map(i => cropped-to-fit(
+          i.element,
+          to-abs-width(i.col-fraction),
+          width-ratio(i.element),
+        ))
+      }
+      if wrap-image-figures {
+        to-wrap += figure-images.map(i => box(
+          width: to-abs-width(i.col-fraction),
+          align(wrap-align-direction, i.element),
+        ))
+      }
+      if wrap-other-figures {
+        to-wrap += other-figures
+      }
+      if wrap-other {
+        to-wrap += other-blocks
+      }
+
+      // Stack all wrapped elements into a single obstacle so they occupy one
+      // column together, rather than computing per-element offsets.
+      let obstacle = if to-wrap.len() == 1 {
+        to-wrap.first()
+      } else {
+        stack(dir: ttb, spacing: 1em, ..to-wrap)
+      }
+
+      meander.reflow({
+        import meander: *
+        placed(top + wrap-align-direction, obstacle)
+        container()
+        content(body-content)
+      })
+    }))
   } else {
-    // a dummy binding.
-    let wrap-content = ()=>none
+    result += items
   }
 
-  // Flatten content to plain text — wrap-it needs splittable text
-  // not used for now, maybe else
-  // let _to-text(c) = {
-  //   if c == none { return "" }
-  //   if type(c) == str { return c }
-  //   if type(c) != content { return "" }
-  //   if c.has("text") { return c.text }
-  //   if c.has("children") { return c.children.map(_to-text).join("") }
-  //   if c.has("body") { return _to-text(c.body) }
-  //   if c.has("child") { return _to-text(c.child) }
-  //   ""
-  // }
-
-  // For figures: rescale the image with inv, then render
-  // the caption separately below at obstacle-width so it doesn't overflow.
-  let _scale-img-figure(
-    fig-el,
-    img-el,
-    col-fraction,
-    content-width,
-    align-direction,
-  ) = {
-    let obstacle-width = (col-fraction * 1pt).pt() * content-width
-    let scaled-img = utils.rescale-image(
-      img-el,
-      img-el,
-      col-fraction,
-      align-direction,
-      container-width: content-width,
-    )
-    let caption = fig-el.at("caption", default: none)
-
-    stack(
-      spacing: 0.5em,
-      scaled-img,
-      if caption != none {
-        box(width: obstacle-width, align(center, caption))
-      },
-    )
+  // Non-wrapped raw images → centered at end
+  if not wrap-images {
+    for img in raw-images {
+      result.push(align(center, img.element))
+    }
   }
 
-  // Resolve content width via layout at the top level — before wrap-it
-  // narrows the container — so rescale-image gets the true content area width.
-  layout(size => {
-    let content-width = size.width
-
-    let raw-images = images.filter(i => not i.is-figure)
-    let figure-images = images.filter(i => i.is-figure)
-    let other-figures = blocks.filter(b => b.func() == figure)
-    let other-blocks = blocks.filter(b => b.func() != figure)
-
-    // Collect all elements to wrap via wrap-it
-    let to-wrap = ()
-    if wrap-images {
-      to-wrap += raw-images.map(i => utils.rescale-image(
-        i.element,
-        i.element,
-        i.col-fraction,
-        wrap-align-direction,
-        container-width: content-width,
-      ))
+  // Non-wrapped figures → centered at end
+  if not wrap-image-figures {
+    for fig in figure-images {
+      result.push(align(center, fig.element))
     }
-    if wrap-image-figures {
-      to-wrap += figure-images.map(i => {
-        let img = i.element.at("body", default: none)
-        if img != none and img.func() == image {
-          _scale-img-figure(
-            i.element,
-            img,
-            i.col-fraction,
-            content-width,
-            wrap-align-direction,
-          )
-        } else {
-          i.element
-        }
-      })
+  }
+
+  // Non-wrapped other figures → centered at end
+  if not wrap-other-figures {
+    for fig in other-figures {
+      result.push(align(center, fig))
     }
-    if wrap-other-figures {
-      to-wrap += other-figures
+  }
+
+  // Non-wrapped block content → centered at end
+  if not wrap-other {
+    for b in other-blocks {
+      result.push(align(center, b))
     }
-    if wrap-other {
-      to-wrap += other-blocks
-    }
+  }
 
-    let result = ()
-
-    if to-wrap.len() > 0 {
-      // Separate headings from wrappable content — wrap-it can't split headings.
-      let headings = items.filter(r => (
-        type(r) == content and r.func() == heading
-      ))
-      let body-parts = items.filter(r => {
-        not (type(r) == content and r.func() == heading)
-      })
-      // Unwrap single-child blocks to expose splittable text to wrap-it
-      //TODO: give option whether to unpack blocks by default true.
-      // some users might not like this.
-      // but we keep at least all inline styling.
-      // 
-      let unwrapped = body-parts.map(r => {
-        if type(r) == content and r.func() == block { //TODO: maybe change this to a better block content check, not only check for direct blocks
-          let body = r.at("body", default: none)
-          if body != none { body } else { r }
-        } else {
-          r
-        }
-      })
-
-      result += headings
-      let body-content = unwrapped.sum(default: none)
-      body-content = if body-content == none { [] } else { body-content }
-
-      // Wrap each element around the text
-      for (idx, el) in to-wrap.enumerate() {
-        let wrapped-body = if idx == 0 { body-content } else { [] }
-        result.push(wrap-content(el, wrapped-body, align: wrap-align-direction))
-      }
-    } else {
-      result += items
-    }
-
-    // Non-wrapped raw images → centered at end
-    if not wrap-images {
-      for img in raw-images {
-        result.push(align(center, img.element))
-      }
-    }
-
-    // Non-wrapped figures → centered at end
-    if not wrap-image-figures {
-      for fig in figure-images {
-        result.push(align(center, fig.element))
-      }
-    }
-
-    // Non-wrapped other figures → centered at end
-    if not wrap-other-figures {
-      for fig in other-figures {
-        result.push(align(center, fig))
-      }
-    }
-
-    // Non-wrapped block content → centered at end
-    if not wrap-other {
-      for b in other-blocks {
-        result.push(align(center, b))
-      }
-    }
-
-    result.sum(default: none)
-  })
+  result.sum(default: none)
 }
 
 
@@ -835,6 +857,7 @@
       let subslide-spec = utils.resolve-negative-subslides(
         repeat,
         subslide-spec,
+        base: base,
       )
 
       if type(subslide-spec) == int {
