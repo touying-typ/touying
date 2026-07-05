@@ -4902,7 +4902,11 @@
         last-subslide = calc.max(last-subslide, next-last-subslide)
       } else if type(child) == content and child.func() == footnote {
         if repetitions <= index or not need-cover {
-          result.push(child)
+          if child.has("label") and index != repetitions {
+            result.push(footnote(child.body))
+          } else {
+            result.push(child)
+          }
         }
       } else if (
         type(child) == content and child.func() in reconstructable-functions
