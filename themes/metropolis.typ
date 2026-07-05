@@ -19,9 +19,9 @@
 ///
 ///   For example, `#slide(composer: (1fr, 2fr, 1fr))[A][B][C]` to split the slide into three parts. The first and the last parts will take 1/4 of the slide, and the second part will take 1/2 of the slide.
 ///
-///   If you pass a non-function value like `(1fr, 2fr, 1fr)`, it will be assumed to be the first argument of the `components.side-by-side` function.
+///   If you pass a non-function value like `(1fr, 2fr, 1fr)`, it will be assumed to be the first argument of the `cols` function.
 ///
-///   The `components.side-by-side` function is a simple wrapper of the `grid` function. It means you can use the `grid.cell(colspan: 2, ..)` to make the cell take 2 columns.
+///   The `cols` function is a simple wrapper of the `grid` function. It means you can use the `grid.cell(colspan: 2, ..)` to make the cell take 2 columns.
 ///
 ///   For example, `#slide(composer: 2)[A][B][#grid.cell(colspan: 2)[Footer]]` will make the `Footer` cell take 2 columns.
 ///
@@ -164,6 +164,9 @@
         if info.institution != none {
           block(spacing: 1em, info.institution)
         }
+        if info.contact != none {
+          block(spacing: 1em, info.contact)
+        }
         if extra != none {
           block(spacing: 1em, extra)
         }
@@ -171,6 +174,63 @@
     )
   }
   touying-slide(self: self, body)
+})
+
+
+/// Outline slide for the presentation.
+///
+/// Example:
+///
+/// ```typst
+/// #show: metropolis-theme.with(
+///   config-info(
+///     title: [Title],
+///     logo: emoji.city,
+///   ),
+/// )
+///
+/// #outline-slide(indent: (1em,), depth: 1, title: [Contents])
+/// ```
+///
+/// - config (dictionary): The configuration of the slide.
+/// - level (int | auto): The level of the outline. Default is `auto`, which uses the slide-level configured in the `config-common`.
+/// - title (string): The title of the slide. Default is "Outline".
+/// - spacing (length): The spacing between the outline entries. Default is 2em.
+/// - args (any): The arguments to pass to the custom-progressive-outline, see https://touying-typ.github.io/docs/reference/components/custom-progressive-outline. Some values like numbering have defaults to mimic the style of the metropolis theme.
+#let outline-slide(
+  config: (:),
+  level: auto,
+  title: [Outline],
+  spacing: 2em,
+  ..args,
+) = slide(title: title, config: config, self => {
+  let named-args = args.named()
+  let indent = if not "indent" in named-args.keys() { (1em,) } else {
+    named-args.remove("indent")
+  }
+  if type(indent) != array {
+    indent = (indent,)
+  }
+  let vspace = if not "vspace" in named-args.keys() {
+    (spacing, spacing / 3, spacing / 3, spacing / 3)
+  } else { named-args.remove("vspace") }
+  let numbered = if not "numbered" in named-args.keys() { (true,) } else {
+    named-args.remove("numbered")
+  }
+  let numbering = if not "numbering" in named-args.keys() { ("1.",) } else {
+    named-args.remove("numbering")
+  }
+  components.custom-progressive-outline(
+    title: none,
+    depth: if level != auto { level } else { self.slide-level },
+    level: level,
+    indent: indent,
+    vspace: vspace,
+    numbered: numbered,
+    numbering: numbering,
+    ..args.pos(),
+    ..named-args,
+  )
 })
 
 
@@ -261,13 +321,13 @@
 /// Example:
 ///
 /// ```typst
-/// #show: metropolis-theme.with(aspect-ratio: "16-9", config-colors(primary: blue))`
+/// #show: metropolis-theme.with(aspect-ratio: "16-9", config-colors(primary: blue))
 /// ```
 ///
 /// Consider using:
 ///
 /// ```typst
-/// #set text(font: "Fira Sans", weight: "light", size: 20pt)`
+/// #set text(font: "Fira Sans", weight: "light", size: 20pt)
 /// #show math.equation: set text(font: "Fira Math")
 /// #set strong(delta: 100)
 /// #set par(justify: true)

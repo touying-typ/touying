@@ -270,7 +270,11 @@
 
     body
   } else {
-    show: split-content-into-slides.with(self: self, is-first-slide: true)
+    show: split-content-into-slides.with(
+      self: self,
+      is-first-slide: true,
+      is-outer-call: true,
+    )
     body
   }
 }

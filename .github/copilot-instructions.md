@@ -13,7 +13,7 @@ src/
   utils.typ          # Shared helpers (merge-dicts, display-current-heading, …)
   configs.typ        # config-common, config-colors, config-page, config-info, …
   exports.typ        # Public API surface
-  components.typ     # Reusable slide components (side-by-side, …)
+  components.typ     # Reusable slide components (cols, …)
 themes/              # 6 built-in themes: simple, metropolis, dewdrop, university, aqua, stargazer
 examples/            # Theme usage examples (excluded from package)
 tests/
@@ -187,14 +187,11 @@ Configuration functions:
 - `config-methods` — animation method overrides
 - `config-page` — page layout
 
-### External package integration (touying-reducer)
+### External package integration (touying-reduce)
 
 ```typst
 // CeTZ
-#let cetz-canvas = touying-reducer.with(
-  reduce: cetz.canvas,
-  cover: cetz.draw.hide.with(bounds: true),
-)
+#let cetz-canvas = touying-reduce.with(cetz)
 #cetz-canvas({
   import cetz.draw: *
   rect((0,0), (5,5))
@@ -203,10 +200,7 @@ Configuration functions:
 })
 
 // Fletcher
-#let fletcher-diagram = touying-reducer.with(
-  reduce: fletcher.diagram,
-  cover: fletcher.hide,
-)
+#let fletcher-diagram = touying-reduce.with(fletcher)
 ```
 
 ### Speaker notes

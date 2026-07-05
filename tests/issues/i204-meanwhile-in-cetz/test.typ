@@ -2,14 +2,11 @@
 // https://github.com/touying-typ/touying/issues/204
 
 #import "/lib.typ": *
-#import "@preview/cetz:0.4.2"
+#import "@preview/cetz:0.5.2"
 #import themes.default: *
 
 // Cetz bindings for touying.
-#let cetz-canvas = touying-reducer.with(
-  reduce: cetz.canvas,
-  cover: cetz.draw.hide.with(bounds: true),
-)
+#let cetz-canvas = touying-reduce.with(cetz)
 
 #show: default-theme.with(aspect-ratio: "16-9")
 

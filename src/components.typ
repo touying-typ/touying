@@ -1,4 +1,5 @@
 #import "utils.typ"
+#import "extern.typ": warning
 
 #let cell = block.with(
   width: 100%,
@@ -10,30 +11,277 @@
 )
 
 
+/// Lazy fractional vertical space, used with `lazy-layout` to push content to the
+/// bottom of a block while keeping sibling blocks at equal height without filling the
+/// entire page.
+///
+/// Has no visual effect without `lazy-layout`. If a column contains multiple `lazy-v`
+/// markers (stacked blocks), only the last one is activated.
+///
+/// Example:
+/// ```typ
+/// #lazy-layout(grid(
+///   columns: (1fr, 1fr),
+///   block(width: 100%)[
+///     #lorem(10)
+///     #lazy-v(1fr)
+///     Bottom left.
+///   ],
+///   block(width: 100%)[
+///     #lorem(20)
+///     #lazy-v(1fr)
+///     Bottom right.
+///   ],
+/// ))
+/// ```
+///
+/// - amount (fraction): The fractional amount of space (e.g. `1fr`).
+///
+/// - weak (bool): Whether the space is weak. Default is `false`.
+///
+/// -> content
+#let lazy-v(amount, weak: false) = {
+  assert(
+    type(amount) == fraction,
+    message: "lazy-v: `amount` must be a fraction (e.g. 1fr), got "
+      + repr(amount),
+  )
+  [#parbreak()#metadata((
+      amount: amount,
+      weak: weak,
+    ))<touying-lazy-v>#parbreak()]
+}
+
+/// Lazy fractional horizontal space, the horizontal counterpart of `lazy-v`.
+/// Used with `lazy-layout(direction: ltr)` to push content to the right edge of a
+/// block while keeping sibling blocks at equal width without filling the entire page.
+///
+/// Has no visual effect without a matching `lazy-layout`. If a row contains multiple
+/// `lazy-h` markers (stacked blocks), only the last one is activated.
+///
+/// Example:
+/// ```typ
+/// #lazy-layout(
+///   direction: ltr,
+///   stack(
+///     dir: ltr,
+///     block(height: 100%)[
+///       Left label. #lazy-h(1fr) Right label.
+///     ],
+///     block(height: 100%)[
+///       A longer left label. #lazy-h(1fr) Right label.
+///     ],
+///   ),
+/// )
+/// ```
+///
+/// - amount (fraction): The fractional amount of space (e.g. `1fr`).
+///
+/// - weak (bool): Whether the space is weak. Default is `false`.
+///
+/// -> content
+#let lazy-h(amount, weak: false) = {
+  assert(
+    type(amount) == fraction,
+    message: "lazy-h: `amount` must be a fraction (e.g. 1fr), got "
+      + repr(amount),
+  )
+  [#metadata((
+    amount: amount,
+    weak: weak,
+  ))<touying-lazy-h>]
+}
+
+/// Make multiple blocks match the size of the tallest (or widest) sibling without
+/// expanding to fill the entire page.
+///
+/// - `direction: ttb` (default): equalizes block *heights* via `lazy-v`.
+/// - `direction: ltr`: equalizes block *widths* via `lazy-h`.
+///
+/// If a column (or row) contains multiple lazy markers (stacked blocks), only the last
+/// one is activated.
+///
+/// Use `cols(lazy-layout: true)` as a convenient shorthand for the vertical case.
+///
+/// ```typ
+/// #lazy-layout(grid(
+///   columns: (1fr, 1fr),
+///   block(width: 100%)[
+///     #lorem(10)
+///     #lazy-v(1fr)
+///     Bottom left.
+///   ],
+///   block(width: 100%)[
+///     #lorem(20)
+///     #lazy-v(1fr)
+///     Bottom right.
+///   ],
+/// ))
+/// ```
+///
+/// - direction (direction): The equalization axis (`ttb`/`btt` for heights, `ltr`/`rtl` for widths). Default is `ttb`.
+///
+/// - grid-size (length): The quantization unit for grouping markers into the same column (vertical mode) or row (horizontal mode). Positions are floored to the nearest multiple of `grid-size` before comparison, adding tolerance for sub-pixel differences. Default is `50pt`.
+///
+/// - body (content): The content containing `lazy-v` or `lazy-h` markers.
+///
+/// -> content
+#let lazy-layout(direction: ttb, grid-size: 50pt, body) = {
+  [#metadata((:))<lazy-layout-begin>]
+  layout(container-size => context {
+    // Query lazy marker positions within this lazy-layout scope.
+    // When lazy-layout is used inside a `measure` environment (e.g. from
+    // `page-container`'s detect-overflow), the metadata labels are not part of
+    // the real document flow, so `query` returns an empty array.  In that case
+    // we gracefully fall back to rendering the body without lazy processing.
+    let begin-candidates = query(selector(<lazy-layout-begin>).before(here()))
+    let end-candidates = query(selector(<lazy-layout-end>).after(here()))
+    if begin-candidates.len() == 0 or end-candidates.len() == 0 {
+      // Fallback: render body as-is without lazy spacing adjustments.
+      body
+    } else {
+      let begin-loc = begin-candidates.last().location()
+      let end-loc = end-candidates.first().location()
+
+      let is-vertical = direction.axis() == "vertical"
+      if is-vertical {
+        // Collect positions of all lazy-v markers in this scope.
+        let lazy-v-items = query(
+          selector(<touying-lazy-v>).after(begin-loc).before(end-loc),
+        )
+        let lazy-v-positions = lazy-v-items.map(it => it.location().position())
+        // For each x coordinate, find the last marker's position (the one to activate).
+        // Group by quantized x (floored to nearest grid-size) to tolerate sub-pixel differences.
+        let last-positions = {
+          let result = (:)
+          for pos in lazy-v-positions {
+            let key = repr(calc.floor(pos.x / grid-size))
+            result.insert(key, pos)
+          }
+          result.values()
+        }
+
+        // Phase 1: measure height with all lazy-v markers hidden.
+        let measured-size = measure(block(
+          width: container-size.width,
+          body,
+        ))
+        // Phase 2: render at the measured height.
+        // Only the last lazy-v marker per x coordinate is activated; others stay hidden.
+        show <touying-lazy-h>: it => panic(
+          "lazy-layout: found a lazy-h marker inside a vertical lazy-layout. "
+            + "Use lazy-v markers for vertical layouts, or pass direction: ltr to lazy-layout.",
+        )
+        show <touying-lazy-v>: it => {
+          let pos = it.location().position()
+          if last-positions.any(lp => (
+            calc.floor(lp.x / grid-size) == calc.floor(pos.x / grid-size)
+              and lp.y == pos.y
+          )) {
+            v(it.value.amount, weak: it.value.weak)
+          }
+        }
+        block(height: measured-size.height, body)
+      } else {
+        // Collect positions of all lazy-h markers in this scope.
+        let lazy-h-items = query(
+          selector(<touying-lazy-h>).after(begin-loc).before(end-loc),
+        )
+        let lazy-h-positions = lazy-h-items.map(it => it.location().position())
+        // For each y coordinate, find the last marker's position (the one to activate).
+        // Group by quantized y (floored to nearest grid-size) to tolerate sub-pixel differences.
+        let last-positions = {
+          let result = (:)
+          for pos in lazy-h-positions {
+            let key = repr(calc.floor(pos.y / grid-size))
+            result.insert(key, pos)
+          }
+          result.values()
+        }
+
+        // Phase 1: measure width with all lazy-h markers hidden.
+        let measured-size = measure(block(
+          height: container-size.height,
+          body,
+        ))
+        // Phase 2: render at the measured width.
+        // Only the last lazy-h marker per y coordinate is activated; others stay hidden.
+        show <touying-lazy-v>: it => panic(
+          "lazy-layout: found a lazy-v marker inside a horizontal lazy-layout. "
+            + "Use lazy-h markers for horizontal layouts, or pass direction: ttb to lazy-layout.",
+        )
+        show <touying-lazy-h>: it => {
+          let pos = it.location().position()
+          if last-positions.any(lp => (
+            calc.floor(lp.y / grid-size) == calc.floor(pos.y / grid-size)
+              and lp.x == pos.x
+          )) {
+            h(it.value.amount, weak: it.value.weak)
+          }
+        }
+        block(width: measured-size.width, body)
+      }
+    }
+  })
+  [#metadata((:))<lazy-layout-end>]
+}
+
+// Alias used inside `cols` to avoid the `lazy-layout` parameter shadowing the function.
+#let _lazy-layout = lazy-layout
+
 /// A simple wrapper around `grid` that creates a single-row grid. Used as the default `composer` for multi-body slides.
 ///
-/// Example: `side-by-side[a][b][c]` will display `a`, `b`, and `c` side by side.
+/// Example: `cols[a][b][c]` will display `a`, `b`, and `c` as columns side by side.
 ///
 /// - columns (auto, array): The column widths. Default is `auto`, which creates equal-width columns matching the number of bodies.
 ///
 /// - gutter (length): The space between columns. Default is `1em`.
 ///
-/// - bodies (content): The contents to display side by side.
+/// - lazy-layout (bool): When `true`, wraps the grid with `lazy-layout` so that
+///   `lazy-v` markers inside the bodies are resolved correctly. Default is `false`.
+///
+/// - bodies (content): The contents to display side by side as columns side by side.
 ///
 /// -> content
-#let side-by-side(columns: auto, gutter: 1em, ..bodies) = {
+#let cols(columns: auto, gutter: 1em, lazy-layout: false, ..bodies) = {
   let args = bodies.named()
   let bodies = bodies.pos()
   if bodies.len() == 1 {
-    return bodies.first()
+    return if lazy-layout {
+      _lazy-layout(bodies.first())
+    } else {
+      bodies.first()
+    }
   }
   let columns = if columns == auto {
     (1fr,) * bodies.len()
   } else {
     columns
   }
-  grid(columns: columns, gutter: gutter, ..args, ..bodies)
+  let result = grid(columns: columns, gutter: gutter, ..args, ..bodies)
+  if lazy-layout {
+    _lazy-layout(result)
+  } else {
+    result
+  }
 }
+
+
+/// A simple wrapper around `grid` that creates a single-row grid. Used as the default `composer` for multi-body slides. Alias for `cols`.
+///
+/// Example: `side-by-side(gutter: 1em)[a][b][c]` will display `a`, `b`, and `c` side by side.
+///
+/// - columns (auto, array): The column widths. Default is `auto`, which creates equal-width columns matching the number of bodies.
+///
+/// - gutter (length): The space between columns. Default is `1em`.
+///
+/// - lazy-layout (bool): When `true`, wraps the grid with `lazy-layout` so that
+///   `lazy-v` markers inside the bodies are resolved correctly. Default is `true`.
+///
+/// - bodies (content): The contents to display side by side.
+///
+/// -> content
+#let side-by-side = cols
 
 
 /// Adaptive columns layout that automatically chooses the number of columns based on content height.
@@ -209,7 +457,7 @@
 ///
 /// - transform (function): A function applied to each outline entry. It receives `(cover: bool, level: int, alpha: ratio, ..args, it)` where `cover` is `true` when the entry should be visually de-emphasized, `it` is the outline entry element, and `alpha` is the transparency value.
 ///
-/// - args (arguments): Additional arguments forwarded to the inner `outline()` call.
+/// - args (arguments): Additional arguments forwarded to the inner `outline()` call, see https://typst.app/docs/reference/model/outline/.
 ///
 /// -> content
 #let progressive-outline(
@@ -262,28 +510,25 @@
 /// A fully-featured progressive outline that renders headings from multiple levels with per-level styling.
 ///
 /// Uses arrays indexed by heading level (first element = level 1, second = level 2, etc.) to apply different styling to each level. Unlike `progressive-outline` (a thin wrapper around Typst's built-in `outline`), this function renders each heading manually, giving full control over numbering, indentation, fills, and typography.
+/// For styling parameters the last value in the array is used for all levels beyond the array length, it is repeated. So you can write `indent: (1em,)` to apply a `1em` indentation to all levels, or `indent: (0em, 1em)` to apply no indentation to level-1 headings and `1em` to level-2 and beyond. This is not the case for `numbering` or `vspace` nor for `filled`, `numbered`, `paged`.
 ///
 /// - self (none): The self context.
 ///
-/// - alpha (ratio): The transparency of the other headings. Default is `60%`.
+/// - alpha (ratio): The transparency of the covered headings. Default is `60%`.
 ///
 /// - level (auto, int): The outline level. When `auto`, all levels up to `slide-level` are shown. Default is `auto`.
 ///
-/// - numbered (array): Per-level booleans indicating whether headings are numbered. Default is `(false,)`.
+/// - numbered (array): Per-level booleans indicating whether headings are numbered. Default is `(false,)`. *Last value in the array is not-repeated!*
 ///
-/// - filled (array): Per-level booleans indicating whether to show a fill between the heading and the page number. Default is `(false,)`.
+/// - filled (array): Per-level booleans indicating whether to show a fill between the heading and the page number. Default is `(false,)`. *Last value in the array is not-repeated!*
 ///
-/// - paged (array): Per-level booleans indicating whether to show the page number. Default is `(false,)`.
+/// - paged (array): Per-level booleans indicating whether to show the page number. Default is `(false,)`. *Last value in the array is not-repeated!*
 ///
-/// - numbering (array): Per-level numbering strings or `none` overrides. Default is `()`.
+/// - numbering (array): Per-level numbering strings or `none` overrides. Default is `()`. *Last value in the array is not-repeated!*
 ///
-/// - text-fill (array, none): Per-level text fill colors. Default is `none` (inherits current text color).
+/// - text-style (array, none): Per-level text style dicts. Default is `none` (inherits current text style). See the parameters of `text` (https://typst.app/docs/reference/text/text/).
 ///
-/// - text-size (array, none): Per-level text sizes. Default is `none` (inherits current text size).
-///
-/// - text-weight (array, none): Per-level text weights. Default is `none` (inherits current text weight).
-///
-/// - vspace (array, none): Per-level vertical space above each heading. Default is `none`.
+/// - vspace (array, none): Per-level vertical space above each heading. Default is `none`. *Last value in the array is not-repeated!*
 ///
 /// - title (str, none): The title of the outline section. Default is `none`.
 ///
@@ -293,116 +538,235 @@
 ///
 /// - short-heading (bool): Whether to shorten headings that have labels using `utils.short-heading`. Default is `true`.
 ///
-/// - uncover-fn (function): A function `body => body` applied to currently-active (non-covered) headings. Default is the identity function.
+/// - show-past (array, function, none): Per-level booleans indicating whether to show headings for past sections. Default is `none`, reverts to the cover behaviour of `progressive-outline`. The last value in the array is used for all levels beyond the array length. \ If a function is provided instead, the function is used to style the outline entries and the styles passed to custom-progressive-outline are ignored. It receives `(level: int, it)` where `it` is the outline entry element and `level` is the heading level of that entry.
 ///
-/// - args (arguments): Additional arguments forwarded to the underlying `progressive-outline` call.
+/// - show-current (array, function, none): Per-level booleans. Defaul is `none`. For more info see `show-past`.
+///
+/// - show-future (array, function, none): Per-level booleans. Default is `none`. For more info see `show-past`.
+///
+/// - style-current (array): Per level text style dicts which override text styles for the non-covered headings. Default is `none`, which uses the styles from `text-style`. See `text-style` for more details.
+///
+/// - args (arguments): Additional arguments forwarded to the underlying `outline` call, see https://typst.app/docs/reference/model/outline/.
 ///
 /// -> content
 #let custom-progressive-outline(
   self: none,
   alpha: 60%,
   level: auto,
-  numbered: (false,),
+  numbered: (false,), //only applies when headings have numbering in the document
   filled: (false,),
   paged: (false,),
-  numbering: (),
-  text-fill: none,
-  text-size: none,
-  text-weight: none,
-  vspace: none,
-  title: none,
+  numbering: (), // only when numbered is true, overrides the document numbering for the outline
+  text-style: none,
+  vspace: none, // set to (0pt, ...) to linebreak the entries
+  title: none, //if set the outline will create its own top level heading
   indent: (0em,),
   fill: (repeat[.],),
   short-heading: true,
-  uncover-fn: body => body,
+  show-past: none,
+  show-current: none,
+  show-future: none,
+  style-current: none,
   ..args,
-) = progressive-outline(
-  alpha: alpha,
-  level: level,
-  transform: (cover: false, alpha: alpha, ..args, it) => {
-    let array-at(arr, idx) = arr.at(idx, default: arr.last())
-    let set-text(level, body) = {
-      set text(fill: {
-        let text-color = if type(text-fill) == array and text-fill.len() > 0 {
-          array-at(text-fill, level - 1)
-        } else {
-          text.fill
-        }
-        if cover {
-          utils.update-alpha(text-color, alpha)
-        } else {
-          text-color
-        }
-      })
-      set text(
-        size: array-at(text-size, level - 1),
-      ) if type(text-size) == array and text-size.len() > 0
-      set text(
-        weight: array-at(text-weight, level - 1),
-      ) if type(text-weight) == array and text-weight.len() > 0
-      body
+) = {
+  // panic when args has uncover-fn
+  if "uncover-fn" in args.named().keys() {
+    panic(
+      "uncover-fn is no longer supported in custom-progressive-outline, use style-current instead.",
+    )
+  }
+  let named-args = args.named()
+  //for backwards compatibility, we extract text-fill, text-size and text-weight from the args and pass it into text-style
+  let merge-dep-styles(base, override, name) = {
+    let result = if base != none { base } else { () }
+    if override.len() > result.len() {
+      result = result + (range(override.len() - result.len()).map(i => (:))) //Extend result with empty dicts
     }
-    let body = {
-      if type(vspace) == array and vspace.len() > it.level - 1 {
-        v(vspace.at(it.level - 1))
+    for i in range(override.len()) {
+      if override.at(i) != none {
+        result.at(i).insert(name, override.at(i))
       }
-      h(range(1, it.level + 1).map(level => array-at(indent, level - 1)).sum())
-      set-text(
-        it.level,
-        {
-          if array-at(numbered, it.level - 1) {
-            let current-numbering = numbering.at(
-              it.level - 1,
-              default: it.element.numbering,
-            )
-            if current-numbering != none {
-              std.numbering(
-                current-numbering,
-                ..counter(heading).at(it.element.location()),
-              )
-              h(.3em)
-            }
-          }
-          link(
-            it.element.location(),
-            {
-              if short-heading {
-                utils.short-heading(self: self, it.element)
-              } else {
-                it.element.body
-              }
-              box(
-                width: 1fr,
-                inset: (x: .2em),
-                if array-at(filled, it.level - 1) {
-                  array-at(fill, level - 1)
-                },
-              )
-              if array-at(paged, it.level - 1) {
-                std.numbering(
-                  if page.numbering != none {
-                    page.numbering
-                  } else {
-                    "1"
-                  },
-                  ..counter(page).at(it.element.location()),
-                )
-              }
-            },
-          )
-        },
-      )
+    }
+    result
+  }
+  let dep-text-fill = named-args.remove("text-fill", default: ())
+  let dep-text-size = named-args.remove("text-size", default: ())
+  let dep-text-weight = named-args.remove("text-weight", default: ())
+  if (
+    not dep-text-fill == ()
+      or not dep-text-size == ()
+      or not dep-text-weight == ()
+  ) {
+    warning(
+      "Passing text-fill, text-size or text-weight to custom-progressive-outline will be deprecated in some future version. Use text-style instead.",
+    )
+  }
+  text-style = merge-dep-styles(text-style, dep-text-fill, "fill")
+  text-style = merge-dep-styles(text-style, dep-text-size, "size")
+  text-style = merge-dep-styles(text-style, dep-text-weight, "weight")
+
+  // now the actualy function
+  if level == auto {
+    level = if self != none { self.at("slide-level", default: 1) } else { 1 }
+  }
+
+  let array-at(arr, idx, d: none) = arr.at(idx, default: if arr.len() > 0 {
+    arr.last()
+  } else { d }) //with last as default
+
+  let set-text(cover, level, alpha, body) = {
+    let style-at-lvl = if not cover and type(style-current) == array {
+      array-at(style-current, level - 1, d: (:))
+    } else if type(text-style) == array {
+      array-at(text-style, level - 1, d: (:))
+    } else {
+      (:)
     }
     if cover {
-      body
-    } else {
-      uncover-fn(body)
+      style-at-lvl.insert("fill", utils.update-alpha(
+        style-at-lvl.at("fill", default: text.fill),
+        alpha,
+      ))
     }
-  },
-  title: title,
-  ..args,
-)
+    set text(..style-at-lvl)
+    body
+  }
 
+  let position(level) = {
+    let start-page = 1
+    let end-page = calc.inf
+    if level != none {
+      let current-heading = utils.current-heading(level: level)
+      if current-heading != none {
+        start-page = current-heading.location().page()
+        let headings-up-to(level) = {
+          if level <= 1 {
+            return heading.where(level: level)
+          } else {
+            return heading.where(level: level).or(headings-up-to(level - 1))
+          }
+        }
+        let next-headings = query(
+          selector(headings-up-to(level)).after(
+            inclusive: false,
+            current-heading.location(),
+          ),
+        ).at(0, default: none)
+        end-page = if next-headings != none {
+          next-headings.location().page()
+        } else {
+          calc.inf
+        }
+      }
+    }
+    return (start-page, end-page)
+  }
+
+  let transform(cover: false, alpha: alpha, it) = {
+    if type(vspace) == array and vspace.len() > it.level - 1 {
+      v(vspace.at(it.level - 1))
+    }
+
+    h(
+      range(1, it.level + 1)
+        .map(level => array-at(indent, level - 1, d: 0%))
+        .sum(),
+    )
+    set-text(
+      cover,
+      it.level,
+      alpha,
+      {
+        if array-at(numbered, it.level - 1, d: false) {
+          let current-numbering = numbering.at(
+            it.level - 1,
+            default: it.element.numbering,
+          )
+          if current-numbering != none {
+            std.numbering(
+              current-numbering,
+              ..counter(heading).at(it.element.location()),
+            )
+            h(.3em)
+          }
+        }
+        link(
+          it.element.location(),
+          {
+            if short-heading {
+              utils.short-heading(self: self, it.element)
+            } else {
+              it.element.body
+            }
+            box(
+              width: 1fr,
+              inset: (x: .2em),
+              if array-at(filled, it.level - 1, d: false) {
+                array-at(fill, it.level - 1, d: repeat[.])
+              },
+            )
+            if array-at(paged, it.level - 1, d: false) {
+              std.numbering(
+                if page.numbering != none {
+                  page.numbering
+                } else {
+                  "1"
+                },
+                ..counter(page).at(it.element.location()),
+              )
+            }
+          },
+        )
+      },
+    )
+  }
+
+  context {
+    let doc-pos = position(level)
+    show outline.entry: it => {
+      let cur-pos = it.element.location().page()
+
+      if cur-pos < doc-pos.first() {
+        if type(show-past) == function {
+          return show-past(it.level, it)
+        } else if (
+          type(show-past) == array
+            and not array-at(show-past, it.level - 1, d: false)
+        ) {
+          return none
+        } else {
+          //if show or show-past is none
+          transform(cover: true, alpha: alpha, it)
+        }
+      } else if cur-pos >= doc-pos.last() {
+        if type(show-future) == function {
+          return show-future(it.level, it)
+        } else if (
+          type(show-future) == array
+            and not array-at(show-future, it.level - 1, d: false)
+        ) {
+          return none
+        } else {
+          //if show or show-future is none
+          return transform(cover: true, alpha: alpha, it)
+        }
+      } else {
+        if type(show-current) == function {
+          return show-current(it.level, it)
+        } else if (
+          type(show-current) == array
+            and not array-at(show-current, it.level - 1, d: false)
+        ) {
+          return none
+        } else {
+          //if show or show-current is none
+          return transform(cover: false, alpha: alpha, it)
+        }
+      }
+    }
+    outline(title: title, ..named-args, ..args.pos())
+  }
+}
 
 /// Section navigation component showing all sections and their per-slide progress as small filled/empty circle dots.
 ///
@@ -642,15 +1006,155 @@
 /// -> content
 #let knob-marker(primary: rgb("#005bac")) = box(
   width: 0.5em,
-  place(
-    dy: 0.1em,
-    circle(
-      fill: gradient.radial(
-        primary.lighten(100%),
-        primary.darken(40%),
-        focal-center: (30%, 30%),
-      ),
-      radius: 0.25em,
+  circle(
+    fill: gradient.radial(
+      primary.lighten(100%),
+      primary.darken(40%),
+      focal-center: (30%, 30%),
     ),
+    radius: 0.25em,
   ),
 )
+
+/// A non-breakable page container that prevents slide content from overflowing
+/// to the next page. When used, content that exceeds the slide height will be
+/// constrained rather than creating additional pages.
+///
+/// This is useful for ensuring a strict one-to-one mapping between source
+/// slides and output pages, which is important in agentic workflows where
+/// an agent needs to reason about slide boundaries.
+///
+/// - clip (bool): Whether to clip overflowing content. When `true`, content
+///   that exceeds the slide height will be visually truncated. Default is `false`.
+///
+/// - detect-overflow (bool): Whether to detect and warn on overflow. When `true`,
+///   a `layout` + `measure` check is performed and a warning is emitted if the
+///   content height exceeds the available container height. When `false`, no
+///   overflow detection is performed (avoids the `layout` overhead). Default is `false`.
+///
+/// - body (content): The slide content to constrain within a single page.
+///
+/// -> content
+#let page-container(self: none, clip: false, detect-overflow: false, body) = {
+  let tight-block-args = (
+    above: 0pt,
+    below: 0pt,
+    inset: (:),
+    outset: (:),
+    radius: (:),
+    spacing: 0pt,
+    sticky: false,
+    stroke: (:),
+  )
+  if detect-overflow {
+    // Detect and warn on overflow
+    layout(container-size => {
+      let content-size = measure(block(
+        ..tight-block-args,
+        width: container-size.width,
+        body,
+      ))
+      let content-height = content-size.height
+      let available-height = container-size.height
+      if content-height > available-height {
+        warning(
+          "detecting slide content overflow at page "
+            + repr(here().page())
+            + " (slide "
+            + str(utils.slide-counter.get().last())
+            + ", subslide "
+            + str(self.subslide)
+            + ", content height: "
+            + repr(content-height)
+            + ", available height: "
+            + repr(available-height)
+            + ").",
+        )
+      } else if content-height == 0pt {
+        warning(
+          "detecting slide content is empty at page "
+            + repr(here().page())
+            + " (slide "
+            + str(utils.slide-counter.get().last())
+            + ", subslide "
+            + str(self.subslide)
+            + ", content height: "
+            + repr(content-height)
+            + ", available height: "
+            + repr(available-height)
+            + ").",
+        )
+      }
+    })
+  }
+  // Disable breakability to prevent overflowing content from creating new pages
+  block(
+    ..tight-block-args,
+    breakable: false,
+    clip: clip,
+    height: 1fr,
+    width: 100%,
+    body,
+  )
+}
+
+
+/// A block that extends horizontally to the full page width by applying
+/// negative horizontal padding that cancels out the current page margins.
+///
+/// Useful for components like progress bars, section banners, or background
+/// fills that need to span the entire page width regardless of the slide margins.
+///
+/// Example:
+/// ```typ
+/// #full-width-block(fill: blue)[Full-width content]
+/// ```
+///
+/// - args (arguments): Named and positional arguments forwarded to the inner
+///   `block` call (e.g. `fill`, `height`, `inset`, …).
+///
+/// - body (content): The content to place inside the full-width block.
+///
+/// -> content
+#let full-width-block(..args, body) = context {
+  let page-width = page.width
+  let margin = page.margin
+  let to-abs(val) = {
+    if type(val) == ratio {
+      val * page-width
+    } else if type(val) == relative {
+      val.ratio * page-width + val.length
+    } else {
+      val
+    }
+  }
+  let pad-args = (:)
+  if type(margin) == length {
+    pad-args.x = -margin
+  } else if type(margin) == ratio or type(margin) == relative {
+    pad-args.x = -to-abs(margin)
+  } else if type(margin) == dictionary {
+    if "x" in margin {
+      pad-args.x = -to-abs(margin.x)
+    }
+    if "left" in margin {
+      pad-args.left = -to-abs(margin.left)
+    }
+    if "right" in margin {
+      pad-args.right = -to-abs(margin.right)
+    }
+    if "rest" in margin {
+      pad-args.x = -to-abs(margin.rest)
+    }
+  }
+  pad(
+    ..pad-args,
+    block(
+      width: 100%,
+      above: 0pt,
+      below: 0pt,
+      ..args.named(),
+      body,
+    ),
+  )
+}

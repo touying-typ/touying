@@ -11,7 +11,7 @@ Like Beamer, Touying also has the concept of sections and subsections.
 Generally, first-level, second-level, and third-level headings correspond to sections, subsections, and subsubsections, respectively, such as in the dewdrop theme.
 
 ```example
-#import "@preview/touying:0.6.3": *
+#import "@preview/touying:0.7.4": *
 #import themes.dewdrop: *
 
 #show: dewdrop-theme.with(aspect-ratio: "16-9")
@@ -28,7 +28,7 @@ Hello, Touying!
 However, there are many times when we do not need subsections, so we also use first-level and second-level headings to correspond to sections and titles, respectively, such as in the university theme.
 
 ```example
-#import "@preview/touying:0.6.3": *
+#import "@preview/touying:0.7.4": *
 #import themes.university: *
 
 #show: university-theme.with(aspect-ratio: "16-9")
@@ -58,7 +58,7 @@ This sets the default numbering to `1.1`, and the section corresponds to the num
 Displaying a table of contents in Touying is straightforward:
 
 ```example
-#import "@preview/touying:0.6.3": *
+#import "@preview/touying:0.7.4": *
 #import themes.simple: *
 #import "@preview/numbly:0.1.0": numbly
 
@@ -75,7 +75,7 @@ Displaying a table of contents in Touying is straightforward:
 
 The `outline(indent: 1em)` is a native Typst function for the table of contents. The `#components.adaptive-columns()` function ensures that the table of contents occupies only one page, adapting by setting `#columns(1, body)` or `#columns(2, body)`, and so on.
 
-If you need a `outline` function that can display the current progress, you might consider using `#components.progressive-outline()` or `#components.custom-progressive-outline()`, as seen in the dewdrop theme.
+If you need a `outline` function that can display the current progress, you might consider using `#components.progressive-outline()` or `#components.custom-progressive-outline()`, as seen in the dewdrop theme. Or write your own by manipulating the `outline.entry` elements, for certain effects you may want to use `#utils.section-relationship`.
 
 ## Special Heading Labels
 
@@ -93,7 +93,7 @@ Touying recognises special labels on headings to control slide behavior:
 Example — a hidden outline slide that does not appear in the final PDF:
 
 ```example
-#import "@preview/touying:0.6.3": *
+#import "@preview/touying:0.7.4": *
 #import themes.simple: *
 #import "@preview/numbly:0.1.0": numbly
 
@@ -117,7 +117,7 @@ Content.
 The `appendix` function stops the slide counter so appendix slides do not affect the total count displayed in the footer.
 
 ```example
-#import "@preview/touying:0.6.3": *
+#import "@preview/touying:0.7.4": *
 #import themes.simple: *
 
 #show: simple-theme

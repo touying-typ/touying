@@ -10,7 +10,7 @@ sidebar_position: 1
 
 - **vs. PowerPoint** — Touying follows a "content and style separation" philosophy. You write plain text with lightweight markup, and themes handle the visual design automatically. This is especially productive for research-heavy presentations with code blocks, mathematical formulas, and theorem environments.
 - **vs. Markdown Slides** — Typst gives you fine-grained typesetting control (headers, footers, custom layouts, and first-class math support) that Markdown-based tools struggle to provide. Touying adds `#pause` and `#meanwhile` for incremental animations that feel natural in a code-first workflow.
-- **vs. Beamer** — Touying compiles in milliseconds instead of seconds (or tens of seconds). Its syntax is far more concise, and creating or modifying a theme is straightforward. Feature parity with Beamer is high, plus Touying offers extras like `touying-reducer` for animated CeTZ/Fletcher diagrams.
+- **vs. Beamer** — Touying compiles in milliseconds instead of seconds (or tens of seconds). Its syntax is far more concise, and creating or modifying a theme is straightforward. Feature parity with Beamer is high, plus Touying offers extras like `touying-reduce`(==`touying-diagram`) for animated CeTZ/Fletcher diagrams.
 - **vs. Polylux** — Touying does not rely on `counter` and `locate` to implement `#pause`, so it avoids the performance penalty those primitives incur. It also provides a richer set of theme utilities and a unified config API that lets you switch themes with minimal changes to your document.
 
 ## About the Name
@@ -24,7 +24,7 @@ You have two main options:
 | Option | Description |
 |--------|-------------|
 | **[Typst Web App](https://typst.app/)** | Browser-based editor. No installation needed; just open `typst.app`, create a new project, and start writing. Supports real-time preview and collaboration. |
-| **[Tinymist for VS Code](https://marketplace.visualstudio.com/items?itemName=myriad-dreamin.tinymist)** | A full-featured Typst LSP extension for VS Code. Provides syntax highlighting, autocomplete, error diagnostics, and a built-in slide preview panel. |
+| **[Tinymist LSP](https://github.com/Myriad-Dreamin/tinymist)** | A full-featured Typst language server that works with editors supporting LSP. Provides syntax highlighting, autocomplete, error diagnostics, and slide preview; a VS Code extension is also available. |
 
 Both options automatically download Touying from the Typst package registry — no separate installation step is required.
 

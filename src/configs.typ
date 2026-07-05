@@ -1,8 +1,10 @@
 #import "pdfpc.typ"
 #import "utils.typ"
 #import "magic.typ"
+#import "extern.typ"
 #import "core/slides.typ": slide, touying-slide
 #import "core/animation.typ": touying-slide-wrapper
+#import "core/blocks.typ": touying-fn-wrapper-raw
 
 #let _default = metadata((kind: "touying-default"))
 
@@ -19,6 +21,8 @@
 /// Store theme-specific private data in the presentation context.
 ///
 /// Use this in your theme's `#show: my-theme.with(...)` to pass arbitrary key-value pairs that your theme needs internally. The stored values are accessible via `self.store.<key>` inside any theme function.
+///
+/// This also registers your theme's config to be readable by `touying-get-config`.
 ///
 /// Example:
 ///
@@ -54,19 +58,38 @@
 )
 
 #let _default-preamble = self => {
-  if self.at("enable-mark-warning", default: true) {
-    context {
-      let marks = query(<touying-temporary-mark>)
-      if marks.len() > 0 {
-        let page-num = marks.at(0).location().page()
-        let kind = marks.at(0).value.kind
-        panic(
-          "Unsupported mark `"
-            + kind
-            + "` at page "
-            + str(page-num)
-            + ". You can't use it inside some functions like `context`. You may want to use the callback-style `uncover` function instead.",
-        )
+  context {
+    let marks = query(<touying-temporary-mark>)
+    if marks.len() > 0 {
+      let page-num = marks.at(0).location().page()
+      let slides = query(selector(heading).before(marks.at(0).location()))
+      let slide-name = if slides.len() > 0 {
+        slides.last().body.at("text", default: "")
+      } else {
+        ""
+      }
+      let kind = marks.at(0).value.kind
+      let fn = if "fn" in marks.at(0).value { marks.at(0).value.fn } else {
+        none
+      }
+      let warning-msg = (
+        "Unsupported mark `"
+          + kind
+          + if fn != none {
+            "` from `" + repr(fn)
+          }
+          + "` at page "
+          + str(page-num)
+          + " in section '"
+          + str(slide-name)
+          + "'. You can't use it inside some functions like `context`. You may want to use the callback-style `utils."
+          + repr(fn)
+          + "` function instead."
+      )
+      if self.at("enable-mark-warning", default: true) {
+        panic(warning-msg)
+      } else {
+        extern.warning(warning-msg)
       }
     }
   }
@@ -103,6 +126,12 @@
 
 
 /// The common configurations of the slides.
+///
+/// - breakable (bool): Whether to allow slide content to overflow to the next page. When `true` (default), content that exceeds the slide height will automatically create new pages. When `false`, content is constrained to a single page using a non-breakable block, which is useful for ensuring a strict one-to-one mapping between source slides and output pages in agentic workflows. Default is `true`.
+///
+/// - clip (bool): Whether to clip overflowing slide content when `breakable` is `false`. When `true`, content that exceeds the slide height will be visually truncated. When `false`, overflowing content remains visible but does not create new pages. Only takes effect when `breakable` is `false`. Default is `false`.
+///
+/// - detect-overflow (bool): Whether to detect and warn on slide content overflow when `breakable` is `false`. When `true`, a layout measurement is performed and a warning is emitted if the content height exceeds the available slide height, which is useful for catching overflow early in agentic workflows without aborting compilation. When `false`, no overflow detection is performed. Only takes effect when `breakable` is `false`. Default is `true`.
 ///
 /// - handout (bool): Whether to enable the handout mode. By default, it retains only the last subslide of each slide, but this can be overridden via `handout-subslides`. Default is `false`.
 ///
@@ -204,17 +233,21 @@
 ///
 /// - default-page-preamble (function): The default preamble for each page. Default is a function to reset the footnote number per slide and reset the page counter to the slide counter.
 ///
-/// - default-composer (auto, function, array): The default composer for slides. It is used when the `composer` argument of the `slide` function is `auto`. Default is `auto`, which falls back to using `components.side-by-side`.
-///   For example, `config-common(default-composer: components.side-by-side.with(gutter: 2em))` sets the default gutter between columns to `2em` for all slides.
-/// 
+/// - default-composer (auto, function, array): The default composer for slides. It is used when the `composer` argument of the `slide` function is `auto`. Default is `auto`, which falls back to using `cols.with(lazy-layout: false)`.
+///
+///   For example, `config-common(default-composer: cols.with(lazy-layout: false, gutter: 2em))` sets the default gutter between columns to `2em` for all slides.
+///
 /// - document-mode (bool): Whether to enable the document mode. In document mode, the content will flow continuously without page breaks between slides, and some slide-specific features will be disabled. Default is `false`. Rather than using this flag, use the export-mode flag instead.
-/// 
+///
 /// - export-mode (str): The export mode for the presentation. It can be `slides`, `document`, `presentation`, `handout`. Default is `slides`. In case of `slides` the `handout`-flag determines whether to render a presentation or a handout.
 ///
 /// - document-theme (theme): The theme to use when rendering in document mode. Can be an arbitrary theme but whether it works correctly is not guaranteed. Default is `auto`, in which case we use touying's builtin document theme.
 /// 
 /// -> dictionary
 #let config-common(
+  breakable: _default,
+  clip: _default,
+  detect-overflow: _default,
   handout: _default,
   handout-subslides: _default,
   slide-level: _default,
@@ -272,6 +305,9 @@
   assert(args.pos().len() == 0, message: "Unexpected positional arguments.")
   return (
     _get-dict-without-default((
+      breakable: breakable,
+      clip: clip,
+      detect-overflow: detect-overflow,
       handout: handout,
       handout-subslides: handout-subslides,
       slide-level: slide-level,
@@ -480,6 +516,7 @@
 ///   author: "Author",
 ///   date: datetime.today(),
 ///   institution: "Institution",
+///   contact: "name@mail.com",
 /// )
 /// ```
 ///
@@ -502,7 +539,11 @@
 ///
 /// - institution (content): The institution of the presentation.
 ///
+/// - contact (content): Contact information for the presentation.
+///
 /// - logo (content): The logo of the institution.
+///
+/// - extra (dict): A dict of extra information. You may use it like `extra: (key1: value1, key2: value2)` to pass extra information. A theme can then access it as `self.info.extra.key1`, `self.info.extra.key2`.
 ///
 /// -> dictionary
 #let config-info(
@@ -513,7 +554,9 @@
   author: _default,
   date: _default,
   institution: _default,
+  contact: _default,
   logo: _default,
+  extra: _default,
   ..args,
 ) = {
   assert(args.pos().len() == 0, message: "Unexpected positional arguments.")
@@ -526,7 +569,9 @@
       author: author,
       date: date,
       institution: institution,
+      contact: contact,
       logo: logo,
+      extra: extra,
     ))
       + args.named(),
   )
@@ -762,6 +807,9 @@
 /// The default configuration values used when no explicit configuration is provided.
 #let default-config = utils.merge-dicts(
   config-common(
+    breakable: true,
+    clip: false,
+    detect-overflow: true,
     handout: false,
     handout-subslides: none,
     slide-level: 2,
@@ -770,10 +818,10 @@
     new-subsection-slide-fn: none,
     new-subsubsection-slide-fn: none,
     new-subsubsubsection-slide-fn: none,
-    receive-body-for-new-section-slide-fn: true,
-    receive-body-for-new-subsection-slide-fn: true,
-    receive-body-for-new-subsubsection-slide-fn: true,
-    receive-body-for-new-subsubsubsection-slide-fn: true,
+    receive-body-for-new-section-slide-fn: false,
+    receive-body-for-new-subsection-slide-fn: false,
+    receive-body-for-new-subsubsection-slide-fn: false,
+    receive-body-for-new-subsubsubsection-slide-fn: false,
     show-strong-with-alert: true,
     datetime-format: auto,
     appendix: false,
@@ -842,7 +890,9 @@
     author: none,
     date: none,
     institution: none,
+    contact: none,
     logo: none,
+    extra: (:),
   ),
   config-colors(
     neutral: rgb("#303030"),
@@ -892,3 +942,134 @@
   ),
   config-store(),
 )
+
+/// Gets the current config at the point of the call. Returns a dict with context evaluated values.
+///
+/// Usage:
+/// ```typc
+/// touying-get-config() // returns the whole config dict
+/// touying-get-config().common.handout // returns the value of the "handout" config in the "common" category
+/// touying-get-config().handout // same as above. common is also registered at the top level.
+/// touying-get-config("commmon.handout") // same as above. You can also query with a key, and you will get the subconfig or value back.
+/// ```
+///
+/// - key (str): The key of the subconfiguration to retrieve. Default `none`, returns the entire config. May also be passed in as a positional argument.
+///   Only necessary when you set custom keys into touyings' config. Theme configuration is naturally available as `touying-get-config().store.long-theme-key`
+/// - default (any): The default value to return if the key is not found.
+/// -> dict
+#let touying-get-config(key: none, default: type, ..args) = {
+  assert(
+    args.pos().len() <= 1,
+    message: "Only one positional argument is allowed.",
+  )
+  assert(
+    args.named().len() == 0,
+    message: "Unexpected named arguments: " + args.named().keys().join(", "),
+  )
+  assert(
+    type(key) == str or key == none,
+    message: "Key must be a string or none.",
+  )
+  let key_ = key
+  if args.pos().len() == 1 {
+    key_ = args.pos().first()
+  }
+
+  let rec-defer-retrieval(config, keychain, default: type) = {
+    if type(config) == dictionary {
+      let defered = (:)
+      for k in config.keys() {
+        defered.insert(k, rec-defer-retrieval(
+          config.at(k),
+          keychain + (k,),
+          default: default,
+        ))
+      }
+      return defered
+    } else {
+      //when we reached a leaf value in the config, we evaluate it at context time via keychain.
+      return touying-fn-wrapper-raw((self: none) => {
+        let value = self
+        for cur in keychain {
+          if cur not in value.keys() and default != type {
+            return default
+          }
+          value = value.at(cur)
+        }
+        return repr(value)
+      })
+    }
+  }
+
+  let rec-defer-retrieval-with-key(
+    config,
+    keychain,
+    key: none,
+    default: type,
+  ) = {
+    if type(config) == dictionary {
+      if key != none {
+        let first-dot = key.position(".")
+        let this-key = none
+        let rest-key = none
+        if first-dot == none {
+          this-key = key
+          rest-key = none
+        } else {
+          this-key = key.slice(0, first-dot)
+          rest-key = key.slice(first-dot + 1)
+        }
+        if this-key in config.keys() {
+          return rec-defer-retrieval-with-key(
+            config.at(this-key),
+            keychain + (this-key,),
+            key: rest-key,
+            default: default,
+          )
+        } else {
+          // store on keychain anyway, but set config to none,
+          // we use the fn-wrapper to try to retrieve the value instead at context time
+          // will likely break, but who knows what users do.
+          let rest-keychain = if rest-key != none {
+            rest-key.split(".")
+          } else {
+            ()
+          }
+          return rec-defer-retrieval(
+            none,
+            keychain + (this-key,) + rest-keychain,
+            default: default,
+          )
+        }
+      } else {
+        // key == none, got to the end of given key, before found a leaf value. returns the deferred unresolved config
+        return rec-defer-retrieval(config, keychain, default: default)
+      }
+    } else if key == none {
+      // found a value and key is also empty, returned deferred result
+      return rec-defer-retrieval(none, keychain, default: default)
+    } else {
+      // got a leaf value, but key is not empty.
+      if default != type {
+        return default
+      }
+      panic(
+        "Key not found in config. Resolved correctly: "
+          + keychain.join(".")
+          + ", but got unresolved part: "
+          + key,
+      )
+    }
+  }
+
+  if key_ == none {
+    return rec-defer-retrieval(default-config, (), default: default)
+  } else {
+    return rec-defer-retrieval-with-key(
+      default-config,
+      (),
+      key: key_,
+      default: default,
+    )
+  }
+}

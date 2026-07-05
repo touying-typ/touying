@@ -14,9 +14,9 @@
 ///
 ///   For example, `#slide(composer: (1fr, 2fr, 1fr))[A][B][C]` to split the slide into three parts. The first and the last parts will take 1/4 of the slide, and the second part will take 1/2 of the slide.
 ///
-///   If you pass a non-function value like `(1fr, 2fr, 1fr)`, it will be assumed to be the first argument of the `components.side-by-side` function.
+///   If you pass a non-function value like `(1fr, 2fr, 1fr)`, it will be assumed to be the first argument of the `cols` function.
 ///
-///   The `components.side-by-side` function is a simple wrapper of the `grid` function. It means you can use the `grid.cell(colspan: 2, ..)` to make the cell take 2 columns.
+///   The `cols` function is a simple wrapper of the `grid` function. It means you can use the `grid.cell(colspan: 2, ..)` to make the cell take 2 columns.
 ///
 ///   For example, `#slide(composer: 2)[A][B][#grid.cell(colspan: 2)[Footer]]` will make the `Footer` cell take 2 columns.
 ///
@@ -286,13 +286,13 @@
 /// Example:
 ///
 /// ```typst
-/// #show: aqua-theme.with(aspect-ratio: "16-9", config-colors(primary: blue))`
+/// #show: aqua-theme.with(aspect-ratio: "16-9", config-colors(primary: blue))
 /// ```
 ///
 /// Consider using:
 ///
 /// ```typst
-/// #set text(font: "Fira Sans", weight: "light", size: 20pt)`
+/// #set text(font: "Fira Sans", weight: "light", size: 20pt)
 /// #show math.equation: set text(font: "Fira Math")
 /// #set strong(delta: 100)
 /// #set par(justify: true)

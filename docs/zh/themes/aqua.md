@@ -12,7 +12,7 @@ sidebar_position: 5
 你可以通过下面的代码来初始化：
 
 ```typst
-#import "@preview/touying:0.6.3": *
+#import "@preview/touying:0.7.4": *
 #import themes.aqua: *
 
 #show: aqua-theme.with(
@@ -31,7 +31,7 @@ sidebar_position: 5
 #outline-slide()
 ```
 
-其中 `register` 接收参数:
+其中 `aqua-theme` 接收参数:
 
 - `aspect-ratio`: 幻灯片的长宽比为 "16-9" 或 "4-3"，默认为 "16-9"。
 - `header`: 显示在页眉的内容，默认为 `utils.display-current-heading()`，也可以传入形如 `self => self.info.title` 的函数。
@@ -78,7 +78,9 @@ Aqua 主题提供了一系列自定义 slide 函数：
 #slide(
   repeat: auto,
   setting: body => body,
-  composer: components.side-by-side,
+  composer: cols,
+  // Aqua theme
+  title: auto,
 )[
   ...
 ]
@@ -105,7 +107,7 @@ Aqua 主题提供了一系列自定义 slide 函数：
 ## 示例
 
 ```example
-#import "@preview/touying:0.6.3": *
+#import "@preview/touying:0.7.4": *
 #import themes.aqua: *
 
 #show: aqua-theme.with(

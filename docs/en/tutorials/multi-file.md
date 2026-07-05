@@ -18,7 +18,7 @@ These three files are separated to allow both `main.typ` and `content.typ` to im
 
 ```typst
 // globals.typ
-#import "@preview/touying:0.6.3": *
+#import "@preview/touying:0.7.4": *
 #import themes.university: *
 
 // as well as some utility functions
@@ -38,6 +38,7 @@ These three files are separated to allow both `main.typ` and `content.typ` to im
     author: [Authors],
     date: datetime.today(),
     institution: [Institution],
+    contact: [contact\@mail.com],
     logo: emoji.school,
   ),
 )
@@ -78,6 +79,7 @@ Implementing multiple sections is also straightforward. You only need to create 
     author: [Authors],
     date: datetime.today(),
     institution: [Institution],
+    contact: [contact\@mail.com],
     logo: emoji.school,
   ),
 )

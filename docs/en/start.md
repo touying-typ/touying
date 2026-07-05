@@ -4,12 +4,12 @@ sidebar_position: 2
 
 # Getting Started
 
-Before you begin, make sure you have the Typst environment installed. If not, you can use the [Web App](https://typst.app/) or install the [Tinymist LSP](https://marketplace.visualstudio.com/items?itemName=myriad-dreamin.tinymist) plugins for VS Code.
+Before you begin, make sure you have the Typst environment installed. If not, you can use the [Web App](https://typst.app/) or install [Tinymist LSP](https://github.com/Myriad-Dreamin/tinymist) in any editor with LSP support; Tinymist also provides a [VS Code extension](https://marketplace.visualstudio.com/items?itemName=myriad-dreamin.tinymist).
 
 To use Touying, you just need to include the following in your document:
 
 ```example
-#import "@preview/touying:0.6.3": *
+#import "@preview/touying:0.7.4": *
 #import themes.simple: *
 
 #show: simple-theme.with(aspect-ratio: "16-9")
@@ -36,18 +36,21 @@ In fact, Touying provides various styles for slide writing. You can also use the
 Touying offers many built-in themes to easily create beautiful slides. For example, in this case:
 
 ```example
-#import "@preview/touying:0.6.3": *
+#import "@preview/touying:0.7.4": *
 #import themes.university: *
-#import "@preview/cetz:0.4.2"
+#import "@preview/cetz:0.5.2"
 #import "@preview/fletcher:0.5.8" as fletcher: node, edge
 #import "@preview/numbly:0.1.0": numbly
-#import "@preview/theorion:0.5.0": *
+#import "@preview/theorion:0.6.0": *
 #import cosmos.clouds: *
 #show: show-theorion
 
-// cetz and fletcher bindings for touying
-#let cetz-canvas = touying-reducer.with(reduce: cetz.canvas, cover: cetz.draw.hide.with(bounds: true))
-#let fletcher-diagram = touying-reducer.with(reduce: fletcher.diagram, cover: fletcher.hide)
+// fletcher bindings for touying
+#let fletcher-diagram = touying-reduce.with(fletcher)
+
+// explicit bindings no longer needed we can just write `touying-(diagram|reduce)(cetz, {...})`
+//#let cetz-canvas = touying-reducer.with(reduce: cetz.canvas, cover: cetz.draw.hide.with(bounds: true))
+#let cetz-canvas = touying-reduce.with(cetz)
 
 #show: university-theme.with(
   aspect-ratio: "16-9",
@@ -60,6 +63,7 @@ Touying offers many built-in themes to easily create beautiful slides. For examp
     author: [Authors],
     date: datetime.today(),
     institution: [Institution],
+    contact: [contact\@mail.com],
     logo: emoji.school,
   ),
 )
@@ -226,12 +230,26 @@ Fletcher Animation in Touying:
 
 = Others
 
-== Side-by-side
+== Multiple columns
 
-#slide(composer: (1fr, 1fr))[
+#cols[
   First column.
 ][
   Second column.
+]
+
+== Multiple columns with equal height blocks
+
+#cols(columns: (1fr, 1fr), gutter: 1em, lazy-layout: true)[
+  #emph-block[
+    First column with equal height: #lorem(10)
+    #lazy-v(1fr)
+  ]
+][
+  #emph-block[
+    Second column with equal height: : #lorem(15)
+    #lazy-v(1fr)
+  ]
 ]
 
 
@@ -249,4 +267,4 @@ Fletcher Animation in Touying:
 Please pay attention to the current slide number.
 ```
 
-For more detailed tutorials on themes, you can refer to the following sections.
+Touying offers many built-in themes to easily create beautiful slides. For example, `#show: university-theme.with()` uses the university theme. For more detailed tutorials on themes, you can refer to the following sections.

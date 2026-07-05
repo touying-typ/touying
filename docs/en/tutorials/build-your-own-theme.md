@@ -20,12 +20,12 @@ To demonstrate how to create a theme with Touying, let's step by step create a s
 If you want to modify a Touying internal theme locally instead of creating one from scratch, you can achieve this by:
 
 1. Copying the [theme code](https://github.com/touying-typ/touying/tree/main/themes) from the `themes` directory to your local, for example, copying `themes/university.typ` to your local `university.typ`.
-2. Replacing the `#import "../src/exports.typ": *` command at the top of the `university.typ` file with `#import "@preview/touying:0.6.3": *`.
+2. Replacing the `#import "../src/exports.typ": *` command at the top of the `university.typ` file with `#import "@preview/touying:0.7.4": *`.
 
 Then you can import and use the theme by:
 
 ```typst
-#import "@preview/touying:0.6.3": *
+#import "@preview/touying:0.7.4": *
 #import "university.typ": *
 
 #show: university-theme.with(
@@ -36,6 +36,7 @@ Then you can import and use the theme by:
     author: [Authors],
     date: datetime.today(),
     institution: [Institution],
+    contact: [contact\@mail.com],
     logo: emoji.school,
   ),
 )
@@ -48,7 +49,7 @@ Depending on whether the theme is your own or part of Touying, you can import it
 If it's just for your own use, you can directly import Touying:
 
 ```typst
-#import "@preview/touying:0.6.3": *
+#import "@preview/touying:0.7.4": *
 ```
 
 If you want the theme to be part of Touying, placed in the Touying `themes` directory, then you should change the import statement above to
@@ -73,7 +74,7 @@ Generally, the first step in making slides is to determine the font size and pag
 
 ```example
 // bamboo.typ
-#import "@preview/touying:0.6.3": *
+#import "@preview/touying:0.7.4": *
 
 #let bamboo-theme(
   aspect-ratio: "16-9",
@@ -94,7 +95,7 @@ Generally, the first step in making slides is to determine the font size and pag
 }
 
 // main.typ
-<<< #import "@preview/touying:0.6.3": *
+<<< #import "@preview/touying:0.7.4": *
 <<< #import "bamboo.typ": *
 
 #show: bamboo-theme.with(aspect-ratio: "16-9")
@@ -195,7 +196,7 @@ We also need to customize a `slide` method, which accepts `#let slide(title: aut
 
 ```example
 // bamboo.typ
-#import "@preview/touying:0.6.3": *
+#import "@preview/touying:0.7.4": *
 
 #let slide(title: auto, ..args) = touying-slide-wrapper(self => {
   if title != auto {
@@ -270,7 +271,7 @@ We also need to customize a `slide` method, which accepts `#let slide(title: aut
 
 
 // main.typ
-<<< #import "@preview/touying:0.6.3": *
+<<< #import "@preview/touying:0.7.4": *
 <<< #import "bamboo.typ": *
 
 #show: bamboo-theme.with(aspect-ratio: "16-9")
@@ -292,7 +293,7 @@ For the `new-section-slide` method, it's the same, but the only thing to note is
 
 ```example
 // bamboo.typ
-#import "@preview/touying:0.6.3": *
+#import "@preview/touying:0.7.4": *
 
 #let slide(title: auto, ..args) = touying-slide-wrapper(self => {
   if title != auto {
@@ -348,6 +349,9 @@ For the `new-section-slide` method, it's the same, but the only thing to note is
     }
     if info.date != none {
       block(utils.display-info-date(self))
+    }
+    if info.contact != none {
+      block(info.contact)
     }
   }
   touying-slide(self: self, body)
@@ -409,7 +413,7 @@ For the `new-section-slide` method, it's the same, but the only thing to note is
 
 
 // main.typ
-<<< #import "@preview/touying:0.6.3": *
+<<< #import "@preview/touying:0.7.4": *
 <<< #import "bamboo.typ": *
 
 #show: bamboo-theme.with(
@@ -421,6 +425,7 @@ For the `new-section-slide` method, it's the same, but the only thing to note is
     author: [Authors],
     date: datetime.today(),
     institution: [Institution],
+    contact: [contact\@mail.com],
   ),
 )
 

@@ -64,9 +64,9 @@
 ///
 ///   For example, `#slide(composer: (1fr, 2fr, 1fr))[A][B][C]` to split the slide into three parts. The first and the last parts will take 1/4 of the slide, and the second part will take 1/2 of the slide.
 ///
-///   If you pass a non-function value like `(1fr, 2fr, 1fr)`, it will be assumed to be the first argument of the `components.side-by-side` function.
+///   If you pass a non-function value like `(1fr, 2fr, 1fr)`, it will be assumed to be the first argument of the `cols` function.
 ///
-///   The `components.side-by-side` function is a simple wrapper of the `grid` function. It means you can use the `grid.cell(colspan: 2, ..)` to make the cell take 2 columns.
+///   The `cols` function is a simple wrapper of the `grid` function. It means you can use the `grid.cell(colspan: 2, ..)` to make the cell take 2 columns.
 ///
 ///   For example, `#slide(composer: 2)[A][B][#grid.cell(colspan: 2)[Footer]]` will make the `Footer` cell take 2 columns.
 ///
@@ -195,6 +195,10 @@
       if info.institution != none {
         parbreak()
         text(size: 0.7em, info.institution)
+      }
+      if info.contact != none {
+        parbreak()
+        text(size: 0.7em, info.contact)
       }
       // date
       if info.date != none {
@@ -354,13 +358,13 @@
 /// Example:
 ///
 /// ```typst
-/// #show: stargazer-theme.with(aspect-ratio: "16-9", config-colors(primary: blue))`
+/// #show: stargazer-theme.with(aspect-ratio: "16-9", config-colors(primary: blue))
 /// ```
 ///
 /// Consider using:
 ///
 /// ```typst
-/// #set text(font: "Fira Sans", weight: "light", size: 20pt)`
+/// #set text(font: "Fira Sans", weight: "light", size: 20pt)
 /// #show math.equation: set text(font: "Fira Math")
 /// #set strong(delta: 100)
 /// #set par(justify: true)
@@ -382,6 +386,8 @@
 /// - aspect-ratio (string): is the aspect ratio of the slides. The default is `16-9`.
 ///
 /// - align (alignment): is the alignment of the content. The default is `horizon`.
+///
+/// - alpha (float): the alpha of the covered headings in outlines. The default is `20%`.
 ///
 /// - title (content, function): is the title in the header of the slide. The default is `self => utils.display-current-heading(depth: self.slide-level)`.
 ///
@@ -466,7 +472,9 @@
     config-methods(
       init: (self: none, body) => {
         set text(size: 20pt)
-        set list(marker: components.knob-marker(primary: self.colors.primary))
+        set list(
+          marker: components.knob-marker(primary: self.colors.primary) + "",
+        )
         show figure.caption: set text(size: 0.6em)
         show footnote.entry: set text(size: 0.6em)
         show heading: set text(fill: self.colors.primary)

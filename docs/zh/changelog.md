@@ -4,6 +4,93 @@ sidebar_position: 8
 
 # 更新日志
 
+## v0.7.4
+
+### Features
+
+- feat: adds `touying-reduce` which automatically looks up reducer bindings given a package ([#363](https://github.com/touying-typ/touying/pull/363))
+- feat(i18n): add Polish locale for outline message ([#372](https://github.com/touying-typ/touying/pull/372))
+- feat: Left/Right keyboard navigation support ([#352](https://github.com/touying-typ/touying/pull/352))
+- feat: add `grid-size` parameter to `lazy-layout` for quantized position grouping, improving robustness of column/row detection
+- feat: add `components.full-width-block` component that spans the full page width by cancelling horizontal margins
+
+### Fixes
+
+- fix (minor breaking change): set `lazy-layout` default to `false` for `cols`
+- fix: handle missing `fn` field in mark warning message gracefully
+- fix: `hide` doing unexpected things to headings ([#366](https://github.com/touying-typ/touying/pull/366))
+- fix: export `touying-fn-wrapper-raw` as part of the public API ([#362](https://github.com/touying-typ/touying/pull/362))
+- fix: improved mark-warning, now also displayed as `magic.warning` when `enable-mark-warning` is `false` ([#348](https://github.com/touying-typ/touying/pull/348))
+- fix: warnings now emitted via `uniwarn` ([#359](https://github.com/touying-typ/touying/pull/359))
+
+
+## v0.7.3
+
+### Minor Breaking Changes
+
+- **feat!: always attach `#speaker-note[]` to the previous slide & default `receive-body-for-new-*-slide-fn` to `false`** ([#354](https://github.com/touying-typ/touying/pull/354))
+  - `#speaker-note[]` now always attaches to the **slide above it**, regardless of how that slide was created (explicit slide calls, heading-triggered section slides, or normal content slides). This eliminates the common pitfall where a `#speaker-note[]` placed after a slide would silently create an unwanted empty "ghost" slide.
+  - `receive-body-for-new-section-slide-fn` and its variants are now **defaulted to `false`** (previously `true`).
+
+### Migration Guide
+
+If you relied on content after `= Section` headings being absorbed into the section slide body, explicitly set `receive-body-for-new-section-slide-fn: true` in your `config-common(...)`.
+
+### Features
+
+- feat: `item-by-item-fn` and presets for it ([#347](https://github.com/touying-typ/touying/pull/347))
+- feat: improved `custom-progressive-outline` and new `section-relationship` and some other things ([#345](https://github.com/touying-typ/touying/pull/345))
+- feat: better lazy-layout for mixed layouts ([#355](https://github.com/touying-typ/touying/pull/355))
+- feat: add `cols` as alias of `side-by-side` and export some components `cols`, `lazy-xxx` to outside ([#356](https://github.com/touying-typ/touying/pull/356))
+- theme(metropolis): add outline-slide for metropolis ([#349](https://github.com/touying-typ/touying/pull/349))
+- feat: add warning for empty slide content height detection
+
+### Documentation
+
+- docs: add multiple columns example and improve docs structure
+
+
+## v0.7.1
+
+### Features
+
+- feat(agents): `breakable` and `clip` options to avoid slide overflow ([#336](https://github.com/touying-typ/touying/pull/336))
+- feat(components): add `lazy-v` (`lazy-h`) and `lazy-layout` for equalizing multi-column (-row) block heights (widths) ([#339](https://github.com/touying-typ/touying/pull/339))
+- feat: additional `contact` and `extra` field in `config-info` ([#342](https://github.com/touying-typ/touying/pull/342))
+- feat: `touying-get-config` function ([#333](https://github.com/touying-typ/touying/pull/333))
+
+### Fixes
+
+- fix: fix `fit-to-height` and `size-to-pt` and allow text reflow ([#332](https://github.com/touying-typ/touying/pull/332))
+- fix: fix waypoint markers ([#341](https://github.com/touying-typ/touying/pull/341))
+
+
+
+## v0.7.0
+
+### Features
+
+- **major feature:** a named waypoint feature ([#298](https://github.com/touying-typ/touying/pull/298))
+- feat(waypoint): start param and Waypoints in handout-subslides ([#304](https://github.com/touying-typ/touying/pull/304))
+- feat: auto, "h"-here string and inverse function for string subslide-numbers and waypoints ([#301](https://github.com/touying-typ/touying/pull/301))
+- feat: implicitly allow fn-wrapper based animation functions via reducer ([#300](https://github.com/touying-typ/touying/pull/300))
+
+### Fixes
+
+- fix: fix cover-with-rect breaking long lines of text when partially hidden and fallback functions for color/alpha cover ([#328](https://github.com/touying-typ/touying/pull/328))
+- fix: using explicit numbering in display-current-heading when style=auto ([#329](https://github.com/touying-typ/touying/pull/329))
+- fix: fix ghost slides with show rules. Fix proper consistent handling of show rules and defer keyword ([#317](https://github.com/touying-typ/touying/pull/317))
+- fix: alert not delayed ([#316](https://github.com/touying-typ/touying/pull/316))
+- fix: remove redundant nested text call ([#324](https://github.com/touying-typ/touying/pull/324))
+- fix: function alternatives-match takes into account parameter stretch ([#320](https://github.com/touying-typ/touying/pull/320))
+- fix: correctly handle page margin merge/precedence ([#322](https://github.com/touying-typ/touying/pull/322))
+- fix: fix cover spacing issues surrounding lists ([#303](https://github.com/touying-typ/touying/pull/303))
+- fix: correctly parses negative subslide indices (ints, arrays) for handout-subslides ([#307](https://github.com/touying-typ/touying/pull/307))
+- fix: slide function does not update via scoped import ([#310](https://github.com/touying-typ/touying/pull/310))
+
+Thanks for the contributions from [@zral0kh](https://github.com/zral0kh), [@Andrew15-5](https://github.com/Andrew15-5), [@navdeeprana](https://github.com/navdeeprana), and [@Cemoixerestre](https://github.com/Cemoixerestre).
+
+
 ## v0.6.3
 
 A major bugfix release, fixing many long-standing bugs and introducing many practical features.
@@ -46,6 +133,28 @@ A major bugfix release, fixing many long-standing bugs and introducing many prac
 - docs: restructure docs + add docs-preview CI for PRs ([#296](https://github.com/touying-typ/touying/pull/296))
 - docs: comprehensive docstring improvements across all source files ([#294](https://github.com/touying-typ/touying/pull/294))
 
+### Theme Migration Guide
+
+**For theme developers upgrading to v0.6.3:**
+
+1. **Move `config` to the last position in `utils.merge-dicts`** to allow user overrides:
+   ```typst
+   // Before
+   self = utils.merge-dicts(self, config, config-page(...))
+   
+   // After
+   self = utils.merge-dicts(self, config-page(...), config)
+   ```
+
+2. **Replace `paper` with `utils.page-args-from-aspect-ratio`** to support arbitrary aspect ratios:
+   ```typst
+   // Before
+   config-page(paper: "presentation-" + aspect-ratio, ...)
+   
+   // After
+   config-page(..utils.page-args-from-aspect-ratio(aspect-ratio), ...)
+   ```
+
 
 ## v0.6.2
 
@@ -70,29 +179,6 @@ A major bugfix release, fixing many long-standing bugs and introducing many prac
 
 - docs: update README, bump versions of deps, and fix comment docs
 - ci: add more tests, bump versions of `tytanic`, and update typstyle workflow (#221, #261)
-
-### Theme Migration Guide
-
-**For theme developers upgrading to v0.6.3:**
-
-1. **Move `config` to the last position in `utils.merge-dicts`** to allow user overrides:
-   ```typst
-   // Before
-   self = utils.merge-dicts(self, config, config-page(...))
-   
-   // After
-   self = utils.merge-dicts(self, config-page(...), config)
-   ```
-
-2. **Replace `paper` with `utils.page-args-from-aspect-ratio`** to support arbitrary aspect ratios:
-   ```typst
-   // Before
-   config-page(paper: "presentation-" + aspect-ratio, ...)
-   
-   // After
-   config-page(..utils.page-args-from-aspect-ratio(aspect-ratio), ...)
-   ```
-
 
 ## v0.6.1
 
@@ -179,7 +265,7 @@ Thanks for the contributions from [@enklht](https://github.com/enklht).
 
 ## v0.5.1 & v0.5.2
 
-- Fix somg bugs.
+- Fix some bugs.
 
 ## v0.5.0
 

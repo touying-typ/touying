@@ -11,7 +11,7 @@ sidebar_position: 2
 一般而言，1 级、2 级和 3 级标题分别用来对应 section、subsection 和 subsubsection，例如 dewdrop 主题。
 
 ```example
-#import "@preview/touying:0.6.3": *
+#import "@preview/touying:0.7.4": *
 #import themes.dewdrop: *
 
 #show: dewdrop-theme.with(aspect-ratio: "16-9")
@@ -28,7 +28,7 @@ Hello, Touying!
 但是很多时候我们并不需要 subsection，因此也会使用 1 级和 2 级标题来分别对应 section 和 title，例如 university 主题。
 
 ```example
-#import "@preview/touying:0.6.3": *
+#import "@preview/touying:0.7.4": *
 #import themes.university: *
 
 #show: university-theme.with(aspect-ratio: "16-9")
@@ -60,7 +60,7 @@ Hello, Touying!
 在 Touying 中显示目录很简单：
 
 ```example
-#import "@preview/touying:0.6.3": *
+#import "@preview/touying:0.7.4": *
 #import themes.simple: *
 #import "@preview/numbly:0.1.0": numbly
 
@@ -78,6 +78,7 @@ Hello, Touying!
 其中 `outline(indent: 1em)` 是 Typst 的原生目录函数。而 `#components.adaptive-columns()` 函数可以让目录尽可能只占据一个页面，即它会自适应分别设置 `#columns(1, body)` 或者 `#columns(2, body)`，以此类推。
 
 如果你需要一个可以显示当前进度的 `outline` 函数，你可以考虑使用 `#components.progressive-outline()` 或 `#components.custom-progressive-outline()`，就像 dewdrop 主题那样。
+或者通过操控 `outline.entry` 元素自行编写，对于某些特定效果，你可能需要用到 `#utils.section-relationship`。
 ## 特殊标题标签
 
 Touying 识别标题上的特殊标签以控制幻灯片行为：
@@ -94,7 +95,7 @@ Touying 识别标题上的特殊标签以控制幻灯片行为：
 示例——使用 `<touying:hidden>` 标签隐藏目录幻灯片，使其不出现在最终 PDF 中：
 
 ```example
-#import "@preview/touying:0.6.3": *
+#import "@preview/touying:0.7.4": *
 #import themes.simple: *
 #import "@preview/numbly:0.1.0": numbly
 
@@ -118,7 +119,7 @@ Content.
 `appendix` 函数会停止幻灯片计数器，使附录幻灯片不影响页脚中显示的总数。
 
 ```example
-#import "@preview/touying:0.6.3": *
+#import "@preview/touying:0.7.4": *
 #import themes.simple: *
 
 #show: simple-theme

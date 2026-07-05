@@ -47,7 +47,6 @@
     }
   }
   let result = ()
-  let hidden-parts = ()
   for child in flat-args {
     if (
       type(child) == content
@@ -62,28 +61,7 @@
           // Track the peak repetitions so that a subsequent negative jump doesn't
           // cause the slide count to be underestimated
           max-repetitions = calc.max(max-repetitions, repetitions)
-          // If we jumped back into the visible zone, flush hidden-parts in order
-          // (so they appear before subsequent visible content, not after it)
-          if hidden-parts.len() != 0 and repetitions <= index {
-            let r = cover(hidden-parts)
-            if type(r) == array {
-              result += r
-            } else {
-              result.push(r)
-            }
-            hidden-parts = ()
-          }
         } else {
-          // absolute jump: clear hidden-parts and jump to target subslide
-          if hidden-parts.len() != 0 {
-            let r = cover(hidden-parts)
-            if type(r) == array {
-              result += r
-            } else {
-              result.push(r)
-            }
-          }
-          hidden-parts = ()
           max-repetitions = calc.max(max-repetitions, repetitions)
           repetitions = child.value.n
           last-subslide = 0
@@ -91,6 +69,7 @@
       } else if kind == "touying-waypoint" {
         // Waypoint inside reducer: advance repetitions if applicable.
         // Only implicit/explicit waypoints supported, no waypoint markers.
+        // Never pushed to result.
         let wp = self.at("waypoints", default: (:))
         let lbl = child.value.label
         let wp-start = child.value.at("start", default: auto)
@@ -167,27 +146,19 @@
         if repetitions <= index {
           result.push(child)
         } else {
-          hidden-parts.push(child)
+          let r = cover((child,))
+          if type(r) == array { result += r } else { result.push(r) }
         }
       }
     } else {
       if repetitions <= index {
         result.push(child)
       } else {
-        hidden-parts.push(child)
+        let r = cover((child,))
+        if type(r) == array { result += r } else { result.push(r) }
       }
     }
   }
-  // clear the hidden-parts when end
-  if hidden-parts.len() != 0 {
-    let r = cover(hidden-parts)
-    if type(r) == array {
-      result += r
-    } else {
-      result.push(r)
-    }
-  }
-  hidden-parts = ()
   // Safety net: filter out any remaining touying metadata nodes before passing
   // to the external reduce function (e.g. fletcher.diagram, cetz.canvas).
   // All touying metadata should already be handled above — if this filter

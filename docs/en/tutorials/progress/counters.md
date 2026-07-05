@@ -11,20 +11,20 @@ Touying provides a set of counters and utilities for tracking and displaying pre
 `utils.slide-counter` is the primary Typst counter that increments on every slide.
 
 ```typst
-// Display the current slide number
-#context utils.slide-counter.display()
+// Get the current slide number
+#context utils.slide-counter.get()
 ```
 
 Use it in a custom footer:
 
 ```example
-#import "@preview/touying:0.6.3": *
+#import "@preview/touying:0.7.4": *
 #import themes.default: *
 
 #show: default-theme.with(
   aspect-ratio: "16-9",
   config-page(
-    footer: context [Slide #utils.slide-counter.display()],
+    footer: context [Slide #utils.slide-counter.get()],
   ),
 )
 
@@ -44,7 +44,7 @@ More content.
 `utils.last-slide-number` holds the number of the last slide **before the appendix**. This is what you typically want to show as the denominator in a "slide X of Y" footer:
 
 ```typst
-#context utils.slide-counter.display() + " / " + utils.last-slide-number
+#context utils.slide-counter.get() + " / " + utils.last-slide-number
 ```
 
 ## Progress Bar
@@ -65,7 +65,7 @@ This is how the metropolis and aqua themes implement their progress bars.
 The `appendix` show rule stops the slide counter so that appendix slides do not change the total shown in the footer:
 
 ```example
-#import "@preview/touying:0.6.3": *
+#import "@preview/touying:0.7.4": *
 #import themes.simple: *
 
 #show: simple-theme

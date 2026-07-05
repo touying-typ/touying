@@ -1,5 +1,5 @@
 #import "pdfpc.typ"
-
+#import "extern.typ": warning
 /// Add page margin dictionary to another page margin dictionary.
 ///
 /// Example: `add-page-margin-dicts((top: 1cm, x: 2cm), (y: 3em))` returns `(x: 2cm, y: 3em)`
@@ -213,7 +213,6 @@
   }
 }
 
-
 /// Reconstruct a table-like content with new children.
 ///
 /// - named (bool): Whether to pass fields as named arguments. Default is `true`.
@@ -318,7 +317,7 @@
 }
 
 
-/// Determine if a content is a heading in a specific depth.
+/// Determine if a content is a heading up to specific depth.
 ///
 /// - it (content): The content to check.
 ///
@@ -353,6 +352,36 @@
   }
 }
 
+/// recursively checks if `it` has a text in it
+///
+/// - it (content): the content to check
+/// - transparentize-table (bool): Whether to assume tables contain text. If `false` tables will get searched completely for available text.
+/// -> bool
+#let _contains-text(it, transparentize-table) = {
+  if type(it) != content {
+    return false
+  }
+  if it.func() in (text, math.equation) {
+    return true
+  }
+  if it.has("body") {
+    return _contains-text(it.body, transparentize-table)
+  }
+  if it.has("child") {
+    return _contains-text(it.child, transparentize-table)
+  }
+  if it.has("children") {
+    if it.func() == table {
+      return transparentize-table
+    }
+    for child in it.children {
+      if _contains-text(child, transparentize-table) {
+        return true
+      }
+    }
+  }
+  return false
+}
 
 /// Wrap a function with a `self` parameter to make it callable as a method.
 ///
@@ -372,6 +401,13 @@
 ///
 /// Example: `#let (uncover, only) = utils.methods(self)` to get `uncover` and `only` methods.
 ///
+/// This function is primarily intended for callback-style usage inside `context` blocks or style rules, where the top-level
+/// `#uncover`/`#only` etc. functions cannot be used. Animation methods resolve waypoint labels
+/// via `self.waypoints` (populated before rendering) and check `self.subslide` directly.
+///
+/// Note: these methods do not register fn-wrappers in the touying parser, so they do not
+/// contribute to the subslide count.
+///
 /// - self (dictionary): The presentation context (must have a `methods` key containing a dictionary of functions).
 ///
 /// -> dictionary
@@ -381,48 +417,10 @@
     "methods" in self and type(self.methods) == dictionary,
     message: "self.methods must be a dictionary",
   )
-  // Animation methods that manage their own subslide visibility.
-  // In callback-style slides the parser's pause/cover logic (driven by
-  // #waypoint jumps) would incorrectly hide method-resolved content based on
-  // source position.  Wrapping the result in a fn-wrapper escapes pause zones
-  // (the parser always pushes fn-wrappers to `result`).
-  //
-  // The type check ensures non-content results (e.g. CeTZ draw-command arrays)
-  // are returned as-is so external packages keep working.
-  let animation-keys = (
-    "uncover",
-    "only",
-    "effect",
-    "alternatives",
-    "alternatives-match",
-    "alternatives-fn",
-    "alternatives-cases",
-    "item-by-item",
-  )
   let methods = (:)
   for key in self.methods.keys() {
     if type(self.methods.at(key)) == function {
-      if key in animation-keys {
-        methods.insert(key, (..args) => {
-          let result = self.methods.at(key)(self: self, ..args)
-          if type(result) == content {
-            [#metadata((
-              kind: "touying-fn-wrapper",
-              fn: (self: none) => result,
-              args: arguments(),
-              last-subslide: none,
-              repetitions: none,
-            ))<touying-temporary-mark>]
-          } else {
-            result
-          }
-        })
-      } else {
-        methods.insert(key, (..args) => self.methods.at(key)(
-          self: self,
-          ..args,
-        ))
-      }
+      methods.insert(key, (..args) => self.methods.at(key)(self: self, ..args))
     }
   }
   return methods
@@ -552,6 +550,34 @@
   }
 }
 
+#let reconstruct-heading(it, new-body, ..args) = {
+  assert(
+    type(it) == content and it.func() == heading,
+    message: "it must be a heading",
+  )
+  let heading-args = (
+    numbering: it.numbering,
+    bookmarked: it.bookmarked,
+    depth: it.depth,
+    offset: it.offset,
+    outlined: it.outlined,
+    hanging-indent: it.hanging-indent,
+    supplement: it.supplement,
+  )
+  if args != (:) { heading-args = merge-dicts(heading-args, args.named()) }
+
+  if it.has("label") {
+    return [#heading(
+        ..heading-args,
+        new-body,
+      )#it.label]
+  }
+  heading(
+    ..heading-args,
+    new-body,
+  )
+}
+
 
 /// Display the current heading on the page.
 ///
@@ -597,19 +623,37 @@
     )
     if current-heading != none {
       if style == none {
-        current-heading
-      } else if style == auto {
+        return current-heading
+      }
+
+      let setting-args-named = setting-args.named()
+      let _style = style
+      if style == auto {
+        _style = (
+          setting: body => body,
+          numbered: true,
+          current-heading,
+        ) => setting({
+          if numbered and current-heading.numbering != none {
+            (
+              std.numbering(
+                current-heading.numbering,
+                ..counter(heading).at(current-heading.location()),
+              )
+                + h(.3em)
+            )
+          }
+          current-heading.body
+        })
+
         let current-level = current-heading.level
         if current-level == 1 {
-          text(.715em, current-heading)
-        } else if current-level == 2 {
-          text(.835em, current-heading)
-        } else {
-          current-heading
-        }
-      } else {
-        style(..setting-args, current-heading)
+          setting-args-named = merge-dicts(setting-args-named, (
+            setting: text.with(.715em),
+          ))
+        } //else do nothing
       }
+      _style(..setting-args-named, ..setting-args.pos(), current-heading)
     }
   }
 )
@@ -695,6 +739,87 @@
     }
   }
 )
+
+/// Get the relationship of the current section a passed in outline entry. For past sections of another top-level section it returns -2, for past section of the current top-level section it returns -1. For the current section and children it returns 0, for future sections of the current top-level section it returns 1, and for future sections of another top-level section it returns 2.
+///
+/// Usage:
+/// ```typc
+/// #{// displays all top levels and all levels of the current top-level,
+///   // with future siblings and other top levels semi-transparent
+///   // and the current entry bold
+///   show outline.entry: it => {
+///     let relationship = utils.section-relationship(it)
+///     let current = utils.current-heading()
+///     let alpha = if relationship == -2 or relationship > 0 {40%} else {100%}
+///     let weight = if relationship == 0 and current.level == it.level { "bold" } else { "regular" }
+///     if it.level > 1 and calc.abs(relationship) > 1 {
+///       none
+///       // text(fill:red, it) // this will show all non-displayed entries in red.
+///     } else {
+///       text(fill:utils.update-alpha(text.fill, alpha), weight: weight, it)
+///     }
+///   }
+///   // if title is not none, it will create a new top-level heading which interferes with the computation
+///   outline(title:none)
+/// }
+/// ```
+///
+/// - current (content, none): The current heading to compare with. Default is `auto`, which uses `utils.current-heading()`.
+/// - it (content): The outline entry to compare with.
+///
+/// -> int
+#let section-relationship(current: auto, it) = {
+  if current == auto {
+    current = current-heading()
+  }
+  let current-top-heading = current-heading(depth: 1)
+  if current-top-heading == none {
+    warning(
+      "Found no current top-level heading when trying to compute section relationship. Falling back to the current heading. This might cause problems. Problematic heading: "
+        + repr(current.body),
+    )
+    current-top-heading = current
+  }
+  let next-top-heading = query(
+    selector(heading.where(depth: 1)).after(
+      inclusive: false,
+      current-top-heading.location(),
+    ),
+  ).at(0, default: none)
+  let next-heading = query(
+    //the next non-child section heading
+    selector(heading.where(depth: current.level)).after(
+      inclusive: false,
+      current.location(),
+    ),
+  ).at(0, default: none)
+  let this-top-loc = current-top-heading.location().page()
+  let this-loc = current.location().page()
+  let next-sibling-loc = if next-heading != none {
+    next-heading.location().page()
+  } else {
+    calc.inf
+  }
+  let next-top-loc = if next-top-heading != none {
+    next-top-heading.location().page()
+  } else {
+    calc.inf
+  }
+
+  let it-location = it.element.location().page()
+
+  if it-location < this-top-loc {
+    return -2
+  } else if it-location < this-loc {
+    return -1
+  } else if it-location < next-sibling-loc and it-location < next-top-loc {
+    return 0
+  } else if it-location < next-top-loc {
+    return 1
+  } else {
+    return 2
+  }
+}
 
 
 /// Display the date from `self.info.date` formatted with `self.datetime-format`.
@@ -823,10 +948,17 @@
 
 #let _size-to-pt(size, container-dimension) = {
   let to-convert = size
-  if type(size) == ratio {
-    to-convert = container-dimension * size
+  if type(size) == fraction {
+    let fr = repr(size * 1000000) //avoid capped precision
+    to-convert = float(fr.slice(0, fr.len() - 2)) / 1000000
   }
-  measure(v(to-convert)).height
+  if type(to-convert) in (int, float, ratio) {
+    //nice just a multiplication
+    to-convert = container-dimension * to-convert
+  } else {
+    to-convert = measure(v(to-convert)).height //get in pt if em
+  }
+  to-convert
 }
 
 #let _limit-content-width(width: none, body, container-size) = {
@@ -840,9 +972,10 @@
 }
 
 
-/// Fit content to specified height.
+/// Fit content to specified/remaining height.
 ///
-/// Example: `#utils.fit-to-height(100%)[BIG]`
+/// Example: `#utils.fit-to-height[BIG]`
+/// - height (length, fraction, relative): The height to fit the content to. For example, `height: 50%` will fit the content to half of the slide height. If given as a fraction, it will be based on the available height after everything else is evaluated, similar to how fractional lengths behave for table column widths. Default is `1fr` which means to fit the content to the full available rest height.
 ///
 /// - width (length, fraction, relative): Will determine the width of the content after scaling. So, if you want the scaled content to fill half of the slide width, you can use `width: 50%`.
 ///
@@ -852,22 +985,49 @@
 ///
 /// - shrink (bool): Indicates whether the content should be scaled down if it is larger than the available height. Default is `true`.
 ///
-/// - height (length): The height to fit the content to.
+/// - reflow (bool): Whether to allow text reflow when scaling with auto width. Default is `true`. Only works when `width` is `auto` and the body contains text.
 ///
-/// - body (content): The content to fit.
+/// - force-height (bool): Whether to force the content to occupy the full height and not have it fill the available width. Only matters when `reflow` is `true` and `width` is auto. By default `false`. When text is reflowed, it makes sense to use as much width as possible and not force the content to be as tall as possible. Lines are naturally discrete and thus so are the possible scaling factors to fit the lines to the available height. Forcing the height may lead to the text not occupying the available width.
+///
+/// - body (content): The content to fit. If two positional arguments are given, this will be height instead.
+///
+/// - args (arguments): For convenience and compatibility with older versions, passing in height as a positional argument is still supported. If two positional arguments are given, the first one is the width and the second one is the body.
 ///
 /// -> content
 #let fit-to-height(
-  width: none,
+  height: 1fr,
+  width: auto,
   prescale-width: none,
   grow: true,
   shrink: true,
-  height,
+  reflow: true,
+  force-height: false,
   body,
+  ..args,
 ) = {
+  assert(
+    args.pos().len() <= 1,
+    message: "Only two positional arguments allowed, which will be interpreted as height and body.",
+  )
+  if args.pos().len() == 1 {
+    height = body
+    body = args.pos().at(0)
+  }
   context {
-    layout(container-size => {
-      let available-height = _size-to-pt(height, container-size.height)
+    let layout-content(
+      width: auto,
+      prescale-width: none,
+      grow: true,
+      shrink: true,
+      height,
+      body,
+    ) = layout(container-size => {
+      let available-height = 0pt
+      if type(height) == fraction {
+        available-height = container-size.height
+      } else {
+        available-height = _size-to-pt(height, container-size.height)
+      }
       // Provide a sensible initial width, which will define initial scale parameters.
       // Note this is different from the post-scale width, which is a limiting factor
       // on the allowable scaling ratio
@@ -877,26 +1037,107 @@
         container-size,
       )
 
-      // post-scaling width
-      let mutable-width = width
-      if width == none {
-        mutable-width = container-size.width
-      }
-      mutable-width = _size-to-pt(mutable-width, container-size.width)
-
+      //get size of the content when boxed to the prescale width, which is the initial size before scaling, may be different from the container-width
       let size = measure(boxed-content)
       if size.height == 0pt or size.width == 0pt {
         return body
       }
       let h-ratio = available-height / size.height
+
+      // post-scaling width
+      let mutable-width = width
+      if width == none or width == auto {
+        mutable-width = container-size.width
+      }
+      mutable-width = _size-to-pt(mutable-width, container-size.width)
+
       let w-ratio = mutable-width / size.width
       let ratio = calc.min(h-ratio, w-ratio) * 100%
 
+      if width == auto and reflow and _contains-text(body, false) {
+        //height is good rn, but width may be too small.
+        // get the current ratio of used/available width and scale such that we fill it. use sqrt trick to allow good flow.
+        // then height may again be slightly too small. repeat that.
+
+        let adjust-width(ratio, body, boxed-content, size) = {
+          let w-ratio = (
+            measure(scale(
+              ratio,
+              boxed-content,
+              origin: top + left,
+              reflow: true,
+            )).width
+              / size.width
+          )
+
+          let _boxed-content = block(
+            width: size.width / calc.sqrt(w-ratio), //increase width by sqrt of w-ratio
+            body,
+          )
+          ratio = calc.sqrt(w-ratio) * 100%
+          return (ratio, _boxed-content)
+        }
+
+        let adjust-height(ratio, body, boxed-content, size) = {
+          let h-ratio = (
+            measure(scale(
+              ratio,
+              boxed-content,
+              origin: top + left,
+              reflow: true,
+            )).height
+              / size.height
+          )
+
+          let _boxed-content = block(
+            width: size.width / float(ratio) * calc.sqrt(h-ratio), //reduce width by sqrt of h-ratio
+            body,
+          )
+          ratio *= calc.sqrt(1 / h-ratio)
+
+          h-ratio = (
+            measure(scale(
+              ratio,
+              _boxed-content,
+              origin: top + left,
+              reflow: true,
+            )).height
+              / size.height
+          )
+          ratio /= h-ratio
+
+          return (ratio, _boxed-content)
+        }
+
+        //improve iteratively, 2 seems enough.
+        for i in range(2) {
+          (ratio, boxed-content) = adjust-width(ratio, body, boxed-content, (
+            width: mutable-width,
+            height: available-height,
+          ))
+          (ratio, boxed-content) = adjust-height(ratio, body, boxed-content, (
+            width: mutable-width,
+            height: available-height,
+          ))
+        }
+        if not force-height {
+          //fix the width one last time linearly.
+          let scaled-width = measure(scale(
+            ratio,
+            boxed-content,
+            origin: top + left,
+            reflow: true,
+          )).width
+          let current-box-width = measure(boxed-content).width
+          boxed-content = box(
+            width: current-box-width * (mutable-width / scaled-width),
+            body,
+          )
+        }
+      }
       if ((shrink and (ratio < 100%)) or (grow and (ratio > 100%))) {
-        let new-width = size.width * ratio
         scale(
-          x: ratio,
-          y: ratio,
+          ratio,
           origin: top + left,
           boxed-content,
           reflow: true,
@@ -905,6 +1146,28 @@
         body
       }
     })
+    if type(height) == fraction {
+      block(
+        height: height,
+        layout-content(
+          width: width,
+          prescale-width: prescale-width,
+          grow: grow,
+          shrink: shrink,
+          height,
+          body,
+        ),
+      )
+    } else {
+      layout-content(
+        width: width,
+        prescale-width: prescale-width,
+        grow: grow,
+        shrink: shrink,
+        height,
+        body,
+      )
+    }
   }
 }
 
@@ -913,18 +1176,29 @@
 ///
 /// Example: `#utils.fit-to-width(100%)[BIG]`
 ///
+/// - width (length, fraction, relative): The width to fit the content to. For example, `width: 50%` will fit the content to half of the slide width. If given as a fraction, it will be based on the available width after everything else is evaluated, similar to how fractional lengths behave for table column widths. Default is `1fr` which means to fit the content to the full available rest width.
+///
 /// - grow (bool): Indicates whether the content should be scaled up if it is smaller than the available width. Default is `true`.
 ///
 /// - shrink (bool): Indicates whether the content should be scaled down if it is larger than the available width. Default is `true`.
 ///
-/// - width (length, fraction, relative): The width to fit the content to.
+/// - body (content): The content to fit. If two positional arguments are given, this will be width instead.
 ///
-/// - body (content): The content to fit.
+/// - args (arguments): For convenience and compatibility with older versions, passing in width as a positional argument is still supported. If two positional arguments are given, the first one is the width and the second one is the body.
 ///
 /// -> content
-#let fit-to-width(grow: true, shrink: true, width, content) = {
+#let fit-to-width(width: 1fr, grow: true, shrink: true, body, ..args) = {
+  assert(
+    args.pos().len() <= 1,
+    message: "Only two positional arguments allowed, which will be interpreted as width and body.",
+  )
+  if args.pos().len() == 1 {
+    width = body
+    body = args.pos().at(0)
+  }
+
   layout(layout-size => {
-    let content-width = measure(content).width
+    let content-width = measure(body).width
     let width = _size-to-pt(width, layout-size.width)
     if (
       content-width != 0pt
@@ -936,16 +1210,63 @@
       let ratio = width / content-width * 100%
       scale(
         // The box keeps content from prematurely wrapping
-        box(content, width: content-width),
+        box(body, width: content-width),
         origin: top + left,
         x: ratio,
         y: ratio,
         reflow: true,
       )
     } else {
-      content
+      body
     }
   })
+}
+/// true for all typst content that is not inline.
+#let is-block(it) = {
+  // whenever sth is wrapped in a box it is automatically inlined.
+  //first get the variable stuff
+  if it.func() in (math.equation, raw, quote) {
+    return it.block
+  }
+  (
+    it.func()
+      in (
+        // model stuff
+        figure,
+        footnote.entry,
+        heading,
+        enum,
+        list,
+        terms,
+        par,
+        table,
+        title,
+        // text stuff already checked above, as can be both
+        // layout stuff
+        align,
+        block,
+        columns,
+        grid,
+        move,
+        pad,
+        place,
+        repeat,
+        rotate,
+        scale,
+        skew,
+        stack,
+        // visual stuff,
+        // (path is deprecated)
+        circle,
+        curve,
+        ellipse,
+        image,
+        line,
+        polygon,
+        rect,
+        square,
+      )
+  )
 }
 
 
@@ -957,7 +1278,7 @@
 ///
 /// - fill (color): The color to fill the rectangle with.
 ///
-/// - inline (bool): Indicates whether the content should be displayed inline. Default is `true`.
+/// - inline (bool): Indicates whether the content should be displayed inline. Default is `auto`. It is determined based on content type, not inline for block content and inline for inline content.
 ///
 /// - body (content): The content to cover.
 ///
@@ -966,7 +1287,8 @@
   self: none,
   ..cover-args,
   fill: auto,
-  inline: true,
+  inline: auto,
+  is-first: false,
   body,
 ) = {
   if fill == auto {
@@ -978,40 +1300,182 @@
   if type(fill) == str {
     fill = rgb(fill)
   }
+  if body == none {
+    return []
+  }
+  //handle all sorts of weird wrappers and space-like content
+  if body.func() == typst-builtin-styled {
+    // unwrap styled content and re-apply style after covering, to avoid the
+    // cover rect being wrapped in the styled element which can cause issues
+    // with certain styles (e.g. `set text-color(red)` would make the rect red)
+    return reconstruct-styled(
+      body,
+      cover-with-rect(
+        self: self,
+        ..cover-args,
+        fill: fill,
+        inline: inline,
+        body.child,
+      ),
+    )
+  }
+  //skip space/empty content
+  if body.func() in (parbreak, linebreak, typst-builtin-space, h, v) {
+    return body
+  }
+  // split up sequences to find actual content types
+  if body.func() == typst-builtin-sequence {
+    let bodies = body.children
+    return bodies
+      .map(b => {
+        cover-with-rect(
+          self: self,
+          ..cover-args,
+          fill: fill,
+          inline: inline,
+          b,
+        )
+      })
+      .sum(default: none)
+  }
 
-  let to-display = layout(layout-size => {
+  if inline == auto {
+    inline = not is-block(body)
+  }
+
+  //debug colors keep these!!!
+  // fill = if body.func() == math.equation {
+  //   rgb(0, 0, 255, 50%)
+  // } else if inline {
+  //   rgb(0, 255, 0, 50%)
+  // } else {
+  //   rgb(255, 0, 0, 50%)
+  // }
+  if inline and body.func() != math.equation {
+    // For inline content, use strike with a thick stroke to overlay a colored
+    // bar per line fragment.  strike is line-break-aware: it renders per
+    // fragment during layout, so text wraps naturally (no rigid box).
+    // Measure body wrapped in par() to pick up show rules like
+    // `show par: set text(2em)` that affect the actual rendered size.
     context {
-      let body-size = measure(body)
-      let bounding-width = calc.min(body-size.width, layout-size.width)
-      let wrapped-body-size = measure(box(body, width: bounding-width))
-      let named = cover-args.named()
-      if "width" not in named {
-        named.insert("width", wrapped-body-size.width)
-      }
-      if "height" not in named {
-        named.insert("height", wrapped-body-size.height)
-      }
-      if "outset" not in named {
-        // This outset covers the tops of tall letters and the bottoms of letters with
-        // descenders. Alternatively, we could use
-        // `set text(top-edge: "bounds", bottom-edge: "bounds")` to get the same effect,
-        // but this changes text alignment and also misaligns bullets in enums/lists.
-        // In contrast, `outset` preserves spacing and alignment at the cost of adding
-        // a slight, visible border when the covered object is right next to the edge
-        // of a color change.
-        named.insert("outset", (top: 0.15em, bottom: 0.25em))
-      }
-      stack(
-        spacing: -wrapped-body-size.height,
+      // Measure a reference character wrapped in par() to pick up show rules
+      // like `show par: set text(2em)` that affect rendered text size.
+      let h = measure(par[Xg]).height
+      strike(
+        stroke: 1.6 * h + fill,
+        offset: -0.35 * h,
+        extent: 0.05 * h,
         body,
-        rect(fill: fill, ..named, ..cover-args.pos()),
       )
+      //debug
+      // [#metadata(
+      //   (func: "cover-with-rect/inline", pos: cover-args.pos(), named: cover-args.named(), body-func: body.func(), body-type: type(body), inline: inline, repr: repr(body), height: h),
+      // )<dbg>]
     }
-  })
-  if inline {
-    box(to-display)
   } else {
-    to-display
+    // For block content and inline math, measure and overlay with stack.
+    // Blocks don't need to line-wrap, and inline math is short enough that
+    // a single box won't cause overflow issues.  strike doesn't work on math.
+    let to-display = layout(layout-size => {
+      context {
+        let new-body-func = if not body.func() in (align, math.equation) {
+          (body.func())
+        } else {
+          par
+        }
+
+        let m-body = body
+        if body.func() == align {
+          m-body = par(body.body)
+        }
+        let body-size = measure(m-body)
+        let bounding-width = calc.min(body-size.width, layout-size.width)
+        let wrapped-body-size = measure(box(m-body, width: bounding-width))
+
+        let named = cover-args.named()
+        if "width" not in named {
+          named.insert("width", wrapped-body-size.width)
+        }
+        if "height" not in named {
+          named.insert("height", wrapped-body-size.height)
+        }
+        if "outset" not in named {
+          // Inline math needs extra outset for superscripts/limits (top)
+          // and subscripts with descenders like g, y, p (bottom)
+          // let math-text-size = measure($X g$).height
+          let real-text-size = measure(new-body-func([Xg])).height
+          let top-outset = if inline { 0.35 * real-text-size } else {
+            0.15 * real-text-size
+          }
+          let bottom-outset = if inline { 0.65 * real-text-size } else {
+            0.45 * real-text-size
+          }
+          named.insert("outset", (top: top-outset, bottom: bottom-outset))
+        }
+        if not inline {
+          named.at("width") = layout-size.width
+        }
+
+        //calculate the extra required padding on top and bottom bc the non-covered text gives this to the layout, but wrapping text twice in a box kills it.
+        // this is required when you switch between non-text block to text block or the size changes, but somehow the spacing gets eaten when two large text blocks follow each other, then this is wrong. but we cannot detect that.
+        let extra = if (
+          (body.has("body") and body.body.func() == text)
+            or body.func() in (align, math.equation)
+        ) {
+          ((1.52 * measure(new-body-func([Xg])).height / text.size) - 1)
+        } else { 0 }
+        let extra-top = (
+          extra * if block.above == auto { par.spacing } else { block.above }
+        )
+        let extra-bottom = (
+          extra * if block.below == auto { par.spacing } else { block.below }
+        )
+
+        stack(
+          spacing: -wrapped-body-size.height,
+          if body.func() in (align, place) {
+            pad(top: extra-top, {
+              body
+              v(0pt)
+            }) //somehow the v element allows text to be the true height even when wrapped in pad.
+          } else {
+            pad(top: extra-top, body)
+          },
+          {
+            pad(
+              rect(
+                fill: fill,
+                ..named,
+                ..cover-args.pos(),
+              ),
+              bottom: extra-bottom,
+            )
+          },
+        )
+        //debug
+        // [#metadata(
+        //   (
+        //     func: "cover-with-rect",
+        //     pos: cover-args.pos(),
+        //     named: cover-args.named(),
+        //     body-func: body.func(),
+        //     body-type: type(body),
+        //     inline: inline,
+        //     repr: repr(body),
+        //     height: wrapped-body-size.height,
+        //     extra: extra,
+        //   ),
+        // )<dbg>]
+      }
+    })
+    if inline {
+      //inline math comes here, as strike doesn't work on math content
+      box(to-display)
+    } else {
+      // Reconstruct the original block element around the covered content
+      // so it preserves native spacing (e.g. skew, figure, etc.).
+      to-display
+    }
   }
 }
 
@@ -1038,8 +1502,9 @@
 /// - body (content): The content to cover.
 ///
 /// -> content
-#let semi-transparent-cover(self: none, alpha: 85%, body) = {
+#let semi-transparent-cover(self: none, alpha: 85%, ..cover-args, body) = {
   cover-with-rect(
+    ..cover-args,
     fill: update-alpha(
       self.page.at("fill", default: rgb("#ffffff")),
       alpha,
@@ -1048,57 +1513,41 @@
   )
 }
 
-// recursively checks if `it` has a text in it
-#let _contains-text(it, transparentize-table) = {
-  if type(it) != content {
-    return false
-  }
-  if it.func() in (text, math.equation) {
-    return true
-  }
-  if it.has("body") {
-    return _contains-text(it.body, transparentize-table)
-  }
-  if it.has("child") {
-    return _contains-text(it.child, transparentize-table)
-  }
-  if it.has("children") {
-    if it.func() == table {
-      return transparentize-table
-    }
-    for child in it.children {
-      if _contains-text(child, transparentize-table) {
-        return true
-      }
-    }
-  }
-  return false
-}
-
 /// Cover content with a text-color-changing mechanism.
 ///
 /// Example: `config-methods(cover: utils.color-changing-cover.with(color: gray))`
 ///
 /// - color (color): The color to apply to text when covered. Default is `gray`.
 ///
-/// - fallback-hide (bool): Whether to hide the content if it does not contain text. Default is `true`.
+/// - fallback-hide (func): The function to use to hide the content if it does not contain text. Default is typst's own `hide`. You may pass `none` to not hide non-text content. To hide content with a semi-transparent/color overlay, you can pass in `semi-transparent-cover`/`cover-with-rect.with(fill: ...)`.
 ///
 /// - transparentize-table (bool): Whether to transparentize table content. Default is `false`.
 ///
 /// - it (content): The content to cover.
 ///
+/// - fallback-hide-args (dict): The named arguments to pass to the fallback hide function if the content does not contain text.
+///
 /// -> content
 #let color-changing-cover(
   self: none,
   color: gray,
-  fallback-hide: true,
+  fallback-hide: hide,
   transparentize-table: false,
+  fallback-hide-args: (:),
   it,
 ) = {
-  show regex(".+"): set text(color)
+  let _fallback-hide = fallback-hide
+  if fallback-hide == none {
+    _fallback-hide = it => it
+  }
   if not _contains-text(it, transparentize-table) {
-    hide(it)
+    if _fallback-hide in (semi-transparent-cover, cover-with-rect) {
+      _fallback-hide(self: self, it, ..fallback-hide-args)
+    } else {
+      _fallback-hide(it)
+    }
   } else {
+    show regex(".+"): set text(color)
     it
   }
 }
@@ -1110,26 +1559,38 @@
 ///
 /// - alpha (ratio): The opacity to apply to text colors when covered. Default is `25%`.
 ///
-/// - fallback-hide (bool): Whether to hide the content if it does not contain text. Default is `true`.
+/// - fallback-hide (func): The function to use to hide the content if it does not contain text. Default is typst's own `hide`. You may pass `none` to not hide non-text content. To hide content with a semi-transparent/color overlay, you can pass in `semi-transparent-cover`/`cover-with-rect.with(fill: ...)`.
 ///
 /// - transparentize-table (bool): Whether to transparentize table content. Default is `false`.
 ///
 /// - it (content): The content to cover.
 ///
+/// - fallback-hide-args (args): The arguments to pass to the fallback hide function if the content does not contain text.
+///
 /// -> content
 #let alpha-changing-cover(
   self: none,
   alpha: 25%,
-  fallback-hide: true,
+  fallback-hide: hide,
   transparentize-table: false,
+  fallback-hide-args: (:),
   it,
 ) = context {
-  show regex(".+"): it => context {
-    text(update-alpha(text.fill, alpha), it)
+  let _fallback-hide = fallback-hide
+  if fallback-hide == none {
+    _fallback-hide = it => it
   }
+
   if not _contains-text(it, transparentize-table) {
-    hide(it)
+    if _fallback-hide in (semi-transparent-cover, cover-with-rect) {
+      _fallback-hide(self: self, it, ..fallback-hide-args)
+    } else {
+      _fallback-hide(it)
+    }
   } else {
+    show regex(".+"): el => context {
+      text(update-alpha(text.fill, alpha), el)
+    }
     it
   }
 }
@@ -1990,38 +2451,17 @@
   alternatives-match(self: self, cases.zip(contents), ..kwargs.named())
 }
 
-
-/// Display list, enum, or terms items one by one with animation.
+/// Display list, enum, or terms items one by one with animation and styling.
+/// For more details see `utils.item-by-item`.
 ///
-/// Each item is revealed on a successive subslide.  By default (`start: auto`),
-/// revealing is relative to the current pause position.  `start` also accepts
-/// a waypoint label or marker to anchor the reveal sequence. From the anchor one additional item is revealed per subslide.
-///
-///  #example(
-/// >>> #let is-dark = sys.inputs.at("x-color-theme", default: none) == "dark";
-/// >>> #let text-color = if is-dark { std.white } else { std.black };
-/// >>> #show: simple-theme.with(
-/// >>>   aspect-ratio: "16-9",
-/// >>>   config-page(width: 320pt, height: 180pt),
-/// >>>   config-colors(neutral-lightest: none, neutral-darkest: text-color),
-/// >>> )
-/// >>> #set text(.5em)
-/// <<< #show: simple-theme.with(aspect-ratio: "16-9")
-/// = Slide
-///
-/// #item-by-item[
-///   - first
-///   - second
-///   - third
-/// ]
-/// )
-///
-/// - start (auto | int | label | dictionary): The subslide on which the first\n///   item appears.  Resolved from a waypoint when a label or marker is given.
-///
-/// - cont (content): The content containing a list, enum, or terms element.
-///
+/// - start (int, label, str, dictionary): The starting subslide number or waypoint.
+/// - fn (function): A function that gets `(idx, it)` and returns the styled item content for the item at the relative index `idx` (may be negative if it was revealed already)
+/// - cont (content): The content containing the items to display.
 /// -> content
-#let item-by-item(self: none, start: 1, cont) = {
+#let item-by-item-fn(self: none, start: 1, fn, cont) = {
+  if fn == none {
+    fn = (idx, it) => it
+  }
   let cover = self.methods.cover.with(self: self)
   let item-funcs = (list.item, enum.item, terms.item)
 
@@ -2072,13 +2512,13 @@
     for child in cont.children {
       if type(child) == content and child.func() in item-funcs {
         if check-visible(self.subslide, (beginning: start + item-count)) {
-          result.push(child)
+          result.push(fn(start + item-count - self.subslide, child))
         } else {
-          result.push(cover(child))
+          result.push(fn(start + item-count - self.subslide, cover(child)))
         }
         item-count += 1
       } else {
-        result.push(child)
+        result.push(fn(start + item-count - self.subslide, child))
       }
     }
     result.sum(default: [])
@@ -2089,9 +2529,9 @@
       .enumerate()
       .map(((idx, item)) => {
         if check-visible(self.subslide, (beginning: start + idx)) {
-          item
+          fn(start + idx - self.subslide, item)
         } else {
-          reconstruct(item, cover(item.body))
+          reconstruct(item, fn(start + idx - self.subslide, cover(item.body)))
         }
       })
     reconstruct-table-like(cont, new-items)
@@ -2102,9 +2542,12 @@
       .enumerate()
       .map(((idx, item)) => {
         if check-visible(self.subslide, (beginning: start + idx)) {
-          item
+          fn(start + idx - self.subslide, item)
         } else {
-          terms.item(cover(item.term), cover(item.description))
+          terms.item(
+            fn(start + idx - self.subslide, cover(item.term)),
+            fn(start + idx - self.subslide, cover(item.description)),
+          )
         }
       })
     reconstruct-table-like(cont, new-items)
@@ -2112,6 +2555,41 @@
     // Fallback: show content as-is
     cont
   }
+}
+
+
+/// Display list, enum, or terms items one by one with animation.
+///
+/// Each item is revealed on a successive subslide.  By default (`start: auto`),
+/// revealing is relative to the current pause position.  `start` also accepts
+/// a waypoint label or marker to anchor the reveal sequence. From the anchor one additional item is revealed per subslide.
+///
+///  #example(
+/// >>> #let is-dark = sys.inputs.at("x-color-theme", default: none) == "dark";
+/// >>> #let text-color = if is-dark { std.white } else { std.black };
+/// >>> #show: simple-theme.with(
+/// >>>   aspect-ratio: "16-9",
+/// >>>   config-page(width: 320pt, height: 180pt),
+/// >>>   config-colors(neutral-lightest: none, neutral-darkest: text-color),
+/// >>> )
+/// >>> #set text(.5em)
+/// <<< #show: simple-theme.with(aspect-ratio: "16-9")
+/// = Slide
+///
+/// #item-by-item[
+///   - first
+///   - second
+///   - third
+/// ]
+/// )
+///
+/// - start (auto | int | label | dictionary): The subslide on which the first\n///   item appears.  Resolved from a waypoint when a label or marker is given.
+///
+/// - cont (content): The content containing a list, enum, or terms element.
+///
+/// -> content
+#let item-by-item(self: none, start: 1, cont) = {
+  item-by-item-fn(self: self, start: start, (idx, it) => it, cont)
 }
 
 
@@ -2266,7 +2744,9 @@
     es: "Índice",
     et: "Sisukord",
     fi: "Sisällys",
+    fr: "Plan",
     ja: "目次",
+    pl: "Agenda",
     ru: "Содержание",
     zh-TW: "目錄",
     zh: "目录",
@@ -2373,3 +2853,104 @@
 }
 
 #let dbg(val) = [#metadata(repr(val))<dbg>]
+
+#let _parse-nav-symbol(s, target, other) = {
+  if type(s) == dictionary {
+    let d = s
+    if target in d {
+      let td = d.at(target)
+      let res = _parse-nav-symbol(td, target, other)
+      if res.left != none or res.right != none { return res }
+    }
+    if other in d {
+      let od = d.at(other)
+      let res = _parse-nav-symbol(od, target, other)
+      if res.left != none or res.right != none { return res }
+    }
+    let res = (left: none, right: none)
+    if "left" in d { res.left = d.left }
+    if "right" in d { res.right = d.right }
+    if res.left == none and res.right != none {
+      res.left = scale(x: -100%, res.right)
+    }
+    if res.right == none and res.left != none {
+      res.right = scale(x: -100%, res.left)
+    }
+    return res
+  }
+
+  if type(s) != symbol {
+    return (left: s, right: scale(x: -100%, s))
+  }
+
+  let r = repr(s)
+  let has(m) = "\"" + m + "\"" in r or "(\"" + m + "\"" in r
+
+  if target == "filled" {
+    if has("filled.l") and has("filled.r") {
+      return (left: s.filled.l, right: s.filled.r)
+    }
+    if has("l.filled") and has("r.filled") {
+      return (left: s.l.filled, right: s.r.filled)
+    }
+    if has("filled") {
+      return (left: scale(x: -100%, s.filled), right: s.filled)
+    }
+
+    if has("stroked.l") and has("stroked.r") {
+      return (left: s.stroked.l, right: s.stroked.r)
+    }
+    if has("l.stroked") and has("r.stroked") {
+      return (left: s.l.stroked, right: s.r.stroked)
+    }
+    if has("stroked") {
+      return (left: scale(x: -100%, s.stroked), right: s.stroked)
+    }
+  } else {
+    if has("stroked.l") and has("stroked.r") {
+      return (left: s.stroked.l, right: s.stroked.r)
+    }
+    if has("l.stroked") and has("r.stroked") {
+      return (left: s.l.stroked, right: s.r.stroked)
+    }
+    if has("stroked") {
+      return (left: scale(x: -100%, s.stroked), right: s.stroked)
+    }
+
+    if has("filled.l") and has("filled.r") {
+      return (left: s.filled.l, right: s.filled.r)
+    }
+    if has("l.filled") and has("r.filled") {
+      return (left: s.l.filled, right: s.r.filled)
+    }
+    if has("filled") {
+      return (left: scale(x: -100%, s.filled), right: s.filled)
+    }
+  }
+
+  if has("l") and has("r") { return (left: s.l, right: s.r) }
+
+  return (left: s, right: scale(x: -100%, s))
+}
+
+#let create-nav-symbols(symbol) = {
+  if type(symbol) == dictionary {
+    let allowed = ("filled", "stroked", "left", "right")
+    for k in symbol.keys() {
+      if k not in allowed {
+        panic(
+          "Invalid key in nav symbols dictionary: "
+            + k
+            + ". Expected 'filled', 'stroked', 'left', or 'right'.",
+        )
+      }
+    }
+  }
+
+  let nav-symbols = (
+    filled: _parse-nav-symbol(symbol, "filled", "stroked"),
+    stroked: _parse-nav-symbol(symbol, "stroked", "filled"),
+  )
+
+  return nav-symbols
+}

@@ -13,7 +13,7 @@ The Metropolis theme is elegant and suitable for everyday use. It is recommended
 You can initialize it using the following code:
 
 ```typst
-#import "@preview/touying:0.6.3": *
+#import "@preview/touying:0.7.4": *
 #import themes.metropolis: *
 
 #import "@preview/numbly:0.1.0": numbly
@@ -27,6 +27,7 @@ You can initialize it using the following code:
     author: [Authors],
     date: datetime.today(),
     institution: [Institution],
+    contact: [contact\@mail.com],
     logo: emoji.city,
   ),
 )
@@ -36,13 +37,13 @@ You can initialize it using the following code:
 #title-slide()
 ```
 
-The `metropolis-theme` in the theme accepts the following parameters:
+The `metropolis-theme` function accepts the following parameters:
 
 - `aspect-ratio`: The aspect ratio of the slides, which can be "16-9" or "4-3", with a default of "16-9".
 - `align`: The alignment of the content within the slides, with a default of `horizon` (horizontal alignment).
 - `header`: The content displayed in the header of the slides, with a default that displays the current heading adjusted to fit the width (`utils.display-current-heading(setting: utils.fit-to-width.with(grow: false, 100%))`). Alternatively, you can provide a function like `self => self.info.title` to customize the header content.
 - `header-right`: The content displayed on the right side of the header, with a default that shows the logo specified in `self.info.logo`.
-- `footer`: The content displayed in the footer of the slides, with a default of an empty array `[]`. You can customize it with a function, for example, to display the author's information: `self => self.info.author`.
+- `footer`: The content displayed in the footer of the slides, with a default of `none`. You can customize it with a function, for example, to display the author's information: `self => self.info.author`.
 - `footer-right`: The content displayed on the right side of the footer, with a default that shows the slide number and the total number of slides (`context utils.slide-counter.display() + " / " + utils.last-slide-number`).
 - `footer-progress`: A boolean value indicating whether to display a progress bar at the bottom of the slides, with a default of `true`.
 
@@ -82,7 +83,7 @@ The Metropolis theme provides a variety of custom slide functions:
   config: (:),
   repeat: auto,
   setting: body => body,
-  composer: components.side-by-side,
+  composer: cols,
   // metropolis theme
   title: auto,
   footer: auto,
@@ -115,7 +116,7 @@ Creates a new section with the given title.
 ## Example
 
 ```example
-#import "@preview/touying:0.6.3": *
+#import "@preview/touying:0.7.4": *
 #import themes.metropolis: *
 
 #import "@preview/numbly:0.1.0": numbly
@@ -129,6 +130,7 @@ Creates a new section with the given title.
     author: [Authors],
     date: datetime.today(),
     institution: [Institution],
+    contact: [contact\@mail.com],
     logo: emoji.city,
   ),
 )

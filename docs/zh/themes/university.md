@@ -11,7 +11,7 @@ sidebar_position: 4
 你可以通过下面的代码来初始化：
 
 ```typst
-#import "@preview/touying:0.6.3": *
+#import "@preview/touying:0.7.4": *
 #import themes.university: *
 
 #import "@preview/numbly:0.1.0": numbly
@@ -24,6 +24,7 @@ sidebar_position: 4
     author: [Authors],
     date: datetime.today(),
     institution: [Institution],
+    contact: [contact\@mail.com],
     logo: emoji.school,
   ),
 )
@@ -33,7 +34,7 @@ sidebar_position: 4
 #title-slide()
 ```
 
-其中 `register` 接收参数:
+其中 `university-theme` 接收参数:
 
 - `aspect-ratio`: 幻灯片的长宽比为 "16-9" 或 "4-3"，默认为 "16-9"。
 - `progress-bar`: 是否显示 slide 顶部的进度条，默认为 `true`。
@@ -87,7 +88,7 @@ University 主题提供了一系列自定义 slide 函数：
   config: (:),
   repeat: auto,
   setting: body => body,
-  composer: components.side-by-side,
+  composer: cols,
   // university theme
   title: none,
 )[
@@ -96,23 +97,17 @@ University 主题提供了一系列自定义 slide 函数：
 ```
 默认拥有标题和页脚的普通 slide 函数，其中 `title` 默认为当前 section title，页脚为您设置的页脚。
 
----
+### Focus Slide
 
 ```typst
 #focus-slide(background-img: ..., background-color: ...)[
   ...
 ]
 ```
+
 用于引起观众的注意力。默认背景色为 `self.colors.primary`。
 
----
-
-```typst
-#new-section-slide(short-title: auto, title)
-```
-用给定标题开启一个新的 section。
-
----
+### Matrix Slide
 
 ```typst
 #matrix-slide(columns: ..., rows: ...)[
@@ -127,7 +122,7 @@ University 主题提供了一系列自定义 slide 函数：
 ## 示例
 
 ```example
-#import "@preview/touying:0.6.3": *
+#import "@preview/touying:0.7.4": *
 #import themes.university: *
 
 #import "@preview/numbly:0.1.0": numbly
@@ -140,6 +135,7 @@ University 主题提供了一系列自定义 slide 函数：
     author: [Authors],
     date: datetime.today(),
     institution: [Institution],
+    contact: [contact\@mail.com],
     logo: emoji.school,
   ),
 )

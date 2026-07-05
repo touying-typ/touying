@@ -79,7 +79,7 @@
   wrap-other: false,
   wrap-align-direction: right,
 ) = {
-  if (wrap-images, wrap-image-figures, wrap-other-figures, wrap-other).any() {
+  if (wrap-images, wrap-image-figures, wrap-other-figures, wrap-other).any(x => x) {
     import "@preview/wrap-it:0.1.1": wrap-content
   } else {
     // a dummy binding.

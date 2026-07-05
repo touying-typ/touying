@@ -1,21 +1,15 @@
 #import "/lib.typ": *
 #import themes.university: *
-#import "@preview/cetz:0.4.2"
+#import "@preview/cetz:0.5.2"
 #import "@preview/fletcher:0.5.8" as fletcher: edge, node
 #import "@preview/numbly:0.1.0": numbly
-#import "@preview/theorion:0.5.0": *
+#import "@preview/theorion:0.6.0": *
 #import cosmos.clouds: *
 #show: show-theorion
 
 // cetz and fletcher bindings for touying
-#let cetz-canvas = touying-reducer.with(
-  reduce: cetz.canvas,
-  cover: cetz.draw.hide.with(bounds: true),
-)
-#let fletcher-diagram = touying-reducer.with(
-  reduce: fletcher.diagram,
-  cover: fletcher.hide,
-)
+#let cetz-canvas = touying-reduce.with(cetz)
+#let fletcher-diagram = touying-reduce.with(fletcher)
 
 #show: university-theme.with(
   aspect-ratio: "16-9",
@@ -196,12 +190,26 @@ Fletcher Animation in Touying:
 
 = Others
 
-== Side-by-side
+== Multiple columns
 
-#slide(composer: (1fr, 1fr))[
+#cols[
   First column.
 ][
   Second column.
+]
+
+== Multiple columns with equal height blocks
+
+#cols(columns: (1fr, 1fr), gutter: 1em, lazy-layout: true)[
+  #emph-block[
+    First column with equal height: #lorem(10)
+    #lazy-v(1fr)
+  ]
+][
+  #emph-block[
+    Second column with equal height: : #lorem(15)
+    #lazy-v(1fr)
+  ]
 ]
 
 

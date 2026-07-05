@@ -11,7 +11,7 @@ The Stargazer theme, originally created by [Coekjan](https://github.com/Coekjan/
 You can initialize the theme with the following code:
 
 ```typst
-#import "@preview/touying:0.6.3": *
+#import "@preview/touying:0.7.4": *
 #import themes.stargazer: *
 
 #import "@preview/numbly:0.1.0": numbly
@@ -24,6 +24,7 @@ You can initialize the theme with the following code:
     author: [Authors],
     date: datetime.today(),
     institution: [Institution],
+    contact: [contact\@mail.com],
     logo: emoji.school,
   ),
 )
@@ -82,12 +83,12 @@ The Stargazer theme offers a variety of custom slide functions:
   config: (:),
   repeat: auto,
   setting: body => body,
-  composer: components.side-by-side,
+  composer: cols,
   // stargazer theme
   title: auto,
   footer: auto,
   align: horizon,
-)[  
+)[
   ...
 ]
 ```
@@ -97,7 +98,7 @@ A standard slide function with a title and footer by default, where `title` defa
 ---
 
 ```typst
-#outline-slide[  
+#outline-slide[
   ...
 ]
 ```
@@ -107,7 +108,7 @@ Used to add a table of contents slide.
 ---
 
 ```typst
-#focus-slide[  
+#focus-slide[
   ...
 ]
 ```
@@ -125,7 +126,7 @@ Start a new section with the given title.
 ## Example
 
 ```example
-#import "@preview/touying:0.6.3": *
+#import "@preview/touying:0.7.4": *
 #import themes.stargazer: *
 
 #import "@preview/numbly:0.1.0": numbly
@@ -138,6 +139,7 @@ Start a new section with the given title.
     author: [Authors],
     date: datetime.today(),
     institution: [Institution],
+    contact: [contact\@mail.com],
     logo: emoji.school,
   ),
 )

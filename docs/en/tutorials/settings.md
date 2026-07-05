@@ -36,7 +36,7 @@ If you are not a theme creator but simply want to add some of your own global st
 
 Like Beamer, Touying helps you better maintain global information through a unified API design, allowing you to easily switch between different themes. Global information is a typical example of this.
 
-You can set the title, subtitle, author, date, and institution information of your slides with:
+You can set the title, subtitle, author, date, institution, contact and logo information of your slides with:
 
 ```typc
 config-info(
@@ -45,8 +45,13 @@ config-info(
   author: [Authors],
   date: datetime.today(),
   institution: [Institution],
+  contact: [contact\@mail.com],
+  logo: [logo.png],
+  extra: (supervisor:[Supervisor],),
 )
 ```
+
+You can even pass extra information, to maintain presentation information not covered by the other attributes.
 
 Later on, you can access them through `self.info`.
 
@@ -76,7 +81,7 @@ However you may also set this locally for individual slides, see below.
 You can override any configuration for all following slides and the current one, using `#show: touying-set-config.with(...)`, just like you would write a `show`/`set`-rule normally.
 
 ```example
-#import "@preview/touying:0.6.3": *
+#import "@preview/touying:0.7.4": *
 #import themes.simple: *
 
 #show: simple-theme.with(aspect-ratio: "16-9")
@@ -146,11 +151,69 @@ Now we have codly available.
 When using animation, figure and theorem counters inside a single slide keep advancing per subslide by default. To freeze a counter (so it does not change between subslides), use:
 
 ```typst
-config-common(frozen-counters: (figure.where(kind: image),))
+config-common(frozen-counters: (counter(figure.where(kind: image)),))
 ```
 
-This is especially useful when working with the [Theorion](../integration/theorion.md) package:
+For custom figure kinds, pass `counter(figure.where(kind: "Name"))` rather than the selector itself; `frozen-counters` expects counters. This is also useful when working with the [Theorion](../integration/theorion.md) package:
 
 ```typst
 config-common(frozen-counters: (theorem-counter,))
 ```
+
+
+## Accessing Config Information
+
+You can use `touying-get-config` to access the stored config for a slide. This will be the global config combined with any overrides you made for that slide.
+
+Note that it is evaluated at `context` time and inserted into the document flow where you request it, thus it is only available as content.
+
+### Querying the Entire Config
+
+Call `touying-get-config()` without arguments to get the full config dictionary. You can then access nested values using normal dictionary syntax:
+
+```typst
+#touying-get-config().info.author
+
+#touying-get-config().common.handout
+```
+
+Since `common` fields are registered at the top level, you can access them directly:
+
+```typst
+#touying-get-config().handout  // same as .common.handout
+```
+
+### Querying by Key
+
+Pass a dot-separated string key to retrieve a specific sub-config or value directly:
+
+```typst
+#touying-get-config("info.author")
+
+#touying-get-config("info")  // returns the entire info sub-dict
+```
+
+### Default Values
+
+If the key does not exist, `touying-get-config` will panic by default. To provide a fallback value instead, use the `default` parameter:
+
+```typst
+#touying-get-config("random.dict.value", default: "default value")
+```
+
+### Accessing Custom Config
+
+If you set custom keys via `touying-set-config`, they become available immediately after the `show` rule:
+
+```typst
+#show: touying-set-config.with((random: (dict: (value: 123))))
+
+#touying-get-config("random.dict.value")  // displays "123"
+```
+
+:::warning[Warning]
+
+When accessing custom config, you must use the string key form (`touying-get-config("random.dict.value")`) rather than chaining dictionary access (`touying-get-config("random.dict").value`), because the latter attempts to access `.value` on a content element, which will fail.
+
+:::
+

@@ -12,6 +12,7 @@
     author: [Authors],
     date: datetime.today(),
     institution: [Institution],
+    contact: [contact\@mail.com],
     logo: emoji.city,
   ),
 )
@@ -20,19 +21,13 @@
 
 #title-slide()
 
-= Outline <touying:hidden>
-
-#outline(title: none, indent: 1em, depth: 1)
+#outline-slide(indent: (1em,), depth: 1)
 
 = First Section
-
----
 
 A slide without a title but with some *important* information.
 
 == A long long long long long long long long long long long long long long long long long long long long long long long long Title
-
-=== sdfsdf
 
 A slide with equation:
 
@@ -62,7 +57,5 @@ Meanwhile, #pause we can also use `#meanwhile` to display other content synchron
 #show: appendix
 
 = Appendix
-
----
 
 Please pay attention to the current slide number.

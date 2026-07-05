@@ -10,7 +10,7 @@ sidebar_position: 1
 
 - **相较于 PowerPoint** — Touying 遵循「内容与样式分离」的理念。你只需编写带有轻量标记的纯文本，主题会自动处理视觉设计。这对于包含代码块、数学公式和定理环境的科研类演示文稿尤为高效。
 - **相较于 Markdown Slides** — Typst 提供了精细的排版控制能力（页眉、页脚、自定义布局以及一流的数学支持），这是基于 Markdown 的工具难以实现的。Touying 还提供了 `#pause` 和 `#meanwhile` 标记，让渐进式动画在代码优先的工作流中自然流畅。
-- **相较于 Beamer** — Touying 的编译速度以毫秒计，而非秒乃至数十秒。其语法更为简洁，创建或修改主题也更加直接。在功能上，Touying 与 Beamer 高度对标，并额外提供了针对 CeTZ/Fletcher 图表的 `touying-reducer` 等便利功能。
+- **相较于 Beamer** — Touying 的编译速度以毫秒计，而非秒乃至数十秒。其语法更为简洁，创建或修改主题也更加直接。在功能上，Touying 与 Beamer 高度对标，并额外提供了针对 CeTZ/Fletcher 图表的 `touying-reduce`(==`touying-diagram`) 等便利功能。
 - **相较于 Polylux** — Touying 实现 `#pause` 时不依赖 `counter` 和 `locate`，从而避免了这些原语带来的性能损耗。Touying 还提供了更丰富的主题工具集以及统一的配置 API，让你以最少的改动即可切换主题。
 
 ## 名称来源
@@ -24,7 +24,7 @@ sidebar_position: 1
 | 选项 | 说明 |
 |------|------|
 | **[Typst Web App](https://typst.app/)** | 基于浏览器的编辑器，无需安装；打开 `typst.app`，创建新项目即可开始编写。支持实时预览和协作。 |
-| **[Tinymist for VS Code](https://marketplace.visualstudio.com/items?itemName=myriad-dreamin.tinymist)** | 功能完整的 Typst LSP 扩展。提供语法高亮、自动补全、错误诊断以及内置幻灯片预览面板。 |
+| **[Tinymist LSP](https://github.com/Myriad-Dreamin/tinymist)** | 功能完整的 Typst 语言服务器，可用于支持 LSP 的编辑器。提供语法高亮、自动补全、错误诊断和幻灯片预览；同时也提供 VS Code 扩展。 |
 
 两种方式均会自动从 Typst 包注册表下载 Touying，无需单独安装。
 

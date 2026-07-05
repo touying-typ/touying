@@ -86,12 +86,14 @@ sidebar_position: 4
 例如，上面的例子就可以改成
 
 ```typst
-config-page(
-  margin: (x: 4em, y: 2em),
-  header: align(top)[Header],
-  footer: align(bottom)[Footer],
-  header-ascent: 0em,
-  footer-descent: 0em,
+#show: default-theme.with(
+  config-page(
+    margin: (x: 4em, y: 2em),
+    header: align(top)[Header],
+    footer: align(bottom)[Footer],
+    header-ascent: 0em,
+    footer-descent: 0em,
+  ),
 )
 ```
 
@@ -117,6 +119,9 @@ config-page(footer: [Custom Footer])
 如果你需要将页面分为两栏或三栏，你可以使用 Touying `slide` 函数默认提供的 `composer` 功能，最简单的示例如下：
 
 ```example
+>>> #import "@preview/touying:0.7.4": *
+>>> #import themes.simple: *
+>>> #show: simple-theme
 #slide[
   First column.
 ][
@@ -124,13 +129,134 @@ config-page(footer: [Custom Footer])
 ]
 ```
 
-如果你需要更改分栏的方式，可以修改 `slide` 的 `composer` 参数，其中默认的参数是 `components.side-by-side.with(columns: auto, gutter: 1em)`，如果我们要让左边那一栏占据剩余宽度，可以使用
+如果你需要更改分栏的方式，可以修改 `slide` 的 `composer` 参数，其中默认的参数是 `cols.with(columns: auto, gutter: 1em)`，如果我们要让左边那一栏占据剩余宽度，可以使用
 
 ```example
+>>> #import "@preview/touying:0.7.4": *
+>>> #import themes.simple: *
+>>> #show: simple-theme
 #slide(composer: (1fr, auto))[
   First column.
 ][
   Second column.
 ]
+```
+
+## 使用 `lazy-v` 对齐多栏高度
+
+使用多栏布局（通过 `cols` 或手动 `grid`）时，内容量不同的各栏高度会不一致。如果你希望在每栏底部放置一些"页脚"内容（如标签或说明文字），并让它们在各栏之间对齐，或者只是想让所有栏与最高栏的高度一致，可以配合使用 `lazy-v` 和 `lazy-layout`。
+
+### 工作原理
+
+- **`lazy-v(1fr)`** — 在 block 的主要内容和底部内容之间插入此标记。它是一个延迟生效的垂直弹性空间，在高度测量阶段不可见。
+- **`lazy-layout`** — 包裹多栏布局。它先测量所有栏的自然高度（忽略 `lazy-v` 标记），然后以该固定高度重新渲染并激活标记。这样每栏都会被拉伸到与最高栏一致的高度，同时整体容器不会撑满整个页面。
+
+### 使用 `cols`（推荐）
+
+`cols` 默认不会启用 `lazy-layout`。需要给 `cols` 传入 `lazy-layout: true`，然后在每个 block 内添加 `lazy-v(1fr)`：
+
+```example
+>>> #import "@preview/touying:0.7.4": *
+>>> #import themes.simple: *
+>>> #show: simple-theme
+#cols(lazy-layout: true)[
+  #block(fill: luma(220), inset: .5em, radius: .2em, width: 100%)[
+    #lorem(10)
+    #lazy-v(1fr)
+    Bottom left.
+  ]
+][
+  #block(fill: luma(220), inset: .5em, radius: .2em, width: 100%)[
+    #lorem(20)
+    #lazy-v(1fr)
+    Bottom right.
+  ]
+]
+```
+
+两栏将具有相同的高度（与较高的一栏一致），"Bottom left."和"Bottom right."会在底部对齐。整体布局高度等于最高栏的高度，**不会**撑满整个页面。
+
+:::note[注意]
+
+这与在 `#slide[][]` 中使用 `v(1fr)` 不同。`slide` 的 composer 会占据整个页面高度，因此 `v(1fr)` 可以直接生效。`lazy-v` 是为独立的 `cols` 或 `lazy-layout` 调用设计的，用于在不撑满整页的情况下实现高度对齐。
+
+:::
+
+### 使用手动 Grid
+
+你也可以直接用 `lazy-layout` 包裹一个 `grid`：
+
+```example
+>>> #import "@preview/touying:0.7.4": *
+>>> #import themes.simple: *
+>>> #show: simple-theme
+#lazy-layout(grid(
+  columns: (1fr, 1fr),
+  gutter: 1em,
+  block(fill: luma(220), inset: .5em, radius: .2em, width: 100%)[
+    #lorem(10)
+    #lazy-v(1fr)
+    Bottom left.
+  ],
+  block(fill: luma(220), inset: .5em, radius: .2em, width: 100%)[
+    #lorem(20)
+    #lazy-v(1fr)
+    Bottom right.
+  ],
+))
+```
+
+:::tip[提示]
+
+`cols` 的默认值是 `lazy-layout: false`。只有需要高度对齐行为时才启用它。
+
+:::
+
+## 防止内容溢出
+
+默认情况下，当幻灯片内容超出页面高度时，Touying 会自动将多余内容溢出到下一页。这在大多数场景下是合理的，但在某些需要严格控制页面映射关系的场景（如 AI 智能体工作流）中，你可能希望禁止这种行为。
+
+使用 `config-common(breakable: false)` 可以防止内容溢出：
+
+```typst
+// Prevent overflow, panic on overflow (default behavior when breakable: false)
+#show: simple-theme.with(
+  config-common(breakable: false),
+)
+
+// Prevent overflow and visually clip overflowing content
+#show: simple-theme.with(
+  config-common(breakable: false, clip: true),
+)
+
+// Prevent overflow, disable overflow detection (performance-first)
+#show: simple-theme.with(
+  config-common(breakable: false, detect-overflow: false),
+)
+```
+
+配合使用的参数：
+
+- **`clip`**（默认 `false`）：设为 `true` 时，超出幻灯片高度的内容会被视觉截断。
+- **`detect-overflow`**（默认 `true`）：设为 `true` 时，会通过布局测量检测溢出，一旦内容高度超出幻灯片高度则直接 `panic()` 报错，便于及早发现问题；设为 `false` 可避免额外的布局开销。
+
+:::note[注意]
+
+`clip`、`detect-overflow` 这两个参数仅在 `breakable: false` 时生效。
+
+:::
+
+你也可以在演示文稿中途通过 `touying-set-config` 动态切换这些配置：
+
+```example
+>>> #import "@preview/touying:0.7.4": *
+>>> #import themes.simple: *
+>>> #show: simple-theme.with(config-common(breakable: false))
+== This slide's overflow will be clipped
+
+// Enable clipping for a specific slide
+#show: touying-set-config.with(config-common(clip: true))
+
+#lorem(500)
 ```
 
