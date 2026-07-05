@@ -2,7 +2,7 @@
 #import themes.simple: *
 
 #let bib = bytes(
-    "@book{knuth,
+  "@book{knuth,
   title={The Art of Computer Programming},
   author={Donald E. Knuth},
   year={1968},
@@ -11,7 +11,7 @@
 )
 
 #show: simple-theme.with(aspect-ratio: "16-9", config-common(
-    show-bibliography-as-footnote: bibliography(bib),
+  show-bibliography-as-footnote: bibliography(bib),
 ))
 
 = Title
@@ -19,15 +19,15 @@
 == First Slide
 
 #slide()[
-    Hello, Touying!
+  Hello, Touying!
 
-    #pause
+  #pause
 
-    Hello, Typst!  #footnote[A footnote] <fn>
+  Hello, Typst!  #footnote[A footnote] <fn>
 
-    #waypoint(<test>)
+  #waypoint(<test>)
 
-    Left Column @fn
+  Left Column @fn
 ][
-    #uncover(<test>)[Another Test for Waypoint and Bibliography. @knuth]
+  #uncover(<test>)[Another Test for Waypoint and Bibliography. @knuth]
 ]
