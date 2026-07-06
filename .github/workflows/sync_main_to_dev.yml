@@ -1,9 +1,13 @@
 name: Sync main into dev
 # Syncs the changes from main into dev automatically, fails when there are conflicts
+
 on:
   push:
     branches: [main]
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   merge:
