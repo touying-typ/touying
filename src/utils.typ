@@ -385,6 +385,38 @@
 /// -> function
 #let method-wrapper(fn) = (self: none, ..args) => fn(..args)
 
+/// The default `cover` method (wraps Typst's own `hide`) and touying's default value
+/// for `config-methods(cover: ..)`. Exposed as a stable, comparable value (rather than
+/// only living as a private default in `configs.typ`) so other code can check
+/// `self.methods.cover == utils.hiding-cover` as a best-effort way to tell whether
+/// covering is genuinely invisible, as opposed to a visual-only style like
+/// `color-changing-cover`/`alpha-changing-cover`.
+///
+/// This is only identity comparison, so it cannot recognize a hand-written cover
+/// function that happens to also just call `hide` - use the `cover-hides-footnote`
+/// config to override the result explicitly where that distinction matters.
+///
+/// -> function
+#let hiding-cover = method-wrapper(hide)
+
+/// Resolve the `cover-hides-footnote` config: whether the presentation's configured
+/// `cover` method genuinely hides content (as opposed to a visual-only style like
+/// `color-changing-cover`/`alpha-changing-cover`). Explicit `true`/`false` is
+/// returned as-is; `auto` (the default) falls back to comparing `self.methods.cover`
+/// against `hiding-cover` by identity - see `hiding-cover` for that check's limits.
+///
+/// - self (dictionary): The presentation context.
+///
+/// -> bool
+#let cover-hides-footnote(self) = {
+  let configured = self.at("cover-hides-footnote", default: auto)
+  if configured == auto {
+    self.methods.cover == hiding-cover
+  } else {
+    configured
+  }
+}
+
 
 /// Extract all method functions from `self` and bind `self` as their first named argument.
 ///

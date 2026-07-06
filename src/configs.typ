@@ -201,6 +201,14 @@
 ///
 /// - reset-footnote-number-per-slide (bool): Whether to reset the footnote number per slide. Default is `true`.
 ///
+/// - footnote-style (auto, function): Customizes how footnote markers are displayed, i.e. the function you would otherwise pass to `show footnote: ..`. Default is `auto`, which uses Typst's own default marker rendering.
+///
+///   A footnote covered by `#pause` must not create a real footnote (its entry would leak below the separator before the pause reveals it), so touying draws a placeholder marker to reserve the same width instead. `show footnote: set super(..)` does not currently affect Typst's footnote marker rendering, and a raw `show footnote: it => ..` rule would only be reflected on real, revealed footnotes - not on touying's placeholder. Set this option instead so both stay visually consistent; touying installs it as `show footnote: footnote-style` and also uses it to draw the placeholder.
+///
+/// - cover-hides-footnote (auto, bool): Whether the configured `cover` method genuinely hides content, as opposed to a visual-only style like `color-changing-cover`/`alpha-changing-cover` that keeps content visible. Default is `auto`, which assumes `true` only for touying's own default cover method and `false` otherwise.
+///
+///   This decides how a footnote covered by `#pause` is handled: a genuinely-hiding cover must not create a real footnote at all (see `footnote-style`), while a visual-only cover should show the real footnote, just recolored/de-emphasized like the rest of the covered content. Since Typst cannot inspect what an arbitrary `cover` function does, `auto` can only recognize touying's own default cover method by identity - set this explicitly if you supply a custom `cover` method that also genuinely hides content.
+///
 /// - nontight-list-enum-and-terms (bool): Whether to make `tight` argument always be `false` for list, enum, and terms. Default is `false`.
 ///
 /// - align-list-marker-with-baseline (bool): Whether to align the list marker with the baseline. Default is `false`.
@@ -294,6 +302,8 @@
   show-notes-on-second-screen: _default,
   horizontal-line-to-pagebreak: _default,
   reset-footnote-number-per-slide: _default,
+  footnote-style: _default,
+  cover-hides-footnote: _default,
   nontight-list-enum-and-terms: _default,
   align-list-marker-with-baseline: _default,
   align-enum-marker-with-baseline: _default,
@@ -349,6 +359,8 @@
       show-notes-on-second-screen: show-notes-on-second-screen,
       horizontal-line-to-pagebreak: horizontal-line-to-pagebreak,
       reset-footnote-number-per-slide: reset-footnote-number-per-slide,
+      footnote-style: footnote-style,
+      cover-hides-footnote: cover-hides-footnote,
       nontight-list-enum-and-terms: nontight-list-enum-and-terms,
       align-list-marker-with-baseline: align-list-marker-with-baseline,
       align-enum-marker-with-baseline: align-enum-marker-with-baseline,
@@ -366,7 +378,7 @@
   body
 }
 
-#let _default-cover = utils.method-wrapper(hide)
+#let _default-cover = utils.hiding-cover
 
 #let _default-show-only-notes(
   self: none,
@@ -766,6 +778,8 @@
     show-notes-on-second-screen: none,
     horizontal-line-to-pagebreak: true,
     reset-footnote-number-per-slide: true,
+    footnote-style: auto,
+    cover-hides-footnote: auto,
     nontight-list-enum-and-terms: false,
     align-list-marker-with-baseline: false,
     align-enum-marker-with-baseline: false,
