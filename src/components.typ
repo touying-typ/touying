@@ -368,9 +368,9 @@
 /// - right (content): The content of the right part.
 ///
 /// -> content
-#let left-mid-right(left, mid, right) = grid(
-  columns: (auto, 1fr, auto, 1fr, auto),
-  left, none, mid, none, right,
+#let left-mid-right(l, m, r) = grid(
+  columns: (1fr, auto, 1fr),
+  l, m, align(right, r),
 )
 
 
