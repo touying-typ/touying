@@ -1563,7 +1563,7 @@
 ///
 /// -> color
 #let update-alpha(color, alpha) = (
-  color.opacify(100%).transparentize(100% - alpha)
+  color.oklch().opacify(100%).transparentize(100% - alpha)
 )
 
 
