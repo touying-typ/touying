@@ -4548,7 +4548,11 @@
                 c
               }
             })
-
+          //flush hidden-parts before calling the fn-wrapper, so that it appears in the correct order relative to subsequent visible content
+          if hidden-parts.len() != 0 {
+            result.push(cover-hidden(cover, hidden-parts, result))
+            hidden-parts = ()
+          }
           result.push((child.value.fn)(
             self: self,
             ..pos-args,
