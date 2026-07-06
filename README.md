@@ -36,10 +36,10 @@ If you like it, consider [giving a star ⭐ on GitHub](https://github.com/touyin
 
 ## Quick Start
 
-Make sure you have [Typst](https://typst.app/) installed, or use the [Web App](https://typst.app/) / [Tinymist for VS Code](https://marketplace.visualstudio.com/items?itemName=myriad-dreamin.tinymist).
+Make sure you have [Typst](https://typst.app/) installed, or use the [Web App](https://typst.app/) / [Tinymist LSP](https://github.com/Myriad-Dreamin/tinymist) in an editor with LSP support (including the [VS Code extension](https://marketplace.visualstudio.com/items?itemName=myriad-dreamin.tinymist)).
 
 ```typst
-#import "@preview/touying:0.7.3": *
+#import "@preview/touying:0.7.4": *
 #import themes.simple: *
 
 #show: simple-theme.with(aspect-ratio: "16-9")
@@ -76,9 +76,9 @@ For the full feature set — cover mode, callback-style animations, `#uncover`, 
 For a comprehensive example showcasing university theme, theorems, CeTZ/Fletcher animations, speaker notes, and more. You can also use the `#slide[..]` format to access more powerful features provided by Touying.
 
 ```typst
-#import "@preview/touying:0.7.3": *
+#import "@preview/touying:0.7.4": *
 #import themes.university: *
-#import "@preview/cetz:0.5.0"
+#import "@preview/cetz:0.5.2"
 #import "@preview/fletcher:0.5.8" as fletcher: node, edge
 #import "@preview/numbly:0.1.0": numbly
 #import "@preview/theorion:0.6.0": *
@@ -276,7 +276,7 @@ Fletcher Animation in Touying:
 
 == Multiple columns with equal height blocks
 
-#cols(columns: (1fr, 1fr), gutter: 1em)[
+#cols(columns: (1fr, 1fr), gutter: 1em, lazy-layout: true)[
   #emph-block[
     First column with equal height: #lorem(10)
     #lazy-v(1fr)

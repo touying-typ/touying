@@ -14,7 +14,7 @@ sidebar_position: 1
 你可以通过下面的代码来初始化：
 
 ```typst
-#import "@preview/touying:0.7.3": *
+#import "@preview/touying:0.7.4": *
 #import themes.simple: *
 
 #show: simple-theme.with(
@@ -23,12 +23,12 @@ sidebar_position: 1
 )
 ```
 
-其中 `register` 接收参数:
+其中 `simple-theme` 接收参数:
 
 - `aspect-ratio`: 幻灯片的长宽比为 "16-9" 或 "4-3"，默认为 "16-9"。
 - `header`: 显示在页眉的内容，默认为 `utils.display-current-heading(setting: utils.fit-to-width.with(grow: false, 100%))`，也可以传入形如 `self => self.info.title` 的函数。
 - `header-right`: 展示在页眉右侧的内容，默认为 `self => self.info.logo`。
-- `footer`: 展示在页脚的内容，默认为 `[]`，也可以传入形如 `self => self.info.author` 的函数。
+- `footer`: 展示在页脚的内容，默认为 `none`，也可以传入形如 `self => self.info.author` 的函数。
 - `footer-right`: 展示在页脚右侧的内容，默认为 `context utils.slide-counter.display() + " / " + utils.last-slide-number`。
 - `primary`: 主题颜色，默认为 `aqua.darken(50%)`。
 - `subslide-preamble`: 默认往当前 slide 加入 subsection 的标题。
@@ -82,7 +82,7 @@ simple 主题提供了一系列自定义 slide 函数：
 ## 示例
 
 ```example
-#import "@preview/touying:0.7.3": *
+#import "@preview/touying:0.7.4": *
 #import themes.simple: *
 
 #show: simple-theme.with(

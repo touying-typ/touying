@@ -11,7 +11,7 @@ For more advanced slide themes it is common to incorporate navigation elements. 
 [`lr-navigation`](https://touying-typ.github.io/docs/reference/core/lr-navigation) creates clickable previous and next controls. It can navigate by slides and subslides (physical pages), or both.
 
 ```example
-#import "@preview/touying:0.7.1": *
+#import "@preview/touying:0.7.4": *
 #import themes.simple: *
 
 #show: simple-theme.with(
@@ -52,7 +52,7 @@ Now the page-level links can jump between full slides.
 This pattern works well in the header when you want compact progress feedback without a full sidebar or a progressbar.
 
 ```example
-#import "@preview/touying:0.7.1": *
+#import "@preview/touying:0.7.4": *
 #import themes.simple: *
 
 #show: simple-theme.with(
@@ -94,7 +94,7 @@ Touying does not provide a single `sidebar-navigation` function. In practice, a 
 The quickest way to use this style is to enable Dewdrop's built-in sidebar navigation and tune its options:
 
 ```example
-#import "@preview/touying:0.7.1": *
+#import "@preview/touying:0.7.4": *
 #import themes.dewdrop: *
 
 #show: dewdrop-theme.with(

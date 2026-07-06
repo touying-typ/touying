@@ -4,6 +4,26 @@ sidebar_position: 8
 
 # 更新日志
 
+## v0.7.4
+
+### Features
+
+- feat: adds `touying-reduce` which automatically looks up reducer bindings given a package ([#363](https://github.com/touying-typ/touying/pull/363))
+- feat(i18n): add Polish locale for outline message ([#372](https://github.com/touying-typ/touying/pull/372))
+- feat: Left/Right keyboard navigation support ([#352](https://github.com/touying-typ/touying/pull/352))
+- feat: add `grid-size` parameter to `lazy-layout` for quantized position grouping, improving robustness of column/row detection
+- feat: add `components.full-width-block` component that spans the full page width by cancelling horizontal margins
+
+### Fixes
+
+- fix (minor breaking change): set `lazy-layout` default to `false` for `cols`
+- fix: handle missing `fn` field in mark warning message gracefully
+- fix: `hide` doing unexpected things to headings ([#366](https://github.com/touying-typ/touying/pull/366))
+- fix: export `touying-fn-wrapper-raw` as part of the public API ([#362](https://github.com/touying-typ/touying/pull/362))
+- fix: improved mark-warning, now also displayed as `magic.warning` when `enable-mark-warning` is `false` ([#348](https://github.com/touying-typ/touying/pull/348))
+- fix: warnings now emitted via `uniwarn` ([#359](https://github.com/touying-typ/touying/pull/359))
+
+
 ## v0.7.3
 
 ### Minor Breaking Changes

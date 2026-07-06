@@ -118,7 +118,7 @@ With this approach, we can also query the current page parameters in real-time u
 If you need to divide a page into two or three columns, you can use the `composer` feature provided by the default `slide` function in Touying. The simplest example is as follows:
 
 ```example
->>> #import "@preview/touying:0.7.3": *
+>>> #import "@preview/touying:0.7.4": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
 #slide[
@@ -131,7 +131,7 @@ If you need to divide a page into two or three columns, you can use the `compose
 If you need to change the way columns are divided, you can modify the `composer` parameter of `slide`, where the default parameter is `cols.with(columns: auto, gutter: 1em)`. If we want the left column to take up the remaining width, we can use:
 
 ```example
->>> #import "@preview/touying:0.7.3": *
+>>> #import "@preview/touying:0.7.4": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
 #slide(composer: (1fr, auto))[
@@ -152,13 +152,13 @@ When using multi-column layouts (via `cols` or a manual `grid`), columns with di
 
 ### Using `cols` (Recommended)
 
-`cols` enables `lazy-layout` by default, so you just need to add `lazy-v(1fr)` inside each block:
+`cols` does not enable `lazy-layout` by default. Pass `lazy-layout: true` to `cols`, then add `lazy-v(1fr)` inside each block:
 
 ```example
->>> #import "@preview/touying:0.7.3": *
+>>> #import "@preview/touying:0.7.4": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
-#cols[
+#cols(lazy-layout: true)[
   #block(fill: luma(220), inset: .5em, radius: .2em, width: 100%)[
     #lorem(10)
     #lazy-v(1fr)
@@ -185,7 +185,7 @@ This is different from using `v(1fr)` inside `#slide[][]`. The `slide` composer 
 You can also wrap a `grid` with `lazy-layout` directly:
 
 ```example
->>> #import "@preview/touying:0.7.3": *
+>>> #import "@preview/touying:0.7.4": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
 #lazy-layout(grid(
@@ -206,7 +206,7 @@ You can also wrap a `grid` with `lazy-layout` directly:
 
 :::tip[Tip]
 
-If you don't need the height-equalizing behavior, pass `lazy-layout: false` to `cols` to opt out.
+`cols` defaults to `lazy-layout: false`. Enable it only when you need height equalization.
 
 :::
 
@@ -247,7 +247,7 @@ Related parameters:
 You can also dynamically switch these settings mid-presentation using `touying-set-config`:
 
 ```example
->>> #import "@preview/touying:0.7.3": *
+>>> #import "@preview/touying:0.7.4": *
 >>> #import themes.simple: *
 >>> #show: simple-theme.with(config-common(breakable: false))
 == This slide's overflow will be clipped

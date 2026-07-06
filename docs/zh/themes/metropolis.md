@@ -15,7 +15,7 @@ sidebar_position: 2
 你可以通过下面的代码来初始化：
 
 ```typst
-#import "@preview/touying:0.7.3": *
+#import "@preview/touying:0.7.4": *
 #import themes.metropolis: *
 
 #import "@preview/numbly:0.1.0": numbly
@@ -45,7 +45,7 @@ sidebar_position: 2
 - `align`: 幻灯片的对齐方式，默认为 `horizon`。
 - `header`: 显示在页眉的内容，默认为 `utils.display-current-heading(setting: utils.fit-to-width.with(grow: false, 100%))`，也可以传入形如 `self => self.info.title` 的函数。
 - `header-right`: 展示在页眉右侧的内容，默认为 `self => self.info.logo`。
-- `footer`: 展示在页脚的内容，默认为 `[]`，也可以传入形如 `self => self.info.author` 的函数。
+- `footer`: 展示在页脚的内容，默认为 `none`，也可以传入形如 `self => self.info.author` 的函数。
 - `footer-right`: 展示在页脚右侧的内容，默认为 `context utils.slide-counter.display() + " / " + utils.last-slide-number`。
 - `footer-progress`: 是否显示 slide 底部的进度条，默认为 `true`。
 
@@ -116,7 +116,7 @@ Metropolis 主题提供了一系列自定义 slide 函数：
 ## 示例
 
 ```example
-#import "@preview/touying:0.7.3": *
+#import "@preview/touying:0.7.4": *
 #import themes.metropolis: *
 
 #import "@preview/numbly:0.1.0": numbly

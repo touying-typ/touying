@@ -1,6 +1,6 @@
 #import "/lib.typ": *
 #import themes.university: *
-#import "@preview/cetz:0.5.0"
+#import "@preview/cetz:0.5.2"
 #import "@preview/fletcher:0.5.8" as fletcher: edge, node
 #import "@preview/numbly:0.1.0": numbly
 #import "@preview/theorion:0.6.0": *
@@ -200,7 +200,7 @@ Fletcher Animation in Touying:
 
 == Multiple columns with equal height blocks
 
-#cols(columns: (1fr, 1fr), gutter: 1em)[
+#cols(columns: (1fr, 1fr), gutter: 1em, lazy-layout: true)[
   #emph-block[
     First column with equal height: #lorem(10)
     #lazy-v(1fr)

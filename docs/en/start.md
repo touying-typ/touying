@@ -4,12 +4,12 @@ sidebar_position: 2
 
 # Getting Started
 
-Before you begin, make sure you have the Typst environment installed. If not, you can use the [Web App](https://typst.app/) or install the [Tinymist LSP](https://marketplace.visualstudio.com/items?itemName=myriad-dreamin.tinymist) plugins for VS Code.
+Before you begin, make sure you have the Typst environment installed. If not, you can use the [Web App](https://typst.app/) or install [Tinymist LSP](https://github.com/Myriad-Dreamin/tinymist) in any editor with LSP support; Tinymist also provides a [VS Code extension](https://marketplace.visualstudio.com/items?itemName=myriad-dreamin.tinymist).
 
 To use Touying, you just need to include the following in your document:
 
 ```example
-#import "@preview/touying:0.7.3": *
+#import "@preview/touying:0.7.4": *
 #import themes.simple: *
 
 #show: simple-theme.with(aspect-ratio: "16-9")
@@ -36,9 +36,9 @@ In fact, Touying provides various styles for slide writing. You can also use the
 Touying offers many built-in themes to easily create beautiful slides. For example, in this case:
 
 ```example
-#import "@preview/touying:0.7.3": *
+#import "@preview/touying:0.7.4": *
 #import themes.university: *
-#import "@preview/cetz:0.5.0"
+#import "@preview/cetz:0.5.2"
 #import "@preview/fletcher:0.5.8" as fletcher: node, edge
 #import "@preview/numbly:0.1.0": numbly
 #import "@preview/theorion:0.6.0": *
@@ -240,7 +240,7 @@ Fletcher Animation in Touying:
 
 == Multiple columns with equal height blocks
 
-#cols(columns: (1fr, 1fr), gutter: 1em)[
+#cols(columns: (1fr, 1fr), gutter: 1em, lazy-layout: true)[
   #emph-block[
     First column with equal height: #lorem(10)
     #lazy-v(1fr)

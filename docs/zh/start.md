@@ -4,12 +4,12 @@ sidebar_position: 2
 
 # 开始
 
-在开始之前，请确保您已经安装了 Typst 环境，如果没有，可以使用 [Web App](https://typst.app/) 或 VS Code 的 [Tinymist LSP](https://marketplace.visualstudio.com/items?itemName=myriad-dreamin.tinymist) 插件。
+在开始之前，请确保您已经安装了 Typst 环境。如果没有，可以使用 [Web App](https://typst.app/)，或在任何支持 LSP 的编辑器中安装 [Tinymist LSP](https://github.com/Myriad-Dreamin/tinymist)；Tinymist 也提供 [VS Code 扩展](https://marketplace.visualstudio.com/items?itemName=myriad-dreamin.tinymist)。
 
 要使用 Touying，您只需要在文档里加入
 
 ```example
-#import "@preview/touying:0.7.3": *
+#import "@preview/touying:0.7.4": *
 #import themes.simple: *
 
 #show: simple-theme.with(aspect-ratio: "16-9")
@@ -34,9 +34,9 @@ Hello, Typst!
 事实上，Touying 提供了多种 slides 编写风格，实际上您也可以使用 `#slide[..]` 的写法，以获得 Touying 提供的更多更强大的功能。
 
 ```example
-#import "@preview/touying:0.7.3": *
+#import "@preview/touying:0.7.4": *
 #import themes.university: *
-#import "@preview/cetz:0.5.0"
+#import "@preview/cetz:0.5.2"
 #import "@preview/fletcher:0.5.8" as fletcher: node, edge
 #import "@preview/numbly:0.1.0": numbly
 #import "@preview/theorion:0.6.0": *
@@ -238,7 +238,7 @@ Fletcher Animation in Touying:
 
 == Multiple columns with equal height blocks
 
-#cols(columns: (1fr, 1fr), gutter: 1em)[
+#cols(columns: (1fr, 1fr), gutter: 1em, lazy-layout: true)[
   #emph-block[
     First column with equal height: #lorem(10)
     #lazy-v(1fr)

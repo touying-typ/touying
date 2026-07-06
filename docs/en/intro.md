@@ -24,7 +24,7 @@ You have two main options:
 | Option | Description |
 |--------|-------------|
 | **[Typst Web App](https://typst.app/)** | Browser-based editor. No installation needed; just open `typst.app`, create a new project, and start writing. Supports real-time preview and collaboration. |
-| **[Tinymist for VS Code](https://marketplace.visualstudio.com/items?itemName=myriad-dreamin.tinymist)** | A full-featured Typst LSP extension for VS Code. Provides syntax highlighting, autocomplete, error diagnostics, and a built-in slide preview panel. |
+| **[Tinymist LSP](https://github.com/Myriad-Dreamin/tinymist)** | A full-featured Typst language server that works with editors supporting LSP. Provides syntax highlighting, autocomplete, error diagnostics, and slide preview; a VS Code extension is also available. |
 
 Both options automatically download Touying from the Typst package registry — no separate installation step is required.
 

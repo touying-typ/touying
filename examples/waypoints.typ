@@ -1,6 +1,6 @@
 #import "/lib.typ": *
 #import themes.simple: *
-#import "@preview/cetz:0.5.0"
+#import "@preview/cetz:0.5.2"
 #import "@preview/fletcher:0.5.8" as fletcher: edge, node
 
 #let cetz-canvas = touying-reduce.with(cetz)
@@ -427,33 +427,6 @@ End Content
   // #waypoint(<final>, advance:false)
   #only(<final>)[Finally after the list.]
 ]
-
-== Callback style
-
-#slide(self => {
-  block(width: 50%)[
-    #code-col(
-      "#slide(self => {
-  let (uncover, only) = utils.methods(self)
-  [
-    Base content.
-    #waypoint(<cb-a>)
-    #uncover(<cb-a>)[Uncovered from cb-a.]
-    #waypoint(<cb-b>)
-    #only(<cb-b>)[Only during cb-b.]
-  ]
-})",
-    )
-  ]
-  [
-    #let (uncover, only) = utils.methods(self)
-    Base content.
-    #waypoint(<cb-a>)
-    #uncover(<cb-a>)[Uncovered from `<cb-a>`.]
-    #waypoint(<cb-b>)
-    #only(<cb-b>)[Only during `<cb-b>`.]
-  ]
-})
 
 == Hierarchical Waypoints
 

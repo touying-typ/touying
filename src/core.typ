@@ -531,6 +531,9 @@
         and child in ([–], [--], [-])
     ) {
       continue
+    } else if child.func() == hide {
+      //needs to be taken out preemptively so that hidden headings don't get weird.
+      start-part.push(child)
     } else if utils.is-heading(child, depth: slide-level) {
       let last-heading-depth = _get-last-heading-depth(current-headings)
       slide-parts = utils.trim(slide-parts)
@@ -1097,8 +1100,10 @@
     if slide-content != none { output-slides.push(slide-content) }
   }
 
-  //add last page metadata to last physical page.
-  if is-outer-call {
+  // Add last-page metadata to the last physical page when one exists.
+  // Empty documents can legitimately produce no slides, so avoid indexing the
+  // empty output list.
+  if is-outer-call and output-slides.len() > 0 {
     output-slides.at(-1) += [#metadata(none)#label("touying-last-page")]
   }
 
@@ -2837,7 +2842,7 @@
   package,
   bindings: (reduce: none, cover: none),
   ..args,
-) = touying-reduce(package, bindings, ..args)
+) = touying-reduce(package, bindings: bindings, ..args)
 
 /// Parse touying equation content and extract animation repetitions
 ///
@@ -3176,7 +3181,6 @@
     }
   }
   let result = ()
-  let hidden-parts = ()
   for child in flat-args {
     if (
       type(child) == content
@@ -3191,35 +3195,14 @@
           // Track the peak repetitions so that a subsequent negative jump doesn't
           // cause the slide count to be underestimated
           max-repetitions = calc.max(max-repetitions, repetitions)
-          // If we jumped back into the visible zone, flush hidden-parts in order
-          // (so they appear before subsequent visible content, not after it)
-          if hidden-parts.len() != 0 and repetitions <= index {
-            let r = cover(hidden-parts)
-            if type(r) == array {
-              result += r
-            } else {
-              result.push(r)
-            }
-            hidden-parts = ()
-          }
         } else {
-          // absolute jump: clear hidden-parts and jump to target subslide
-          if hidden-parts.len() != 0 {
-            let r = cover(hidden-parts)
-            if type(r) == array {
-              result += r
-            } else {
-              result.push(r)
-            }
-          }
-          hidden-parts = ()
           max-repetitions = calc.max(max-repetitions, repetitions)
           repetitions = child.value.n
           last-subslide = 0
         }
       } else if kind == "touying-waypoint" {
         //support only implicit or explicit waypoints in reducer, no waypoint markers for now
-        // Waypoint inside reducer: never pushed to result or hidden-parts.
+        // Waypoint inside reducer: never pushed to result.
         let wp = self.at("waypoints", default: (:))
         let lbl = child.value.label
         let wp-start = child.value.at("start", default: auto)
@@ -3293,31 +3276,22 @@
           }
         }
       } else {
-        //automatically collects raw fn wrapper
         if repetitions <= index {
           result.push(child)
         } else {
-          hidden-parts.push(child)
+          let r = cover((child,))
+          if type(r) == array { result += r } else { result.push(r) }
         }
       }
     } else {
       if repetitions <= index {
         result.push(child)
       } else {
-        hidden-parts.push(child)
+        let r = cover((child,))
+        if type(r) == array { result += r } else { result.push(r) }
       }
     }
   }
-  // clear the hidden-parts when end
-  if hidden-parts.len() != 0 {
-    let r = cover(hidden-parts)
-    if type(r) == array {
-      result += r
-    } else {
-      result.push(r)
-    }
-  }
-  hidden-parts = ()
   // Safety net: filter out any remaining touying metadata nodes before passing
   // to the external reduce function (e.g. fletcher.diagram, cetz.canvas).
   // All touying metadata should already be handled above — if this filter
@@ -4568,7 +4542,11 @@
                 c
               }
             })
-
+          //flush hidden-parts before calling the fn-wrapper, so that it appears in the correct order relative to subsequent visible content
+          if hidden-parts.len() != 0 {
+            result.push(cover-hidden(cover, hidden-parts, result))
+            hidden-parts = ()
+          }
           result.push((child.value.fn)(
             self: self,
             ..pos-args,

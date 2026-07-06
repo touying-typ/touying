@@ -13,7 +13,7 @@ Considered a relatively straightforward theme, you can use it to create simple s
 You can initialize it using the following code:
 
 ```typst
-#import "@preview/touying:0.7.3": *
+#import "@preview/touying:0.7.4": *
 #import themes.simple: *
 
 #show: simple-theme.with(
@@ -22,12 +22,12 @@ You can initialize it using the following code:
 )
 ```
 
-The `register` function in the theme accepts the following parameters:
+The `simple-theme` function accepts the following parameters:
 
 - `aspect-ratio`: The aspect ratio of the slides, which can be "16-9" or "4-3", with a default of "16-9".
 - `header`: The content displayed in the header, with a default of `utils.display-current-heading(setting: utils.fit-to-width.with(grow: false, 100%))`. You can also pass a function like `self => self.info.title`.
 - `header-right`: The content displayed on the right side of the header, with a default of `self => self.info.logo`.
-- `footer`: The content displayed in the footer, with a default of `[]` (empty). You can also pass a function like `self => self.info.author`.
+- `footer`: The content displayed in the footer, with a default of `none`. You can also pass a function like `self => self.info.author`.
 - `footer-right`: The content displayed on the right side of the footer, with a default of `context utils.slide-counter.display() + " / " + utils.last-slide-number`.
 - `primary`: The primary color of the theme, with a default of `aqua.darken(50%)`.
 - `subslide-preamble`: By default, it adds the subsection title to the current slide.
@@ -84,7 +84,7 @@ Used to draw attention, it optionally accepts a foreground color (defaulting to 
 ## Example
 
 ```example
-#import "@preview/touying:0.7.3": *
+#import "@preview/touying:0.7.4": *
 #import themes.simple: *
 
 #show: simple-theme.with(
