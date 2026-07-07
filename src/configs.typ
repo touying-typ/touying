@@ -431,7 +431,7 @@
 ///
 /// - cover (function): The function to cover content. The default value is `utils.method-wrapper(hide)` function.
 ///
-///   You can configure it with `cover: utils.semi-transparent-cover` to use the semi-transparent cover.
+///   You can configure it with `cover: utils.alpha-changing-cover` to use a transparent cover effect.
 ///
 /// - uncover (function): The function to uncover content. The default value is `utils.uncover` function.
 ///

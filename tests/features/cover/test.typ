@@ -60,9 +60,12 @@ Content that gets hidden completely when covered.#pause New content replaces the
   cover: utils.color-changing-cover.with(color: gray),
 ))
 Regular content here.#pause This text should appear in gray when covered.
-
+#let pantone = color.spot(
+  "PANTONE 2221 C",
+  rgb("#239dad"),
+)
 #figure(
-  rect(fill: red),
+  rect(fill: pantone.tint(40%)),
   caption: [A red rectangle.],
 )
 
@@ -97,7 +100,7 @@ More text with the same effect.
 Regular content here.#pause This text should appear semi-transparent when covered.
 
 #figure(
-  rect(fill: red),
+  rect(fill: pantone.tint(40%)),
   caption: [A red rectangle.],
 )
 
