@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkdocs=self.webpackChunkdocs||[]).push([[4780],{1222:e=>{e.exports=JSON.parse('[{"label":"release","permalink":"/touying/pr-preview/pr-402/zh/blog/tags/release","count":3},{"label":"development","permalink":"/touying/pr-preview/pr-402/zh/blog/tags/development","count":1}]')}}]);
