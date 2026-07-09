@@ -1687,6 +1687,13 @@
               }
             })
 
+          // Flush hidden-parts before calling the fn-wrapper, so it renders in
+          // the correct order relative to subsequent visible content (fn-wrappers
+          // always render in-place and never go through hidden-parts themselves).
+          if hidden-parts.len() != 0 {
+            result.push(cover-hidden(cover, hidden-parts, result))
+            hidden-parts = ()
+          }
           result.push((child.value.fn)(
             self: self,
             ..pos-args,
