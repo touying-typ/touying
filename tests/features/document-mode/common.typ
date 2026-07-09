@@ -163,7 +163,7 @@
     #figure(
       scale(40%, reflow: true)[#touying-block-recall(
         <doc-test-diagram>,
-        subslide: 2,
+        subslide: 3,
         base: 2, //accounts for the outer context
       )],
       supplement: [Graphic],
