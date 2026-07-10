@@ -225,7 +225,7 @@
 ///
 /// - cover (function): Called with a drawing command when that command should be hidden on the current subslide. Should produce invisible but space-preserving content (e.g. `cetz.draw.hide.with(bounds: true)` or `fletcher.hide`).
 ///
-/// - label (none, str, label): An optional label to identify the graphic in document mode via `touying-block-recall`.
+/// - label (none, str, label): An optional label to identify the graphic for later recall via `touying-recall`. A string is converted to a label automatically.
 ///
 /// - args (arguments): The positional and named arguments passed to the `reduce` function.
 ///
@@ -235,14 +235,26 @@
   cover: arr => none,
   label: none,
   ..args,
-) = [#metadata((
-  kind: "touying-reducer",
-  reduce: reduce,
-  cover: cover,
-  kwargs: args.named(),
-  args: args.pos(),
-  label: label,
-))<touying-temporary-mark>]
+) = {
+  // std.label: the `label` parameter shadows Typst's own `label()` constructor.
+  //
+  // Note: this must stay a single metadata node, not a sequence of two — a
+  // sequence here would nest one level deeper than the parser's dispatch
+  // loop flattens, so neither node would ever be individually recognized.
+  // The label-only-on-last-subslide breadcrumb for touying-recall is
+  // instead emitted by the parser's own "touying-reducer" dispatch case
+  // (src/core/parser.typ), alongside the rendered content, at the point
+  // where a single "child" is already being pushed to the result array.
+  let real-label = if type(label) == str { std.label(label) } else { label }
+  [#metadata((
+    kind: "touying-reducer",
+    reduce: reduce,
+    cover: cover,
+    kwargs: args.named(),
+    args: args.pos(),
+    label: real-label,
+  ))<touying-temporary-mark>]
+}
 
 /// Automatically reduces the content with the given package and given or predefined bindings. Only works if the package exposes the bindings or its name and touying defines the bindings for the name.
 ///

@@ -157,11 +157,11 @@
     The animated CeTZ diagram is recalled at specific stages below inside this document-text.
 
     Stage 1 (rectangle only):
-    #touying-block-recall(<doc-test-diagram>, subslide: 1)
+    #touying-recall(<doc-test-diagram>, subslide: 1)
 
     Stage 2 (rectangle and circle):
     #figure(
-      scale(40%, reflow: true)[#touying-block-recall(
+      scale(40%, reflow: true)[#touying-recall(
         <doc-test-diagram>,
         subslide: 3,
         base: 2, //accounts for the outer context
@@ -170,20 +170,20 @@
     )<fig:cetz-stage2>
 
     Final state (all elements):
-    #touying-block-recall(<doc-test-diagram>, subslide: 4, base: 2)
+    #touying-recall(<doc-test-diagram>, subslide: 4, base: 2)
 
     See @fig:cetz-stage2 for stage 2 of the animated diagram.
   ]
 
-  == Render and Block Recall
+  == Render and Recall
   We can also render a block saved in a variable directly at some specific subslide via `touying-render`, even in handout or presentation mode.
   #touying-render(ccanvas, subslide: 2)
 
-  Block Recall only works in document only or document text however. this allows arbitrary placing of previous images but you will need to rescale them yourself.
+  Recall allows this via labels and is especially useful for document-text content, but can be used in normal presentations as well. this allows arbitrary labeled content at specific subslides, but you will need to rescale them yourself.
   #document-only[
-    #rotate(45deg)[#align(center)[#block(clip: true, width: (1.0 / 0.8) * 40%, touying-block-recall(<my-img>))]]
+    #rotate(45deg)[#align(center)[#block(clip: true, width: (1.0 / 0.8) * 40%, touying-recall(<my-img>))]]
     We can even recall a table that is defined in a later slide at one of its subslides.
-    #touying-block-recall(<my-table>, subslide: 1)
+    #touying-recall(<my-table>, subslide: 1)
   ]
 
   == Table Content

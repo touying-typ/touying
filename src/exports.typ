@@ -14,7 +14,7 @@
   from-wp, get-first, get-last, next-wp, not-wp, prev-wp, until-wp, waypoint,
 )
 // rendering logic: for document-mode and slides-mode: rely on parser.typ for parsing the metadata
-#import "core/docmode.typ": document-only, document-text, touying-block-recall
+#import "core/docmode.typ": document-only, document-text
 #import "core/slides.typ": (
   appendix, empty-slide, slide, touying-recall, touying-set-config,
   touying-slide,

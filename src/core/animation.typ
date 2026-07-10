@@ -1020,7 +1020,7 @@
 }
 
 /// Render a content block at a specific animation subslide.
-/// Unlike `touying-block-recall` (./src/core/docmode.typ) which looks up a label, this takes a content
+/// Unlike `touying-recall` (./src/core/slides.typ) which looks up a label, this takes a content
 /// variable directly and renders it at the requested subslide index.
 ///
 /// Example:

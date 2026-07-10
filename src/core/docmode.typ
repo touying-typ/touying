@@ -1,12 +1,8 @@
 #import "../utils.typ"
-#import "waypoints.typ": (
-  _compute-waypoint-ranges, _cover-never, _resolve-waypoint-forest,
-  _waypoint-known, waypoint-kinds,
-)
+#import "../extern.typ"
 #import "parser.typ": (
-  _collect-waypoints, _find-reducer-meta,
-  _parse-content-into-results-and-repetitions, _parse-touying-reducer,
-  _prepare-render-context, _render-at-subslide, _resolve-waypoint-to-int,
+  _build-native-recall, _parse-content-into-results-and-repetitions,
+  _prepare-render-context, _render-at-subslide,
 )
 
 /// Content that replaces the slide content when in document mode. Place it after your slide, before the next one.
@@ -43,7 +39,7 @@
 /// so that theme styling (set text, set page, etc.) doesn't leak into the document.
 /// This walks through styled wrappers and sequences to find and extract the payload.
 ///
-/// Returns: the full payload dictionary (with body, block-recall-map, waypoint-map, etc.)
+/// Returns: the full payload dictionary (with content, images, blocks, etc.)
 #let _unwrap-document-raw(cont) = {
   // This is where we stop unwrapping, finally found our payload!
   if utils.is-kind(cont, "touying-document-raw") {
@@ -93,46 +89,60 @@
 
   let result = ()
 
+  // Separate headings and recall breadcrumbs from ordinary flow content.
+  // Breadcrumbs (invisible metadata) must stay out of the wrapped body:
+  // content placed inside the `layout()` callback below is measured/
+  // reflowed by meander, and touying-recall's own `query()` lookups need
+  // breadcrumbs to behave like ordinary top-level document content, not
+  // something buried inside a layout measurement pass.
+  let headings = items.filter(r => (
+    type(r) == content and r.func() == heading
+  ))
+  let breadcrumbs = items.filter(r => utils.is-kind(r, "touying-recall-breadcrumb"))
+  let body-parts = items.filter(r => (
+    not (type(r) == content and r.func() == heading)
+      and not utils.is-kind(r, "touying-recall-breadcrumb")
+  ))
+  // Unwrap blocks to expose the inner content directly. Content gets nested
+  // in `block(...)` at multiple points upstream (`_document-linearize` for
+  // bare document-mode text, and again by touying-slide's own document-mode
+  // rendering for `#slide[...]`/`#focus-slide[...]` bodies), and those
+  // blocks can end up buried inside a `styled` node (from an intervening
+  // `set`/`show` rule) or a sequence, not just at the top level — so this
+  // has to walk the whole tree, not only the outermost wrapper, and rebuild
+  // `styled` nodes in place to keep their styling. This must run
+  // unconditionally (not only when meander wrapping is active): a leftover
+  // `block()` carries its own above/below spacing resolved from wherever it
+  // was constructed (e.g. a slide's own styling context), which doesn't
+  // collapse with a preceding heading's spacing the way plain paragraph
+  // flow does — meander needs it for its own reasons (a `block` is an
+  // atomic, unsplittable unit to it), but plain (non-wrapped) sections need
+  // it just as much to avoid that visible extra gap.
+  let _unwrap-blocks(r) = {
+    if type(r) != content { return r }
+    if r.func() == block {
+      let body = r.at("body", default: none)
+      if body == none { return r }
+      return _unwrap-blocks(body)
+    }
+    if utils.is-styled(r) {
+      return (r.func())(_unwrap-blocks(r.child), r.styles)
+    }
+    if utils.is-sequence(r) {
+      return r.children.map(_unwrap-blocks).sum(default: none)
+    }
+    r
+  }
+  let unwrapped = body-parts.map(_unwrap-blocks)
+
   if has-wrap-content {
     // Only pull in meander for sections that actually need wrapping around
     // an obstacle — most document-mode sections have no images/blocks to
     // wrap, and shouldn't pay for the import or the reflow layout pass.
     import "@preview/meander:0.4.4"
 
-    // Separate headings from wrappable content — meander's container flows
-    // paragraph-like content, not headings.
-    let headings = items.filter(r => (
-      type(r) == content and r.func() == heading
-    ))
-    let body-parts = items.filter(r => {
-      not (type(r) == content and r.func() == heading)
-    })
-    // Unwrap blocks to expose the inner content directly — meander treats a
-    // `block` as an atomic, unsplittable unit, so it must not reach `content`
-    // still wrapped. Content gets nested in `block(...)` at multiple points
-    // upstream (`_document-linearize`, then again in `_process-child`), and
-    // those blocks can end up buried inside a `styled` node (from an
-    // intervening `set`/`show` rule) or a sequence, not just at the top
-    // level — so this has to walk the whole tree, not only the outermost
-    // wrapper, and rebuild `styled` nodes in place to keep their styling.
-    let _unwrap-blocks(r) = {
-      if type(r) != content { return r }
-      if r.func() == block {
-        let body = r.at("body", default: none)
-        if body == none { return r }
-        return _unwrap-blocks(body)
-      }
-      if utils.is-styled(r) {
-        return (r.func())(_unwrap-blocks(r.child), r.styles)
-      }
-      if utils.is-sequence(r) {
-        return r.children.map(_unwrap-blocks).sum(default: none)
-      }
-      r
-    }
-    let unwrapped = body-parts.map(_unwrap-blocks)
-
     result += headings
+    result += breadcrumbs
     let body-content = unwrapped.sum(default: none)
     body-content = if body-content == none { [] } else { body-content }
 
@@ -228,7 +238,9 @@
       })
     }))
   } else {
-    result += items
+    result += headings
+    result += breadcrumbs
+    result += unwrapped
   }
 
   // Non-wrapped raw images → centered at end
@@ -356,8 +368,19 @@
       or doc-cfg.at("wrap-other", default: false)
   )
 
+  // Distinct top-level bodies (e.g. a composer's separate column contents)
+  // are joined with an explicit parbreak() rather than wrapped in their own
+  // block()s — a block's above/below spacing is resolved from wherever it's
+  // constructed (e.g. a slide's own styling context) and doesn't collapse
+  // with a preceding heading's spacing the way plain paragraph flow does,
+  // and it can't be relied on for separation once _wrap-section's
+  // _unwrap-blocks strips block wrappers back out downstream anyway.
   if not any-wrapping {
-    return (content: conts.map(c => block(c)).join(), images: (), blocks: ())
+    return (
+      content: if conts.len() == 0 { none } else { conts.join(parbreak()) },
+      images: (),
+      blocks: (),
+    )
   }
 
   // Compute column fractions from composer to scale images correctly.
@@ -398,7 +421,7 @@
   }
 
   (
-    content: text-parts.map(c => block(c)).join(),
+    content: if text-parts.len() == 0 { none } else { text-parts.join(parbreak()) },
     images: images,
     blocks: block-parts,
   )
@@ -408,138 +431,39 @@
 
 
 
-// Generic content scanner. Walks the content tree and collects matches.
-// `match-fn`: called on each node, returns `none` (no match) or a `(key, value)` pair.
-// `deep`: when true, recurse into `.body` and `.children` fields (deep scan);
-//         when false, only recurse into sequences and styled nodes (shallow scan).
-#let _scan-content(body, match-fn, deep: true) = {
-  if type(body) != content { return () }
-  let matched = match-fn(body)
-  if matched != none { return (matched,) }
-  if utils.is-sequence(body) {
-    let result = ()
-    for child in body.children {
-      result += _scan-content(child, match-fn, deep: deep)
+// Check for leaked <touying-temporary-mark> metadata anywhere in the final
+// document — the same diagnostic configs.typ's `_default-preamble` runs per
+// slide (gated on `is-first-slide`), which document mode never activates
+// (entrypoint.typ's document-mode branch never sets that flag). Run once,
+// at the end of the whole document, instead of per-slide.
+#let _leak-check(self) = context {
+  let marks = query(<touying-temporary-mark>)
+  if marks.len() > 0 {
+    let page-num = marks.at(0).location().page()
+    let kind = marks.at(0).value.kind
+    let fn = if "fn" in marks.at(0).value { marks.at(0).value.fn } else {
+      none
     }
-    return result
-  }
-  if utils.is-styled(body) {
-    return _scan-content(body.child, match-fn, deep: deep)
-  }
-  if deep {
-    if body.has("body") {
-      return _scan-content(body.body, match-fn, deep: deep)
+    let warning-msg = (
+      "Unsupported mark `"
+        + kind
+        + if fn != none {
+          "` from `" + repr(fn)
+        }
+        + "` at page "
+        + str(page-num)
+        + " of the document. You can't use it inside some functions like "
+        + "`context`. You may want to use the callback-style `utils."
+        + repr(fn)
+        + "` function instead."
+    )
+    if self.at("enable-mark-warning", default: true) {
+      panic(warning-msg)
+    } else {
+      extern.warning(warning-msg)
     }
-    if body.has("children") {
-      let result = ()
-      for child in body.children {
-        result += _scan-content(child, match-fn, deep: deep)
-      }
-      return result
-    }
   }
-  ()
 }
-
-#let _scan-content-for-labeled-reducers(body) = _scan-content(body, c => {
-  if c.func() == metadata and type(c.value) == dictionary {
-    let v = c.value
-    if (
-      v.at("kind", default: none) == "touying-reducer"
-        and v.at("label", default: none) != none
-    ) {
-      return (str(v.label), v)
-    }
-  }
-  none
-})
-
-
-#let _collect-labeled-reducers(..bodies) = {
-  let result = ()
-  for body in bodies.pos() {
-    if type(body) == function { continue }
-    result += _scan-content-for-labeled-reducers(body)
-  }
-  result
-}
-
-
-// Shallow scan: only finds top-level labeled elements (not nested in body/children).
-#let _scan-content-for-labeled-blocks(body) = _scan-content(
-  body,
-  c => {
-    // Skip touying metadata nodes
-    if c.func() == metadata { return none }
-    let lbl = c.fields().at("label", default: none)
-    if lbl != none and str(lbl) != "touying-temporary-mark" and str(lbl) != "" {
-      return (str(lbl), c)
-    }
-    none
-  },
-  deep: false,
-)
-
-
-#let _collect-labeled-blocks(..bodies) = {
-  let result = ()
-  for body in bodies.pos() {
-    if type(body) == function { continue }
-    result += _scan-content-for-labeled-blocks(body)
-  }
-  result
-}
-
-
-/// Recall a labeled reducer graphic or arbitrary labeled block at a specific animation stage.
-/// Intended for use inside `document-text` or `document-only` blocks in document mode.
-///
-/// Example:
-///
-/// ```typ
-/// // In a slide, define an animated CeTZ diagram with a label:
-/// #let my-diagram = touying-reducer.with(
-///   reduce: cetz.canvas,
-///   cover: cetz.draw.hide.with(bounds: true),
-///   label: "my-diagram",
-/// )
-///
-/// // Later, inside document-text or document-only:
-/// #document-text[
-///   Stage 1 only:
-///   #touying-block-recall("my-diagram", subslide: 1)
-///
-///   Final state:
-///   #touying-block-recall("my-diagram")
-///
-///   #touying-block-recall("my-diagram", subslide: 2)
-/// ]
-/// ```
-///
-/// - lbl (str, label): The label given to `touying-reducer`'s `label:` parameter,
-///   or a regular Typst label for non-reducer labeled content.
-///
-/// - subslide (auto, int): Which animation stage to show.
-///   - `auto` (default): the final / fully-revealed state.
-///   - `int`: a specific 1-indexed subslide number.
-///
-/// - base (auto, int): Starting repetition counter for pause numbering.
-///   - `auto` (default): `1` in document mode (no slide context).
-///   - `int`: explicit offset, e.g. `base: 3` makes the first pause
-///     create subslide 4 instead of 2.
-///
-/// -> content
-#let touying-block-recall(lbl, subslide: auto, base: auto) = {
-  let lbl-str = str(lbl)
-  [#metadata((
-    kind: "touying-block-recall",
-    lbl-str: lbl-str,
-    subslide: subslide,
-    base: base,
-  ))<touying-temporary-mark>]
-}
-
-
 
 // Render content as a continuous document instead of splitting into slides.
 //
@@ -547,20 +471,18 @@
 // their body inline (no page breaks), and animation primitives (pause,
 // meanwhile, uncover, only, etc.) show the final state.
 //
+// Bare (non-`#slide[...]`) content is routed through the real parser
+// (`_parse-content-into-results-and-repetitions`, the same function
+// `touying-slide`'s own document-mode branch uses) exactly like slide-
+// wrapped content already is — this is what gives it full container
+// recursion and full kind coverage (reducers, equations, waypoints,
+// fn-wrappers, etc.) for free, rather than a separate, hand-rolled,
+// necessarily-incomplete reimplementation of the same dispatch.
+//
 // - self (dictionary): The presentation context (must have document-mode: true and optionally document config like wrap-images)
 // - body (content): The content to render
 //
 // -> content
-
-// Scan a single content value for touying-reducer metadata nodes that carry
-// a non-none `label` field.  Returns an array of (label-string, reducer-data-dict).
-
-// Scan content bodies for touying-reducer metadata with non-none labels.
-// Returns an array of (label-string, reducer-data-dict) pairs.
-
-// Internal slide rendering function. Called by theme slide functions via `touying-slide-wrapper`.
-// See the public `slide` function for parameter documentation.
-
 #let render-content-as-document(self: none, body) = {
   let children = if utils.is-sequence(body) {
     body.children
@@ -578,6 +500,31 @@
   let any-wrapping = (
     wrap-images or wrap-image-figures or wrap-other-figures or wrap-other
   )
+
+  // Build the document-mode whole-slide-label set: labels attached to
+  // headings or explicit #slide[...] wrappers, which touying-recall must
+  // treat as a no-op (with a warning) rather than the generic recall
+  // fallback — see parser.typ's inlined "touying-slide-recaller" branch,
+  // which reads self.document-whole-slide-labels. Mirrors
+  // split-content-into-slides's two registration sites
+  // (slides.typ:298-304, :442-448) at a much smaller scope: document mode
+  // never needs to replay a slide, just to recognize "was this ever a
+  // whole-slide target."
+  let whole-slide-labels = ()
+  for child in children {
+    let lbl = if type(child) == content and child.func() == heading {
+      child.at("label", default: none)
+    } else if utils.is-kind(child, "touying-slide-wrapper") {
+      child.at("label", default: none)
+    } else {
+      none
+    }
+    if lbl != none and lbl != <touying-temporary-mark> {
+      whole-slide-labels.push(lbl)
+    }
+  }
+  let self = self + (document-whole-slide-labels: whole-slide-labels)
+
   // Enable content extraction in slides when any wrapping is on
   let extract-self = if any-wrapping {
     self + (document-extract-content: true)
@@ -585,344 +532,82 @@
     self
   }
 
-  // Process a single child, returning (items, images, blocks, block-recall-map)
-  let _empty = (
-    items: (),
-    images: (),
-    blocks: (),
-    block-recall-map: (:),
-    waypoint-map: (:),
-  )
-  let _process-child(self, extract-self, child) = {
-    if utils.is-kind(child, "touying-slide-wrapper") {
-      let slide-result = (child.value.fn)(extract-self)
-      // touying-slide returns content containing a touying-document-raw metadata
-      // element. Extract the payload, stripping any theme styling wrappers.
-      let payload = _unwrap-document-raw(slide-result)
-      // panic(slide-result, payload)
-      let brm = payload.at("block-recall-map", default: (:))
-      let wpm = payload.at("waypoint-map", default: (:))
-      let raw-content = payload.at("content", default: none)
-      let images = payload.at("images", default: ())
-      let blocks = payload.at("blocks", default: ())
-      if any-wrapping and (images.len() > 0 or blocks.len() > 0) {
-        // Got structured result with extracted images/blocks
-        let items = if raw-content != none {
-          (block(raw-content),)
-        } else { () }
-        return (
-          items: items,
-          images: images,
-          blocks: blocks,
-          block-recall-map: brm,
-          waypoint-map: wpm,
-        )
-      }
-      // Plain content (no extraction or nothing extracted)
-      return (
-        items: if raw-content != none { (block(raw-content),) } else { () },
-        images: (),
-        blocks: (),
-        block-recall-map: brm,
-        waypoint-map: wpm,
-      )
-    } else if utils.is-kind(child, "touying-fn-wrapper") {
-      let wrapper = child.value
-      let last = if (
-        wrapper.last-subslide != none and type(wrapper.last-subslide) == int
-      ) {
-        wrapper.last-subslide
-      } else {
-        9999
-      }
-      let doc-self = self + (subslide: last, handout: true)
-      return (
-        items: ((wrapper.fn)(self: doc-self, ..wrapper.args),),
-        images: (),
-        blocks: (),
-        block-recall-map: (:),
-        waypoint-map: (:),
-      )
-    } else if utils.is-kind(child, "touying-document-text") {
-      // Handled specially in the main loop (replaces preceding text)
-      return _empty
-    } else if utils.is-kind(child, "touying-document-only") {
-      // Standalone document-mode content — emit inline
-      return (
-        items: (child.value.body,),
-        images: (),
-        blocks: (),
-        block-recall-map: (:),
-        waypoint-map: (:),
-      )
-    } else if utils.is-kind(child, "touying-slides-only") {
-      // for presentation, handout and both
-      // Slides-only content — strip in document mode
-      return _empty
-    } else if utils.is-kind(child, "touying-jump/pause/meanwhile") {
-      return _empty
-    } else if utils.is-kind(child, "touying-set-config") {
-      let new-self = utils.merge-dicts(self, child.value.config)
-      return (
-        items: (render-content-as-document(self: new-self, child.value.body),),
-        images: (),
-        blocks: (),
-        block-recall-map: (:),
-        waypoint-map: (:),
-      )
-    } else if utils.is-kind(child, "touying-slide-recaller") {
-      return _empty
-    } else if utils.is-kind(child, "touying-block-recall") {
-      panic(
-        "touying-block-recall can only be used inside document-text or document-only blocks. "
-          + "It appeared at the top level of the document. "
-          + "Wrap it in #document-text[...] or #document-only[...].",
-      )
-    } else if utils.is-kind(child, "touying-render") {
-      let v = child.value
-      let render-base = if v.at("base", default: auto) == auto { 1 } else {
-        v.at("base")
-      }
-      let (reducer-data, cwp, repeat, _) = _prepare-render-context(
-        self,
-        v.content,
-        render-base,
-      )
-      let target = if v.subslide == auto { repeat } else { v.subslide }
-      let cont = _render-at-subslide(
-        self,
-        v.content,
-        reducer-data,
-        cwp,
-        render-base,
-        target,
-      )
-      return (
-        items: if cont != none { (cont,) } else { () },
-        images: (),
-        blocks: (),
-        block-recall-map: (:),
-        waypoint-map: (:),
-      )
-    } else if utils.is-styled(child) {
-      let inner = render-content-as-document(self: self, child.child)
-      return (
-        items: (utils.reconstruct-styled(child, inner),),
-        images: (),
-        blocks: (),
-        block-recall-map: (:),
-        waypoint-map: (:),
-      )
-    } else {
-      // Scan non-slide content for labeled reducers and labeled blocks so they
-      // are available to touying-block-recall in later document-text blocks.
-      // Store raw data (JIT): rendering happens on demand in _resolve-block-recalls.
-      let found-reducers = _scan-content-for-labeled-reducers(child)
-      let found-blocks = _scan-content-for-labeled-blocks(child)
-      let brm = (:)
-      let wpm = (:)
-      if found-reducers.len() > 0 or found-blocks.len() > 0 {
-        // Collect waypoints from the entire child content so that waypoint-based
-        // subslide references work in touying-block-recall.
-        let (raw-waypoints, start-overrides, decl-reps) = _collect-waypoints(
-          child,
-        )
-        let resolved-waypoints = _resolve-waypoint-forest(
-          raw-waypoints,
-          start-overrides,
-        )
-
-        // --- Reducers ---
-        for (lbl-str, reducer-data) in found-reducers {
-          // First pass: determine repeat count (without waypoints)
-          let (_, max-rep-raw) = _parse-touying-reducer(
-            self: self + (waypoints: (:), subslide: 9999),
-            base: 1,
-            index: 9999,
-            reducer-data,
-          )
-          let max-rep = calc.max(max-rep-raw, ..resolved-waypoints.values(), 1)
-          let waypoints = _compute-waypoint-ranges(
-            resolved-waypoints,
-            max-rep,
-            start-overrides,
-            decl-reps,
-          )
-          wpm = waypoints
-          // Store raw data for JIT rendering
-          brm.insert(lbl-str, (
-            kind: "reducer",
-            data: reducer-data,
-            waypoints: waypoints,
-            repeat: max-rep,
-          ))
-        }
-
-        // --- Labeled non-reducer blocks ---
-        for (lbl-str, block-content) in found-blocks {
-          // Determine repeat count by parsing with infinite index
-          let (
-            _,
-            max-rep-raw,
-            _,
-            _,
-            _,
-          ) = _parse-content-into-results-and-repetitions(
-            self: self + (waypoints: (:), subslide: 9999),
-            base: 1,
-            index: 9999,
-            block-content,
-          )
-          let max-rep = calc.max(max-rep-raw, ..resolved-waypoints.values(), 1)
-          let waypoints = _compute-waypoint-ranges(
-            resolved-waypoints,
-            max-rep,
-            start-overrides,
-            decl-reps,
-          )
-          if wpm == (:) { wpm = waypoints }
-          // Store raw data for JIT rendering
-          brm.insert(lbl-str, (
-            kind: "block",
-            data: block-content,
-            waypoints: waypoints,
-            repeat: max-rep,
-          ))
-        }
-      }
-      return (
-        items: (child,),
-        images: (),
-        blocks: (),
-        block-recall-map: brm,
-        waypoint-map: wpm,
-      )
+  // Render one accumulated "run" of bare (non-special) document children by
+  // routing it through the real parser, exactly like touying-slide's own
+  // document-mode branch does for explicit #slide[...] content (mirrors
+  // slides.typ:1816-1822: probe for repeat, then render at the final
+  // subslide with delayed-wrapper content shown). Waypoint pre-computation
+  // is intentionally skipped here (unlike touying-slide) — bare
+  // document-mode content has no tested use case for named waypoint
+  // ranges, and self.waypoints defaults safely to (:) everywhere it's read.
+  // Pull top-level "touying-recall-breadcrumb" metadata nodes out of a
+  // joined content tree. Breadcrumbs are invisible bookkeeping, not part of
+  // the visible content document-text/document-only are meant to replace or
+  // supplement — if they stayed buried inside the single joined block
+  // _render-run produces, a subsequent "keep only headings" filter (see
+  // document-text handling below) would discard them along with the
+  // visible content they happen to share a run with, making touying-recall
+  // unable to find them from anywhere inside that document-text/-only body.
+  // Breadcrumbs are always emitted as direct top-level pushes alongside
+  // whatever else the parser produces (never nested inside other pushed
+  // content), so a single level of sequence-unwrapping is enough to find
+  // them all.
+  let _extract-breadcrumbs(cont) = {
+    if cont == none { return (breadcrumbs: (), rest: none) }
+    if utils.is-kind(cont, "touying-recall-breadcrumb") {
+      return (breadcrumbs: (cont,), rest: none)
     }
+    if utils.is-sequence(cont) {
+      let breadcrumbs = ()
+      let rest = ()
+      for c in cont.children {
+        if utils.is-kind(c, "touying-recall-breadcrumb") {
+          breadcrumbs.push(c)
+        } else {
+          rest.push(c)
+        }
+      }
+      return (breadcrumbs: breadcrumbs, rest: rest.sum(default: none))
+    }
+    (breadcrumbs: (), rest: cont)
   }
 
-  // Resolve touying-block-recall metadata nodes in a content body using the
-  // accumulated block-recall-map.  Returns the body with recalls replaced by
-  // rendered content.
-  let _resolve-block-recalls(body, block-recall-map, waypoint-map) = {
-    // Fast path: nothing to resolve
-    if block-recall-map.len() == 0 { return body }
-
-    // Render content at one or more subslides, resolving waypoint and negative-index specs.
-    // Uses shared _render-at-subslide from parser.typ for the actual rendering.
-    let _render-content(
-      inline-content,
-      reducer-data,
-      content-waypoints,
-      repeat,
-      subslide-spec,
-      base: 1,
-    ) = {
-      if subslide-spec == auto {
-        return _render-at-subslide(
-          self,
-          inline-content,
-          reducer-data,
-          content-waypoints,
-          base,
-          repeat,
-        )
-      }
-
-      // Resolve waypoint labels/markers to ints
-      let wp-self = self + (waypoints: content-waypoints)
-      let subslide-spec = subslide-spec
-      if type(subslide-spec) == array {
-        for (i, idx) in subslide-spec.enumerate() {
-          if (
-            type(idx) == label
-              or (
-                type(idx) == dictionary
-                  and idx.at("kind", default: "") in waypoint-kinds
-              )
-          ) {
-            subslide-spec.at(i) = (_resolve-waypoint-to-int(wp-self, idx),)
-          }
-        }
-      } else if (
-        type(subslide-spec) == label
-          or (
-            type(subslide-spec) == dictionary
-              and subslide-spec.at("kind", default: "") in waypoint-kinds
-          )
-      ) {
-        subslide-spec = (_resolve-waypoint-to-int(wp-self, subslide-spec),)
-      }
-
-      // Resolve negative indices (e.g. -1 = last subslide)
-      let subslide-spec = utils.resolve-negative-subslides(
-        repeat,
-        subslide-spec,
-        base: base,
+  let _render-run(self, run) = {
+    if run.len() == 0 { return (items: (), images: (), blocks: (), breadcrumbs: ()) }
+    let joined = run.sum(default: none)
+    // touying-slide always sets self.subslide before any parsing, even the
+    // probe pass (slides.typ:1759) — utils.uncover/only and friends read
+    // self.subslide directly, so it must be present from the start.
+    let probe-self = self + (subslide: 1)
+    let (_, repetitions, last-subslide, _, _) = (
+      _parse-content-into-results-and-repetitions(
+        self: probe-self, base: 1, index: 1, joined,
       )
+    )
+    let repeat = calc.max(repetitions, last-subslide, 1)
+    let render-self = self + (repeat: repeat, subslide: repeat)
+    let (conts, _, _, _, _) = _parse-content-into-results-and-repetitions(
+      self: render-self, index: repeat, show-delayed-wrapper: true, joined,
+    )
+    let cont = conts.sum(default: none)
+    let extracted = _extract-breadcrumbs(cont)
+    let linearized = _document-linearize(render-self, none, (extracted.rest,))
+    (
+      items: if linearized.content != none {
+        (block(linearized.content),)
+      } else {
+        ()
+      },
+      images: linearized.images,
+      blocks: linearized.blocks,
+      breadcrumbs: extracted.breadcrumbs,
+    )
+  }
 
-      if type(subslide-spec) == int {
-        return _render-at-subslide(
-          self,
-          inline-content,
-          reducer-data,
-          content-waypoints,
-          base,
-          subslide-spec,
-        )
-      }
-
-      // Array or range spec: render matching subslides
-      let subslide-indices = range(1, repeat + 1).filter(
-        i => utils.check-visible(i, subslide-spec),
-      )
-      if subslide-indices.len() == 0 {
-        subslide-indices = (repeat,)
-      }
-      subslide-indices
-        .map(i => _render-at-subslide(
-          self,
-          inline-content,
-          reducer-data,
-          content-waypoints,
-          base,
-          i,
-        ))
-        .sum(default: none)
-    }
-
+  // Resolve touying-render metadata nodes in a content body (recursing
+  // through sequences, styled nodes, and wrapper/table-like content).
+  let _resolve-block-recalls(body) = {
     if type(body) != content { return body }
-
-    // touying-block-recall: look up label in block-recall-map, then delegate to _render-content
-    if (
-      body.func() == metadata
-        and type(body.value) == dictionary
-        and body.value.at("kind", default: none) == "touying-block-recall"
-    ) {
-      let v = body.value
-      let lbl-str = v.lbl-str
-      if lbl-str not in block-recall-map {
-        panic(
-          "touying-block-recall: label \""
-            + lbl-str
-            + "\" not found in block-recall-map. Available labels: "
-            + repr(block-recall-map.keys()),
-        )
-      }
-      let entry = block-recall-map.at(lbl-str)
-      let render-waypoints = entry.at("waypoints", default: waypoint-map)
-      let reducer-data = if entry.kind == "reducer" { entry.data } else { none }
-      let render-base = v.at("base", default: auto)
-      // In document mode, auto resolves to 1 (no slide context)
-      let render-base = if render-base == auto { 1 } else { render-base }
-      return _render-content(
-        entry.data,
-        reducer-data,
-        render-waypoints,
-        entry.repeat,
-        v.subslide,
-        base: render-base,
-      )
-    }
 
     // touying-render: inline content variable rendering
     if (
@@ -949,22 +634,38 @@
         target,
       )
     }
+    // touying-recall used inside document-text/document-only: never a
+    // whole-slide target here (recaller-map isn't consulted in document
+    // mode), always the native-ref fallback (labeled reducer or arbitrary
+    // labeled content).
+    if (
+      body.func() == metadata
+        and type(body.value) == dictionary
+        and body.value.at("kind", default: none) == "touying-slide-recaller"
+    ) {
+      let v = body.value
+      let raw-label = v.raw-label
+      if type(raw-label) != label {
+        panic(
+          "touying-recall: a native label (e.g. <my-label>) is required to "
+            + "recall a labeled reducer or other content in document mode — "
+            + "a string label can only target a registered whole-slide recall.",
+        )
+      }
+      return _build-native-recall(
+        raw-label,
+        v.at("subslide", default: none),
+        v.at("base", default: auto),
+      )
+    }
     // Recurse into sequences
     if utils.is-sequence(body) {
-      let parts = body.children.map(c => _resolve-block-recalls(
-        c,
-        block-recall-map,
-        waypoint-map,
-      ))
+      let parts = body.children.map(c => _resolve-block-recalls(c))
       return parts.sum(default: [])
     }
     // Recurse into styled nodes
     if utils.is-styled(body) {
-      let resolved-child = _resolve-block-recalls(
-        body.child,
-        block-recall-map,
-        waypoint-map,
-      )
+      let resolved-child = _resolve-block-recalls(body.child)
       if resolved-child != body.child {
         return utils.typst-builtin-styled(resolved-child, body.styles)
       }
@@ -976,11 +677,7 @@
     if type(body) == content and body.has("body") {
       let inner = body.at("body", default: none)
       if inner != none {
-        let resolved-inner = _resolve-block-recalls(
-          inner,
-          block-recall-map,
-          waypoint-map,
-        )
+        let resolved-inner = _resolve-block-recalls(inner)
         if resolved-inner != inner {
           let f = body.func()
           if f == rotate {
@@ -1033,11 +730,7 @@
       let any-changed = false
       let new-kids = ()
       for kid in kids {
-        let resolved-kid = _resolve-block-recalls(
-          kid,
-          block-recall-map,
-          waypoint-map,
-        )
+        let resolved-kid = _resolve-block-recalls(kid)
         new-kids.push(resolved-kid)
         if resolved-kid != kid { any-changed = true }
       }
@@ -1053,114 +746,187 @@
     body
   }
 
-  // --- Pass 1: process all children and collect the full block-recall-map ---
-  // This lets touying-block-recall reference labels from slides that appear
-  // later in the document (forward references).
-  let processed = ()
-  let block-recall-map = (:)
-  let waypoint-map = (:)
+  // touying-set-config's target self can change partway through the
+  // document, so it's threaded as a local variable (not recomputed from
+  // the original `self`) across the whole walk below — later runs and
+  // #slide[...] calls see the merged config, matching the old per-child
+  // behavior where touying-set-config recursed with a locally-merged self.
   let use-self = if any-wrapping { extract-self } else { self }
-  for child in children {
-    if (
-      utils.is-kind(child, "touying-document-text")
-        or utils.is-kind(child, "touying-document-only")
-    ) {
-      processed.push(none) // placeholder — resolved in pass 2
-    } else {
-      let r = _process-child(self, use-self, child)
-      processed.push(r)
-      block-recall-map = utils.merge-dicts(block-recall-map, r.block-recall-map)
-      if waypoint-map == (:) {
-        waypoint-map = r.waypoint-map
-      }
-    }
-  }
 
-  // --- Pass 2: build output using the complete block-recall-map ---
+  // Note: unlike the pre-recall-feature version of this function, this is
+  // now a single pass, not two — the old two-pass "collect everything,
+  // then resolve document-text/document-only" structure existed only to
+  // support forward-references into a pre-scanned block-recall-map, which
+  // no longer exists (recall is native-label/query-based now, and query()
+  // doesn't care about document order). document-text/document-only still
+  // get resolved via _resolve-block-recalls (still needed for
+  // touying-render's inline content and touying-recall's fallback), just
+  // without a separate first pass.
+
   if not any-wrapping {
-    // Simple path: no wrapping or block extraction
+    // Simple path: no wrapping or block extraction. Local closures in
+    // Typst can't mutate variables from the enclosing scope, so the
+    // "flush the accumulated run" step is inlined at each call site below
+    // rather than factored into a helper.
     let result = ()
-    for (idx, child) in children.enumerate() {
+    let current-run = ()
+    for child in children {
       if utils.is-kind(child, "touying-document-text") {
-        let headings = result.filter(r => (
-          type(r) == content and r.func() == heading
+        let r = _render-run(use-self, current-run)
+        current-run = ()
+        result += r.items
+        // document-text replaces the preceding run's visible content, but
+        // breadcrumbs are invisible bookkeeping (not part of what it's
+        // replacing) and must survive so touying-recall inside its own
+        // body can still find them.
+        let headings = result.filter(item => (
+          type(item) == content and item.func() == heading
         ))
         result = headings
-        result.push(_resolve-block-recalls(
-          child.value.body,
-          block-recall-map,
-          waypoint-map,
-        ))
-        continue
+        result += r.breadcrumbs
+        result.push(_resolve-block-recalls(child.value.body))
+      } else if utils.is-kind(child, "touying-document-only") {
+        let r = _render-run(use-self, current-run)
+        current-run = ()
+        result += r.items
+        result += r.breadcrumbs
+        result.push(_resolve-block-recalls(child.value.body))
+      } else if utils.is-kind(child, "touying-set-config") {
+        let r = _render-run(use-self, current-run)
+        current-run = ()
+        result += r.items
+        result += r.breadcrumbs
+        use-self = utils.merge-dicts(use-self, child.value.config)
+      } else if utils.is-kind(child, "touying-slide-wrapper") {
+        let r = _render-run(use-self, current-run)
+        current-run = ()
+        result += r.items
+        result += r.breadcrumbs
+        let slide-result = (child.value.fn)(use-self)
+        let payload = _unwrap-document-raw(slide-result)
+        let raw-content = payload.at("content", default: none)
+        // Not wrapped in an extra block(): a rendered slide's own content is
+        // already block-level (themes wrap slide bodies themselves), and an
+        // additional block() here doesn't collapse its spacing with the
+        // preceding heading's own below-spacing the way normal paragraph
+        // flow does — it visibly doubles the gap when this is the first
+        // thing under a heading (see e.g. "With Explicit Slide"/"Focus
+        // Slide" in the document-mode test).
+        if raw-content != none { result.push(raw-content) }
+      } else if utils.is-kind(child, "touying-slides-only") {
+        // Stripped in document mode — a document-mode/slide-mode
+        // distinction the shared parser has no notion of, so it must be
+        // filtered out here rather than left for the parser to see.
+      } else {
+        current-run.push(child)
       }
-      if utils.is-kind(child, "touying-document-only") {
-        result.push(_resolve-block-recalls(
-          child.value.body,
-          block-recall-map,
-          waypoint-map,
-        ))
-        continue
-      }
-      result += processed.at(idx).items
     }
-    return result.sum(default: none)
+    let r = _render-run(use-self, current-run)
+    result += r.items
+    result += r.breadcrumbs
+    return result.sum(default: none) + _leak-check(self)
   }
 
-  // Content-extraction path: group by headings, wrap stuff with wrap-it,
-  // and place rest block-level content (e.g. tables, canvases) centered at section end.
+  // Content-extraction path: group by headings, wrap stuff with meander,
+  // and place block-level content (e.g. tables, canvases) centered at
+  // section end. Same inlined-flush constraint as above applies here.
   let sections = ()
   let current-items = ()
   let current-images = ()
   let current-blocks = ()
-
-  for (idx, child) in children.enumerate() {
+  let current-run = ()
+  for child in children {
     let is-section-heading = (
       type(child) == content and child.func() == heading
     )
-
-    if is-section-heading and current-items.len() > 0 {
-      sections.push(_wrap-section(
-        current-items,
-        current-images,
-        current-blocks,
-        wrap-images: wrap-images,
-        wrap-image-figures: wrap-image-figures,
-        wrap-other-figures: wrap-other-figures,
-        wrap-other: wrap-other,
-        wrap-align-direction: wrap-align-direction,
-      ))
+    if is-section-heading and (current-items.len() > 0 or current-run.len() > 0) {
+      let r = _render-run(use-self, current-run)
+      current-run = ()
+      current-items += r.items
+      current-items += r.breadcrumbs
+      current-images += r.images
+      current-blocks += r.blocks
+      if current-items.len() > 0 {
+        sections.push(_wrap-section(
+          current-items,
+          current-images,
+          current-blocks,
+          wrap-images: wrap-images,
+          wrap-image-figures: wrap-image-figures,
+          wrap-other-figures: wrap-other-figures,
+          wrap-other: wrap-other,
+          wrap-align-direction: wrap-align-direction,
+        ))
+      }
       current-items = ()
       current-images = ()
       current-blocks = ()
     }
 
     if utils.is-kind(child, "touying-document-text") {
-      let headings = current-items.filter(r => (
-        type(r) == content and r.func() == heading
+      let r = _render-run(use-self, current-run)
+      current-run = ()
+      current-items += r.items
+      current-images += r.images
+      current-blocks += r.blocks
+      // document-text replaces the preceding run's visible content, but
+      // breadcrumbs are invisible bookkeeping (not part of what it's
+      // replacing) and must survive so touying-recall inside its own body
+      // can still find them.
+      let headings = current-items.filter(item => (
+        type(item) == content and item.func() == heading
       ))
       current-items = headings
-      current-items.push(_resolve-block-recalls(
-        child.value.body,
-        block-recall-map,
-        waypoint-map,
-      ))
-      continue
+      current-items += r.breadcrumbs
+      current-items.push(_resolve-block-recalls(child.value.body))
+    } else if utils.is-kind(child, "touying-document-only") {
+      let r = _render-run(use-self, current-run)
+      current-run = ()
+      current-items += r.items
+      current-items += r.breadcrumbs
+      current-images += r.images
+      current-blocks += r.blocks
+      current-items.push(_resolve-block-recalls(child.value.body))
+    } else if utils.is-kind(child, "touying-set-config") {
+      let r = _render-run(use-self, current-run)
+      current-run = ()
+      current-items += r.items
+      current-items += r.breadcrumbs
+      current-images += r.images
+      current-blocks += r.blocks
+      use-self = utils.merge-dicts(use-self, child.value.config)
+    } else if utils.is-kind(child, "touying-slide-wrapper") {
+      let r = _render-run(use-self, current-run)
+      current-run = ()
+      current-items += r.items
+      current-items += r.breadcrumbs
+      current-images += r.images
+      current-blocks += r.blocks
+      let slide-result = (child.value.fn)(use-self)
+      let payload = _unwrap-document-raw(slide-result)
+      let raw-content = payload.at("content", default: none)
+      // See the matching comment in the simple path above: no extra
+      // block() wrap here either. (_wrap-section's own _unwrap-blocks
+      // would strip it anyway when meander wrapping is active — this just
+      // avoids the double-spacing bug in the common case where it isn't.)
+      if raw-content != none { current-items.push(raw-content) }
+      current-images += payload.at("images", default: ())
+      current-blocks += payload.at("blocks", default: ())
+    } else if is-section-heading {
+      current-items.push(child)
+    } else if utils.is-kind(child, "touying-slides-only") {
+      // Stripped in document mode — a document-mode/slide-mode
+      // distinction the shared parser has no notion of, so it must be
+      // filtered out here rather than left for the parser to see.
+    } else {
+      current-run.push(child)
     }
-
-    if utils.is-kind(child, "touying-document-only") {
-      current-items.push(_resolve-block-recalls(
-        child.value.body,
-        block-recall-map,
-        waypoint-map,
-      ))
-      continue
-    }
-
-    let r = processed.at(idx)
-    current-items += r.items
-    current-images += r.images
-    current-blocks += r.blocks
   }
+  let r = _render-run(use-self, current-run)
+  current-items += r.items
+  current-items += r.breadcrumbs
+  current-images += r.images
+  current-blocks += r.blocks
   if current-items.len() > 0 {
     sections.push(_wrap-section(
       current-items,
@@ -1174,5 +940,5 @@
     ))
   }
 
-  sections.join()
+  sections.join() + _leak-check(self)
 }

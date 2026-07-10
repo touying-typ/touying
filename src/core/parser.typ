@@ -1,4 +1,5 @@
 #import "../utils.typ"
+#import "../extern.typ"
 #import "waypoints.typ": (
   _compute-waypoint-ranges, _cover-never, _resolve-waypoint-forest,
   _waypoint-known, waypoint-kinds,
@@ -1178,6 +1179,62 @@
         and self.subslide != self.repeat
     )
   }
+  // Determine the "real" recall-relevant label for `child`, if any, and —
+  // only on the slide's own last subslide, to avoid attaching the same
+  // real label more than once across multiple rendered pages — emit an
+  // invisible breadcrumb carrying the raw, pre-parse content under a label
+  // derived from the original, if that content has more than one subslide
+  // of its own. `touying-recall`'s fallback (see `_build-native-recall`)
+  // looks this breadcrumb label up when an explicit subslide is requested;
+  // the original label keeps pointing at the original element, completely
+  // unchanged, for the default (auto/none) case.
+  let maybe-build-recall-breadcrumb(child) = {
+    // A touying-reducer stores its label inside the metadata dict (its own
+    // attached label is the internal <touying-temporary-mark>, unaffected);
+    // anything else uses its own directly-attached label.
+    let real-label = if utils.is-kind(child, "touying-reducer") {
+      child.value.at("label", default: none)
+    } else if (
+      type(child) == content and child.has("label") and child.label != <touying-temporary-mark>
+    ) {
+      child.label
+    } else {
+      none
+    }
+    if (
+      real-label == none
+        or self.at("subslide", default: none) != self.at("repeat", default: none)
+    ) {
+      return none
+    }
+    // Probe this child's own standalone repeat count (inlined from
+    // _prepare-render-context — can't call it directly, it's defined later
+    // in this file and itself depends on this function).
+    let probe-reducer-data = _find-reducer-meta(child)
+    let (raw-wp, so, dr) = _collect-waypoints(child)
+    let resolved-wp = _resolve-waypoint-forest(raw-wp, so)
+    let max-rep-raw = if probe-reducer-data != none {
+      let (_, mrr) = _parse-touying-reducer(
+        self: self + (waypoints: (:), subslide: 9999),
+        base: 1,
+        index: 9999,
+        probe-reducer-data,
+      )
+      mrr
+    } else {
+      let (_, mrr, _, _, _) = _parse-content-into-results-and-repetitions(
+        self: self + (waypoints: (:), subslide: 9999),
+        base: 1,
+        index: 9999,
+        child,
+      )
+      mrr
+    }
+    let own-repeat = calc.max(max-rep-raw, ..resolved-wp.values(), 1)
+    if own-repeat <= 1 { return none }
+    let breadcrumb-label = label(str(real-label) + ":touying-recall-breadcrumb")
+    [#metadata((kind: "touying-recall-breadcrumb", content: child))#breadcrumb-label]
+  }
   // Helper function to parse child content and reconstruct
   // Returns a 5-tuple:
   //   - reconstructed-content: the reconstructed container content
@@ -1469,6 +1526,14 @@
 
     // Process each child element for animation markers and content types
     for child in children {
+      let recall-breadcrumb = maybe-build-recall-breadcrumb(child)
+      if recall-breadcrumb != none {
+        if repetitions <= index or not need-cover {
+          result.push(recall-breadcrumb)
+        } else {
+          hidden-parts.push(recall-breadcrumb)
+        }
+      }
       if (
         type(child) == content
           and child.func() == metadata
@@ -1532,6 +1597,27 @@
             child.value,
           )
           let cont = conts.first()
+          // If labeled, attach the real label directly to the rendered
+          // output (wrapped in `block` — reducer output is already
+          // effectively block-level, so this doesn't change layout) so the
+          // label is genuinely findable via query()/@ref, not just stored
+          // inside the metadata dict. Only on the slide's own last
+          // subslide, so the label always points at the reducer's true
+          // final state, and so a multi-subslide slide doesn't attach the
+          // same real label more than once across multiple rendered pages.
+          let real-label = child.value.at("label", default: none)
+          let cont = if (
+            cont != none
+              and real-label != none
+              and self.at("subslide", default: none) == self.at(
+                "repeat",
+                default: none,
+              )
+          ) {
+            [#block(cont)#real-label]
+          } else {
+            cont
+          }
           if repetitions <= index or not need-cover {
             result.push(cont)
           } else {
@@ -1806,11 +1892,158 @@
             }
           }
           // No visible output.
-        } else if kind == "touying-block-recall" {
-          panic(
-            "touying-block-recall can only be used inside document-text or document-only blocks. "
-              + "Use touying-render instead to render animated blocks at specific subslides.",
+        } else if kind == "touying-slide-recaller" {
+          // Used inside a slide's own body: there's no sensible "recall a
+          // whole other slide from within this slide's content" semantic,
+          // so this always goes through the recall fallback (reducer or
+          // arbitrary labeled content), never the whole-slide recaller-map.
+          // Inlined from _build-native-recall: that function (and the
+          // _prepare-render-context/_render-at-subslide it calls) is defined
+          // later in this file and itself depends on
+          // _parse-content-into-results-and-repetitions, so it can't be
+          // called from inside this function's own body — same reason
+          // touying-render's branch above is inlined rather than calling
+          // _render-at-subslide directly.
+          let raw-label = child.value.raw-label
+          if type(raw-label) != label {
+            panic(
+              "touying-recall: a native label (e.g. <my-label>) is required "
+                + "to recall a labeled reducer or other content from inside "
+                + "a slide body — a string label can only target a "
+                + "registered whole-slide recall at the top level of the document.",
+            )
+          }
+          let recall-subslide = child.value.at("subslide", default: none)
+          let recall-subslide = if recall-subslide == none { auto } else {
+            recall-subslide
+          }
+          let recall-base = child.value.at("base", default: auto)
+          if recall-subslide != auto and type(recall-subslide) != int {
+            panic(
+              "touying-recall: subslide: " + repr(recall-subslide)
+                + " is not supported outside a whole-slide target — only "
+                + "auto/none or an int subslide number are supported here.",
+            )
+          }
+          // Recalling a whole-slide target has no effect in document mode
+          // (see docmode.typ's document-whole-slide-labels) — warn and
+          // produce nothing rather than silently falling through to the
+          // generic recall below, which would recall just a fragment
+          // (e.g. a bare heading) of what the user probably meant as a
+          // whole slide.
+          let whole-slide-labels = self.at(
+            "document-whole-slide-labels",
+            default: (),
           )
+          let recalled = if (
+            self.at("document-mode", default: false)
+              and raw-label in whole-slide-labels
+          ) {
+            extern.warning(
+              "touying-recall: label " + repr(raw-label)
+                + " refers to a whole-slide recall target, which has no "
+                + "effect in document mode. Wrap this call in "
+                + "#slides-only[...] to suppress this warning once you've "
+                + "confirmed that's what you want.",
+            )
+            none
+          } else {
+            context {
+              // Always check the breadcrumb first, regardless of subslide:
+              // a touying-reducer's own real label is never itself attached
+              // to anything (it only lives inside the metadata dict), so
+              // "auto" still needs the breadcrumb's raw content to render
+              // anything for a reducer, not just to pick a specific stage.
+              let breadcrumb-label = label(
+                str(raw-label) + ":touying-recall-breadcrumb",
+              )
+              let breadcrumb-found = query(breadcrumb-label)
+              if breadcrumb-found.len() > 0 {
+                let raw-content = breadcrumb-found.first().value.content
+                let minimal-self = (
+                  methods: (cover: utils.method-wrapper(hide)),
+                  waypoints: (:),
+                  subslide: 1,
+                )
+                let render-base = if recall-base == auto { 1 } else {
+                  recall-base
+                }
+                // Inlined from _prepare-render-context/_render-at-subslide
+                // (see the comment above this branch for why they can't be
+                // called directly).
+                let reducer-data = _find-reducer-meta(raw-content)
+                let (raw-wp, so, dr) = _collect-waypoints(raw-content)
+                let resolved-wp = _resolve-waypoint-forest(raw-wp, so)
+                let max-rep-raw = if reducer-data != none {
+                  let (_, mrr) = _parse-touying-reducer(
+                    self: minimal-self + (waypoints: (:), subslide: 9999),
+                    base: render-base,
+                    index: 9999,
+                    reducer-data,
+                  )
+                  mrr
+                } else {
+                  let (
+                    _, mrr, _, _, _,
+                  ) = _parse-content-into-results-and-repetitions(
+                    self: minimal-self + (waypoints: (:), subslide: 9999),
+                    base: render-base,
+                    index: 9999,
+                    raw-content,
+                  )
+                  mrr
+                }
+                let repeat = calc.max(max-rep-raw, ..resolved-wp.values(), 1)
+                let cwp = _compute-waypoint-ranges(resolved-wp, repeat, so, dr)
+                let target = if recall-subslide == auto { repeat } else {
+                  recall-subslide
+                }
+                let render-self = minimal-self + (
+                  waypoints: cwp, subslide: target,
+                )
+                if reducer-data != none {
+                  let (r, _) = _parse-touying-reducer(
+                    self: render-self,
+                    base: render-base,
+                    index: target,
+                    reducer-data,
+                  )
+                  r.sum(default: none)
+                } else {
+                  let (
+                    conts, _, _, _, _,
+                  ) = _parse-content-into-results-and-repetitions(
+                    self: render-self,
+                    base: render-base,
+                    index: target,
+                    raw-content,
+                  )
+                  conts.sum(default: none)
+                }
+              } else {
+                if recall-subslide != auto {
+                  panic(
+                    "touying-recall: label " + repr(raw-label)
+                      + " refers to content with no subslide dimension, but "
+                      + "subslide: " + repr(recall-subslide) + " was given.",
+                  )
+                }
+                let found = query(raw-label)
+                if found.len() == 0 {
+                  panic(
+                    "touying-recall: label " + repr(raw-label)
+                      + " was not found in the document.",
+                  )
+                }
+                found.first()
+              }
+            }
+          }
+          if repetitions <= index or not need-cover {
+            result.push(recalled)
+          } else {
+            hidden-parts.push(recalled)
+          }
         } else if kind == "touying-delayed-wrapper" {
           if show-delayed-wrapper {
             if repetitions <= index or not need-cover {
@@ -2436,6 +2669,68 @@
       inline-content,
     )
     conts.sum(default: none)
+  }
+}
+
+
+/// Build a query-based recall for a label that isn't a registered
+/// whole-slide recall target: a labeled `touying-reducer`, or arbitrary
+/// labeled content — which may itself have more than one subslide of its
+/// own (see the "labeled + multi-repetition" breadcrumb mechanism above).
+///
+/// Always checks the derived breadcrumb label
+/// (`<label>:touying-recall-breadcrumb`) first, regardless of whether an
+/// explicit subslide was requested — a `touying-reducer`'s own real label
+/// is never itself attached to anything (it only lives inside the
+/// metadata dict), so `subslide: auto` still needs the breadcrumb's raw
+/// content to render *anything* for a reducer, not just to pick a specific
+/// stage. Only falls back to querying the original label directly when no
+/// breadcrumb exists — i.e. genuinely static, non-reducer content with no
+/// subslide dimension at all, where the original label already points at
+/// the final state directly and any explicit subslide is an error.
+///
+/// -> content
+#let _build-native-recall(lbl, subslide, base) = {
+  let subslide = if subslide == none { auto } else { subslide }
+  if subslide != auto and type(subslide) != int {
+    panic(
+      "touying-recall: subslide: " + repr(subslide)
+        + " is not supported outside a whole-slide target — only "
+        + "auto/none or an int subslide number are supported here.",
+    )
+  }
+  context {
+    let breadcrumb-label = label(str(lbl) + ":touying-recall-breadcrumb")
+    let breadcrumb-found = query(breadcrumb-label)
+    if breadcrumb-found.len() > 0 {
+      let raw-content = breadcrumb-found.first().value.content
+      let minimal-self = (
+        methods: (cover: utils.method-wrapper(hide)),
+        waypoints: (:),
+        subslide: 1,
+      )
+      let render-base = if base == auto { 1 } else { base }
+      let (reducer-data, cwp, repeat, _) = _prepare-render-context(
+        minimal-self,
+        raw-content,
+        render-base,
+      )
+      let target = if subslide == auto { repeat } else { subslide }
+      _render-at-subslide(minimal-self, raw-content, reducer-data, cwp, render-base, target)
+    } else {
+      if subslide != auto {
+        panic(
+          "touying-recall: label " + repr(lbl)
+            + " refers to content with no subslide dimension, but subslide: "
+            + repr(subslide) + " was given.",
+        )
+      }
+      let found = query(lbl)
+      if found.len() == 0 {
+        panic("touying-recall: label " + repr(lbl) + " was not found in the document.")
+      }
+      found.first()
+    }
   }
 }
 

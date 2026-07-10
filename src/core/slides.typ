@@ -6,15 +6,13 @@
   _waypoint-known, waypoint-kinds,
 )
 #import "parser.typ": (
-  _collect-waypoints, _count-animated-block-repetitions, _find-reducer-meta,
-  _parse-content-into-results-and-repetitions, _parse-touying-reducer,
-  _resolve-waypoint-to-int,
+  _build-native-recall, _collect-waypoints,
+  _parse-content-into-results-and-repetitions, _resolve-waypoint-to-int,
 )
 #import "animation.typ": touying-slide-wrapper
 #import "docmode.typ": (
-  _collect-labeled-blocks, _collect-labeled-reducers, _document-linearize,
-  _extract-image, _is-block-content, _scan-content-for-labeled-blocks,
-  _scan-content-for-labeled-reducers, render-content-as-document,
+  _document-linearize, _extract-image, _is-block-content,
+  render-content-as-document,
 )
 
 #let _delayed-wrapper(body) = [#metadata((
@@ -63,12 +61,30 @@
 )
 
 
-/// Recall a slide by its label.
+/// Recall content by its label.
+///
+/// If the label was registered as a whole-slide recall target — either a
+/// heading that auto-split into its own slide, or an explicit
+/// `#slide(...)[...]<label>` call — the entire slide is replayed. Otherwise,
+/// this falls back to a native-ref-based lookup: it works for a
+/// `touying-reducer(label: <x>, ...)` (recalling a specific animation stage
+/// of that reducer), or any other native-labeled content (a table, image, or
+/// a heading that sits *inside* an explicit slide without itself being a
+/// whole-slide target) — recalled as-is, anywhere in the document, in a
+/// slide or in document mode.
+///
+/// Note: a whole-slide target must already have been processed (i.e. the
+/// recall must come *after* it in the document) to be found — forward-
+/// referencing a bare heading that hasn't auto-split into its own slide yet
+/// falls through to the native-ref fallback instead (recalling just the
+/// heading) rather than erroring, since native ref resolution has no such
+/// ordering restriction. An explicit `#slide(...)[...]<label>` call has the
+/// same forward-reference limitation.
 ///
 /// Example:
 ///
 /// ```typ
-/// // Recall all subslides
+/// // Recall all subslides of a whole-slide target
 /// #touying-recall(<my-slide>)
 ///
 /// // Recall only a specific subslide
@@ -85,12 +101,25 @@
 ///
 /// // Recall only the last subslide of a waypoint
 /// #touying-recall(<my-slide>, subslide: get-last(<my-waypoint>))
+///
+/// // Recall a labeled reducer at a specific animation stage
+/// #let my-diagram = touying-reducer.with(
+///   reduce: cetz.canvas, cover: cetz.draw.hide.with(bounds: true), label: <my-diagram>,
+/// )
+/// #touying-recall(<my-diagram>, subslide: 1)
+///
+/// // Recall arbitrary labeled static content (shown as-is)
+/// #touying-recall(<my-table>)
 /// ```
 ///
-/// - lbl (str, label): The label of the slide to recall.
+/// - lbl (str, label): The label to recall. Must be a native label (not a
+///   string) to recall a reducer or other labeled content that isn't a
+///   registered whole-slide target — a string can only match a whole-slide
+///   recall.
 ///
 /// - subslide (none, auto, int, str, label, dictionary): Which subslide(s) to recall.
 ///
+///   For a whole-slide target:
 ///   - `none` (default): recall all subslides.
 ///   - `auto`: recall only the last subslide (the final animation state).
 ///   - `int`: recall a specific subslide by number.
@@ -103,15 +132,33 @@
 ///     `next-wp(<wp>)` — resolves to a single subslide or waypoint range
 ///     using the recalled slide's waypoint map.
 ///
+///   For a reducer/labeled-content fallback target, only `none`/`auto`
+///   (both mean "the final/fully-revealed state" — there's no "all
+///   subslides" sequence for a single recalled snippet) and `int` are
+///   supported. The content doesn't have to be a `touying-reducer` — any
+///   labeled content with its own `#pause` markers works the same way (e.g.
+///   a labeled table with paused rows). Passing an explicit subslide value
+///   for content with no subslide dimension at all (no pauses anywhere in
+///   it) panics.
+///
+/// - base (auto, int): Starting repetition counter for pause numbering,
+///   only used by the reducer/labeled-content fallback (a whole-slide
+///   recall replays the original slide's own numbering).
+///   - `auto` (default): `1`.
+///   - `int`: explicit offset, e.g. `base: 3` makes the first pause
+///     create subslide 4 instead of 2.
+///
 /// -> content
-#let touying-recall(lbl, subslide: none) = [#metadata((
+#let touying-recall(lbl, subslide: none, base: auto) = [#metadata((
   kind: "touying-slide-recaller",
   label: if type(lbl) == label {
     str(lbl)
   } else {
     lbl
   },
+  raw-label: lbl,
   subslide: subslide,
+  base: base,
 ))<touying-temporary-mark>]
 
 #let _get-last-heading-depth(current-headings) = {
@@ -514,27 +561,42 @@
         if slide-content != none { output-slides.push(slide-content) }
       }
       let lbl = child.value.label
-      assert(
-        lbl in recaller-map,
-        message: "label not found in the recaller map for slides",
-      )
-      // recall the slide
-      let recall-entry = recaller-map.at(lbl)
-      let recall-subslide = child.value.at("subslide", default: none)
-      if recall-subslide == none {
-        output-slides.push(recall-entry.content)
+      if lbl in recaller-map {
+        // recall the slide
+        let recall-entry = recaller-map.at(lbl)
+        let recall-subslide = child.value.at("subslide", default: none)
+        if recall-subslide == none {
+          output-slides.push(recall-entry.content)
+        } else {
+          // Pass the raw subslide spec through to touying-slide, which will
+          // resolve it after computing `repeat` and `waypoints`.
+          let recalled-self = (
+            recall-entry.slide-self
+              + (
+                freeze-slide-counter: true,
+                _recall-subslide: recall-subslide,
+                enable-frozen-states-and-counters: false,
+              )
+          )
+          output-slides.push((recall-entry.callable)(recalled-self))
+        }
       } else {
-        // Pass the raw subslide spec through to touying-slide, which will
-        // resolve it after computing `repeat` and `waypoints`.
-        let recalled-self = (
-          recall-entry.slide-self
-            + (
-              freeze-slide-counter: true,
-              _recall-subslide: recall-subslide,
-              enable-frozen-states-and-counters: false,
-            )
-        )
-        output-slides.push((recall-entry.callable)(recalled-self))
+        // Not a registered whole-slide target — fall back to native-ref resolution (labeled reducer or arbitrary labeled content).
+        let raw-label = child.value.raw-label
+        if type(raw-label) != label {
+          panic(
+            "touying-recall: label " + repr(lbl)
+              + " not found in the recaller map for slides. A native label "
+              + "(e.g. <my-label>) is required to recall a labeled reducer "
+              + "or other content — a string label can only target a "
+              + "registered whole-slide recall.",
+          )
+        }
+        output-slides.push(_build-native-recall(
+          raw-label,
+          child.value.at("subslide", default: none),
+          child.value.at("base", default: auto),
+        ))
       }
       absorb-leading-preamble = false
     } else if child in (pagebreak(), pagebreak(weak: true)) {
@@ -1758,40 +1820,6 @@
       show-delayed-wrapper: true,
       ..bodies,
     )
-    // Store raw data for labeled reducers and labeled blocks (JIT rendering).
-    let labeled-reducers = _collect-labeled-reducers(..resolved-bodies)
-    let labeled-blocks = _collect-labeled-blocks(..resolved-bodies)
-    let block-recall-map = (:)
-    for (lbl-str, reducer-data) in labeled-reducers {
-      block-recall-map.insert(lbl-str, (
-        kind: "reducer",
-        data: reducer-data,
-        waypoints: self.waypoints,
-        repeat: repeat,
-      ))
-    }
-    for (lbl-str, block-content) in labeled-blocks {
-      // Determine max subslide count for this block
-      let (
-        _,
-        max-rep-raw,
-        _,
-        _,
-        _,
-      ) = _parse-content-into-results-and-repetitions(
-        self: self + (waypoints: (:), subslide: 9999),
-        base: 1,
-        index: 9999,
-        block-content,
-      )
-      let max-rep = calc.max(max-rep-raw, 1)
-      block-recall-map.insert(lbl-str, (
-        kind: "block",
-        data: block-content,
-        waypoints: self.waypoints,
-        repeat: max-rep,
-      ))
-    }
     // Linearize: returns (content: .., images: .., blocks: ..)
     let result = _document-linearize(self, composer, conts)
     // Document-specific setting function: only preserves semantic styling
@@ -1820,8 +1848,6 @@
     let payload = (
       kind: "touying-document-raw",
       content: content,
-      block-recall-map: block-recall-map,
-      waypoint-map: self.waypoints,
     )
     if self.at("document-extract-content", default: false) and has-extracted {
       payload.insert("images", result.images)
