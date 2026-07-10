@@ -321,7 +321,36 @@
     not in-slides and not in-document
   }
 
-  children = children.map(utils.sequence-to-array).flatten()
+  //recursively flattens the array and checks for X-only content which is inlined when necessary. Merged loop to avoid repeatedly iterating all elements.
+  let _expand-child(child) = {
+    if (
+      utils.is-kind(child, "touying-document-text")
+        or utils.is-kind(child, "touying-document-only")
+    ) {
+      return ()
+    }
+    if utils.is-kind(child, "touying-slides-only") {
+      let visible-in = child.value.at("visible-in", default: "slides")
+      let is-visible = (
+        visible-in == "slides"
+          or (visible-in == "presentation" and not self.handout)
+          or (visible-in == "handout" and self.handout)
+      )
+      if not is-visible { return () }
+      let inner = if utils.is-sequence(child.value.body) {
+        child.value.body.children
+      } else {
+        (child.value.body,)
+      }
+      return inner.map(_expand-child)
+    }
+    if utils.is-sequence(child) {
+      return child.children.map(_expand-child)
+    }
+    child
+  }
+  children = children.map(_expand-child).flatten()
+
   let call-slide-fn-and-reset(
     self,
     slide-fn,
@@ -585,7 +614,8 @@
         let raw-label = child.value.raw-label
         if type(raw-label) != label {
           panic(
-            "touying-recall: label " + repr(lbl)
+            "touying-recall: label "
+              + repr(lbl)
               + " not found in the recaller map for slides. A native label "
               + "(e.g. <my-label>) is required to recall a labeled reducer "
               + "or other content — a string label can only target a "
@@ -1025,28 +1055,6 @@
           }
         }
       }
-    } else if (
-      utils.is-kind(child, "touying-document-text")
-        or utils.is-kind(child, "touying-document-only")
-    ) {
-      // Document-only content — silently skip here, as this is not reachable in document mode
-      continue
-    } else if utils.is-kind(child, "touying-slides-only") {
-      // Slides-only content — inline the body in slides mode
-      //for presentation, handout and both
-      let (inner-start-part, slide-content-part) = split-content-into-slides(
-        self: self,
-        recaller-map: recaller-map,
-        new-start: false,
-        child.value.body,
-      )
-      if slide-content-part != none {
-        panic(
-          "touying-slides-only: only-content should not contain slide breaking elements."
-            + repr(slide-content-part),
-        )
-      }
-      slide-parts.push(inner-start-part)
     } else if utils.is-styled(child) {
       // When absorbing leading preamble and no heading seen yet, recurse into
       // the styled node with absorb-leading-preamble: true. The set/show rules

@@ -25,6 +25,8 @@
 /// Use this for standalone sections or inline content that should only exist in the document
 /// output (e.g., inline: footnotes, remarks; sections: appendices, methodology, acknowledgements, extended discussion).
 ///
+/// Note that slide-breaking shorthands like `---` won't be interpreted inside this wrapper and just render as-is. A `pagebreak()` will still work though.
+///
 /// - body (content): The document-only content.
 ///
 /// -> content
@@ -98,7 +100,10 @@
   let headings = items.filter(r => (
     type(r) == content and r.func() == heading
   ))
-  let breadcrumbs = items.filter(r => utils.is-kind(r, "touying-recall-breadcrumb"))
+  let breadcrumbs = items.filter(r => utils.is-kind(
+    r,
+    "touying-recall-breadcrumb",
+  ))
   let body-parts = items.filter(r => (
     not (type(r) == content and r.func() == heading)
       and not utils.is-kind(r, "touying-recall-breadcrumb")
@@ -421,7 +426,9 @@
   }
 
   (
-    content: if text-parts.len() == 0 { none } else { text-parts.join(parbreak()) },
+    content: if text-parts.len() == 0 { none } else {
+      text-parts.join(parbreak())
+    },
     images: images,
     blocks: block-parts,
   )
@@ -490,6 +497,15 @@
     (body,)
   }
   children = children.map(utils.sequence-to-array).flatten()
+
+  // Same convention split-content-into-slides uses to turn a bare "---"/"—"
+  // into a slide break — in document mode there are no slide boundaries to
+  // break, so it's a silent no-op instead (see the per-child checks below).
+  // Wrap it in #document-only[...] to force a literal dash through instead.
+  let horizontal-line-to-pagebreak = self.at(
+    "horizontal-line-to-pagebreak",
+    default: true,
+  )
 
   let doc-cfg = self.at("document", default: (:))
   let wrap-images = doc-cfg.at("wrap-images", default: true)
@@ -573,7 +589,9 @@
   }
 
   let _render-run(self, run) = {
-    if run.len() == 0 { return (items: (), images: (), blocks: (), breadcrumbs: ()) }
+    if run.len() == 0 {
+      return (items: (), images: (), blocks: (), breadcrumbs: ())
+    }
     let joined = run.sum(default: none)
     // touying-slide always sets self.subslide before any parsing, even the
     // probe pass (slides.typ:1759) — utils.uncover/only and friends read
@@ -581,13 +599,19 @@
     let probe-self = self + (subslide: 1)
     let (_, repetitions, last-subslide, _, _) = (
       _parse-content-into-results-and-repetitions(
-        self: probe-self, base: 1, index: 1, joined,
+        self: probe-self,
+        base: 1,
+        index: 1,
+        joined,
       )
     )
     let repeat = calc.max(repetitions, last-subslide, 1)
     let render-self = self + (repeat: repeat, subslide: repeat)
     let (conts, _, _, _, _) = _parse-content-into-results-and-repetitions(
-      self: render-self, index: repeat, show-delayed-wrapper: true, joined,
+      self: render-self,
+      index: repeat,
+      show-delayed-wrapper: true,
+      joined,
     )
     let cont = conts.sum(default: none)
     let extracted = _extract-breadcrumbs(cont)
@@ -817,6 +841,10 @@
         // Stripped in document mode — a document-mode/slide-mode
         // distinction the shared parser has no notion of, so it must be
         // filtered out here rather than left for the parser to see.
+      } else if horizontal-line-to-pagebreak and child in ([—], [---]) {
+        // A bare slide-separator dash — no-op in document mode (no slide
+        // boundaries to break). See slides.typ's own horizontal-line
+        // handling for the slide-mode equivalent.
       } else {
         current-run.push(child)
       }
@@ -839,7 +867,9 @@
     let is-section-heading = (
       type(child) == content and child.func() == heading
     )
-    if is-section-heading and (current-items.len() > 0 or current-run.len() > 0) {
+    if (
+      is-section-heading and (current-items.len() > 0 or current-run.len() > 0)
+    ) {
       let r = _render-run(use-self, current-run)
       current-run = ()
       current-items += r.items
@@ -918,6 +948,10 @@
       // Stripped in document mode — a document-mode/slide-mode
       // distinction the shared parser has no notion of, so it must be
       // filtered out here rather than left for the parser to see.
+    } else if horizontal-line-to-pagebreak and child in ([—], [---]) {
+      // A bare slide-separator dash — no-op in document mode (no slide
+      // boundaries to break). See slides.typ's own horizontal-line
+      // handling for the slide-mode equivalent.
     } else {
       current-run.push(child)
     }

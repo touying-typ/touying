@@ -1,4 +1,4 @@
-#import "/lib.typ": *
+#import "../../../lib.typ": *
 
 #import themes.document: document-theme
 #import themes.simple: *
@@ -46,10 +46,12 @@
       subtitle: [Testing Touying's Document Mode],
       date: datetime.today(),
     ),
-    config-document( //general document mode config, nothing theme specific here. those stuff should be put into the theme via `.with` when specifiying it above.
+    config-document(
+      //general document mode config, nothing theme specific here. those stuff should be put into the theme via `.with` when specifiying it above.
       wrap-images: true,
       wrap-image-figures: true,
-      available-fields: ( // don't pass if you use ef-document for rendering as it does not have those fields.
+      available-fields: (
+        // don't pass if you use ef-document for rendering as it does not have those fields.
         title: "info.title",
         subtitle: "common.export-mode",
       ),
@@ -123,7 +125,7 @@
   #slide(composer: (1fr, 1fr))[
     Here is some text alongside an image. The image should be wrapped to the side in document mode when
 
-     `wrap-images` is enabled. #lorem(80)
+    `wrap-images` is enabled. #lorem(80)
   ][
     #image("./image.png", width: 80%)<my-img>
   ]
@@ -141,15 +143,19 @@
 
   #lorem(25)
   #pause
-  #let ccanvas = cetz-canvas(label: "doc-test-diagram", {
-    import cetz.draw: *
-    rect((0, 0), (4, 3), fill: blue.lighten(80%), stroke: blue)
-    (pause,)
-    circle((2, 1.5), radius: 0.8, fill: red.lighten(60%), stroke: red)
-    (pause,)
-    line((0, 0), (4, 3), stroke: 2pt + green)
-    (waypoint(<final>, advance: false),)
-  }, length: 30pt)
+  #let ccanvas = cetz-canvas(
+    label: "doc-test-diagram",
+    {
+      import cetz.draw: *
+      rect((0, 0), (4, 3), fill: blue.lighten(80%), stroke: blue)
+      (pause,)
+      circle((2, 1.5), radius: 0.8, fill: red.lighten(60%), stroke: red)
+      (pause,)
+      line((0, 0), (4, 3), stroke: 2pt + green)
+      (waypoint(<final>, advance: false),)
+    },
+    length: 30pt,
+  )
   #ccanvas
 
   #document-text[
@@ -181,7 +187,11 @@
 
   Recall allows this via labels and is especially useful for document-text content, but can be used in normal presentations as well. this allows arbitrary labeled content at specific subslides, but you will need to rescale them yourself.
   #document-only[
-    #rotate(45deg)[#align(center)[#block(clip: true, width: (1.0 / 0.8) * 40%, touying-recall(<my-img>))]]
+    #rotate(45deg)[#align(center)[#block(
+      clip: true,
+      width: (1.0 / 0.8) * 40%,
+      touying-recall(<my-img>),
+    )]]
     We can even recall a table that is defined in a later slide at one of its subslides.
     #touying-recall(<my-table>, subslide: 1)
   ]
@@ -191,8 +201,9 @@
   #slide(composer: (1fr, 1fr))[
     #table(
       columns: 2,
-      [Header 1], [Header 2], pause,
-      [Cell 1], [Cell 2], pause,
+      [Header 1], [Header 2],
+      pause, [Cell 1],
+      [Cell 2], pause,
       [Cell 3], [Cell 4],
     )
     <my-table>
@@ -287,5 +298,6 @@
 
   This is the conclusion. The document should be continuous A4 with no slide boundaries. #lorem(30)
 
+  #slides-only[---]
   #bibliography(bib)
 ]

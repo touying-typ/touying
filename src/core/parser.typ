@@ -1195,7 +1195,9 @@
     let real-label = if utils.is-kind(child, "touying-reducer") {
       child.value.at("label", default: none)
     } else if (
-      type(child) == content and child.has("label") and child.label != <touying-temporary-mark>
+      type(child) == content
+        and child.has("label")
+        and child.label != <touying-temporary-mark>
     ) {
       child.label
     } else {
@@ -1203,7 +1205,8 @@
     }
     if (
       real-label == none
-        or self.at("subslide", default: none) != self.at("repeat", default: none)
+        or self.at("subslide", default: none)
+          != self.at("repeat", default: none)
     ) {
       return none
     }
@@ -1233,7 +1236,10 @@
     let own-repeat = calc.max(max-rep-raw, ..resolved-wp.values(), 1)
     if own-repeat <= 1 { return none }
     let breadcrumb-label = label(str(real-label) + ":touying-recall-breadcrumb")
-    [#metadata((kind: "touying-recall-breadcrumb", content: child))#breadcrumb-label]
+    [#metadata((
+        kind: "touying-recall-breadcrumb",
+        content: child,
+      ))#breadcrumb-label]
   }
   // Helper function to parse child content and reconstruct
   // Returns a 5-tuple:
@@ -1609,10 +1615,11 @@
           let cont = if (
             cont != none
               and real-label != none
-              and self.at("subslide", default: none) == self.at(
-                "repeat",
-                default: none,
-              )
+              and self.at("subslide", default: none)
+                == self.at(
+                  "repeat",
+                  default: none,
+                )
           ) {
             [#block(cont)#real-label]
           } else {
@@ -1920,7 +1927,8 @@
           let recall-base = child.value.at("base", default: auto)
           if recall-subslide != auto and type(recall-subslide) != int {
             panic(
-              "touying-recall: subslide: " + repr(recall-subslide)
+              "touying-recall: subslide: "
+                + repr(recall-subslide)
                 + " is not supported outside a whole-slide target — only "
                 + "auto/none or an int subslide number are supported here.",
             )
@@ -1940,7 +1948,8 @@
               and raw-label in whole-slide-labels
           ) {
             extern.warning(
-              "touying-recall: label " + repr(raw-label)
+              "touying-recall: label "
+                + repr(raw-label)
                 + " refers to a whole-slide recall target, which has no "
                 + "effect in document mode. Wrap this call in "
                 + "#slides-only[...] to suppress this warning once you've "
@@ -1984,7 +1993,11 @@
                   mrr
                 } else {
                   let (
-                    _, mrr, _, _, _,
+                    _,
+                    mrr,
+                    _,
+                    _,
+                    _,
                   ) = _parse-content-into-results-and-repetitions(
                     self: minimal-self + (waypoints: (:), subslide: 9999),
                     base: render-base,
@@ -1998,8 +2011,12 @@
                 let target = if recall-subslide == auto { repeat } else {
                   recall-subslide
                 }
-                let render-self = minimal-self + (
-                  waypoints: cwp, subslide: target,
+                let render-self = (
+                  minimal-self
+                    + (
+                      waypoints: cwp,
+                      subslide: target,
+                    )
                 )
                 if reducer-data != none {
                   let (r, _) = _parse-touying-reducer(
@@ -2011,7 +2028,11 @@
                   r.sum(default: none)
                 } else {
                   let (
-                    conts, _, _, _, _,
+                    conts,
+                    _,
+                    _,
+                    _,
+                    _,
                   ) = _parse-content-into-results-and-repetitions(
                     self: render-self,
                     base: render-base,
@@ -2023,15 +2044,19 @@
               } else {
                 if recall-subslide != auto {
                   panic(
-                    "touying-recall: label " + repr(raw-label)
+                    "touying-recall: label "
+                      + repr(raw-label)
                       + " refers to content with no subslide dimension, but "
-                      + "subslide: " + repr(recall-subslide) + " was given.",
+                      + "subslide: "
+                      + repr(recall-subslide)
+                      + " was given.",
                   )
                 }
                 let found = query(raw-label)
                 if found.len() == 0 {
                   panic(
-                    "touying-recall: label " + repr(raw-label)
+                    "touying-recall: label "
+                      + repr(raw-label)
                       + " was not found in the document.",
                   )
                 }
@@ -2694,7 +2719,8 @@
   let subslide = if subslide == none { auto } else { subslide }
   if subslide != auto and type(subslide) != int {
     panic(
-      "touying-recall: subslide: " + repr(subslide)
+      "touying-recall: subslide: "
+        + repr(subslide)
         + " is not supported outside a whole-slide target — only "
         + "auto/none or an int subslide number are supported here.",
     )
@@ -2716,18 +2742,31 @@
         render-base,
       )
       let target = if subslide == auto { repeat } else { subslide }
-      _render-at-subslide(minimal-self, raw-content, reducer-data, cwp, render-base, target)
+      _render-at-subslide(
+        minimal-self,
+        raw-content,
+        reducer-data,
+        cwp,
+        render-base,
+        target,
+      )
     } else {
       if subslide != auto {
         panic(
-          "touying-recall: label " + repr(lbl)
+          "touying-recall: label "
+            + repr(lbl)
             + " refers to content with no subslide dimension, but subslide: "
-            + repr(subslide) + " was given.",
+            + repr(subslide)
+            + " was given.",
         )
       }
       let found = query(lbl)
       if found.len() == 0 {
-        panic("touying-recall: label " + repr(lbl) + " was not found in the document.")
+        panic(
+          "touying-recall: label "
+            + repr(lbl)
+            + " was not found in the document.",
+        )
       }
       found.first()
     }

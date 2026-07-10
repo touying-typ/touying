@@ -64,6 +64,15 @@
 /// Display content only in handout mode. (not presentation)
 /// Don't reserve space when hidden, content is completely not existing there.
 ///
+/// Unlike `handout-only`/`presentation-only`'s old callback-based
+/// implementation, `body` here is embedded directly (not wrapped in a
+/// deferred `touying-fn-wrapper` call) — `self.handout` is a static,
+/// per-compile value, so which mode is active can be decided once at
+/// slide-splitting time. This is also what lets `body` contain its own
+/// slide-breaking elements (a heading, `#pagebreak()`, `---`) and have them
+/// behave exactly as if this wrapper weren't there, in whichever mode this
+/// content is actually visible.
+///
 /// Example:
 ///
 /// ```typst
@@ -75,14 +84,15 @@
 /// -> content
 #let handout-only(body) = [#metadata((
   kind: "touying-slides-only",
-  body: touying-fn-wrapper(
-    utils.handout-only,
-    body,
-  ),
+  body: body,
+  visible-in: "handout",
 ))<touying-temporary-mark>]
 
 /// Display content only in presentation mode. (not handout)
 /// Don't reserve space when hidden, content is completely not existing there.
+///
+/// See `handout-only`'s docs for why `body` is embedded directly and can
+/// itself contain slide-breaking elements.
 ///
 /// Example:
 ///
@@ -95,10 +105,8 @@
 /// -> content
 #let presentation-only(body) = [#metadata((
   kind: "touying-slides-only",
-  body: touying-fn-wrapper(
-    utils.presentation-only,
-    body,
-  ),
+  body: body,
+  visible-in: "presentation",
 ))<touying-temporary-mark>]
 
 
@@ -108,6 +116,11 @@
 /// In document mode this content is stripped entirely. Use this for
 /// visual-only elements that don't make sense in a written document
 /// (e.g., decorative graphics, audience prompts, transition animations).
+///
+/// `body` may itself contain slide-breaking elements (a heading,
+/// `#pagebreak()`, a bare `---`) — they behave exactly as if this wrapper
+/// weren't there when in slides mode, and are simply never reached in
+/// document mode since the whole wrapper is skipped there.
 ///
 /// Example:
 ///
@@ -123,6 +136,7 @@
 #let slides-only(body) = [#metadata((
   kind: "touying-slides-only",
   body: body,
+  visible-in: "slides",
 ))<touying-temporary-mark>]
 
 
