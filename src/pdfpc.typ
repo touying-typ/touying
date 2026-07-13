@@ -35,11 +35,11 @@
         page.hidden = true
       } else if item.t == "SaveSlide" {
         if "savedSlide" not in pdfpc {
-          pdfpc.savedSlide = page.label - 1
+          pdfpc.savedSlide = int(page.label) - 1
         }
       } else if item.t == "EndSlide" {
         if "endSlide" not in pdfpc {
-          pdfpc.endSlide = page.label - 1
+          pdfpc.endSlide = int(page.label) - 1
         }
       } else if item.t == "Note" {
         page.note = if "note" in page {
