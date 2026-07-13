@@ -2,9 +2,9 @@
 ///
 /// This is a plain document theme with no presentation framework dependency.
 /// It can be used standalone for papers, reports, etc., or paired with a
-/// slide theme via `dual-theme` for single-source presentation + document output.
+/// slide theme via for single-source presentation + document output.
 ///
-/// It serves as an example, you may pass any document theme to the dual theme.
+/// It serves as an example, you may in fact use any document theme you like for the document output target.
 ///
 /// Example (standalone):
 ///
@@ -16,6 +16,29 @@
 /// = Introduction
 /// Some content here.
 /// ```
+/// 
+/// Example (paired with a slide theme):
+/// ```typst
+/// #show: simple-theme.with(
+///   config-common(
+///    export-mode: "document",
+///    document-theme: document-theme.with(numbering: "1.1"),
+///   ),
+///   config-document(
+///     wrap-images: true,
+///     wrap-image-figures: true,
+///     available-fields: (
+///       // specify config fields that should be passed to the document theme.
+///       title: "info.title",
+///       subtitle: "common.export-mode",
+///     ),
+///   )
+/// )
+/// 
+/// = Introduction
+/// Some content here. #pause More content which is not paused during document output.
+/// ```
+/// 
 /// - title (str): Document title.
 /// - subtitle (str, none): Document subtitle. Default is `none`.
 /// - author (str, array): Document author(s).

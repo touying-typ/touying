@@ -771,9 +771,9 @@
 /// ```
 /// - available-fields (dict): The fields from the config to pass to the document-theme. A dict mapping config to the theme fields. E.g. (the-title: "info.title", the-author: "info.author") will pass the config-info fields `title` and `author` in the config to the theme as `the-title` and `the-author`. Default is (:), which passes no fields.
 /// - title-block-fn (function): A function returning the title block to show at the beginning of the rendered document. If your theme has an automatic function for this you don't need it. And you can always use `#document-only` before the first slide to show your custom title block. Default is `none`.
-/// - wrap-images (bool): Wrap raw images to the side via wrap-it. Default is `true`.
-/// - wrap-image-figures (bool): Wrap image figures (image + caption) to the side via wrap-it. Default is `false`.
-/// - wrap-other-figures (bool): Wrap other figures (block + caption) to the side via wrap-it. Default is `false`.
+/// - wrap-images (bool): Wrap raw images to the side via meander. Default is `true`.
+/// - wrap-image-figures (bool): Wrap image figures (image + caption) to the side via meander. Default is `false`.
+/// - wrap-other-figures (bool): Wrap other figures (block + caption) to the side via meander. Default is `false`.
 /// - wrap-other (bool): Wrap blocks (cetz canvases, tables, etc.) to the side. Default is `false`.
 /// - wrap-align-direction (direction): The direction to wrap the content when `wrap-images`, `wrap-image-figures`, `wrap-other-figures`, or `wrap-other` is true. It can be either `left` or `right`. Default is `right`.
 ///

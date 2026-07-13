@@ -1052,23 +1052,61 @@
 /// - body (content): The content to render. Can be a reducer metadata node
 ///   or any arbitrary content containing animation primitives.
 ///
-/// - subslide (auto, int): Which animation stage to show.
-///   - `auto` (default): the final / fully-revealed state (document mode)
-///     or the current subslide (slide mode).
-///   - `int`: a specific 1-indexed subslide number.
+/// - subslide (auto, int, label, dictionary): Which animation stage of
+///   `body` to show — its own local subslide, unaffected by where in the
+///   enclosing slide this call sits.
+///   - `auto` (default): tracks the enclosing slide's own subslide
+///     progression (see `start`/`repeat-last` below) — the final/fully-
+///     revealed state in document mode, since there's no progression to
+///     track there.
+///   - `int`: a specific 1-indexed subslide number (negative indices count
+///     from the end).
+///   - `label`/waypoint marker (`get-first(<wp>)`, `get-last(<wp>)`, etc.):
+///     resolved against `body`'s own waypoints — a range (a bare label)
+///     collapses to its first/beginning subslide.
 ///
-/// - base (auto, int): Starting repetition counter for pause numbering.
+/// - base (auto, int): Starting repetition counter for `body`'s own
+///   internal pause-numbering — purely internal to `body`, never affects
+///   the enclosing slide's own numbering (see `start` for that).
 ///   - `auto` (default): in slide mode, inherits the current slide's
 ///     repetition counter and waypoints; in document mode, resolves to `1`.
 ///   - `int`: explicit offset, e.g. `base: 3` makes the first pause
 ///     create subslide 4 instead of 2.
 ///
+/// - start (auto, int, label, dictionary): Where, in the *enclosing*
+///   slide's own subslide numbering, `body`'s own progression begins (only
+///   meaningful when `subslide: auto`'s tracking mode is in effect —
+///   resolved against the enclosing slide's own waypoints, a completely
+///   separate lookup from `subslide`'s). `auto` (default) is a strict
+///   no-op — `body` is always visible, tracking the enclosing slide's
+///   current subslide from 1 (today's behavior, unchanged). Given an
+///   explicit `start`, `body` is absent entirely (like `only`, not
+///   `uncover` — no reserved layout space) until the enclosing slide
+///   reaches it, then visible from then on — see `repeat-last` for what
+///   happens once `body`'s own stages run out. Has no effect in document
+///   mode (warns if given a non-default value there).
+///
+/// - repeat-last (bool): What happens once `body`'s own stages are
+///   exhausted (only relevant together with an explicit `start`).
+///   - `true` (default): hold at the final stage forever after — matches
+///     `alternatives`' own default.
+///   - `false`: remove `body` again (no reserved layout space) once past
+///     its own natural duration, instead of freezing on the last stage.
+///
 /// -> content
-#let touying-render(body, subslide: auto, base: auto) = {
+#let touying-render(
+  body,
+  subslide: auto,
+  base: auto,
+  start: auto,
+  repeat-last: true,
+) = {
   [#metadata((
     kind: "touying-render",
     content: body,
     subslide: subslide,
     base: base,
+    start: start,
+    repeat-last: repeat-last,
   ))<touying-temporary-mark>]
 }

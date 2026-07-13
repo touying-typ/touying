@@ -2,7 +2,8 @@
 #import "../extern.typ"
 #import "parser.typ": (
   _build-native-recall, _parse-content-into-results-and-repetitions,
-  _prepare-render-context, _render-at-subslide,
+  _prepare-render-context, _render-at-subslide, _resolve-marks-in-tree,
+  _resolve-waypoint-to-int, waypoint-kinds,
 )
 
 /// Content that replaces the slide content when in document mode. Place it after your slide, before the next one.
@@ -628,46 +629,59 @@
     )
   }
 
-  // Resolve touying-render metadata nodes in a content body (recursing
-  // through sequences, styled nodes, and wrapper/table-like content).
-  let _resolve-block-recalls(body) = {
-    if type(body) != content { return body }
-
-    // touying-render: inline content variable rendering
-    if (
-      body.func() == metadata
-        and type(body.value) == dictionary
-        and body.value.at("kind", default: none) == "touying-render"
-    ) {
-      let v = body.value
+  // Resolve touying-render/touying-recall metadata nodes found anywhere in
+  // a content body. The tree-walk itself (sequences, styled nodes,
+  // wrapper/table-like content) is shared with touying-fn-wrapper's own
+  // nesting support in parser.typ (see _resolve-marks-in-tree there) —
+  // this only supplies the per-kind resolution logic.
+  let _resolve-block-recalls(body) = _resolve-marks-in-tree(
+    body,
+    ("touying-render", "touying-slide-recaller"),
+    v => if v.kind == "touying-render" {
       let render-base = if v.at("base", default: auto) == auto { 1 } else {
         v.at("base")
+      }
+      if (
+        v.at("start", default: auto) != auto
+          or v.at("repeat-last", default: true) != true
+      ) {
+        extern.warning(
+          "touying-render: start:/repeat-last: have no effect in "
+            + "document mode (there is no subslide progression to gate "
+            + "against). Wrap this call in #slides-only[...] to "
+            + "suppress this warning once you've confirmed that's what "
+            + "you want.",
+        )
       }
       let (reducer-data, cwp, repeat, _) = _prepare-render-context(
         self,
         v.content,
         render-base,
       )
-      let target = if v.subslide == auto { repeat } else { v.subslide }
-      return _render-at-subslide(
-        self,
-        v.content,
-        reducer-data,
-        cwp,
-        render-base,
-        target,
-      )
-    }
-    // touying-recall used inside document-text/document-only: never a
-    // whole-slide target here (recaller-map isn't consulted in document
-    // mode), always the native-ref fallback (labeled reducer or arbitrary
-    // labeled content).
-    if (
-      body.func() == metadata
-        and type(body.value) == dictionary
-        and body.value.at("kind", default: none) == "touying-slide-recaller"
-    ) {
-      let v = body.value
+      let spec = v.subslide
+      let target = if spec == auto {
+        repeat
+      } else if (
+        type(spec) == label
+          or (
+            type(spec) == dictionary
+              and spec.at("kind", default: "") in waypoint-kinds
+          )
+      ) {
+        // cwp is always this content's own *local* (base=1) waypoint map —
+        // document mode has no enclosing slide context to track — so the
+        // resolved position must be shifted by (render-base - 1) to land
+        // in the same absolute numbering as `repeat` above.
+        _resolve-waypoint-to-int((waypoints: cwp), spec) + render-base - 1
+      } else {
+        utils.resolve-negative-subslides(repeat, spec, base: render-base)
+      }
+      _render-at-subslide(self, v.content, reducer-data, cwp, render-base, target)
+    } else {
+      // touying-recall used inside document-text/document-only: never a
+      // whole-slide target here (recaller-map isn't consulted in document
+      // mode), always the native-ref fallback (labeled reducer or arbitrary
+      // labeled content).
       let raw-label = v.raw-label
       if type(raw-label) != label {
         panic(
@@ -676,99 +690,13 @@
             + "a string label can only target a registered whole-slide recall.",
         )
       }
-      return _build-native-recall(
+      _build-native-recall(
         raw-label,
         v.at("subslide", default: none),
         v.at("base", default: auto),
       )
-    }
-    // Recurse into sequences
-    if utils.is-sequence(body) {
-      let parts = body.children.map(c => _resolve-block-recalls(c))
-      return parts.sum(default: [])
-    }
-    // Recurse into styled nodes
-    if utils.is-styled(body) {
-      let resolved-child = _resolve-block-recalls(body.child)
-      if resolved-child != body.child {
-        return utils.typst-builtin-styled(resolved-child, body.styles)
-      }
-      return body
-    }
-    // Recurse into any content with a .body field.
-    // Some functions (rotate, place, columns, scale, align) have positional-first
-    // params that can't be spread as named args, so they need special reconstruction.
-    if type(body) == content and body.has("body") {
-      let inner = body.at("body", default: none)
-      if inner != none {
-        let resolved-inner = _resolve-block-recalls(inner)
-        if resolved-inner != inner {
-          let f = body.func()
-          if f == rotate {
-            let fields = body.fields()
-            let _ = fields.remove("angle", default: none)
-            let _ = fields.remove("body", default: none)
-            let _ = fields.remove("label", default: none)
-            let angle = if body.has("angle") { body.angle } else { 0deg }
-            return rotate(angle, ..fields, resolved-inner)
-          } else if f == place {
-            let fields = body.fields()
-            let _ = fields.remove("alignment", default: none)
-            let _ = fields.remove("body", default: none)
-            let _ = fields.remove("label", default: none)
-            let alignment = if body.has("alignment") { body.alignment } else {
-              start
-            }
-            return place(alignment, ..fields, resolved-inner)
-          } else if f == columns {
-            let args = if body.has("gutter") { (gutter: body.gutter) } else {
-              (:)
-            }
-            let count = if body.has("count") { body.count } else { 2 }
-            return columns(count, ..args, resolved-inner)
-          } else if f == scale {
-            let fields = body.fields()
-            let _ = fields.remove("body", default: none)
-            let _ = fields.remove("label", default: none)
-            let factor = fields.remove("factor", default: auto)
-            return scale(factor, ..fields, resolved-inner)
-          } else if f == align {
-            let alignment = if body.has("alignment") { body.alignment } else {
-              start
-            }
-            return align(alignment, resolved-inner)
-          } else {
-            return utils.reconstruct(
-              named: true,
-              labeled: true,
-              body,
-              resolved-inner,
-            )
-          }
-        }
-      }
-    }
-    // Recurse into content with .children (table, grid, stack)
-    if type(body) == content and body.has("children") {
-      let kids = body.children
-      let any-changed = false
-      let new-kids = ()
-      for kid in kids {
-        let resolved-kid = _resolve-block-recalls(kid)
-        new-kids.push(resolved-kid)
-        if resolved-kid != kid { any-changed = true }
-      }
-      if any-changed {
-        return utils.reconstruct-table-like(
-          named: true,
-          labeled: true,
-          body,
-          new-kids,
-        )
-      }
-    }
-    body
-  }
+    },
+  )
 
   // touying-set-config's target self can change partway through the
   // document, so it's threaded as a local variable (not recomputed from

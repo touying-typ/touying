@@ -36,12 +36,12 @@ Phase B content
 #pause
 More B content
 
-== Recall auto (last subslide):
+== Recall none (last subslide):
 Recall only the last subslide.
 
-#touying-recall(<animated>, subslide: auto)
+#touying-recall(<animated>, subslide: none)
 
-#touying-recall(<wp-slide>, subslide: auto)
+#touying-recall(<wp-slide>, subslide: none)
 
 == Recall waypoints (last of each):
 Recall the last subslide of each waypoint.

@@ -1134,6 +1134,127 @@
   return (parsed-results, max-repetitions)
 }
 
+/// Recursively resolve metadata marks anywhere inside a content tree.
+///
+/// Walks `body` (sequences, styled nodes, and any content with a `body` or
+/// `children` field — figure, scale, rotate, table, grid, stack, etc.)
+/// looking for `metadata` nodes whose `kind` is in `kinds`. Each match is
+/// replaced *in place* by `resolve(node-value)`; everything else in the
+/// tree (surrounding text, siblings, wrapping) is reconstructed unchanged
+/// around it. This is what lets a "passive" mark (one with no visibility
+/// of its own — `touying-fn-wrapper-raw`/`alert`, `touying-recall`'s
+/// fallback path) be embedded anywhere inside content handed to something
+/// else, not just when it's the *entire* content — e.g. `text before
+/// #alert[...] text after` nested inside `#uncover[...]`, not only a bare
+/// `#uncover[#alert[...]]`.
+///
+/// Shared by document mode's whole-body walk (`docmode.typ`'s
+/// `_resolve-block-recalls`) and `touying-fn-wrapper`'s own
+/// pre-processing of its positional args (nesting passive marks inside
+/// `uncover`/`only`/`alternatives`).
+///
+/// - body (content): The content to walk.
+/// - kinds (array): Metadata `kind` strings to look for and resolve.
+/// - resolve (function): Called with a matched node's `.value` dictionary;
+///   returns the content to substitute in its place.
+///
+/// -> content
+#let _resolve-marks-in-tree(body, kinds, resolve) = {
+  if type(body) != content { return body }
+  if (
+    body.func() == metadata
+      and type(body.value) == dictionary
+      and body.value.at("kind", default: none) in kinds
+  ) {
+    return resolve(body.value)
+  }
+  if utils.is-sequence(body) {
+    let parts = body.children.map(c => _resolve-marks-in-tree(
+      c,
+      kinds,
+      resolve,
+    ))
+    return parts.sum(default: [])
+  }
+  if utils.is-styled(body) {
+    let resolved-child = _resolve-marks-in-tree(body.child, kinds, resolve)
+    if resolved-child != body.child {
+      return utils.reconstruct-styled(body, resolved-child)
+    }
+    return body
+  }
+  // Recurse into any content with a .body field. Some functions (rotate,
+  // place, columns, scale, align) have positional-first params that can't
+  // be spread as named args, so they need special reconstruction.
+  if body.has("body") {
+    let inner = body.at("body", default: none)
+    if inner != none {
+      let resolved-inner = _resolve-marks-in-tree(inner, kinds, resolve)
+      if resolved-inner != inner {
+        let f = body.func()
+        if f == rotate {
+          let fields = body.fields()
+          let _ = fields.remove("angle", default: none)
+          let _ = fields.remove("body", default: none)
+          let _ = fields.remove("label", default: none)
+          let angle = if body.has("angle") { body.angle } else { 0deg }
+          return rotate(angle, ..fields, resolved-inner)
+        } else if f == place {
+          let fields = body.fields()
+          let _ = fields.remove("alignment", default: none)
+          let _ = fields.remove("body", default: none)
+          let _ = fields.remove("label", default: none)
+          let alignment = if body.has("alignment") { body.alignment } else {
+            start
+          }
+          return place(alignment, ..fields, resolved-inner)
+        } else if f == columns {
+          let args = if body.has("gutter") { (gutter: body.gutter) } else {
+            (:)
+          }
+          let count = if body.has("count") { body.count } else { 2 }
+          return columns(count, ..args, resolved-inner)
+        } else if f == scale {
+          let fields = body.fields()
+          let _ = fields.remove("body", default: none)
+          let _ = fields.remove("label", default: none)
+          let factor = fields.remove("factor", default: auto)
+          return scale(factor, ..fields, resolved-inner)
+        } else if f == align {
+          let alignment = if body.has("alignment") { body.alignment } else {
+            start
+          }
+          return align(alignment, resolved-inner)
+        } else {
+          return utils.reconstruct(
+            named: true,
+            labeled: true,
+            body,
+            resolved-inner,
+          )
+        }
+      }
+    }
+    return body
+  }
+  // Recurse into content with .children (table, grid, stack)
+  if body.has("children") {
+    let kids = body.children
+    let any-changed = false
+    let new-kids = kids.map(kid => {
+      let resolved-kid = _resolve-marks-in-tree(kid, kinds, resolve)
+      if resolved-kid != kid { any-changed = true }
+      resolved-kid
+    })
+    if any-changed {
+      return utils.reconstruct-table-like(body, new-kids)
+    }
+    return body
+  }
+  body
+}
+
+
 /// Resolve a waypoint label or dictionary marker to a single integer subslide index.
 /// Extracts the "beginning" (or "first") value from resolved waypoint dictionaries.
 #let _resolve-waypoint-to-int(self, spec) = {
@@ -1240,6 +1361,206 @@
         kind: "touying-recall-breadcrumb",
         content: child,
       ))#breadcrumb-label]
+  }
+  // Resolve touying-recall's fallback (non-whole-slide) target: a labeled
+  // touying-reducer, or any other labeled content with its own subslide
+  // dimension. Shared by the bare "touying-slide-recaller" dispatch below
+  // and by touying-fn-wrapper's pre-processing step, so a fallback recall
+  // can be nested inside #uncover[...]/#only[...]/#alternatives[...] and
+  // gated by their own visibility logic instead — a fallback recall never
+  // has multi-subslide behavior of its own to gate, unlike touying-render,
+  // so it composes the same way #alert (touying-fn-wrapper-raw) already
+  // does. Inlined here (not a top-level function) for the same reason
+  // _build-native-recall/_prepare-render-context/_render-at-subslide can't
+  // be called from inside this function's own body: they're defined later
+  // in this file and themselves depend on
+  // _parse-content-into-results-and-repetitions.
+  let resolve-recall-fallback(self, raw-label, subslide, base) = {
+    if type(raw-label) != label {
+      panic(
+        "touying-recall: a native label (e.g. <my-label>) is required "
+          + "to recall a labeled reducer or other content from inside "
+          + "a slide body — a string label can only target a "
+          + "registered whole-slide recall at the top level of the document.",
+      )
+    }
+    let recall-subslide = if subslide == none { auto } else { subslide }
+    let recall-base = base
+    if (
+      recall-subslide != auto
+        and type(recall-subslide) != int
+        and type(recall-subslide) != label
+        and not (
+          type(recall-subslide) == dictionary
+            and recall-subslide.at("kind", default: "") in waypoint-kinds
+        )
+    ) {
+      panic(
+        "touying-recall: subslide: "
+          + repr(recall-subslide)
+          + " is not supported outside a whole-slide target — only "
+          + "auto/none, an int subslide number, or a waypoint label/marker "
+          + "are supported here.",
+      )
+    }
+    // Recalling a whole-slide target has no effect in document mode
+    // (see docmode.typ's document-whole-slide-labels) — warn and
+    // produce nothing rather than silently falling through to the
+    // generic recall below, which would recall just a fragment
+    // (e.g. a bare heading) of what the user probably meant as a
+    // whole slide.
+    let whole-slide-labels = self.at(
+      "document-whole-slide-labels",
+      default: (),
+    )
+    if (
+      self.at("document-mode", default: false)
+        and raw-label in whole-slide-labels
+    ) {
+      extern.warning(
+        "touying-recall: label "
+          + repr(raw-label)
+          + " refers to a whole-slide recall target, which has no "
+          + "effect in document mode. Wrap this call in "
+          + "#slides-only[...] to suppress this warning once you've "
+          + "confirmed that's what you want.",
+      )
+      return none
+    }
+    context {
+      // Always check the breadcrumb first, regardless of subslide:
+      // a touying-reducer's own real label is never itself attached
+      // to anything (it only lives inside the metadata dict), so
+      // "auto" still needs the breadcrumb's raw content to render
+      // anything for a reducer, not just to pick a specific stage.
+      let breadcrumb-label = label(
+        str(raw-label) + ":touying-recall-breadcrumb",
+      )
+      let breadcrumb-found = query(breadcrumb-label)
+      if breadcrumb-found.len() > 0 {
+        let raw-content = breadcrumb-found.first().value.content
+        let minimal-self = (
+          methods: (cover: utils.method-wrapper(hide)),
+          waypoints: (:),
+          subslide: 1,
+        )
+        let render-base = if recall-base == auto { 1 } else {
+          recall-base
+        }
+        // Inlined from _prepare-render-context/_render-at-subslide
+        // (see this function's own doc comment for why they can't be
+        // called directly).
+        let reducer-data = _find-reducer-meta(raw-content)
+        let (raw-wp, so, dr) = _collect-waypoints(raw-content)
+        let resolved-wp = _resolve-waypoint-forest(raw-wp, so)
+        let max-rep-raw = if reducer-data != none {
+          let (_, mrr) = _parse-touying-reducer(
+            self: minimal-self + (waypoints: (:), subslide: 9999),
+            base: render-base,
+            index: 9999,
+            reducer-data,
+          )
+          mrr
+        } else {
+          let (
+            _,
+            mrr,
+            _,
+            _,
+            _,
+          ) = _parse-content-into-results-and-repetitions(
+            self: minimal-self + (waypoints: (:), subslide: 9999),
+            base: render-base,
+            index: 9999,
+            raw-content,
+          )
+          mrr
+        }
+        let repeat = calc.max(max-rep-raw, ..resolved-wp.values(), 1)
+        let cwp = _compute-waypoint-ranges(resolved-wp, repeat, so, dr)
+        let target = if recall-subslide == auto {
+          repeat
+        } else if (
+          type(recall-subslide) == label
+            or (
+              type(recall-subslide) == dictionary
+                and recall-subslide.at("kind", default: "") in waypoint-kinds
+            )
+        ) {
+          // cwp is always this content's own *local* (base=1) waypoint
+          // map — never an outer slide's — so the resolved position must
+          // be shifted by (render-base - 1) to land in the same absolute
+          // numbering as `repeat`/`max-rep-raw` above. Kept as one
+          // parenthesized expression: a bare `+`/`-` starting a new line
+          // in a Typst code block is parsed as its own statement (unary
+          // +/-), not a continuation of the previous line — splitting
+          // this across lines without wrapping it silently produced three
+          // sibling int values that Typst then tried (and failed) to
+          // join, instead of one arithmetic expression.
+          (
+            _resolve-waypoint-to-int((waypoints: cwp), recall-subslide)
+              + render-base
+              - 1
+          )
+        } else {
+          utils.resolve-negative-subslides(
+            repeat,
+            recall-subslide,
+            base: render-base,
+          )
+        }
+        let render-self = (
+          minimal-self
+            + (
+              waypoints: cwp,
+              subslide: target,
+            )
+        )
+        if reducer-data != none {
+          let (r, _) = _parse-touying-reducer(
+            self: render-self,
+            base: render-base,
+            index: target,
+            reducer-data,
+          )
+          r.sum(default: none)
+        } else {
+          let (
+            conts,
+            _,
+            _,
+            _,
+            _,
+          ) = _parse-content-into-results-and-repetitions(
+            self: render-self,
+            base: render-base,
+            index: target,
+            raw-content,
+          )
+          conts.sum(default: none)
+        }
+      } else {
+        if recall-subslide != auto {
+          panic(
+            "touying-recall: label "
+              + repr(raw-label)
+              + " refers to content with no subslide dimension, but "
+              + "subslide: "
+              + repr(recall-subslide)
+              + " was given.",
+          )
+        }
+        let found = query(raw-label)
+        if found.len() == 0 {
+          panic(
+            "touying-recall: label "
+              + repr(raw-label)
+              + " was not found in the document.",
+          )
+        }
+        found.first()
+      }
+    }
   }
   // Helper function to parse child content and reconstruct
   // Returns a 5-tuple:
@@ -1640,6 +1961,28 @@
           let render-base = if use-slide-context { repetitions } else {
             child.value.base
           }
+          // start:/repeat-last: anchor this content's own progression to a
+          // point in the *enclosing* slide's own numbering — a separate
+          // concern from base: (which only ever affects this content's own
+          // internal pause-numbering, never the outer slide's). No effect
+          // in document mode, which has no outer subslide progression to
+          // anchor against.
+          let start-spec = child.value.at("start", default: auto)
+          let repeat-last-spec = child.value.at("repeat-last", default: true)
+          if (
+            self.at("document-mode", default: false)
+              and (start-spec != auto or repeat-last-spec != true)
+          ) {
+            extern.warning(
+              "touying-render: start:/repeat-last: have no effect in "
+                + "document mode (there is no subslide progression to gate "
+                + "against). Wrap this call in #slides-only[...] to "
+                + "suppress this warning once you've confirmed that's what "
+                + "you want.",
+            )
+            start-spec = auto
+            repeat-last-spec = true
+          }
           // Compute render context (inlined from _prepare-render-context)
           let reducer-data = _find-reducer-meta(inline-content)
           let (raw-wp, so, dr) = _collect-waypoints(inline-content)
@@ -1681,7 +2024,30 @@
             content-cwp
           }
           let rp = content-repeat
-          let target = if subslide-spec == auto { index } else {
+          // start: is resolved against the *outer* slide's own waypoints
+          // (self.waypoints) — a completely separate lookup from cwp above,
+          // which resolves subslide: against either this content's own
+          // local waypoints or (when use-slide-context) the outer ones.
+          let start-resolved = if start-spec == auto {
+            none
+          } else if (
+            type(start-spec) == label
+              or (
+                type(start-spec) == dictionary
+                  and start-spec.at("kind", default: "") in waypoint-kinds
+              )
+          ) {
+            _resolve-waypoint-to-int(self, start-spec)
+          } else {
+            start-spec
+          }
+          let target = if subslide-spec == auto {
+            if start-resolved == none {
+              index
+            } else {
+              calc.clamp(index - start-resolved + 1, 1, content-repeat)
+            }
+          } else {
             let spec = subslide-spec
             let wp-self = self + (waypoints: cwp)
             if (
@@ -1691,7 +2057,15 @@
                     and spec.at("kind", default: "") in waypoint-kinds
                 )
             ) {
-              _resolve-waypoint-to-int(wp-self, spec)
+              // cwp may be this content's own *local* (base=1) waypoint map
+              // (not use-slide-context) — shift by (render-base - 1) to
+              // land in the same absolute numbering as `rp` below. When
+              // use-slide-context, cwp is already the outer slide's own
+              // absolute waypoints, so no shift is needed.
+              let raw-target = _resolve-waypoint-to-int(wp-self, spec)
+              if use-slide-context { raw-target } else {
+                raw-target + render-base - 1
+              }
             } else if type(spec) == int {
               // `rp` is the absolute final counter value (it already
               // includes `render-base`), so convert it to a plain stage
@@ -1728,13 +2102,38 @@
             )
             conts.sum(default: none)
           }
-          if cont != none {
+          // Visibility: with no explicit start:, always visible — today's
+          // unconditional behavior, unchanged. With an explicit start:,
+          // absent entirely (like `only`, not `uncover` — no reserved
+          // layout space) before it's reached; visible from then on — held
+          // forever with repeat-last: true (default), or removed again
+          // once past this content's own natural duration
+          // (start + content-repeat - 1) with repeat-last: false.
+          let is-visible = if start-resolved == none {
+            true
+          } else if index < start-resolved {
+            false
+          } else if repeat-last-spec {
+            true
+          } else {
+            index <= start-resolved + content-repeat - 1
+          }
+          if cont != none and (is-visible or not need-cover) {
             result.push(cont)
           }
           // When subslide: auto, this content's animation contributes to the
-          // outer slide's repetition count (same as an inlined reducer/block).
+          // outer slide's repetition count (same as an inlined reducer/block)
+          // — calc.max, not a bare assignment, so a touying-render appearing
+          // after other pause-generating siblings doesn't clobber a higher
+          // count already established. Reduces to exactly today's behavior
+          // when start: is left at its default.
           if subslide-spec == auto {
-            repetitions = content-mrr
+            repetitions = calc.max(
+              repetitions,
+              (if start-resolved == none { 1 } else { start-resolved })
+                + content-mrr
+                - 1,
+            )
           }
         } else if kind == "touying-fn-wrapper" {
           // Handle function wrappers (uncover, only, alternatives, etc.)
@@ -1758,27 +2157,37 @@
               last-subslide = calc.max(last-subslide, child.value.last-subslide)
             }
           }
-          //check child.value.args for touying-fn-wrapper-raw. may only be in content, which always is positional
+          // Resolve any "passive" mark (touying-fn-wrapper-raw, e.g.
+          // #alert; or a touying-recall fallback, i.e.
+          // touying-slide-recaller) found anywhere inside each positional
+          // arg's content tree — not just when the mark is the *entire*
+          // arg, so `text #alert[...] more text` nests inside
+          // `#uncover[...]` exactly like a bare `#uncover[#alert[...]]`
+          // does. Passive marks have no multi-subslide behavior of their
+          // own (unlike touying-render, which can grow the outer slide's
+          // own subslide count and so keeps its own dedicated dispatch),
+          // so they compose with uncover/only/alternatives by being fully
+          // resolved in place before the wrapper's own visibility logic
+          // runs — nesting lets the outer wrapper gate/hide them instead
+          // of needing any visibility parameter of their own.
           let pos-args = child
             .value
             .args
             .pos()
-            .map(c => {
-              if (
-                type(c) == content
-                  and c.func() == metadata
-                  and type(c.value) == dictionary
-                  and c.value.at("kind", default: none)
-                    == "touying-fn-wrapper-raw"
-              ) {
-                (c.value.fn)(
-                  self: self,
-                  ..c.value.args,
-                )
+            .map(c => _resolve-marks-in-tree(
+              c,
+              ("touying-fn-wrapper-raw", "touying-slide-recaller"),
+              v => if v.kind == "touying-fn-wrapper-raw" {
+                (v.fn)(self: self, ..v.args)
               } else {
-                c
-              }
-            })
+                resolve-recall-fallback(
+                  self,
+                  v.raw-label,
+                  v.at("subslide", default: none),
+                  v.at("base", default: auto),
+                )
+              },
+            ))
 
           // Flush hidden-parts before calling the fn-wrapper, so it renders in
           // the correct order relative to subsequent visible content (fn-wrappers
@@ -1795,16 +2204,42 @@
           ))
           repetitions = nextrepetitions
         } else if kind == "touying-fn-wrapper-raw" {
-          // Handle raw function wrappers (e.g., #alert)
+          // Handle raw function wrappers (e.g., #alert). Resolve any
+          // nested passive mark (another touying-fn-wrapper-raw, or a
+          // touying-recall fallback) found anywhere inside this one's own
+          // positional args first — e.g. `#alert[text #alert[nested]
+          // more]` or `#alert[#touying-recall(<label>)]` — the same
+          // self-nesting support touying-fn-wrapper's own pre-processing
+          // gives uncover/only/alternatives.
+          let resolved-pos-args = child
+            .value
+            .args
+            .pos()
+            .map(c => _resolve-marks-in-tree(
+              c,
+              ("touying-fn-wrapper-raw", "touying-slide-recaller"),
+              v => if v.kind == "touying-fn-wrapper-raw" {
+                (v.fn)(self: self, ..v.args)
+              } else {
+                resolve-recall-fallback(
+                  self,
+                  v.raw-label,
+                  v.at("subslide", default: none),
+                  v.at("base", default: auto),
+                )
+              },
+            ))
           if repetitions <= index or not need-cover {
             result.push((child.value.fn)(
               self: self,
-              ..child.value.args,
+              ..resolved-pos-args,
+              ..child.value.args.named(),
             ))
           } else {
             hidden-parts.push((child.value.fn)(
               self: self,
-              ..child.value.args,
+              ..resolved-pos-args,
+              ..child.value.args.named(),
             ))
           }
         } else if kind == "touying-speaker-note" {
@@ -1904,166 +2339,12 @@
           // whole other slide from within this slide's content" semantic,
           // so this always goes through the recall fallback (reducer or
           // arbitrary labeled content), never the whole-slide recaller-map.
-          // Inlined from _build-native-recall: that function (and the
-          // _prepare-render-context/_render-at-subslide it calls) is defined
-          // later in this file and itself depends on
-          // _parse-content-into-results-and-repetitions, so it can't be
-          // called from inside this function's own body — same reason
-          // touying-render's branch above is inlined rather than calling
-          // _render-at-subslide directly.
-          let raw-label = child.value.raw-label
-          if type(raw-label) != label {
-            panic(
-              "touying-recall: a native label (e.g. <my-label>) is required "
-                + "to recall a labeled reducer or other content from inside "
-                + "a slide body — a string label can only target a "
-                + "registered whole-slide recall at the top level of the document.",
-            )
-          }
-          let recall-subslide = child.value.at("subslide", default: none)
-          let recall-subslide = if recall-subslide == none { auto } else {
-            recall-subslide
-          }
-          let recall-base = child.value.at("base", default: auto)
-          if recall-subslide != auto and type(recall-subslide) != int {
-            panic(
-              "touying-recall: subslide: "
-                + repr(recall-subslide)
-                + " is not supported outside a whole-slide target — only "
-                + "auto/none or an int subslide number are supported here.",
-            )
-          }
-          // Recalling a whole-slide target has no effect in document mode
-          // (see docmode.typ's document-whole-slide-labels) — warn and
-          // produce nothing rather than silently falling through to the
-          // generic recall below, which would recall just a fragment
-          // (e.g. a bare heading) of what the user probably meant as a
-          // whole slide.
-          let whole-slide-labels = self.at(
-            "document-whole-slide-labels",
-            default: (),
+          let recalled = resolve-recall-fallback(
+            self,
+            child.value.raw-label,
+            child.value.at("subslide", default: none),
+            child.value.at("base", default: auto),
           )
-          let recalled = if (
-            self.at("document-mode", default: false)
-              and raw-label in whole-slide-labels
-          ) {
-            extern.warning(
-              "touying-recall: label "
-                + repr(raw-label)
-                + " refers to a whole-slide recall target, which has no "
-                + "effect in document mode. Wrap this call in "
-                + "#slides-only[...] to suppress this warning once you've "
-                + "confirmed that's what you want.",
-            )
-            none
-          } else {
-            context {
-              // Always check the breadcrumb first, regardless of subslide:
-              // a touying-reducer's own real label is never itself attached
-              // to anything (it only lives inside the metadata dict), so
-              // "auto" still needs the breadcrumb's raw content to render
-              // anything for a reducer, not just to pick a specific stage.
-              let breadcrumb-label = label(
-                str(raw-label) + ":touying-recall-breadcrumb",
-              )
-              let breadcrumb-found = query(breadcrumb-label)
-              if breadcrumb-found.len() > 0 {
-                let raw-content = breadcrumb-found.first().value.content
-                let minimal-self = (
-                  methods: (cover: utils.method-wrapper(hide)),
-                  waypoints: (:),
-                  subslide: 1,
-                )
-                let render-base = if recall-base == auto { 1 } else {
-                  recall-base
-                }
-                // Inlined from _prepare-render-context/_render-at-subslide
-                // (see the comment above this branch for why they can't be
-                // called directly).
-                let reducer-data = _find-reducer-meta(raw-content)
-                let (raw-wp, so, dr) = _collect-waypoints(raw-content)
-                let resolved-wp = _resolve-waypoint-forest(raw-wp, so)
-                let max-rep-raw = if reducer-data != none {
-                  let (_, mrr) = _parse-touying-reducer(
-                    self: minimal-self + (waypoints: (:), subslide: 9999),
-                    base: render-base,
-                    index: 9999,
-                    reducer-data,
-                  )
-                  mrr
-                } else {
-                  let (
-                    _,
-                    mrr,
-                    _,
-                    _,
-                    _,
-                  ) = _parse-content-into-results-and-repetitions(
-                    self: minimal-self + (waypoints: (:), subslide: 9999),
-                    base: render-base,
-                    index: 9999,
-                    raw-content,
-                  )
-                  mrr
-                }
-                let repeat = calc.max(max-rep-raw, ..resolved-wp.values(), 1)
-                let cwp = _compute-waypoint-ranges(resolved-wp, repeat, so, dr)
-                let target = if recall-subslide == auto { repeat } else {
-                  recall-subslide
-                }
-                let render-self = (
-                  minimal-self
-                    + (
-                      waypoints: cwp,
-                      subslide: target,
-                    )
-                )
-                if reducer-data != none {
-                  let (r, _) = _parse-touying-reducer(
-                    self: render-self,
-                    base: render-base,
-                    index: target,
-                    reducer-data,
-                  )
-                  r.sum(default: none)
-                } else {
-                  let (
-                    conts,
-                    _,
-                    _,
-                    _,
-                    _,
-                  ) = _parse-content-into-results-and-repetitions(
-                    self: render-self,
-                    base: render-base,
-                    index: target,
-                    raw-content,
-                  )
-                  conts.sum(default: none)
-                }
-              } else {
-                if recall-subslide != auto {
-                  panic(
-                    "touying-recall: label "
-                      + repr(raw-label)
-                      + " refers to content with no subslide dimension, but "
-                      + "subslide: "
-                      + repr(recall-subslide)
-                      + " was given.",
-                  )
-                }
-                let found = query(raw-label)
-                if found.len() == 0 {
-                  panic(
-                    "touying-recall: label "
-                      + repr(raw-label)
-                      + " was not found in the document.",
-                  )
-                }
-                found.first()
-              }
-            }
-          }
           if repetitions <= index or not need-cover {
             result.push(recalled)
           } else {
@@ -2717,12 +2998,21 @@
 /// -> content
 #let _build-native-recall(lbl, subslide, base) = {
   let subslide = if subslide == none { auto } else { subslide }
-  if subslide != auto and type(subslide) != int {
+  if (
+    subslide != auto
+      and type(subslide) != int
+      and type(subslide) != label
+      and not (
+        type(subslide) == dictionary
+          and subslide.at("kind", default: "") in waypoint-kinds
+      )
+  ) {
     panic(
       "touying-recall: subslide: "
         + repr(subslide)
         + " is not supported outside a whole-slide target — only "
-        + "auto/none or an int subslide number are supported here.",
+        + "auto/none, an int subslide number, or a waypoint label/marker "
+        + "are supported here.",
     )
   }
   context {
@@ -2741,7 +3031,23 @@
         raw-content,
         render-base,
       )
-      let target = if subslide == auto { repeat } else { subslide }
+      let target = if subslide == auto {
+        repeat
+      } else if (
+        type(subslide) == label
+          or (
+            type(subslide) == dictionary
+              and subslide.at("kind", default: "") in waypoint-kinds
+          )
+      ) {
+        // cwp is always this content's own *local* (base=1) waypoint map —
+        // never an outer slide's — so the resolved position must be
+        // shifted by (render-base - 1) to land in the same absolute
+        // numbering as `repeat` above.
+        _resolve-waypoint-to-int((waypoints: cwp), subslide) + render-base - 1
+      } else {
+        utils.resolve-negative-subslides(repeat, subslide, base: render-base)
+      }
       _render-at-subslide(
         minimal-self,
         raw-content,
