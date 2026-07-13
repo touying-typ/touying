@@ -362,3 +362,198 @@
     - third
   ]
 ]
+
+= Discussion #387
+
+== Hiding Cover
+#slide(
+  config: config-page(
+    height: 300pt,
+    width: 900pt,
+    margin: (x: 4pt, y: 4pt),
+    header: none,
+    footer: none,
+  ),
+  setting: body => {
+    place(top + left, dy: 56pt)[#line(length: 100%, stroke: .4pt + red)]
+    body
+  },
+)[
+  #text(size: 32pt, $ E = m c^2 $)
+
+  #uncover("0-")[#place[#line(length: 100%, stroke: .4pt + red)]]
+  #pause
+  - Test Text #pause
+  - More Test Text #pause
+  - Even More Text
+  #uncover("0-")[#place[#line(length: 100%, stroke: .4pt + red)]]
+  #uncover(auto)[
+    $ |NN| < |ZZ| $
+  ]
+  #uncover("0-")[#place[#line(length: 100%, stroke: .4pt + red)]]
+][
+  #meanwhile
+  #text(size: 32pt, $ E = m c^2 $)
+  #uncover("0-")[#place[#line(length: 100%, stroke: .4pt + red)]]
+  - Test Text
+  - More Test Text
+  - Even More Text
+  #uncover("0-")[#place[#line(length: 100%, stroke: .4pt + red)]]
+  $ |NN| < |ZZ| $
+  #uncover("0-")[#place[#line(length: 100%, stroke: .4pt + red)]]
+]
+
+== Color-Changing Cover
+#slide(
+  config: config-page(
+      height: 300pt,
+      width: 900pt,
+      margin: (x: 4pt, y: 4pt),
+      header: none,
+      footer: none,
+    ) +
+    config-methods(cover: utils.color-changing-cover.with(color: gray)),
+  setting: body => {
+    place(top + left, dy: 56pt)[#line(length: 100%, stroke: .4pt + red)]
+    body
+  },
+)[
+  #text(size: 32pt, $ E = m c^2 $)
+
+  #uncover("0-")[#place[#line(length: 100%, stroke: .4pt + red)]]
+  #pause
+  - Test Text #pause
+  - More Test Text #pause
+  - Even More Text
+  #uncover("0-")[#place[#line(length: 100%, stroke: .4pt + red)]]
+  #uncover(auto)[
+    $ |NN| < |ZZ| $
+  ]
+  #uncover("0-")[#place[#line(length: 100%, stroke: .4pt + red)]]
+][
+  #meanwhile
+  #text(size: 32pt, $ E = m c^2 $)
+  #uncover("0-")[#place[#line(length: 100%, stroke: .4pt + red)]]
+  - Test Text
+  - More Test Text
+  - Even More Text
+  #uncover("0-")[#place[#line(length: 100%, stroke: .4pt + red)]]
+  $ |NN| < |ZZ| $
+  #uncover("0-")[#place[#line(length: 100%, stroke: .4pt + red)]]
+]
+
+= Meanwhile look-below spacing
+
+// A #meanwhile can reveal further list/enum/terms items directly *after* a
+// covered run.  The covered block then needs list spacing *below* it (not the
+// default paragraph spacing), so the revealed items line up with the
+// all-visible reference.  This is the mirror image of the #pause case, which
+// corrects the spacing *above* the covered block.
+//
+// Full-width guide lines are drawn (always visible, spanning both columns) at
+// the baseline of each of the four items.  The animated left column and the
+// all-visible right column (reset with #meanwhile) must sit on the same lines
+// on every subslide — in particular the revealed items after the covered run
+// (c, d) must not drift below their guides.
+
+#let guides = {
+  for dy in (58pt, 90.5pt, 123pt, 156pt) {
+    place(top + left, dy: dy)[#line(length: 100%, stroke: .4pt + red)]
+  }
+}
+
+== list
+#slide(
+  composer: (1fr, 1fr),
+  setting: body => { guides; body },
+)[
+  #align(horizon)[
+    - a
+    #pause
+    - b
+    #meanwhile
+    - c
+    - d
+  ]
+][
+  #meanwhile
+  #align(horizon)[
+    - a
+    - b
+    - c
+    - d
+  ]
+]
+
+== enum
+#slide(
+  composer: (1fr, 1fr),
+  setting: body => { guides; body },
+)[
+  #align(horizon)[
+    + a
+    #pause
+    + b
+    #meanwhile
+    + c
+    + d
+  ]
+][
+  #meanwhile
+  #align(horizon)[
+    + a
+    + b
+    + c
+    + d
+  ]
+]
+
+== terms
+#slide(
+  composer: (1fr, 1fr),
+  setting: body => { guides; body },
+)[
+  #align(horizon)[
+    / A: a
+    #pause
+    / B: b
+    #meanwhile
+    / C: c
+    / D: d
+  ]
+][
+  #meanwhile
+  #align(horizon)[
+    / A: a
+    / B: b
+    / C: c
+    / D: d
+  ]
+]
+
+// Same list case with a color-changing cover so the covered item b stays
+// visible (grey) — makes it obvious that b keeps its slot and the below-gap
+// to c is list-tight.
+== list (color-changing cover)
+#slide(
+  composer: (1fr, 1fr),
+  config: config-methods(cover: utils.color-changing-cover.with(color: gray)),
+  setting: body => { guides; body },
+)[
+  #align(horizon)[
+    - a
+    #pause
+    - b
+    #meanwhile
+    - c
+    - d
+  ]
+][
+  #meanwhile
+  #align(horizon)[
+    - a
+    - b
+    - c
+    - d
+  ]
+]

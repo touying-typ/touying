@@ -4328,11 +4328,66 @@
     /// hidden element are both list/enum/terms items — i.e. a list interrupted
     /// by `#pause`.  In all other cases (text→list, list→text, text→text) the
     /// default paragraph spacing is correct.
-    let cover-hidden(cover-fn, items, last-result) = {
-      // First non-space hidden element
+    let spacing-is-auto(it) = {
+      if it.func() == list.item {
+        list.spacing == auto
+      } else if it.func() == enum.item {
+        enum.spacing == auto
+      } else if it.func() == terms.item {
+        terms.spacing == auto
+      } else {
+        false
+      }
+    }
+    // The spacing that should border a covered run next to the list/enum/terms
+    // item `it`. When the list spacing is `auto` we fall back to paragraph-
+    // derived spacing (nontight -> par.spacing, tight -> par.leading); otherwise
+    // the user set an explicit value we can read off directly.
+    let list-spacing-for(it) = {
+      if spacing-is-auto(it) {
+        // would yield `auto` which is a par.spacing for the block.
+        if self.at("nontight-list-enum-and-terms", default: true) {
+          //cannot set list thightness via set rule somehow. if user uses magic.nontight locally we can't detect that, so we just assume he only uses the config. thus this might break.
+          par.spacing
+        } else {
+          par.leading
+        }
+      } else if it.func() == list.item {
+        list.spacing
+      } else if it.func() == enum.item {
+        enum.spacing
+      } else if it.func() == terms.item {
+        terms.spacing
+      } else {
+        par.spacing
+      }
+    }
+    // `next-is-list` is a look-ahead hint: is the first *following* visible
+    // element (after this covered run) a list/enum/terms item? It is needed to
+    // correct the spacing *below* the covered block, which cannot be derived
+    // from `items`/`last-result` alone (e.g. the #meanwhile case).
+    let cover-hidden(cover-fn, items, last-result, next-is-list: false) = {
+      // First non-space hidden element (borders the gap *above* the block)
       let first-pos = items.position(item => not utils.is-space(item))
       let first-is-list = (
         first-pos != none and _is-list-item(items.at(first-pos))
+      )
+      // Last non-space hidden element (borders the gap *below* the block)
+      let last-hidden-item = {
+        let found = none
+        for i in range(items.len()) {
+          let item = items.at(items.len() - 1 - i)
+          if utils.is-space(item) {
+            // skip space nodes only
+          } else {
+            found = item
+            break
+          }
+        }
+        found
+      }
+      let last-hidden-is-list = (
+        last-hidden-item != none and _is-list-item(last-hidden-item)
       )
 
       // Last non-space visible element (walk result backwards).
@@ -4353,47 +4408,28 @@
         }
         found
       }
-      let spacing-is-auto(it) = {
-        if it.func() == list.item {
-          list.spacing == auto
-        } else if it.func() == enum.item {
-          enum.spacing == auto
-        } else if it.func() == terms.item {
-          terms.spacing == auto
-        } else {
-          false
-        }
-      }
       let covered = cover-fn(items.sum())
-      //decrease below spacing for rect cover functions
-      // if type(cover-fn) == function and (
-      //   cover-fn==utils.cover-with-rect or
-      //   cover-fn==utils.semi-transparent-cover
-      // ){
-      //   covered // does not fix it, but does not hurt: problem stems from box itself causing later content to be shifted? idk
-      // }else
-      if first-is-list and last-is-list {
-        let first-item = items.at(first-pos)
-        // construct a block around the covered content that corrects spacing. looks for auto
+      // The gap *above* the covered block is broken when the last visible and
+      // first hidden elements are both list items (a list interrupted by a
+      // #pause). The gap *below* is broken symmetrically when the last hidden
+      // and the next visible elements are both list items — e.g. a #meanwhile
+      // that reveals further list items right after a covered run. Each side is
+      // corrected independently; a paragraph / break / end on either side keeps
+      // the natural (auto) spacing.
+      let above-needs = first-is-list and last-is-list
+      let below-needs = last-hidden-is-list and next-is-list
+      if above-needs or below-needs {
+        // construct a block around the covered content that corrects spacing.
         context block(
-          spacing: if spacing-is-auto(first-item) {
-            // would yield `auto` which is a par.spacing for the block.
-            if self.at("nontight-list-enum-and-terms", default: true) {
-              //cannot set list thightness via set rule somehow. if user uses magic.nontight locally we can't detect that, so we just assume he only uses the config. thus this might break.
-              par.spacing
-            } else {
-              par.leading
-            }
+          above: if above-needs {
+            list-spacing-for(items.at(first-pos))
           } else {
-            if first-item.func() == list.item {
-              list.spacing
-            } else if first-item.func() == enum.item {
-              enum.spacing
-            } else if first-item.func() == terms.item {
-              terms.spacing
-            } else {
-              par.spacing
-            }
+            auto
+          },
+          below: if below-needs {
+            list-spacing-for(last-hidden-item)
+          } else {
+            auto
           },
           covered,
         )
@@ -4409,8 +4445,29 @@
       (it,)
     }
 
+    // Look ahead from `from-index`: is the first following non-space sibling a
+    // list/enum/terms item? Used at flush sites to decide whether a covered run
+    // needs list-spacing *below* it (the visible-list-after-covered case, e.g.
+    // #meanwhile). Stops at the first non-space element, so an intervening
+    // parbreak/linebreak (an intentional list break) correctly yields false.
+    let next-sibling-is-list(from-index) = {
+      let j = from-index + 1
+      let res = false
+      while j < children.len() {
+        let sibling = children.at(j)
+        if utils.is-space(sibling) {
+          j += 1
+        } else {
+          res = _is-list-item(sibling)
+          break
+        }
+      }
+      res
+    }
+
     // Process each child element for animation markers and content types
-    for child in children {
+    for _child_i in range(children.len()) {
+      let child = children.at(_child_i)
       if (
         type(child) == content
           and child.func() == metadata
@@ -4429,13 +4486,25 @@
             // If we jumped back into the visible zone, flush hidden-parts in order
             // (so they appear before subsequent visible content, not after it)
             if hidden-parts.len() != 0 and repetitions <= index {
-              result.push(cover-hidden(cover, hidden-parts, result))
+              result.push(cover-hidden(
+                cover,
+                hidden-parts,
+                result,
+                next-is-list: next-sibling-is-list(_child_i),
+              ))
               hidden-parts = ()
             }
           } else {
-            // absolute: reveal all hidden content then jump to target subslide
+            // absolute: reveal all hidden content then jump to target subslide.
+            // Visible content (e.g. list items) may follow directly, so look
+            // ahead to correct the spacing below the covered run.
             if hidden-parts.len() != 0 {
-              result.push(cover-hidden(cover, hidden-parts, result))
+              result.push(cover-hidden(
+                cover,
+                hidden-parts,
+                result,
+                next-is-list: next-sibling-is-list(_child_i),
+              ))
               hidden-parts = ()
             }
             max-repetitions = calc.max(max-repetitions, repetitions)
