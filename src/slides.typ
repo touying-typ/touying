@@ -109,7 +109,7 @@
         )
       } else {
         // args is a bibliography like `bibliography(title: none, "ref.bib")`
-        magic.bibliography-as-footnote(args, body)
+        magic.bibliography-as-footnote(self: self, args, body)
       }
     } else {
       body

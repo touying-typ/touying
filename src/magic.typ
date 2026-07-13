@@ -154,16 +154,47 @@
 ///
 /// Usage: `#show: magic.bibliography-as-footnote.with(bibliography(title: none, "ref.bib"))`
 ///
+/// - self (dictionary): The presentation context, used to read `footnote-style` if configured. Default is `none`.
+///
 /// - numbering (str): The numbering format for footnote citations. Default is `"[1]"`.
 ///
 /// - bibliography (bibliography): The bibliography element, e.g. `bibliography("ref.bib")`.
 ///
 /// -> content
 #let bibliography-as-footnote(
+  self: none,
   numbering: "[1]",
   bibliography,
   body,
 ) = {
+  // Covering a citation with `hide()` hides its marker, but Typst still lays out
+  // the footnote entry it would create regardless of `hide`. So inside a hidden
+  // region, don't create a real footnote for it - instead reserve the same marker
+  // width by advancing the real footnote counter and drawing just the superscript
+  // number, matching how plain footnotes are handled in core.typ.
+  show hide: it => {
+    show cite.where(form: "normal"): it2 => context {
+      let n = counter(footnote).get().first() + 1
+      counter(footnote).update(n)
+      let footnote-style = if self != none {
+        self.at("footnote-style", default: auto)
+      } else {
+        auto
+      }
+      if footnote-style == auto {
+        super[#std.numbering(numbering, n)]
+      } else {
+        // See the matching comment in core.typ: calling `footnote-style` directly
+        // on a constructed `footnote(..)` would lay it out for real, double
+        // counting and leaking its own entry. `measure` discards those side
+        // effects and keeps only the width, which is all a placeholder needs.
+        let fake = footnote(numbering: numbering, [])
+        box(width: measure(footnote-style(fake)).width)
+      }
+    }
+    it
+  }
+
   show cite.where(form: "normal"): it => (
     context {
       let label-str = str(here().page()) + str(it.key)
