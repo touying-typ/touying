@@ -406,13 +406,13 @@
 == Color-Changing Cover
 #slide(
   config: config-page(
-      height: 300pt,
-      width: 900pt,
-      margin: (x: 4pt, y: 4pt),
-      header: none,
-      footer: none,
-    ) +
-    config-methods(cover: utils.color-changing-cover.with(color: gray)),
+    height: 300pt,
+    width: 900pt,
+    margin: (x: 4pt, y: 4pt),
+    header: none,
+    footer: none,
+  )
+    + config-methods(cover: utils.color-changing-cover.with(color: gray)),
   setting: body => {
     place(top + left, dy: 56pt)[#line(length: 100%, stroke: .4pt + red)]
     body
@@ -465,7 +465,10 @@
 == list
 #slide(
   composer: (1fr, 1fr),
-  setting: body => { guides; body },
+  setting: body => {
+    guides
+    body
+  },
 )[
   #align(horizon)[
     - a
@@ -488,7 +491,10 @@
 == enum
 #slide(
   composer: (1fr, 1fr),
-  setting: body => { guides; body },
+  setting: body => {
+    guides
+    body
+  },
 )[
   #align(horizon)[
     + a
@@ -511,7 +517,10 @@
 == terms
 #slide(
   composer: (1fr, 1fr),
-  setting: body => { guides; body },
+  setting: body => {
+    guides
+    body
+  },
 )[
   #align(horizon)[
     / A: a
@@ -538,7 +547,10 @@
 #slide(
   composer: (1fr, 1fr),
   config: config-methods(cover: utils.color-changing-cover.with(color: gray)),
-  setting: body => { guides; body },
+  setting: body => {
+    guides
+    body
+  },
 )[
   #align(horizon)[
     - a
