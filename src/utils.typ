@@ -343,6 +343,15 @@
   return [#it]
 }
 
+// convert all sequence to array recursively, and then flatten the array
+#let sequence-to-array(it) = {
+  if is-sequence(it) {
+    it.children.map(sequence-to-array)
+  } else {
+    it
+  }
+}
+
 /// recursively checks if `it` has a text in it
 ///
 /// - it (content): the content to check
@@ -1655,6 +1664,44 @@
 ///    - An array, e.g. `(1, 2, 4)` — equivalent to `"1, 2, 4"`.
 ///    - A string with ranges, e.g. `"-2, 4, 6-8, 10-"` — subslides 1, 2, 4, 6, 7, 8, 10, and all after 10.
 ///
+/// Resolve negative subslide indices relative to a total repeat count.
+/// E.g. `-1` becomes the last subslide, `-2` the second-to-last.
+///
+/// Positive indices are absolute and, when `base` is not `1` (e.g. a reducer
+/// block rendered with a custom `base` so its internal counter starts higher
+/// than 1), are valid over `base..(base + repeat - 1)` rather than `1..repeat`.
+/// Negative indices always count backward from the last subslide, so their
+/// valid magnitude range (`1..repeat`) does not depend on `base`.
+///
+/// - repeat (int): Total number of subslides.
+/// - idx (int, array): A subslide index or array of indices.
+/// - base (int): The counter value of the first subslide. Default is `1`.
+///
+/// -> int or array
+#let resolve-negative-subslides(repeat, idx, base: 1) = {
+  let resolve-one(i) = {
+    assert(i != 0, message: "idx cannot be zero")
+    if i < 0 {
+      assert(calc.abs(i) <= repeat, message: "idx out of bounds")
+      base + repeat + i
+    } else {
+      assert(
+        i >= base and i <= base + repeat - 1,
+        message: "idx out of bounds",
+      )
+      i
+    }
+  }
+
+  if type(idx) == array {
+    idx.map(i => if type(i) == int { resolve-one(i) } else { i })
+  } else if type(idx) == int {
+    resolve-one(idx)
+  } else {
+    idx
+  }
+}
+
 /// -> bool
 #let check-visible(idx, visible-subslides) = {
   if type(visible-subslides) == int {
@@ -2207,25 +2254,6 @@
 }
 
 
-/// Display content only in handout mode.
-/// Don't reserve space when hidden, content is completely not existing there.
-///
-/// Example:
-///
-/// ```typst
-/// #handout-only[This content is only visible in handout mode.]
-/// ```
-///
-/// - cont (content): The content to display in handout mode.
-///
-/// -> content
-#let handout-only(self: none, cont) = {
-  if self.handout {
-    cont
-  }
-}
-
-
 
 
 /// `#alternatives` has a couple of "cousins" that might be more convenient in some situations. The first one is `#alternatives-match` that has a name inspired by match-statements in many functional programming languages. The idea is that you give it a dictionary mapping from subslides to content:
@@ -2704,6 +2732,106 @@
   )
   mapping.at(text.lang, default: mapping.en)
 }
+
+// *Returns input given to the compiler.*
+//
+// *Important*: This function uses typst `#eval` to parse your value.
+//
+// Example:
+// `typst compile FILE --input export-mode=\"presentation\" myslide.typ` \
+// Then in the code you can do:
+// `#let export-mode = get-input("export-mode")`
+//
+// Example 2:
+// `typst compile FILE --input config='("foo": 1, "bar": [1, 2, 3], "baz": ("nested": 4))'`
+//
+// You may also provide no key to get the entire inputs dictionary with parsed values:
+// `#let inputs = get-input()`
+//
+// - key (str, none): The input key to retrieve. If `none`, returns the entire inputs dictionary with parsed values.
+//
+#let get-input(key: none) = {
+  if key == none {
+    let values = (:)
+    for key in sys.inputs.keys() {
+      if key == "x-preview" { continue } // skip tinymist preview input
+      let value = sys.inputs.at(key, default: none)
+      values.insert(key, eval(value))
+    }
+    values
+  } else {
+    let value = sys.inputs.at(key, default: none)
+    eval(value)
+  }
+}
+
+
+/// Rescale an image element to fit within a column-fraction of the available content width.
+///
+/// Used by `_wrap-section` in document mode to resize slide images so they fit alongside
+/// wrapped text. Can also be called directly when you need to place a slide image at a
+/// proportionally correct size in a document.
+///
+/// - img-el (content): The raw image element — used only for measuring its declared `width`.
+/// - display-el (content): The element that is actually rendered (may be `img-el` itself, or a figure containing it).
+/// - col-fraction (ratio): Fraction of `container-width` this image should occupy (e.g. `40%` → `0.4`).
+/// - container-width (none, length): The available content-area width in points. When `none` (default), it is measured automatically via `layout()`.
+/// - align-direction (alignment): `left` or `right` — which side the image is placed on.
+///
+/// -> content
+#let rescale-image(
+  img-el,
+  display-el,
+  col-fraction,
+  align-direction,
+  container-width: none,
+) = {
+  let _render(cw) = {
+    let obstacle-width = (col-fraction * 1pt).pt() * cw
+
+    let img-width = img-el.fields().at("width", default: none)
+    let p = if img-width != none and type(img-width) == relative {
+      (img-width.ratio * 1pt).pt()
+    } else if img-width != none and type(img-width) == ratio {
+      (img-width * 1pt).pt()
+    } else {
+      1.0
+    }
+    let inv = if p > 0 { 1.0 / p } else { 1.0 }
+
+    let overlay(..args) = {
+      box(place(
+        top + (if align-direction == right { left } else { right }),
+        ..args,
+      ))
+      sym.wj
+      h(0pt, weak: true)
+    }
+
+    let visible-width = obstacle-width * inv * 0.95
+    let dx-offset = obstacle-width * inv * 0.025
+    let img-size = measure(display-el, width: visible-width)
+    let other-direction = if align-direction == right { 1 } else { -1 }
+
+    stack(
+      spacing: -par.leading,
+      overlay(
+        box(width: visible-width, display-el),
+        dy: -par.leading,
+        dx: dx-offset * other-direction,
+      ),
+      hide(box(width: obstacle-width, height: img-size.height)),
+    )
+  }
+
+  if container-width != none {
+    _render(container-width)
+  } else {
+    layout(size => _render(size.width))
+  }
+}
+
+#let dbg(val) = [#metadata(repr(val))<dbg>]
 
 #let _parse-nav-symbol(s, target, other) = {
   if type(s) == dictionary {

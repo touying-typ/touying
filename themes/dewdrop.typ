@@ -251,30 +251,33 @@
       footer: dewdrop-footer,
     ),
   )
+  let setting(title, args, body) = {
+    components.adaptive-columns(
+      start: text(
+        1.2em,
+        fill: self.colors.primary,
+        weight: "bold",
+        utils.call-or-display(self, title),
+      ),
+      text(
+        fill: self.colors.neutral-darkest,
+        components.progressive-outline(
+          alpha: self.store.alpha,
+          title: none,
+          indent: 1em,
+          depth: self.slide-level,
+          ..args,
+        ),
+      ),
+    )
+    body
+  }
+
   touying-slide(
     self: self,
     config: config,
-    {
-      components.adaptive-columns(
-        start: text(
-          1.2em,
-          fill: self.colors.primary,
-          weight: "bold",
-          utils.call-or-display(self, title),
-        ),
-        text(
-          fill: self.colors.neutral-darkest,
-          components.progressive-outline(
-            alpha: self.store.alpha,
-            title: none,
-            indent: 1em,
-            depth: self.slide-level,
-            ..args,
-          ),
-        ),
-      )
-      body
-    },
+    setting: setting.with(title, args),
+    body,
   )
 })
 
@@ -291,7 +294,12 @@
     config-page(fill: self.colors.primary, margin: 2em),
   )
   set text(fill: self.colors.neutral-lightest, size: 1.5em)
-  touying-slide(self: self, config: config, align(horizon + center, body))
+  touying-slide(
+    self: self,
+    config: config,
+    setting: align.with(horizon + center),
+    body,
+  )
 })
 
 
