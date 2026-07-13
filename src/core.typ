@@ -532,8 +532,15 @@
     ) {
       continue
     } else if child.func() == hide {
-      //needs to be taken out preemptively so that hidden headings don't get weird.
-      start-part.push(child)
+      // needs to be taken out preemptively so that hidden headings don't get weird
+      // (they should not be traversed into for heading-detection purposes), but still
+      // respect new-start like the generic content case below, otherwise this content
+      // can end up in start-part and be silently dropped if nothing later reconciles it.
+      if new-start {
+        slide-parts.push(child)
+      } else {
+        start-part.push(child)
+      }
     } else if utils.is-heading(child, depth: slide-level) {
       let last-heading-depth = _get-last-heading-depth(current-headings)
       slide-parts = utils.trim(slide-parts)
@@ -4973,6 +4980,53 @@
         repetitions = final-repetitions
         max-repetitions = calc.max(max-repetitions, inner-max-repetitions)
         last-subslide = calc.max(last-subslide, next-last-subslide)
+      } else if type(child) == content and child.func() == footnote {
+        if repetitions <= index or not need-cover {
+          if labeled(child.func()) and child.has("label") {
+            result.push([#footnote(child.body)#child.label])
+          } else {
+            result.push(footnote(child.body))
+          }
+        } else if not utils.cover-hides-footnote(self) {
+          // Only a genuinely-hiding cover needs the placeholder trick below: native
+          // `hide()` does not by itself hide a footnote's entry, so real footnotes
+          // must not be created while covered that way. Visual-only cover methods
+          // (color-changing-cover, alpha-changing-cover, ...) are meant to keep
+          // content visible, just de-emphasized - a footnote under one of those
+          // should still show its real marker and entry, recolored like everything
+          // else, so push it through the normal cover mechanism instead.
+          if labeled(child.func()) and child.has("label") {
+            hidden-parts.push([#footnote(child.body)#child.label])
+          } else {
+            hidden-parts.push(footnote(child.body))
+          }
+        } else {
+          // `hide()` only hides a footnote's marker, not the entry it queues at the
+          // bottom of the page - so a covered footnote must not call `footnote()` at
+          // all, or its entry leaks through before it should be revealed. To still
+          // reserve the same marker width (so revealing it later doesn't reflow the
+          // paragraph), advance the real footnote counter and draw just the
+          // superscript number. Reading/writing the real counter - rather than
+          // tracking our own - keeps this correct even if the user manipulates
+          // `counter(footnote)` themselves elsewhere in the document.
+          hidden-parts.push(context {
+            let n = counter(footnote).get().first() + 1
+            counter(footnote).update(n)
+            let footnote-style = self.at("footnote-style", default: auto)
+            if footnote-style == auto {
+              super[#numbering(footnote.numbering, n)]
+            } else {
+              // Calling `footnote-style` directly on a constructed `footnote(..)`
+              // would actually lay that footnote out for real the moment this
+              // content is shown (even inside `hide()`) - double-counting the
+              // counter and leaking its own entry. `measure` runs that lookup in
+              // an isolated, discarded layout, so only the resulting width (not
+              // the side effects) survives - which is all a placeholder needs.
+              let fake = footnote(numbering: footnote.numbering, [])
+              box(width: measure(footnote-style(fake)).width)
+            }
+          })
+        }
       } else if (
         type(child) == content and child.func() in reconstructable-functions
       ) {
@@ -5691,6 +5745,15 @@
     show: body => {
       if self.at("show-strong-with-alert", default: true) {
         show strong: self.methods.alert.with(self: self)
+        body
+      } else {
+        body
+      }
+    }
+    show: body => {
+      let footnote-style = self.at("footnote-style", default: auto)
+      if footnote-style != auto {
+        show footnote: footnote-style
         body
       } else {
         body
