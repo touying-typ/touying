@@ -90,9 +90,10 @@ Aqua 主题提供了一系列自定义 slide 函数：
 ---
 
 ```typst
-#focus-slide[
+#focus-slide(
+  background-img: ..., 
   ...
-]
+)
 ```
 用于引起观众的注意力。背景色为 `self.colors.primary`。
 

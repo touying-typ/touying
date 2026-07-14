@@ -73,12 +73,16 @@ A default slide with headers and footers, where the header corresponds to the cu
 ---
 
 ```typst
-#focus-slide(foreground: ..., background: ...)[
+#focus-slide(
+  foreground: ..., 
+  background: ..., 
+  background-img: ..., 
+)[
   ...
 ]
 ```
 
-Used to draw attention, it optionally accepts a foreground color (defaulting to `white`) and a background color (defaulting to `auto`, i.e., `self.colors.primary`).
+Used to draw attention, it optionally accepts a foreground color (defaulting to `white`) and a background color (defaulting to `auto`, i.e., `self.colors.primary`). You can also pass `background-img` to use an image as slide background.
 
 
 ## Example

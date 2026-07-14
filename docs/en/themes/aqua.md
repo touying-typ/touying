@@ -91,9 +91,10 @@ A default ordinary slide function with title and footer, where `title` defaults 
 ---
 
 ```typst
-#focus-slide[
+#focus-slide(
+  background-img: ..., 
   ...
-]
+)
 ```
 
 Used to draw the audience's attention. The background color is `self.colors.primary`.

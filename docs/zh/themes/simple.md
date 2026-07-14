@@ -72,11 +72,15 @@ simple 主题提供了一系列自定义 slide 函数：
 ---
 
 ```typst
-#focus-slide(foreground: ..., background: ...)[
+#focus-slide(
+  foreground: ..., 
+  background: ..., 
+  background-img: ..., 
+)[
   ...
 ]
 ```
-用于引起观众的注意力。可选接受一个前景色 (默认为 `white`) 和一个背景色 (默认为 `auto`，即 `self.colors.primary`)。
+用于引起观众的注意力。可选接受一个前景色 (默认为 `white`) 和一个背景色 (默认为 `auto`，即 `self.colors.primary`)。另外可选 `background-img` 来设置背景图。
 
 
 ## 示例
