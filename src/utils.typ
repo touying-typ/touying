@@ -544,16 +544,34 @@
 ///
 /// -> content
 #let current-heading(level: auto, hierachical: true, depth: 9999) = {
+  let heading-selector = {
+    // In normal typst documents, `query(heading)` suffices to select all
+    // headings. When using bundle export, this would result in the headings
+    // of other documents messing up the selection (see #406).
+    // We solve this restricting the `heading` selector to only the current
+    // document, with a trick mentioned in a Typst forum post:
+    // https://forum.typst.app/t/how-to-query-headings-in-current-document/9308
+    // This has the disadvantage that it does not work in "normal" documents
+    // (non-bundle exports), so we make a case distinction.
+
+    let current-and-prev-documents = query(selector(document).before(here()))
+    if current-and-prev-documents.len() > 0 {
+      let current-doc = current-and-prev-documents.last().location()
+      selector(heading).within(current-doc)
+    } else {
+      selector(heading)
+    }
+  }
   let current-page = here().page()
   if not hierachical and level != auto {
-    let headings = query(heading).filter(h => (
+    let headings = query(heading-selector).filter(h => (
       h.location().page() <= current-page
         and h.level <= depth
         and h.level == level
     ))
     return headings.at(-1, default: none)
   }
-  let headings = query(heading).filter(h => (
+  let headings = query(heading-selector).filter(h => (
     h.location().page() <= current-page and h.level <= depth
   ))
   if headings == () {
