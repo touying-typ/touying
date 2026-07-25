@@ -53,3 +53,17 @@ There is a #pause in this slide.
   },
   length: 30pt,
 )
+
+== Plain Content
+
+#show: touying-set-config.with(config-methods(
+  cover: utils.color-changing-cover,
+))
+
+There is a #pause in this slide.
+
+// Same bug, no reducer involved: plain text hidden via hidden-parts on
+// subslide 1, followed by an uncover fn-wrapper. The fn-wrapper always
+// renders in-place - without flushing hidden-parts first, its content used
+// to jump ahead of the still-covered text before it.
+Hidden text#uncover("1-")[ Always visible.]
