@@ -5027,6 +5027,22 @@
             }
           })
         }
+      } else if type(child) == content and child.func() in (cite, ref) {
+        // A note-style citation renders as a footnote whose entry leaks
+        // at the page bottom before its `#pause`. `hide()` hides the marker
+        // but not the entry, so a covered citation must not be rendered at
+        // all, the same way the footnote branch above does.
+        if repetitions <= index or not need-cover {
+          result.push(child)
+        } else if not utils.cover-hides-footnote(self) {
+          hidden-parts.push(child)
+        } else {
+          hidden-parts.push({
+            show cite: none
+            show ref: none
+            child
+          })
+        }
       } else if (
         type(child) == content and child.func() in reconstructable-functions
       ) {
