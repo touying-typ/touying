@@ -27,6 +27,12 @@ jobs:
       - name: Run test suite
         run: tt run
 
+      - name: Run bundle regression test
+        run: >-
+          typst compile --features bundle --format bundle --root .
+          tests/issues/i406-bundle-headings/bundle.typ
+          "$RUNNER_TEMP/i406-bundle"
+
       - name: Archive diffs
         uses: actions/upload-artifact@v4
         if: always()
