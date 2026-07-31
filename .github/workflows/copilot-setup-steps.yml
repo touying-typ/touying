@@ -40,7 +40,7 @@ jobs:
       # tytanic (tt) is the visual regression test runner for Touying
       # Pinned to the same version used in test.yml CI
       - name: Install tytanic
-        run: cargo binstall tytanic@0.3.3 -y
+        run: cargo binstall tytanic@0.4.0 -y
 
       # typstyle is the official Typst code formatter
       # Usage: typstyle -i file1.typ file2.typ dir/
