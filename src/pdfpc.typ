@@ -1,7 +1,7 @@
 // Attribution: This file is based on the code from https://github.com/andreasKroepelin/polylux/blob/main/utils/pdfpc.typ
 // Author: Andreas Kröpelin
 
-/// Generate pdfpc metadata for the presentation. Called internally in the preamble when `enable-pdfpc` is `true`. Query the result with `typst query --root . ./example.typ --field value --one "<pdfpc-file>" > ./example.pdfpc`.
+/// Generate pdfpc metadata for the presentation. Called internally in the preamble when `enable-pdfpc` is `true`. Query the result with `typst eval --in ./example.typ 'query(<pdfpc-file>).first().value' > ./example.pdfpc`.
 ///
 /// -> content
 #let pdfpc-file(loc) = {
