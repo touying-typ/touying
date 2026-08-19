@@ -430,6 +430,7 @@
   let footer(self) = {
     set text(size: .5em)
     set std.align(center + bottom)
+    show linebreak: none
     grid(
       rows: (auto, auto),
       utils.call-or-display(self, self.store.footer),
