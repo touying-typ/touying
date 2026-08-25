@@ -270,6 +270,7 @@
   background-img: none,
   body,
 ) = touying-slide-wrapper(self => {
+  self = utils.merge-dicts(self, config)
   let background-color = if (
     background-img == none and background-color == none
   ) {

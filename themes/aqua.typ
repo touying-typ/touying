@@ -261,6 +261,7 @@
 ///
 /// - config (dictionary): The configuration of the slide. You can use `config-xxx` to set the configuration of the slide. For more configurations, you can use `utils.merge-dicts` to merge them.
 #let focus-slide(config: (:), body) = touying-slide-wrapper(self => {
+  self = utils.merge-dicts(self, config)
   self = utils.merge-dicts(
     self,
     config-common(freeze-slide-counter: true),

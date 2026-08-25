@@ -302,6 +302,7 @@
   align: horizon + center,
   body,
 ) = touying-slide-wrapper(self => {
+  self = utils.merge-dicts(self, config)
   self = utils.merge-dicts(
     self,
     config-common(freeze-slide-counter: true),
