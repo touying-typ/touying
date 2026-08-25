@@ -1006,14 +1006,26 @@
             // emit the new slides directly instead of using _delayed-wrapper,
             // which would hide them when show-delayed-wrapper is false.
             if inner-start-part != none {
-              let styled-start = utils.reconstruct-styled(
-                child,
+              // Trim before reconstructing the style, otherwise a styled
+              // parbreak is no longer recognized as empty content.
+              let inner-start-children = if utils.is-sequence(
                 inner-start-part,
-              )
-              if new-start {
-                slide-parts.push(styled-start)
+              ) {
+                inner-start-part.children
               } else {
-                start-part.push(styled-start)
+                (inner-start-part,)
+              }
+              inner-start-children = utils.trim(inner-start-children)
+              if inner-start-children != () {
+                let styled-start = utils.reconstruct-styled(
+                  child,
+                  inner-start-children.sum(default: none),
+                )
+                if new-start {
+                  slide-parts.push(styled-start)
+                } else {
+                  start-part.push(styled-start)
+                }
               }
             }
             slide-parts = utils.trim(slide-parts)
