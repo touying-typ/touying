@@ -1897,7 +1897,12 @@
           c,
         ))
         reconstruct-table-like(it, new-children)
-      } else if it.func() == raw {
+      } else if it.func() in (raw, cite, ref) {
+        // A citation renders as text, so recolour it rather than letting it fall
+        // through to `noncolor-method`, which would hide it and, under a footnote
+        // bibliography, hide the marker while still leaving its entry behind.
+        // `@key` is a `ref` in the content tree and only becomes a `cite` during
+        // layout, so both have to be listed here.
         text(fill: color, it)
       } else if (
         it.func() in (parbreak, linebreak) or is-space(it) or is-metadata(it)
@@ -3579,7 +3584,7 @@
     }
     values
   } else {
-    let value = sys.inputs.at(key, default: none)
+    let value = sys.inputs.at(key, default: "")
     eval(value)
   }
 }

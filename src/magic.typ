@@ -1,3 +1,5 @@
+#import "utils.typ"
+
 // ---------------------------------------------------------------------
 // List, Enum, and Terms
 // ---------------------------------------------------------------------
@@ -173,7 +175,13 @@
   // region, don't create a real footnote for it - instead reserve the same marker
   // width by advancing the real footnote counter and drawing just the superscript
   // number, matching how plain footnotes are handled in core.typ.
-  show hide: it => {
+  // Only a genuinely-hiding cover needs the placeholder: a visual-only method
+  // (color-changing-cover, alpha-changing-cover) keeps covered content visible,
+  // so its citations should stay real. This mirrors the footnote branch in
+  // core/parser.typ, which asks the same config rather than looking for `hide`.
+  show hide: it => if self != none and not utils.cover-hides-footnote(self) {
+    it
+  } else {
     show cite.where(form: "normal"): it2 => context {
       let n = counter(footnote).get().first() + 1
       counter(footnote).update(n)
