@@ -1369,17 +1369,22 @@
 // Scale content down to new-height, preserving aspect ratio.
 // Returns a box of dimensions (width * new-height / height) × new-height
 // containing the original content scaled proportionally.
-#let _miniaturize(width, height, new-height, outer-style: (), content) = {
-  let factor = new-height / height * 100%
-  let new-width = width * factor
+#let _miniaturize(
+  width,
+  height,
+  new-width,
+  new-height,
+  outer-style: (),
+  content,
+) = {
   box(
     stroke: black,
     width: new-width,
     height: new-height,
     ..outer-style,
     scale(
-      x: factor,
-      y: factor,
+      x: new-width / width * 100%,
+      y: new-height / height * 100%,
       reflow: true,
       box(width: width, height: height, align(left + top, content)),
     ),
@@ -1535,13 +1540,26 @@
     header = none
     footer = none
     body-transform = body => {
-      let slide-preview(height: 88pt) = _miniaturize(
-        page-width,
-        page-height,
-        if type(height) == ratio { height * page-height } else { height },
-        outer-style: (fill: white),
-        slide-page(body),
-      )
+      // `auto` on one side copies the other, so a single ratio keeps the
+      // aspect and passing both stretches the preview on purpose.
+      let slide-preview(width: auto, height: auto) = {
+        let both-auto = width == auto and height == auto
+        let w = if width != auto { width } else if both-auto { 25% } else {
+          height
+        }
+        let h = if height != auto { height } else if both-auto { 25% } else {
+          width
+        }
+        let resolve(v, against) = if type(v) == ratio { v * against } else { v }
+        _miniaturize(
+          page-width,
+          page-height,
+          resolve(w, page-width),
+          resolve(h, page-height),
+          outer-style: (fill: white),
+          slide-page(body),
+        )
+      }
       place(
         top + left,
         dx: -margin-left,
@@ -2214,14 +2232,6 @@
   }
 })
 
-
-
-/// Empty slide with no default heading or section context.
-///
-/// Unlike `slide`, this function does not look at heading context or trigger `new-section-slide-fn` / `new-subsection-slide-fn`. Use it to create isolated slides outside the normal slide hierarchy (e.g. a standalone title card).
-///
-/// - config (dictionary): The configuration of the slide. You can use `config-xxx` to set the configuration of the slide. For more configurations, you can use `utils.merge-dicts` to merge them.
-///
 /// Render the speaker-note panel. This is to `notes-fn` what `touying-slide` is to
 /// `slide-fn`: themes call it with their own colours and layout instead of
 /// building a panel from scratch, and its defaults are the look touying uses
@@ -2233,11 +2243,10 @@
 ///
 /// - self (dictionary): The presentation context.
 ///
-/// - note (content): The speaker note for the current slide. Passed in because it
-///   lives in a state that has to be cleared once per slide; touying does that.
+/// - note (content): The speaker note for the current slide.
 ///
-/// - slide-preview (function, none): In `show-only-notes` mode, `(height: ..) => content`
-///   returning a miniature of the slide at that height, which may be a length or a
+/// - slide-preview (function, none): In `show-only-notes` mode a function `(height: ..) => content`
+///   returning a miniature of the slide at that height or width, which may be a length or a
 ///   ratio of the page height. `none` on a second screen, where the real slide is
 ///   already visible next to the notes.
 ///
@@ -2293,7 +2302,21 @@
           )
         }
         if slide-preview != none {
-          place(preview-align, slide-preview(height: header-height))
+          // Match the strip's height, giving the width explicitly so an
+          // absolute `header-height` keeps the slide's aspect rather than
+          // being copied onto both sides. A stripless panel takes the default.
+          let (page-width, page-height) = utils.get-page-dimensions(self)
+          place(
+            preview-align,
+            if header-height == 0pt {
+              slide-preview()
+            } else {
+              slide-preview(
+                width: header-height / page-height * page-width,
+                height: header-height,
+              )
+            },
+          )
         }
         if type(inset) == dictionary {
           pad(..inset, note)
@@ -2305,7 +2328,12 @@
   )
 }
 
-
+/// Empty slide with no default heading or section context.
+///
+/// Unlike `slide`, this function does not look at heading context or trigger `new-section-slide-fn` / `new-subsection-slide-fn`. Use it to create isolated slides outside the normal slide hierarchy (e.g. a standalone title card).
+///
+/// - config (dictionary): The configuration of the slide. You can use `config-xxx` to set the configuration of the slide. For more configurations, you can use `utils.merge-dicts` to merge them.
+///
 /// - repeat (auto, int): The number of subslides. Default is `auto`, which means touying will automatically calculate the number of subslides.
 ///
 /// - setting (function): Set/show rules to apply for the slide. Receives the composed body and returns it.
