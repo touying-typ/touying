@@ -111,7 +111,7 @@ config-page(footer: [Custom Footer])
 
 :::
 
-借助这种方式，我们也可以通过 `self.page` 实时查询当前页面的参数，这对一些需要获取页边距或当前页面背景颜色的函数很有用，例如 `transparent-cover`。这里就部分等价于 context get rule，而且实际上用起来会更方便。
+借助这种方式，我们也可以通过 `self.page` 实时查询当前页面的参数，这对一些需要获取页边距或当前页面背景颜色的函数很有用。这里就部分等价于 context get rule，而且实际上用起来会更方便。
 
 
 ## 页面分栏

@@ -34,41 +34,23 @@ config-methods(cover: (self: none, body) => box(scale(x: 0%, body)))
 ```
 
 
-## 半透明 Cover 函数
+## Alpha 变化 Cover 函数
 
-Touying 提供了半透明 Cover 函数的支持，只需要加入
+Touying 提供了 Alpha 变化 Cover 函数的支持，只需要加入
 
 ```typst
-config-methods(cover: utils.semi-transparent-cover.with(alpha: 85%))
+config-methods(cover: utils.alpha-changing-cover)
 ```
 
 即可开启，其中你可以通过 `alpha: ..` 参数调节透明度。
 
 
-:::warning[警告]
-
-注意，这里的 `transparent-cover` 并不能像 `hide` 一样不影响文本布局，因为里面有一层 `box`，因此可能会破坏页面原有的结构。
-
-:::
-
-
 :::tip[原理]
 
-`utils.semi-transparent-cover` 方法定义为
+`utils.alpha-changing-cover` 的工作方式是将遇到的所有颜色的 alpha 值降低。由于需要在每一层嵌套的样式或上下文中访问 Typst 的 context，这可能会有一定的性能开销。
 
-```typst
-#let semi-transparent-cover(self: none, constructor: rgb, alpha: 85%, body) = {
-  cover-with-rect(
-    fill: update-alpha(
-      constructor: constructor,
-      self.page.fill,
-      alpha,
-    ),
-    body,
-  )
-}
-```
+如果你发现项目编译变慢，可以尝试切换到 `utils.color-changing-cover`，它会将所有内容变为灰色。
 
-可以看出，其是通过 `utils.cover-with-rect` 创建了一个与背景色同色的半透明矩形遮罩，以模拟内容透明的效果，其中 `constructor: rgb` 和 `alpha: 85%` 分别表明了背景色的构造函数与透明程度。
+这两种方法并不能改变所有显示的颜色。图片或平铺等内容无法被干预。因此，两种方法都使用了一个备用的 hide 机制，通过 `utils.semi-transparent-rect` 叠加一个灰色半透明矩形来模拟相同效果。不再推荐将该函数作为默认选项，因为它存在若干已知但不会修复的问题。
 
 :::

@@ -107,11 +107,11 @@ config-page(footer: [Custom Footer])
 
 :::warning[Warning]
 
-Therefore, you should not use the `set page(..)` command yourself, as it will be reset by Touying.
+Therefore, you should not use the `set page(..)` command yourself, as it might be overriden by Touying.
 
 :::
 
-With this approach, we can also query the current page parameters in real-time using `self.page`, which is very useful for functions that need to obtain the page margins or the current page background color, such as `transparent-cover`. This is somewhat equivalent to context get rule, and in practice, it is more convenient to use.
+With this approach, we can also query the current page parameters in real-time using `self.page`, which is very useful for functions that need to obtain the page margins or the current page background color. This is somewhat equivalent to context get rule, and in practice, it is more convenient to use.
 
 ## Page Columnization
 
