@@ -27,6 +27,14 @@ jobs:
       - name: Run test suite
         run: tt run
 
+      - name: Run bibliography convergence regression test (#395)
+        # Compile-only test whose assertion is "emits no warnings", so it has to
+        # run with warnings promoted to errors. It cannot join the main `tt run`
+        # above: other tests deliberately emit warnings (touying delivers its own
+        # warnings through uniwarn, which shows up as an unknown-font-family
+        # warning), so promoting warnings suite-wide would fail them.
+        run: tt run --warnings promote issues/i395-bibliography-convergence
+
       - name: Run bundle regression test
         run: >-
           typst compile --features bundle --format bundle --root .
