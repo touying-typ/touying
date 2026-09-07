@@ -1257,6 +1257,33 @@
 
 /// Resolve a waypoint label or dictionary marker to a single integer subslide index.
 /// Extracts the "beginning" (or "first") value from resolved waypoint dictionaries.
+/// Resolve "passive" marks anywhere inside a content tree: a
+/// `touying-fn-wrapper-raw` (e.g. `#alert`) is called in place, a
+/// `touying-slide-recaller` is handed to `resolve-recall`. Passive marks have no
+/// multi-subslide behaviour of their own, so they can be resolved before the
+/// surrounding wrapper's visibility logic runs.
+///
+/// Recursive through a raw wrapper's own positional arguments, so a raw wrapper
+/// nested inside another one is resolved too - `#uncover[#alert[a #alert[b]]]`
+/// behaves like `#uncover[#alert[a]]`.
+#let _resolve-passive-marks(
+  body,
+  self,
+  resolve-recall,
+) = _resolve-marks-in-tree(
+  body,
+  ("touying-fn-wrapper-raw", "touying-slide-recaller"),
+  v => if v.kind == "touying-fn-wrapper-raw" {
+    (v.fn)(
+      self: self,
+      ..v.args.pos().map(c => _resolve-passive-marks(c, self, resolve-recall)),
+      ..v.args.named(),
+    )
+  } else {
+    resolve-recall(v)
+  },
+)
+
 #let _resolve-waypoint-to-int(self, spec) = {
   let resolved = utils.resolve-waypoints(self, spec)
   if type(resolved) == int {
@@ -2243,19 +2270,15 @@
             .value
             .args
             .pos()
-            .map(c => _resolve-marks-in-tree(
+            .map(c => _resolve-passive-marks(
               c,
-              ("touying-fn-wrapper-raw", "touying-slide-recaller"),
-              v => if v.kind == "touying-fn-wrapper-raw" {
-                (v.fn)(self: self, ..v.args)
-              } else {
-                resolve-recall-fallback(
-                  self,
-                  v.raw-label,
-                  v.at("subslide", default: none),
-                  v.at("base", default: auto),
-                )
-              },
+              self,
+              v => resolve-recall-fallback(
+                self,
+                v.raw-label,
+                v.at("subslide", default: none),
+                v.at("base", default: auto),
+              ),
             ))
 
           // Flush hidden-parts before calling the fn-wrapper, so it renders in
@@ -2273,44 +2296,107 @@
           ))
           repetitions = nextrepetitions
         } else if kind == "touying-fn-wrapper-raw" {
-          // Handle raw function wrappers (e.g., #alert). Resolve any
-          // nested passive mark (another touying-fn-wrapper-raw, or a
-          // touying-recall fallback) found anywhere inside this one's own
-          // positional args first — e.g. `#alert[text #alert[nested]
-          // more]` or `#alert[#touying-recall(<label>)]` — the same
-          // self-nesting support touying-fn-wrapper's own pre-processing
-          // gives uncover/only/alternatives.
-          let resolved-pos-args = child
+          // Handle raw function wrappers (e.g. #alert). First resolve any
+          // touying-recall fallback found anywhere inside this one's own
+          // positional args — e.g. `#alert[#touying-recall(<label>)]`.
+          // Nested touying-fn-wrapper-raw marks are deliberately *not*
+          // resolved here: the recursive parse below reaches this same branch
+          // for them, so their own bodies get parsed too. Resolving them
+          // eagerly would swallow a `#pause`/`#meanwhile` sitting inside a
+          // nested `#alert[..]`.
+          let raw-bodies = child
             .value
             .args
             .pos()
             .map(c => _resolve-marks-in-tree(
               c,
-              ("touying-fn-wrapper-raw", "touying-slide-recaller"),
-              v => if v.kind == "touying-fn-wrapper-raw" {
-                (v.fn)(self: self, ..v.args)
-              } else {
-                resolve-recall-fallback(
-                  self,
-                  v.raw-label,
-                  v.at("subslide", default: none),
-                  v.at("base", default: auto),
-                )
-              },
+              ("touying-slide-recaller",),
+              v => resolve-recall-fallback(
+                self,
+                v.raw-label,
+                v.at("subslide", default: none),
+                v.at("base", default: auto),
+              ),
             ))
-          if repetitions <= index or not need-cover {
+          // Parse the body so markers inside it are counted and rendered like
+          // anywhere else: #pause/#meanwhile advance the subslide count, and a
+          // touying-fn-wrapper (#only, #uncover, #effect, ..) is resolved here
+          // instead of reaching the wrapped function as a raw metadata mark,
+          // which would trip the unsupported-mark panic.
+          let (
+            conts,
+            inner-max-repetitions,
+            next-last-subslide,
+            final-repetitions,
+            inner-has-fn-wrapper,
+          ) = _parse-content-into-results-and-repetitions(
+            self: self,
+            need-cover: repetitions <= index,
+            base: repetitions,
+            base-last-subslide: last-subslide,
+            index: index,
+            show-delayed-wrapper: show-delayed-wrapper,
+            ..raw-bodies,
+          )
+          // `would-be-hidden` uses the repetitions this wrapper was *entered*
+          // at, not `calc.min(repetitions, final-repetitions)` as the container
+          // branches do: a #meanwhile inside rewinds final-repetitions to 1, and
+          // taking the min would then wrongly declare the whole wrapper visible
+          // and reveal the content sitting before that #meanwhile too early.
+          let would-be-hidden = repetitions > index and need-cover
+          let meanwhile-escaped = final-repetitions < repetitions
+          // Propagate a #meanwhile that fired inside the wrapper
+          if meanwhile-escaped {
+            if hidden-parts.len() != 0 {
+              result.push(cover-hidden(cover, hidden-parts, result))
+              hidden-parts = ()
+            }
+            max-repetitions = calc.max(max-repetitions, repetitions)
+          }
+          if would-be-hidden and (inner-has-fn-wrapper or meanwhile-escaped) {
+            // Two-pass: the body has to decide its own visibility, so re-run it
+            // with the outer need-cover and push to result rather than
+            // hidden-parts. A fn-wrapper directly inside a hidden wrapper would
+            // otherwise be covered twice; a #meanwhile needs the inner parse to
+            // cover what comes before it while revealing what comes after.
+            let (
+              conts2,
+              inner-max-repetitions2,
+              _,
+              _,
+              _,
+            ) = _parse-content-into-results-and-repetitions(
+              self: self,
+              need-cover: need-cover,
+              base: repetitions,
+              base-last-subslide: last-subslide,
+              index: index,
+              show-delayed-wrapper: show-delayed-wrapper,
+              ..raw-bodies,
+            )
             result.push((child.value.fn)(
               self: self,
-              ..resolved-pos-args,
+              ..conts2,
               ..child.value.args.named(),
             ))
+            has-fn-wrapper = true
+            max-repetitions = calc.max(max-repetitions, inner-max-repetitions2)
           } else {
-            hidden-parts.push((child.value.fn)(
+            let rendered = (child.value.fn)(
               self: self,
-              ..resolved-pos-args,
+              ..conts,
               ..child.value.args.named(),
-            ))
+            )
+            if would-be-hidden {
+              hidden-parts.push(rendered)
+            } else {
+              result.push(rendered)
+            }
+            if inner-has-fn-wrapper { has-fn-wrapper = true }
+            max-repetitions = calc.max(max-repetitions, inner-max-repetitions)
           }
+          repetitions = final-repetitions
+          last-subslide = calc.max(last-subslide, next-last-subslide)
         } else if kind == "touying-speaker-note" {
           // Handle speaker notes with optional #pause markers inside the note body.
           // Speaker notes always escape the pause zone (like fn-wrappers): they emit

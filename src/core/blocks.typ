@@ -6,13 +6,18 @@
 /// (speaker notes, alerts, animated equations/code/reducers)
 /// ------------------------------------------------
 
-// A raw version of `touying-fn-wrapper` that does not support `last-subslide` and `repetitions`.
+// A raw version of `touying-fn-wrapper` that does not support `last-subslide` or `repetitions`.
 // It is for wrapping functions that should be affected by the repetition counter surrounding them.
 // e.g. `utils.alert`
 //
+// Positional arguments are parsed like ordinary slide content, so `#pause`,
+// `#meanwhile` and touying-fn-wrappers (`#only`, `#uncover`, `#effect`, ..) work
+// inside them, as does nesting another `touying-fn-wrapper-raw`.
+//
 // - fn (function): The function that will be called like `(self: none, ..args) => { .. }`.
 //
-// - args: The arguments to pass to the function. E.g. content
+// - args: The arguments to pass to the function. Only content is allowed as positional
+//   arguments; anything else must be passed as a named argument.
 //
 // -> content
 #let touying-fn-wrapper-raw(
