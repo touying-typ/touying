@@ -323,10 +323,6 @@
   ),
   header-fill: self.colors.secondary,
   fill: self.colors.neutral-lightest,
-  setting: body => {
-    set text(fill: self.colors.neutral-darkest)
-    body
-  },
   ..args,
 )
 

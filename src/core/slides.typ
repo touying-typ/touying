@@ -2203,52 +2203,52 @@
 ///
 /// - self (dictionary): The presentation context.
 ///
-/// - note (content): The speaker note for the current slide.
-///
-/// - slide-preview (content, none): In `show-only-notes` mode the slide itself, at
-///   full page size, to be shrunk with `scale` by `preview-setting`. `none` on a second
-///   screen, where the real slide is already visible next to the notes, in which case
-///   `preview-setting` is not called at all.
-///
 /// - header (content, function): The panel's header strip. Default shows the current
 ///   section and slide headings.
 ///
-/// - header-height (length): Height of that strip. `0pt` drops it.
+/// - header-height (auto, length): Height of the strip. `auto` collapses it to its
+///   content plus the strip's own padding; `0pt` drops the strip entirely.
 ///
 /// - header-fill (color, gradient, tiling, none): Fill behind the strip.
 ///
 /// - fill (color, gradient, tiling, none): Fill behind the whole panel.
 ///
-/// - note-setting (auto, function): How the note body is laid out, as
-///   `note => content`. `auto` pads it by `48pt` horizontally. Set/show rules for the
-///   note go here, and the note is a parameter so it can also be measured or parsed.
+/// - note-setting (function): How the note body is laid out, as `note => content`.
+///   Set/show rules for the note go here, and the note is its parameter so it can also
+///   be measured or parsed.
 ///
-/// - preview-setting (auto, function): How the slide preview is scaled and placed, as
-///   `preview => content`. Scaling is `scale`'s job, so `scale(x: .., y: .., reflow: true, ..)`
-///   with unequal factors stretches the slide deliberately. `auto` scales it uniformly to the
-///   header strip's height - a quarter of the page when there is no strip - and puts it at the
-///   panel's top right. Only called when there is a preview.
+/// - preview-setting (function): How the slide preview is scaled and placed, as
+///   `preview => content`. Scaling is `scale`'s job, so unequal factors stretch the
+///   slide deliberately. Only called when there is a preview.
 ///
-/// - setting (function): `body => body` wrapper for set/show rules on the panel. Runs
-///   inside touying's own defaults, so its rules win.
+/// - note (content, none): the notes to be displayed.
+///
+/// - slide-preview (content, none): a preview of the accompanying slide, not none when `show-notes-only` is true.
 ///
 /// -> content
 #let touying-notes(
   self: none,
-  note: none,
-  slide-preview: none,
   header: self => {
     utils.display-current-heading(level: 1, depth: self.slide-level)
     linebreak()
     [ --- ]
     utils.display-current-heading(level: 2, depth: self.slide-level)
   },
-  header-height: 88pt,
+  header-height: auto,
   header-fill: rgb("#CCCCCC"),
   fill: rgb("#E6E6E6"),
-  note-setting: auto,
-  preview-setting: auto,
-  setting: body => body,
+  note-setting: note => pad(x: 48pt, note),
+  preview-setting: preview => place(
+    top + right,
+    box(stroke: black, fill: white, scale(
+      x: 25%,
+      y: 25%,
+      reflow: true,
+      preview,
+    )),
+  ),
+  note: none,
+  slide-preview: none,
 ) = {
   block(
     fill: fill,
@@ -2256,37 +2256,24 @@
     height: 100%,
     {
       set align(left + top)
-      set text(size: 24pt, fill: black, weight: "regular")
-      setting({
-        if header-height != 0pt {
-          block(
-            width: 100%,
-            height: header-height,
-            inset: (left: 32pt, top: 16pt),
-            fill: header-fill,
-            utils.call-or-display(self, header),
-          )
-        }
-        if slide-preview != none {
-          if preview-setting == auto {
-            let (page-width, page-height) = utils.get-page-dimensions(self)
-            let target = if header-height == 0pt { 25% * page-height } else {
-              header-height
-            }
-            let factor = target / page-height * 100%
-            place(top + right, box(
-              stroke: black,
-              fill: white,
-              scale(x: factor, y: factor, reflow: true, slide-preview),
-            ))
-          } else {
-            preview-setting(slide-preview)
-          }
-        }
-        if note-setting == auto { pad(x: 48pt, note) } else {
-          note-setting(note)
-        }
-      })
+      set text(
+        size: 24pt,
+        fill: self.colors.neutral-darkest,
+        weight: "regular",
+      )
+      if header-height != 0pt {
+        block(
+          width: 100%,
+          height: header-height,
+          inset: (x: 32pt, y: 16pt),
+          fill: header-fill,
+          utils.call-or-display(self, header),
+        )
+      }
+      if slide-preview != none {
+        preview-setting(slide-preview)
+      }
+      note-setting(note)
     },
   )
 }
