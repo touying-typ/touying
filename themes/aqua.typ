@@ -158,6 +158,14 @@
   set par(leading: leading)
 
   let body = {
+    place(hide(heading(
+      //place invisible heading so that the title is discoverable via get-current-heading
+      level: self.slide-level,
+      utils.i18n-outline-title,
+      bookmarked: false,
+      outlined: false,
+      numbering: none,
+    )))
     grid(
       columns: (1fr, 1fr),
       rows: 1fr,
@@ -279,6 +287,19 @@
     body,
   )
 })
+/// Speaker-note panel for this theme. Only styling; `touying-notes` does the layout.
+#let notes(self: none, ..args) = touying-notes(
+  self: self,
+  header: self => pad(x: 32pt, y: 16pt, text(
+    fill: self.colors.neutral-lightest,
+    utils.display-current-heading(depth: self.slide-level),
+  )),
+  header-fill: self.colors.primary,
+  fill: self.colors.primary-lightest,
+  ..args,
+)
+
+
 
 
 /// Touying aqua theme.
@@ -332,6 +353,7 @@
     ),
     config-common(
       slide-fn: slide,
+      notes-fn: notes,
       new-section-slide-fn: new-section-slide,
     ),
     config-methods(

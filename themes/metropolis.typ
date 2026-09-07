@@ -203,7 +203,7 @@
   title: [Outline],
   spacing: 2em,
   ..args,
-) = slide(title: title, config: config, self => {
+) = slide(config: config, self => {
   let named-args = args.named()
   let indent = if not "indent" in named-args.keys() { (1em,) } else {
     named-args.remove("indent")
@@ -220,6 +220,14 @@
   let numbering = if not "numbering" in named-args.keys() { ("1.",) } else {
     named-args.remove("numbering")
   }
+  place(hide(heading(
+    //place invisible heading so that the title is discoverable via get-current-heading
+    level: self.slide-level,
+    title,
+    bookmarked: false,
+    outlined: false,
+    numbering: none,
+  )))
   components.custom-progressive-outline(
     title: none,
     depth: if level != auto { level } else { self.slide-level },
@@ -314,6 +322,19 @@
     body,
   )
 })
+/// Speaker-note panel for this theme. Only styling; `touying-notes` does the layout.
+#let notes(self: none, ..args) = touying-notes(
+  self: self,
+  header: self => pad(x: 32pt, y: 16pt, text(
+    fill: self.colors.neutral-lightest,
+    utils.display-current-heading(depth: self.slide-level),
+  )),
+  header-fill: self.colors.secondary,
+  fill: self.colors.neutral-lightest,
+  ..args,
+)
+
+
 
 
 /// Touying metropolis theme.
@@ -386,6 +407,7 @@
     ),
     config-common(
       slide-fn: slide,
+      notes-fn: notes,
       new-section-slide-fn: new-section-slide,
     ),
     config-methods(

@@ -85,7 +85,7 @@ The header now uses the custom primary color.
 | `slide-level` | `2` | 控制哪个标题级别创建新幻灯片 |
 | `frozen-counters` | `()` | 冻结计数器列表 |
 | `show-strong-with-alert` | `true` | 粗体文本使用 alert 样式 |
-| `show-notes-on-second-screen` | `none` | 第二屏幕演讲者备注（`none`/`bottom`/`right`） |
+| `show-notes-on-second-screen` | `none` | 第二屏幕演讲者备注（`none`/`top`/`bottom`/`left`/`right`） |
 | `horizontal-line-to-pagebreak` | `true` | 将 `---` 水平线转换为分页符 |
 | `nontight-list-enum-and-terms` | `false` | 列表项间距控制 |
 | `show-hide-set-list-marker-none` | `true` | `#pause` 后隐藏列表标记 |
@@ -459,6 +459,9 @@ This is a famous book. @knuth
   config-common(show-notes-on-second-screen: right),
 )
 ```
+
+`top`、`bottom`、`left`、`right` 均可使用。页面会沿相应的方向加倍，多出的那一半
+被放进页边距，因此幻灯片本身的尺寸保持不变。
 
 此功能与 [pdfpc](https://pdfpc.github.io/) 和 [pympress](https://github.com/Cimbali/pympress) 等演示工具兼容。
 

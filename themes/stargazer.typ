@@ -232,29 +232,36 @@
   level: none,
   ..args,
 ) = touying-slide-wrapper(self => {
-  self.store.title = title
   touying-slide(
     self: self,
     config: config,
-    std.align(
-      self.store.align,
-      components.adaptive-columns(
-        text(
-          fill: self.colors.primary,
-          weight: "bold",
-          components.custom-progressive-outline(
-            level: level,
-            alpha: self.store.alpha,
-            indent: (0em, 1em),
-            vspace: (.4em,),
-            numbered: (numbered,),
-            depth: 1,
-            ..args.named(),
+    place(hide(heading(
+      //place invisible heading so that the title is discoverable via get-current-heading
+      level: self.slide-level,
+      utils.call-or-display(self, title),
+      bookmarked: false,
+      outlined: false,
+      numbering: none,
+    )))
+      + std.align(
+        self.store.align,
+        components.adaptive-columns(
+          text(
+            fill: self.colors.primary,
+            weight: "bold",
+            components.custom-progressive-outline(
+              level: level,
+              alpha: self.store.alpha,
+              indent: (0em, 1em),
+              vspace: (.4em,),
+              numbered: (numbered,),
+              depth: 1,
+              ..args.named(),
+            ),
           ),
-        ),
-      )
-        + args.pos().sum(default: none),
-    ),
+        )
+          + args.pos().sum(default: none),
+      ),
   )
 })
 
@@ -334,6 +341,14 @@
     let setting(title, body) = {
       set std.align(center + horizon)
       if title != none {
+        place(hide(heading(
+          //place invisible heading so that the title is discoverable via get-current-heading
+          level: self.slide-level,
+          title,
+          bookmarked: false,
+          outlined: false,
+          numbering: none,
+        )))
         block(
           fill: self.colors.tertiary,
           inset: (top: 0.7em, bottom: 0.7em, left: 3em, right: 3em),
@@ -351,6 +366,19 @@
     )
   },
 )
+/// Speaker-note panel for this theme. Only styling; `touying-notes` does the layout.
+#let notes(self: none, ..args) = touying-notes(
+  self: self,
+  header: self => pad(x: 32pt, y: 16pt, text(
+    fill: self.colors.secondary,
+    utils.display-current-heading(depth: self.slide-level),
+  )),
+  header-fill: self.colors.primary,
+  fill: self.colors.neutral-lightest,
+  ..args,
+)
+
+
 
 
 /// Touying stargazer theme.
@@ -467,6 +495,7 @@
     ),
     config-common(
       slide-fn: slide,
+      notes-fn: notes,
       new-section-slide-fn: new-section-slide,
     ),
     config-methods(

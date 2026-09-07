@@ -317,6 +317,10 @@ Use `config-common(show-notes-on-second-screen: right)` to show notes beside the
 )
 ```
 
+We support the alignments `top`, `bottom`, `left` and `right`. The page is doubled along
+the corresponding axis and the extra half is pushed into the margin, so the
+slide keeps its own dimensions.
+
 This is compatible with presenter tools like [pdfpc](https://pdfpc.github.io/) and [pympress](https://github.com/Cimbali/pympress).
 
 ---

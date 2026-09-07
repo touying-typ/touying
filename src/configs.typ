@@ -2,7 +2,7 @@
 #import "utils.typ"
 #import "magic.typ"
 #import "extern.typ"
-#import "core/slides.typ": slide, touying-slide
+#import "core/slides.typ": slide, touying-notes, touying-slide
 #import "core/animation.typ": touying-slide-wrapper
 #import "core/blocks.typ": touying-fn-wrapper-raw
 
@@ -183,6 +183,8 @@
 ///
 ///   This is similar to LaTeX Beamer's `\setbeameroption{show only notes}`. It is useful for using speaker notes with presentation tools that let you load two PDFs and synchronize them, one to display on the main screen and one on the auxiliary screen.
 ///
+/// - notes-fn (function): The function rendering the speaker-note panel, used both on a second screen and in `show-only-notes` mode. It receives `(self: none, note: none, slide-preview: none)` and returns content. Default is `touying-notes`; a theme overrides it the same way it overrides `slide-fn`. See `touying-notes` for what a theme gets to style.
+///
 /// - show-notes-on-second-screen (none, alignment): Whether to show the speaker notes on the second screen. Default is `none`.
 ///
 ///   Currently, the alignment can be `none`, `bottom`, and `right`.
@@ -295,6 +297,7 @@
   page-preamble: _default,
   default-page-preamble: _default,
   show-only-notes: _default,
+  notes-fn: _default,
   show-notes-on-second-screen: _default,
   horizontal-line-to-pagebreak: _default,
   reset-footnote-number-per-slide: _default,
@@ -355,6 +358,7 @@
       page-preamble: page-preamble,
       default-page-preamble: default-page-preamble,
       show-only-notes: show-only-notes,
+      notes-fn: notes-fn,
       show-notes-on-second-screen: show-notes-on-second-screen,
       horizontal-line-to-pagebreak: horizontal-line-to-pagebreak,
       reset-footnote-number-per-slide: reset-footnote-number-per-slide,
@@ -381,57 +385,6 @@
 }
 
 #let _default-cover = utils.hiding-cover
-
-#let _default-show-only-notes(
-  self: none,
-  width: 0pt,
-  height: 0pt,
-  cutout: false,
-) = {
-  let header-fill = rgb("#CCCCCC")
-  let header-height = 88pt
-  let header-content = {
-    utils.display-current-heading(level: 1, depth: self.slide-level)
-    linebreak()
-    [ --- ]
-    utils.display-current-heading(level: 2, depth: self.slide-level)
-  }
-  let body-fill = rgb("#E6E6E6")
-  let body-content = {
-    pad(x: 48pt, utils.current-slide-note)
-    // clear the slide note
-    utils.slide-note-state.update(none)
-  }
-
-  let template(hdr-fill, hdr-content, bdy-fill, bdy-content) = block(
-    fill: bdy-fill,
-    width: width,
-    height: height,
-    {
-      set align(left + top)
-      set text(size: 24pt, fill: black, weight: "regular")
-      block(
-        width: 100%,
-        height: header-height,
-        inset: (left: 32pt, top: 16pt),
-        outset: 0pt,
-        fill: hdr-fill,
-        hdr-content,
-      )
-      bdy-content
-    },
-  )
-
-  if cutout {
-    (
-      background: template(header-fill, none, body-fill, none),
-      foreground: template(none, header-content, none, body-content),
-      cutout-height: header-height,
-    )
-  } else {
-    template(header-fill, header-content, body-fill, body-content)
-  }
-}
 
 #let _default-alert = utils.method-wrapper(text.with(weight: "bold"))
 
@@ -465,8 +418,6 @@
 ///
 /// - alert (function): The function to alert the content. The default value is `utils.method-wrapper(text.with(weight: "bold"))` function.
 ///
-/// - show-only-notes (function): The function used to render speaker notes, either as the primary content (`show-only-notes: true` mode) or on a second screen. It should accept `(self: none, width: 0pt, height: 0pt, cutout: false)`. When `cutout: true`, return a dictionary with `background`, `foreground`, and `cutout-height` keys.
-///
 /// - convert-label-to-short-heading (function): The function to convert label to short heading. It is useful for the short heading for heading with label. It will be used in function with `short-heading`.
 ///
 ///   The default value is `utils.titlecase(lbl.replace(regex("^[^:]*:"), "").replace("_", " ").replace("-", " "))`.
@@ -490,7 +441,6 @@
   // alert interface
   alert: _default,
   // show notes
-  show-only-notes: _default,
   // convert label to short heading
   convert-label-to-short-heading: _default,
   ..args,
@@ -509,7 +459,6 @@
       alternatives-cases: alternatives-cases,
       item-by-item: item-by-item,
       alert: alert,
-      show-only-notes: show-only-notes,
       convert-label-to-short-heading: convert-label-to-short-heading,
     ))
       + args.named(),
@@ -844,14 +793,15 @@
     enable-pdfpc: true,
     enable-mark-warning: true,
     reset-page-counter-to-slide-counter: true,
-    // some black magics for better slides writing,
-    // maybe will be deprecated in the future
     show-only-notes: false,
+    notes-fn: touying-notes,
     show-notes-on-second-screen: none,
     horizontal-line-to-pagebreak: true,
     reset-footnote-number-per-slide: true,
     footnote-style: auto,
     cover-hides-footnote: auto,
+    // some black magics for better slides writing,
+    // maybe will be deprecated in the future
     nontight-list-enum-and-terms: false,
     align-list-marker-with-baseline: false,
     align-enum-marker-with-baseline: false,
@@ -892,7 +842,6 @@
     // alert interface
     alert: _default-alert,
     // show notes
-    show-only-notes: _default-show-only-notes,
     // convert label to short heading
     convert-label-to-short-heading: _default-convert-label-to-short-heading,
   ),
