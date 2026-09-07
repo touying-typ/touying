@@ -333,6 +333,23 @@
     ..bodies,
   )
 })
+/// Speaker-note panel for this theme. Only styling; `touying-notes` does the layout.
+#let notes(self: none, ..args) = touying-notes(
+  self: self,
+  header: self => text(
+    fill: self.colors.neutral-lightest,
+    utils.display-current-heading(depth: self.slide-level),
+  ),
+  header-fill: self.colors.primary,
+  fill: self.colors.neutral-lightest,
+  setting: body => {
+    set text(fill: self.colors.neutral-darkest)
+    body
+  },
+  ..args,
+)
+
+
 
 
 /// Touying university theme.
@@ -406,6 +423,7 @@
     ),
     config-common(
       slide-fn: slide,
+      notes-fn: notes,
       new-section-slide-fn: new-section-slide,
     ),
     config-methods(

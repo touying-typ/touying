@@ -1386,6 +1386,15 @@
   )
 }
 
+#let _margin-of(self, names, fallback: 0pt) = {
+  if type(self.page.margin) != dictionary {
+    self.page.margin
+  } else {
+    let hit = names.find(name => name in self.page.margin)
+    if hit != none { self.page.margin.at(hit) } else { fallback }
+  }
+}
+
 // The half of the doubled page that the slide itself occupies, given which side
 // the speaker notes were sent to. Used to keep the page background/foreground on
 // the slide instead of letting it stretch across both halves (#219).
@@ -1449,10 +1458,8 @@
     // which after the doubling above is the slide *and* the notes half - so a
     // background sized `100%` gets stretched across both (#219). Confine each
     // layer to a box the size of one slide, placed on the slide's own half, so
-    // that percentage sizes and `fit: "cover"` images mean what the user meant.
-    // Styling the notes half is a separate job, done through
-    // `config-common(note-*: ..)` rather than by bleeding the slide's own
-    // background into it.
+    // that percentage sized images mean what the user meant.
+    // Styling the notes is done via the notes-fn.
     let slide-half = _slide-half-alignment(notes-side)
     for key in ("background", "foreground") {
       let layer = self.page.at(key, default: none)
@@ -1492,165 +1499,91 @@
     let bottom-pad = _get-bottom-pad(self)
     footer = bottom-pad(footer)
   }
-  // speaker note (full-screen notes mode with slide thumbnail)
   if self.at("show-only-notes", default: false) {
     let (page-width, page-height) = utils.get-page-dimensions(self)
-    let show-only-notes = (self.methods.show-only-notes)(
-      self: self,
-      width: page-width,
-      height: page-height,
-      cutout: true,
-    )
-
-    let margin-left = if type(self.page.margin) != dictionary {
-      self.page.margin
-    } else if "left" in self.page.margin {
-      self.page.margin.left
-    } else if "x" in self.page.margin {
-      self.page.margin.x
-    } else {
-      0pt
-    }
-
-    let margin-right = if type(self.page.margin) != dictionary {
-      self.page.margin
-    } else if "right" in self.page.margin {
-      self.page.margin.right
-    } else if "x" in self.page.margin {
-      self.page.margin.x
-    } else {
-      0pt
-    }
-
-    let margin-top = if type(self.page.margin) != dictionary {
-      self.page.margin
-    } else if "top" in self.page.margin {
-      self.page.margin.top
-    } else if "y" in self.page.margin {
-      self.page.margin.y
-    } else {
-      0pt
-    }
-
-    let margin-bottom = if type(self.page.margin) != dictionary {
-      self.page.margin
-    } else if "bottom" in self.page.margin {
-      self.page.margin.bottom
-    } else if "y" in self.page.margin {
-      self.page.margin.y
-    } else {
-      0pt
-    }
-
-    let cutout-height = show-only-notes.cutout-height
+    let slide-header = header
+    let slide-footer = footer
+    let margin-left = _margin-of(self, ("left", "x"))
+    let margin-right = _margin-of(self, ("right", "x"))
+    let margin-top = _margin-of(self, ("top", "y"))
+    let margin-bottom = _margin-of(self, ("bottom", "y"))
     let inset = (left: margin-left, right: margin-right)
-
-    // header: place notes background + thumbnail of slide header
-    header = {
-      place(
-        left + bottom,
-        dx: -margin-left,
-        dy: margin-top,
-        show-only-notes.background,
-      )
-      place(
-        right + top,
-        dx: margin-right,
-        _miniaturize(
-          page-width,
-          page-height,
-          cutout-height,
-          outer-style: (fill: white),
-          box(
-            width: 100%,
-            height: 100%,
-            inset: (bottom: page-height - margin-top, ..inset),
-            align(horizon, header),
-          ),
-        ),
-      )
-    }
-
-    // footer: place notes foreground + thumbnail of slide footer
-    footer = {
-      place(
-        right + bottom,
-        dx: margin-right,
-        dy: -(page-height - cutout-height),
-        _miniaturize(
-          page-width,
-          page-height,
-          cutout-height,
-          box(
-            width: 100%,
-            height: 100%,
-            inset: (top: page-height - margin-bottom, ..inset),
-            align(horizon, footer),
-          ),
-        ),
-      )
-      place(
-        left + bottom,
-        dx: -margin-left,
-        show-only-notes.foreground,
-      )
-    }
-
-    // body-transform: miniaturize the slide body and place in top-right corner
-    body-transform = body => place(
-      right + top,
-      dx: margin-right,
-      dy: -margin-top,
-      _miniaturize(
+    // Reassemble the slide's own page from its three parts so it can be shrunk
+    // as one piece. Each part is laid out page-sized and inset into its band,
+    // which reproduces the page geometry without re-deriving it.
+    let slide-page(body) = box(width: page-width, height: page-height, {
+      place(top + left, box(
+        width: 100%,
+        height: 100%,
+        inset: (bottom: page-height - margin-top, ..inset),
+        align(horizon, slide-header),
+      ))
+      place(top + left, box(
+        width: 100%,
+        height: 100%,
+        inset: (top: margin-top, bottom: margin-bottom, ..inset),
+        body,
+      ))
+      place(top + left, box(
+        width: 100%,
+        height: 100%,
+        inset: (top: page-height - margin-bottom, ..inset),
+        align(horizon, slide-footer),
+      ))
+    })
+    // The slide's own chrome belongs inside the preview, not around the notes.
+    header = none
+    footer = none
+    body-transform = body => {
+      let slide-preview(height: 88pt) = _miniaturize(
         page-width,
         page-height,
-        cutout-height,
-        box(
-          width: 100%,
-          height: 100%,
-          inset: (top: margin-top, bottom: margin-bottom, ..inset),
-          body,
-        ),
-      ),
-    )
+        if type(height) == ratio { height * page-height } else { height },
+        outer-style: (fill: white),
+        slide-page(body),
+      )
+      place(
+        top + left,
+        dx: -margin-left,
+        dy: -margin-top,
+        box(width: page-width, height: page-height, {
+          (self.notes-fn)(
+            self: self,
+            note: utils.current-slide-note,
+            slide-preview: slide-preview,
+          )
+          utils.slide-note-state.update(none)
+        }),
+      )
+    }
   } else if self.show-notes-on-second-screen in (top, bottom, left, right) {
-    // speaker note (second-screen mode)
     let notes-side = self.show-notes-on-second-screen
     let (page-width, page-height) = utils.get-page-dimensions(self)
-    let show-only-notes = (self.methods.show-only-notes)(
-      self: self,
-      width: page-width,
-      height: page-height,
-    )
-    let margin-of(names, fallback) = if type(self.page.margin) != dictionary {
-      self.page.margin
-    } else {
-      let hit = names.find(name => name in self.page.margin)
-      if hit != none { self.page.margin.at(hit) } else { fallback }
-    }
-    let margin-left = margin-of(("left", "x"), 0pt)
+    let panel = box(width: page-width, height: page-height, {
+      (self.notes-fn)(
+        self: self,
+        note: utils.current-slide-note,
+        slide-preview: none,
+      )
+      utils.slide-note-state.update(none)
+    })
+    let margin-left = _margin-of(self, ("left", "x"))
     // The notes are appended to the footer, so the anchor is the bottom-left of
-    // the slide's own half: vertically at that half's bottom page edge (the
-    // footer is pulled there by `zero-margin-footer`'s negative padding),
-    // horizontally at its content edge, i.e. `margin-left` in. Every offset
-    // below moves the notes box from there onto the half that
+    // the slide's own half: vertically at that half's bottom page edge, pulled
+    // there by `zero-margin-footer`'s negative padding, horizontally at its
+    // content edge. Offsets move the panel onto the half that
     // `_get-page-extra-args` opened up in the margin.
     let (dx, dy) = if notes-side == bottom {
-      // Slide is the upper half; the box already hangs below the anchor.
       (-margin-left, 0pt)
     } else if notes-side == top {
-      // Slide is the lower half, so its bottom edge is 2 * page-height down the
-      // doubled page and the notes half starts at its very top.
+      // The slide is the lower half, so the notes half starts a page height up.
       (-margin-left, -page-height)
     } else if notes-side == right {
-      // Slide is the left half; step one slide width right, undoing the inset.
       (page-width - margin-left, 0pt)
     } else {
-      // Slide is the right half, so its content edge is a full slide width plus
-      // the inset in from the page's left edge.
       (-(page-width + margin-left), 0pt)
     }
-    footer += place(left + bottom, dx: dx, dy: dy, show-only-notes)
+    footer += place(left + bottom, dx: dx, dy: dy, panel)
   }
   (header, footer, body-transform)
 }
@@ -2289,6 +2222,90 @@
 ///
 /// - config (dictionary): The configuration of the slide. You can use `config-xxx` to set the configuration of the slide. For more configurations, you can use `utils.merge-dicts` to merge them.
 ///
+/// Render the speaker-note panel. This is to `notes-fn` what `touying-slide` is to
+/// `slide-fn`: themes call it with their own colours and layout instead of
+/// building a panel from scratch, and its defaults are the look touying uses
+/// when no theme sets `notes-fn`.
+///
+/// The panel fills whichever region touying gives it - the second screen next to
+/// the slide, or the whole page in `show-only-notes` mode - so sizes inside it
+/// may be given relative to that region.
+///
+/// - self (dictionary): The presentation context.
+///
+/// - note (content): The speaker note for the current slide. Passed in because it
+///   lives in a state that has to be cleared once per slide; touying does that.
+///
+/// - slide-preview (function, none): In `show-only-notes` mode, `(height: ..) => content`
+///   returning a miniature of the slide at that height, which may be a length or a
+///   ratio of the page height. `none` on a second screen, where the real slide is
+///   already visible next to the notes.
+///
+/// - header (content, function): The panel's header strip. Default shows the current
+///   section and slide headings.
+///
+/// - header-height (length): Height of that strip. `0pt` drops it.
+///
+/// - header-fill (color, gradient, tiling, none): Fill behind the strip.
+///
+/// - fill (color, gradient, tiling, none): Fill behind the whole panel.
+///
+/// - inset (relative, dictionary): Padding around the note body.
+///
+/// - preview-align (alignment): Where the slide preview goes, when there is one.
+///
+/// - setting (function): `body => body` wrapper for set/show rules on the panel. Runs
+///   inside touying's own defaults, so its rules win.
+///
+/// -> content
+#let touying-notes(
+  self: none,
+  note: none,
+  slide-preview: none,
+  header: self => {
+    utils.display-current-heading(level: 1, depth: self.slide-level)
+    linebreak()
+    [ --- ]
+    utils.display-current-heading(level: 2, depth: self.slide-level)
+  },
+  header-height: 88pt,
+  header-fill: rgb("#CCCCCC"),
+  fill: rgb("#E6E6E6"),
+  inset: (x: 48pt),
+  preview-align: top + right,
+  setting: body => body,
+) = {
+  block(
+    fill: fill,
+    width: 100%,
+    height: 100%,
+    {
+      set align(left + top)
+      set text(size: 24pt, fill: black, weight: "regular")
+      setting({
+        if header-height != 0pt {
+          block(
+            width: 100%,
+            height: header-height,
+            inset: (left: 32pt, top: 16pt),
+            fill: header-fill,
+            utils.call-or-display(self, header),
+          )
+        }
+        if slide-preview != none {
+          place(preview-align, slide-preview(height: header-height))
+        }
+        if type(inset) == dictionary {
+          pad(..inset, note)
+        } else {
+          pad(inset, note)
+        }
+      })
+    },
+  )
+}
+
+
 /// - repeat (auto, int): The number of subslides. Default is `auto`, which means touying will automatically calculate the number of subslides.
 ///
 /// - setting (function): Set/show rules to apply for the slide. Receives the composed body and returns it.

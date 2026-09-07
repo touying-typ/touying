@@ -16,8 +16,8 @@
 // rendering logic: for document-mode and slides-mode: rely on parser.typ for parsing the metadata
 #import "core/docmode.typ": document-only, document-text
 #import "core/slides.typ": (
-  appendix, empty-slide, slide, touying-recall, touying-set-config,
-  touying-slide,
+  appendix, empty-slide, slide, touying-notes, touying-recall,
+  touying-set-config, touying-slide,
 )
 //configs
 #import "configs.typ": (
