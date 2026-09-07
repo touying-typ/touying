@@ -19,4 +19,4 @@ Before. #pause After.#footnote[Revealed with the second step.]
 
 First @a #pause then @b.
 
-#bibliography(bib-data, style: "chicago-notes", title: none)
+#only("h", bibliography(bib-data, style: "chicago-notes", title: none))
