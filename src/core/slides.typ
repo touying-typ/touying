@@ -2203,8 +2203,9 @@
 ///
 /// - self (dictionary): The presentation context.
 ///
-/// - header (content, function): The panel's header strip. Default shows the current
-///   section and slide headings.
+/// - header (content, function): The panel's header strip. The strip applies no inset
+///   of its own, so padding belongs in here. Default shows the current section and slide
+///   headings, padded.
 ///
 /// - header-height (auto, length): Height of the strip. `auto` collapses it to its
 ///   content plus the strip's own padding; `0pt` drops the strip entirely.
@@ -2228,12 +2229,12 @@
 /// -> content
 #let touying-notes(
   self: none,
-  header: self => {
+  header: self => pad(x: 32pt, y: 16pt, {
     utils.display-current-heading(level: 1, depth: self.slide-level)
     linebreak()
     [ --- ]
     utils.display-current-heading(level: 2, depth: self.slide-level)
-  },
+  }),
   header-height: auto,
   header-fill: rgb("#CCCCCC"),
   fill: rgb("#E6E6E6"),
@@ -2265,7 +2266,6 @@
         block(
           width: 100%,
           height: header-height,
-          inset: (x: 32pt, y: 16pt),
           fill: header-fill,
           utils.call-or-display(self, header),
         )

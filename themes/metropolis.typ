@@ -317,10 +317,10 @@
 /// Speaker-note panel for this theme. Only styling; `touying-notes` does the layout.
 #let notes(self: none, ..args) = touying-notes(
   self: self,
-  header: self => text(
+  header: self => pad(x: 32pt, y: 16pt, text(
     fill: self.colors.neutral-lightest,
     utils.display-current-heading(depth: self.slide-level),
-  ),
+  )),
   header-fill: self.colors.secondary,
   fill: self.colors.neutral-lightest,
   ..args,
