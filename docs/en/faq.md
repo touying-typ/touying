@@ -276,8 +276,8 @@ This is a famous book. @knuth
 
 The bibliography has to be part of the document for the footnote citations to resolve. If you don't want to show the list of references at all, call it as `hide(bibliography(bib))` instead.
 
-If you wish to invoke the on a slide with other content you must be careful not to invoke it multiple times.
-This may happen automatic if the slide you place the bibliography on has more than one subslide. In that case wrap it with `only("h", <bibliography>)`, which only emits it once at the time of invocation.
+If you wish to invoke it on a slide with other content you must be careful not to invoke it multiple times.
+This may happen automatically if the slide you place the bibliography on has more than one subslide. In that case wrap it with `only("h", bibliography(bib))`, which only emits it once at the time of invocation.
 
 ---
 

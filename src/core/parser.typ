@@ -1254,9 +1254,6 @@
   body
 }
 
-
-/// Resolve a waypoint label or dictionary marker to a single integer subslide index.
-/// Extracts the "beginning" (or "first") value from resolved waypoint dictionaries.
 /// Resolve "passive" marks anywhere inside a content tree: a
 /// `touying-fn-wrapper-raw` (e.g. `#alert`) is called in place, a
 /// `touying-slide-recaller` is handed to `resolve-recall`. Passive marks have no
@@ -1284,6 +1281,8 @@
   },
 )
 
+/// Resolve a waypoint label or dictionary marker to a single integer subslide index.
+/// Extracts the "beginning" (or "first") value from resolved waypoint dictionaries.
 #let _resolve-waypoint-to-int(self, spec) = {
   let resolved = utils.resolve-waypoints(self, spec)
   if type(resolved) == int {
