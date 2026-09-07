@@ -2261,7 +2261,10 @@
 ///
 /// - inset (relative, dictionary): Padding around the note body.
 ///
-/// - preview-align (alignment): Where the slide preview goes, when there is one.
+/// - preview-setting (auto, function): How the slide preview is scaled and placed,
+///   as `preview => content` where `preview` is `slide-preview`. `auto` scales it to
+///   the header strip's height, keeping the slide's aspect, and puts it at the strip's
+///   right end - or, with no strip, leaves `slide-preview` to its own default size.
 ///
 /// - setting (function): `body => body` wrapper for set/show rules on the panel. Runs
 ///   inside touying's own defaults, so its rules win.
@@ -2281,7 +2284,7 @@
   header-fill: rgb("#CCCCCC"),
   fill: rgb("#E6E6E6"),
   inset: (x: 48pt),
-  preview-align: top + right,
+  preview-setting: auto,
   setting: body => body,
 ) = {
   block(
@@ -2302,21 +2305,21 @@
           )
         }
         if slide-preview != none {
-          // Match the strip's height, giving the width explicitly so an
-          // absolute `header-height` keeps the slide's aspect rather than
-          // being copied onto both sides. A stripless panel takes the default.
-          let (page-width, page-height) = utils.get-page-dimensions(self)
-          place(
-            preview-align,
-            if header-height == 0pt {
+          if preview-setting == auto {
+            // The width is given explicitly so that an absolute `header-height`
+            // keeps the slide's aspect instead of being copied onto both sides.
+            let (page-width, page-height) = utils.get-page-dimensions(self)
+            place(top + right, if header-height == 0pt {
               slide-preview()
             } else {
               slide-preview(
                 width: header-height / page-height * page-width,
                 height: header-height,
               )
-            },
-          )
+            })
+          } else {
+            preview-setting(slide-preview)
+          }
         }
         if type(inset) == dictionary {
           pad(..inset, note)
