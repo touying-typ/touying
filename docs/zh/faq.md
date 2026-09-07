@@ -85,7 +85,8 @@ The header now uses the custom primary color.
 | `slide-level` | `2` | 控制哪个标题级别创建新幻灯片 |
 | `frozen-counters` | `()` | 冻结计数器列表 |
 | `show-strong-with-alert` | `true` | 粗体文本使用 alert 样式 |
-| `show-notes-on-second-screen` | `none` | 第二屏幕演讲者备注（`none`/`bottom`/`right`） |
+| `show-notes-on-second-screen` | `none` | 第二屏幕演讲者备注（`none`/`top`/`bottom`/`left`/`right`） |
+| `background-covers-second-screen` | `false` | 页面背景是否也覆盖备注那一半 |
 | `horizontal-line-to-pagebreak` | `true` | 将 `---` 水平线转换为分页符 |
 | `nontight-list-enum-and-terms` | `false` | 列表项间距控制 |
 | `show-hide-set-list-marker-none` | `true` | `#pause` 后隐藏列表标记 |
@@ -482,6 +483,14 @@ Some cited content. @knuth
   config-common(show-notes-on-second-screen: right),
 )
 ```
+
+`top`、`bottom`、`left`、`right` 均可使用。页面会沿相应的方向加倍，多出的那一半
+被放进页边距，因此幻灯片本身的尺寸保持不变。
+
+`config-page(background: ..)` 只会覆盖幻灯片自己的那一半，所以尺寸为 `100%` 的背景
+或使用 `fit: "cover"` 的图片会填满幻灯片，而不会被拉伸到备注那一半上去。如果某个主题
+确实需要在备注区域后面绘制内容，可以传入
+`config-common(background-covers-second-screen: true)` 恢复旧行为。
 
 此功能与 [pdfpc](https://pdfpc.github.io/) 和 [pympress](https://github.com/Cimbali/pympress) 等演示工具兼容。
 

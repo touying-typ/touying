@@ -1386,9 +1386,27 @@
   )
 }
 
+// The half of the doubled page that the slide itself occupies, given which side
+// the speaker notes were sent to. Used to keep the page background/foreground on
+// the slide instead of letting it stretch across both halves (#219).
+#let _slide-half-alignment(notes-side) = {
+  if notes-side == right {
+    top + left
+  } else if notes-side == bottom {
+    top + left
+  } else if notes-side == left {
+    top + right
+  } else if notes-side == top {
+    bottom + left
+  } else {
+    top + left
+  }
+}
+
 // get page extra args for show-notes-on-second-screen
 #let _get-page-extra-args(self) = {
-  if self.show-notes-on-second-screen in (bottom, right) {
+  let notes-side = self.show-notes-on-second-screen
+  if notes-side in (top, bottom, left, right) {
     let margin = self.page.margin
     let (page-width, page-height) = utils.get-page-dimensions(self)
     if (
@@ -1401,22 +1419,55 @@
     if type(margin) == length or type(margin) == relative {
       margin = (x: margin, y: margin)
     }
-    if self.show-notes-on-second-screen == bottom {
-      if "bottom" not in margin {
-        assert("y" in margin, message: "The margin should have bottom or y")
-        margin.bottom = margin.y
+    // The page is doubled along one axis and the extra half is pushed into the
+    // margin, so the slide keeps its own dimensions and the notes are placed
+    // into the margin by `_get-header-footer`.
+    let extra = if notes-side in (top, bottom) {
+      let side = if notes-side == bottom { "bottom" } else { "top" }
+      if side not in margin {
+        assert(
+          "y" in margin,
+          message: "The margin should have " + side + " or y",
+        )
+        margin.insert(side, margin.y)
       }
-      margin.bottom += page-height
-      return (margin: margin, height: 2 * page-height)
-    } else if self.show-notes-on-second-screen == right {
-      if "right" not in margin {
-        assert("x" in margin, message: "The margin should have right or x")
-        margin.right = margin.x
+      margin.at(side) += page-height
+      (margin: margin, height: 2 * page-height)
+    } else {
+      let side = if notes-side == right { "right" } else { "left" }
+      if side not in margin {
+        assert(
+          "x" in margin,
+          message: "The margin should have " + side + " or x",
+        )
+        margin.insert(side, margin.x)
       }
-      margin.right += page-width
-      return (margin: margin, width: 2 * page-width)
+      margin.at(side) += page-width
+      (margin: margin, width: 2 * page-width)
     }
-    return (:)
+    // `page(background: ..)` and `page(foreground: ..)` cover the whole page,
+    // which after the doubling above is the slide *and* the notes half - so a
+    // background sized `100%` gets stretched across both (#219). Confine each
+    // layer to a box the size of one slide, placed on the slide's own half, so
+    // that percentage sizes and `fit: "cover"` images mean what the user meant.
+    // Set `background-covers-second-screen: true` to opt back out; a theme that
+    // deliberately draws behind the notes panel needs the old behaviour.
+    if not self.at("background-covers-second-screen", default: false) {
+      let slide-half = _slide-half-alignment(notes-side)
+      for key in ("background", "foreground") {
+        let layer = self.page.at(key, default: none)
+        if layer != none {
+          extra.insert(
+            key,
+            place(
+              slide-half,
+              box(width: page-width, height: page-height, layer),
+            ),
+          )
+        }
+      }
+    }
+    return extra
   } else {
     return (:)
   }
@@ -1566,36 +1617,44 @@
         ),
       ),
     )
-  } else if self.show-notes-on-second-screen in (bottom, right) {
+  } else if self.show-notes-on-second-screen in (top, bottom, left, right) {
     // speaker note (second-screen mode)
+    let notes-side = self.show-notes-on-second-screen
     let (page-width, page-height) = utils.get-page-dimensions(self)
     let show-only-notes = (self.methods.show-only-notes)(
       self: self,
       width: page-width,
       height: page-height,
     )
-    let margin-left = if type(self.page.margin) != dictionary {
+    let margin-of(names, fallback) = if type(self.page.margin) != dictionary {
       self.page.margin
-    } else if "left" in self.page.margin {
-      self.page.margin.left
-    } else if "x" in self.page.margin {
-      self.page.margin.x
     } else {
-      0pt
+      let hit = names.find(name => name in self.page.margin)
+      if hit != none { self.page.margin.at(hit) } else { fallback }
     }
-    if self.show-notes-on-second-screen == bottom {
-      footer += place(
-        left + bottom,
-        dx: -margin-left,
-        show-only-notes,
-      )
-    } else if self.show-notes-on-second-screen == right {
-      footer += place(
-        left + bottom,
-        dx: page-width - margin-left,
-        show-only-notes,
-      )
+    let margin-left = margin-of(("left", "x"), 0pt)
+    // The notes are appended to the footer, so the anchor is the bottom-left of
+    // the slide's own half: vertically at that half's bottom page edge (the
+    // footer is pulled there by `zero-margin-footer`'s negative padding),
+    // horizontally at its content edge, i.e. `margin-left` in. Every offset
+    // below moves the notes box from there onto the half that
+    // `_get-page-extra-args` opened up in the margin.
+    let (dx, dy) = if notes-side == bottom {
+      // Slide is the upper half; the box already hangs below the anchor.
+      (-margin-left, 0pt)
+    } else if notes-side == top {
+      // Slide is the lower half, so its bottom edge is 2 * page-height down the
+      // doubled page and the notes half starts at its very top.
+      (-margin-left, -page-height)
+    } else if notes-side == right {
+      // Slide is the left half; step one slide width right, undoing the inset.
+      (page-width - margin-left, 0pt)
+    } else {
+      // Slide is the right half, so its content edge is a full slide width plus
+      // the inset in from the page's left edge.
+      (-(page-width + margin-left), 0pt)
     }
+    footer += place(left + bottom, dx: dx, dy: dy, show-only-notes)
   }
   (header, footer, body-transform)
 }

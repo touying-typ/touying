@@ -3438,8 +3438,9 @@
     default: none,
   )
   assert(
-    show-notes-on-second-screen in (none, bottom, right),
-    message: "`show-notes-on-second-screen` should be `none`, `bottom` or `right`",
+    show-notes-on-second-screen in (none, top, bottom, left, right),
+    message: "`show-notes-on-second-screen` should be `none`, `top`, `bottom`, "
+      + "`left` or `right`",
   )
   let is-visible = (
     subslide == none

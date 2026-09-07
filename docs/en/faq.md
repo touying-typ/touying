@@ -342,6 +342,17 @@ Use `config-common(show-notes-on-second-screen: right)` to show notes beside the
 )
 ```
 
+`top`, `bottom`, `left` and `right` are all accepted. The page is doubled along
+the corresponding axis and the extra half is pushed into the margin, so the
+slide keeps its own dimensions.
+
+A `config-page(background: ..)` is confined to the slide's own half, so a
+background sized `100%` or an image with `fit: "cover"` fills the slide rather
+than being stretched across the notes half as well. If a theme deliberately
+paints behind the notes panel, pass
+`config-common(background-covers-second-screen: true)` to get the old
+behaviour back.
+
 This is compatible with presenter tools like [pdfpc](https://pdfpc.github.io/) and [pympress](https://github.com/Cimbali/pympress).
 
 ---

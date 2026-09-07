@@ -183,7 +183,11 @@
 ///
 ///   This is similar to LaTeX Beamer's `\setbeameroption{show only notes}`. It is useful for using speaker notes with presentation tools that let you load two PDFs and synchronize them, one to display on the main screen and one on the auxiliary screen.
 ///
-/// - show-notes-on-second-screen (none, alignment): Whether to show the speaker notes on the second screen. Default is `none`.
+/// - show-notes-on-second-screen (none, alignment): Whether to show the speaker notes on the second screen, and on which side of the slide to put them. One of `none`, `top`, `bottom`, `left` or `right`. Default is `none`.
+///
+///   The page is doubled along the corresponding axis and the extra half is pushed into the margin, so the slide keeps its own dimensions and the notes are drawn into that margin.
+///
+/// - background-covers-second-screen (bool): Whether the `config-page(background: ..)` and `foreground` layers also cover the speaker-note half when `show-notes-on-second-screen` is set. Default is `false`, which confines each layer to a box the size of one slide so that percentage sizes and `fit: "cover"` images mean what they mean without the second screen (see #219). Set it to `true` for the pre-0.8.0 behaviour, which a theme deliberately painting behind the notes panel needs.
 ///
 ///   Currently, the alignment can be `none`, `bottom`, and `right`.
 ///
