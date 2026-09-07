@@ -1,28 +1,31 @@
-// Regression test for #415: numeric citation numbers must not drift across
-// subslides.
+// #415: numeric citation numbers looked inflated under `#pause` - the second
+// subslide showed `[3][4]` where `[1][2]` was expected.
 //
-// Compile-only, assertion-based: the resolved citation number is produced by
-// typst's CSL pass and is exposed on neither the `cite` element (whose only
-// fields are key/supplement/form/style) nor the `bibliography` element, so it
-// cannot be asserted directly. What *can* be asserted is the mechanism behind
-// #415, which was established empirically:
+// Not a bug in the end, and closed as such. The cause is that a `bibliography`
+// *claims* the citations present in the render it sees, and touying re-renders a
+// slide body once per subslide. On a multi-subslide slide the bibliography is
+// therefore instantiated more than once: the first instance claims the
+// citations (while being covered, so nobody sees its numbering) and each later
+// instance starts a fresh block of the global numbering sequence. Two symptoms
+// fall out of that one cause:
 //
-//   citation numbers are allocated in one global sequence, and each
-//   `bibliography` *instance* claims a fresh block of it.
+//   - citations re-rendered on the later subslide get renumbered -> `[3][4]`;
+//   - citations that live on an *earlier* slide are not re-rendered at all, so
+//     the later instance has nothing left to claim and renders nothing.
 //
-// touying re-renders a slide body once per subslide, so a `#bibliography(..)`
-// call sitting on a multi-subslide slide is instantiated once per subslide and
-// each instance claims a new block - the second block is why the reporter saw
-// `[3][4]` instead of `[1][2]`.
+// The fix is to make sure only one instance exists. Either put the bibliography
+// on its own slide with no `#pause` on it, or - if it has to live on an animated
+// slide - wrap it in `only("h", ..)`, which emits it at a single subslide.
 //
-// Re-rendered *citations* are harmless: the four subslides below re-render
-// `@a`/`@b`/`@c` repeatedly and still number them `[1][2][3]`, because the
-// bibliography is instantiated exactly once. So "exactly one bibliography
-// instance" is the invariant that keeps the numbering stable, and asserting it
-// is both necessary and sufficient here.
+// So the invariant this test pins down is "exactly one bibliography instance",
+// which is what keeps the numbering stable. It is asserted rather than compared
+// as an image because the resolved number is exposed on neither the `cite`
+// element (whose only fields are key/supplement/form/style) nor the
+// `bibliography` element, while the instance count is directly queryable.
 //
-// See tests/issues/i415-bibliography-instances-known-bug for the shape that
-// still gets this wrong.
+// Re-rendered *citations* are harmless, and the first slide below is here to
+// keep that clear: four subslides re-render `@a`/`@b`/`@c` repeatedly and still
+// number them `[1][2][3]`.
 
 #import "/lib.typ": *
 #import themes.simple: *
@@ -37,32 +40,31 @@
 
 = Citation numbering under pause
 
-== Content
+== Cites re-rendered across four subslides
 
 First @a #pause then @b #pause and @c #pause done.
 
-== References
+== References on their own slide
 
 #bibliography(bib-data, style: "ieee", title: none)
 
 == Assertions
 
 #context {
-  // The bibliography sits on its own slide, which has no `#pause`, so it is
-  // rendered once for the whole document however many subslides the content
-  // slide has.
+  // The bibliography is on a slide with no `#pause`, so it is instantiated
+  // once for the whole document no matter how many subslides the content
+  // slide has. Every extra instance would shift the citation numbers.
   assert.eq(
     query(bibliography).len(),
     1,
-    message: "the bibliography must be instantiated exactly once, or each "
-      + "extra instance shifts the citation numbers (#415)",
+    message: "expected exactly one bibliography instance; each extra one "
+      + "claims a fresh block of citation numbers (#415)",
   )
-  // Meanwhile the citations really are re-rendered once per subslide of the
-  // content slide - four subslides, three citations, one of them repeated on
-  // every later subslide. This is here to document that cite re-renders are
-  // *not* the problem, so a future fix is not tempted to chase them.
+  // The citations really are re-rendered per subslide. Asserted so that a
+  // future change is not tempted to chase cite re-renders, which are not the
+  // cause.
   assert(
     query(cite).len() > 3,
-    message: "expected the citations to be re-rendered per subslide",
+    message: "expected the citations to be re-rendered once per subslide",
   )
 }
