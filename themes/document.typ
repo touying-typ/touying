@@ -16,7 +16,7 @@
 /// = Introduction
 /// Some content here.
 /// ```
-/// 
+///
 /// Example (paired with a slide theme):
 /// ```typst
 /// #show: simple-theme.with(
@@ -34,11 +34,11 @@
 ///     ),
 ///   )
 /// )
-/// 
+///
 /// = Introduction
 /// Some content here. #pause More content which is not paused during document output.
 /// ```
-/// 
+///
 /// - title (str): Document title.
 /// - subtitle (str, none): Document subtitle. Default is `none`.
 /// - author (str, array): Document author(s).
@@ -54,11 +54,11 @@
 /// - justify (bool): Whether to justify paragraphs. Default is `true`.
 /// - title-block-fn (function): A function returning the title block to show at the beginning of the rendered document. If your theme has an automatic function for this you don't need it. And you can always use `#document-only` before the first slide to show your custom title block.
 /// - body (content): The document content.
-/// 
+///
 /// -> content
 #let document-theme(
   title: "Title",
-  subtitle:none,
+  subtitle: none,
   author: "Author Name",
   date: datetime.today(),
   date-format: "[day].[month].[year]",

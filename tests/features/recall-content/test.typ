@@ -10,8 +10,9 @@
 
 #table(
   columns: 2,
-  [Header 1], [Header 2], pause,
-  [Cell 1], [Cell 2], pause,
+  [Header 1], [Header 2],
+  pause, [Cell 1],
+  [Cell 2], pause,
   [Cell 3], [Cell 4],
 ) <my-table>
 
@@ -21,14 +22,18 @@
   reduce: cetz.canvas,
   cover: cetz.draw.hide.with(bounds: true),
 )
-#cetz-canvas(label: "my-diagram", {
-  import cetz.draw: *
-  rect((0, 0), (4, 3), fill: blue.lighten(80%), stroke: blue)
-  (pause,)
-  circle((2, 1.5), radius: 0.8, fill: red.lighten(60%), stroke: red)
-  (pause,)
-  line((0, 0), (4, 3), stroke: 2pt + green)
-}, length: 30pt)
+#cetz-canvas(
+  label: "my-diagram",
+  {
+    import cetz.draw: *
+    rect((0, 0), (4, 3), fill: blue.lighten(80%), stroke: blue)
+    (pause,)
+    circle((2, 1.5), radius: 0.8, fill: red.lighten(60%), stroke: red)
+    (pause,)
+    line((0, 0), (4, 3), stroke: 2pt + green)
+  },
+  length: 30pt,
+)
 
 == Source: Static Content
 
@@ -143,7 +148,7 @@ the base-shifted grid below.
 // the result). Both should render identically ("Second stage." only).
 
 #grid(
-  columns:3,
+  columns: 3,
   gutter: 1cm,
   [
     `base: auto` \
@@ -165,8 +170,12 @@ the base-shifted grid below.
 // inside `uncover`/`only` lets the outer wrapper gate it exactly like ordinary
 // content, appearing then disappearing again across the outer subslides.
 #v(-1em)
-#uncover("2-3")[Uncover-gated recall (reserves space): #touying-recall(<my-table>, subslide: 2)]
+#uncover(
+  "2-3",
+)[Uncover-gated recall (reserves space): #touying-recall(<my-table>, subslide: 2)]
 #v(-1em)
-#only("2")[Only-gated recall (no reserved space): #touying-recall(<my-table>, subslide: 2)]
+#only(
+  "2",
+)[Only-gated recall (no reserved space): #touying-recall(<my-table>, subslide: 2)]
 
 text stays and moves upwards

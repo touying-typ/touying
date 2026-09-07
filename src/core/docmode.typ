@@ -676,7 +676,14 @@
       } else {
         utils.resolve-negative-subslides(repeat, spec, base: render-base)
       }
-      _render-at-subslide(self, v.content, reducer-data, cwp, render-base, target)
+      _render-at-subslide(
+        self,
+        v.content,
+        reducer-data,
+        cwp,
+        render-base,
+        target,
+      )
     } else {
       // touying-recall used inside document-text/document-only: never a
       // whole-slide target here (recaller-map isn't consulted in document

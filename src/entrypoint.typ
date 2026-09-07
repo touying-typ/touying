@@ -38,19 +38,19 @@
     let parts = path.split(".")
     if parts.len() == 0 {
       return true
-    } 
+    }
 
     let key = parts.remove(0)
     if key in dict {
       return _recursive-has(dict.at(key), parts.join("."))
-    } 
+    }
     false
   }
 
   let _recursive-get(dict, path) = {
     if path == none {
       return dict
-    } 
+    }
     let parts = path.split(".")
     let key = parts.remove(0)
     _recursive-get(dict.at(key), parts.join("."))
@@ -150,8 +150,8 @@
         init: (self: none, body) => body,
       )),
     ))
-  } 
- 
+  }
+
   show: body => {
     if self.at("scale-list-items", default: none) != none {
       magic.scale-list-items(
@@ -164,7 +164,10 @@
   }
 
   show: body => {
-    if not self.at("document-mode") and self.at("nontight-list-enum-and-terms", default: true) {
+    if (
+      not self.at("document-mode")
+        and self.at("nontight-list-enum-and-terms", default: true)
+    ) {
       magic.nontight-list-enum-and-terms(body)
     } else {
       body
@@ -172,7 +175,10 @@
   }
 
   show: body => {
-    if not self.at("document-mode") and self.at("align-enum-marker-with-baseline", default: false) {
+    if (
+      not self.at("document-mode")
+        and self.at("align-enum-marker-with-baseline", default: false)
+    ) {
       magic.align-enum-marker-with-baseline(body)
     } else {
       body
@@ -180,7 +186,10 @@
   }
 
   show: body => {
-    if not self.at("document-mode") and self.at("align-list-marker-with-baseline", default: false) {
+    if (
+      not self.at("document-mode")
+        and self.at("align-list-marker-with-baseline", default: false)
+    ) {
       magic.align-list-marker-with-baseline(body)
     } else {
       body
@@ -188,7 +197,10 @@
   }
 
   show: body => {
-    if not self.at("document-mode") and self.at("show-hide-set-list-marker-none", default: true) {
+    if (
+      not self.at("document-mode")
+        and self.at("show-hide-set-list-marker-none", default: true)
+    ) {
       magic.show-hide-set-list-marker-none(body)
     } else {
       body
@@ -203,7 +215,6 @@
       body
     }
   }
-  
 
   // get the init function and show.
   let init = if "init" in self.methods and type(self.methods.init) == function {

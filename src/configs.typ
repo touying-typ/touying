@@ -250,7 +250,7 @@
 /// - export-mode (str): The export mode for the presentation. It can be `slides`, `document`, `presentation`, `handout`. Default is `slides`. In case of `slides` the `handout`-flag determines whether to render a presentation or a handout.
 ///
 /// - document-theme (theme): The theme to use when rendering in document mode. Can be an arbitrary theme but whether it works correctly is not guaranteed. Default is `auto`, in which case we use touying's builtin document theme.
-/// 
+///
 /// -> dictionary
 #let config-common(
   breakable: _default,

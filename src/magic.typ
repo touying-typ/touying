@@ -149,7 +149,7 @@
 
 #let bibliography-visited = state("footer-bibliography-visited", ())
 
-/// Display bibliography citations as footnotes. 
+/// Display bibliography citations as footnotes.
 /// / Note: #[You still need to register the bibliography globally once. \ If you don't want to show the bibliography, \ use `hide(bibliography(...))` at the end of your document. ]
 ///
 /// Usage: `#show: magic.bibliography-as-footnote`
@@ -165,7 +165,7 @@
 #let bibliography-as-footnote(
   self: none,
   numbering: "[1]",
-  footnote-style: (typographic: false, baseline: 0em, size:1em),
+  footnote-style: (typographic: false, baseline: 0em, size: 1em),
   body,
 ) = {
   // Covering a citation with `hide()` hides its marker, but Typst still lays out
