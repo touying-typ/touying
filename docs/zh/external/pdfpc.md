@@ -58,3 +58,38 @@ typst query --root . ./example.typ --field value --one "<pdfpc-file>" > ./exampl
 
 #context touying.pdfpc.pdfpc-file(here())
 ```
+
+## 以 Bundle 资源的形式输出 .pdfpc 文件
+
+从 Typst 0.15 开始，一次编译可以输出一整个 bundle 的文件，因此 `.pdfpc` 文件可以直接
+输出到 PDF 旁边，而不需要额外执行一条命令。只需要在文件的顶层，也就是所有
+`#document(..)` 之外，加入 `#pdfpc.bundle-assets()`：
+
+```typst
+#import "@preview/touying:0.7.4": *
+#import themes.simple: *
+
+#pdfpc.bundle-assets()
+
+#document("deck.pdf", [
+  #show: simple-theme
+
+  == A slide
+  #speaker-note[Only the speaker sees this.]
+])
+```
+
+用下面的命令编译
+
+```sh
+typst compile --features bundle --format bundle --root . ./example.typ ./out
+```
+
+就会同时得到 `./out/deck.pdf` 和 `./out/deck.pdfpc`。bundle 中的每个 PDF 文档都会得到
+以自身命名的 `.pdfpc` 文件，其中只包含该演示文稿自己的 notes 与配置。没有 pdfpc metadata
+的文档以及非 PDF 的文档会被跳过；在非 bundle 的导出中，这个调用不会有任何作用，因此可以把
+`#pdfpc.bundle-assets()` 留在同时也会编译为普通 PDF 的文件里。请注意这只适用于该调用本身：
+上面的 `#document(..)` 只能用于 bundle，编译为 PDF 时 Typst 会报错
+`constructing a document is only supported in the bundle target`。
+
+注意 bundle 导出目前仍是实验性功能，Typst 会为此发出警告，其行为也可能发生变化。

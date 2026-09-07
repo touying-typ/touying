@@ -41,6 +41,18 @@ jobs:
           tests/issues/i406-bundle-headings/bundle.typ
           "$RUNNER_TEMP/i406-bundle"
 
+      - name: Run pdfpc bundle regression test
+        run: |
+          typst compile --features bundle --format bundle --root . \
+            tests/issues/i408-pdfpc-bundle/bundle.typ "$RUNNER_TEMP/i408-bundle"
+          # Every presentation gets its own `.pdfpc` asset next to its PDF, and
+          # that file must carry its own speaker notes only.
+          out="$RUNNER_TEMP/i408-bundle"
+          grep -q "Note A1" "$out/slides-a.pdfpc"
+          grep -q "Note B1" "$out/decks/slides-b.pdfpc"
+          ! grep -q "Note B1" "$out/slides-a.pdfpc"
+          ! grep -q "Note A1" "$out/decks/slides-b.pdfpc"
+
       - name: Archive diffs
         uses: actions/upload-artifact@v4
         if: always()
