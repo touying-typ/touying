@@ -1369,28 +1369,6 @@
 // Scale content down to new-height, preserving aspect ratio.
 // Returns a box of dimensions (width * new-height / height) × new-height
 // containing the original content scaled proportionally.
-#let _miniaturize(
-  width,
-  height,
-  new-width,
-  new-height,
-  outer-style: (),
-  content,
-) = {
-  box(
-    stroke: black,
-    width: new-width,
-    height: new-height,
-    ..outer-style,
-    scale(
-      x: new-width / width * 100%,
-      y: new-height / height * 100%,
-      reflow: true,
-      box(width: width, height: height, align(left + top, content)),
-    ),
-  )
-}
-
 #let _margin-of(self, names, fallback: 0pt) = {
   if type(self.page.margin) != dictionary {
     self.page.margin
@@ -1542,24 +1520,6 @@
     body-transform = body => {
       // `auto` on one side copies the other, so a single ratio keeps the
       // aspect and passing both stretches the preview on purpose.
-      let slide-preview(width: auto, height: auto) = {
-        let both-auto = width == auto and height == auto
-        let w = if width != auto { width } else if both-auto { 25% } else {
-          height
-        }
-        let h = if height != auto { height } else if both-auto { 25% } else {
-          width
-        }
-        let resolve(v, against) = if type(v) == ratio { v * against } else { v }
-        _miniaturize(
-          page-width,
-          page-height,
-          resolve(w, page-width),
-          resolve(h, page-height),
-          outer-style: (fill: white),
-          slide-page(body),
-        )
-      }
       place(
         top + left,
         dx: -margin-left,
@@ -1568,7 +1528,7 @@
           (self.notes-fn)(
             self: self,
             note: utils.current-slide-note,
-            slide-preview: slide-preview,
+            slide-preview: slide-page(body),
           )
           utils.slide-note-state.update(none)
         }),
@@ -2245,10 +2205,10 @@
 ///
 /// - note (content): The speaker note for the current slide.
 ///
-/// - slide-preview (function, none): In `show-only-notes` mode a function `(height: ..) => content`
-///   returning a miniature of the slide at that height or width, which may be a length or a
-///   ratio of the page height. `none` on a second screen, where the real slide is
-///   already visible next to the notes.
+/// - slide-preview (content, none): In `show-only-notes` mode the slide itself, at
+///   full page size, to be shrunk with `scale` by `preview-setting`. `none` on a second
+///   screen, where the real slide is already visible next to the notes, in which case
+///   `preview-setting` is not called at all.
 ///
 /// - header (content, function): The panel's header strip. Default shows the current
 ///   section and slide headings.
@@ -2259,12 +2219,15 @@
 ///
 /// - fill (color, gradient, tiling, none): Fill behind the whole panel.
 ///
-/// - inset (relative, dictionary): Padding around the note body.
+/// - note-setting (auto, function): How the note body is laid out, as
+///   `note => content`. `auto` pads it by `48pt` horizontally. Set/show rules for the
+///   note go here, and the note is a parameter so it can also be measured or parsed.
 ///
-/// - preview-setting (auto, function): How the slide preview is scaled and placed,
-///   as `preview => content` where `preview` is `slide-preview`. `auto` scales it to
-///   the header strip's height, keeping the slide's aspect, and puts it at the strip's
-///   right end - or, with no strip, leaves `slide-preview` to its own default size.
+/// - preview-setting (auto, function): How the slide preview is scaled and placed, as
+///   `preview => content`. Scaling is `scale`'s job, so `scale(x: .., y: .., reflow: true, ..)`
+///   with unequal factors stretches the slide deliberately. `auto` scales it uniformly to the
+///   header strip's height - a quarter of the page when there is no strip - and puts it at the
+///   panel's top right. Only called when there is a preview.
 ///
 /// - setting (function): `body => body` wrapper for set/show rules on the panel. Runs
 ///   inside touying's own defaults, so its rules win.
@@ -2283,7 +2246,7 @@
   header-height: 88pt,
   header-fill: rgb("#CCCCCC"),
   fill: rgb("#E6E6E6"),
-  inset: (x: 48pt),
+  note-setting: auto,
   preview-setting: auto,
   setting: body => body,
 ) = {
@@ -2306,25 +2269,22 @@
         }
         if slide-preview != none {
           if preview-setting == auto {
-            // The width is given explicitly so that an absolute `header-height`
-            // keeps the slide's aspect instead of being copied onto both sides.
             let (page-width, page-height) = utils.get-page-dimensions(self)
-            place(top + right, if header-height == 0pt {
-              slide-preview()
-            } else {
-              slide-preview(
-                width: header-height / page-height * page-width,
-                height: header-height,
-              )
-            })
+            let target = if header-height == 0pt { 25% * page-height } else {
+              header-height
+            }
+            let factor = target / page-height * 100%
+            place(top + right, box(
+              stroke: black,
+              fill: white,
+              scale(x: factor, y: factor, reflow: true, slide-preview),
+            ))
           } else {
             preview-setting(slide-preview)
           }
         }
-        if type(inset) == dictionary {
-          pad(..inset, note)
-        } else {
-          pad(inset, note)
+        if note-setting == auto { pad(x: 48pt, note) } else {
+          note-setting(note)
         }
       })
     },
