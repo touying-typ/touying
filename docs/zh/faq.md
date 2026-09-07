@@ -89,7 +89,7 @@ The header now uses the custom primary color.
 | `horizontal-line-to-pagebreak` | `true` | 将 `---` 水平线转换为分页符 |
 | `nontight-list-enum-and-terms` | `false` | 列表项间距控制 |
 | `show-hide-set-list-marker-none` | `true` | `#pause` 后隐藏列表标记 |
-| `show-bibliography-as-footnote` | `none` | 参考文献显示为脚注 |
+| `show-bibliography-as-footnote` | `false` | 参考文献显示为脚注 |
 | `scale-list-items` | `none` | 缩放列表项大小 |
 | `new-section-slide-fn` | `none` | 章节幻灯片函数 |
 | `freeze-slide-counter` | `false` | 冻结幻灯片计数器 |
@@ -391,7 +391,7 @@ More content here.
 
 ### 如何将引用显示为脚注？
 
-将 `bibliography(...)` 值传递给 `config-common(show-bibliography-as-footnote: ...)`：
+设置 `config-common(show-bibliography-as-footnote: true)`，并在幻灯片放映的末尾调用参考文献。
 
 ```example
 #import "@preview/touying:0.7.4": *
@@ -406,44 +406,21 @@ More content here.
 )
 #show: simple-theme.with(
   aspect-ratio: "16-9",
-  config-common(show-bibliography-as-footnote: bibliography(bib)),
+  config-common(show-bibliography-as-footnote: true),
 )
 = Citations
 
 == Footnote Example
 
 This is a famous book. @knuth
+== Bibliography
+#bibliography(bib)
 ```
 
-### 如何在末尾添加参考文献幻灯片？
+参考文献必须出现在文档中，脚注引用才能解析。如果完全不想显示参考文献列表，请改用 `hide(bibliography(bib))`。
 
-使用 `magic.bibliography(...)` 显示参考文献幻灯片：
-
-```example
-#import "@preview/touying:0.7.4": *
-#import themes.simple: *
-#let bib = bytes(
-  "@book{knuth,
-    title={The Art of Computer Programming},
-    author={Donald E. Knuth},
-    year={1968},
-    publisher={Addison-Wesley},
-  }",
-)
-#show: simple-theme.with(
-  aspect-ratio: "16-9",
-  config-common(show-bibliography-as-footnote: bibliography(bib)),
-)
-= Intro
-
-== Slide
-
-Some cited content. @knuth
-
-== References
-
-#magic.bibliography(title: none)
-```
+如果要在还有其他内容的幻灯片上调用参考文献，必须注意不要多次调用它。
+当放置参考文献的那张幻灯片包含多个子幻灯片时，就会自动发生这种重复调用。此时请用 `only("h", bibliography(..))` 包裹它，这样它只会在调用处发出一次。
 
 ---
 

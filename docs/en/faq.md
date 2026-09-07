@@ -244,7 +244,7 @@ Use `components.progressive-outline` to highlight the current section:
 
 ### How do I show citations as footnotes?
 
-Pass a `bibliography(...)` value to `config-common(show-bibliography-as-footnote: ...)`:
+Set `config-common(show-bibliography-as-footnote: true)` and call the bibliography at the end of your slideshow.
 
 ```example
 #import "@preview/touying:0.7.4": *
@@ -261,7 +261,7 @@ Pass a `bibliography(...)` value to `config-common(show-bibliography-as-footnote
 
 #show: simple-theme.with(
   aspect-ratio: "16-9",
-  config-common(show-bibliography-as-footnote: bibliography(bib)),
+  config-common(show-bibliography-as-footnote: true),
 )
 
 = Citations
@@ -269,40 +269,15 @@ Pass a `bibliography(...)` value to `config-common(show-bibliography-as-footnote
 == Footnote Example
 
 This is a famous book. @knuth
+
+== Bibliography
+#bibliography(bib)
 ```
 
-### How do I add a bibliography slide at the end?
+The bibliography has to be part of the document for the footnote citations to resolve. If you don't want to show the list of references at all, call it as `hide(bibliography(bib))` instead.
 
-Use `magic.bibliography(...)` to display a references slide:
-
-```example
-#import "@preview/touying:0.7.4": *
-#import themes.simple: *
-
-#let bib = bytes(
-  "@book{knuth,
-    title={The Art of Computer Programming},
-    author={Donald E. Knuth},
-    year={1968},
-    publisher={Addison-Wesley},
-  }",
-)
-
-#show: simple-theme.with(
-  aspect-ratio: "16-9",
-  config-common(show-bibliography-as-footnote: bibliography(bib)),
-)
-
-= Intro
-
-== Slide
-
-Some cited content. @knuth
-
-== References
-
-#magic.bibliography(title: none)
-```
+If you wish to invoke the on a slide with other content you must be careful not to invoke it multiple times.
+This may happen automatic if the slide you place the bibliography on has more than one subslide. In that case wrap it with `only("h", <bibliography>)`, which only emits it once at the time of invocation.
 
 ---
 
