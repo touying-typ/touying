@@ -2197,34 +2197,25 @@
 /// building a panel from scratch, and its defaults are the look touying uses
 /// when no theme sets `notes-fn`.
 ///
-/// The panel fills whichever region touying gives it - the second screen next to
-/// the slide, or the whole page in `show-only-notes` mode - so sizes inside it
-/// may be given relative to that region.
-///
 /// - self (dictionary): The presentation context.
 ///
-/// - header (content, function): The panel's header strip. The strip applies no inset
-///   of its own, so padding belongs in here. Default shows the current section and slide
+/// - header (content, function): The panel's header strip. Default shows the current section and slide
 ///   headings, padded.
 ///
 /// - header-height (auto, length): Height of the strip. `auto` collapses it to its
-///   content plus the strip's own padding; `0pt` drops the strip entirely.
+///   content; `0pt` drops the strip entirely.
 ///
 /// - header-fill (color, gradient, tiling, none): Fill behind the strip.
 ///
 /// - fill (color, gradient, tiling, none): Fill behind the whole panel.
 ///
 /// - note-setting (function): How the note body is laid out, as `note => content`.
-///   Set/show rules for the note go here, and the note is its parameter so it can also
-///   be measured or parsed.
 ///
-/// - preview-setting (function): How the slide preview is scaled and placed, as
-///   `preview => content`. Scaling is `scale`'s job, so unequal factors stretch the
-///   slide deliberately. Only called when there is a preview.
+/// - preview-setting (function): How the slide preview is placed.
 ///
 /// - note (content, none): the notes to be displayed.
 ///
-/// - slide-preview (content, none): a preview of the accompanying slide, not none when `show-notes-only` is true.
+/// - slide-preview (content, none): a preview of the accompanying slide, not none when `show-only-notes` is true.
 ///
 /// -> content
 #let touying-notes(

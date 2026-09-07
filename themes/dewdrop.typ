@@ -214,18 +214,25 @@
   touying-slide(
     self: self,
     config: config,
-    components.adaptive-columns(
-      start: text(
-        1.2em,
-        fill: self.colors.primary,
-        weight: "bold",
-        utils.call-or-display(self, title),
+    place(hide(heading(
+      level: self.slide-level,
+      utils.call-or-display(self, title),
+      bookmarked: false,
+      outlined: false,
+      numbering: none,
+    )))
+      + components.adaptive-columns(
+        start: text(
+          1.2em,
+          fill: self.colors.primary,
+          weight: "bold",
+          utils.call-or-display(self, title),
+        ),
+        text(
+          fill: self.colors.neutral-darkest,
+          outline(title: none, indent: 1em, depth: self.slide-level, ..args),
+        ),
       ),
-      text(
-        fill: self.colors.neutral-darkest,
-        outline(title: none, indent: 1em, depth: self.slide-level, ..args),
-      ),
-    ),
   )
 })
 

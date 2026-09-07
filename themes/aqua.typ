@@ -158,6 +158,13 @@
   set par(leading: leading)
 
   let body = {
+    place(hide(heading(
+      level: self.slide-level,
+      utils.i18n-outline-title,
+      bookmarked: false,
+      outlined: false,
+      numbering: none,
+    )))
     grid(
       columns: (1fr, 1fr),
       rows: 1fr,

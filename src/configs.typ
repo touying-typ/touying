@@ -793,8 +793,6 @@
     enable-pdfpc: true,
     enable-mark-warning: true,
     reset-page-counter-to-slide-counter: true,
-    // some black magics for better slides writing,
-    // maybe will be deprecated in the future
     show-only-notes: false,
     notes-fn: touying-notes,
     show-notes-on-second-screen: none,
@@ -802,6 +800,8 @@
     reset-footnote-number-per-slide: true,
     footnote-style: auto,
     cover-hides-footnote: auto,
+    // some black magics for better slides writing,
+    // maybe will be deprecated in the future
     nontight-list-enum-and-terms: false,
     align-list-marker-with-baseline: false,
     align-enum-marker-with-baseline: false,

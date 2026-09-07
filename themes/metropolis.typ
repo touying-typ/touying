@@ -203,7 +203,7 @@
   title: [Outline],
   spacing: 2em,
   ..args,
-) = slide(title: title, config: config, self => {
+) = slide(config: config, self => {
   let named-args = args.named()
   let indent = if not "indent" in named-args.keys() { (1em,) } else {
     named-args.remove("indent")
@@ -220,6 +220,13 @@
   let numbering = if not "numbering" in named-args.keys() { ("1.",) } else {
     named-args.remove("numbering")
   }
+  place(hide(heading(
+    level: self.slide-level,
+    title,
+    bookmarked: false,
+    outlined: false,
+    numbering: none,
+  )))
   components.custom-progressive-outline(
     title: none,
     depth: if level != auto { level } else { self.slide-level },
