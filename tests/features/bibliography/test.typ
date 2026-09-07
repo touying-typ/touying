@@ -13,7 +13,7 @@
 
 #show: simple-theme.with(
   aspect-ratio: "16-9",
-  config-common(show-bibliography-as-footnote: bibliography(bib)),
+  config-common(show-bibliography-as-footnote: true),
 )
 
 = Title
@@ -23,5 +23,4 @@
 Hello, Touying! @dirac
 
 == Bibliography
-
-#magic.bibliography(title: none)
+#bibliography(bib, title: none)

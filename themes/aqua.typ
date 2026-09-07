@@ -219,7 +219,7 @@
 /// - body (content): The body of the section. It will be passed by touying automatically.
 #let new-section-slide(config: (:), level: 1, body) = touying-slide-wrapper(
   self => {
-    let slide-body = {
+    let setting(level, body) = {
       stack(
         dir: ttb,
         spacing: 12%,
@@ -250,7 +250,12 @@
         background: utils.call-or-display(self, self.store.background),
       ),
     )
-    touying-slide(self: self, config: config, slide-body)
+    touying-slide(
+      self: self,
+      config: config,
+      setting: setting.with(level),
+      body,
+    )
   },
 )
 
@@ -267,7 +272,12 @@
     config-page(fill: self.colors.primary, margin: 2em),
   )
   set text(fill: self.colors.neutral-lightest, size: 2em, weight: "bold")
-  touying-slide(self: self, config: config, align(horizon + center, body))
+  touying-slide(
+    self: self,
+    config: config,
+    setting: align.with(horizon + center),
+    body,
+  )
 })
 
 
