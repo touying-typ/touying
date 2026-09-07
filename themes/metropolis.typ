@@ -220,7 +220,7 @@
   let numbering = if not "numbering" in named-args.keys() { ("1.",) } else {
     named-args.remove("numbering")
   }
-  place(hide(heading(
+  place(hide(heading( //place invisible heading so that the title is discoverable via get-current-heading
     level: self.slide-level,
     title,
     bookmarked: false,

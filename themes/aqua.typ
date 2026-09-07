@@ -158,7 +158,7 @@
   set par(leading: leading)
 
   let body = {
-    place(hide(heading(
+    place(hide(heading( //place invisible heading so that the title is discoverable via get-current-heading
       level: self.slide-level,
       utils.i18n-outline-title,
       bookmarked: false,
