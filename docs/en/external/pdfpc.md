@@ -56,3 +56,43 @@ With the compatibility of Touying and Polylux, you can make Polylux also support
 
 #context touying.pdfpc.pdfpc-file(here())
 ```
+
+## Exporting .pdfpc Files as Bundle Assets
+
+Since Typst 0.15, one compilation can emit a whole bundle of files, so the
+`.pdfpc` file can be written next to the PDF without a second command. Add a
+call to `#pdfpc.bundle-assets()` at the top level of your file, i.e. outside of
+every `#document(..)`:
+
+```typst
+#import "@preview/touying:0.7.4": *
+#import themes.simple: *
+
+#pdfpc.bundle-assets()
+
+#document("deck.pdf", [
+  #show: simple-theme
+
+  == A slide
+  #speaker-note[Only the speaker sees this.]
+])
+```
+
+Compiling this with
+
+```sh
+typst compile --features bundle --format bundle --root . ./example.typ ./out
+```
+
+writes both `./out/deck.pdf` and `./out/deck.pdfpc`. Every PDF document of the
+bundle gets its own `.pdfpc` file, named after the document and containing only
+that presentation's notes and configuration. Documents without pdfpc metadata
+and non-PDF documents are skipped, and outside of a bundle export the call does
+nothing at all - so you can leave `#pdfpc.bundle-assets()` in a file that you
+also compile to a plain PDF. Note that this is true of the call itself; the
+`#document(..)` wrapper above is bundle-only, and Typst rejects it with
+`constructing a document is only supported in the bundle target` when you
+compile to a PDF.
+
+Note that bundle export is still experimental, so Typst warns about it and its
+behaviour may change.
