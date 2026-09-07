@@ -1450,21 +1450,17 @@
     // background sized `100%` gets stretched across both (#219). Confine each
     // layer to a box the size of one slide, placed on the slide's own half, so
     // that percentage sizes and `fit: "cover"` images mean what the user meant.
-    // Set `background-covers-second-screen: true` to opt back out; a theme that
-    // deliberately draws behind the notes panel needs the old behaviour.
-    if not self.at("background-covers-second-screen", default: false) {
-      let slide-half = _slide-half-alignment(notes-side)
-      for key in ("background", "foreground") {
-        let layer = self.page.at(key, default: none)
-        if layer != none {
-          extra.insert(
-            key,
-            place(
-              slide-half,
-              box(width: page-width, height: page-height, layer),
-            ),
-          )
-        }
+    // Styling the notes half is a separate job, done through
+    // `config-common(note-*: ..)` rather than by bleeding the slide's own
+    // background into it.
+    let slide-half = _slide-half-alignment(notes-side)
+    for key in ("background", "foreground") {
+      let layer = self.page.at(key, default: none)
+      if layer != none {
+        extra.insert(
+          key,
+          place(slide-half, box(width: page-width, height: page-height, layer)),
+        )
       }
     }
     return extra

@@ -183,11 +183,22 @@
 ///
 ///   This is similar to LaTeX Beamer's `\setbeameroption{show only notes}`. It is useful for using speaker notes with presentation tools that let you load two PDFs and synchronize them, one to display on the main screen and one on the auxiliary screen.
 ///
+/// - note-header (auto, none, content, function): The header strip of the speaker-note panel. `auto` shows the current section and slide headings, `none` removes the strip entirely, and content or a `self => ..` function replaces it. Default is `auto`.
+///
+/// - note-header-height (auto, length): The height of that strip. `auto` is `88pt`, or `0pt` when `note-header` is `none`. In `show-only-notes` mode this is also the height reserved for the slide thumbnail. Default is `auto`.
+///
+/// - note-header-background (none, color, gradient, tiling, content): What is painted behind the header strip. Content, e.g. an `image(..)`, is placed behind it. Default is `rgb("#CCCCCC")`.
+///
+/// - note-background (none, color, gradient, tiling, content): What is painted behind the whole note panel. Use this rather than `config-page(background: ..)`, which belongs to the slide and is confined to it. Default is `rgb("#E6E6E6")`.
+///
+/// - note-inset (relative, dictionary): The padding around the note body. Default is `(x: 48pt)`.
+///
+/// - note-setting (function): A `body => body` wrapper around the note panel's contents, for `set` and `show` rules - text size, colour, font, alignment. It runs inside touying's own defaults, so its rules win. Default is `body => body`.
+///
 /// - show-notes-on-second-screen (none, alignment): Whether to show the speaker notes on the second screen, and on which side of the slide to put them. One of `none`, `top`, `bottom`, `left` or `right`. Default is `none`.
 ///
 ///   The page is doubled along the corresponding axis and the extra half is pushed into the margin, so the slide keeps its own dimensions and the notes are drawn into that margin.
-///
-/// - background-covers-second-screen (bool): Whether the `config-page(background: ..)` and `foreground` layers also cover the speaker-note half when `show-notes-on-second-screen` is set. Default is `false`, which confines each layer to a box the size of one slide so that percentage sizes and `fit: "cover"` images mean what they mean without the second screen (see #219). Set it to `true` for the pre-0.8.0 behaviour, which a theme deliberately painting behind the notes panel needs.
+
 ///
 ///   Currently, the alignment can be `none`, `bottom`, and `right`.
 ///
@@ -386,43 +397,84 @@
 
 #let _default-cover = utils.hiding-cover
 
+// Paint `bg` behind `body` in a `width` x `height` block. `bg` may be a plain
+// paint (color/gradient/tiling), which `block(fill: ..)` takes directly, or
+// arbitrary content - an image, say - which has to be placed behind instead.
+#let _note-panel(bg, width, height, inset: 0pt, body) = {
+  let is-paint = bg == none or type(bg) in (color, gradient, tiling)
+  block(
+    fill: if is-paint { bg } else { none },
+    width: width,
+    height: height,
+    inset: inset,
+    if is-paint {
+      body
+    } else {
+      place(top + left, box(width: 100%, height: 100%, bg))
+      body
+    },
+  )
+}
+
 #let _default-show-only-notes(
   self: none,
   width: 0pt,
   height: 0pt,
   cutout: false,
 ) = {
-  let header-fill = rgb("#CCCCCC")
-  let header-height = 88pt
-  let header-content = {
+  let header-spec = self.at("note-header", default: auto)
+  let header-height = self.at("note-header-height", default: auto)
+  if header-height == auto {
+    // No header means no reserved strip at all, so that `note-header: none`
+    // really does give a plain panel rather than a blank band above the note.
+    header-height = if header-spec == none { 0pt } else { 88pt }
+  }
+  let header-content = if header-spec == none {
+    none
+  } else if header-spec == auto {
     utils.display-current-heading(level: 1, depth: self.slide-level)
     linebreak()
     [ --- ]
     utils.display-current-heading(level: 2, depth: self.slide-level)
+  } else {
+    utils.call-or-display(self, header-spec)
   }
-  let body-fill = rgb("#E6E6E6")
+  let header-fill = self.at("note-header-background", default: rgb("#CCCCCC"))
+  let body-fill = self.at("note-background", default: rgb("#E6E6E6"))
+  let note-inset = self.at("note-inset", default: (x: 48pt))
+  let note-setting = self.at("note-setting", default: body => body)
   let body-content = {
-    pad(x: 48pt, utils.current-slide-note)
+    if type(note-inset) == dictionary {
+      pad(..note-inset, utils.current-slide-note)
+    } else {
+      pad(note-inset, utils.current-slide-note)
+    }
     // clear the slide note
     utils.slide-note-state.update(none)
   }
 
-  let template(hdr-fill, hdr-content, bdy-fill, bdy-content) = block(
-    fill: bdy-fill,
-    width: width,
-    height: height,
+  let template(hdr-fill, hdr-content, bdy-fill, bdy-content) = _note-panel(
+    bdy-fill,
+    width,
+    height,
     {
       set align(left + top)
       set text(size: 24pt, fill: black, weight: "regular")
-      block(
-        width: 100%,
-        height: header-height,
-        inset: (left: 32pt, top: 16pt),
-        outset: 0pt,
-        fill: hdr-fill,
-        hdr-content,
-      )
-      bdy-content
+      // `note-setting` runs inside the defaults above, so a user's `set text`
+      // wins over them, and it wraps the header too so a theme can restyle the
+      // whole panel rather than just the note body.
+      note-setting({
+        if header-height != 0pt or hdr-content != none {
+          _note-panel(
+            hdr-fill,
+            100%,
+            header-height,
+            inset: (left: 32pt, top: 16pt),
+            hdr-content,
+          )
+        }
+        bdy-content
+      })
     },
   )
 
@@ -851,6 +903,12 @@
     // some black magics for better slides writing,
     // maybe will be deprecated in the future
     show-only-notes: false,
+    note-header: auto,
+    note-header-height: auto,
+    note-header-background: rgb("#CCCCCC"),
+    note-background: rgb("#E6E6E6"),
+    note-inset: (x: 48pt),
+    note-setting: body => body,
     show-notes-on-second-screen: none,
     horizontal-line-to-pagebreak: true,
     reset-footnote-number-per-slide: true,

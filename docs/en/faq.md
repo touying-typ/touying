@@ -342,18 +342,50 @@ Use `config-common(show-notes-on-second-screen: right)` to show notes beside the
 )
 ```
 
-`top`, `bottom`, `left` and `right` are all accepted. The page is doubled along
+We support the alignments `top`, `bottom`, `left` and `right`. The page is doubled along
 the corresponding axis and the extra half is pushed into the margin, so the
 slide keeps its own dimensions.
 
-A `config-page(background: ..)` is confined to the slide's own half, so a
-background sized `100%` or an image with `fit: "cover"` fills the slide rather
-than being stretched across the notes half as well. If a theme deliberately
-paints behind the notes panel, pass
-`config-common(background-covers-second-screen: true)` to get the old
-behaviour back.
+A `config-page(background: ..)` belongs to the slide and covers only the slide's
+own half. The notes half gets its background and styling from the `note-*`
+options below.
 
 This is compatible with presenter tools like [pdfpc](https://pdfpc.github.io/) and [pympress](https://github.com/Cimbali/pympress).
+
+### How do I restyle the speaker notes?
+
+The note panel is styled through `config-common(note-*: ..)`:
+
+```typst
+#show: simple-theme.with(
+  aspect-ratio: "16-9",
+  config-common(
+    show-notes-on-second-screen: right,
+    note-header: none,
+    note-background: white,
+    note-inset: 24pt,
+    note-setting: body => {
+      set text(size: 16pt, fill: rgb("#333333"))
+      body
+    },
+  ),
+)
+```
+
+| option | meaning |
+| --- | --- |
+| `note-header` | `auto` shows the current headings, `none` removes the strip entirely, content or a `self => ..` function replaces it |
+| `note-header-height` | height of that strip; `auto` is `88pt`, or `0pt` when `note-header` is `none` |
+| `note-header-background` | paint or content behind the strip |
+| `note-background` | paint or content behind the whole panel |
+| `note-inset` | padding around the note body |
+| `note-setting` | a `body => body` wrapper for `set`/`show` rules on the panel |
+
+`note-header: none` is what removes the grey strip above the note entirely,
+leaving just the note text. These apply to both `show-notes-on-second-screen`
+and `show-only-notes: true`. For anything they do not cover,
+`config-methods(show-only-notes: ..)` still replaces the panel renderer
+outright.
 
 ---
 

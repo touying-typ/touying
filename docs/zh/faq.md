@@ -86,7 +86,12 @@ The header now uses the custom primary color.
 | `frozen-counters` | `()` | 冻结计数器列表 |
 | `show-strong-with-alert` | `true` | 粗体文本使用 alert 样式 |
 | `show-notes-on-second-screen` | `none` | 第二屏幕演讲者备注（`none`/`top`/`bottom`/`left`/`right`） |
-| `background-covers-second-screen` | `false` | 页面背景是否也覆盖备注那一半 |
+| `note-header` | `auto` | 备注面板顶栏：`auto` 显示标题，`none` 去掉顶栏 |
+| `note-header-height` | `auto` | 顶栏高度 |
+| `note-header-background` | `rgb("#CCCCCC")` | 顶栏背景（颜色或内容） |
+| `note-background` | `rgb("#E6E6E6")` | 备注面板背景（颜色或内容） |
+| `note-inset` | `(x: 48pt)` | 备注正文的内边距 |
+| `note-setting` | `body => body` | 作用于备注面板的 `set`/`show` 规则 |
 | `horizontal-line-to-pagebreak` | `true` | 将 `---` 水平线转换为分页符 |
 | `nontight-list-enum-and-terms` | `false` | 列表项间距控制 |
 | `show-hide-set-list-marker-none` | `true` | `#pause` 后隐藏列表标记 |
@@ -487,12 +492,34 @@ Some cited content. @knuth
 `top`、`bottom`、`left`、`right` 均可使用。页面会沿相应的方向加倍，多出的那一半
 被放进页边距，因此幻灯片本身的尺寸保持不变。
 
-`config-page(background: ..)` 只会覆盖幻灯片自己的那一半，所以尺寸为 `100%` 的背景
-或使用 `fit: "cover"` 的图片会填满幻灯片，而不会被拉伸到备注那一半上去。如果某个主题
-确实需要在备注区域后面绘制内容，可以传入
-`config-common(background-covers-second-screen: true)` 恢复旧行为。
+`config-page(background: ..)` 属于幻灯片本身，只覆盖幻灯片那一半。备注那一半的背景
+和样式通过下面的 `note-*` 选项设置。
 
 此功能与 [pdfpc](https://pdfpc.github.io/) 和 [pympress](https://github.com/Cimbali/pympress) 等演示工具兼容。
+
+### 如何自定义演讲者备注的样式？
+
+备注面板通过 `config-common(note-*: ..)` 设置样式：
+
+```typst
+#show: simple-theme.with(
+  aspect-ratio: "16-9",
+  config-common(
+    show-notes-on-second-screen: right,
+    note-header: none,
+    note-background: white,
+    note-inset: 24pt,
+    note-setting: body => {
+      set text(size: 16pt, fill: rgb("#333333"))
+      body
+    },
+  ),
+)
+```
+
+`note-header: none` 会完全去掉顶部那条灰色横栏，只留下备注正文。这些选项对
+`show-notes-on-second-screen` 和 `show-only-notes: true` 都有效。如果它们仍然不够用，
+`config-methods(show-only-notes: ..)` 可以整体替换备注面板的渲染函数。
 
 ---
 
