@@ -47,7 +47,7 @@ The header now uses the custom primary color.
 
 ### 如何在正文中访问当前主题颜色？
 
-主题颜色保存在 `self.colors` 中。在普通幻灯片正文里，可以用 `touying-fn-wrapper` 包裹一个函数，让 Touying 把当前幻灯片上下文作为 `self` 传入：
+主题颜色保存在 `self.colors` 中。在普通幻灯片正文里，可以用 `touying-fn-wrapper-raw` 包裹一个函数，让 Touying 把当前幻灯片上下文作为 `self` 传入：
 
 ```example
 #import "@preview/touying:0.7.4": *
@@ -58,11 +58,11 @@ The header now uses the custom primary color.
 
 == Slide
 
-#touying-fn-wrapper((self: none) => text(fill: self.colors.primary)[
+#touying-fn-wrapper-raw((self: none) => text(fill: self.colors.primary)[
   This text uses the current theme's primary color.
 ])
 
-#touying-fn-wrapper((self: none) => rect(
+#touying-fn-wrapper-raw((self: none) => rect(
   fill: self.colors.secondary,
   width: 4em,
   height: 1em,
@@ -70,6 +70,8 @@ The header now uses the custom primary color.
 ```
 
 如果你正在编写已经接收 `self` 的主题方法或回调函数，则可以直接使用 `self.colors.primary`、`self.colors.neutral-lightest` 等颜色。
+
+你仍然可以使用 `touying-fn-wrapper`，但 `raw` 变体不会脱离 pause 流程，并且可以嵌套在所有动画方法以及它自身之中，参见[这里](https://github.com/touying-typ/touying/blob/main/tests/features/alert/test.typ)。
 
 ---
 

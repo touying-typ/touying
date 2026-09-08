@@ -695,7 +695,7 @@
 }
 
 
-/// Document-mode configuration.
+/// Article-mode configuration.
 ///
 /// Controls how slide content is rendered when using article mode via the
 /// dual theme. These settings are consumed by `render-content-as-article`
@@ -704,14 +704,14 @@
 /// When you pass `auto` to the `title-block-fn` it will show
 /// ```typc
 /// (..args) => context{
-///   let title = document.title
-///   let authors = document.author
+///   let title = article.title
+///   let authors = article.author
 ///   if type(authors) == array {
 ///     authors = authors.reduce((a, b) => a + " and " + b)
 ///   }
-///   let date = document.date
-///   let description = document.description
-///   let keywords = document.keywords
+///   let date = article.date
+///   let description = article.description
+///   let keywords = article.keywords
 ///   if type(keywords) == array {
 ///     keywords = keywords.reduce((a, b) => a + ", " + b)
 ///   }
@@ -731,7 +731,7 @@
 /// },
 /// ```
 /// - available-fields (dict): The fields from the config to pass to the article-theme. A dict mapping config to the theme fields. E.g. (the-title: "info.title", the-author: "info.author") will pass the config-info fields `title` and `author` in the config to the theme as `the-title` and `the-author`. Default is (:), which passes no fields.
-/// - title-block-fn (function): A function returning the title block to show at the beginning of the rendered document. If your theme has an automatic function for this you don't need it. And you can always use `#article-only` before the first slide to show your custom title block. Default is `none`.
+/// - title-block-fn (function): A function returning the title block to show at the beginning of the rendered article. If your theme has an automatic function for this you don't need it. And you can always use `#article-only` before the first slide to show your custom title block. Default is `none`.
 /// - wrap-images (bool): Wrap raw images to the side via meander. Default is `true`.
 /// - wrap-image-figures (bool): Wrap image figures (image + caption) to the side via meander. Default is `false`.
 /// - wrap-other-figures (bool): Wrap other figures (block + caption) to the side via meander. Default is `false`.

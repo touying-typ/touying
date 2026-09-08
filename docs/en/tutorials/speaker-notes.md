@@ -1,5 +1,5 @@
 ---
-sidebar_position: 10
+sidebar_position: 9
 ---
 
 # Speaker Notes
@@ -13,7 +13,7 @@ A speaker note is content meant for you, not for the audience. You write it inli
 
 == Photosynthesis
 
-Light in, sugar out.
+#align(horizon+center, text(size: 2em)[Light in, sugar out.])
 
 #speaker-note[
   - Recap respiration from the previous section.
@@ -21,21 +21,28 @@ Light in, sugar out.
 ]
 ```
 
-The note leaves no trace on the slide. That is the point: the same source produces the slides your audience sees and, separately, the material only you see.
+The note leaves no trace on the slide. And you may write multiple `speaker-note[]`s per slide, they will be collected automatically into one notes-slide.
 
-## Where notes actually go
+Speaker notes exist mainly to feed a presenter tool — the two Touying is set up for are
+[pdfpc](../external/pdfpc.md) and [pympress](../external/pympress.md). Which of the
+mechanisms below you want depends on which presenter you use.
+
+## Where notes go
 
 A note has three possible destinations, and they are independent — you can use one, two, or all three from the same document.
 
-| destination | how | who sees it |
+| destination | how to enable | what reads it |
 | --- | --- | --- |
-| pdfpc metadata | on by default (`enable-pdfpc: true`) | your presenter tool |
-| a second screen | `config-common(show-notes-on-second-screen: ..)` | you, on the second display |
-| a presenter view | `config-common(show-only-notes: true)` | you, in a separate export |
+| pdfpc file | on by default (`enable-pdfpc: true`) | [pdfpc](../external/pdfpc.md), via a `.pdfpc` sidecar |
+| a second screen | `config-common(show-notes-on-second-screen: ..)` | [pympress](../external/pympress.md) and any dual-screen viewer |
+| a presenter view | `config-common(show-only-notes: true)` | you, or a tool that can sync two PDFs |
+
+The first is metadata, invisible in the PDF and exportable as a `.pdfpc` file. The other two change what the PDF
+*contains*, so they are choices about the visual output itself.
 
 ## Second screen
 
-`show-notes-on-second-screen` doubles the page along one axis and puts the notes in the half that opens up. The slide keeps its own dimensions, so the left half is still a normal slide — you present that half full-screen and read the other half yourself.
+`show-notes-on-second-screen` doubles the page along one side, e.g. to the right; and puts the notes, collected per slide, in the half that opens up. The slide keeps its own dimensions, so the left half is still a normal slide — you present that half full-screen and read the other half yourself.
 
 ```typst
 #show: simple-theme.with(
@@ -44,7 +51,11 @@ A note has three possible destinations, and they are independent — you can use
 )
 ```
 
-`top`, `bottom`, `left` and `right` are all accepted.
+`top`, `bottom`, `left` and `right` are all accepted. The default is `none` which shows no notes on any side.
+
+This is the layout [pympress](../external/pympress.md) expects: it shows the slide half
+on the projector and the notes half on your screen, with no sidecar file involved. That
+page has a worked example and screenshots of the result.
 
 A `config-page(background: ..)` belongs to the slide and covers only the slide's own half. The notes half is styled separately — see [Styling the panel](#styling-the-panel).
 
@@ -76,7 +87,7 @@ Two things about it are easy to get wrong.
 
 ```sh
 typst compile slides.typ slides.pdf
-typst compile slides.typ --input notes=1 notes.pdf
+typst compile slides.typ --input notes=true notes.pdf
 ```
 
 ## Restricting a note to some subslides
@@ -106,14 +117,25 @@ pdfpc renders notes as Markdown. `mode` controls how Touying serialises a note i
 
 With `mode: "typ"` (the default) that `*bold*` is written out as `*bold*`; with `mode: "md"` it becomes `**bold**`, which is what pdfpc expects. Headings, links and emphasis are translated the same way.
 
-## Exporting for a presenter tool
+## Exporting for pdfpc
 
-With `enable-pdfpc: true` (the default) Touying records every note in the document's pdfpc metadata. Extracting it as a `.pdfpc` file next to your PDF gives tools like [pdfpc](https://pdfpc.github.io/) and [pympress](https://github.com/Cimbali/pympress) their notes, timings and slide structure.
+With `enable-pdfpc: true` (the default) Touying records every note in the document's
+pdfpc metadata, alongside the slide structure. Written out as a `.pdfpc` file next to
+your PDF, that is what gives pdfpc its notes, its overlay structure and its timings.
 
-Since Typst 0.15 you can have the file written for you during a bundle export instead of running a second command — see [pdfpc](../external/pdfpc.md) for both routes.
+There are two ways to produce the file — a `typst query` after compiling, or
+`#pdfpc.bundle-assets()` during a bundle export, which needs no second command. Both are
+covered on the [pdfpc](../external/pdfpc.md) page, along with `#pdfpc.config(..)` for
+talk duration, a countdown and slide transitions.
+
+That page also documents `#pdfpc.speaker-note(..)`, the lower-level call Touying keeps
+for [Polylux](https://polylux.dev/book/external/pdfpc.html) compatibility. It writes a
+raw string straight into the metadata and takes none of the arguments below, so prefer
+`#speaker-note[..]` unless you are porting an existing deck. Both end up in the same
+place: several notes on one slide are concatenated into that slide's entry.
 
 ## Styling the panel
 
-The panel that shows your notes — on a second screen or in the presenter view — is drawn by the theme, through `config-common(notes-fn: ..)`. Every bundled theme sets it, so the notes come out looking like the rest of the theme.
+The panel that shows your notes — the second screen or the only-notes view — is drawn by the theme, through a `notes` function that goes in `config-common(notes-fn: ..)`. Every bundled theme sets it, so the notes come out looking like the rest of the theme. 
 
-The default is `touying-notes`, which handles the layout and leaves the styling to you: `header`, `header-fill`, `fill`, `note-setting` and `preview-setting`. Writing one for your own theme is covered in [Build Your Own Theme](build-your-own-theme.md).
+The default without a theme is `touying-notes`, which handles the layout and leaves the styling to you: `header`, `header-fill`, `fill`, `note-setting` and `preview-setting`. Writing one for your own theme is covered in [Build Your Own Theme](build-your-own-theme.md).

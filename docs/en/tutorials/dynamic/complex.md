@@ -15,7 +15,7 @@ We can use mark-style functions, which are very convenient to use.
 >>> #import "@preview/touying:0.7.4": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
-At subslide #touying-fn-wrapper((self: none) => str(self.subslide)), we can
+At subslide #touying-fn-wrapper-raw((self: none) => str(self.subslide)), we can
 
 use #uncover("2-")[`#uncover` function] for reserving space,
 

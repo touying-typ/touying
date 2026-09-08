@@ -42,7 +42,7 @@
 /// - title (string): The title of the theorem. Default is `none`.
 ///
 /// - it (content): The content of the theorem.
-#let tblock(title: none, it) = touying-fn-wrapper(_tblock.with(
+#let tblock(title: none, it) = touying-fn-wrapper-raw(_tblock.with(
   title: title,
   it,
 ))

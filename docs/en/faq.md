@@ -47,7 +47,7 @@ The header now uses the custom primary color.
 
 ### How do I access the current theme colors in slide content?
 
-Theme colors live on `self.colors`. In ordinary slide content, wrap a function with `touying-fn-wrapper` so Touying can pass the current slide context as `self`:
+Theme colors live on `self.colors`. In ordinary slide content, wrap a function with `touying-fn-wrapper-raw` so Touying can pass the current slide context as `self`:
 
 ```example
 #import "@preview/touying:0.7.4": *
@@ -59,11 +59,11 @@ Theme colors live on `self.colors`. In ordinary slide content, wrap a function w
 
 == Slide
 
-#touying-fn-wrapper((self: none) => text(fill: self.colors.primary)[
+#touying-fn-wrapper-raw((self: none) => text(fill: self.colors.primary)[
   This text uses the current theme's primary color.
 ])
 
-#touying-fn-wrapper((self: none) => rect(
+#touying-fn-wrapper-raw((self: none) => rect(
   fill: self.colors.secondary,
   width: 4em,
   height: 1em,
@@ -72,6 +72,7 @@ Theme colors live on `self.colors`. In ordinary slide content, wrap a function w
 
 If you are writing a theme method or callback that already receives `self`, access colors directly as `self.colors.primary`, `self.colors.neutral-lightest`, and so on.
 
+You may still use `touying-fn-wrapper`, but the `raw` variant does not escape the pause flow and can be nested in all animation methods and itself, see [here](https://github.com/touying-typ/touying/blob/main/tests/features/alert/test.typ). 
 ---
 
 ## Layout and Columns
@@ -95,6 +96,7 @@ Use `slide` with a `composer` argument to split content into columns:
 ]
 ```
 
+For equal widths you may also omit the `composer` argument.
 For unequal widths, adjust the fractions, e.g. `(2fr, 1fr)`.
 
 ### How do I place content at an absolute position?
@@ -244,7 +246,7 @@ Use `components.progressive-outline` to highlight the current section:
 
 ### How do I show citations as footnotes?
 
-Set `config-common(show-bibliography-as-footnote: true)` and call the bibliography at the end of your slideshow.
+Set `config-common(show-bibliography-as-footnote: true)` and call the bibliography at the end of your slideshow. If the style of your bibliography does this automatically, like `"chicago-notes"` don't set this to `true`.
 
 ```example
 #import "@preview/touying:0.7.4": *
@@ -277,7 +279,7 @@ This is a famous book. @knuth
 The bibliography has to be part of the document for the footnote citations to resolve. If you don't want to show the list of references at all, call it as `hide(bibliography(bib))` instead.
 
 If you wish to invoke it on a slide with other content you must be careful not to invoke it multiple times.
-This may happen automatically if the slide you place the bibliography on has more than one subslide. In that case wrap it with `only("h", bibliography(bib))`, which only emits it once at the time of invocation.
+This may happen automatically if the slide you place the bibliography on has more than one subslide. In that case wrap it with `only("h", bibliography(bib))`, which only emits it once at the time of invocation. 
 
 ---
 
@@ -332,8 +334,8 @@ This is compatible with presenter tools like [pdfpc](https://pdfpc.github.io/) a
 Use `utils.slide-counter.display()` for the current slide number and `utils.last-slide-number` for the total:
 
 ```example
-#import "@preview/touying:0.7.4": *
-#import themes.simple: *
+>>>#import "@preview/touying:0.7.4": *
+>>>#import themes.simple: *
 
 #show: simple-theme.with(
   aspect-ratio: "16-9",
@@ -360,9 +362,9 @@ Still counting.
 Add the `<touying:unnumbered>` label to the heading:
 
 ```example
-#import "@preview/touying:0.7.4": *
-#import themes.simple: *
-#show: simple-theme
+>>>#import "@preview/touying:0.7.4": *
+>>>#import themes.simple: *
+>>>#show: simple-theme
 = Title Slide <touying:unnumbered>
 
 == Welcome
@@ -379,10 +381,10 @@ This slide is counted.
 Apply `#show: appendix` after your main content. Slides after this point do not increment the slide counter:
 
 ```example
-#import "@preview/touying:0.7.4": *
-#import themes.simple: *
-
-#show: simple-theme.with(aspect-ratio: "16-9")
+>>>#import "@preview/touying:0.7.4": *
+>>>#import themes.simple: *
+>>>
+>>>#show: simple-theme.with(aspect-ratio: "16-9")
 
 = Main Content
 
@@ -412,9 +414,9 @@ This slide is in the appendix and does not increment the main counter.
 Place `#pause` between content blocks within a `#slide`:
 
 ```example
-#import "@preview/touying:0.7.4": *
-#import themes.simple: *
-#show: simple-theme
+>>>#import "@preview/touying:0.7.4": *
+>>>#import themes.simple: *
+>>>#show: simple-theme
 #slide[
   First point.
 
@@ -433,9 +435,9 @@ Place `#pause` between content blocks within a `#slide`:
 Use `#only("...")` to show content on particular subslides, or `#uncover("...")` to show it while reserving its space:
 
 ```example
-#import "@preview/touying:0.7.4": *
-#import themes.simple: *
-#show: simple-theme
+>>>#import "@preview/touying:0.7.4": *
+>>>#import themes.simple: *
+>>>#show: simple-theme
 #slide[
   #only("1")[Shown on subslide 1 only.]
   #only("2-")[Shown from subslide 2 onward.]
@@ -443,15 +445,18 @@ Use `#only("...")` to show content on particular subslides, or `#uncover("...")`
 ]
 ```
 
-### Why doesn't `#pause` work inside a `context` expression?
+You may also use `"h"` to specify the current subslide from the flow that the pauses create, or combine all strings with `"!"` which inverts the selection.
+For more details see the [*dynamics* section](./tutorials/dynamic/simple.md).
 
-`#pause` uses metadata injection that does not work inside `context { ... }` blocks. Use the callback-style `slide` instead to access `self.subslide`:
+### Why doesn't `#pause` work inside other animation commands or in `context` expressions?
+
+`#pause` uses metadata injection that does not work inside `context { ... }` blocks. Use the callback-style `slide` instead to access `self.subslide`. But you must specify the `repeat` count yourself.
 
 ```example
-#import "@preview/touying:0.7.4": *
-#import themes.simple: *
-#show: simple-theme
-#slide(self => {
+>>>#import "@preview/touying:0.7.4": *
+>>>#import themes.simple: *
+>>>#show: simple-theme
+#slide(repeat: 3, self => {
   let (uncover, only) = utils.methods(self)
   [First content.]
   linebreak()
@@ -461,9 +466,11 @@ Use `#only("...")` to show content on particular subslides, or `#uncover("...")`
 })
 ```
 
+All auto-counting animation functions are based on `touying-fn-wrapper` which cannot be nested in itself and `context`. You may however nest `touying-fn-wrapper-raw` inside itself, `touying-fn-wrapper` and thus all animation functions. But not inside `context`!
+
 ### How do I use `#pause` inside a CeTZ drawing?
 
-Use `touying-reduce` or the alias `touying-diagram` to wrap CeTZ canvas so Touying can animate it:
+Use `touying-reduce` or the alias `touying-diagram` to wrap CeTZ canvas so Touying can animate it: Note the array syntax `(•,)` around animation commands.
 
 ```example
 >>> #import "@preview/touying:0.7.4": *
@@ -499,21 +506,21 @@ Use `touying-reduce` to wrap Fletcher diagrams so Touying can automatically find
   #fletcher-diagram(
     node((0, 0), [A]),
     edge("->"),
-    (pause,),
+    pause,
     node((1, 0), [B]),
   )
 ]
 ```
-(we cannot provide the same easy syntax atm as fletcher does not expose its package name)
+Note that fletcher does not need the array syntax, writing it is also okay however.
 
 ### How do I show alternative content across subslides?
 
 Use `#alternatives` to swap between different content versions:
 
 ```example
-#import "@preview/touying:0.7.4": *
-#import themes.simple: *
-#show: simple-theme
+>>>#import "@preview/touying:0.7.4": *
+>>>#import themes.simple: *
+>>>#show: simple-theme
 #slide[
   The answer is: #alternatives[42][*forty-two*][_the ultimate answer_].
 ]
@@ -541,13 +548,13 @@ In handout mode, only the final subslide of each slide is output.
 Use a `#set text(...)` rule before or after your theme setup:
 
 ```example
-#import "@preview/touying:0.7.4": *
-#import themes.metropolis: *
-
-#show: metropolis-theme.with(
-  aspect-ratio: "16-9",
-  config-info(title: [Custom Font]),
-)
+>>>#import "@preview/touying:0.7.4": *
+>>>#import themes.metropolis: *
+>>>
+>>>#show: metropolis-theme.with(
+>>>  aspect-ratio: "16-9",
+>>>  config-info(title: [Custom Font]),
+>>>)
 
 #set text(font: "New Computer Modern", size: 22pt)
 
@@ -569,16 +576,16 @@ For math, also set the math font:
 Use `#set par(justify: true)`:
 
 ```example
-#import "@preview/touying:0.7.4": *
-#import themes.simple: *
-#show: simple-theme
+>>>#import "@preview/touying:0.7.4": *
+>>>#import themes.simple: *
+>>>#show: simple-theme
+
 #set par(justify: true)
 
-#slide[
-  == Justified Text
+== Justified Text
 
-  #lorem(40)
-]
+#lorem(40)
+
 ```
 
 ---
@@ -590,9 +597,9 @@ Use `#set par(justify: true)`:
 Set `config-common(new-section-slide-fn: none)`:
 
 ```example
-#import "@preview/touying:0.7.4": *
-#import themes.metropolis: *
-
+>>>#import "@preview/touying:0.7.4": *
+>>>#import themes.metropolis: *
+>>>
 #show: metropolis-theme.with(
   aspect-ratio: "16-9",
   config-common(new-section-slide-fn: none),
@@ -606,28 +613,30 @@ Set `config-common(new-section-slide-fn: none)`:
 No automatic section slide was created for the `= Section` heading.
 ```
 
-### How do I write content for sections that have section slides?
+### How do I write content on section slides?
 
-Use `pagebreak()` or `---` to force a new page for that section and write there.
+By default touying has `config-common(receive-body-for-new-section-slide-fn: false)`, also for all deeper subsections. Which means the content you write for a slide that has a section slide goes onto another slide. If you wish to add content to the section slide you can set the above field to `true`.
+
 
 ```example
 >>>#import "@preview/touying:0.7.4": *
 >>>#import themes.metropolis: *
 >>>
->>>#show: metropolis-theme.with(
->>>  aspect-ratio: "16-9",
->>>  config-info(title: [content slides next to section slides]),
->>>)
+#show: metropolis-theme.with(
+  aspect-ratio: "16-9",
+  config-info(title: [content slides next to section slides]),
+  config-common(receive-body-for-new-section-slide-fn: true)
+)
 
 = Section
+This goes on the section slide itself.
 ---
 Here is my content for this section.
 
 == Slide
 And this works normally.
 ```
-
-You may also set `config-common(receive-body-for-new-section-slide-fn: false)`. This however will prevent you from writing speaker-notes for the section slide.
+You can only add speaker notes to the section slide if `receive-body-...` is true.
 
 ### How do I hide section slides, or keep headings out of outlines/bookmarks?
 
@@ -794,6 +803,9 @@ Use `config-methods(cover: utils.alpha-changing-cover)`:
 #pause
 This content is shown with a low alpha cover.
 ```
+
+You may also use `utils.color-changing-cover` wich should be faster to compile.
+The default is `utils.hiding-cover`.
 
 ### How do I use preamble to insert content before every slide?
 
@@ -974,7 +986,7 @@ For live preview during editing:
 typst watch slides.typ
 ```
 
-Or use the [Typst Preview](https://marketplace.visualstudio.com/items?itemName=mgt19937.typst-preview) VS Code extension for instant in-editor preview.
+Or use the [Tinymist](https://marketplace.visualstudio.com/items?itemName=myriad-dreamin.tinymist) VS Code extension for instant in-editor preview.
 
 ### How do I create a multi-file presentation?
 
@@ -1065,7 +1077,7 @@ We bind the functions into touying so you can directly do
 But you can also do
 
 ```typst
-#import "@preview/uniwarn:0.1.0"
+#import "@preview/uniwarn:0.1.1"
 #uniwarn.disable-warnings("touying")
 #uniwarn.enable-warnings("touying")
 ```

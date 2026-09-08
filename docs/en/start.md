@@ -98,7 +98,7 @@ Meanwhile, #pause we can also use `#meanwhile` to #pause display other content s
 
 == Complex Animation
 
-At subslide #touying-fn-wrapper((self: none) => str(self.subslide)), we can
+At subslide #touying-fn-wrapper-raw((self: none) => str(self.subslide)), we can
 
 use #uncover("2-")[`#uncover` function] for reserving space,
 
