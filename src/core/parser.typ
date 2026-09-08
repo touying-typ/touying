@@ -1,8 +1,8 @@
 #import "../utils.typ"
 #import "../extern.typ"
 #import "waypoints.typ": (
-  _compute-waypoint-ranges, _cover-never, _resolve-waypoint-forest,
-  _waypoint-known, waypoint-kinds,
+  _compute-waypoint-ranges, _resolve-waypoint-forest, _waypoint-known,
+  waypoint-kinds,
 )
 
 /// Parse touying reducer content and extract animation repetitions

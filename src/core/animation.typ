@@ -238,7 +238,7 @@
 ///    - A single integer, e.g. `3` — only subslide 3.
 ///    - An array, e.g. `(1, 2, 4)` — equivalent to `"1, 2, 4"`.
 ///    - A string with ranges, e.g. `"-2, 4, 6-8, 10-"` — subslides 1, 2, 4, 6, 7, 8, 10, and all after 10.
-///    - A label, e.g. `<my-waypoint>` — creates an implicit waypoint and shows from there onward.
+///    - A label, e.g. `<my-waypoint>` — shows from that waypoint's start until the next waypoint. creates a new implicit waypoint if it does not already exist.
 ///    - A waypoint marker, e.g. `from-wp(<label>)`, `until-wp(<label>)`, `get-first(<label>)`, etc.
 ///
 /// - cont (content): The content to display when visible.
@@ -311,7 +311,7 @@
 ///    - A single integer, e.g. `3` — only subslide 3.
 ///    - An array, e.g. `(1, 2, 4)` — equivalent to `"1, 2, 4"`.
 ///    - A string with ranges, e.g. `"-2, 4, 6-8, 10-"` — subslides 1, 2, 4, 6, 7, 8, 10, and all after 10.
-///    - A label, e.g. `<my-waypoint>` — creates an implicit waypoint and shows from there onward.
+///    - A label, e.g. `<my-waypoint>` — shows from that waypoint's start until the next waypoint. creates a new implicit waypoint if it does not already exist.
 ///    - A waypoint marker, e.g. `from-wp(<label>)`, `until-wp(<label>)`, `get-first(<label>)`, etc.
 ///
 /// - uncover-cont (content): The content to display when visible.
@@ -383,7 +383,7 @@
 ///    - A single integer, e.g. `3` — only subslide 3.
 ///    - An array, e.g. `(1, 2, 4)` — equivalent to `"1, 2, 4"`.
 ///    - A string with ranges, e.g. `"-2, 4, 6-8, 10-"` — subslides 1, 2, 4, 6, 7, 8, 10, and all after 10.
-///    - A label, e.g. `<my-waypoint>` — creates an implicit waypoint and shows from there onward.
+///    - A label, e.g. `<my-waypoint>` — shows from that waypoint's start until the next waypoint. creates a new implicit waypoint if it does not already exist.
 ///    - A waypoint marker, e.g. `from-wp(<label>)`, `until-wp(<label>)`, `get-first(<label>)`, etc.
 ///
 /// - only-cont (content): The content to display when visible.

@@ -296,6 +296,7 @@
     self,
     config-common(freeze-slide-counter: true),
     config-page(margin: 1em, ..args),
+    config,
   )
   set text(fill: self.colors.neutral-lightest, weight: "bold", size: 2em)
   touying-slide(self: self, setting: std.align.with(horizon), body)

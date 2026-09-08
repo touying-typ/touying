@@ -2,8 +2,8 @@
 #import "../pdfpc.typ"
 #import "../components.typ"
 #import "waypoints.typ": (
-  _compute-waypoint-ranges, _cover-never, _resolve-waypoint-forest,
-  _waypoint-known, waypoint-kinds,
+  _compute-waypoint-ranges, _resolve-waypoint-forest, _waypoint-known,
+  waypoint-kinds,
 )
 #import "parser.typ": (
   _collect-waypoints, _parse-content-into-results-and-repetitions,
@@ -1621,7 +1621,8 @@
     headings.sum(default: none)
   }
 }
-
+/// Internal slide rendering function. Called by theme slide functions via `touying-slide-wrapper`.
+/// See the public `slide` function for parameter documentation.
 #let touying-slide(
   self: none,
   config: (:),

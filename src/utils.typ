@@ -3552,23 +3552,23 @@
   mapping.at(text.lang, default: mapping.en)
 }
 
-// *Returns input given to the compiler.*
-//
-// *Important*: This function uses typst `#eval` to parse your value.
-//
-// Example:
-// `typst compile FILE --input export-mode=\"presentation\" myslide.typ` \
-// Then in the code you can do:
-// `#let export-mode = get-input("export-mode")`
-//
-// Example 2:
-// `typst compile FILE --input config='("foo": 1, "bar": [1, 2, 3], "baz": ("nested": 4))'`
-//
-// You may also provide no key to get the entire inputs dictionary with parsed values:
-// `#let inputs = get-input()`
-//
-// - key (str, none): The input key to retrieve. If `none`, returns the entire inputs dictionary with parsed values.
-//
+/// *Returns input given to the compiler.*
+///
+/// *Important*: This function uses typst `#eval` to parse your value.
+///
+/// Example:
+/// `typst compile FILE --input export-mode=\"presentation\" myslide.typ` \
+/// Then in the code you can do:
+/// `#let export-mode = get-input("export-mode")`
+///
+/// Example 2:
+/// `typst compile FILE --input config='("foo": 1, "bar": [1, 2, 3], "baz": ("nested": 4))'`
+///
+/// You may also provide no key to get the entire inputs dictionary with parsed values:
+/// `#let inputs = get-input()`
+///
+/// - key (str, none): The input key to retrieve. If `none`, returns the entire inputs dictionary with parsed values.
+///
 #let get-input(key: none) = {
   if key == none {
     let values = (:)
@@ -3586,10 +3586,6 @@
 
 
 /// Rescale an image element to fit within a column-fraction of the available content width.
-///
-/// Used by `_wrap-section` in document mode to resize slide images so they fit alongside
-/// wrapped text. Can also be called directly when you need to place a slide image at a
-/// proportionally correct size in a document.
 ///
 /// - img-el (content): The raw image element — used only for measuring its declared `width`.
 /// - display-el (content): The element that is actually rendered (may be `img-el` itself, or a figure containing it).

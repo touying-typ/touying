@@ -149,13 +149,13 @@
 ///
 /// - new-subsubsubsection-slide-fn (function): The function to create a new slide for a new subsubsubsection. Default is `none`.
 ///
-/// - receive-body-for-new-section-slide-fn (bool): Whether to receive the body for the new section slide function. Default is `true`.
+/// - receive-body-for-new-section-slide-fn (bool): Whether to receive the body for the new section slide function. Default is `false`.
 ///
-/// - receive-body-for-new-subsection-slide-fn (bool): Whether to receive the body for the new subsection slide function. Default is `true`.
+/// - receive-body-for-new-subsection-slide-fn (bool): Whether to receive the body for the new subsection slide function. Default is `false`.
 ///
-/// - receive-body-for-new-subsubsection-slide-fn (bool): Whether to receive the body for the new subsubsection slide function. Default is `true`.
+/// - receive-body-for-new-subsubsection-slide-fn (bool): Whether to receive the body for the new subsubsection slide function. Default is `false`.
 ///
-/// - receive-body-for-new-subsubsubsection-slide-fn (bool): Whether to receive the body for the new subsubsubsection slide function. Default is `true`.
+/// - receive-body-for-new-subsubsubsection-slide-fn (bool): Whether to receive the body for the new subsubsubsection slide function. Default is `false`.
 ///
 /// - show-strong-with-alert (bool): Whether to show strong with alert. Default is `true`.
 ///
@@ -169,7 +169,7 @@
 ///
 /// - zero-margin-footer (bool): Whether to show the full footer (with negative padding). Default is `true`.
 ///
-/// - auto-offset-for-heading (bool): Whether to add an offset relative to slide-level for headings. Default is `true`.
+/// - auto-offset-for-heading (bool): Whether to add an offset relative to slide-level for headings. Default is `false`.
 ///
 /// - enable-pdfpc (bool): Whether to add `<pdfpc-file>` label for querying. Default is `true`.
 ///
@@ -895,7 +895,7 @@
     numbering: "1",
   ),
   config-document(
-    available-fields: (),
+    available-fields: (:),
     title-block-fn: none,
     wrap-images: true,
     wrap-image-figures: false,
@@ -905,6 +905,8 @@
   ),
   config-store(),
 )
+/// all the real config prefixes: `("methods", "info", "colors", "page", "document", "store")`
+#let _prefixes = ("methods", "info", "colors", "page", "document", "store")
 
 /// Gets the current config at the point of the call. Returns a dict with context evaluated values.
 ///
@@ -913,14 +915,14 @@
 /// touying-get-config() // returns the whole config dict
 /// touying-get-config().common.handout // returns the value of the "handout" config in the "common" category
 /// touying-get-config().handout // same as above. common is also registered at the top level.
-/// touying-get-config("commmon.handout") // same as above. You can also query with a key, and you will get the subconfig or value back.
+/// touying-get-config("common.handout") // same as above. You can also query with a key, and you will get the subconfig or value back.
 /// ```
 ///
 /// - key (str): The key of the subconfiguration to retrieve. Default `none`, returns the entire config. May also be passed in as a positional argument.
 ///   Only necessary when you set custom keys into touyings' config. Theme configuration is naturally available as `touying-get-config().store.long-theme-key`
 /// - default (any): The default value to return if the key is not found.
 /// -> dict
-#let touying-get-config(key: none, default: type, ..args) = {
+#let touying-get-config(key: none, default: _default, ..args) = {
   assert(
     args.pos().len() <= 1,
     message: "Only one positional argument is allowed.",
@@ -933,12 +935,16 @@
     type(key) == str or key == none,
     message: "Key must be a string or none.",
   )
+  assert(
+    key == none or args.pos().len() == 0,
+    message: "A key may be passed either as named or positional argument, not both.",
+  )
   let key_ = key
   if args.pos().len() == 1 {
     key_ = args.pos().first()
   }
 
-  let rec-defer-retrieval(config, keychain, default: type) = {
+  let rec-defer-retrieval(config, keychain, default: _default) = {
     if type(config) == dictionary {
       let defered = (:)
       for k in config.keys() {
@@ -948,13 +954,26 @@
           default: default,
         ))
       }
+      // The flat top-level keys are also reachable under `common`. Mirror the
+      // entries just deferred rather than recursing on the same dictionary,
+      // which would never terminate. Only the root has a `common`.
+      if keychain == () {
+        let common = (:)
+        for k in config.keys() {
+          if k not in _prefixes {
+            common.insert(k, defered.at(k))
+          }
+        }
+        defered.insert("common", common)
+      }
+
       return defered
     } else {
       //when we reached a leaf value in the config, we evaluate it at context time via keychain.
       return touying-fn-wrapper-raw((self: none) => {
         let value = self
         for cur in keychain {
-          if cur not in value.keys() and default != type {
+          if cur not in value.keys() and default != _default {
             return default
           }
           value = value.at(cur)
@@ -968,7 +987,7 @@
     config,
     keychain,
     key: none,
-    default: type,
+    default: _default,
   ) = {
     if type(config) == dictionary {
       if key != none {
@@ -982,6 +1001,43 @@
           this-key = key.slice(0, first-dot)
           rest-key = key.slice(first-dot + 1)
         }
+        // `common` is a virtual category holding the flat top-level keys, so it
+        // only exists at the root - `page.common` is an ordinary miss.
+        if this-key == "common" and keychain == () {
+          if rest-key == none {
+            let common = (:)
+            for k in config.keys() {
+              if k not in _prefixes {
+                common.insert(k, rec-defer-retrieval(
+                  config.at(k),
+                  keychain + (k,),
+                  default: default,
+                ))
+              }
+            }
+            return common
+          }
+          // Compare whole segments: `common.storefront` is a plain key lookup,
+          // only `common.store` names the category.
+          if rest-key.split(".").first() in _prefixes {
+            if default != _default {
+              return default
+            }
+            panic(
+              "`"
+                + rest-key.split(".").first()
+                + "` is a config category, not a key under `common`: "
+                + key,
+            )
+          }
+          return rec-defer-retrieval-with-key(
+            config,
+            keychain,
+            key: rest-key,
+            default: default,
+          )
+        }
+
         if this-key in config.keys() {
           return rec-defer-retrieval-with-key(
             config.at(this-key),
@@ -1013,7 +1069,7 @@
       return rec-defer-retrieval(none, keychain, default: default)
     } else {
       // got a leaf value, but key is not empty.
-      if default != type {
+      if default != _default {
         return default
       }
       panic(

@@ -231,36 +231,3 @@
 
   body
 }
-
-// /// Display the collected bibliography entries. Avoids the "multiple bibliographies are not yet supported" error by rendering entries gathered by `bibliography-as-footnote`.
-// ///
-// /// Usage: `#magic.bibliography()`
-// ///
-// /// - title (str, auto, none): The heading for the bibliography section. When `auto`, uses a language-appropriate title. When `none`, no heading is shown. Default is `auto`.
-// ///
-// /// -> content
-// #let bibliography(title: auto) = {
-//   context {
-//     let title = title
-//     let bibitems = bibliography-state.final()
-//     if title == auto {
-//       if text.lang == "zh" {
-//         title = "参考文献"
-//       } else {
-//         title = "Bibliography"
-//       }
-//     }
-//     if title != none {
-//       heading(title)
-//       v(.45em)
-//     }
-//     grid(
-//       columns: (auto, 1fr),
-//       column-gutter: .7em,
-//       row-gutter: 1.2em,
-//       ..range(bibitems.len())
-//         .map(i => (numbering("[1]", i + 1), bibitems.at(i)))
-//         .flatten(),
-//     )
-//   }
-// }
