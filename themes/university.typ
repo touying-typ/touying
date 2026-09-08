@@ -289,6 +289,7 @@
   }
   self = utils.merge-dicts(
     self,
+    config,
     config-common(freeze-slide-counter: true),
     config-page(margin: 1em, ..args),
   )
