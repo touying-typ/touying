@@ -96,8 +96,10 @@
   let self = utils.merge-dicts(..args)
 
   // get compiler args
-  let comp_args = utils.get-input()
-  self = utils.merge-dicts(self, comp_args)
+  let _export-mode = utils.get-input(key: "export-mode")
+  if (_export-mode!=none) {
+    self.insert("export-mode", _export-mode)
+  }
 
   // resolve export-mode and apply handout flag
   let export-mode = self.at("export-mode", default: "slides")
