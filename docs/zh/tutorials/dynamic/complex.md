@@ -32,6 +32,9 @@ use #only("2-")[`#only` function] for not reserving space,
 为了避免上文提到的布局函数的限制，Touying 利用回调函数巧妙实现了总是能生效的 `only`、`uncover` 和 `alternatives`，具体来说，您要这样引入这三个函数：
 
 ```example
+>>> #import "@preview/touying:0.7.4": *
+>>> #import themes.simple: *
+>>> #show: simple-theme
 #slide(repeat: 3, self => [
   #let (uncover, only, alternatives) = utils.methods(self)
 
@@ -87,6 +90,9 @@ use #only("2-")[`#only` function] for not reserving space,
 `alternatives` 函数表示在不同的 subslides 中展示一系列不同的内容，例如
 
 ```example
+>>> #import "@preview/touying:0.7.4": *
+>>> #import themes.simple: *
+>>> #show: simple-theme
 #slide(repeat: 3, self => [
   #let (uncover, only, alternatives) = utils.methods(self)
 

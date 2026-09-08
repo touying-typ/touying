@@ -123,13 +123,13 @@ We can also pass the slide self and then use the utils methods. You don't need t
     
     rect((0,0), (5,5))
 
-    (uncover("2-3", {
+    uncover("2-3", {
       rect((0,0), (1,1))
       rect((1,1), (2,2))
       rect((2,2), (3,3))
-    }),)
+    })
 
-    (only(3, line((0,0), (2.5, 2.5), name: "line")),)
+    only(3, line((0,0), (2.5, 2.5), name: "line"))
   })
 ])
 ```

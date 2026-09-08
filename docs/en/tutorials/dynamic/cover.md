@@ -8,25 +8,19 @@ As you already know, both `uncover` and `#pause` use the `cover` function to con
 
 ## Default Cover Function: `hide`
 
-The `cover` function is a method stored in `s.methods.cover`, which is later used by `uncover` and `#pause`.
+The `cover` function is a method stored in `self.methods.cover`, which is later used by `uncover` and `#pause`.
 
-The default `cover` function is the [hide](https://typst.app/docs/reference/layout/hide/) function. This function makes the internal content invisible without affecting the layout.
+The default `cover` function is the [hide](https://typst.app/docs/reference/layout/hide/) function. This function makes the internal content invisible without affecting the layout. It is written onto the config as detailed below.
 
 ## Updating the Cover Function
 
-In some cases, you might want to use your own `cover` function. In that case, you can set your own `cover` function using:
+In some cases, you might want to use your own `cover` function. In that case, you can set your own `cover` function using: 
 
 ```typst
-config-methods(cover: (self: none, body) => hide(body))
+config-methods(cover: utils.hiding-cover)
 ```
 
-## hack: handle enum and list
-
-You will find that the existing cover function cannot hide the mark of enum and list, refer to [here](https://github.com/touying-typ/touying/issues/10), so you can hack:
-
-```typst
-config-methods(cover: (self: none, body) => box(scale(x: 0%, body)))
-```
+If you custom method should hide footnotes completely, set `config-common(cover-hides-footnote: true)`
 
 ## Alpha-Changing Cover Function
 

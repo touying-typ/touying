@@ -11,6 +11,9 @@ Touying 为简单的动画效果提供了两个标记：`#pause` 和 `#meanwhile
 `#pause` 的用途很简单，就是用于将后续的内容放到下一张 subslide 中，并且可以使用多个 `#pause` 以创建多张 subslides，一个简单的例子：
 
 ```example
+>>> #import "@preview/touying:0.7.4": *
+>>> #import themes.simple: *
+>>> #show: simple-theme
 #slide[
   First #pause Second
 
@@ -30,6 +33,9 @@ Touying 为简单的动画效果提供了两个标记：`#pause` 和 `#meanwhile
 有些情况下，我们需要在 `#pause` 的同时展示一些其他内容，这时候我们就可以用 `#meanwhile`。
 
 ```example
+>>> #import "@preview/touying:0.7.4": *
+>>> #import themes.simple: *
+>>> #show: simple-theme
 #slide[
   First
   

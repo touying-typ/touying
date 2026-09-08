@@ -148,7 +148,7 @@ The header now uses the custom primary color.
 
 #show: simple-theme.with(
   aspect-ratio: "16-9",
-  config-methods(cover: alpha-changing-cover),
+  config-methods(cover: utils.alpha-changing-cover),
 )
 
 = Section
@@ -171,7 +171,7 @@ This content is shown with a low alpha cover.
   aspect-ratio: "16-9",
   config-common(
     preamble: text(gray)[This appears before every slide],
-    subslide-preamble: (2: [Special prelude for subslide 2]),
+    subslide-preamble: [Special prelude for each subslide]),
   ),
 )
 

@@ -11,6 +11,9 @@ Touying 还提供了一个独特且十分有用的功能，即数学公式动画
 让我们先来看一个例子：
 
 ```example
+>>> #import "@preview/touying:0.7.4": *
+>>> #import themes.simple: *
+>>> #show: simple-theme
 #slide[
   Touying equation with pause:
 
@@ -36,6 +39,9 @@ Touying 还提供了一个独特且十分有用的功能，即数学公式动画
 事实上，我们也可以使用 `only`、`uncover` 和 `alternatives`：
 
 ```example
+>>> #import "@preview/touying:0.7.4": *
+>>> #import themes.simple: *
+>>> #show: simple-theme
 #slide(repeat: 3, self => [
   #let (uncover, only, alternatives) = utils.methods(self)
 

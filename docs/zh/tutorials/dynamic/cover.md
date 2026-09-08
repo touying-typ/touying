@@ -9,7 +9,7 @@ sidebar_position: 4
 
 ## 默认 Cover 函数：`hide`
 
-`cover` 函数是保存在 `s.methods.cover` 的一个方法，后续 `uncover` 和 `#pause` 均会在这里取出 `cover` 函数来使用。
+`cover` 函数是保存在 `self.methods.cover` 的一个方法，后续 `uncover` 和 `#pause` 均会在这里取出 `cover` 函数来使用。
 
 默认的 `cover` 函数是 [hide](https://typst.app/docs/reference/layout/hide/) 函数，这个函数能将内部的内容更改为不可见的，且不会影响布局。
 
@@ -19,19 +19,10 @@ sidebar_position: 4
 有的情况下，您想用您自己的 `cover` 函数，那么您可以通过
 
 ```typst
-config-methods(cover: (self: none, body) => hide(body))
+config-methods(cover: utils.hiding-cover)
 ```
 
 方法来设置您自己的 `cover` 函数。
-
-
-## hack: 处理 enum 和 list
-
-你会发现现有的 cover 函数无法隐藏 enum 和 list 的 mark，参考 [这里](https://github.com/touying-typ/touying/issues/10)，因此你可以进行 hack：
-
-```typst
-config-methods(cover: (self: none, body) => box(scale(x: 0%, body)))
-```
 
 
 ## Alpha 变化 Cover 函数
