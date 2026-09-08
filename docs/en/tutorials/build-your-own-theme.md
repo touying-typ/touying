@@ -12,6 +12,7 @@ Creating your own theme with Touying can be a bit complex due to the many concep
 - Customizing the footer;
 - Customizing the `slide` method;
 - Customizing special slide methods, such as `title-slide` and `focus-slide` methods;
+- Customizing the `notes` method;
 
 To demonstrate how to create a theme with Touying, let's step by step create a simple and aesthetically pleasing Bamboo theme.
 
@@ -290,6 +291,172 @@ On the basis of the basic slides we've created, we further add some special slid
 For the `title-slide` method, first, we can obtain the information saved in `self.info` through `let info = self.info + args.named()`, and we can also update the information with `args.named()` passed in through the function parameters for subsequent use in the form of `info.title`. The specific page content `body` will vary for each theme, so I won't go into too much detail here.
 
 For the `new-section-slide` method, it's the same, but the only thing to note is that we registered `new-section-slide-fn: new-section-slide` in `config-methods()`, so `new-section-slide` will be automatically called when encountering a first-level heading.
+```example
+// bamboo.typ
+#import "@preview/touying:0.7.4": *
+
+#let slide(title: auto, ..args) = touying-slide-wrapper(self => {
+  if title != auto {
+    self.store.title = title
+  }
+  // set page
+  let header(self) = {
+    set align(top)
+    show: components.cell.with(fill: self.colors.primary, inset: 1em)
+    set align(horizon)
+    set text(fill: self.colors.neutral-lightest, size: .7em)
+    utils.display-current-heading(level: 1)
+    linebreak()
+    set text(size: 1.5em)
+    if self.store.title != none {
+      utils.call-or-display(self, self.store.title)
+    } else {
+      utils.display-current-heading(level: 2)
+    }
+  }
+  let footer(self) = {
+    set align(bottom)
+    show: pad.with(.4em)
+    set text(fill: self.colors.neutral-darkest, size: .8em)
+    utils.call-or-display(self, self.store.footer)
+    h(1fr)
+    context utils.slide-counter.display() + " / " + utils.last-slide-number
+  }
+  self = utils.merge-dicts(
+    self,
+    config-page(
+      header: header,
+      footer: footer,
+    ),
+  )
+  touying-slide(self: self, ..args)
+})
+
+#let title-slide(..args) = touying-slide-wrapper(self => {
+  let info = self.info + args.named()
+  let body = {
+    set align(center + horizon)
+    block(
+      fill: self.colors.primary,
+      width: 80%,
+      inset: (y: 1em),
+      radius: 1em,
+      text(size: 2em, fill: self.colors.neutral-lightest, weight: "bold", info.title),
+    )
+    set text(fill: self.colors.neutral-darkest)
+    if info.author != none {
+      block(info.author)
+    }
+    if info.date != none {
+      block(utils.display-info-date(self))
+    }
+    if info.contact != none {
+      block(info.contact)
+    }
+  }
+  touying-slide(self: self, body)
+})
+
+#let new-section-slide(self: none, body) = touying-slide-wrapper(self => {
+  let main-body = {
+    set align(center + horizon)
+    set text(size: 2em, fill: self.colors.primary, weight: "bold", style: "italic")
+    utils.display-current-heading(level: 1)
+  }
+  touying-slide(self: self, main-body)
+})
+
+#let focus-slide(body) = touying-slide-wrapper(self => {
+  self = utils.merge-dicts(
+    self,
+    config-page(
+      fill: self.colors.primary,
+      margin: 2em,
+    ),
+  )
+  place(hide(heading[Focus Slide])) // put an invisible heading on the slide. Useful later
+
+  set text(fill: self.colors.neutral-lightest, size: 2em)
+  touying-slide(self: self, align(horizon + center, body))
+})
+
+#let bamboo-theme(
+  aspect-ratio: "16-9",
+  footer: none,
+  ..args,
+  body,
+) = {
+  set text(size: 20pt)
+
+  show: touying-slides.with(
+    config-page(
+      paper: "presentation-" + aspect-ratio,
+      margin: (top: 4em, bottom: 1.5em, x: 2em),
+    ),
+    config-common(
+      slide-fn: slide,
+      new-section-slide-fn: new-section-slide,
+    ),
+    config-methods(alert: utils.alert-with-primary-color),
+    config-colors(
+      primary: rgb("#5E8B65"),
+      neutral-lightest: rgb("#ffffff"),
+      neutral-darkest: rgb("#000000"),
+    ),
+    config-store(
+      title: none,
+      footer: footer,
+    ),
+    ..args,
+  )
+
+  body
+}
+
+
+// main.typ
+<<< #import "@preview/touying:0.7.4": *
+<<< #import "bamboo.typ": *
+
+#show: bamboo-theme.with(
+  aspect-ratio: "16-9",
+  footer: self => self.info.institution,
+  config-info(
+    title: [Title],
+    subtitle: [Subtitle],
+    author: [Authors],
+    date: datetime.today(),
+    institution: [Institution],
+    contact: [contact\@mail.com],
+  ),
+)
+
+#title-slide()
+
+= First Section
+
+== First Slide
+
+A slide with a title and an *important* information.
+
+#focus-slide[
+  Focus on it!
+]
+```
+
+
+
+## Customizing the Notes
+
+The last aspect is customizing our notes.
+Since touying 0.8.0 you can detail how those should look by writing a function `notes` and passing it to `config-common(notes-fn: notes)`.
+
+Your `notes` function should build upon `touying-notes`, which allows you to define setting functions just like slide does and it also has a header that you can customize.
+A `notes` function has two setting functions: `note-setting` and `preview-setting`.
+The first one transforms the notes and thus the main content. The second one is for placing and scaling the "preview slide" that gets rendered in [`show-only-notes` mode](https://touying-typ.github.io/docs/reference/configs/config-common#show-only-notes), similar to LaTeX Beamer's option. Both have sensible defaults so you can omit either.
+#TODO ref a better speaker-notes page.
+To set the page background or similar we don't use `config-page()`, instead you can pass a colored `rect` or an `image` directly to its `fill` field. Similar for the parameter `header-fill`.
+The `header` takes up an upper portion of the note page and the full width. By default it renders the current section header.
 
 ```example
 // bamboo.typ
@@ -374,9 +541,26 @@ For the `new-section-slide` method, it's the same, but the only thing to note is
       margin: 2em,
     ),
   )
+  place(hide(heading[Focus Slide])) // put an invisible heading on the slide. Useful later
+
   set text(fill: self.colors.neutral-lightest, size: 2em)
   touying-slide(self: self, align(horizon + center, body))
 })
+
+#let notes(self: none, ..args) = touying-notes(
+  self: self,
+  // Echo the slide header: same primary band, same light text.
+  header: self => pad(1em, text(
+    fill: self.colors.neutral-lightest,
+    size: .7em,
+    utils.display-current-heading(depth: self.slide-level),
+  )),
+  header-fill: self.colors.primary,
+  fill: self.colors.neutral-lightest,
+  note-setting: note => pad(1.5em, text(size: .8em, note)),
+  preview-setting: slide-preview => align(top+right, scale(x:20%, y:20%, slide-preview))
+  ..args,
+)
 
 #let bamboo-theme(
   aspect-ratio: "16-9",
@@ -394,6 +578,7 @@ For the `new-section-slide` method, it's the same, but the only thing to note is
     config-common(
       slide-fn: slide,
       new-section-slide-fn: new-section-slide,
+      notes-fn: notes,
     ),
     config-methods(alert: utils.alert-with-primary-color),
     config-colors(
@@ -419,6 +604,7 @@ For the `new-section-slide` method, it's the same, but the only thing to note is
 #show: bamboo-theme.with(
   aspect-ratio: "16-9",
   footer: self => self.info.institution,
+  config-common(show-notes-on-second-screen: right),
   config-info(
     title: [Title],
     subtitle: [Subtitle],
@@ -437,11 +623,14 @@ For the `new-section-slide` method, it's the same, but the only thing to note is
 
 A slide with a title and an *important* information.
 
+#speaker-note[
+  Remember to explain why bamboo is the fastest-growing plant on earth.
+]
+
 #focus-slide[
   Focus on it!
 ]
 ```
-
 
 
 ## Conclusion

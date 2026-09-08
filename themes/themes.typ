@@ -5,4 +5,4 @@
 #import "university.typ"
 #import "aqua.typ"
 #import "stargazer.typ"
-#import "document.typ"
+#import "article.typ"

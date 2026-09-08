@@ -247,11 +247,11 @@
 ///
 ///   For example, `config-common(default-composer: cols.with(lazy-layout: false, gutter: 2em))` sets the default gutter between columns to `2em` for all slides.
 ///
-/// - document-mode (bool): Whether to enable the document mode. In document mode, the content will flow continuously without page breaks between slides, and some slide-specific features will be disabled. Default is `false`. Rather than using this flag, use the export-mode flag instead.
+/// - article-mode (bool): Whether to enable the article mode. In article mode, the content will flow continuously without page breaks between slides, and some slide-specific features will be disabled. Default is `false`. Rather than using this flag, use the export-mode flag instead.
 ///
-/// - export-mode (str): The export mode for the presentation. It can be `slides`, `document`, `presentation`, `handout`. Default is `slides`. In case of `slides` the `handout`-flag determines whether to render a presentation or a handout.
+/// - export-mode (str): The export mode for the presentation. It can be `slides`, `article`, `presentation`, `handout`. Default is `slides`. In case of `slides` the `handout`-flag determines whether to render a presentation or a handout.
 ///
-/// - document-theme (theme): The theme to use when rendering in document mode. Can be an arbitrary theme but whether it works correctly is not guaranteed. Default is `auto`, in which case we use touying's builtin document theme.
+/// - article-theme (theme): The theme to use when rendering in article mode. Can be an arbitrary theme but whether it works correctly is not guaranteed. Default is `auto`, in which case we use touying's builtin article theme.
 ///
 /// -> dictionary
 #let config-common(
@@ -310,9 +310,9 @@
   show-hide-set-list-marker-none: _default,
   show-bibliography-as-footnote: _default,
   default-composer: _default,
-  document-mode: _default,
+  article-mode: _default,
   export-mode: _default,
-  document-theme: _default,
+  article-theme: _default,
   ..args,
 ) = {
   assert(args.pos().len() == 0, message: "Unexpected positional arguments.")
@@ -371,9 +371,9 @@
       show-hide-set-list-marker-none: show-hide-set-list-marker-none,
       show-bibliography-as-footnote: show-bibliography-as-footnote,
       default-composer: default-composer,
-      document-mode: document-mode,
+      article-mode: article-mode,
       export-mode: export-mode,
-      document-theme: document-theme,
+      article-theme: article-theme,
     ))
       + args.named()
   )
@@ -697,8 +697,8 @@
 
 /// Document-mode configuration.
 ///
-/// Controls how slide content is rendered when using document mode via the
-/// dual theme. These settings are consumed by `render-content-as-document`
+/// Controls how slide content is rendered when using article mode via the
+/// dual theme. These settings are consumed by `render-content-as-article`
 /// and `_wrap-section` in core.typ.
 ///
 /// When you pass `auto` to the `title-block-fn` it will show
@@ -730,8 +730,8 @@
 ///   ])
 /// },
 /// ```
-/// - available-fields (dict): The fields from the config to pass to the document-theme. A dict mapping config to the theme fields. E.g. (the-title: "info.title", the-author: "info.author") will pass the config-info fields `title` and `author` in the config to the theme as `the-title` and `the-author`. Default is (:), which passes no fields.
-/// - title-block-fn (function): A function returning the title block to show at the beginning of the rendered document. If your theme has an automatic function for this you don't need it. And you can always use `#document-only` before the first slide to show your custom title block. Default is `none`.
+/// - available-fields (dict): The fields from the config to pass to the article-theme. A dict mapping config to the theme fields. E.g. (the-title: "info.title", the-author: "info.author") will pass the config-info fields `title` and `author` in the config to the theme as `the-title` and `the-author`. Default is (:), which passes no fields.
+/// - title-block-fn (function): A function returning the title block to show at the beginning of the rendered document. If your theme has an automatic function for this you don't need it. And you can always use `#article-only` before the first slide to show your custom title block. Default is `none`.
 /// - wrap-images (bool): Wrap raw images to the side via meander. Default is `true`.
 /// - wrap-image-figures (bool): Wrap image figures (image + caption) to the side via meander. Default is `false`.
 /// - wrap-other-figures (bool): Wrap other figures (block + caption) to the side via meander. Default is `false`.
@@ -739,7 +739,7 @@
 /// - wrap-align-direction (direction): The direction to wrap the content when `wrap-images`, `wrap-image-figures`, `wrap-other-figures`, or `wrap-other` is true. It can be either `left` or `right`. Default is `right`.
 ///
 /// -> dictionary
-#let config-document(
+#let config-article(
   available-fields: _default,
   title-block-fn: _default,
   wrap-images: _default,
@@ -751,7 +751,7 @@
 ) = {
   assert(args.pos().len() == 0, message: "Unexpected positional arguments.")
   return (
-    document: _get-dict-without-default((
+    article: _get-dict-without-default((
       available-fields: available-fields,
       title-block-fn: title-block-fn,
       wrap-images: wrap-images,
@@ -808,9 +808,9 @@
     scale-list-items: none,
     show-hide-set-list-marker-none: true,
     show-bibliography-as-footnote: false,
-    document-mode: false,
+    article-mode: false,
     export-mode: "slides",
-    document-theme: auto,
+    article-theme: auto,
     enable-frozen-states-and-counters: true,
     frozen-states: (),
     default-frozen-states: _default-frozen-states,
@@ -894,7 +894,7 @@
     margin: (x: 3em, y: 2.8em),
     numbering: "1",
   ),
-  config-document(
+  config-article(
     available-fields: (:),
     title-block-fn: none,
     wrap-images: true,
@@ -905,8 +905,8 @@
   ),
   config-store(),
 )
-/// all the real config prefixes: `("methods", "info", "colors", "page", "document", "store")`
-#let _prefixes = ("methods", "info", "colors", "page", "document", "store")
+/// all the real config prefixes: `("methods", "info", "colors", "page", "article", "store")`
+#let _prefixes = ("methods", "info", "colors", "page", "article", "store")
 
 /// Gets the current config at the point of the call. Returns a dict with context evaluated values.
 ///

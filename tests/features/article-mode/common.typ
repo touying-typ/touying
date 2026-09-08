@@ -1,6 +1,6 @@
 #import "../../../lib.typ": *
 
-#import themes.document: document-theme
+#import themes.article: article-theme
 #import themes.simple: *
 
 // bibliography data for testing bib
@@ -24,11 +24,11 @@
   }",
 )
 
-/// Shared content rendered by the presentation/handout/document variants of
+/// Shared content rendered by the presentation/handout/article variants of
 /// this test, so all three exercise identical source content and any
 /// mode-specific regression is easy to spot.
 ///
-/// - export-mode (str): "presentation", "handout", or "document".
+/// - export-mode (str): "presentation", "handout", or "article".
 #let render(export-mode) = [
   // this will be used when the title-block-fn is set to `auto`.
   #set document(description: lorem(20), keywords: ("lorem", "ipsum", "dolor"))
@@ -36,18 +36,18 @@
   #show: simple-theme.with(
     config-common(
       export-mode: export-mode,
-      document-theme: document-theme.with(numbering: "1.1"), // touying default document theme
+      article-theme: article-theme.with(numbering: "1.1"), // touying default article theme
       show-bibliography-as-footnote: true,
       show-hide-set-list-marker-none: true,
     ),
     config-info(
-      title: [Document Mode Test],
+      title: [Article Mode Test],
       author: [Test Author],
-      subtitle: [Testing Touying's Document Mode],
+      subtitle: [Testing Touying's Article Mode],
       date: datetime.today(),
     ),
-    config-document(
-      //general document mode config, nothing theme specific here. those stuff should be put into the theme via `.with` when specifiying it above.
+    config-article(
+      //general article mode config, nothing theme specific here. those stuff should be put into the theme via `.with` when specifiying it above.
       wrap-images: true,
       wrap-image-figures: true,
       available-fields: (
@@ -76,17 +76,17 @@
 
   #pause
 
-  Second part — in document mode this should appear directly (no animation). #lorem(10)
+  Second part — in article mode this should appear directly (no animation). #lorem(10)
 
   == With Explicit Slide
   #slide[
     This content is inside an explicit `slide` call.
-    It should render inline in the document. #lorem(15)
+    It should render inline in the article. #lorem(15)
   ]
 
   == With Uncover
 
-  #uncover("2-")[This text uses uncover — should be visible in document mode.]
+  #uncover("2-")[This text uses uncover — should be visible in article mode.]
 
   Normal text after uncover. #lorem(20)
 
@@ -95,18 +95,18 @@
   #slide(composer: (1fr, 1fr))[
     Left column content in the slide. #lorem(15)
   ][
-    Right column content — should be linearized in document mode. #lorem(10)
+    Right column content — should be linearized in article mode. #lorem(10)
   ]
 
   == With Only
 
-  #only("2-")[This text uses only — should be visible in document mode.]
+  #only("2-")[This text uses only — should be visible in article mode.]
 
   More text here. #lorem(15)
 
   == Focus Slide
   #focus-slide[
-    This is a focus slide. In document mode, it should just render inline with the rest of the content. #lorem(20)
+    This is a focus slide. In article mode, it should just render inline with the rest of the content. #lorem(20)
   ]
 
   == Lists and Items
@@ -123,7 +123,7 @@
 
   == Image Content
   #slide(composer: (1fr, 1fr))[
-    Here is some text alongside an image. The image should be wrapped to the side in document mode when
+    Here is some text alongside an image. The image should be wrapped to the side in article mode when
 
     `wrap-images` is enabled. #lorem(80)
   ][
@@ -158,9 +158,9 @@
   )
   #ccanvas
 
-  #document-text[
+  #article-text[
 
-    The animated CeTZ diagram is recalled at specific stages below inside this document-text.
+    The animated CeTZ diagram is recalled at specific stages below inside this article-text.
 
     Stage 1 (rectangle only):
     #touying-recall(<doc-test-diagram>, subslide: 1)
@@ -185,8 +185,8 @@
   We can also render a block saved in a variable directly at some specific subslide via `touying-render`, even in handout or presentation mode.
   #touying-render(ccanvas, subslide: 2)
 
-  Recall allows this via labels and is especially useful for document-text content, but can be used in normal presentations as well. this allows arbitrary labeled content at specific subslides, but you will need to rescale them yourself.
-  #document-only[
+  Recall allows this via labels and is especially useful for article-text content, but can be used in normal presentations as well. this allows arbitrary labeled content at specific subslides, but you will need to rescale them yourself.
+  #article-only[
     #rotate(45deg)[#align(center)[#block(
       clip: true,
       width: (1.0 / 0.8) * 40%,
@@ -238,7 +238,7 @@
     This tests a figure wrapping a table. It should be centered at the end of the subsection, just like a bare table. #lorem(20)
   ]
 
-  == Document Text
+  == Article Text
 
   #slide[
     - Key finding A
@@ -246,13 +246,13 @@
     - Key finding C
   ]
 
-  #document-text[
-    This prose only appears in document mode. It replaces the terse bullet points
+  #article-text[
+    This prose only appears in article mode. It replaces the terse bullet points
     in the slides with a longer discussion suitable for a written report. #lorem(30)
 
     #figure(
       image("./image.png", width: 60%),
-      caption: [A placed figure inside document-text.],
+      caption: [A placed figure inside article-text.],
       placement: top,
     )
 
@@ -262,7 +262,7 @@
   == Slide/Presentation/Handout-Only Content
 
   #slides-only[
-    _This content only appears in the presentation or handout, not in the document._
+    _This content only appears in the presentation or handout, not in the article._
   ]
 
   #presentation-only[
@@ -275,28 +275,28 @@
 
   Some text visible in all modes. Above we have content only in slides, presentation, or handout.
 
-  == Document-Only Content
-  Next section is only visible in document mode, hidden in slides (presentation and handout).
-  #document-only[
+  == Article-Only Content
+  Next section is only visible in article mode, hidden in slides (presentation and handout).
+  #article-only[
     === Extended Methodology
 
-    This methodology section only appears in the document output. It provides
+    This methodology section only appears in the article output. It provides
     additional detail that would be too verbose for a presentation. #lorem(40)
   ]
 
-  == Document-Only Section via Label <touying:document>
+  == Article-Only Section via Label <touying:article>
 
-  This entire section only appears in document mode. It is hidden in both
+  This entire section only appears in article mode. It is hidden in both
   presentation and handout modes. #lorem(20)
 
-  == Handout+Document Section <touying:handout-document>
+  == Handout+Article Section <touying:handout-article>
 
-  This section appears in handout and document modes, but is hidden during
+  This section appears in handout and article modes, but is hidden during
   a live presentation. #lorem(15)
 
   == Conclusion
 
-  This is the conclusion. The document should be continuous A4 with no slide boundaries. #lorem(30)
+  This is the conclusion. The article should be continuous A4 with no slide boundaries. #lorem(30)
 
   #slides-only[---]
   #bibliography(bib)

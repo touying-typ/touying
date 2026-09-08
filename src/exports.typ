@@ -13,15 +13,15 @@
 #import "core/waypoints.typ": (
   from-wp, get-first, get-last, next-wp, not-wp, prev-wp, until-wp, waypoint,
 )
-// rendering logic: for document-mode and slides-mode: rely on parser.typ for parsing the metadata
-#import "core/docmode.typ": document-only, document-text
+// rendering logic: for article-mode and slides-mode: rely on parser.typ for parsing the metadata
+#import "core/article.typ": article-only, article-text
 #import "core/slides.typ": (
   appendix, empty-slide, slide, touying-notes, touying-recall,
   touying-set-config, touying-slide,
 )
 //configs
 #import "configs.typ": (
-  config-colors, config-common, config-document, config-info, config-methods,
+  config-article, config-colors, config-common, config-info, config-methods,
   config-page, config-store, default-config, touying-get-config,
 )
 //entrypoint

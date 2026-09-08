@@ -33,8 +33,8 @@
   composer: auto,
   ..bodies,
 ) = touying-slide-wrapper(self => {
-  // no headings available when rendering in document mode
-  // you cannot debug your slide theme when rendering in document mode, as some stuff may not be populated since we don't need it.
+  // no headings available when rendering in article mode
+  // you cannot debug your slide theme when rendering in article mode, as some stuff may not be populated since we don't need it.
   // let dbg-node = [#metadata((
   //   fn: "slide-fn",
   //   self-headings: self.headings,

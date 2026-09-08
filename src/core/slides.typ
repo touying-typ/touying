@@ -10,9 +10,9 @@
   _resolve-waypoint-to-int,
 )
 #import "animation.typ": touying-slide-wrapper
-#import "docmode.typ": (
-  _document-linearize, _extract-image, _is-block-content,
-  render-content-as-document,
+#import "article.typ": (
+  _article-linearize, _extract-image, _is-block-content,
+  render-content-as-article,
 )
 
 #let _delayed-wrapper(body) = [#metadata((
@@ -317,7 +317,7 @@
       "presentation" in parts
         or "handout" in parts
         or "slides" in parts
-        or "document" in parts
+        or "article" in parts
     )
     if not has-mode-keyword { return false }
 
@@ -325,20 +325,20 @@
     let in-handout = "handout" in parts and self.handout
     let in-slides = (
       ("slides" in parts or in-presentation or in-handout)
-        and not self.at("document-mode", default: false)
+        and not self.at("article-mode", default: false)
     )
-    let in-document = (
-      "document" in parts and self.at("document-mode", default: false)
+    let in-article = (
+      "article" in parts and self.at("article-mode", default: false)
     )
 
-    not in-slides and not in-document
+    not in-slides and not in-article
   }
 
   //recursively flattens the array and checks for X-only content which is inlined when necessary. Merged loop to avoid repeatedly iterating all elements.
   let _expand-child(child) = {
     if (
-      utils.is-kind(child, "touying-document-text")
-        or utils.is-kind(child, "touying-document-only")
+      utils.is-kind(child, "touying-article-text")
+        or utils.is-kind(child, "touying-article-only")
     ) {
       return ()
     }
@@ -506,7 +506,7 @@
       )
 
       // honor uses wishes like <touying:handout> etc. by skipping depending on the mode. Same as for the heading-based skipping logic.
-      // we allow multiple: e.g. <touying:handout-presentation>, or even <touying:presentation-document>, you may write <touying:slides> as a short for <touying:presentation-handout>
+      // we allow multiple: e.g. <touying:handout-presentation>, or even <touying:presentation-article>, you may write <touying:slides> as a short for <touying:presentation-handout>
       if child.has("label") {
         let slide_label = str(child.label)
         if _check-current-mode-skip(self, slide_label) {
@@ -647,7 +647,7 @@
       // inside an explicit #slide[...]. (The raw-label/type check this used
       // to do here is already duplicated at that dispatch site, so nothing
       // is lost — it just fires at slide-render time instead of
-      // document-walk time.)
+      // article-walk time.)
       if absorb-leading-preamble and current-headings == () {
         leading-preamble.push(child)
       } else if new-start {
@@ -1828,8 +1828,8 @@
   let (header, footer, body-transform) = _get-header-footer(self)
   let page-extra-args = _get-page-extra-args(self)
 
-  if self.at("document-mode", default: false) {
-    // Document mode: render last subslide inline, no page breaks, no preambles.
+  if self.at("article-mode", default: false) {
+    // Article mode: render last subslide inline, no page breaks, no preambles.
     self.subslide = repeat
     let (conts, _, _, _, _) = _parse-content-into-results-and-repetitions(
       self: self,
@@ -1838,10 +1838,10 @@
       ..bodies,
     )
     // Linearize: returns (content: .., images: .., blocks: ..)
-    let result = _document-linearize(self, composer, conts)
-    // Document-specific setting function: only preserves semantic styling
+    let result = _article-linearize(self, composer, conts)
+    // Article-specific setting function: only preserves semantic styling
     // (strong→alert), drops slide-specific rules (heading offset, layout anchor).
-    let document-setting-fn(body) = {
+    let article-setting-fn(body) = {
       show: body => {
         if self.at("show-strong-with-alert", default: true) {
           show strong: self.methods.alert.with(self: self)
@@ -1863,23 +1863,23 @@
     }
     // Return everything inside a metadata element so theme styling
     // (set text, set page, etc.) applied by the caller doesn't affect
-    // the content. The document renderer extracts this metadata.
+    // the content. The article renderer extracts this metadata.
     // We pack everything (content, images, blocks, maps) into the metadata
     // value because returning a dictionary gets converted to content
     // by Typst when set rules are active in the calling scope.
     let has-extracted = result.images.len() > 0 or result.blocks.len() > 0
     let content = if result.content != none {
-      document-setting-fn(result.content)
+      article-setting-fn(result.content)
     } else { none }
     let payload = (
-      kind: "touying-document-raw",
+      kind: "touying-article-raw",
       content: content,
     )
-    if self.at("document-extract-content", default: false) and has-extracted {
+    if self.at("article-extract-content", default: false) and has-extracted {
       payload.insert("images", result.images)
       payload.insert("blocks", result.blocks)
     }
-    return [#metadata(payload) <touying-document-wrapper>]
+    return [#metadata(payload) <touying-article-wrapper>]
   }
 
   if self.handout {
@@ -2200,11 +2200,10 @@
 ///
 /// - self (dictionary): The presentation context.
 ///
-/// - header (content, function): The panel's header strip. Default shows the current section and slide
-///   headings, padded.
-///
-/// - header-height (auto, length): Height of the strip. `auto` collapses it to its
-///   content; `0pt` drops the strip entirely.
+/// - header (content, function, none): The panel's header strip, which sizes to its
+///   content - give it a fixed height by wrapping it in a `block(height: ..)`, or pass
+///   `none` to drop the strip entirely. The strip applies no inset of its own, so padding
+///   belongs in here too. Default shows the current section and slide headings, padded.
 ///
 /// - header-fill (color, gradient, tiling, none): Fill behind the strip.
 ///
@@ -2227,7 +2226,6 @@
     [ --- ]
     utils.display-current-heading(level: 2, depth: self.slide-level)
   }),
-  header-height: auto,
   header-fill: rgb("#CCCCCC"),
   fill: rgb("#E6E6E6"),
   note-setting: note => pad(x: 48pt, note),
@@ -2254,10 +2252,9 @@
         fill: self.colors.neutral-darkest,
         weight: "regular",
       )
-      if header-height != 0pt {
+      if header != none {
         block(
           width: 100%,
-          height: header-height,
           fill: header-fill,
           utils.call-or-display(self, header),
         )

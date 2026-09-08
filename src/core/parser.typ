@@ -1148,7 +1148,7 @@
 /// #alert[...] text after` nested inside `#uncover[...]`, not only a bare
 /// `#uncover[#alert[...]]`.
 ///
-/// Shared by document mode's whole-body walk (`docmode.typ`'s
+/// Shared by article mode's whole-body walk (`article.typ`'s
 /// `_resolve-block-recalls`) and `touying-fn-wrapper`'s own
 /// pre-processing of its positional args (nesting passive marks inside
 /// `uncover`/`only`/`alternatives`).
@@ -1429,25 +1429,25 @@
           + "are supported here.",
       )
     }
-    // Recalling a whole-slide target has no effect in document mode
-    // (see docmode.typ's document-whole-slide-labels) — warn and
+    // Recalling a whole-slide target has no effect in article mode
+    // (see article.typ's article-whole-slide-labels) — warn and
     // produce nothing rather than silently falling through to the
     // generic recall below, which would recall just a fragment
     // (e.g. a bare heading) of what the user probably meant as a
     // whole slide.
     let whole-slide-labels = self.at(
-      "document-whole-slide-labels",
+      "article-whole-slide-labels",
       default: (),
     )
     if (
-      self.at("document-mode", default: false)
+      self.at("article-mode", default: false)
         and raw-label in whole-slide-labels
     ) {
       extern.warning(
         "touying-recall: label "
           + repr(raw-label)
           + " refers to a whole-slide recall target, which has no "
-          + "effect in document mode. Wrap this call in "
+          + "effect in article mode. Wrap this call in "
           + "#slides-only[...] to suppress this warning once you've "
           + "confirmed that's what you want.",
       )
@@ -2060,17 +2060,17 @@
           // point in the *enclosing* slide's own numbering — a separate
           // concern from base: (which only ever affects this content's own
           // internal pause-numbering, never the outer slide's). No effect
-          // in document mode, which has no outer subslide progression to
+          // in article mode, which has no outer subslide progression to
           // anchor against.
           let start-spec = child.value.at("start", default: auto)
           let repeat-last-spec = child.value.at("repeat-last", default: true)
           if (
-            self.at("document-mode", default: false)
+            self.at("article-mode", default: false)
               and (start-spec != auto or repeat-last-spec != true)
           ) {
             extern.warning(
               "touying-render: start:/repeat-last: have no effect in "
-                + "document mode (there is no subslide progression to gate "
+                + "article mode (there is no subslide progression to gate "
                 + "against). Wrap this call in #slides-only[...] to "
                 + "suppress this warning once you've confirmed that's what "
                 + "you want.",

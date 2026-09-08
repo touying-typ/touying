@@ -6,59 +6,59 @@
   _resolve-waypoint-to-int, waypoint-kinds,
 )
 
-/// Content that replaces the slide content when in document mode. Place it after your slide, before the next one.
+/// Content that replaces the slide content when in article mode. Place it after your slide, before the next one.
 ///
 /// You can use this to write a prose alternative to your slides' bullet points,
-/// and even properly use figures etc which will be rendered in the document normally.
+/// and even properly use figures etc which will be rendered in the article normally.
 ///
-/// - body (content): The document-text content.
+/// - body (content): The article-text content.
 ///
 /// -> content
-#let document-text(body) = [#metadata((
-  kind: "touying-document-text",
+#let article-text(body) = [#metadata((
+  kind: "touying-article-text",
   body: body,
 ))<touying-temporary-mark>]
 
 
-/// Content that only appears in document mode.
+/// Content that only appears in article mode.
 ///
-/// Unlike `document-text`, this does NOT replace a preceding slide's content.
-/// Use this for standalone sections or inline content that should only exist in the document
+/// Unlike `article-text`, this does NOT replace a preceding slide's content.
+/// Use this for standalone sections or inline content that should only exist in the article
 /// output (e.g., inline: footnotes, remarks; sections: appendices, methodology, acknowledgements, extended discussion).
 ///
 /// Note that slide-breaking shorthands like `---` won't be interpreted inside this wrapper and just render as-is. A `pagebreak()` will still work though.
 ///
-/// - body (content): The document-only content.
+/// - body (content): The article-only content.
 ///
 /// -> content
-#let document-only(body) = [#metadata((
-  kind: "touying-document-only",
+#let article-only(body) = [#metadata((
+  kind: "touying-article-only",
   body: body,
 ))<touying-temporary-mark>]
 
 
-/// Extract the payload dictionary from a touying-document-raw metadata wrapper.
-/// In document mode, touying-slide wraps its result (content + maps) in metadata
-/// so that theme styling (set text, set page, etc.) doesn't leak into the document.
+/// Extract the payload dictionary from a touying-article-raw metadata wrapper.
+/// In article mode, touying-slide wraps its result (content + maps) in metadata
+/// so that theme styling (set text, set page, etc.) doesn't leak into the article.
 /// This walks through styled wrappers and sequences to find and extract the payload.
 ///
 /// Returns: the full payload dictionary (with content, images, blocks, etc.)
-#let _unwrap-document-raw(cont) = {
+#let _unwrap-article-raw(cont) = {
   // This is where we stop unwrapping, finally found our payload!
-  if utils.is-kind(cont, "touying-document-raw") {
+  if utils.is-kind(cont, "touying-article-raw") {
     return cont.value
   }
   //unwrap all sorts of wrappers.
   if utils.is-styled(cont) {
-    return _unwrap-document-raw(cont.child)
+    return _unwrap-article-raw(cont.child)
   }
   if type(cont) == content and cont.has("body") {
-    return _unwrap-document-raw(cont.body)
+    return _unwrap-article-raw(cont.body)
   }
   // Sequence - look into children, there should only be one payload child, thus we return the first.
   if utils.is-sequence(cont) {
     for child in cont.children {
-      let result = _unwrap-document-raw(child)
+      let result = _unwrap-article-raw(child)
       if result != none {
         return result
       }
@@ -110,8 +110,8 @@
       and not utils.is-kind(r, "touying-recall-breadcrumb")
   ))
   // Unwrap blocks to expose the inner content directly. Content gets nested
-  // in `block(...)` at multiple points upstream (`_document-linearize` for
-  // bare document-mode text, and again by touying-slide's own document-mode
+  // in `block(...)` at multiple points upstream (`_article-linearize` for
+  // bare article-mode text, and again by touying-slide's own article-mode
   // rendering for `#slide[...]`/`#focus-slide[...]` bodies), and those
   // blocks can end up buried inside a `styled` node (from an intervening
   // `set`/`show` rule) or a sequence, not just at the top level — so this
@@ -143,7 +143,7 @@
 
   if has-wrap-content {
     // Only pull in meander for sections that actually need wrapping around
-    // an obstacle — most document-mode sections have no images/blocks to
+    // an obstacle — most article-mode sections have no images/blocks to
     // wrap, and shouldn't pay for the import or the reflow layout pass.
     import "@preview/meander:0.4.4"
 
@@ -317,7 +317,7 @@
 // Check if content is block-level (table, grid, figure without image,
 // box with explicit dimensions, or a block/sequence whose only meaningful
 // child is block-level).
-// These should be centered at the end of their subsection in document mode.
+// These should be centered at the end of their subsection in article mode.
 #let _is-block-content(cont) = {
   if cont == none or type(cont) != content { return false }
   let f = cont.func()
@@ -358,20 +358,20 @@
   false
 }
 
-// Linearize slide bodies for document mode.
+// Linearize slide bodies for article mode.
 //
 // Returns a dictionary:
 // - content: the text bodies joined as content
 // - images: array of (img: content, width: length) for meander wrapping
 // - blocks: array of block-level content (tables, canvases, non-image figures)
 //           to be centered at the end of the subsection
-#let _document-linearize(self, composer, conts) = {
-  let doc-cfg = self.at("document", default: (:))
+#let _article-linearize(self, composer, conts) = {
+  let article-cfg = self.at("article", default: (:))
   let any-wrapping = (
-    doc-cfg.at("wrap-images", default: true)
-      or doc-cfg.at("wrap-image-figures", default: false)
-      or doc-cfg.at("wrap-other-figures", default: false)
-      or doc-cfg.at("wrap-other", default: false)
+    article-cfg.at("wrap-images", default: true)
+      or article-cfg.at("wrap-image-figures", default: false)
+      or article-cfg.at("wrap-other-figures", default: false)
+      or article-cfg.at("wrap-other", default: false)
   )
 
   // Distinct top-level bodies (e.g. a composer's separate column contents)
@@ -440,10 +440,10 @@
 
 
 // Check for leaked <touying-temporary-mark> metadata anywhere in the final
-// document — the same diagnostic configs.typ's `_default-preamble` runs per
-// slide (gated on `is-first-slide`), which document mode never activates
-// (entrypoint.typ's document-mode branch never sets that flag). Run once,
-// at the end of the whole document, instead of per-slide.
+// article — the same diagnostic configs.typ's `_default-preamble` runs per
+// slide (gated on `is-first-slide`), which article mode never activates
+// (entrypoint.typ's article-mode branch never sets that flag). Run once,
+// at the end of the whole article, instead of per-slide.
 #let _leak-check(self) = context {
   let marks = query(<touying-temporary-mark>)
   if marks.len() > 0 {
@@ -473,25 +473,25 @@
   }
 }
 
-// Render content as a continuous document instead of splitting into slides.
+// Render content as a continuous article instead of splitting into slides.
 //
-// In document mode, headings remain normal headings, slide wrappers render
+// In article mode, headings remain normal headings, slide wrappers render
 // their body inline (no page breaks), and animation primitives (pause,
 // meanwhile, uncover, only, etc.) show the final state.
 //
 // Bare (non-`#slide[...]`) content is routed through the real parser
 // (`_parse-content-into-results-and-repetitions`, the same function
-// `touying-slide`'s own document-mode branch uses) exactly like slide-
+// `touying-slide`'s own article-mode branch uses) exactly like slide-
 // wrapped content already is — this is what gives it full container
 // recursion and full kind coverage (reducers, equations, waypoints,
 // fn-wrappers, etc.) for free, rather than a separate, hand-rolled,
 // necessarily-incomplete reimplementation of the same dispatch.
 //
-// - self (dictionary): The presentation context (must have document-mode: true and optionally document config like wrap-images)
+// - self (dictionary): The presentation context (must have article-mode: true and optionally article config like wrap-images)
 // - body (content): The content to render
 //
 // -> content
-#let render-content-as-document(self: none, body) = {
+#let render-content-as-article(self: none, body) = {
   let children = if utils.is-sequence(body) {
     body.children
   } else {
@@ -500,31 +500,34 @@
   children = children.map(utils.sequence-to-array).flatten()
 
   // Same convention split-content-into-slides uses to turn a bare "---"/"—"
-  // into a slide break — in document mode there are no slide boundaries to
+  // into a slide break — in article mode there are no slide boundaries to
   // break, so it's a silent no-op instead (see the per-child checks below).
-  // Wrap it in #document-only[...] to force a literal dash through instead.
+  // Wrap it in #article-only[...] to force a literal dash through instead.
   let horizontal-line-to-pagebreak = self.at(
     "horizontal-line-to-pagebreak",
     default: true,
   )
 
-  let doc-cfg = self.at("document", default: (:))
-  let wrap-images = doc-cfg.at("wrap-images", default: true)
-  let wrap-image-figures = doc-cfg.at("wrap-image-figures", default: false)
-  let wrap-other-figures = doc-cfg.at("wrap-other-figures", default: false)
-  let wrap-other = doc-cfg.at("wrap-other", default: false)
-  let wrap-align-direction = doc-cfg.at("wrap-align-direction", default: right)
+  let article-cfg = self.at("article", default: (:))
+  let wrap-images = article-cfg.at("wrap-images", default: true)
+  let wrap-image-figures = article-cfg.at("wrap-image-figures", default: false)
+  let wrap-other-figures = article-cfg.at("wrap-other-figures", default: false)
+  let wrap-other = article-cfg.at("wrap-other", default: false)
+  let wrap-align-direction = article-cfg.at(
+    "wrap-align-direction",
+    default: right,
+  )
   let any-wrapping = (
     wrap-images or wrap-image-figures or wrap-other-figures or wrap-other
   )
 
-  // Build the document-mode whole-slide-label set: labels attached to
+  // Build the article-mode whole-slide-label set: labels attached to
   // headings or explicit #slide[...] wrappers, which touying-recall must
   // treat as a no-op (with a warning) rather than the generic recall
   // fallback — see parser.typ's inlined "touying-slide-recaller" branch,
-  // which reads self.document-whole-slide-labels. Mirrors
+  // which reads self.article-whole-slide-labels. Mirrors
   // split-content-into-slides's two registration sites
-  // (slides.typ:298-304, :442-448) at a much smaller scope: document mode
+  // (slides.typ:298-304, :442-448) at a much smaller scope: article mode
   // never needs to replay a slide, just to recognize "was this ever a
   // whole-slide target."
   let whole-slide-labels = ()
@@ -540,31 +543,31 @@
       whole-slide-labels.push(lbl)
     }
   }
-  let self = self + (document-whole-slide-labels: whole-slide-labels)
+  let self = self + (article-whole-slide-labels: whole-slide-labels)
 
   // Enable content extraction in slides when any wrapping is on
   let extract-self = if any-wrapping {
-    self + (document-extract-content: true)
+    self + (article-extract-content: true)
   } else {
     self
   }
 
   // Render one accumulated "run" of bare (non-special) document children by
   // routing it through the real parser, exactly like touying-slide's own
-  // document-mode branch does for explicit #slide[...] content (mirrors
+  // article-mode branch does for explicit #slide[...] content (mirrors
   // slides.typ:1816-1822: probe for repeat, then render at the final
   // subslide with delayed-wrapper content shown). Waypoint pre-computation
   // is intentionally skipped here (unlike touying-slide) — bare
-  // document-mode content has no tested use case for named waypoint
+  // article-mode content has no tested use case for named waypoint
   // ranges, and self.waypoints defaults safely to (:) everywhere it's read.
   // Pull top-level "touying-recall-breadcrumb" metadata nodes out of a
   // joined content tree. Breadcrumbs are invisible bookkeeping, not part of
-  // the visible content document-text/document-only are meant to replace or
+  // the visible content article-text/article-only are meant to replace or
   // supplement — if they stayed buried inside the single joined block
   // _render-run produces, a subsequent "keep only headings" filter (see
-  // document-text handling below) would discard them along with the
+  // article-text handling below) would discard them along with the
   // visible content they happen to share a run with, making touying-recall
-  // unable to find them from anywhere inside that document-text/-only body.
+  // unable to find them from anywhere inside that article-text/-only body.
   // Breadcrumbs are always emitted as direct top-level pushes alongside
   // whatever else the parser produces (never nested inside other pushed
   // content), so a single level of sequence-unwrapping is enough to find
@@ -616,7 +619,7 @@
     )
     let cont = conts.sum(default: none)
     let extracted = _extract-breadcrumbs(cont)
-    let linearized = _document-linearize(render-self, none, (extracted.rest,))
+    let linearized = _article-linearize(render-self, none, (extracted.rest,))
     (
       items: if linearized.content != none {
         (block(linearized.content),)
@@ -647,7 +650,7 @@
       ) {
         extern.warning(
           "touying-render: start:/repeat-last: have no effect in "
-            + "document mode (there is no subslide progression to gate "
+            + "article mode (there is no subslide progression to gate "
             + "against). Wrap this call in #slides-only[...] to "
             + "suppress this warning once you've confirmed that's what "
             + "you want.",
@@ -669,7 +672,7 @@
           )
       ) {
         // cwp is always this content's own *local* (base=1) waypoint map —
-        // document mode has no enclosing slide context to track — so the
+        // article mode has no enclosing slide context to track — so the
         // resolved position must be shifted by (render-base - 1) to land
         // in the same absolute numbering as `repeat` above.
         _resolve-waypoint-to-int((waypoints: cwp), spec) + render-base - 1
@@ -685,15 +688,15 @@
         target,
       )
     } else {
-      // touying-recall used inside document-text/document-only: never a
-      // whole-slide target here (recaller-map isn't consulted in document
+      // touying-recall used inside article-text/article-only: never a
+      // whole-slide target here (recaller-map isn't consulted in article
       // mode), always the native-ref fallback (labeled reducer or arbitrary
       // labeled content).
       let raw-label = v.raw-label
       if type(raw-label) != label {
         panic(
           "touying-recall: a native label (e.g. <my-label>) is required to "
-            + "recall a labeled reducer or other content in document mode — "
+            + "recall a labeled reducer or other content in article mode — "
             + "a string label can only target a registered whole-slide recall.",
         )
       }
@@ -706,21 +709,11 @@
   )
 
   // touying-set-config's target self can change partway through the
-  // document, so it's threaded as a local variable (not recomputed from
+  // article, so it's threaded as a local variable (not recomputed from
   // the original `self`) across the whole walk below — later runs and
   // #slide[...] calls see the merged config, matching the old per-child
   // behavior where touying-set-config recursed with a locally-merged self.
   let use-self = if any-wrapping { extract-self } else { self }
-
-  // Note: unlike the pre-recall-feature version of this function, this is
-  // now a single pass, not two — the old two-pass "collect everything,
-  // then resolve document-text/document-only" structure existed only to
-  // support forward-references into a pre-scanned block-recall-map, which
-  // no longer exists (recall is native-label/query-based now, and query()
-  // doesn't care about document order). document-text/document-only still
-  // get resolved via _resolve-block-recalls (still needed for
-  // touying-render's inline content and touying-recall's fallback), just
-  // without a separate first pass.
 
   if not any-wrapping {
     // Simple path: no wrapping or block extraction. Local closures in
@@ -730,11 +723,11 @@
     let result = ()
     let current-run = ()
     for child in children {
-      if utils.is-kind(child, "touying-document-text") {
+      if utils.is-kind(child, "touying-article-text") {
         let r = _render-run(use-self, current-run)
         current-run = ()
         result += r.items
-        // document-text replaces the preceding run's visible content, but
+        // article-text replaces the preceding run's visible content, but
         // breadcrumbs are invisible bookkeeping (not part of what it's
         // replacing) and must survive so touying-recall inside its own
         // body can still find them.
@@ -744,7 +737,7 @@
         result = headings
         result += r.breadcrumbs
         result.push(_resolve-block-recalls(child.value.body))
-      } else if utils.is-kind(child, "touying-document-only") {
+      } else if utils.is-kind(child, "touying-article-only") {
         let r = _render-run(use-self, current-run)
         current-run = ()
         result += r.items
@@ -762,7 +755,7 @@
         result += r.items
         result += r.breadcrumbs
         let slide-result = (child.value.fn)(use-self)
-        let payload = _unwrap-document-raw(slide-result)
+        let payload = _unwrap-article-raw(slide-result)
         let raw-content = payload.at("content", default: none)
         // Not wrapped in an extra block(): a rendered slide's own content is
         // already block-level (themes wrap slide bodies themselves), and an
@@ -770,14 +763,14 @@
         // preceding heading's own below-spacing the way normal paragraph
         // flow does — it visibly doubles the gap when this is the first
         // thing under a heading (see e.g. "With Explicit Slide"/"Focus
-        // Slide" in the document-mode test).
+        // Slide" in the article-mode test).
         if raw-content != none { result.push(raw-content) }
       } else if utils.is-kind(child, "touying-slides-only") {
-        // Stripped in document mode — a document-mode/slide-mode
+        // Stripped in article mode — an article-mode/slide-mode
         // distinction the shared parser has no notion of, so it must be
         // filtered out here rather than left for the parser to see.
       } else if horizontal-line-to-pagebreak and child in ([—], [---]) {
-        // A bare slide-separator dash — no-op in document mode (no slide
+        // A bare slide-separator dash — no-op in article mode (no slide
         // boundaries to break). See slides.typ's own horizontal-line
         // handling for the slide-mode equivalent.
       } else {
@@ -828,13 +821,13 @@
       current-blocks = ()
     }
 
-    if utils.is-kind(child, "touying-document-text") {
+    if utils.is-kind(child, "touying-article-text") {
       let r = _render-run(use-self, current-run)
       current-run = ()
       current-items += r.items
       current-images += r.images
       current-blocks += r.blocks
-      // document-text replaces the preceding run's visible content, but
+      // article-text replaces the preceding run's visible content, but
       // breadcrumbs are invisible bookkeeping (not part of what it's
       // replacing) and must survive so touying-recall inside its own body
       // can still find them.
@@ -844,7 +837,7 @@
       current-items = headings
       current-items += r.breadcrumbs
       current-items.push(_resolve-block-recalls(child.value.body))
-    } else if utils.is-kind(child, "touying-document-only") {
+    } else if utils.is-kind(child, "touying-article-only") {
       let r = _render-run(use-self, current-run)
       current-run = ()
       current-items += r.items
@@ -868,7 +861,7 @@
       current-images += r.images
       current-blocks += r.blocks
       let slide-result = (child.value.fn)(use-self)
-      let payload = _unwrap-document-raw(slide-result)
+      let payload = _unwrap-article-raw(slide-result)
       let raw-content = payload.at("content", default: none)
       // See the matching comment in the simple path above: no extra
       // block() wrap here either. (_wrap-section's own _unwrap-blocks
@@ -880,11 +873,11 @@
     } else if is-section-heading {
       current-items.push(child)
     } else if utils.is-kind(child, "touying-slides-only") {
-      // Stripped in document mode — a document-mode/slide-mode
+      // Stripped in article mode — an article-mode/slide-mode
       // distinction the shared parser has no notion of, so it must be
       // filtered out here rather than left for the parser to see.
     } else if horizontal-line-to-pagebreak and child in ([—], [---]) {
-      // A bare slide-separator dash — no-op in document mode (no slide
+      // A bare slide-separator dash — no-op in article mode (no slide
       // boundaries to break). See slides.typ's own horizontal-line
       // handling for the slide-mode equivalent.
     } else {

@@ -3552,35 +3552,64 @@
   mapping.at(text.lang, default: mapping.en)
 }
 
+/// Every name Typst knows is parsed; a single word it does not know becomes a
+/// string, so shell-friendly input needs no quoting.
+///
+/// "Knows" means a `std` binding (`red`, `left`, `calc`, ..), one of the keywords
+/// that are not bindings (`true`, `false`, `none`, `auto`), or a number, with or
+/// without a unit. Everything else that is a single bare word - letters, digits,
+/// `_` and `-` - is returned verbatim; anything else at all goes through `eval`.
+#let _std-names = dictionary(std).keys()
+
+#let _parse-input(value) = {
+  if value == none {
+    return none
+  }
+  let known = (
+    value in _std-names
+      or value in ("true", "false", "none", "auto")
+      or value.match(
+        regex("^-?\\d+(\\.\\d+)?(e-?\\d+)?(pt|mm|cm|in|em|deg|rad|fr|%)?$"),
+      )
+        != none
+  )
+  if not known and value.match(regex("^[\\p{L}\\p{N}_\\-]+$")) != none {
+    return value
+  }
+  eval(value)
+}
+
 /// *Returns input given to the compiler.*
 ///
-/// *Important*: This function uses typst `#eval` to parse your value.
+/// Anything Typst knows is parsed as Typst: `red` is a colour, `left` an alignment,
+/// `3` and `2em` numbers, `true`/`false`/`none`/`auto` keywords, and dictionaries,
+/// arrays and function calls all work. A single word Typst does *not* know becomes
+/// a string, so `--input export-mode=handout` needs no shell quoting.
 ///
 /// Example:
-/// `typst compile FILE --input export-mode=\"presentation\" myslide.typ` \
+/// `typst compile --input export-mode=handout myslide.typ` \
 /// Then in the code you can do:
-/// `#let export-mode = get-input("export-mode")`
+/// `#let export-mode = utils.get-input(key: "export-mode")`
 ///
 /// Example 2:
 /// `typst compile FILE --input config='("foo": 1, "bar": [1, 2, 3], "baz": ("nested": 4))'`
 ///
 /// You may also provide no key to get the entire inputs dictionary with parsed values:
-/// `#let inputs = get-input()`
+/// `#let inputs = utils.get-input()`
 ///
 /// - key (str, none): The input key to retrieve. If `none`, returns the entire inputs dictionary with parsed values.
 ///
+/// -> any
 #let get-input(key: none) = {
   if key == none {
     let values = (:)
     for key in sys.inputs.keys() {
       if key == "x-preview" { continue } // skip tinymist preview input
-      let value = sys.inputs.at(key, default: none)
-      values.insert(key, eval(value))
+      values.insert(key, _parse-input(sys.inputs.at(key, default: none)))
     }
     values
   } else {
-    let value = sys.inputs.at(key, default: "")
-    eval(value)
+    _parse-input(sys.inputs.at(key, default: none))
   }
 }
 

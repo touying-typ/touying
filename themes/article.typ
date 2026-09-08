@@ -1,15 +1,15 @@
-/// A clean document theme for continuous A4 output.
+/// A clean article theme for continuous A4 output.
 ///
-/// This is a plain document theme with no presentation framework dependency.
+/// This is a plain article theme with no presentation framework dependency.
 /// It can be used standalone for papers, reports, etc., or paired with a
-/// slide theme via for single-source presentation + document output.
+/// slide theme via for single-source presentation + article output.
 ///
-/// It serves as an example, you may in fact use any document theme you like for the document output target.
+/// It serves as an example, you may in fact use any article-like theme you like for the article output target.
 ///
 /// Example (standalone):
 ///
 /// ```typst
-/// #show: document-theme.with(
+/// #show: article-theme.with(
 ///   numbering: "1.1",
 /// )
 ///
@@ -21,14 +21,14 @@
 /// ```typst
 /// #show: simple-theme.with(
 ///   config-common(
-///    export-mode: "document",
-///    document-theme: document-theme.with(numbering: "1.1"),
+///    export-mode: "article",
+///    article-theme: article-theme.with(numbering: "1.1"),
 ///   ),
-///   config-document(
+///   config-article(
 ///     wrap-images: true,
 ///     wrap-image-figures: true,
 ///     available-fields: (
-///       // specify config fields that should be passed to the document theme.
+///       // specify config fields that should be passed to the article theme.
 ///       title: "info.title",
 ///       subtitle: "common.export-mode",
 ///     ),
@@ -36,13 +36,13 @@
 /// )
 ///
 /// = Introduction
-/// Some content here. #pause More content which is not paused during document output.
+/// Some content here. #pause More content which is not paused during article output.
 /// ```
 ///
-/// - title (str): Document title.
-/// - subtitle (str, none): Document subtitle. Default is `none`.
-/// - author (str, array): Document author(s).
-/// - date (datetime): Document date.
+/// - title (str): Article title.
+/// - subtitle (str, none): Article subtitle. Default is `none`.
+/// - author (str, array): Article author(s).
+/// - date (datetime): Article date.
 /// - date-format (str): Date format for displaying the date. Default is `"[day].[month].[year]"`.
 /// - institution (str, none): Institution or affiliation. Default is `none`.
 /// - logo (str, none): Path to a logo image to show in the title block. Default is `none`.
@@ -52,11 +52,11 @@
 /// - paper (str): Paper size. Default is `"a4"`.
 /// - margin (length, dictionary): Page margins. Default is `(x: 2.5cm, y: 2.5cm)`.
 /// - justify (bool): Whether to justify paragraphs. Default is `true`.
-/// - title-block-fn (function): A function returning the title block to show at the beginning of the rendered document. If your theme has an automatic function for this you don't need it. And you can always use `#document-only` before the first slide to show your custom title block.
-/// - body (content): The document content.
+/// - title-block-fn (function): A function returning the title block to show at the beginning of the rendered article. If your theme has an automatic function for this you don't need it. And you can always use `#article-only` before the first slide to show your custom title block.
+/// - body (content): The article content.
 ///
 /// -> content
-#let document-theme(
+#let article-theme(
   title: "Title",
   subtitle: none,
   author: "Author Name",

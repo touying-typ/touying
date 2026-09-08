@@ -113,14 +113,14 @@
 
 /// Content that only appears in handout or presentation (slides) mode.
 ///
-/// In document mode this content is stripped entirely. Use this for
-/// visual-only elements that don't make sense in a written document
+/// In article mode this content is stripped entirely. Use this for
+/// visual-only elements that don't make sense in a prose document
 /// (e.g., decorative graphics, audience prompts, transition animations).
 ///
 /// `body` may itself contain slide-breaking elements (a heading,
 /// `#pagebreak()`, a bare `---`) — they behave exactly as if this wrapper
 /// weren't there when in slides mode, and are simply never reached in
-/// document mode since the whole wrapper is skipped there.
+/// article mode since the whole wrapper is skipped there.
 ///
 /// Example:
 ///
@@ -1043,7 +1043,7 @@
 /// #let ccanvas = touying-reducer(label: "doc-test-diagram", reduce: cetz.canvas, ...)
 /// #ccanvas
 ///
-/// #document-text[
+/// #article-text[
 ///   Stage 2 of the canvas:
 ///   #touying-render(ccanvas, subslide: 2)
 /// ]
@@ -1057,7 +1057,7 @@
 ///   enclosing slide this call sits.
 ///   - `auto` (default): tracks the enclosing slide's own subslide
 ///     progression (see `start`/`repeat-last` below) — the final/fully-
-///     revealed state in document mode, since there's no progression to
+///     revealed state in article mode, since there's no progression to
 ///     track there.
 ///   - `int`: a specific 1-indexed subslide number (negative indices count
 ///     from the end).
@@ -1069,7 +1069,7 @@
 ///   internal pause-numbering — purely internal to `body`, never affects
 ///   the enclosing slide's own numbering (see `start` for that).
 ///   - `auto` (default): in slide mode, inherits the current slide's
-///     repetition counter and waypoints; in document mode, resolves to `1`.
+///     repetition counter and waypoints; in article mode, resolves to `1`.
 ///   - `int`: explicit offset, e.g. `base: 3` makes the first pause
 ///     create subslide 4 instead of 2.
 ///
@@ -1083,7 +1083,7 @@
 ///   explicit `start`, `body` is absent entirely (like `only`, not
 ///   `uncover` — no reserved layout space) until the enclosing slide
 ///   reaches it, then visible from then on — see `repeat-last` for what
-///   happens once `body`'s own stages run out. Has no effect in document
+///   happens once `body`'s own stages run out. Has no effect in article
 ///   mode (warns if given a non-default value there).
 ///
 /// - repeat-last (bool): What happens once `body`'s own stages are

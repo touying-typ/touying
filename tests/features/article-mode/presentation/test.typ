@@ -1,3 +1,3 @@
-#import "/tests/features/document-mode/common.typ": render
+#import "/tests/features/article-mode/common.typ": render
 
 #render("presentation")

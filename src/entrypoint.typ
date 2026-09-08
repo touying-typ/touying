@@ -1,18 +1,18 @@
 #import "utils.typ"
 #import "configs.typ"
-#import "core/docmode.typ": render-content-as-document
+#import "core/article.typ": render-content-as-article
 #import "core/slides.typ": split-content-into-slides, touying-slide
 #import "core/animation.typ": touying-slide-wrapper
 #import "magic.typ"
 
-#import "../themes/document.typ": document-theme as _default-document-theme
+#import "../themes/article.typ": article-theme as _default-article-theme
 
-/// Internal slide function for document mode.
+/// Internal slide function for article mode.
 ///
-/// In document mode, slides render their content inline (no page breaks).
+/// In article mode, slides render their content inline (no page breaks).
 /// Animations show the final state. Multiple bodies are linearized sequentially.
 /// Use a raw slide wrapper to avoid theme stuff.
-#let _document-slide(
+#let _article-slide(
   config: (:),
   repeat: auto,
   setting: body => body,
@@ -97,15 +97,15 @@
 
   // get compiler args
   let _export-mode = utils.get-input(key: "export-mode")
-  if (_export-mode!=none) {
+  if (_export-mode != none) {
     self.insert("export-mode", _export-mode)
   }
 
   // resolve export-mode and apply handout flag
   let export-mode = self.at("export-mode", default: "slides")
   assert(
-    export-mode in ("presentation", "handout", "slides", "document"),
-    message: "export-mode must be \"presentation\", \"handout\", \"slides\", or \"document\"",
+    export-mode in ("presentation", "handout", "slides", "article"),
+    message: "export-mode must be \"presentation\", \"handout\", \"slides\", or \"article\"",
   )
   if export-mode == "handout" {
     self.handout = true
@@ -131,16 +131,16 @@
     ),
   )
 
-  // apply document-mode overrides to self before any other processing
-  if export-mode == "document" or self.at("document-mode", default: false) {
-    //don't set export-mode as a field on self, use document-mode flag instead.
+  // apply article-mode overrides to self before any other processing
+  if export-mode == "article" or self.at("article-mode", default: false) {
+    //don't set export-mode as a field on self, use article-mode flag instead.
     self = utils.merge-dicts(self, (
       page: utils.merge-dicts(self.at("page", default: (:)), (
         header: none,
         footer: none,
       )),
-      slide-fn: _document-slide,
-      document-mode: true,
+      slide-fn: _article-slide,
+      article-mode: true,
       handout: true,
       horizontal-line-to-pagebreak: false,
       reset-page-counter-to-slide-counter: false,
@@ -167,7 +167,7 @@
 
   show: body => {
     if (
-      not self.at("document-mode")
+      not self.at("article-mode")
         and self.at("nontight-list-enum-and-terms", default: true)
     ) {
       magic.nontight-list-enum-and-terms(body)
@@ -178,7 +178,7 @@
 
   show: body => {
     if (
-      not self.at("document-mode")
+      not self.at("article-mode")
         and self.at("align-enum-marker-with-baseline", default: false)
     ) {
       magic.align-enum-marker-with-baseline(body)
@@ -189,7 +189,7 @@
 
   show: body => {
     if (
-      not self.at("document-mode")
+      not self.at("article-mode")
         and self.at("align-list-marker-with-baseline", default: false)
     ) {
       magic.align-list-marker-with-baseline(body)
@@ -200,7 +200,7 @@
 
   show: body => {
     if (
-      not self.at("document-mode")
+      not self.at("article-mode")
         and self.at("show-hide-set-list-marker-none", default: true)
     ) {
       magic.show-hide-set-list-marker-none(body)
@@ -226,8 +226,8 @@
   }
   show: init
 
-  //final show rules either presentation or document mode.
-  if self.at("document-mode", default: false) {
+  //final show rules either presentation or article mode.
+  if self.at("article-mode", default: false) {
     let auto-title-block() = context {
       let title = document.title
       let authors = document.author
@@ -256,16 +256,16 @@
     }
 
     // show the theme and then render the content into it.
-    let doc-theme-fn = self.at("document-theme", default: auto)
-    let doc-theme = if doc-theme-fn == auto { _default-document-theme } else {
+    let doc-theme-fn = self.at("article-theme", default: auto)
+    let doc-theme = if doc-theme-fn == auto { _default-article-theme } else {
       doc-theme-fn
     }
-    let avail-fields = self.at("document").at("available-fields", default: ())
+    let avail-fields = self.at("article").at("available-fields", default: ())
     let doc-fields = _get-available-fields(self, avail-fields)
     show: doc-theme.with(..doc-fields)
 
     //show the title block
-    let title-block-fn = self.at("document").at("title-block-fn", default: none)
+    let title-block-fn = self.at("article").at("title-block-fn", default: none)
     if title-block-fn == none {
       //do nothing
     } else if title-block-fn == auto {
@@ -279,7 +279,7 @@
       )
     }
 
-    show: render-content-as-document.with(self: self)
+    show: render-content-as-article.with(self: self)
 
     body
   } else {
