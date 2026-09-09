@@ -266,3 +266,11 @@ Please pay attention to the current slide number.
 ```
 
 Touying 提供了很多内置的主题，能够简单地编写精美的 slides，例如此处的 `#show: university-theme.with()` 可以使用 university 主题。关于主题更详细的教程，您可以参阅后面的章节。
+
+:::tip
+
+上面例子里出现的 `#speaker-note[..]` 是演讲者备注。除了 `config-common(show-notes-on-second-screen: right)`
+（也可以取 `top`、`bottom`、`left`、`right`）之外，Touying 还支持导出 pdfpc 文件等多种方式，
+详见[演讲者备注](./tutorials/speaker-notes.md)教程。
+
+:::

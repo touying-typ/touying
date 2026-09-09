@@ -37,9 +37,10 @@ sidebar_position: 4
 其中 `university-theme` 接收参数:
 
 - `aspect-ratio`: 幻灯片的长宽比为 "16-9" 或 "4-3"，默认为 "16-9"。
+- `align`: 幻灯片的对齐方式，默认为 `top`。
 - `progress-bar`: 是否显示 slide 顶部的进度条，默认为 `true`。
-- `header`: 显示在页眉的内容，默认为 `utils.display-current-heading(level: 2)`，也可以传入形如 `self => self.info.title` 的函数。
-- `header-right`: 展示在页眉右侧的内容，默认为 `self => self.info.logo`。
+- `header`: 显示在页眉的内容，默认为 `utils.display-current-heading(level: 2, style: auto)`，也可以传入形如 `self => self.info.title` 的函数。
+- `header-right`: 展示在页眉右侧的内容，默认为 `self => box(utils.display-current-heading(level: 1)) + h(.3em) + self.info.logo`，即当前一级标题加上 logo。
 - `footer-columns`: 底部三栏 Footer 的宽度，默认为 `(25%, 1fr, 25%)`。
 - `footer-a`: 第一栏，默认为 `self => self.info.author`。
 - `footer-b`: 第二栏，默认为 `self => if self.info.short-title == auto { self.info.title } else { self.info.short-title }`。
@@ -76,10 +77,10 @@ config-colors(
 University 主题提供了一系列自定义 slide 函数：
 
 ```typst
-#title-slide(logo: none, authors: none, ..args)
+#title-slide(config: (:), extra: none, ..args)
 ```
 
-`title-slide` 会读取 `self.info` 里的信息用于显示，你也可以为其传入 `logo` 参数和 array 类型的 `authors` 参数。
+`title-slide` 会读取 `self.info` 里的信息用于显示，你也可以为其传入 `extra` 参数显示额外的信息。`..args` 里的具名参数会覆盖 `self.info` 中的同名字段，因此也可以直接传入 `logo` 或 array 类型的 `authors`。
 
 ---
 
@@ -88,14 +89,21 @@ University 主题提供了一系列自定义 slide 函数：
   config: (:),
   repeat: auto,
   setting: body => body,
-  composer: cols,
-  // university theme
-  title: none,
+  composer: auto,
+  align: auto,
 )[
   ...
 ]
 ```
-默认拥有标题和页脚的普通 slide 函数，其中 `title` 默认为当前 section title，页脚为您设置的页脚。
+默认拥有页眉和页脚的普通 slide 函数。`#slide` 本身没有 `title` 参数：页眉由主题的 `header` 参数决定，默认显示当前二级标题。`align` 默认为 `auto`，即沿用主题的 `align` 参数（默认 `top`）。
+
+---
+
+```typst
+#new-section-slide(config: (:), level: 1, numbered: true, body)
+```
+
+用给定标题开启一个新的 section。它已通过 `config-common(new-section-slide-fn: ..)` 注册，因此通常由 `= 标题` 自动触发，无需手动调用。
 
 ### Focus Slide
 
@@ -105,7 +113,7 @@ University 主题提供了一系列自定义 slide 函数：
 ]
 ```
 
-用于引起观众的注意力。默认背景色为 `self.colors.primary`。
+用于引起观众的注意力。`background-color` 和 `background-img` 默认都是 `none`，此时背景色取 `self.colors.primary`。
 
 ### Matrix Slide
 
@@ -117,6 +125,18 @@ University 主题提供了一系列自定义 slide 函数：
 ]
 ```
 可以参考 [文档](https://polylux.dev/book/themes/gallery/university.html)。
+
+## 演讲者备注
+
+University 定义了自己的 `notes` 函数，并通过 `config-common(notes-fn: notes)` 注册，因此第二屏幕和 only-notes 视图中的备注面板会沿用主题的配色。它建立在 `touying-notes` 之上，你也可以传入自己的实现来覆盖它：
+
+```typst
+#show: university-theme.with(
+  config-common(notes-fn: my-notes),
+)
+```
+
+详见[演讲者备注](../tutorials/speaker-notes.md)。
 
 
 ## 示例

@@ -704,14 +704,14 @@
 /// When you pass `auto` to the `title-block-fn` it will show
 /// ```typc
 /// (..args) => context{
-///   let title = article.title
-///   let authors = article.author
+///   let title = document.title
+///   let authors = document.author
 ///   if type(authors) == array {
 ///     authors = authors.reduce((a, b) => a + " and " + b)
 ///   }
-///   let date = article.date
-///   let description = article.description
-///   let keywords = article.keywords
+///   let date = if document.date == auto {datetime.today()} else {document.date} 
+///   let description = document.description
+///   let keywords = document.keywords
 ///   if type(keywords) == array {
 ///     keywords = keywords.reduce((a, b) => a + ", " + b)
 ///   }

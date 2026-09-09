@@ -93,6 +93,22 @@ touying compile example.typ --sys-inputs '{"title":"My Presentation","author":"J
 By #author
 ```
 
+`sys.inputs` 里的值永远是字符串。若希望拿到已经解析好的值，可以改用 Touying 提供的
+`utils.get-input`，它会把取到的值当作 Typst 来解析：Typst 认识的东西都会被解析成对应的值
+（`red` 是颜色，`left` 是 alignment，`3`、`2em` 是数值，`true`/`false`/`none`/`auto`
+是关键字，字典、数组以及函数调用也都可以），而 Typst 不认识的单个词则会保持为字符串——
+所以 `--input export-mode=article` 不需要任何 shell 引号。
+
+```typst
+#let export-mode = utils.get-input(key: "export-mode")
+```
+
+不传 `key` 时，它会返回整个已解析的 inputs 字典（并会跳过 tinymist 预览注入的 `x-preview` 键）：
+
+```typst
+#let inputs = utils.get-input()
+```
+
 ## 作为 Python 包使用
 
 ```python

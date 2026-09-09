@@ -75,162 +75,6 @@ The header now uses the custom primary color.
 
 ---
 
-## config-common 配置参考
-
-### config-common 有哪些常用配置项？
-
-`config-common` 是 Touying 的核心配置函数，以下是常用配置项及其默认值和说明：
-
-| 配置项 | 默认值 | 说明 |
-|--------|--------|------|
-| `handout` | `false` | 讲义模式，禁用动画 |
-| `slide-level` | `2` | 控制哪个标题级别创建新幻灯片 |
-| `frozen-counters` | `()` | 冻结计数器列表 |
-| `show-strong-with-alert` | `true` | 粗体文本使用 alert 样式 |
-| `show-notes-on-second-screen` | `none` | 第二屏幕演讲者备注（`none`/`top`/`bottom`/`left`/`right`） |
-| `horizontal-line-to-pagebreak` | `true` | 将 `---` 水平线转换为分页符 |
-| `nontight-list-enum-and-terms` | `false` | 列表项间距控制 |
-| `show-hide-set-list-marker-none` | `true` | `#pause` 后隐藏列表标记 |
-| `show-bibliography-as-footnote` | `false` | 参考文献显示为脚注 |
-| `scale-list-items` | `none` | 缩放列表项大小 |
-| `new-section-slide-fn` | `none` | 章节幻灯片函数 |
-| `freeze-slide-counter` | `false` | 冻结幻灯片计数器 |
-| `enable-pdfpc` | `true` | 启用 pdfpc 支持 |
-| `breakable` | `true` | 是否允许幻灯片内容溢出到下一页 |
-| `clip` | `false` | 是否裁剪溢出内容（仅在 `breakable: false` 时生效） |
-| `detect-overflow` | `true` | 是否检测溢出并报错（仅在 `breakable: false` 时生效） |
-
-### 如何防止幻灯片内容溢出到下一页？
-
-使用 `config-common(breakable: false)` 可以防止幻灯片内容自动溢出到下一页。默认情况下（`breakable: true`），超出幻灯片高度的内容会自动创建新页面；设置为 `false` 后，内容将被限制在单页内，这对于需要保证源码与输出页面一一对应的场景（如 AI 智能体工作流）非常有用。
-
-配合使用的参数：
-
-- **`clip`**（默认 `false`）：设为 `true` 时，超出幻灯片高度的内容会被视觉截断。
-- **`detect-overflow`**（默认 `true`）：设为 `true` 时，会通过布局测量检测溢出，一旦内容高度超出幻灯片高度则直接 `panic()` 报错，便于及早发现问题；设为 `false` 可避免额外的布局开销。
-
-```typst
-// Prevent overflow, panic on overflow (default behavior when breakable: false)
-#show: simple-theme.with(
-  config-common(breakable: false),
-)
-
-// Prevent overflow and visually clip overflowing content
-#show: simple-theme.with(
-  config-common(breakable: false, clip: true),
-)
-
-// Prevent overflow, disable overflow detection (performance-first)
-#show: simple-theme.with(
-  config-common(breakable: false, detect-overflow: false),
-)
-```
-
-也可以在演示文稿中途通过 `touying-set-config` 切换：
-
-```example
->>> #import "@preview/touying:0.7.4": *
->>> #import themes.simple: *
->>> #show: simple-theme.with(config-common(breakable: false))
-== This slide's overflow will be clipped
-
-// Enable clipping for a specific slide
-#show: touying-set-config.with(config-common(clip: true))
-
-#lorem(500)
-```
-
-### 如何使用半透明遮罩替代完全隐藏？
-
-使用 `config-methods(cover: utils.alpha-changing-cover)` 配置，使被隐藏的内容以低透明度形式显示：
-
-```example
-#import "@preview/touying:0.7.4": *
-#import themes.simple: *
-
-#show: simple-theme.with(
-  aspect-ratio: "16-9",
-  config-methods(cover: utils.alpha-changing-cover),
-)
-
-= Section
-
-== Slide
-
-#pause
-This content is shown with a low alpha cover.
-```
-
-### 如何使用 preamble 在每张幻灯片前插入内容？
-
-使用 `config-common(preamble: ...)` 在每张幻灯片前插入固定内容，`subslide-preamble` 在子幻灯片前插入：
-
-```example
-#import "@preview/touying:0.7.4": *
-#import themes.simple: *
-
-#show: simple-theme.with(
-  aspect-ratio: "16-9",
-  config-common(
-    preamble: text(gray)[This appears before every slide],
-    subslide-preamble: [Special prelude for each subslide]),
-  ),
-)
-
-= Section
-
-== Slide
-
-Content here.
-
-#pause
-
-More content.
-```
-
-### 如何使用 `---` 分隔幻灯片？
-
-当 `horizontal-line-to-pagebreak: true` 时，可以在标题之间使用 `---` 来创建新幻灯片：
-
-```example
-#import "@preview/touying:0.7.4": *
-#import themes.simple: *
-#show: simple-theme
-= Section
-
-== First Slide
-
-Content here.
-
----
-
-== Second Slide
-
-Created by `---`.
-```
-
-### 如何让列表项在 #pause 后隐藏标记符号？
-
-`show-hide-set-list-marker-none: true` 会在 `#pause` 后隐藏列表标记：
-
-```typst
-#show: simple-theme.with(
-  config-common(show-hide-set-list-marker-none: true),
-)
-```
-
-### 如何缩放列表项大小？
-
-使用 `scale-list-items: 0.8` 将列表项缩小到原始大小的 80%：
-
-```typst
-#show: simple-theme.with(
-  config-common(scale-list-items: 0.8),
-)
-```
-
----
-
 ## 布局与分栏
 
 ### 如何创建两栏布局？
@@ -252,6 +96,7 @@ Created by `---`.
 ]
 ```
 
+若各列等宽，也可以省略 `composer` 参数。
 如需不等宽的列，可调整分数比例，例如 `(2fr, 1fr)`。
 
 ### 如何将内容放置在绝对位置？
@@ -393,7 +238,7 @@ More content here.
 
 ### 如何将引用显示为脚注？
 
-设置 `config-common(show-bibliography-as-footnote: true)`，并在幻灯片放映的末尾调用参考文献。
+设置 `config-common(show-bibliography-as-footnote: true)`，并在幻灯片放映的末尾自行调用 `#bibliography(..)`。如果你使用的参考文献样式（例如 `"chicago-notes"`）本身就会把引用排成脚注，则不要把这一项设为 `true`。
 
 ```example
 #import "@preview/touying:0.7.4": *
@@ -462,10 +307,15 @@ This is a famous book. @knuth
 )
 ```
 
-`top`、`bottom`、`left`、`right` 均可使用。页面会沿相应的方向加倍，多出的那一半
+`top`、`bottom`、`left`、`right` 均可使用（默认为 `none`）。页面会沿相应的方向加倍，多出的那一半
 被放进页边距，因此幻灯片本身的尺寸保持不变。
 
+备注面板由 `config-common(notes-fn: ..)` 渲染，内置实现是 `touying-notes`，所有自带主题都会设置它，因此备注的外观会与主题保持一致。
+另外请注意，`config-page(background: ..)` 属于幻灯片本身，只覆盖幻灯片所在的那一半；备注的那一半需要通过 `notes-fn` 单独设置样式。
+
 此功能与 [pdfpc](https://pdfpc.github.io/) 和 [pympress](https://github.com/Cimbali/pympress) 等演示工具兼容。
+
+更多内容参见[演讲者备注](./tutorials/speaker-notes.md)教程。
 
 ---
 
@@ -476,8 +326,9 @@ This is a famous book. @knuth
 使用 `utils.slide-counter.display()` 显示当前编号，`utils.last-slide-number` 显示总数：
 
 ```example
-#import "@preview/touying:0.7.4": *
-#import themes.simple: *
+>>>#import "@preview/touying:0.7.4": *
+>>>#import themes.simple: *
+
 #show: simple-theme.with(
   aspect-ratio: "16-9",
   config-page(
@@ -486,6 +337,7 @@ This is a famous book. @knuth
     ],
   ),
 )
+
 = Section
 
 == First Slide
@@ -502,9 +354,9 @@ Still counting.
 在标题上添加 `<touying:unnumbered>` 标签：
 
 ```example
-#import "@preview/touying:0.7.4": *
-#import themes.simple: *
-#show: simple-theme
+>>>#import "@preview/touying:0.7.4": *
+>>>#import themes.simple: *
+>>>#show: simple-theme
 = Title Slide <touying:unnumbered>
 
 == Welcome
@@ -521,9 +373,11 @@ This slide is counted.
 在主要内容之后使用 `#show: appendix`。此后的幻灯片不会递增幻灯片计数器：
 
 ```example
-#import "@preview/touying:0.7.4": *
-#import themes.simple: *
-#show: simple-theme.with(aspect-ratio: "16-9")
+>>>#import "@preview/touying:0.7.4": *
+>>>#import themes.simple: *
+>>>
+>>>#show: simple-theme.with(aspect-ratio: "16-9")
+
 = Main Content
 
 == Introduction
@@ -552,9 +406,9 @@ This slide is in the appendix and does not increment the main counter.
 在 `#slide` 内的内容块之间放置 `#pause`：
 
 ```example
-#import "@preview/touying:0.7.4": *
-#import themes.simple: *
-#show: simple-theme
+>>>#import "@preview/touying:0.7.4": *
+>>>#import themes.simple: *
+>>>#show: simple-theme
 #slide[
   First point.
 
@@ -573,9 +427,9 @@ This slide is in the appendix and does not increment the main counter.
 使用 `#only("...")` 在特定子幻灯片上显示内容，或用 `#uncover("...")` 显示内容同时保留其占位空间：
 
 ```example
-#import "@preview/touying:0.7.4": *
-#import themes.simple: *
-#show: simple-theme
+>>>#import "@preview/touying:0.7.4": *
+>>>#import themes.simple: *
+>>>#show: simple-theme
 #slide[
   #only("1")[Shown on subslide 1 only.]
   #only("2-")[Shown from subslide 2 onward.]
@@ -583,15 +437,18 @@ This slide is in the appendix and does not increment the main counter.
 ]
 ```
 
-### 为什么 `#pause` 在 `context` 表达式内不起作用？
+你还可以用 `"h"` 表示由 `#pause` 构成的流程中的当前子幻灯片，或者在任意字符串前加上 `"!"` 来反转选择。
+详见[*动态内容*章节](./tutorials/dynamic/simple.md)。
 
-`#pause` 使用元数据注入机制，在 `context { ... }` 块内无法正常工作。请改用回调式 `slide` 来访问 `self.subslide`：
+### 为什么 `#pause` 在其他动画命令或 `context` 表达式内不起作用？
+
+`#pause` 使用元数据注入机制，在 `context { ... }` 块内无法正常工作。请改用回调式 `slide` 来访问 `self.subslide`，但此时需要你自己指定 `repeat` 的数量。
 
 ```example
-#import "@preview/touying:0.7.4": *
-#import themes.simple: *
-#show: simple-theme
-#slide(self => {
+>>>#import "@preview/touying:0.7.4": *
+>>>#import themes.simple: *
+>>>#show: simple-theme
+#slide(repeat: 3, self => {
   let (uncover, only) = utils.methods(self)
   [First content.]
   linebreak()
@@ -601,9 +458,11 @@ This slide is in the appendix and does not increment the main counter.
 })
 ```
 
+所有自动计数的动画函数都基于 `touying-fn-wrapper`，它无法嵌套在自身以及 `context` 中。不过 `touying-fn-wrapper-raw` 可以嵌套在它自身、`touying-fn-wrapper` 以及由此实现的所有动画函数之中——但同样不能放进 `context` 里！
+
 ### 如何在 CeTZ 绘图中使用 `#pause`？
 
-使用 `touying-reduce` 包裹 CeTZ canvas，使 Touying 能够为其添加动画：
+使用 `touying-reduce`（或其别名 `touying-diagram`）包裹 CeTZ canvas，使 Touying 能够为其添加动画。注意动画命令需要写成数组语法 `(•,)`：
 
 ```example
 >>> #import "@preview/touying:0.7.4": *
@@ -639,20 +498,21 @@ This slide is in the appendix and does not increment the main counter.
   #fletcher-diagram(
     node((0, 0), [A]),
     edge("->"),
-    (pause,),
+    pause,
     node((1, 0), [B]),
   )
 ]
 ```
+注意 fletcher 不需要数组语法，不过写成数组也是可以的。
 
 ### 如何在子幻灯片间展示替换内容？
 
 使用 `#alternatives` 在不同版本的内容之间切换：
 
 ```example
-#import "@preview/touying:0.7.4": *
-#import themes.simple: *
-#show: simple-theme
+>>>#import "@preview/touying:0.7.4": *
+>>>#import themes.simple: *
+>>>#show: simple-theme
 #slide[
   The answer is: #alternatives[42][*forty-two*][_the ultimate answer_].
 ]
@@ -680,13 +540,16 @@ This slide is in the appendix and does not increment the main counter.
 在主题设置之前或之后使用 `#set text(...)` 规则：
 
 ```example
-#import "@preview/touying:0.7.4": *
-#import themes.metropolis: *
-#show: metropolis-theme.with(
-  aspect-ratio: "16-9",
-  config-info(title: [Custom Font]),
-)
+>>>#import "@preview/touying:0.7.4": *
+>>>#import themes.metropolis: *
+>>>
+>>>#show: metropolis-theme.with(
+>>>  aspect-ratio: "16-9",
+>>>  config-info(title: [Custom Font]),
+>>>)
+
 #set text(font: "New Computer Modern", size: 22pt)
+
 = Section
 
 == Slide
@@ -705,15 +568,16 @@ Text now uses the custom font.
 使用 `#set par(justify: true)`：
 
 ```example
-#import "@preview/touying:0.7.4": *
-#import themes.simple: *
-#show: simple-theme
-#set par(justify: true)
-#slide[
-  == Justified Text
+>>>#import "@preview/touying:0.7.4": *
+>>>#import themes.simple: *
+>>>#show: simple-theme
 
-  #lorem(40)
-]
+#set par(justify: true)
+
+== Justified Text
+
+#lorem(40)
+
 ```
 
 ---
@@ -725,13 +589,15 @@ Text now uses the custom font.
 设置 `config-common(new-section-slide-fn: none)`：
 
 ```example
-#import "@preview/touying:0.7.4": *
-#import themes.metropolis: *
+>>>#import "@preview/touying:0.7.4": *
+>>>#import themes.metropolis: *
+>>>
 #show: metropolis-theme.with(
   aspect-ratio: "16-9",
   config-common(new-section-slide-fn: none),
   config-info(title: [No Auto Sections]),
 )
+
 = Section
 
 == Slide
@@ -739,27 +605,29 @@ Text now uses the custom font.
 No automatic section slide was created for the `= Section` heading.
 ```
 
-### 如何为带有章节幻灯片的章节添加内容？
+### 如何在章节幻灯片上编写内容？
 
-使用 `pagebreak()` 或 `---` 强制新建一页，然后在该页编写内容。
+Touying 默认使用 `config-common(receive-body-for-new-section-slide-fn: false)`（更深层的小节同理），这意味着你为某个带章节幻灯片的章节写下的内容会被放到另一张幻灯片上。如果希望把内容写进章节幻灯片本身，可以把上面这一项设为 `true`。
+
 ```example
 >>>#import "@preview/touying:0.7.4": *
 >>>#import themes.metropolis: *
 >>>
->>>#show: metropolis-theme.with(
->>>  aspect-ratio: "16-9",
->>>  config-info(title: [content slides next to section slides]),
->>>)
+#show: metropolis-theme.with(
+  aspect-ratio: "16-9",
+  config-info(title: [content slides next to section slides]),
+  config-common(receive-body-for-new-section-slide-fn: true)
+)
 
 = Section
+This goes on the section slide itself.
 ---
 Here is my content for this section.
 
 == Slide
 And this works normally.
 ```
-
-你也可以设置 `config-common(receive-body-for-new-section-slide-fn: false)`。但这样会导致无法为章节幻灯片编写演讲者备注。
+只有当 `receive-body-...` 为 `true` 时，才能为章节幻灯片编写演讲者备注。
 
 ### 如何隐藏章节页，或让标题不进入目录/书签？
 
@@ -860,6 +728,179 @@ Slide with a custom header and footer.
 
 ---
 
+## config-common 配置参考
+
+### config-common 有哪些常用配置项？
+
+`config-common` 是 Touying 的核心配置函数，以下是常用配置项及其默认值和说明：
+
+| 配置项 | 默认值 | 说明 |
+|--------|--------|------|
+| `handout` | `false` | 讲义模式，禁用动画 |
+| `slide-level` | `2` | 控制哪个标题级别创建新幻灯片 |
+| `frozen-counters` | `()` | 冻结计数器列表 |
+| `show-strong-with-alert` | `true` | 粗体文本使用 alert 样式 |
+| `show-notes-on-second-screen` | `none` | 第二屏幕演讲者备注（`none`/`top`/`bottom`/`left`/`right`） |
+| `horizontal-line-to-pagebreak` | `true` | 将 `---` 水平线转换为分页符 |
+| `nontight-list-enum-and-terms` | `false` | 列表项间距控制 |
+| `show-hide-set-list-marker-none` | `true` | `#pause` 后隐藏列表标记 |
+| `show-bibliography-as-footnote` | `false` | 参考文献显示为脚注 |
+| `scale-list-items` | `none` | 缩放列表项大小 |
+| `new-section-slide-fn` | `none` | 章节幻灯片函数 |
+| `freeze-slide-counter` | `false` | 冻结幻灯片计数器 |
+| `enable-pdfpc` | `true` | 启用 pdfpc 支持 |
+| `breakable` | `true` | 是否允许幻灯片内容溢出到下一页 |
+| `clip` | `false` | 是否裁剪溢出内容（仅在 `breakable: false` 时生效） |
+| `detect-overflow` | `true` | 是否检测溢出并报错（仅在 `breakable: false` 时生效） |
+| `handout-subslides` | `none` | 讲义模式下保留哪些子幻灯片（语法同 `visible-subslides`），`none` 表示只保留最后一张 |
+| `default-composer` | `auto` | `slide` 的 `composer` 为 `auto` 时使用的默认组合器 |
+| `show-only-notes` | `false` | 以演讲者备注为页面主体，幻灯片缩略显示在角落 |
+| `notes-fn` | `touying-notes` | 渲染演讲者备注面板的函数（第二屏幕与 `show-only-notes` 共用） |
+| `footnote-style` | `auto` | 自定义脚注标记的显示方式，相当于 `show footnote: ..` |
+| `cover-hides-footnote` | `auto` | `cover` 方法是否真正隐藏内容，决定被 `#pause` 遮住的脚注如何处理 |
+| `export-mode` | `"slides"` | 导出模式：`slides`/`presentation`/`handout`/`article` |
+| `article-mode` | `false` | 文章模式；一般请改用 `export-mode` |
+| `article-theme` | `auto` | 文章模式使用的主题，`auto` 表示 Touying 内置的 article 主题 |
+
+`export-mode` 也可以从命令行设置，无需修改源文件：
+
+```bash
+typst compile slides.typ --input export-mode=article
+```
+
+### 如何防止幻灯片内容溢出到下一页？
+
+使用 `config-common(breakable: false)` 可以防止幻灯片内容自动溢出到下一页。默认情况下（`breakable: true`），超出幻灯片高度的内容会自动创建新页面；设置为 `false` 后，内容将被限制在单页内，这对于需要保证源码与输出页面一一对应的场景（如 AI 智能体工作流）非常有用。
+
+配合使用的参数：
+
+- **`clip`**（默认 `false`）：设为 `true` 时，超出幻灯片高度的内容会被视觉截断。
+- **`detect-overflow`**（默认 `true`）：设为 `true` 时，会通过布局测量检测溢出，一旦内容高度超出幻灯片高度就会发出警告，便于及早发现问题（编译仍会继续）；设为 `false` 可避免额外的布局开销。
+
+```typst
+// Prevent overflow, warn on overflow (default behavior when breakable: false)
+#show: simple-theme.with(
+  config-common(breakable: false),
+)
+
+// Prevent overflow and visually clip overflowing content
+#show: simple-theme.with(
+  config-common(breakable: false, clip: true),
+)
+
+// Prevent overflow, disable overflow detection (performance-first)
+#show: simple-theme.with(
+  config-common(breakable: false, detect-overflow: false),
+)
+```
+
+也可以在演示文稿中途通过 `touying-set-config` 切换：
+
+```example
+>>> #import "@preview/touying:0.7.4": *
+>>> #import themes.simple: *
+>>> #show: simple-theme.with(config-common(breakable: false))
+== This slide's overflow will be clipped
+
+// Enable clipping for a specific slide
+#show: touying-set-config.with(config-common(clip: true))
+
+#lorem(500)
+```
+
+### 如何使用半透明遮罩替代完全隐藏？
+
+使用 `config-methods(cover: utils.alpha-changing-cover)` 配置，使被隐藏的内容以低透明度形式显示：
+
+```example
+#import "@preview/touying:0.7.4": *
+#import themes.simple: *
+
+#show: simple-theme.with(
+  aspect-ratio: "16-9",
+  config-methods(cover: utils.alpha-changing-cover),
+)
+
+= Section
+
+== Slide
+
+#pause
+This content is shown with a low alpha cover.
+```
+
+你也可以使用 `utils.color-changing-cover`，它的编译速度通常更快。默认值是 `utils.hiding-cover`。
+
+### 如何使用 preamble 在每张幻灯片前插入内容？
+
+使用 `config-common(preamble: ...)` 在每张幻灯片前插入固定内容，`subslide-preamble` 在子幻灯片前插入：
+
+```example
+#import "@preview/touying:0.7.4": *
+#import themes.simple: *
+
+#show: simple-theme.with(
+  aspect-ratio: "16-9",
+  config-common(
+    preamble: text(gray)[This appears before every slide],
+    subslide-preamble: [Special prelude for each subslide],
+  ),
+)
+
+= Section
+
+== Slide
+
+Content here.
+
+#pause
+
+More content.
+```
+
+### 如何使用 `---` 分隔幻灯片？
+
+当 `horizontal-line-to-pagebreak: true` 时，可以在标题之间使用 `---` 来创建新幻灯片：
+
+```example
+#import "@preview/touying:0.7.4": *
+#import themes.simple: *
+#show: simple-theme
+= Section
+
+== First Slide
+
+Content here.
+
+---
+
+== Second Slide
+
+Created by `---`.
+```
+
+### 如何让列表项在 #pause 后隐藏标记符号？
+
+`show-hide-set-list-marker-none: true` 会在 `#pause` 后隐藏列表标记：
+
+```typst
+#show: simple-theme.with(
+  config-common(show-hide-set-list-marker-none: true),
+)
+```
+
+### 如何缩放列表项大小？
+
+使用 `scale-list-items: 0.8` 将列表项缩小到原始大小的 80%：
+
+```typst
+#show: simple-theme.with(
+  config-common(scale-list-items: 0.8),
+)
+```
+
+---
+
 ## 测试与开发
 
 ### 如何运行 Touying 的测试套件？
@@ -916,6 +957,7 @@ tt run
     author: [Jane Doe],
     date: datetime.today(),
     institution: [My University],
+    contact: [contact\@mail.com],
   ),
 )
 #title-slide()
@@ -980,7 +1022,7 @@ typst compile slides.typ
 typst watch slides.typ
 ```
 
-或者使用 [Typst Preview](https://marketplace.visualstudio.com/items?itemName=mgt19937.typst-preview) VS Code 扩展进行即时编辑器内预览。
+或者使用 [Tinymist](https://marketplace.visualstudio.com/items?itemName=myriad-dreamin.tinymist) VS Code 扩展进行即时编辑器内预览。
 
 ### 如何创建多文件演示文稿？
 
@@ -1064,12 +1106,12 @@ Touying 使用 `uniwarn` 来处理其命名空间为 `touying` 的警告。
 #touying-disable-warnings
 // 重新启用 Touying 发出的警告
 #touying-enable-warnings
-````
+```
 
 你也可以这样做：
 
 ```typst
-#import "@preview/uniwarn:0.1.0"
+#import "@preview/uniwarn:0.1.1"
 #uniwarn.disable-warnings("touying")
 #uniwarn.enable-warnings("touying")
 ```

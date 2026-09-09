@@ -7,14 +7,34 @@ sidebar_position: 4
 [pdfpc](https://pdfpc.github.io/) 是一个 "对 PDF 文档具有多显示器支持的演示者控制台"。这意味着，您可以使用它以 PDF 页面的形式显示幻灯片，并且还具有一些已知的出色功能，就像 PowerPoint 一样。
 
 pdfpc 有一个 JSON 格式的 `.pdfpc` 文件，它可以为 PDF slides 提供更多的信息。虽然您可以手动编写它，但你也可以通过 Touying 来管理。
+其原理是向文档中加入 metadata，Touying 再把它们收集并提取成一个 `.pdfpc` 文件。所有相关函数都位于 `pdfpc` 模块下。
+
+Touying 与 [Polylux](https://polylux.dev/book/external/pdfpc.html) 保持一致，以避免 API 之间的冲突，下面的大部分内容也来自 Polylux。
 
 
-## 加入 Metadata
+## 演讲者备注
 
-Touying 与 [Polylux](https://polylux.dev/book/external/pdfpc.html) 保持一致，以避免 API 之间的冲突。
+你可以使用 `pdfpc.speaker-note(str|raw)` 函数为幻灯片加入备注，这些备注只会在 pdfpc 的演讲者视图中可见。
+例如 `#pdfpc.speaker-note("This is a note that only the speaker will see.")`。
 
-例如，你可以通过 `#pdfpc.speaker-note("This is a note that only the speaker will see.")` 加入 notes。
+## 结束页
 
+有时候演示文稿的最后一页并不是你真正想要收尾的那一页。比如在「感谢我妈妈和所有相信我的人」这一页之后，
+为了完整性你还附上了参考文献或附录。
+
+只要在任意一页里放一个简单的 `#pdfpc.end-slide`，就可以告诉 pdfpc 这是你通常想展示到的最后一页，
+按下 End 键便会跳转到那里。
+
+## 标记页面
+
+类似地，pdfpc 还有一个为特定页面添加书签的功能（之后可以用 Shift + M 跳转过去）。
+在 Typst 源码中，把 `#pdfpc.save-slide` 放进某一页即可选中该页。
+
+## 隐藏页面
+
+如果你想在演示文稿中保留某一页（以防万一），但通常并不打算展示它，可以在 pdfpc 中把它隐藏起来。
+放映时这一页会被跳过，但在总览视图中仍然可用。在 Typst 源码中使用 `#pdfpc.hidden-slide`
+即可把一页标记为隐藏。
 
 ## pdfpc 配置
 

@@ -12,13 +12,13 @@ sidebar_position: 3
 ```typst
 config-methods(
   init: (self: none, body) => {
-    set text(fill: self.colors.neutral-darkest, size: 25pt)
+    set text(size: 25pt)
     show footnote.entry: set text(size: .6em)
-    show strong: self.methods.alert.with(self: self)
-    show heading.where(level: self.slide-level + 1): set text(1.4em)
+    show heading.where(level: 1): set text(1.4em)
 
     body
   },
+  alert: utils.alert-with-primary-color,
 )
 ```
 
@@ -38,7 +38,9 @@ config-methods(
 ```typc
 config-info(
   title: [Title],
+  short-title: [Short Title],
   subtitle: [Subtitle],
+  short-subtitle: [Short Subtitle],
   author: [Authors],
   date: datetime.today(),
   institution: [Institution],
@@ -47,6 +49,8 @@ config-info(
   extra: (supervisor:[Supervisor],),
 )
 ```
+
+其中 `short-title` 和 `short-subtitle` 是给页眉、页脚这种空间有限的位置准备的短标题，默认值为 `auto`，此时会回退到 `title` 和 `subtitle`。
 
 你甚至可以传入额外信息，以维护其他属性未涵盖的演示文稿信息。
 
@@ -60,6 +64,61 @@ config-common(datetime-format: "[year]-[month]-[day]")
 ```
 
 的方式更改。
+
+## 配置函数一览
+
+Touying 的所有配置都通过一组 `config-*` 函数传给主题，它们返回的字典会被合并成 `self`：
+
+| 函数 | 作用 |
+|------|------|
+| `config-common(..)` | 通用配置：`slide-fn`、`slide-level`、`handout`、`preamble`、`frozen-counters` 等。 |
+| `config-page(..)` | 页面配置：`paper`、`margin`、`header`、`footer`、`fill` 等，对应 `set page(..)` 的参数。 |
+| `config-info(..)` | 演示文稿元信息，见上文。 |
+| `config-colors(..)` | 主题色板，通过 `self.colors` 访问。 |
+| `config-methods(..)` | 主题方法，例如 `init`、`alert`，通过 `self.methods` 访问。 |
+| `config-store(..)` | 主题自定义的存储字段，通过 `self.store` 访问。 |
+| `config-article(..)` | article（文章）模式下的排版选项，见下文。 |
+
+### 演讲者备注面板
+
+`config-common(notes-fn: ..)` 决定演讲者备注面板的渲染方式，第二屏输出和 `show-only-notes` 模式都使用它。它接收 `(self: none, note: none, slide-preview: none)` 并返回内容，默认值是 `touying-notes`；主题覆盖它的方式与覆盖 `slide-fn` 完全一样。详见[演讲者备注](./speaker-notes.md)。
+
+### 输出模式与 article 模式
+
+| 键 | 默认值 | 说明 |
+|----|--------|------|
+| `config-common(export-mode: ..)` | `"slides"` | 输出模式，取值为 `"slides"`、`"presentation"`、`"handout"`、`"article"`。也可以在命令行用 `--input export-mode=article` 设置。 |
+| `config-common(article-mode: ..)` | `false` | 直接打开 article 模式的开关。一般请改用 `export-mode`。 |
+| `config-common(article-theme: ..)` | `auto` | article 模式使用的主题，`auto` 表示 Touying 内置的 `themes.article`。 |
+
+`config-article(..)` 用于配置 article 模式下的排版，例如把图片浮动到侧边、指定标题块，以及把配置字段传给 article 主题：
+
+```typst
+#import "@preview/touying:0.7.4": *
+#import themes.simple: *
+#import themes.article: article-theme
+
+#show: simple-theme.with(
+  config-info(title: [Title], author: [Author], date: datetime.today()),
+  config-common(
+    export-mode: "article",
+    article-theme: article-theme.with(numbering: "1.1"),
+  ),
+  config-article(
+    wrap-images: true,
+    title-block-fn: auto,
+    available-fields: (title: "info.title"),
+  ),
+)
+```
+
+:::note[注意]
+
+`title-block-fn: auto` 会使用内置的标题块，它读取 `document.date`，因此必须同时通过 `config-info(date: ..)` 设置日期，否则编译会报 `type auto has no method \`display\`` 的错误。
+
+:::
+
+在正文里，`#article-only[..]`、`#article-text[..]`、`#slides-only[..]` 和 `#presentation-only[..]` 可以按输出目标切换内容。
 
 ## 前言（Preamble）
 
@@ -130,6 +189,9 @@ Only this slide has a light purple background, but the next slide goes back bein
 ```example
 >>> #import "../lib.typ": *
 >>> #import themes.simple: *
+>>> #import "@preview/codly:1.3.0": *
+>>> #import "@preview/codly-languages:0.1.10": *
+>>> #show: codly-init.with()
 
 >>> #show: simple-theme.with(aspect-ratio: "16-9")
 == Content Slide
@@ -137,7 +199,7 @@ Some content.
 #show: touying-set-config.with(defer:true, config-common(appendix:true))
 // you can just write `show: appendix`
 == Appendix
-Page counter does no longer increase.
+The total slide count no longer increases.
 #show: touying-set-config.with(defer:true, (preamble:{codly(languages: codly-languages)}))
 == Deferred Config Change
 Now we have codly available.
@@ -154,6 +216,8 @@ config-common(frozen-counters: (counter(figure.where(kind: image)),))
 ```typst
 config-common(frozen-counters: (theorem-counter,))
 ```
+
+注意不要把 `frozen-counters` 和 `config-common(freeze-slide-counter: true)` 混淆：后者冻结的是幻灯片计数器，让这张幻灯片不占用幻灯片编号，详见[幻灯片计数器与进度](./progress/counters.md)。
 
 ## 访问配置信息
 

@@ -43,7 +43,7 @@ sidebar_position: 2
 
 - `aspect-ratio`: 幻灯片的长宽比为 "16-9" 或 "4-3"，默认为 "16-9"。
 - `align`: 幻灯片的对齐方式，默认为 `horizon`。
-- `header`: 显示在页眉的内容，默认为 `utils.display-current-heading(setting: utils.fit-to-width.with(grow: false, 100%))`，也可以传入形如 `self => self.info.title` 的函数。
+- `header`: 显示在页眉的内容，默认为 `self => utils.display-current-heading(setting: utils.fit-to-width.with(grow: false, 100%), depth: self.slide-level)`，也可以传入形如 `self => self.info.title` 的函数。
 - `header-right`: 展示在页眉右侧的内容，默认为 `self => self.info.logo`。
 - `footer`: 展示在页脚的内容，默认为 `none`，也可以传入形如 `self => self.info.author` 的函数。
 - `footer-right`: 展示在页脚右侧的内容，默认为 `context utils.slide-counter.display() + " / " + utils.last-slide-number`。
@@ -82,19 +82,32 @@ Metropolis 主题提供了一系列自定义 slide 函数：
 
 ```typst
 #slide(
+  title: auto,
+  align: auto,
   config: (:),
   repeat: auto,
   setting: body => body,
-  composer: cols,
-  // metropolis theme
-  title: auto,
-  footer: auto,
-  align: horizon,
+  composer: auto,
 )[
   ...
 ]
 ```
-默认拥有标题和页脚的普通 slide 函数，其中 `title` 默认为当前 section title，页脚为您设置的页脚。
+默认拥有页眉和页脚的普通 slide 函数，其中 `title` 默认为 `auto`，即显示当前 slide-level 的标题；`align` 默认为 `auto`，即沿用主题的 `align` 参数（默认 `horizon`）。页脚只能在主题层通过 `footer` / `footer-right` 参数设置，`#slide` 本身没有 `footer` 参数。
+
+---
+
+```typst
+#outline-slide(
+  config: (:),
+  level: auto,
+  title: [Outline],
+  spacing: 2em,
+  ..args,
+)
+```
+显示一个大纲页。`level` 默认为 `auto`，即使用 `config-common` 里配置的 slide-level；`..args` 会转发给 [`components.custom-progressive-outline`](https://touying-typ.github.io/docs/reference/components/custom-progressive-outline)，其中 `indent`、`vspace`、`numbered`、`numbering` 都已有符合 Metropolis 风格的默认值。
+
+大纲页会用 `place(hide(heading(..)))` 放置一个不可见的标题，这样页眉和演讲者备注面板都能通过 `utils.display-current-heading` 取到这一页的标题。
 
 ---
 
@@ -103,14 +116,26 @@ Metropolis 主题提供了一系列自定义 slide 函数：
   ...
 ]
 ```
-用于引起观众的注意力。背景色为 `self.colors.primary-dark`。
+用于引起观众的注意力。背景色为 `self.colors.neutral-dark`（Metropolis 并没有定义 `primary-dark`）。
 
 ---
 
 ```typst
-#new-section-slide(short-title: auto, title)
+#new-section-slide(config: (:), level: 1, numbered: true, body)
 ```
-用给定标题开启一个新的 section。
+用给定标题开启一个新的 section。它已通过 `config-common(new-section-slide-fn: ..)` 注册，因此通常由 `= 标题` 自动触发，无需手动调用。
+
+## 演讲者备注
+
+Metropolis 定义了自己的 `notes` 函数，并通过 `config-common(notes-fn: notes)` 注册，因此第二屏幕和 only-notes 视图中的备注面板会沿用主题的配色。它建立在 `touying-notes` 之上，你也可以传入自己的实现来覆盖它：
+
+```typst
+#show: metropolis-theme.with(
+  config-common(notes-fn: my-notes),
+)
+```
+
+详见[演讲者备注](../tutorials/speaker-notes.md)。
 
 
 ## 示例

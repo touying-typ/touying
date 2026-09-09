@@ -234,7 +234,7 @@
       if type(authors) == array {
         authors = authors.reduce((a, b) => a + " and " + b)
       }
-      let date = document.date
+      let date = if document.date == auto {datetime.today()} else {document.date} 
       let description = document.description
       let keywords = document.keywords
       if type(keywords) == array {

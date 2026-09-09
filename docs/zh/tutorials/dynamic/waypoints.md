@@ -8,7 +8,7 @@ sidebar_position: 7
 
 ## 基本用法
 
-使用 `#waypoint(<label>)` 标记一个命名位置，然后在 `#uncover` 或 `#only` 中使用该标签：
+使用 `#waypoint(<label>)` 标记一个命名位置，然后在 `#uncover`、`#only` 或 `#effect` 中使用该标签：
 
 ```typst
 #slide[
@@ -24,7 +24,7 @@ sidebar_position: 7
 
 ## 隐式路标
 
-当你直接将一个新标签传递给 `#uncover`、`#only` 或 `#item-by-item` 时，会自动生成一个隐式路标——无需单独调用 `#waypoint`：
+当你直接将一个新标签传递给 `#uncover`、`#only`、`#effect` 或 `#item-by-item` 时，会自动生成一个隐式路标——无需单独调用 `#waypoint`：
 
 ```typst
 #slide[
@@ -65,6 +65,26 @@ sidebar_position: 7
   Content at the current position.
 ]
 ```
+
+## 层级标签
+
+路标标签可以用 `:` 分隔构成层级，例如 `<part:intro>` 和 `<part:main>`。引用父标签 `<part>` 时，所有以 `part:` 开头的路标会被合并起来，得到覆盖它们的整个范围：
+
+```typst
+#slide[
+  #waypoint(<part:intro>)
+  Intro
+
+  #waypoint(<part:main>)
+  Main
+
+  #uncover(<part>)[从第一个 part: 路标开始显示]
+
+  #effect(text.with(fill: red), <part:main>)[只在 main 处高亮]
+]
+```
+
+父标签不需要单独声明，只要存在任意一个以它为前缀的子路标即可。标签只需在单张幻灯片内唯一，不必全局唯一。
 
 ## 路标标记
 

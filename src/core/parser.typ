@@ -1283,6 +1283,39 @@
 
 /// Resolve a waypoint label or dictionary marker to a single integer subslide index.
 /// Extracts the "beginning" (or "first") value from resolved waypoint dictionaries.
+/// Whether a `<touying:..>` label excludes this content from the current output
+/// mode. Lives here rather than in slides.typ or article.typ because both the
+/// slide splitter and the article renderer have to honour it, and article.typ
+/// cannot import slides.typ (slides.typ already imports article.typ).
+///
+/// - self (dictionary): The presentation context.
+///
+/// - lbl (str, none): The label as a string, e.g. `"touying:handout-article"`.
+///
+/// -> bool
+#let check-current-mode-skip(self, lbl) = {
+  if lbl == none or not lbl.starts-with("touying:") { return false }
+  let parts = lbl.slice("touying:".len()).split("-")
+  // Labels like touying:hidden / touying:skip carry no mode intent.
+  let has-mode-keyword = (
+    "presentation" in parts
+      or "handout" in parts
+      or "slides" in parts
+      or "article" in parts
+  )
+  if not has-mode-keyword { return false }
+  let in-presentation = "presentation" in parts and not self.handout
+  let in-handout = "handout" in parts and self.handout
+  let in-slides = (
+    ("slides" in parts or in-presentation or in-handout)
+      and not self.at("article-mode", default: false)
+  )
+  let in-article = (
+    "article" in parts and self.at("article-mode", default: false)
+  )
+  not in-slides and not in-article
+}
+
 #let _resolve-waypoint-to-int(self, spec) = {
   let resolved = utils.resolve-waypoints(self, spec)
   if type(resolved) == int {

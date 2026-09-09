@@ -27,6 +27,28 @@ use #only("2-")[`#only` function] for not reserving space,
 但是这种方式并非在所有情况下都能生效，例如你将 `uncover` 放入 `context` 表达式中，就会报错。
 
 
+## 在标记风格的函数内部使用动画
+
+上面的例子里，我们用 `touying-fn-wrapper-raw` 在标记风格的写法中取到了 `self`。它的回调必须写成 `(self: none) => ..` 的形式，写成 `(self) => ..` 会报错 the argument `self` is positional。
+
+与 `touying-fn-wrapper` 不同，`touying-fn-wrapper-raw` 不会脱离 pause 流程，它的正文会像普通的幻灯片内容一样被解析。因此 `#pause`、`#meanwhile` 以及 `#only`、`#uncover`、`#effect` 都可以写在它的内部，多个 `touying-fn-wrapper-raw` 之间也可以相互嵌套。基于它实现的函数（例如 `#alert`）同样如此：
+
+```example
+>>> #import "@preview/touying:0.7.4": *
+>>> #import themes.simple: *
+>>> #show: simple-theme
+#slide[
+  #alert[First #pause Second #uncover("3-")[Third]]
+
+  #pause
+
+  Fourth
+]
+```
+
+这个例子会创建 4 张 subslides。因此在大多数情况下，`touying-fn-wrapper-raw` 都比 `touying-fn-wrapper` 更合适。
+
+
 ## 回调风格的函数
 
 为了避免上文提到的布局函数的限制，Touying 利用回调函数巧妙实现了总是能生效的 `only`、`uncover` 和 `alternatives`，具体来说，您要这样引入这三个函数：

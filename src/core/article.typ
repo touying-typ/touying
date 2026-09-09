@@ -3,7 +3,7 @@
 #import "parser.typ": (
   _build-native-recall, _parse-content-into-results-and-repetitions,
   _prepare-render-context, _render-at-subslide, _resolve-marks-in-tree,
-  _resolve-waypoint-to-int, waypoint-kinds,
+  _resolve-waypoint-to-int, check-current-mode-skip, waypoint-kinds,
 )
 
 /// Content that replaces the slide content when in article mode. Place it after your slide, before the next one.
@@ -491,6 +491,35 @@
 // - body (content): The content to render
 //
 // -> content
+
+// Drop what a mode label excludes. A labelled heading takes its whole section
+// with it - everything up to the next heading of the same or higher level -
+// because in slides mode skipping the heading skips the slide it would have
+// produced, and that slide carries the section's content.
+#let _filter-mode-children(self, children) = {
+  let out = ()
+  let skipping-depth = none
+  for child in children {
+    let is-heading = type(child) == content and child.func() == heading
+    if skipping-depth != none {
+      if is-heading and child.depth <= skipping-depth {
+        skipping-depth = none
+      } else {
+        continue
+      }
+    }
+    let lbl = if type(child) == content and child.has("label") {
+      str(child.label)
+    }
+    if lbl != none and check-current-mode-skip(self, lbl) {
+      if is-heading { skipping-depth = child.depth }
+      continue
+    }
+    out.push(child)
+  }
+  out
+}
+
 #let render-content-as-article(self: none, body) = {
   let children = if utils.is-sequence(body) {
     body.children
@@ -498,6 +527,7 @@
     (body,)
   }
   children = children.map(utils.sequence-to-array).flatten()
+  children = _filter-mode-children(self, children)
 
   // Same convention split-content-into-slides uses to turn a bare "---"/"—"
   // into a slide break — in article mode there are no slide boundaries to

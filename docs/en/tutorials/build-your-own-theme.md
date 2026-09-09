@@ -558,7 +558,7 @@ The `header` takes up an upper portion of the note page and the full width. By d
   header-fill: self.colors.primary,
   fill: self.colors.neutral-lightest,
   note-setting: note => pad(1.5em, text(size: .8em, note)),
-  preview-setting: slide-preview => align(top+right, scale(x:20%, y:20%, slide-preview))
+  preview-setting: slide-preview => align(top+right, scale(x:20%, y:20%, slide-preview)),
   ..args,
 )
 

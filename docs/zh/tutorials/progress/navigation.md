@@ -13,6 +13,7 @@ sidebar_position: 2
 ```example
 #import "@preview/touying:0.7.4": *
 #import themes.simple: *
+
 #show: simple-theme.with(
   footer: self=>[
     #align(center,
@@ -28,12 +29,19 @@ sidebar_position: 2
     )
   ],
 )
+
 = Navigation Demo
+
 == Slide A
+
 This slide has a pause.
+
 #pause
+
 This appears on the next subslide.
+
 == Slide B
+
 Now the page-level links can jump between full slides.
 ```
 
@@ -46,6 +54,7 @@ Now the page-level links can jump between full slides.
 ```example
 #import "@preview/touying:0.7.4": *
 #import themes.simple: *
+
 #show: simple-theme.with(
     config-page(
         margin: (top: 4em, bottom: 2em, x: 2em),
@@ -60,13 +69,21 @@ Now the page-level links can jump between full slides.
         short-heading: true,
     ),
 )
+
 = Introduction
+
 == Motivation
+
 The mini-slides row updates as you move.
+
 == Scope
+
 Another subsection.
+
 = Methods
+
 == Setup
+
 Current section is highlighted.
 ```
 
@@ -79,6 +96,7 @@ Touying 没有提供单独的 `sidebar-navigation` 函数。实际上，侧边�
 ```example
 #import "@preview/touying:0.7.4": *
 #import themes.dewdrop: *
+
 #show: dewdrop-theme.with(
     aspect-ratio: "16-9",
     navigation: "sidebar",
@@ -91,13 +109,21 @@ Touying 没有提供单独的 `sidebar-navigation` 函数。实际上，侧边�
     ),
 )
 #outline-slide()
+
 = Part I <touying:skip>
+
 == Problem
+
 Sidebar highlights where you are in the outline.
+
 == Constraints
+
 Indented subsection entries.
+
 = Part II
+
 == Solution
+
 The active section and subsection are emphasized automatically.
 ```
 

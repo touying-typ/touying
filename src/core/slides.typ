@@ -7,7 +7,7 @@
 )
 #import "parser.typ": (
   _collect-waypoints, _parse-content-into-results-and-repetitions,
-  _resolve-waypoint-to-int,
+  _resolve-waypoint-to-int, check-current-mode-skip,
 )
 #import "animation.typ": touying-slide-wrapper
 #import "article.typ": (
@@ -307,33 +307,6 @@
     (body,)
   }
 
-  let _check-current-mode-skip(self, lbl) = {
-    if lbl == none or not lbl.starts-with("touying:") { return false }
-
-    let parts = lbl.slice("touying:".len()).split("-")
-    // Only apply mode-filtering if the label actually names a mode.
-    // Labels like touying:hidden / touying:skip carry no mode intent.
-    let has-mode-keyword = (
-      "presentation" in parts
-        or "handout" in parts
-        or "slides" in parts
-        or "article" in parts
-    )
-    if not has-mode-keyword { return false }
-
-    let in-presentation = "presentation" in parts and not self.handout
-    let in-handout = "handout" in parts and self.handout
-    let in-slides = (
-      ("slides" in parts or in-presentation or in-handout)
-        and not self.at("article-mode", default: false)
-    )
-    let in-article = (
-      "article" in parts and self.at("article-mode", default: false)
-    )
-
-    not in-slides and not in-article
-  }
-
   //recursively flattens the array and checks for X-only content which is inlined when necessary. Merged loop to avoid repeatedly iterating all elements.
   let _expand-child(child) = {
     if (
@@ -374,7 +347,7 @@
     let last-heading-label = _get-last-heading-label(self.headings)
 
     // Skip sections with mode-specific labels when not in that mode
-    if _check-current-mode-skip(self, last-heading-label) {
+    if check-current-mode-skip(self, last-heading-label) {
       // Return early without the slide.
       return (none, recaller-map, (), (), true, false)
     }
@@ -509,7 +482,7 @@
       // we allow multiple: e.g. <touying:handout-presentation>, or even <touying:presentation-article>, you may write <touying:slides> as a short for <touying:presentation-handout>
       if child.has("label") {
         let slide_label = str(child.label)
-        if _check-current-mode-skip(self, slide_label) {
+        if check-current-mode-skip(self, slide_label) {
           continue
         }
       }
@@ -1923,9 +1896,10 @@
                 and subslide-idx.at("kind", default: "") in waypoint-kinds
             )
         ) {
-          handout-subslides[i] = (
-            _resolve-waypoint-to-int(self, subslide-idx),
-          ) //resolve waypoint labels to first subslide, only for handout
+          // resolve waypoint labels to their first subslide, only for handout.
+          // `arr[i] = ..` is not index assignment in Typst - it parses as a call
+          // and panics with "expected function, found array".
+          handout-subslides.at(i) = _resolve-waypoint-to-int(self, subslide-idx)
         } else if type(subslide-idx) == int or type(subslide-idx) == str {
           // do nothing
         } else {

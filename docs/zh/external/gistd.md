@@ -35,7 +35,7 @@ https://gistd.myriad-dreamin.com/typst/templates/blob/main/charged-ieee/template
 
 - `g-page`: 要显示的页码。默认为 `1`。仅在幻灯片模式下可用。
 - `g-mode`: 显示模式。
-  - `doc`: 以文档模式查看文档。
+  - `doc`: 以文章模式查看文档。
   - `slide`: 以幻灯片模式查看文档。
 - `g-version`: 要使用的 typst 编译器版本。
   - 可以是 `v0.13.0`、`v0.13.1`、`v0.14.0` 或 `latest`。

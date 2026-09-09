@@ -34,7 +34,7 @@ sidebar_position: 5
 其中 `aqua-theme` 接收参数:
 
 - `aspect-ratio`: 幻灯片的长宽比为 "16-9" 或 "4-3"，默认为 "16-9"。
-- `header`: 显示在页眉的内容，默认为 `utils.display-current-heading()`，也可以传入形如 `self => self.info.title` 的函数。
+- `header`: 显示在页眉的内容，默认为 `self => utils.display-current-heading(depth: self.slide-level)`，也可以传入形如 `self => self.info.title` 的函数。
 - `footer`: 展示在页脚右侧的内容，默认为 `context utils.slide-counter.display()`。
 
 并且 Aqua 主题会提供一个 `#alert[..]` 函数，你可以通过 `#show strong: alert` 来使用 `*alert text*` 语法。
@@ -59,33 +59,34 @@ config-colors(
 Aqua 主题提供了一系列自定义 slide 函数：
 
 ```typst
-#title-slide(..args)
+#title-slide(config: (:), extra: none, ..args)
 ```
 
-`title-slide` 会读取 `self.info` 里的信息用于显示。
+`title-slide` 会读取 `self.info` 里的信息用于显示，你也可以为其传入 `extra` 参数，显示额外的信息。
 
 ---
 
 ```typst
-#let outline-slide(self: none, enum-args: (:), leading: 50pt)
+#outline-slide(config: (:), leading: 50pt)
 ```
 
-显示一个大纲页。
+显示一个大纲页，其中 `leading` 控制大纲各行之间的行距。
+
+大纲页会用 `place(hide(heading(..)))` 放置一个不可见的标题，这样页眉和演讲者备注面板都能通过 `utils.display-current-heading` 取到这一页的标题。
 
 ---
 
 ```typst
 #slide(
+  config: (:),
   repeat: auto,
   setting: body => body,
-  composer: cols,
-  // Aqua theme
-  title: auto,
+  composer: auto,
 )[
   ...
 ]
 ```
-默认拥有标题和页脚的普通 slide 函数，其中 `title` 默认为当前 section title。
+默认拥有页眉和页脚的普通 slide 函数。页眉的内容由主题的 `header` 参数决定，默认为当前 slide-level 的标题。
 
 ---
 
@@ -99,9 +100,21 @@ Aqua 主题提供了一系列自定义 slide 函数：
 ---
 
 ```typst
-#new-section-slide(title)
+#new-section-slide(config: (:), level: 1, body)
 ```
-用给定标题开启一个新的 section。
+用给定标题开启一个新的 section。它已通过 `config-common(new-section-slide-fn: ..)` 注册，因此通常由 `= 标题` 自动触发，无需手动调用。
+
+## 演讲者备注
+
+Aqua 定义了自己的 `notes` 函数，并通过 `config-common(notes-fn: notes)` 注册，因此第二屏幕和 only-notes 视图中的备注面板会沿用主题的配色。它建立在 `touying-notes` 之上，你也可以传入自己的实现来覆盖它：
+
+```typst
+#show: aqua-theme.with(
+  config-common(notes-fn: my-notes),
+)
+```
+
+详见[演讲者备注](../tutorials/speaker-notes.md)。
 
 
 ## 示例

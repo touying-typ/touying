@@ -107,7 +107,7 @@ config-page(footer: [Custom Footer])
 
 :::warning[警告]
 
-因此，你不应该自己使用 `set page(..)` 命令，因为会被 Touying 重置。
+因此，你不应该自己使用 `set page(..)` 命令，因为可能会被 Touying 覆盖。
 
 :::
 

@@ -1,5 +1,5 @@
 ---
-sidebar_position: 9
+sidebar_position: 10
 ---
 
 # 创建自己的主题
@@ -12,6 +12,7 @@ sidebar_position: 9
 - 自定义 footer；
 - 自定义 `slide` 方法；
 - 自定义特殊 slide 方法，如 `title-slide` 和 `focus-slide` 方法；
+- 自定义 `notes` 方法；
 
 为了演示如何使用 Touying 创建一个自己的主题，我们不妨来一步一步地创建一个简洁美观的 Bamboo 主题。
 
@@ -240,52 +241,6 @@ config-methods(alert: utils.alert-with-primary-color)
   touying-slide(self: self, ..args)
 })
 
-#let title-slide(..args) = touying-slide-wrapper(self => {
-  let info = self.info + args.named()
-  let body = {
-    set align(center + horizon)
-    block(
-      fill: self.colors.primary,
-      width: 80%,
-      inset: (y: 1em),
-      radius: 1em,
-      text(size: 2em, fill: self.colors.neutral-lightest, weight: "bold", info.title),
-    )
-    set text(fill: self.colors.neutral-darkest)
-    if info.author != none {
-      block(info.author)
-    }
-    if info.date != none {
-      block(utils.display-info-date(self))
-    }
-    if info.contact != none {
-      block(info.contact)
-    }
-  }
-  touying-slide(self: self, body)
-})
-
-#let new-section-slide(self: none, body) = touying-slide-wrapper(self => {
-  let main-body = {
-    set align(center + horizon)
-    set text(size: 2em, fill: self.colors.primary, weight: "bold", style: "italic")
-    utils.display-current-heading(level: 1)
-  }
-  touying-slide(self: self, main-body)
-})
-
-#let focus-slide(body) = touying-slide-wrapper(self => {
-  self = utils.merge-dicts(
-    self,
-    config-page(
-      fill: self.colors.primary,
-      margin: 2em,
-    ),
-  )
-  set text(fill: self.colors.neutral-lightest, size: 2em)
-  touying-slide(self: self, align(horizon + center, body))
-})
-
 #let bamboo-theme(
   aspect-ratio: "16-9",
   footer: none,
@@ -301,9 +256,10 @@ config-methods(alert: utils.alert-with-primary-color)
     ),
     config-common(
       slide-fn: slide,
-      new-section-slide-fn: new-section-slide,
     ),
-    config-methods(alert: utils.alert-with-primary-color),
+    config-methods(
+      alert: utils.alert-with-primary-color,
+    ),
     config-colors(
       primary: rgb("#5E8B65"),
       neutral-lightest: rgb("#ffffff"),
@@ -319,34 +275,18 @@ config-methods(alert: utils.alert-with-primary-color)
   body
 }
 
+
 // main.typ
 <<< #import "@preview/touying:0.7.4": *
 <<< #import "bamboo.typ": *
 
-#show: bamboo-theme.with(
-  aspect-ratio: "16-9",
-  footer: self => self.info.institution,
-  config-info(
-    title: [Title],
-    subtitle: [Subtitle],
-    author: [Authors],
-    date: datetime.today(),
-    institution: [Institution],
-    contact: [contact\@mail.com],
-  ),
-)
-
-#title-slide()
+#show: bamboo-theme.with(aspect-ratio: "16-9")
 
 = First Section
 
 == First Slide
 
 A slide with a title and an *important* information.
-
-#focus-slide[
-  Focus on it!
-]
 ```
 
 
@@ -358,7 +298,7 @@ A slide with a title and an *important* information.
 
 对于 `new-section-slide` 方法，也是同理，不过唯一要注意的是我们在 `config-methods()` 中注册了 `new-section-slide-fn: new-section-slide`，这样 `new-section-slide` 就会在碰到一级标题时自动被调用。
 
-```
+```example
 // bamboo.typ
 #import "@preview/touying:0.7.4": *
 
@@ -417,6 +357,9 @@ A slide with a title and an *important* information.
     if info.date != none {
       block(utils.display-info-date(self))
     }
+    if info.contact != none {
+      block(info.contact)
+    }
   }
   touying-slide(self: self, body)
 })
@@ -438,6 +381,8 @@ A slide with a title and an *important* information.
       margin: 2em,
     ),
   )
+  place(hide(heading[Focus Slide])) // put an invisible heading on the slide. Useful later
+
   set text(fill: self.colors.neutral-lightest, size: 2em)
   touying-slide(self: self, align(horizon + center, body))
 })
@@ -489,6 +434,7 @@ A slide with a title and an *important* information.
     author: [Authors],
     date: datetime.today(),
     institution: [Institution],
+    contact: [contact\@mail.com],
   ),
 )
 
@@ -499,6 +445,193 @@ A slide with a title and an *important* information.
 == First Slide
 
 A slide with a title and an *important* information.
+
+#focus-slide[
+  Focus on it!
+]
+```
+
+
+## 自定义 Notes
+
+最后一个方面是自定义我们的备注。
+从 Touying 0.8.0 起，你可以通过编写一个 `notes` 函数、并把它传给 `config-common(notes-fn: notes)`，来详细描述备注应该长什么样。
+
+你的 `notes` 函数应当构建在 `touying-notes` 之上，它让你可以像 slide 那样定义 setting 函数，并且还有一个可以自定义的 header。
+一个 `notes` 函数有两个 setting 函数：`note-setting` 和 `preview-setting`。
+前者变换备注，也就是主体内容。后者用于摆放和缩放在 [`show-only-notes` 模式](https://touying-typ.github.io/docs/reference/configs/config-common#show-only-notes)下渲染出来的「预览幻灯片」，类似于 LaTeX Beamer 的同名选项。两者都有合理的默认值，因此你可以省略其中任何一个。关于演讲者备注本身的更多说明，参见 [演讲者备注](speaker-notes.md)。
+
+要设置页面背景之类的东西，我们不使用 `config-page()`，而是可以直接把一个带颜色的 `rect` 或者一个 `image` 传给它的 `fill` 参数。`header-fill` 参数也是同理。
+`header` 会占据备注页面上方的一部分，并占满整个宽度。默认情况下它会渲染当前的章节标题。
+
+```example
+// bamboo.typ
+#import "@preview/touying:0.7.4": *
+
+#let slide(title: auto, ..args) = touying-slide-wrapper(self => {
+  if title != auto {
+    self.store.title = title
+  }
+  // set page
+  let header(self) = {
+    set align(top)
+    show: components.cell.with(fill: self.colors.primary, inset: 1em)
+    set align(horizon)
+    set text(fill: self.colors.neutral-lightest, size: .7em)
+    utils.display-current-heading(level: 1)
+    linebreak()
+    set text(size: 1.5em)
+    if self.store.title != none {
+      utils.call-or-display(self, self.store.title)
+    } else {
+      utils.display-current-heading(level: 2)
+    }
+  }
+  let footer(self) = {
+    set align(bottom)
+    show: pad.with(.4em)
+    set text(fill: self.colors.neutral-darkest, size: .8em)
+    utils.call-or-display(self, self.store.footer)
+    h(1fr)
+    context utils.slide-counter.display() + " / " + utils.last-slide-number
+  }
+  self = utils.merge-dicts(
+    self,
+    config-page(
+      header: header,
+      footer: footer,
+    ),
+  )
+  touying-slide(self: self, ..args)
+})
+
+#let title-slide(..args) = touying-slide-wrapper(self => {
+  let info = self.info + args.named()
+  let body = {
+    set align(center + horizon)
+    block(
+      fill: self.colors.primary,
+      width: 80%,
+      inset: (y: 1em),
+      radius: 1em,
+      text(size: 2em, fill: self.colors.neutral-lightest, weight: "bold", info.title),
+    )
+    set text(fill: self.colors.neutral-darkest)
+    if info.author != none {
+      block(info.author)
+    }
+    if info.date != none {
+      block(utils.display-info-date(self))
+    }
+    if info.contact != none {
+      block(info.contact)
+    }
+  }
+  touying-slide(self: self, body)
+})
+
+#let new-section-slide(self: none, body) = touying-slide-wrapper(self => {
+  let main-body = {
+    set align(center + horizon)
+    set text(size: 2em, fill: self.colors.primary, weight: "bold", style: "italic")
+    utils.display-current-heading(level: 1)
+  }
+  touying-slide(self: self, main-body)
+})
+
+#let focus-slide(body) = touying-slide-wrapper(self => {
+  self = utils.merge-dicts(
+    self,
+    config-page(
+      fill: self.colors.primary,
+      margin: 2em,
+    ),
+  )
+  place(hide(heading[Focus Slide])) // put an invisible heading on the slide. Useful later
+
+  set text(fill: self.colors.neutral-lightest, size: 2em)
+  touying-slide(self: self, align(horizon + center, body))
+})
+
+#let notes(self: none, ..args) = touying-notes(
+  self: self,
+  // Echo the slide header: same primary band, same light text.
+  header: self => pad(1em, text(
+    fill: self.colors.neutral-lightest,
+    size: .7em,
+    utils.display-current-heading(depth: self.slide-level),
+  )),
+  header-fill: self.colors.primary,
+  fill: self.colors.neutral-lightest,
+  note-setting: note => pad(1.5em, text(size: .8em, note)),
+  preview-setting: slide-preview => align(top+right, scale(x:20%, y:20%, slide-preview)),
+  ..args,
+)
+
+#let bamboo-theme(
+  aspect-ratio: "16-9",
+  footer: none,
+  ..args,
+  body,
+) = {
+  set text(size: 20pt)
+
+  show: touying-slides.with(
+    config-page(
+      paper: "presentation-" + aspect-ratio,
+      margin: (top: 4em, bottom: 1.5em, x: 2em),
+    ),
+    config-common(
+      slide-fn: slide,
+      new-section-slide-fn: new-section-slide,
+      notes-fn: notes,
+    ),
+    config-methods(alert: utils.alert-with-primary-color),
+    config-colors(
+      primary: rgb("#5E8B65"),
+      neutral-lightest: rgb("#ffffff"),
+      neutral-darkest: rgb("#000000"),
+    ),
+    config-store(
+      title: none,
+      footer: footer,
+    ),
+    ..args,
+  )
+
+  body
+}
+
+
+// main.typ
+<<< #import "@preview/touying:0.7.4": *
+<<< #import "bamboo.typ": *
+
+#show: bamboo-theme.with(
+  aspect-ratio: "16-9",
+  footer: self => self.info.institution,
+  config-common(show-notes-on-second-screen: right),
+  config-info(
+    title: [Title],
+    subtitle: [Subtitle],
+    author: [Authors],
+    date: datetime.today(),
+    institution: [Institution],
+    contact: [contact\@mail.com],
+  ),
+)
+
+#title-slide()
+
+= First Section
+
+== First Slide
+
+A slide with a title and an *important* information.
+
+#speaker-note[
+  Remember to explain why bamboo is the fastest-growing plant on earth.
+]
 
 #focus-slide[
   Focus on it!
