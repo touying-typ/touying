@@ -22,10 +22,10 @@
 // so that "which stage rendered" is a clean presence/absence question — a
 // bare `#pause` chain would legitimately keep every earlier stage's label
 // around too, which is correct pause semantics but would make assertions
-// about *this* feature murkier. `#pause` is still what drives the stage
-// count here (`only(...)` siblings with no `#pause` between them don't
-// currently grow touying-render's own probed repeat count — a separate,
-// pre-existing gap, not something this test is about).
+// about *this* feature murkier. `#pause` is what drives the stage count
+// here, keeping each scenario's member arithmetic obvious to read; that a
+// fn-wrapper's own extent counts toward it too is `features/render-repeat`'s
+// job to pin down, not this test's.
 #let stages(prefix) = [
   #only("h")[First #label(prefix + "-1")]
   #pause
@@ -37,14 +37,13 @@
 ]
 
 // Both waypoints are `advance: false` — positions come entirely from the
-// explicit `#pause` calls, never from a waypoint's own implicit advance.
-// That advance doesn't register in touying-render's own probed repeat
-// count (a separate, pre-existing gap: the probe walks with an empty
-// waypoint map, so `lbl in wp` never holds for it) and, independently,
-// `_collect-waypoints`' own position bookkeeping isn't a no-op when an
-// advancing waypoint's target coincides with a `#pause` immediately
-// before it — both are pre-existing wrinkles this test isn't about, so
-// pure `#pause`-driven positions sidestep both cleanly.
+// explicit `#pause` calls, so each scenario's expected member list can be
+// read straight off the source. Leaving them advancing would shift every
+// position by one: an advancing waypoint claims the *next* subslide
+// unconditionally, so one placed right after a `#pause` lands two steps
+// on, not one. Correct, but noise for a test about member selection —
+// that an advancing waypoint's own advance is counted at all is
+// `features/render-repeat`'s job.
 #let wp-stages(prefix) = [
   #waypoint(label(prefix + "-a"), advance: false)
   #only("h")[A #label(prefix + "-wp-a")]

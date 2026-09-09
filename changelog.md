@@ -1,5 +1,333 @@
 # Changelog
 
+## v0.8.0 (unreleased)
+
+A big release, and the first that requires **Typst 0.15**.
+
+The main new feature is **article mode**: the same source file compiles either to slides or to a flowing prose document, with animations collapsed to their final state and images optionally floated to the side. Two new animation entry points come with it. `touying-render` renders a piece of content at chosen animation stages, and `animate` combines visibility and styling on one piece of content. `touying-recall` was extended from whole slides to any labelled element. `touying-fn-wrapper-raw` now parses and nests its body, so `#alert[.. #pause ..]` works, and much more besides. `.pdfpc` files can be written directly as bundle assets instead of through a separate `typst query` step. The footnote bibliography was rebuilt on real Typst bibliographies, and the speaker-note panel is now a theme-supplied function with documentation to match. Internally, `src/core.typ` (6288 lines) was split into modules.
+
+Things to watch when upgrading: a `#pause` after `uncover`/`only`/`alternatives` no longer skips the subslides they reserve, the footnote-bibliography config changed shape, `semi-transparent-cover` is deprecated, and on a second screen the page background is confined to the slide half. There is a migration guide below, and a separate one for theme authors at the end. Most documentation pages were rewritten or corrected.
+
+### Breaking Changes
+
+- **feat!: Touying now requires Typst 0.15.0**
+
+  `typst.toml`'s `compiler` field goes from `0.12.0` to `0.15.0`. Bundle export for `.pdfpc` assets and the reworked cover methods both need it. All reference renders were regenerated against Typst 0.15 / tytanic 0.4.
+
+- **fix!: a `#pause` after `uncover`/`only`/`alternatives` no longer skips the subslides they reserve**
+
+  ```typst
+  #uncover("2")[Only on subslide 2]
+  On subslide one
+  #pause
+  On subslide two    // v0.7.0-v0.7.4: on subslide *three*
+  ```
+
+  Up to v0.6.x a relative jump advanced the counter by one. v0.7.0 changed it to snap past the highest subslide any preceding fn-wrapper had reserved. That was meant for `item-by-item`, which stands in for a run of pauses and should push a later `#pause` past its whole animation. But `item-by-item` reports its extent through the same channel as every other wrapper, so the change caught `uncover`, `only` and `alternatives` as well. No test asserted it and it slipped past. Reserving subslides and consuming them are separate things again.
+
+  Waypoint placement gets the same correction. `#waypoint(<w>)` after an `#uncover("5")` now lands one past the current flow position, not one past subslide 5.
+
+  **Migration:** if you relied on the snap, add the extra `#pause` (or `#jump(n, relative: true)` or waypoints) yourself. `item-by-item` and `item-by-item-fn` are unaffected. They still push later pauses past their last item, and they now match the hand-written `#pause` sequence they abbreviate, including for content that follows them without any `#pause`.
+
+- **feat!: `show-bibliography-as-footnote` is a boolean, and `magic.bibliography()` is gone**
+
+  The old mechanism took the bibliography element itself, as `config-common(show-bibliography-as-footnote: bibliography("ref.bib"))`, hid it in the preamble, collected the entries into a state, and re-rendered them through `magic.bibliography()`. That state is gone. Set the flag and call a real `#bibliography(..)` in the presentation:
+
+  ```typst
+  #show: simple-theme.with(
+    config-common(show-bibliography-as-footnote: true),
+  )
+
+  == References
+  #bibliography("ref.bib")
+  ```
+
+  The bibliography has to be part of the document for the footnote citations to resolve. Use `hide(bibliography(..))` if you do not want the reference list shown. Multiple bibliographies work now, and [#395](https://github.com/touying-typ/touying/issues/395), where a footnote bibliography that overflowed its slide stopped the document converging, is fixed as a result. If your citation style already produces notes, such as `"chicago-notes"`, leave the flag at `false`. See the [FAQ](https://touying-typ.github.io/docs/faq).
+
+  `magic.bibliography-as-footnote` loses its `bibliography` parameter and gains `footnote-style`, a dictionary of `super` properties for the citation markers. The default `(typographic: false, baseline: 0em, size: 1em)` makes them read as normal text.
+
+- **feat!: the speaker-note panel is customizable through `config-common(notes-fn: ..)`; the `config-methods(show-only-notes: ..)` *renderer* is removed** ([#353](https://github.com/touying-typ/touying/issues/353))
+
+  `show-only-notes` was two separate options in v0.7.4 and only one of them changes. `config-common(show-only-notes: true)`, the flag that turns on presenter view, works as before, and is documented for the first time in [Speaker Notes](https://touying-typ.github.io/docs/tutorials/speaker-notes). What is gone is `config-methods(show-only-notes: ..)`, the function that drew the panel. Only theme authors ever overrode it.
+
+  The panel is now produced by a theme-supplied function, the way slides are produced by `slide-fn`. `notes-fn(self: none, note: none, slide-preview: none) -> content` mirrors `slide-fn`, and `touying-notes` is the counterpart of `touying-slide`: it owns the rough layout, the theme passes colours and arranges the content. All six bundled themes register their own, so the notes panel matches the deck in spirit. Some alignment bugs will be fixed later.
+
+  `show-only-notes` mode was restructured along with it. The slide's parts, previously shown on the top right, are reassembled into one page-sized box and handed to the theme as `slide-preview` content to place where and scale how it likes. The old `cutout` / `cutout-height` / `(background, foreground)` return protocol is gone, and `slide-preview: none` tells a theme it is on a second screen. This also fixes [#281](https://github.com/touying-typ/touying/issues/281): the panel background was placed from the page header and nearly all of it fell off-page, so the declared `#CCCCCC`/`#E6E6E6` colours never rendered.
+
+  See [Customizing the Speaker-Note Panel](https://touying-typ.github.io/docs/themes/custom) and [Build Your Own Theme](https://touying-typ.github.io/docs/tutorials/build-your-own-theme).
+
+- **fix!: the page background and foreground are confined to the slide half on a second screen** ([#219](https://github.com/touying-typ/touying/issues/219))
+
+  With `show-notes-on-second-screen`, Touying doubles the page along one axis and pushes the extra half into the margin (Now all four alignments are supported). `page(background: ..)` covers the whole page, so a background sized `100%`, or an image with `fit: "cover"`, was stretched across the slide and the notes half together. `background` and `foreground` are now each placed in a box the size of one slide, on the slide's own half, so percentage sizes and `fit: "cover"` behave as they do without a second screen.
+
+- **feat!: `touying-recall`'s `subslide:` parameter becomes `subslides:`, and its `none`/`auto` values swap**
+
+  The parameter is now plural because it takes ranges (since v0.6.3) rather than a single subslide, matching `visible-subslides` on `uncover`/`only`/`effect`. It accepts a superset of the old values.
+
+  `subslides: auto` is the new default. It recalls all subslides of a whole-slide target, or the final animation state of a labelled element. `subslides: none` recalls only the last subslide. v0.7.4 had these the other way round, with `none` as the default, so the default behaviour is unchanged. Only code that passed either value explicitly needs the value swapped as well as the key renamed.
+
+### Minor Breaking Changes
+
+- **feat!: `utils.semi-transparent-cover` is deprecated** — use `utils.alpha-changing-cover` or `utils.color-changing-cover`
+
+  It worked by overlaying a semi-transparent rectangle on the covered content, which does not hold up in general: the overlay dims the slide background along with the content, and it stacks where covered regions overlap. It still renders, (slightly worse than the last iterations) so presentations keep compiling. Builds that use `--warnings promote` will however fail.
+
+  ```typst
+  // Before
+  config-methods(cover: utils.semi-transparent-cover)
+  // After: a real alpha cover, with an automatic fallback for content it cannot recolour
+  config-methods(cover: utils.alpha-changing-cover)
+  // Or, cheaper to compile, flattening everything to one colour
+  config-methods(cover: utils.color-changing-cover.with(color: gray))
+  ```
+
+  Passing it as another cover method's `fallback-hide` function is still fine and does not warn. `utils.cover-with-rect` does also not warn.
+
+- **fix!: `utils.handout-only` is removed** — use the top-level `#handout-only[..]`. It is a parser mark rather than a callback, so it can contain slide-breaking content. See [Handout Mode](https://touying-typ.github.io/docs/tutorials/dynamic/handout).
+
+### Migration Guide
+
+1. **Bump your compiler** to Typst 0.15.0 or newer.
+2. **Bibliography:** replace `config-common(show-bibliography-as-footnote: bibliography("ref.bib"))` with `config-common(show-bibliography-as-footnote: true)` and put a real `#bibliography("ref.bib")` in the presentation. Delete any `#magic.bibliography(..)` call. If the bibliography sits on a slide with more than one subslide, wrap it as `only("h", bibliography("ref.bib"))` so it is instantiated once. Otherwise each subslide creates a fresh instance and the citation numbering restarts ([#415](https://github.com/touying-typ/touying/issues/415)).
+3. **Speaker notes:** if you overrode the `config-methods(show-only-notes: ..)` *renderer*, rewrite it as `config-common(notes-fn: ..)` built on top of `touying-notes`. `config-common(show-only-notes: true)` needs no change.
+4. **Second screen:** if a theme painted behind the notes half through `config-page(background: ..)`, move that styling into its `notes-fn` (`fill` / `header-fill` on `touying-notes`).
+5. **`touying-recall`:** rename `subslide:` to `subslides:`. If you passed `none` or `auto` explicitly, swap it for the other one. If you relied on the default, nothing changes.
+6. **Covers:** replace `config-methods(cover: utils.semi-transparent-cover)` with `utils.alpha-changing-cover` or `utils.color-changing-cover`. Leaving it is a warning rather than an error, unless you build with `--warnings promote`.
+7. **Pause flow:** see the first breaking entry. Add an explicit `#pause` or `#jump`, or use waypoints, where you relied on a fn-wrapper snapping the counter forward.
+
+### Features
+
+- **feat: article mode, one source file for slides or a flowing article**
+
+  Compiling with `config-common(export-mode: "article")`, or with `typst compile slides.typ --input export-mode=article`, renders the whole deck as a continuous document instead of pages: no slide breaks, animations collapsed to their final state, images optionally floated to the side. `export-mode` accepts `"slides"` (the default, where the `handout` flag decides), `"presentation"`, `"handout"` and `"article"`. `config-common(article-mode: true)` is the raw switch behind it.
+
+  ```typst
+  #show: simple-theme.with(
+    config-common(
+      export-mode: "article",
+      article-theme: themes.article.article-theme.with(numbering: "1.1"),
+    ),
+    config-article(
+      wrap-images: true,
+      available-fields: (title: "info.title"),
+    ),
+  )
+  ```
+
+  Two markers let you write for the article target. `#article-text[..]` placed after a slide replaces that slide's content in the article, so you can give a prose paragraph instead of bullet points. `#article-only[..]` adds content that appears only in the article (for more see mode-only content below). The new `config-article(..)` group covers article-side layout: `wrap-images`, `wrap-image-figures`, `wrap-other-figures`, `wrap-other` and `wrap-align-direction` for side-floating (done with `meander`), plus an optional `title-block-fn`, and `available-fields`: a mapping that hands configuration values such as `info.title` through to the article theme's own parameters.
+
+- **feat: `themes.article`, a plain A4 article theme**
+
+  The default target of `article-theme: auto`. It does not depend on the presentation framework, so it also works standalone for papers and reports. It is meant as an example; any article-like theme can be used instead.
+
+- **feat: mode-only content and mode labels**
+
+  Four inline markers select content by output target: `#article-only[..]`, `#handout-only[..]`, `#presentation-only[..]` and `#slides-only[..]`, the last meaning both slide modes but not the article. Hidden content is removed entirely and reserves no space, and the body can contain slide-breaking elements, so a heading inside `#handout-only[..]` really does start a new slide in handout mode.
+
+  The same choice exists per slide as heading and slide labels: `<touying:presentation>`, `<touying:handout>`, `<touying:slides>` and `<touying:article>`, combinable with hyphens, where `<touying:presentation-article>` means "or". The new `<touying:never>` is the Typst equivalent of `\iffalse`. It parks a slide out of every render without you having to comment out markup. See [Handout Mode](https://touying-typ.github.io/docs/tutorials/dynamic/handout) and [Sections and Headings](https://touying-typ.github.io/docs/tutorials/sections).
+
+- **feat: `touying-recall` recalls any labelled element, not just whole slides**
+
+  Besides a whole slide, `#touying-recall(<lbl>)` now takes a labelled reducer, a labelled diagram, or any labelled animated content as well, and replays it at a chosen stage:
+
+  ```typst
+  #touying-recall(<my-slide>, subslides: "waypoints")  // one subslide per waypoint
+  #touying-recall(<my-diagram>, subslides: 1)          // a reducer at stage 1
+  #touying-recall(<my-table>)                          // plain labelled content
+  ```
+
+  Subslide selection accepts ints, including negative indices counted back from the last subslide, waypoint labels, and waypoint markers (`get-first`, `get-last`, `prev-wp`, `next-wp`), resolved against the recalled content's own waypoints. Recalling an element places it inline; only recalling a whole slide starts a new page. And a recall can sit inside `#only`/`#uncover`/`#alternatives` anywhere in their body, not just as the whole body, and `base:` sets the starting repetition counter for content with its own numbered steps.
+
+- **feat: `touying-render` renders content at a chosen animation stage, or steps through a range**
+
+  Where `touying-recall` looks up previous content by label, `touying-render` takes the content value directly. It is useful for miniature previews or for showing a diagram's intermediate state in the article output and probably much more. You can even render entire slide contents with it.
+
+  ```typst
+  #touying-render(body, subslides: "2-4")   // steps through 2, 3 and 4
+  #touying-render(body, subslides: "!2-3")  // skips 2-3, collapsing the gap
+  #touying-render(body, subslides: <wp>)    // the waypoint's whole range
+  ```
+
+  A single-point spec, such as a plain int, `get-first` or `get-last`, freezes one stage. `subslides: auto` follows the enclosing slide's own progression. `base:` offsets the content's internal pause numbering, `start:` sets where in the enclosing slide the first subslide rendered begins, and `repeat-last:` controls whether the content holds at its final stage (the default) or disappears again.
+
+- **feat: `animate`, for combining visibility and styling on one piece of content**
+
+  ```typst
+  #animate(
+    [The original],
+    effects: (
+      (effect: "cover", subslides: "-2"),
+      (effect: swap[Something else], subslides: 3),
+      (effect: (body, ..) => text(red, body), subslides: "4-", priority: 2),
+    ),
+  )
+  ```
+
+  Placements (`"show"`, `"cover"`, `"remove"`, `swap(..)`) resolve to a single winner per subslide. They cannot be composed: the only cover method is `hide`, which is not a style node, and `"remove"` drops the content outright, so neither can be undone from inside. If you need alpha-changed covered content use styling effect functions instead. Styling functions do compose and nest. Priority picks the winning placement and orders the nesting, and the order you wrote them in breaks ties. `swap` takes `stretch`, like `alternatives` does: without it the layout reflows while the swap is shown, with it the swap joins the reserved space and the block keeps one size. Measuring only happens if some swap sets `stretch`, and each distinct combination of placement and styles is measured once.
+
+- **feat: `advances-flow` on `touying-fn-wrapper`, for wrappers that stand in for a run of pauses**
+
+  The flag that keeps `item-by-item` pushing later pauses past its last item is an ordinary parameter, so your own wrappers can opt in:
+
+  ```typst
+  #let reveal-lines(body) = touying-fn-wrapper(
+    (self: none, body) => /* ... */ body,
+    last-subslide: repetitions => (repetitions + count-lines(body) - 1, (:)),
+    advances-flow: true,   // a following #pause continues after the last line
+    body,
+  )
+  ```
+
+  It defaults to `false`, which is what you want for anything that only animates its own body. Such a wrapper reserves the subslides it needs without moving the pause cursor.
+
+- **feat: `touying-fn-wrapper-raw` parses its body nests recursively, while `touying-fn-wrapper` allows raw variants inside itself**
+
+  `#alert[This is important, #only("2-")[easter egg] don't miss it!]` used to panic with *Unsupported mark*. A raw wrapper handed its positional arguments straight to the wrapped function, so any animation marker inside survived as unresolved metadata. Those arguments now go through the parser like ordinary slide content, so `#pause`, `#meanwhile` and every fn-wrapper behave inside a raw wrapper as they do anywhere else, and the wrapper's content counts towards the slide's subslide total. Nested raw wrappers resolve recursively, so `#uncover[#alert[a #alert[b #alert[c]]]]` works all the way down.
+
+  This makes `touying-fn-wrapper-raw` the better default for reaching `self` from markup, and the docs and themes now say so. Stargazer's `tblock` was switched over so it can be used with the normal animation functions. The body has to be a positional argument for any of this to apply; baking it in with `.with(..)` hides it from the parser. See [Complex Animations](https://touying-typ.github.io/docs/tutorials/dynamic/complex).
+
+- **feat: export `.pdfpc` files as bundle assets, one per document** ([#408](https://github.com/touying-typ/touying/issues/408))
+
+  Typst 0.15's bundle export can emit arbitrary files, so the separate `typst query .. > example.pdfpc` step is no longer needed (you can still use it and the docs have transitioned to `typst eval` now). Put `#pdfpc.bundle-assets()` at the top level, outside every `#document(..)`:
+
+  ```sh
+  typst compile --features bundle --format bundle --root . ./example.typ ./out
+  # => ./out/deck.pdf and ./out/deck.pdfpc
+  ```
+
+  Every PDF document in the bundle that carries pdfpc metadata gets its own `.pdfpc` next to it, with slide labels numbered from that document's own first slide and only that document's notes, markers and configuration in it. The call is inert in every other target, so it can stay in a file you also compile to a plain PDF. See [pdfpc](https://touying-typ.github.io/docs/external/pdfpc).
+
+- **feat: several documents in one source file** ([#406](https://github.com/touying-typ/touying/issues/406), thanks @mxmerz)
+
+  Typst 0.15's bundle export lets a single file emit more than one PDF through `#document("name.pdf", [..])`, and a deck can now live in each of them. Heading lookups are scoped to the document they are in, so `utils.current-heading` and everything built on it (slide headers, the notes panel, progressive outlines) no longer pick up headings from a neighbouring deck. pdfpc metadata is scoped the same way, see the bundle-asset entry above.
+
+  ```typst
+  #document("deck-a.pdf", [
+    #show: simple-theme
+    == Deck A
+  ])
+  #document("deck-b.pdf", [
+    #show: simple-theme
+    == Deck B
+  ])
+  ```
+
+- **feat: themes style the speaker-note panel through `touying-notes`**
+
+  `touying-notes` takes `header`, `header-fill`, `fill`, `note-setting` and `preview-setting`; a theme may use the `note-setting` to style the page and content. `header-height` collapses to its content by default, and `header: none` drops the strip entirely. `preview-setting` receives the full-size slide preview, so a theme can scale and place it freely, for example `preview => place(bottom + right, box(scale(x: 30%, y: 15%, reflow: true, preview)))`. All six bundled themes ship one. See [Speaker Notes](https://touying-typ.github.io/docs/tutorials/speaker-notes).
+
+- **feat: `show-notes-on-second-screen` accepts `top` and `left`** as well as `bottom` and `right`. The page is doubled along the corresponding axis and the extra half pushed into the margin, so the slide keeps its own dimensions in all four directions.
+
+- **feat: better covering, with `alpha-changing-cover` and `color-changing-cover` reworked** ([#112](https://github.com/touying-typ/touying/issues/112))
+
+  `utils.alpha-changing-cover` is now the recommended semi-transparent cover, replacing the deprecated `semi-transparent-cover` above. It governs every stylable colour, inherits the outer scope's colour when an element declares none, understands gradients and tilings, and converts spot colours to Oklch before opacifying. Its automatic fallback alpha depends on the lightness of the colour it is dimming, and the fallback path is used far more sparingly, so images and diagrams no longer turn into grey blocks. `utils.color-changing-cover` remains the compile-cheap alternative that flattens everything to one colour. See [Cover Function](https://touying-typ.github.io/docs/tutorials/dynamic/cover).
+
+- **feat: `components.left-mid-right` places content in three columns** ([#397](https://github.com/touying-typ/touying/pull/397), thanks @thomas-saigre)
+
+- **feat: `utils.get-input` for reading command-line inputs**
+
+  Everything passed through `--input key=value` reaches Typst as a string. `utils.get-input` parses each value as Typst first, so `accent=red` is a colour, `count=3` an integer and `flag=true` a boolean, while a bare word Typst does not know comes back as a string. That last part is what makes `--input export-mode=handout` work without shell quoting. Rn we only depend on it for export-mode, but we might support more commandline customizability later. Pass no key to get the whole parsed dictionary. See [touying-exporter](https://touying-typ.github.io/docs/external/touying-exporter).
+
+- **feat/fix: `touying-get-config` exposes `common` as a real category**
+
+  `touying-get-config("common.handout")` resolves now, and `touying-get-config().common` returns the flat top-level keys as a subtree, which is what the docstring always claimed. Naming a category under it, such as `common.store`, panics with a clear message instead of silently missing.
+
+- feat: new utilities. `utils.is-math-symbol`, `utils.sequence-to-array`, `utils.resolve-negative-subslides` (negative subslide indices resolved against a repeat count and an optional non-1 base), and `utils.rescale-image` (used by article mode's image wrapping).
+
+### Fixes
+
+- **fix: special slides announce their title as a hidden heading**
+
+  An outline slide's title never became a heading, so nothing reading the current heading could see it. The slide header worked only because the title was passed in explicitly, and the notes panel showed nothing at all. The affected slides now emit `place(hide(heading(level: self.slide-level, ..)))`. `place` keeps it out of the flow, since a plain `hide` still pushed the outline's contents down by about 16pt, and `level: self.slide-level` keeps `custom-progressive-outline` from mistaking "Outline" for the current section and dimming every entry. Applied to `outline-slide` in aqua, dewdrop, metropolis and stargazer, plus stargazer's `ending-slide`. Title slides are left alone for now.
+
+- **fix: a citation covered by a visual-only method stays a real citation**
+
+  `color-changing-cover` sent citations to the `hide` fallback, so the marker vanished while the bibliography entry it queues stayed behind. `@key` is a `ref` in the content tree and only becomes a `cite` during layout, so neither func was in the recolourable set. Both are now, and a citation is recoloured like `raw` rather than hidden. Separately, `magic.bibliography-as-footnote` decided whether to draw a width-reserving placeholder by looking for a `hide` element instead of asking `utils.cover-hides-footnote`. It asks the config now, so it agrees with the parser's own footnote branch.
+
+  Still open: an opaque cover that is not `hide`, such as `cover-with-rect`, together with `cover-hides-footnote: true` leaks the entry.
+
+- **fix: a footnote bibliography no longer prevents convergence** ([#395](https://github.com/touying-typ/touying/issues/395)) — fixed by the bibliography rework above. Verified across 30 size × breakable/detect-overflow combinations that previously warned *document did not converge within five attempts*. A CI step runs the regression with `--warnings promote`.
+
+- fix: a bibliography no longer needs a preceding `pagebreak()` to render. `---` slide breaks inside mode-only content are handled as slide breaks, while `pagebreak()` stays a page break
+
+- fix: `touying-get-config`'s `default:` sentinel is a private marker instead of the `type` builtin, so `default: type` is no longer a magic value, and passing a key both positionally and by name is rejected rather than silently ignored
+
+- fix: footnotes are no longer shown before the `#pause` that reveals them ([#399](https://github.com/touying-typ/touying/pull/399), thanks @RivinHD for the initial contribution)
+
+- fix: `hidden-parts` are flushed in the right order when a `touying-fn-wrapper` follows paused content, so a fn-wrapper no longer renders ahead of content written before it ([#400](https://github.com/touying-typ/touying/pull/400))
+
+- fix: cover spacing ([#387](https://github.com/touying-typ/touying/issues/387), [#405](https://github.com/touying-typ/touying/pull/405))
+
+- fix: reducer elements are covered individually rather than as one block ([#371](https://github.com/touying-typ/touying/issues/371), [#381](https://github.com/touying-typ/touying/pull/381))
+
+- fix: callback-style usage works again ([#374](https://github.com/touying-typ/touying/issues/374), [#380](https://github.com/touying-typ/touying/pull/380))
+
+- fix: empty output slides are no longer indexed when adding last-page metadata ([#382](https://github.com/touying-typ/touying/pull/382))
+
+- fix: wrong type in pdfpc commands ([#407](https://github.com/touying-typ/touying/pull/407), thanks @vilaureu)
+
+- fix: `touying-diagram` binding and the CeTZ docs example repaired ([#389](https://github.com/touying-typ/touying/pull/389))
+
+- i18n: French translation for the outline ([#396](https://github.com/touying-typ/touying/pull/396), thanks @tarikgraba)
+
+- theme(dewdrop): `outline-title` is gone from the theme's documented parameter list. It was never an actual parameter of `dewdrop-theme`; the outline slide's title is its `title` argument
+
+- theme(stargazer): list markers are positioned correctly ([#393](https://github.com/touying-typ/touying/pull/393), thanks @joseph-tao)
+
+- theme(stargazer): it also documented `footer` and `footer-right` when never using those.
+
+### Documentation
+
+Almost every page was touched. The largest items:
+
+- **docs: new [Article Mode](https://touying-typ.github.io/docs/integration/article-mode) tutorial** #TODO! As it is mainly meant for integrating other themes for article style documents it goes into integration.
+
+- **docs: new [Speaker Notes](https://touying-typ.github.io/docs/tutorials/speaker-notes) tutorial** (English and Chinese), covering where notes attach, the second screen, presenter view, per-subslide notes, markdown notes for pdfpc, exporting, and styling the panel. 
+- docs: [Custom Themes](https://touying-typ.github.io/docs/themes/custom) gains sections on customizing the speaker-note panel, making a special slide's title discoverable with a hidden heading, and why helper components should use `touying-fn-wrapper-raw`. [Build Your Own Theme](https://touying-typ.github.io/docs/tutorials/build-your-own-theme) gains a matching "Customizing the Notes" section.
+- docs: [Cover Function](https://touying-typ.github.io/docs/tutorials/dynamic/cover) rewritten around `alpha-changing-cover` and `color-changing-cover`, with a new section on `cover-hides-footnote` explaining why `auto` recognises a hiding cover by identity, so a hand-written `(self: none, body) => hide(body)` is classified visual-only and its footnotes appear before the reveal.
+- docs: [Sections and Headings](https://touying-typ.github.io/docs/tutorials/sections) now separates the labels that change how a heading is presented from the labels that filter by output mode, and warns that `<touying:hidden>` does not suppress the slide or its number, which `config-common(freeze-slide-counter: true)` does.
+- docs: [Counters](https://touying-typ.github.io/docs/tutorials/progress/counters) and the sections page corrected on `appendix`, which freezes only the denominator (`utils.last-slide-number`) while `utils.slide-counter` keeps advancing, so an appendix footer reads `4 / 2`.
+- docs: [Complex Animations](https://touying-typ.github.io/docs/tutorials/dynamic/complex) explains what can be nested inside `touying-fn-wrapper-raw` versus `touying-fn-wrapper`, including the `.with(..)` trap for theme authors.
+- docs: [Waypoints](https://touying-typ.github.io/docs/tutorials/dynamic/waypoints) documents hierarchical labels, where `<part:intro>` and `<part:main>` combine under `<part>`, and corrects `start`, which belongs on `#waypoint` rather than on `#uncover`.
+- docs: [Fit To](https://touying-typ.github.io/docs/tutorials/utilities/fit-to) brought in line with the real signatures of `fit-to-height` and `fit-to-width`, where `height`/`width` are named with a `1fr` default, positional is still accepted, and `reflow` and `force-height` exist.
+- docs: [Layout](https://touying-typ.github.io/docs/tutorials/layout) and the FAQ corrected. `detect-overflow` emits a warning and compilation continues; it does not `panic()`.
+- docs: [pdfpc](https://touying-typ.github.io/docs/external/pdfpc) documents `end-slide`, `save-slide` and `hidden-slide` alongside speaker notes, plus bundle export. [touying-exporter](https://touying-typ.github.io/docs/external/touying-exporter) documents `utils.get-input`.
+- docs: [CeTZ integration](https://touying-typ.github.io/docs/integration/cetz) drops the stale `(uncover(..),)` array syntax from the callback-style example, and the FAQ's fletcher example likewise.
+- docs: the [FAQ](https://touying-typ.github.io/docs/faq) was substantially reworked, covering the bibliography, section-slide bodies, `touying-fn-wrapper-raw`, the cover methods, `"h"` and `"!"` subslide specs, second-screen alignments, and Tinymist in place of the discontinued Typst Preview extension.
+- docs: large Chinese translation pass covering the theme pages, FAQ, settings, sections, navigation, and the new speaker-notes page. The Chinese `settings` and `custom` pages document article mode; their English counterparts do not yet.
+
+### Miscellaneous
+
+- **refactor: `src/core.typ` is split into modules.** The 6288-line file becomes `src/core/parser.typ`, `src/core/animation.typ`, `src/core/slides.typ`, `src/core/blocks.typ`, `src/core/waypoints.typ` and additionally `src/core/article.typ`, with `src/slides.typ` replaced by `src/entrypoint.typ` and the new `src/bundle.typ` holding the bundle-export helpers. `src/exports.typ` is reorganised along the same lines. The public API is unaffected except where noted above, but anything importing `touying/src/core.typ` directly has to be updated.
+- refactor: block rendering, waypoint-to-integer resolution, the equation/mitex/raw paths and the article-mode scanning functions were each unified into one implementation rather than several near-duplicates.
+- test: reference renders regenerated for Typst 0.15.0 / tytanic 0.4.0 layout drift. New suites for article mode (presentation, handout and article variants of one source), `recall-content`, `render-subslides`, `mode-never`, `notes-second-screen`, `pdfpc`, `cover-citation`, and the #395, #408 and #415 regressions.
+
+### Theme Migration Guide
+
+**For theme developers upgrading to v0.8.0:**
+
+1. **Style the body through `setting:`, not by wrapping it.** All bundled themes now pass their alignment and decoration as `touying-slide(setting: ..)` rather than wrapping the body in `align(..)` or a block. Wrapping hides the body from the parser, which breaks animation counting and article-mode linearization:
+   ```typst
+   // Before
+   touying-slide(self: self, config: config, align(center + horizon, body))
+
+   // After
+   touying-slide(self: self, config: config, setting: align.with(center + horizon), body)
+   ```
+2. **Register a `notes-fn`.** Replace any `config-methods(show-only-notes: ..)` renderer override with `config-common(notes-fn: ..)` built on `touying-notes`; roughly ten lines of colours per theme. The `config-common(show-only-notes: ..)` flag is a separate option and is unchanged.
+3. **Give special slides a hidden heading** so their title is discoverable by `utils.display-current-heading`. Both the slide header and the notes panel read from it:
+   ```typst
+   place(hide(heading(
+     level: self.slide-level, title,
+     bookmarked: false, outlined: false, numbering: none,
+   )))
+   ```
+4. **Prefer `touying-fn-wrapper-raw` for helper components** that need `self`, and pass the body as a positional argument so animations inside it are parsed:
+   ```typst
+   #let tblock(title: none, it) = touying-fn-wrapper-raw(_tblock.with(title: title), it)
+   ```
+5. **Do not paint behind the notes half** through `config-page(background: ..)`. Use `touying-notes`' `fill` and `header-fill`.
+
 ## v0.7.4
 
 ### Features

@@ -144,17 +144,22 @@
   self = utils.merge-dicts(
     self,
     config-common(freeze-slide-counter: true),
-    config-page(fill: if background == auto {
-      self.colors.primary
-    } else {
-      background
-    }),
+    // 3em, not the theme's 2em: the focus text used to be enlarged by a
+    // `set text(size: 1.5em)` around the whole slide, which scaled this
+    // margin with it. The styling now applies to the body alone, so the
+    // margin states the size it always effectively had.
+    config-page(
+      margin: 3em,
+      fill: if background == auto { self.colors.primary } else { background },
+    ),
   )
-  set text(fill: foreground, size: 1.5em)
   touying-slide(
     self: self,
     config: config,
-    setting: align.with(center + horizon),
+    setting: it => align(
+      center + horizon,
+      text(fill: foreground, size: 1.5em, it),
+    ),
     body,
   )
 })

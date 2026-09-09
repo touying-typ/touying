@@ -3072,6 +3072,160 @@
 }
 
 
+/// The placement effects `animate` understands as strings. See `animate` for
+/// why placements are resolved rather than composed.
+#let animate-placements = ("show", "cover", "remove")
+
+#let _is-swap(eff) = (
+  type(eff) == dictionary and eff.at("kind", default: none) == "touying-swap"
+)
+
+#let _is-placement(eff) = (
+  (type(eff) == str and eff in animate-placements) or _is-swap(eff)
+)
+
+/// Runtime half of `#animate` — see its docstring for the model. Called
+/// through `touying-fn-wrapper`, so it receives `self` and can read
+/// `self.subslide` and the slide's waypoints.
+///
+/// - effects (array): Normalized effect entries, each a dictionary with
+///   `effect`, `subslides` and `priority` keys.
+///
+/// - body (content): The content being animated.
+///
+/// - alignment (alignment): Where `body` itself sits inside the reserved box,
+///   when one is needed. Each swap carries its own alignment.
+///
+/// - resolved-subslides (array, none): Per-effect specs with `"h"` already
+///   substituted, supplied by the `last-subslide` callback at placement time.
+///
+/// -> content
+#let animate(
+  self: none,
+  effects: (),
+  alignment: top + left,
+  resolved-subslides: none,
+  body,
+) = {
+  // Each effect's spec, resolved once. `resolved-subslides`, when present,
+  // runs parallel to `effects` and carries each spec with its "h" already
+  // replaced by the placement-time repetitions counter.
+  let specs = effects
+    .enumerate()
+    .map(((i, eff)) => resolve-waypoints(
+      self,
+      if resolved-subslides != none {
+        resolved-subslides.at(i)
+      } else { eff.subslides },
+    ))
+
+  // What applies at subslide `idx`: the one winning placement, and the styles
+  // to nest around it. Both come back tagged with the index of the effect they
+  // came from, so that a configuration can be identified without comparing
+  // content.
+  let resolve-at(idx) = {
+    let active = effects
+      .enumerate()
+      .filter(((i, _)) => check-visible(idx, specs.at(i)))
+
+    // Placements are resolved, never composed: the cover method is `hide`,
+    // which is not a style node, and "remove" drops the content outright, so
+    // nothing nested inside either could undo it. The implicit default sits at
+    // priority 0 and effects default to priority 1, so writing any placement
+    // at all replaces it; among the rest the highest priority wins, ties going
+    // to the last one written.
+    let winner = active
+      .filter(((_, eff)) => _is-placement(eff.effect))
+      .fold((-1, (effect: "show", priority: 0)), (best, it) => {
+        if it.last().priority >= best.last().priority { it } else { best }
+      })
+
+    // Styles all apply, nesting innermost-first. Grouped by priority
+    // explicitly rather than sorted, so that the order within one priority is
+    // the order written whether or not `array.sorted` is stable.
+    let style-entries = active.filter(((_, eff)) => {
+      not _is-placement(eff.effect)
+    })
+    let styles = ()
+    for p in style-entries.map(((_, eff)) => eff.priority).dedup().sorted() {
+      styles += style-entries.filter(((_, eff)) => eff.priority == p)
+    }
+    (winner, styles)
+  }
+
+  let apply-styles(styles, cont) = {
+    for (_, eff) in styles {
+      cont = (eff.effect)(cont, self: self)
+    }
+    cont
+  }
+
+  // The content a configuration puts on the page, or `none` where it puts
+  // nothing. `reserving-only` additionally drops what does not lay claim to
+  // space: a swap only reserves when it asks to stretch.
+  let render(config, reserving-only: false) = {
+    let ((_, winner), styles) = config
+    let eff = winner.effect
+    if eff == "remove" {
+      none
+    } else if _is-swap(eff) {
+      if reserving-only and not eff.stretch {
+        none
+      } else {
+        (apply-styles(styles, eff.body), eff.alignment)
+      }
+    } else if eff == "cover" {
+      ((self.methods.cover)(self: self, apply-styles(styles, body)), alignment)
+    } else {
+      (apply-styles(styles, body), alignment)
+    }
+  }
+
+  let here = render(resolve-at(self.subslide))
+
+  // Measuring costs a `context` and a pass over the slide's subslides, so it
+  // only happens once some swap actually asks to stretch. Everything else —
+  // show, cover, remove, and swaps that let the layout reflow — needs no
+  // reserved size at all: the cover method already preserves layout by itself.
+  if not effects.any(eff => _is-swap(eff.effect) and eff.effect.stretch) {
+    if here != none { here.first() }
+  } else if here == none {
+    // Removed here, so nothing to place — the reservation is moot.
+  } else {
+    context {
+      // Walk the slide's subslides and measure what each *distinct*
+      // configuration reserves. Distinct is by which effects are in play, not
+      // by the content they produce, so a style that is active across five
+      // subslides is measured once. Measuring the styled result (rather than
+      // the bare body) is the point: a style that changes the size would
+      // otherwise be left out of the reservation it belongs in.
+      let seen = ()
+      let sizes = ()
+      for idx in range(1, calc.max(self.at("repeat", default: 1), 1) + 1) {
+        let config = resolve-at(idx)
+        let ((wi, _), styles) = config
+        let key = (wi,) + styles.map(((i, _)) => i)
+        if key in seen {
+          continue
+        }
+        seen.push(key)
+        let reserved = render(config, reserving-only: true)
+        if reserved != none {
+          sizes.push(measure(reserved.first()))
+        }
+      }
+      if sizes.len() == 0 {
+        here.first()
+      } else {
+        box(
+          width: calc.max(..sizes.map(sz => sz.width)),
+          height: calc.max(..sizes.map(sz => sz.height)),
+          align(here.last(), here.first()),
+        )
+      }
+    }
+  }
+}
 
 
 /// `#alternatives` has a couple of "cousins" that might be more convenient in some situations. The first one is `#alternatives-match` that has a name inspired by match-statements in many functional programming languages. The idea is that you give it a dictionary mapping from subslides to content:

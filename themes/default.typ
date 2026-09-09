@@ -50,7 +50,7 @@
 /// ```
 ///
 /// - aspect-ratio (string): The aspect ratio of the slides. Default is `16-9`.
-/// 
+///
 #let default-theme(
   aspect-ratio: "16-9",
   ..args,

@@ -312,13 +312,16 @@
   self = utils.merge-dicts(
     self,
     config-common(freeze-slide-counter: true),
-    config-page(fill: self.colors.neutral-dark, margin: 2em),
+    // 3em: was 2em scaled by the focus text's own `set text(size: 1.5em)`.
+    config-page(fill: self.colors.neutral-dark, margin: 3em),
   )
-  set text(fill: self.colors.neutral-lightest, size: 1.5em)
   touying-slide(
     self: self,
     config: config,
-    setting: std.align.with(align),
+    setting: it => std.align(
+      align,
+      text(fill: self.colors.neutral-lightest, size: 1.5em, it),
+    ),
     body,
   )
 })

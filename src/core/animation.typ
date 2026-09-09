@@ -20,11 +20,14 @@
 ///
 ///   It accepts a `(repetitions, args)` and should return a (nextrepetitions, extra-args).
 ///
+/// - advances-flow (bool): Whether this wrapper takes up the slide's pause flow, so that a following `#pause` continues after its last subslide rather than after the current one — true for `item-by-item`, which stands in for a run of pauses, and false for wrappers like `uncover` and `only`, which only animate their own body.
+///
 /// -> content
 #let touying-fn-wrapper(
   fn,
   last-subslide: none,
   repetitions: none,
+  advances-flow: false,
   ..args,
 ) = [#metadata((
   kind: "touying-fn-wrapper",
@@ -32,6 +35,7 @@
   args: args,
   last-subslide: last-subslide,
   repetitions: repetitions,
+  advances-flow: advances-flow,
 ))<touying-temporary-mark>]
 
 #import "blocks.typ": (
@@ -779,6 +783,7 @@
     // Relative: items start from the current pause position.
     touying-fn-wrapper(
       utils.item-by-item,
+      advances-flow: true,
       last-subslide: repetitions => (
         repetitions + num-items - 1,
         (start: repetitions),
@@ -789,6 +794,7 @@
   } else if type(start) == int {
     touying-fn-wrapper(
       utils.item-by-item,
+      advances-flow: true,
       last-subslide: start + num-items - 1,
       start: start,
       cont,
@@ -806,6 +812,7 @@
     let n = parts.first()
     touying-fn-wrapper(
       utils.item-by-item,
+      advances-flow: true,
       last-subslide: n + num-items - 1,
       start: n,
       cont,
@@ -832,6 +839,7 @@
     // for render-time resolution via resolve-waypoints.
     touying-fn-wrapper(
       utils.item-by-item,
+      advances-flow: true,
       last-subslide: repetitions => (
         repetitions + num-items - 1,
         (:),
@@ -979,6 +987,7 @@
   if start == auto {
     touying-fn-wrapper(
       utils.item-by-item-fn,
+      advances-flow: true,
       last-subslide: repetitions => (
         repetitions + num-items - 1,
         (start: repetitions),
@@ -990,6 +999,7 @@
   } else if type(start) == int {
     touying-fn-wrapper(
       utils.item-by-item-fn,
+      advances-flow: true,
       last-subslide: start + num-items - 1,
       start: start,
       fn,
@@ -1008,6 +1018,7 @@
     let n = parts.first()
     touying-fn-wrapper(
       utils.item-by-item-fn,
+      advances-flow: true,
       last-subslide: n + num-items - 1,
       start: n,
       fn,
@@ -1022,6 +1033,7 @@
     }
     touying-fn-wrapper(
       utils.item-by-item-fn,
+      advances-flow: true,
       last-subslide: repetitions => (
         repetitions + num-items - 1,
         (:),
@@ -1035,7 +1047,7 @@
 
 /// Render a content block at a specific animation stage, or step through
 /// several of them. Unlike `touying-recall` (./src/core/slides.typ), which
-/// looks up content by label that has already been rendered once, 
+/// looks up content by label that has already been rendered once,
 /// this takes a content variable directly.
 ///
 /// Example:
@@ -1083,7 +1095,7 @@
 ///
 /// - base (auto, int): Starting repetition counter for `body`'s own
 ///   internal pause-numbering — purely internal to `body`, never affects
-///   the enclosing slide's own numbering (see `start` for that). 
+///   the enclosing slide's own numbering (see `start` for that).
 ///   Use this to align absolute with relative animations that you render.
 ///   - `auto` (default): in slide mode, inherits the current slide's
 ///     repetition counter and waypoints; in article mode, resolves to `1`.
@@ -1125,4 +1137,197 @@
     start: start,
     repeat-last: repeat-last,
   ))<touying-temporary-mark>]
+}
+
+/// Replace `body` with `swap-body` while this effect is active. Only for use
+/// as an `#animate` effect.
+///
+/// - swap-body (content): What to render in `body`'s place.
+///
+/// - alignment (alignment): Where `swap-body` sits inside the reserved space.
+///
+/// - stretch (bool): Whether `swap-body` joins the reserved space, exactly as
+///   in `alternatives`. Default is `false`, which lets the layout reflow when
+///   this swap is shown. With `true` it is measured along with everything else
+///   that reserves, so the block keeps one size across every subslide.
+///
+///   Important: If you use a zero-length content like a context expression,
+///   you should set `stretch: false`.
+///
+/// -> dictionary
+#let swap(swap-body, alignment: top + left, stretch: false) = (
+  kind: "touying-swap",
+  body: swap-body,
+  alignment: alignment,
+  stretch: stretch,
+)
+
+/// Animate content arbitrarily with your own or builtin effects.
+/// Use this for special cases where you want to combine visibility, effects, ...
+/// Effects may be layered arbitrarily.
+///
+/// Example:
+///
+/// ```typst
+/// #animate(
+///   [The original],
+///   effects: (
+///     (effect: "cover", subslides: "-2"),
+///     (effect: swap[Something else], subslides: 3),
+///     (effect: (body, ..) => text(red, body), subslides: "4-", priority: 2),
+///   ),
+/// )
+/// ```
+///
+/// == Placement versus styling
+///
+/// Effects fall into two classes, and they combine differently.
+///
+/// *Placements* — `"show"`, `"cover"`, `"remove"` and `swap(..)` — decide
+/// whether and in what form `body` appears at all. Exactly one of them applies
+/// per subslide, see priority below.
+///
+/// *Styles* — any function you pass — all apply, nested inside one another,
+/// because that is something Typst composes correctly on its own.
+///
+/// == Priority
+///
+/// An effect of type `"show"` with subslides `"1-"` and priority `0` is
+/// applied by default, and your own effects default to priority `1`, so
+/// writing any placement at all replaces it. Among the placements active on a
+/// subslide the highest priority wins, ties going to the last one written. For
+/// styles priority only sets the nesting order: lowest is innermost, and
+/// within one priority they nest in the order written.
+///
+/// == Space
+///
+/// `"cover"` reserves `body`'s space entirely and `"remove"` reserves none at
+/// all, exactly as `uncover` and `only` do. A `swap` replaces `body` outright,
+/// just like `alternatives`, and reflows the layout while it is shown —
+/// unless it is given `stretch: true`, which puts it into the reserved space
+/// along with `body` itself, so that the block keeps one size throughout.
+///
+/// Nothing is measured unless at least one swap asks to stretch. When one
+/// does, the reserved space is the overlay of everything that actually renders
+/// and reserves, measured *with* the styles that are active where it renders:
+/// each distinct combination of placement and styles is measured once. As with
+/// `alternatives`' `stretch`, zero-length content such as a bare `context`
+/// expression cannot be measured usefully, provide a fixed-size box wrapping
+/// it in that case.
+///
+/// - body (content): The entire content onto which the effects will apply.
+///
+/// - effects (array, dictionary): The effects, each a dictionary with the keys
+///   below. A single effect may be given on its own instead of in an array.
+///
+///   - effect (function, str, dictionary): The builtin effects are `"cover"`,
+///     `"remove"`, `"show"` and
+///     `swap(body, alignment: top + left, stretch: false)`.
+///     If passed a function it needs the following header:
+///     `(body, self: none) -> content` \
+///     From self you can extract the current subslide and waypoint.
+///     To use a simple function like `text.with(red)` write `(body, ..args) => text(red, body)` instead.
+///   - subslides (int, str, label, dictionary): Subslide types as usual (see docstring of `uncover`),
+///     corresponding to integer subslides, string subslide ranges, waypoints or waypoint markers.
+///     The effect will only be invoked if the current subslide is among the range given.
+///     Defaults to `"1-"`.
+///   - priority (int): Defaults to `1`. See above.
+///
+///   If you want to cover content via `utils.alpha-changing-cover` or
+///   `utils.color-changing-cover`, you can use those functions directly as a
+///   styling effect.
+///
+/// - alignment (alignment): Where `body` itself sits inside the reserved box,
+///   when a swap makes one necessary. Each swap carries its own alignment.
+///
+/// -> content
+#let animate(
+  body,
+  effects: (),
+  alignment: top + left,
+) = {
+  // A single effect may be written without the enclosing array; `(:)` and `()`
+  // both mean "no effects", i.e. plain `body`.
+  let effects = if type(effects) == dictionary {
+    if effects.len() == 0 { () } else { (effects,) }
+  } else {
+    effects
+  }
+  let effects = effects
+    .enumerate()
+    .map(((i, eff)) => {
+      assert(
+        type(eff) == dictionary and "effect" in eff,
+        message: "animate: effects.at("
+          + str(i)
+          + ") must be a dictionary with "
+          + "an `effect` key, got "
+          + repr(eff),
+      )
+      let kind = eff.effect
+      assert(
+        type(kind) == function or utils._is-placement(kind),
+        message: "animate: effects.at("
+          + str(i)
+          + ").effect must be a function, "
+          + "a swap, or one of "
+          + repr(utils.animate-placements)
+          + ", got "
+          + repr(kind),
+      )
+      let subslides = eff.at("subslides", default: "1-")
+      assert(
+        subslides != auto,
+        message: "animate: effects.at("
+          + str(i)
+          + ").subslides does not support "
+          + "`auto`; write \"h\" for this effect's own placement position, or an "
+          + "explicit range.",
+      )
+      (
+        effect: kind,
+        subslides: subslides,
+        priority: eff.at("priority", default: 1),
+      )
+    })
+  // A label spec names a waypoint, which has to exist by the time the spec is
+  // resolved — same implicit declaration `effect`/`uncover` make.
+  for eff in effects {
+    if type(eff.subslides) == label {
+      [#metadata((
+        kind: "touying-implicit-waypoint",
+        label: str(eff.subslides),
+      ))<touying-temporary-mark>]
+    }
+  }
+  let last-of(specs) = calc.max(
+    1,
+    ..specs.map(utils.last-required-subslide),
+  )
+  if effects.any(eff => _has-here-marker(eff.subslides)) {
+    // At least one spec says "h", so every spec has to be resolved against the
+    // repetitions counter at placement time rather than up front.
+    touying-fn-wrapper(
+      utils.animate,
+      last-subslide: repetitions => {
+        let resolved = effects.map(eff => if _has-here-marker(eff.subslides) {
+          eff.subslides.replace("h", str(repetitions))
+        } else {
+          eff.subslides
+        })
+        (last-of(resolved), (resolved-subslides: resolved))
+      },
+      effects: effects,
+      alignment: alignment,
+      body,
+    )
+  } else {
+    touying-fn-wrapper(
+      utils.animate,
+      last-subslide: last-of(effects.map(eff => eff.subslides)),
+      effects: effects,
+      alignment: alignment,
+      body,
+    )
+  }
 }

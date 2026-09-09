@@ -314,16 +314,19 @@
     config-common(freeze-slide-counter: true),
     config-page(
       fill: self.colors.primary,
-      margin: 2em,
+      // 3em: was 2em scaled by the focus text's own `set text(size: 1.5em)`.
+      margin: 3em,
       header: none,
       footer: none,
     ),
   )
-  set text(fill: self.colors.neutral-lightest, weight: "bold", size: 1.5em)
   touying-slide(
     self: self,
     config: config,
-    setting: std.align.with(align),
+    setting: it => std.align(
+      align,
+      text(fill: self.colors.neutral-lightest, weight: "bold", size: 1.5em, it),
+    ),
     body,
   )
 })

@@ -57,8 +57,7 @@
       let kind = child.value.at("kind", default: none)
       if kind == "touying-jump/pause/meanwhile" {
         if child.value.relative {
-          // Snap past any fn-wrapper range before applying the relative jump
-          repetitions = calc.max(repetitions, last-subslide) + child.value.n
+          repetitions += child.value.n
           // Track the peak repetitions so that a subsequent negative jump doesn't
           // cause the slide count to be underestimated
           max-repetitions = calc.max(max-repetitions, repetitions)
@@ -82,10 +81,7 @@
           child.value.at("advance", default: true) and lbl in wp
         ) {
           let first = wp.at(lbl).first
-          if (
-            first == repetitions + 1
-              or (first == last-subslide + 1 and first > repetitions)
-          ) {
+          if first == repetitions + 1 {
             repetitions = first
             max-repetitions = calc.max(max-repetitions, repetitions)
           }
@@ -96,10 +92,7 @@
         let lbl = child.value.label
         if lbl in wp {
           let first = wp.at(lbl).first
-          if (
-            first == repetitions + 1
-              or (first == last-subslide + 1 and first > repetitions)
-          ) {
+          if first == repetitions + 1 {
             repetitions = first
             max-repetitions = calc.max(max-repetitions, repetitions)
           }
@@ -109,16 +102,21 @@
         // These always escape the pause zone: they handle their own visibility.
         let extra-args = (:)
         if child.value.last-subslide != none {
-          if type(child.value.last-subslide) == function {
+          let resolved = if type(child.value.last-subslide) == function {
             let (callback-last-subslide, callback-extra-args) = (
               child.value.last-subslide
             )(
               repetitions,
             )
-            last-subslide = calc.max(last-subslide, callback-last-subslide)
             extra-args = callback-extra-args
+            callback-last-subslide
           } else {
-            last-subslide = calc.max(last-subslide, child.value.last-subslide)
+            child.value.last-subslide
+          }
+          last-subslide = calc.max(last-subslide, resolved)
+          if child.value.at("advances-flow", default: false) {
+            repetitions = calc.max(repetitions, resolved)
+            max-repetitions = calc.max(max-repetitions, repetitions)
           }
         }
         let fn-result = (child.value.fn)(
@@ -233,8 +231,7 @@
         let k = child.value.at("kind", default: none)
         if k == "touying-jump/pause/meanwhile" {
           if child.value.relative {
-            // Snap past any fn-wrapper range before applying the relative jump
-            repetitions = calc.max(repetitions, last-subslide) + child.value.n
+            repetitions += child.value.n
             max-repetitions = calc.max(max-repetitions, repetitions)
           } else {
             max-repetitions = calc.max(max-repetitions, repetitions)
@@ -243,20 +240,22 @@
           }
         } else if k == "touying-waypoint" {
           if child.value.at("advance", default: true) {
-            repetitions = calc.max(repetitions + 1, last-subslide + 1)
+            repetitions += 1
             max-repetitions = calc.max(max-repetitions, repetitions)
           }
         } else if k == "touying-implicit-waypoint" {
-          repetitions = calc.max(repetitions + 1, last-subslide + 1)
+          repetitions += 1
           max-repetitions = calc.max(max-repetitions, repetitions)
         } else if k == "touying-fn-wrapper" {
           let ls = child.value.at("last-subslide", default: none)
-          if ls != none {
-            if type(ls) == function {
-              let (callback-ls, _) = ls(repetitions)
-              last-subslide = calc.max(last-subslide, callback-ls)
-            } else if type(ls) == int {
-              last-subslide = calc.max(last-subslide, ls)
+          let resolved = if type(ls) == function {
+            ls(repetitions).first()
+          } else if type(ls) == int { ls } else { none }
+          if resolved != none {
+            last-subslide = calc.max(last-subslide, resolved)
+            if child.value.at("advances-flow", default: false) {
+              repetitions = calc.max(repetitions, resolved)
+              max-repetitions = calc.max(max-repetitions, repetitions)
             }
           }
         }
@@ -346,7 +345,7 @@
 /// `start-overrides` maps labels with explicit `start` to their start spec
 /// (an int or a label string), and `decl-reps` maps labels to the effective
 /// repetitions counter at the point of declaration in the content
-/// (`calc.max(repetitions, last-subslide)`).
+/// (the pause cursor at that point).
 ///
 /// This mirrors the pause-tracking logic of `_parse-content-into-results-and-repetitions`
 /// but does NOT handle covering or visibility — it is a lightweight pre-pass.
@@ -358,10 +357,12 @@
   start-overrides,
   decl-reps,
 ) = {
-  // Helper: register a new advancing waypoint at the correct position.
-  // Uses max(repetitions+1, last-subslide+1) so that waypoints placed after a
-  // multi-subslide fn-wrapper (e.g. item-by-item) land AFTER its full range,
-  // not just one step past the last sequential pause.
+  // Helper: register a new advancing waypoint at the correct position, one
+  // step past the pause flow. A flow-advancing fn-wrapper (item-by-item) has
+  // already moved `repetitions` to the end of its own range by the time we
+  // get here, so a waypoint after one still lands after its full animation;
+  // a wrapper that only animates its own body (uncover/only) leaves the flow
+  // where it was, and the waypoint lands one step past *that*.
   let register-advancing-wp(
     lbl,
     repetitions,
@@ -369,8 +370,8 @@
     waypoints,
     decl-reps,
   ) = {
-    decl-reps.insert(lbl, calc.max(repetitions, last-subslide))
-    let pos = calc.max(repetitions + 1, last-subslide + 1)
+    decl-reps.insert(lbl, repetitions)
+    let pos = repetitions + 1
     repetitions = pos
     last-subslide = calc.max(last-subslide, pos)
     waypoints.insert(lbl, pos)
@@ -389,7 +390,7 @@
     start-overrides,
     decl-reps,
   ) = {
-    decl-reps.insert(lbl, calc.max(repetitions, last-subslide))
+    decl-reps.insert(lbl, repetitions)
     start-overrides.insert(lbl, wp-start)
     if type(wp-start) == int {
       waypoints.insert(lbl, wp-start)
@@ -426,9 +427,7 @@
       let kind = child.value.at("kind", default: none)
       if kind == "touying-jump/pause/meanwhile" {
         if child.value.relative {
-          // Snap past any preceding fn-wrapper range before applying the
-          // relative jump, so pauses after e.g. item-by-item land correctly.
-          repetitions = calc.max(repetitions, last-subslide) + child.value.n
+          repetitions += child.value.n
         } else {
           repetitions = child.value.n
           last-subslide = 0
@@ -536,8 +535,7 @@
             let ik = inner-child.value.at("kind", default: none)
             if ik == "touying-jump/pause/meanwhile" {
               if inner-child.value.relative {
-                // Snap past any fn-wrapper range before applying the relative jump
-                inner-rep = calc.max(inner-rep, inner-ls) + inner-child.value.n
+                inner-rep += inner-child.value.n
                 inner-max = calc.max(inner-max, inner-rep)
               } else {
                 inner-max = calc.max(inner-max, inner-rep)
@@ -577,10 +575,7 @@
                     decl-reps,
                   )
                 } else {
-                  decl-reps.insert(inner-child.value.label, calc.max(
-                    inner-rep,
-                    inner-ls,
-                  ))
+                  decl-reps.insert(inner-child.value.label, inner-rep)
                   waypoints.insert(inner-child.value.label, inner-rep)
                 }
               }
@@ -602,12 +597,14 @@
             } else if ik == "touying-fn-wrapper" {
               // fn-wrappers can span multiple subslides via their last-subslide field.
               let ls = inner-child.value.at("last-subslide", default: none)
-              if ls != none {
-                if type(ls) == function {
-                  let (callback-ls, _) = ls(inner-rep)
-                  inner-ls = calc.max(inner-ls, callback-ls)
-                } else if type(ls) == int {
-                  inner-ls = calc.max(inner-ls, ls)
+              let resolved = if type(ls) == function {
+                ls(inner-rep).first()
+              } else if type(ls) == int { ls } else { none }
+              if resolved != none {
+                inner-ls = calc.max(inner-ls, resolved)
+                if inner-child.value.at("advances-flow", default: false) {
+                  inner-rep = calc.max(inner-rep, resolved)
+                  inner-max = calc.max(inner-max, inner-rep)
                 }
               }
             }
@@ -616,16 +613,19 @@
         repetitions = calc.max(inner-max, inner-rep)
         last-subslide = calc.max(last-subslide, inner-ls)
       } else if kind == "touying-fn-wrapper" {
-        // fn-wrappers can span multiple subslides via their last-subslide field.
-        // Update last-subslide so that subsequent waypoints are placed AFTER
-        // this fn-wrapper's full animation range, not just at repetitions+1.
+        // fn-wrappers can span multiple subslides via their last-subslide
+        // field. That always grows the slide's total (last-subslide), but
+        // only a flow-advancing one (item-by-item) also moves the pause
+        // cursor, so that a following pause or waypoint lands after its full
+        // animation range rather than one step past where it started.
         let ls = child.value.at("last-subslide", default: none)
-        if ls != none {
-          if type(ls) == function {
-            let (callback-ls, _) = ls(repetitions)
-            last-subslide = calc.max(last-subslide, callback-ls)
-          } else if type(ls) == int {
-            last-subslide = calc.max(last-subslide, ls)
+        let resolved = if type(ls) == function {
+          ls(repetitions).first()
+        } else if type(ls) == int { ls } else { none }
+        if resolved != none {
+          last-subslide = calc.max(last-subslide, resolved)
+          if child.value.at("advances-flow", default: false) {
+            repetitions = calc.max(repetitions, resolved)
           }
         }
       }
@@ -656,9 +656,7 @@
         let kind = child.body.value.at("kind", default: none)
         if kind == "touying-jump/pause/meanwhile" {
           if child.body.value.relative {
-            repetitions = (
-              calc.max(repetitions, last-subslide) + child.body.value.n
-            )
+            repetitions += child.body.value.n
           } else {
             repetitions = child.body.value.n
             last-subslide = 0
@@ -1824,7 +1822,7 @@
         let kind = it.body.value.at("kind", default: none)
         if kind == "touying-jump/pause/meanwhile" {
           if it.body.value.relative {
-            repetitions = calc.max(repetitions, last-subslide) + it.body.value.n
+            repetitions += it.body.value.n
           } else {
             // absolute jump
             max-repetitions = calc.max(max-repetitions, repetitions)
@@ -1843,10 +1841,7 @@
             last-subslide = 0
           } else if it.body.value.at("advance", default: true) and lbl in wp {
             let first = wp.at(lbl).first
-            if (
-              first == repetitions + 1
-                or (first == last-subslide + 1 and first > repetitions)
-            ) {
+            if first == repetitions + 1 {
               repetitions = first
               max-repetitions = calc.max(max-repetitions, repetitions)
             }
@@ -1857,10 +1852,7 @@
           let lbl = it.body.value.label
           if lbl in wp {
             let first = wp.at(lbl).first
-            if (
-              first == repetitions + 1
-                or (first == last-subslide + 1 and first > repetitions)
-            ) {
+            if first == repetitions + 1 {
               repetitions = first
               max-repetitions = calc.max(max-repetitions, repetitions)
             }
@@ -2050,10 +2042,7 @@
         let kind = child.value.at("kind", default: none)
         if kind == "touying-jump/pause/meanwhile" {
           if child.value.relative {
-            // Snap past any preceding fn-wrapper range before applying the
-            // relative jump, so that a #pause after e.g. item-by-item lands
-            // after the full animation, not after its first subslide.
-            repetitions = calc.max(repetitions, last-subslide) + child.value.n
+            repetitions += child.value.n
             // Track the peak repetitions so that a subsequent negative jump doesn't
             // cause the slide count to be underestimated
             max-repetitions = calc.max(max-repetitions, repetitions)
@@ -2180,23 +2169,54 @@
           let reducer-data = _find-reducer-meta(inline-content)
           let (raw-wp, so, dr) = _collect-waypoints(inline-content)
           let resolved-wp = _resolve-waypoint-forest(raw-wp, so)
-          let content-mrr = if reducer-data != none {
+          // Probe `body`'s own natural stage count by walking it at an index
+          // past every conceivable stage. `last-subslide` counts for just as
+          // much as `mrr` here: content whose extent comes from a fn-wrapper
+          // (`uncover`, `only`, `alternatives`, ...) rather than from `#pause`
+          // reports it *only* there — `_parse-content-into-results-and-repetitions`
+          // hands the two back separately and leaves combining them to its
+          // caller (`_parse-touying-reducer` already folds them itself, hence
+          // the asymmetry between the branches).
+          let probe(wp) = if reducer-data != none {
             let (_, mrr) = _parse-touying-reducer(
-              self: self + (waypoints: (:), subslide: 9999),
+              self: self + (waypoints: wp, subslide: 9999),
               base: render-base,
               index: 9999,
               reducer-data,
             )
             mrr
           } else {
-            let (_, mrr, _, _, _) = _parse-content-into-results-and-repetitions(
-              self: self + (waypoints: (:), subslide: 9999),
+            let (
+              _,
+              mrr,
+              ls,
+              _,
+              _,
+            ) = _parse-content-into-results-and-repetitions(
+              self: self + (waypoints: wp, subslide: 9999),
               base: render-base,
               index: 9999,
               inline-content,
             )
-            mrr
+            calc.max(mrr, ls)
           }
+          // Two passes, because the waypoint map and the repeat count are
+          // mutually dependent: `_compute-waypoint-ranges` needs a repeat
+          // count to close every range against, but a waypoint's own implicit
+          // advance only fires for a label that's *in* the map — so a
+          // single pass over an empty map silently drops that advance, and
+          // everything the advance pushes forward with it. Pass one measures
+          // against no waypoints at all, pass two re-measures against the
+          // provisional map that first measurement makes computable. Their
+          // start positions come from `_collect-waypoints`' own static walk
+          // (`resolved-wp`), so the second pass can only ever grow the count.
+          let provisional-cwp = _compute-waypoint-ranges(
+            resolved-wp,
+            calc.max(probe((:)), ..resolved-wp.values(), 1),
+            so,
+            dr,
+          )
+          let content-mrr = probe(provisional-cwp)
           let content-repeat = calc.max(content-mrr, ..resolved-wp.values(), 1)
           let content-cwp = _compute-waypoint-ranges(
             resolved-wp,
@@ -2377,25 +2397,30 @@
           if cont != none and (is-visible or not need-cover) {
             result.push(cont)
           }
-          // When subslides: auto, this content's animation contributes to
-          // the outer slide's repetition count (same as an inlined
-          // reducer/block) — calc.max, not a bare assignment, so a
-          // touying-render appearing after other pause-generating siblings
-          // doesn't clobber a higher count already established.
+          // This content's animation grows the outer slide to hold every
+          // stage it will step through — exactly as an `#uncover` spanning
+          // that many subslides would, and via the same channel: it raises
+          // `last-subslide`, never the pause cursor (`repetitions`). The
+          // distinction is what the surrounding siblings see. Reserving
+          // subslides is not the same as consuming them, so plain content
+          // written after this call stays visible from the slide's first
+          // subslide and a following `#pause` counts from where the flow
+          // already was; consuming them instead — what `item-by-item` opts
+          // into with `advances-flow` — would push every later sibling past
+          // this content's end, which is right for a stand-in for a run of
+          // pauses but wrong for content rendered at a fixed point.
           //
-          // is-bare-auto keeps using content-mrr, exactly as before it had
-          // a name: `content-mrr` (not `content-repeat`) is the historical
-          // value here, preserved untouched per its own self-advancing
-          // semantics. Every other case (auto + start:, or any explicit
-          // subslides: spec, single- or multi-member alike) now bumps by
-          // `anchor + targets.len() - 1` instead: for auto + start: this is
-          // the exact same count as before (targets.len() == content-repeat
-          // there), and for an explicit spec it newly guarantees the outer
-          // slide actually grows enough subslides to reach — and, with
-          // repeat-last: false, later remove — every member being stepped
-          // through, which an explicit spec never contributed before at all.
-          repetitions = calc.max(
-            repetitions,
+          // is-bare-auto contributes `content-mrr` (not `content-repeat`),
+          // the historical value for its own self-advancing semantics. Every
+          // other case (auto + start:, or any explicit subslides: spec,
+          // single- or multi-member alike) contributes
+          // `anchor + targets.len() - 1`: for auto + start: that's the same
+          // count as before (targets.len() == content-repeat there), and for
+          // an explicit spec it guarantees the outer slide actually grows
+          // enough subslides to reach — and, with repeat-last: false, later
+          // remove — every member being stepped through.
+          last-subslide = calc.max(
+            last-subslide,
             if is-bare-auto { content-mrr } else {
               anchor + targets.len() - 1
             },
@@ -2408,18 +2433,28 @@
           let nextrepetitions = repetitions
           let extra-args = (:)
           if child.value.last-subslide != none {
-            if type(child.value.last-subslide) == function {
+            // calc.max throughout, to stop a callback from *decreasing*
+            // either counter.
+            let resolved = if type(child.value.last-subslide) == function {
               let (callback-last-subslide, callback-extra-args) = (
                 child.value.last-subslide
               )(
                 repetitions,
               )
-              // Use calc.max to prevent callback from decreasing last-subslide
-              // (mirrors the non-callback else-branch)
-              last-subslide = calc.max(last-subslide, callback-last-subslide)
               extra-args = callback-extra-args
+              callback-last-subslide
             } else {
-              last-subslide = calc.max(last-subslide, child.value.last-subslide)
+              child.value.last-subslide
+            }
+            last-subslide = calc.max(last-subslide, resolved)
+            // A flow-advancing wrapper (item-by-item) stands in for a run of
+            // pauses, so it hands the pause cursor on at the end of its own
+            // range — via nextrepetitions, since `repetitions` itself must
+            // stay put for the duration of the call below (the wrapper's own
+            // `start:` is resolved from it). Every other wrapper only
+            // animates its own body and leaves the cursor alone.
+            if child.value.at("advances-flow", default: false) {
+              nextrepetitions = calc.max(nextrepetitions, resolved)
             }
           }
           // Resolve any "passive" mark (touying-fn-wrapper-raw, e.g.
@@ -2631,10 +2666,7 @@
             last-subslide = 0
           } else if child.value.at("advance", default: true) and lbl in wp {
             let first = wp.at(lbl).first
-            if (
-              first == repetitions + 1
-                or (first == last-subslide + 1 and first > repetitions)
-            ) {
+            if first == repetitions + 1 {
               repetitions = first
               max-repetitions = calc.max(max-repetitions, repetitions)
             }
@@ -2649,10 +2681,7 @@
           let lbl = child.value.label
           if lbl in wp {
             let first = wp.at(lbl).first
-            if (
-              first == repetitions + 1
-                or (first == last-subslide + 1 and first > repetitions)
-            ) {
+            if first == repetitions + 1 {
               repetitions = first
               max-repetitions = calc.max(max-repetitions, repetitions)
             }

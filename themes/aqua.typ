@@ -154,9 +154,6 @@
 ///
 /// - leading (length): The leading of paragraphs in the outline. Default is `50pt`.
 #let outline-slide(config: (:), leading: 50pt) = touying-slide-wrapper(self => {
-  set text(size: 30pt, fill: self.colors.primary)
-  set par(leading: leading)
-
   let body = {
     place(hide(heading(
       //place invisible heading so that the title is discoverable via get-current-heading
@@ -212,7 +209,16 @@
       margin: 0em,
     ),
   )
-  touying-slide(self: self, config: config, body)
+  touying-slide(
+    self: self,
+    config: config,
+    setting: it => {
+      set text(size: 30pt, fill: self.colors.primary)
+      set par(leading: leading)
+      it
+    },
+    body,
+  )
 })
 
 
@@ -277,13 +283,16 @@
   self = utils.merge-dicts(
     self,
     config-common(freeze-slide-counter: true),
-    config-page(fill: self.colors.primary, margin: 2em),
+    // 4em: was 2em scaled by the focus text's own `set text(size: 2em)`.
+    config-page(fill: self.colors.primary, margin: 4em),
   )
-  set text(fill: self.colors.neutral-lightest, size: 2em, weight: "bold")
   touying-slide(
     self: self,
     config: config,
-    setting: align.with(horizon + center),
+    setting: it => align(
+      horizon + center,
+      text(fill: self.colors.neutral-lightest, size: 2em, weight: "bold", it),
+    ),
     body,
   )
 })
