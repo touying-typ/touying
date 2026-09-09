@@ -100,12 +100,13 @@
     if self.at("show-bibliography-as-footnote", default: none) != none {
       let args = self.at("show-bibliography-as-footnote", default: none)
       if type(args) == dictionary {
-        let bibliography = args.at("bibliography")
-        args.remove("bibliography")
-        magic.show-bibliography-as-footnote.with(
-          ..args,
+        let bibliography = args.at("bibliography", default: none)
+        let numbering = args.at("numbering", default: "[1]")
+        magic.bibliography-as-footnote(
           bibliography,
           body,
+          numbering: numbering,
+          self: self,
         )
       } else {
         // args is a bibliography like `bibliography(title: none, "ref.bib")`
