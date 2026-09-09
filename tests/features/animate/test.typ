@@ -11,6 +11,9 @@
 //   - Styles (plain functions) are *composed*, nesting innermost-first, which
 //     is something Typst already handles correctly.
 //
+// Ties break the same way in both classes: the last effect written wins. A
+// placement wins by being the one used, a style by ending up innermost.
+//
 // The other half is space. A swap replaces the body outright and lets the
 // layout reflow, unless it asks to `stretch`, in which case it joins the
 // reservation. Nothing is measured at all until some swap does ask.
@@ -32,7 +35,7 @@
 #let wide = [wwwwwwwwwwwwwwwwwwww]
 
 // Two styles that do not commute: whichever ends up outermost decides the
-// width. inset-then-fixed measures 200pt, fixed-then-inset measures 220pt.
+// width. A pin-200 outermost measures 200pt, a grow outermost measures 220pt.
 #let grow = (body, ..) => box(body, inset: 10pt)
 #let pin-200 = (body, ..) => box(body, width: 200pt)
 
@@ -85,7 +88,7 @@
   ),
 )#mark("tie-cover-last")
 
-== equal style priorities: the first one written is innermost
+== equal style priorities: the last one written is innermost
 #animate(
   narrow,
   effects: (
@@ -103,7 +106,8 @@
 )#mark("style-pin-first")
 
 == style priority overrides the written order
-// Same order as "style-grow-first", but pin-200 is pushed inside by priority.
+// pin-200 is innermost because of its lower priority, not because of where
+// it is written - priority is consulted before the written order.
 #animate(
   narrow,
   effects: (
@@ -183,13 +187,13 @@
   assert.eq(x("tie-remove-last"), x("removed"))
   assert.eq(x("tie-cover-last"), mm)
 
-  // equal priorities: the first style written is innermost, so grow-then-pin
-  // ends at pin-200's 200pt and pin-then-grow ends 20pt wider
-  let pinned = x("style-grow-first")
-  assert.eq(x("style-pin-first") - pinned, 20pt)
+  // equal priorities: the LAST style written is innermost, so pin-then-grow
+  // ends at pin-200's 200pt and grow-then-pin ends 20pt wider
+  let pinned = x("style-pin-first")
+  assert.eq(x("style-grow-first") - pinned, 20pt)
   // and priority beats the written order: pin-200 at the lower priority goes
-  // innermost even though it is written second
-  assert.eq(x("style-by-priority"), x("style-pin-first"))
+  // innermost even though it is written first
+  assert.eq(x("style-by-priority"), x("style-grow-first"))
 
   // --- reservation -------------------------------------------------------
 

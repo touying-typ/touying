@@ -3095,6 +3095,7 @@
 ///
 /// - alignment (alignment): Where `body` itself sits inside the reserved box,
 ///   when one is needed. Each swap carries its own alignment.
+
 ///
 /// - resolved-subslides (array, none): Per-effect specs with `"h"` already
 ///   substituted, supplied by the `last-subslide` callback at placement time.
@@ -3140,12 +3141,15 @@
         if it.last().priority >= best.last().priority { it } else { best }
       })
 
-    // Styles all apply, nesting innermost-first. Grouped by priority
-    // explicitly rather than sorted, so that the order within one priority is
-    // the order written whether or not `array.sorted` is stable.
-    let style-entries = active.filter(((_, eff)) => {
-      not _is-placement(eff.effect)
-    })
+    // Styles all apply, nesting innermost-first. Reversed before grouping, so
+    // that within one priority the *last* style written ends up innermost and
+    // therefore wins any property the two of them both set - matching the way
+    // a later placement wins its own tie. Grouped by priority explicitly
+    // rather than sorted, so the within-priority order does not depend on
+    // `array.sorted` being stable.
+    let style-entries = active
+      .filter(((_, eff)) => not _is-placement(eff.effect))
+      .rev()
     let styles = ()
     for p in style-entries.map(((_, eff)) => eff.priority).dedup().sorted() {
       styles += style-entries.filter(((_, eff)) => eff.priority == p)

@@ -1,10 +1,10 @@
 //metadata emitters
 #import "core/animation.typ": (
   alternatives, alternatives-cases, alternatives-fn, alternatives-match,
-  animate, effect, handout-only, item-by-item, item-by-item-fn,
-  item-by-item-functions, jump, meanwhile, only, pause, presentation-only,
-  slides-only, swap, touying-fn-wrapper, touying-render, touying-slide-wrapper,
-  uncover,
+  animate, animate-hidden, animate-removed, effect, handout-only, item-by-item,
+  item-by-item-fn, item-by-item-functions, jump, meanwhile, only, pause,
+  presentation-only, slides-only, swap, touying-fn-wrapper, touying-render,
+  touying-slide-wrapper, uncover,
 )
 #import "core/blocks.typ": (
   alert, lr-navigation, speaker-note, touying-diagram, touying-equation,

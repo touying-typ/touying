@@ -1197,7 +1197,16 @@
 /// writing any placement at all replaces it. Among the placements active on a
 /// subslide the highest priority wins, ties going to the last one written. For
 /// styles priority only sets the nesting order: lowest is innermost, and
-/// within one priority they nest in the order written.
+/// within one priority the last one written is innermost, so it wins any
+/// property both of them set.
+///
+/// Ties therefore break the same way in both classes — the last effect you
+/// wrote wins — a placement by being the one used, a style by ending up
+/// innermost.
+///
+/// `animate-hidden` and `animate-removed` are this function with a `"cover"`
+/// or `"remove"` placement already in front of your effects at priority 0, so
+/// anything you write still takes precedence over it.
 ///
 /// == Space
 ///
@@ -1239,6 +1248,7 @@
 ///
 /// - alignment (alignment): Where `body` itself sits inside the reserved box,
 ///   when a swap makes one necessary. Each swap carries its own alignment.
+
 ///
 /// -> content
 #let animate(
@@ -1331,3 +1341,42 @@
     )
   }
 }
+
+
+// Put `placement` in front of the caller's own effects as an ordinary
+// priority-0 placement. It therefore beats `animate`'s implicit priority-0
+// "show" (a tie, and this one is written later), while anything the caller
+// writes still beats it — their own effects default to priority 1, and even an
+// explicit priority-0 placement of theirs comes later in the list and so wins
+// the tie in turn.
+#let _with-base-placement(placement, effects) = {
+  let effects = if type(effects) == dictionary {
+    if effects.len() == 0 { () } else { (effects,) }
+  } else {
+    effects
+  }
+  ((effect: placement, subslides: "1-", priority: 0),) + effects
+}
+
+/// `#animate` starting from covered rather than shown, so effects say when
+/// `body` *appears* instead of when it disappears. See `animate` for
+/// everything else.
+///
+/// -> content
+#let animate-hidden(body, effects: (), ..args) = animate(
+  body,
+  effects: _with-base-placement("cover", effects),
+  ..args,
+)
+
+
+/// `#animate` starting from removed rather than shown. Like `animate-hidden`,
+/// except the subslides where `body` is absent reserve no space at all, the way
+/// `only` differs from `uncover`. See `animate` for everything else.
+///
+/// -> content
+#let animate-removed(body, effects: (), ..args) = animate(
+  body,
+  effects: _with-base-placement("remove", effects),
+  ..args,
+)
