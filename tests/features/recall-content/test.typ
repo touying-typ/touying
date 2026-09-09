@@ -53,25 +53,25 @@ before content #pause
 
 == Recall Table: subslide 1
 
-#touying-recall(<my-table>, subslide: 1)
+#touying-recall(<my-table>, subslides: 1)
 
 == Recall Table: subslide 2
 
-#touying-recall(<my-table>, subslide: 2)
+#touying-recall(<my-table>, subslides: 2)
 
 == Recall Table: negative index (last)
 
-#touying-recall(<my-table>, subslide: -1)
+#touying-recall(<my-table>, subslides: -1)
 
 == Recall Table: none (final state, explicit)
 
-#touying-recall(<my-table>, subslide: none)
+#touying-recall(<my-table>, subslides: none)
 
 == Recall Table: alongside other content
 
 Some text before the recall:
 
-#touying-recall(<my-table>, subslide: 2)
+#touying-recall(<my-table>, subslides: 2)
 
 Some text after the recall, on the same slide — confirms the recall renders
 natively inside this slide instead of creating its own separate page.
@@ -82,22 +82,22 @@ natively inside this slide instead of creating its own separate page.
 
 == Recall Reducer: subslide 1
 
-#touying-recall(<my-diagram>, subslide: 1)
+#touying-recall(<my-diagram>, subslides: 1)
 
 == Recall Reducer: subslide 2
 
-#touying-recall(<my-diagram>, subslide: 2)
+#touying-recall(<my-diagram>, subslides: 2)
 
 == Recall Reducer: negative index (last)
 
-#touying-recall(<my-diagram>, subslide: -1)
+#touying-recall(<my-diagram>, subslides: -1)
 
 == Recall Reducer: with base offset
 
 #figure(
   scale(50%, reflow: true)[#touying-recall(
     <my-diagram>,
-    subslide: 3,
+    subslides: 3,
     base: 2, // accounts for the outer context
   )],
   caption: [Scaled recall with an outer pause already advancing the counter],
@@ -119,7 +119,7 @@ Only "First stage." should be visible — `<wp-a>` marks the start of its
 own phase (`advance: false`, so it doesn't itself create a new subslide),
 and the range collapses to its first subslide.
 
-#touying-recall(<wp-block>, subslide: get-first(<wp-a>))
+#touying-recall(<wp-block>, subslides: get-first(<wp-a>))
 
 == Recall via Waypoint: get-last
 
@@ -127,7 +127,7 @@ Same waypoint, resolved via `get-last` instead — `<wp-a>`'s range extends
 through the next subslide (up to where `<wp-b>` begins), so this shows the
 cumulative state up to there: "First stage. Second stage."
 
-#touying-recall(<wp-block>, subslide: get-last(<wp-a>))
+#touying-recall(<wp-block>, subslides: get-last(<wp-a>))
 
 == Recall via Waypoint: bare label
 
@@ -136,7 +136,7 @@ to its first subslide. `<wp-b>` sits at the block's own final stage, so this
 shows the full cumulative text — same output as the `base: auto` column of
 the base-shifted grid below.
 
-#touying-recall(<wp-block>, subslide: <wp-b>)
+#touying-recall(<wp-block>, subslides: <wp-b>)
 
 == Recall via Waypoint: base-shifted (regression test for the base-shift bug)
 
@@ -152,15 +152,15 @@ the base-shifted grid below.
   gutter: 1cm,
   [
     `base: auto` \
-    #touying-recall(<wp-block>, subslide: get-first(<wp-b>))
+    #touying-recall(<wp-block>, subslides: get-first(<wp-b>))
   ],
   [
     `base: 2` \
-    #touying-recall(<wp-block>, subslide: get-first(<wp-b>), base: 2)
+    #touying-recall(<wp-block>, subslides: get-first(<wp-b>), base: 2)
   ],
   [
     `base: 2, int` \
-    #touying-recall(<wp-block>, subslide: 4, base: 2)
+    #touying-recall(<wp-block>, subslides: 4, base: 2)
   ],
 )
 
@@ -172,10 +172,10 @@ the base-shifted grid below.
 #v(-1em)
 #uncover(
   "2-3",
-)[Uncover-gated recall (reserves space): #touying-recall(<my-table>, subslide: 2)]
+)[Uncover-gated recall (reserves space): #touying-recall(<my-table>, subslides: 2)]
 #v(-1em)
 #only(
   "2",
-)[Only-gated recall (no reserved space): #touying-recall(<my-table>, subslide: 2)]
+)[Only-gated recall (no reserved space): #touying-recall(<my-table>, subslides: 2)]
 
 text stays and moves upwards

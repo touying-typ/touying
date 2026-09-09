@@ -20,7 +20,7 @@ In some cases, you might want to use your own `cover` function. In that case, yo
 config-methods(cover: utils.hiding-cover)
 ```
 
-If you custom method should hide footnotes completely, set `config-common(cover-hides-footnote: true)`
+If your custom method genuinely hides its content (footnotes included), set `config-common(cover-hides-footnote: true)`. See [Footnotes and the Cover Function](#footnotes-and-the-cover-function) below for why this matters.
 
 ## Alpha-Changing Cover Function
 
@@ -42,3 +42,21 @@ If you notice your project compiling slowly you can try switching to `utils.colo
 Both methods cannot change all colors displayed. Some contents like images or tilings cannot be interfered with. As such both methods utilize a fallback hide which aims to mimic the same effect by overlaying the content with a grey semi-transparent rectangle via `utils.semi-transparent-rect`. Using that function as default is no longer recommended as it has multiple not to be fixed bugs. 
 
 :::
+
+
+## Footnotes and the Cover Function
+
+`cover-hides-footnote` defaults to `auto`: only touying's own default `cover` method is treated as genuinely hiding its content, and every other method is treated as visual-only. This decides how a footnote covered by `#pause` is rendered:
+
+- A genuinely-hiding cover method must not create a real footnote at all. The entry would show up under the separator line while the content it belongs to is still hidden, so touying draws a placeholder marker instead, reserving the same width.
+- A visual-only cover method (`utils.alpha-changing-cover`, `utils.color-changing-cover`) does create the real footnote; it is merely recolored or de-emphasized along with the rest of the covered content.
+
+Typst cannot inspect what an arbitrary `cover` function does, so `auto` can only recognize touying's own default method **by identity**: it compares `self.methods.cover` against `utils.hiding-cover`. A hand-written wrapper such as `(self: none, body) => hide(body)` is a different function value even though it behaves identically, so `auto` classifies it as visual-only, and footnotes inside covered content become real footnotes that appear before the reveal. Either use `utils.hiding-cover` itself, or say so explicitly:
+
+```typst
+config-common(cover-hides-footnote: true)
+```
+
+`false` forces the opposite, so a hiding cover method will emit real footnotes anyway.
+
+If you want to customize how footnote markers look, use `config-common(footnote-style: ..)`, i.e. the function you would otherwise pass to `show footnote: ..`. Touying installs it as `show footnote: footnote-style` and also uses it to draw the placeholder marker described above, so real footnotes and placeholders stay visually consistent. A `show footnote: it => ..` rule you write yourself would only reach real, revealed footnotes, not the placeholder.

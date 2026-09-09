@@ -217,7 +217,7 @@ By default, when slide content exceeds the page height, Touying automatically ov
 Use `config-common(breakable: false)` to prevent content from overflowing:
 
 ```typst
-// Prevent overflow, panic on overflow (default behavior when breakable: false)
+// Prevent overflow, warn on overflow (default behavior when breakable: false)
 #show: simple-theme.with(
   config-common(breakable: false),
 )
@@ -236,7 +236,7 @@ Use `config-common(breakable: false)` to prevent content from overflowing:
 Related parameters:
 
 - **`clip`** (default `false`): When `true`, content that exceeds the slide height is visually truncated.
-- **`detect-overflow`** (default `true`): When `true`, a layout measurement is performed and `panic()` is called if the content height exceeds the available slide height, making it easy to catch overflow early. Set to `false` to avoid the extra layout overhead.
+- **`detect-overflow`** (default `true`): When `true`, a layout measurement is performed and a **warning** is emitted if the content height exceeds the available slide height, naming the page, slide and subslide. Compilation is not aborted — the document still builds — which makes it easy to catch overflow early without breaking the build. Set to `false` to avoid the extra layout overhead.
 
 :::note[Note]
 

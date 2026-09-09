@@ -33,7 +33,7 @@ You can initialize it with the following code:
 The `aqua-theme` function accepts the following parameters:
 
 - `aspect-ratio`: The aspect ratio of the slides, which can be "16-9" or "4-3", with a default of "16-9".
-- `header`: The content displayed in the header of the slides, with a default of `utils.display-current-heading()`. You can also provide a function like `self => self.info.title` to customize the header content.
+- `header`: The content displayed in the header of the slides, with a default of `self => utils.display-current-heading(depth: self.slide-level)`. You can also provide a function like `self => self.info.title` to customize the header content.
 - `footer`: The content displayed on the right side of the footer, with a default of `context utils.slide-counter.display()`.
 
 Additionally, the Aqua theme provides a `#alert[..]` function, which you can use with the `#show strong: alert` syntax to emphasize text within your slides.
@@ -59,34 +59,35 @@ You can modify this color scheme using the `config-colors()` function to suit yo
 Aqua theme offers a series of custom slide functions:
 
 ```typst
-#title-slide(..args)
+#title-slide(config: (:), extra: none, ..args)
 ```
 
-`title-slide` will read information from `self.info` for display.
+`title-slide` will read information from `self.info` for display. You can also pass an `extra` parameter to show additional information.
 
 ---
 
 ```typst
-#let outline-slide(self: none, enum-args: (:), leading: 50pt)
+#outline-slide(config: (:), leading: 50pt)
 ```
 
-Display an outline slide.
+Display an outline slide, where `leading` controls the spacing between the outline entries.
+
+The outline slide places an invisible heading with `place(hide(heading(..)))`, so that both the slide header and the speaker-note panel can pick the title up through `utils.display-current-heading`.
 
 ---
 
 ```typst
 #slide(
+  config: (:),
   repeat: auto,
   setting: body => body,
-  composer: cols,
-  // Aqua theme
-  title: auto,
+  composer: auto,
 )[
   ...
 ]
 ```
 
-A default ordinary slide function with title and footer, where `title` defaults to the current section title.
+A default ordinary slide function with a header and a footer. The header content is decided by the theme's `header` parameter, and defaults to the heading of the current slide level.
 
 ---
 
@@ -101,10 +102,22 @@ Used to draw the audience's attention. The background color is `self.colors.prim
 ---
 
 ```typst
-#new-section-slide(title)
+#new-section-slide(config: (:), level: 1, body)
 ```
 
-Start a new section with the given title.
+Start a new section with the given title. It is already registered through `config-common(new-section-slide-fn: ..)`, so it is normally triggered by writing `= Title` and does not need to be called by hand.
+
+## Speaker Notes
+
+Aqua defines its own `notes` function and registers it with `config-common(notes-fn: notes)`, so the notes panel on a second screen and in the only-notes view follows the theme's colors. It is built on top of `touying-notes`, and you can override it with your own implementation:
+
+```typst
+#show: aqua-theme.with(
+  config-common(notes-fn: my-notes),
+)
+```
+
+See [Speaker Notes](../tutorials/speaker-notes.md) for details.
 
 
 ## Example

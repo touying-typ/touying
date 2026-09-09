@@ -1033,9 +1033,10 @@
   }
 }
 
-/// Render a content block at a specific animation subslide.
-/// Unlike `touying-recall` (./src/core/slides.typ) which looks up a label, this takes a content
-/// variable directly and renders it at the requested subslide index.
+/// Render a content block at a specific animation stage, or step through
+/// several of them. Unlike `touying-recall` (./src/core/slides.typ), which
+/// looks up content by label that has already been rendered once, 
+/// this takes a content variable directly.
 ///
 /// Example:
 ///
@@ -1045,58 +1046,73 @@
 ///
 /// #article-text[
 ///   Stage 2 of the canvas:
-///   #touying-render(ccanvas, subslide: 2)
+///   #touying-render(ccanvas, subslides: 2)
 /// ]
 /// ```
 ///
 /// - body (content): The content to render. Can be a reducer metadata node
 ///   or any arbitrary content containing animation primitives.
 ///
-/// - subslide (auto, int, label, dictionary): Which animation stage of
-///   `body` to show — its own local subslide, unaffected by where in the
-///   enclosing slide this call sits.
+/// - subslides (auto, int, str, label, dictionary): Which animation
+///   stage(s) of `body` to show — its own local numbering, unaffected by
+///   where in the enclosing slide this call sits.
 ///   - `auto` (default): tracks the enclosing slide's own subslide
-///     progression (see `start`/`repeat-last` below) — the final/fully-
-///     revealed state in article mode, since there's no progression to
-///     track there.
+///     progression directly, uncapped — a self-advancing miniature preview
+///     of `body`, e.g. for a slide-thumbnail overview. `start`/
+///     `repeat-last` still apply (see below): given an explicit `start`,
+///     this instead steps through `body`'s *entire* natural range one
+///     stage per outer subslide — the same stepping every other,
+///     non-`auto` spec below gets, just implicitly spanning all of `body`
+///     rather than an explicit subset of it.
 ///   - `int`: a specific 1-indexed subslide number (negative indices count
-///     from the end).
-///   - `label`/waypoint marker (`get-first(<wp>)`, `get-last(<wp>)`, etc.):
-///     resolved against `body`'s own waypoints — a range (a bare label)
-///     collapses to its first/beginning subslide.
+///     from the end) — a single, frozen stage.
+///   - `str`: a range spec in the same syntax as `uncover`/`only`
+///     (`"2-4"`, `"-2, 6-"`, `"!2-4"`) — every subslide it matches becomes
+///     one exposed member (see stepping below); a spec matching only one
+///     subslide (e.g. `"3"`) behaves exactly like the plain `int` case.
+///      `"h"` resolves to this render's own numbering
+///     anchor (`base`, or the outer slide's current position when
+///     `base: auto`)
+///   - `label`/waypoint marker (`get-first(<wp>)`, `get-last(<wp>)`,
+///     `from-wp`, `until-wp`, `not-wp`, ...): resolved against `body`'s own
+///     waypoints. A single-point marker (`get-first`, `get-last`) exposes
+///     one frozen stage; a bare label or a range/complement marker
+///     (`from-wp`, `until-wp`, `not-wp`) exposes every subslide it spans —
+///     `not-wp`'s gap is simply skipped over, collapsing onto whichever
+///     member comes right after it.
 ///
 /// - base (auto, int): Starting repetition counter for `body`'s own
 ///   internal pause-numbering — purely internal to `body`, never affects
-///   the enclosing slide's own numbering (see `start` for that).
+///   the enclosing slide's own numbering (see `start` for that). 
+///   Use this to align absolute with relative animations that you render.
 ///   - `auto` (default): in slide mode, inherits the current slide's
 ///     repetition counter and waypoints; in article mode, resolves to `1`.
 ///   - `int`: explicit offset, e.g. `base: 3` makes the first pause
 ///     create subslide 4 instead of 2.
 ///
 /// - start (auto, int, label, dictionary): Where, in the *enclosing*
-///   slide's own subslide numbering, `body`'s own progression begins (only
-///   meaningful when `subslide: auto`'s tracking mode is in effect —
-///   resolved against the enclosing slide's own waypoints, a completely
-///   separate lookup from `subslide`'s). `auto` (default) is a strict
-///   no-op — `body` is always visible, tracking the enclosing slide's
-///   current subslide from 1 (today's behavior, unchanged). Given an
-///   explicit `start`, `body` is absent entirely (like `only`, not
-///   `uncover` — no reserved layout space) until the enclosing slide
-///   reaches it, then visible from then on — see `repeat-last` for what
-///   happens once `body`'s own stages run out. Has no effect in article
-///   mode (warns if given a non-default value there).
+///   slide's own subslide numbering, `body`'s exposed member(s) begin
+///   stepping. `auto` (default) starts at the outer slide's very first subslide — except
+///   for `subslides: auto` specifically, where it's instead a strict
+///   no-op: `body` is always visible, tracking the enclosing slide's raw
+///   current subslide with no capping (today's original behavior,
+///   unchanged). Given an explicit `start`, `body`'s exposed member(s) are
+///   absent entirely (like `only`, not `uncover` — no reserved layout
+///   space) until the enclosing slide reaches it, then visible from then
+///   on — see `repeat-last` for what happens once they run out. Has no
+///   effect in article mode (warns if given a non-default value there).
 ///
-/// - repeat-last (bool): What happens once `body`'s own stages are
+/// - repeat-last (bool): What happens once `body`'s exposed member(s) are
 ///   exhausted (only relevant together with an explicit `start`).
-///   - `true` (default): hold at the final stage forever after — matches
+///   - `true` (default): hold at the final member forever after — matches
 ///     `alternatives`' own default.
 ///   - `false`: remove `body` again (no reserved layout space) once past
-///     its own natural duration, instead of freezing on the last stage.
+///     its own natural duration, instead of freezing on the last member.
 ///
 /// -> content
 #let touying-render(
   body,
-  subslide: auto,
+  subslides: auto,
   base: auto,
   start: auto,
   repeat-last: true,
@@ -1104,7 +1120,7 @@
   [#metadata((
     kind: "touying-render",
     content: body,
-    subslide: subslide,
+    subslides: subslides,
     base: base,
     start: start,
     repeat-last: repeat-last,

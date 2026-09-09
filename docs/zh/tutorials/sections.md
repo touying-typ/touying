@@ -112,8 +112,13 @@ Touying 识别标题上的特殊标签以控制幻灯片行为。它们分为两
 | `<touying:handout>` | 仅在讲义模式（`handout: true`）下渲染。 |
 | `<touying:slides>` | 仅在幻灯片输出中渲染，即 `<touying:presentation-handout>` 的简写。 |
 | `<touying:article>` | 仅在 article 模式下渲染。 |
+| `<touying:never>` | 在任何输出模式下都不渲染。 |
 
 这些关键字可以用连字符组合，含义是「或」，例如 `<touying:handout-presentation>`（等价于 `<touying:slides>`）或 `<touying:presentation-article>`（演示模式和 article 模式下都渲染，讲义模式下跳过）。
+
+`<touying:never>` 是个例外：它表示空的模式列表。上面三种模式可以同时成立，因此可以组合；而 `never` 不能组合，只能单独使用。`<touying:never-presentation>` 不是有效的关键字，它不会过滤任何内容，带该标签的内容在所有模式下都会渲染。
+
+它适合用来搁置暂时不想删除的幻灯片：草稿、备选版本，或者你希望在所有构建中都排除、但又不想注释掉其中含 `#pause` 或标签的内容的小节。
 
 标签既可以写在标题上，也可以写在整张幻灯片上：
 
@@ -125,7 +130,7 @@ Touying 识别标题上的特殊标签以控制幻灯片行为。它们分为两
 
 :::note[注意]
 
-模式过滤目前只在幻灯片输出中生效。在 article 模式下这些标签不会过滤任何内容，所有带标签的内容都会渲染。如果你需要在 article 模式下区分内容，请使用 `#article-only[..]`、`#slides-only[..]`、`#presentation-only[..]` 这些函数。
+模式过滤在幻灯片输出和 article 输出中都生效——判断逻辑由 `src/core/parser.typ` 中的 `check-current-mode-skip` 统一提供，幻灯片切分器和 article 渲染器都会遵守它。标签写在标题上时，整个小节都会被过滤。如果你需要在正文中间按模式区分内容，可以使用 `#article-only[..]`、`#slides-only[..]`、`#presentation-only[..]` 这些函数。
 
 :::
 

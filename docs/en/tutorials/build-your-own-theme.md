@@ -193,7 +193,9 @@ We also find that we use syntax like `utils.call-or-display(self, self.store.foo
 
 To ensure that the header and footer are displayed correctly and have enough spacing from the main text, we need to set the margin, such as `config-page(margin: (top: 4em, bottom: 1.5em, x: 2em))`.
 
-We also need to customize a `slide` method, which accepts `#let slide(title: auto, ..args) = touying-slide-wrapper(self => {..})`, where `self` in the callback function is a required parameter to get the latest `self`; the second `title` is used to update `self.store.title` for display in the header; the third `..args` is used to collect the remaining parameters and pass them to `touying-slide(self: self, ..args)`, which is also necessary for the normal functioning of Touying's `slide` feature. Moreover, we need to register this method in the `bamboo-theme` function using `config-methods(slide: slide)`.
+We also need to customize a `slide` method, which accepts `#let slide(title: auto, ..args) = touying-slide-wrapper(self => {..})`, where `self` in the callback function is a required parameter to get the latest `self`; the second `title` is used to update `self.store.title` for display in the header; the third `..args` is used to collect the remaining parameters and pass them to `touying-slide(self: self, ..args)`, which is also necessary for the normal functioning of Touying's `slide` feature. Moreover, we need to register this method in the `bamboo-theme` function using `config-common(slide-fn: slide)`, exactly as the code below does.
+
+`slide-fn` is a `config-common` key, not a `config-methods` one, and the difference is easy to miss: `config-methods` collects every key it does not know into `self.methods` through its `..args`, so `config-methods(slide-fn: slide)` compiles without an error or a warning and simply never takes effect — your header and footer quietly disappear. The same holds for the other `*-fn` keys used below, such as `new-section-slide-fn` and `notes-fn`.
 
 ```example
 // bamboo.typ
@@ -290,7 +292,22 @@ On the basis of the basic slides we've created, we further add some special slid
 
 For the `title-slide` method, first, we can obtain the information saved in `self.info` through `let info = self.info + args.named()`, and we can also update the information with `args.named()` passed in through the function parameters for subsequent use in the form of `info.title`. The specific page content `body` will vary for each theme, so I won't go into too much detail here.
 
-For the `new-section-slide` method, it's the same, but the only thing to note is that we registered `new-section-slide-fn: new-section-slide` in `config-methods()`, so `new-section-slide` will be automatically called when encountering a first-level heading.
+For the `new-section-slide` method, it's the same, but the only thing to note is that we registered `new-section-slide-fn: new-section-slide` in `config-common()` — again, not in `config-methods()`, which would swallow the key — so `new-section-slide` will be automatically called when encountering a first-level heading. Touying calls it with `none` as its body; a theme that sets `config-common(receive-body-for-new-section-slide-fn: true)` receives the section's content instead, so it is worth passing the argument straight through to `touying-slide`.
+
+A special slide usually wants to style the whole page: centre it, pad it, enlarge the text. It is tempting to wrap the body, as in `touying-slide(self: self, align(horizon + center, body))`, but that only wraps the single body you were handed. Prefer `touying-slide`'s `setting` argument, which is what every shipped theme uses. `setting` is a function that receives the *composed* subslide — the subslide preamble followed by all bodies, after `#pause` has been resolved and the composer has arranged them — and returns what is actually placed on the page. Wrapping the body leaves a `subslide-preamble` outside your alignment while the body alone is centred; `setting: align.with(horizon + center)` moves the whole slide together. And because `setting` is an ordinary function, it is the natural place for `set` and `show` rules that should apply to the entire slide:
+
+```typst
+#let new-section-slide(body) = touying-slide-wrapper(self => {
+  let setting(body) = {
+    set align(center + horizon)
+    set text(size: 2em, fill: self.colors.primary, weight: "bold", style: "italic")
+    utils.display-current-heading(level: 1)
+    body
+  }
+  touying-slide(self: self, setting: setting, body)
+})
+```
+
 ```example
 // bamboo.typ
 #import "@preview/touying:0.7.4": *
@@ -335,7 +352,6 @@ For the `new-section-slide` method, it's the same, but the only thing to note is
 #let title-slide(..args) = touying-slide-wrapper(self => {
   let info = self.info + args.named()
   let body = {
-    set align(center + horizon)
     block(
       fill: self.colors.primary,
       width: 80%,
@@ -354,16 +370,17 @@ For the `new-section-slide` method, it's the same, but the only thing to note is
       block(info.contact)
     }
   }
-  touying-slide(self: self, body)
+  touying-slide(self: self, setting: align.with(center + horizon), body)
 })
 
-#let new-section-slide(self: none, body) = touying-slide-wrapper(self => {
-  let main-body = {
+#let new-section-slide(body) = touying-slide-wrapper(self => {
+  let setting(body) = {
     set align(center + horizon)
     set text(size: 2em, fill: self.colors.primary, weight: "bold", style: "italic")
     utils.display-current-heading(level: 1)
+    body
   }
-  touying-slide(self: self, main-body)
+  touying-slide(self: self, setting: setting, body)
 })
 
 #let focus-slide(body) = touying-slide-wrapper(self => {
@@ -377,7 +394,7 @@ For the `new-section-slide` method, it's the same, but the only thing to note is
   place(hide(heading[Focus Slide])) // put an invisible heading on the slide. Useful later
 
   set text(fill: self.colors.neutral-lightest, size: 2em)
-  touying-slide(self: self, align(horizon + center, body))
+  touying-slide(self: self, setting: align.with(horizon + center), body)
 })
 
 #let bamboo-theme(
@@ -454,7 +471,7 @@ Since touying 0.8.0 you can detail how those should look by writing a function `
 Your `notes` function should build upon `touying-notes`, which allows you to define setting functions just like slide does and it also has a header that you can customize.
 A `notes` function has two setting functions: `note-setting` and `preview-setting`.
 The first one transforms the notes and thus the main content. The second one is for placing and scaling the "preview slide" that gets rendered in [`show-only-notes` mode](https://touying-typ.github.io/docs/reference/configs/config-common#show-only-notes), similar to LaTeX Beamer's option. Both have sensible defaults so you can omit either.
-#TODO ref a better speaker-notes page.
+See the [Speaker Notes](./speaker-notes.md) page for what a note is and the ways Touying can deliver it.
 To set the page background or similar we don't use `config-page()`, instead you can pass a colored `rect` or an `image` directly to its `fill` field. Similar for the parameter `header-fill`.
 The `header` takes up an upper portion of the note page and the full width. By default it renders the current section header.
 
@@ -502,7 +519,6 @@ The `header` takes up an upper portion of the note page and the full width. By d
 #let title-slide(..args) = touying-slide-wrapper(self => {
   let info = self.info + args.named()
   let body = {
-    set align(center + horizon)
     block(
       fill: self.colors.primary,
       width: 80%,
@@ -521,16 +537,17 @@ The `header` takes up an upper portion of the note page and the full width. By d
       block(info.contact)
     }
   }
-  touying-slide(self: self, body)
+  touying-slide(self: self, setting: align.with(center + horizon), body)
 })
 
-#let new-section-slide(self: none, body) = touying-slide-wrapper(self => {
-  let main-body = {
+#let new-section-slide(body) = touying-slide-wrapper(self => {
+  let setting(body) = {
     set align(center + horizon)
     set text(size: 2em, fill: self.colors.primary, weight: "bold", style: "italic")
     utils.display-current-heading(level: 1)
+    body
   }
-  touying-slide(self: self, main-body)
+  touying-slide(self: self, setting: setting, body)
 })
 
 #let focus-slide(body) = touying-slide-wrapper(self => {
@@ -544,7 +561,7 @@ The `header` takes up an upper portion of the note page and the full width. By d
   place(hide(heading[Focus Slide])) // put an invisible heading on the slide. Useful later
 
   set text(fill: self.colors.neutral-lightest, size: 2em)
-  touying-slide(self: self, align(horizon + center, body))
+  touying-slide(self: self, setting: align.with(horizon + center), body)
 })
 
 #let notes(self: none, ..args) = touying-notes(

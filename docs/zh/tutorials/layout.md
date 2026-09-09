@@ -219,7 +219,7 @@ config-page(footer: [Custom Footer])
 使用 `config-common(breakable: false)` 可以防止内容溢出：
 
 ```typst
-// Prevent overflow, panic on overflow (default behavior when breakable: false)
+// Prevent overflow, warn on overflow (default behavior when breakable: false)
 #show: simple-theme.with(
   config-common(breakable: false),
 )
@@ -238,7 +238,7 @@ config-page(footer: [Custom Footer])
 配合使用的参数：
 
 - **`clip`**（默认 `false`）：设为 `true` 时，超出幻灯片高度的内容会被视觉截断。
-- **`detect-overflow`**（默认 `true`）：设为 `true` 时，会通过布局测量检测溢出，一旦内容高度超出幻灯片高度则直接 `panic()` 报错，便于及早发现问题；设为 `false` 可避免额外的布局开销。
+- **`detect-overflow`**（默认 `true`）：设为 `true` 时，会通过布局测量检测溢出。一旦内容高度超出可用高度，就会发出**警告**，并指明页码、幻灯片与子幻灯片编号；编译不会中断，文档仍会正常生成，因此既能及早发现问题，又不会让构建失败。设为 `false` 可避免额外的布局开销。
 
 :::note[注意]
 

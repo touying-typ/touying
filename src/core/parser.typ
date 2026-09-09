@@ -1296,6 +1296,11 @@
 #let check-current-mode-skip(self, lbl) = {
   if lbl == none or not lbl.starts-with("touying:") { return false }
   let parts = lbl.slice("touying:".len()).split("-")
+  // `touying:never` excludes the content from every output mode. It is the
+  // empty mode list, so unlike presentation / handout / article -- which can
+  // hold at the same time and therefore combine -- it does not compose.
+  // Anything hyphenated onto it is not a valid label and filters nothing.
+  if "never" in parts { return parts.len() == 1 }
   // Labels like touying:hidden / touying:skip carry no mode intent.
   let has-mode-keyword = (
     "presentation" in parts
@@ -1325,6 +1330,66 @@
   } else {
     panic("unexpected resolved waypoint type: " + repr(resolved))
   }
+}
+
+/// Every subslide index in `[lo, hi]` that `utils.check-visible` accepts
+/// `spec` for. `check-visible` already understands every dict/string shape
+/// `subslides:` can resolve to (`(beginning:, until:)`, `(kind: "not",
+/// inner:)`, `"2-4"`, `"!2-4"`, ...), so this is the one shared primitive
+/// both waypoint- and string-based member resolution below build on.
+///
+/// -> array (sorted, ascending)
+#let _members-in-range(spec, lo, hi) = (
+  range(lo, hi + 1).filter(idx => utils.check-visible(idx, spec))
+)
+
+/// Resolve a waypoint label or dictionary marker to the full, sorted set of
+/// subslide indices it captures — unlike `_resolve-waypoint-to-int`, which
+/// collapses a range down to its first ("beginning") value alone. A
+/// single-subslide marker (`get-first`, `get-last`, ...) still comes back
+/// as a one-element list, so callers never need to special-case cardinality.
+///
+/// - self (dictionary): carries the `waypoints` map `spec` is resolved against.
+/// - spec (label, dictionary): the waypoint reference to resolve.
+/// - bound (int): the local `1..bound` range used to enumerate the members
+///   of a negated (`not-wp`) marker, whose own range is unbounded above.
+///
+/// -> array (sorted, ascending, non-empty)
+#let _resolve-waypoint-to-members(self, spec, bound) = {
+  let resolved = utils.resolve-waypoints(self, spec)
+  if type(resolved) == int {
+    (resolved,)
+  } else {
+    _members-in-range(resolved, 1, bound)
+  }
+}
+
+/// Resolve a string `subslides:` spec (`"2-4"`, `"!2-4"`, ...) to the
+/// sorted, ascending list of absolute subslide indices it captures within
+/// `[lo, hi]`.
+///
+/// Deliberately does not support `only`/`effect`'s `"h"` (here) marker:
+/// `"h"` there resolves against the *surrounding* flow's own live counter,
+/// but every plain number in a `subslides:` spec already addresses
+/// `body`'s own *local* counter — mixing the two within one string would
+/// silently blend two different numbering spaces into one spec. `base:`
+/// already exists for deliberately relating the two counters; conflating
+/// them through `"h"` as well isn't worth the confusion.
+///
+/// -> array (sorted, ascending, non-empty)
+#let _resolve-string-to-members(spec, lo, hi) = {
+  let members = _members-in-range(spec, lo, hi)
+  assert(
+    members.len() > 0,
+    message: "touying-render: subslides: "
+      + repr(spec)
+      + " matches no subslide in range "
+      + str(lo)
+      + ".."
+      + str(hi)
+      + ".",
+  )
+  members
 }
 
 
@@ -1434,7 +1499,7 @@
   // be called from inside this function's own body: they're defined later
   // in this file and themselves depend on
   // _parse-content-into-results-and-repetitions.
-  let resolve-recall-fallback(self, raw-label, subslide, base) = {
+  let resolve-recall-fallback(self, raw-label, subslides, base) = {
     if type(raw-label) != label {
       panic(
         "touying-recall: a native label (e.g. <my-label>) is required "
@@ -1443,7 +1508,7 @@
           + "registered whole-slide recall at the top level of the document.",
       )
     }
-    let recall-subslide = if subslide == none { auto } else { subslide }
+    let recall-subslide = if subslides == none { auto } else { subslides }
     let recall-base = base
     if (
       recall-subslide != auto
@@ -1455,7 +1520,7 @@
         )
     ) {
       panic(
-        "touying-recall: subslide: "
+        "touying-recall: subslides: "
           + repr(recall-subslide)
           + " is not supported outside a whole-slide target — only "
           + "auto/none, an int subslide number, or a waypoint label/marker "
@@ -2084,7 +2149,7 @@
           // Render inline content at a specific subslide.
           // In slide mode, default (auto) renders at the current slide index.
           let inline-content = child.value.content
-          let subslide-spec = child.value.subslide
+          let subslides-spec = child.value.subslides
           let use-slide-context = child.value.at("base", default: auto) == auto
           let render-base = if use-slide-context { repetitions } else {
             child.value.base
@@ -2169,14 +2234,31 @@
           } else {
             start-spec
           }
-          let target = if subslide-spec == auto {
-            if start-resolved == none {
-              index
-            } else {
-              calc.clamp(index - start-resolved + 1, 1, content-repeat)
-            }
+          // `is-bare-auto` (`subslides: auto` with no `start:`) is left
+          // completely untouched by everything below: it's the
+          // self-advancing "miniature preview" mode — always tracks the
+          // outer slide's own raw index, unbounded, no member list, no
+          // repetitions contribution beyond `content-mrr`. Anyone who wants
+          // stepped/held semantics instead reaches for an explicit range
+          // (e.g. `subslides: "1-"`) rather than `auto`.
+          let is-bare-auto = subslides-spec == auto and start-resolved == none
+          // For every other case, `subslides:` resolves to an ordered,
+          // non-empty list of this content's own absolute subslide
+          // indices (`render-base`-shifted, matching `rp`'s own
+          // convention) — a single-point spec (a plain int, `get-first`,
+          // `get-last`, ...) simply comes back as a one-element list, so
+          // the stepping logic just below needs no cardinality special
+          // case: `auto` + `start:` steps through this content's *entire*
+          // natural range (unchanged from before — now just reframed as
+          // the identity member list `1..content-repeat` instead of a
+          // bespoke clamp formula), and an explicit range/waypoint/string
+          // spec steps through whatever subset it captures.
+          let targets = if is-bare-auto {
+            () // unused; is-bare-auto short-circuits before this is read
+          } else if subslides-spec == auto {
+            range(1, content-repeat + 1)
           } else {
-            let spec = subslide-spec
+            let spec = subslides-spec
             let wp-self = self + (waypoints: cwp)
             if (
               type(spec) == label
@@ -2186,24 +2268,65 @@
                 )
             ) {
               // cwp may be this content's own *local* (base=1) waypoint map
-              // (not use-slide-context) — shift by (render-base - 1) to
-              // land in the same absolute numbering as `rp` below. When
-              // use-slide-context, cwp is already the outer slide's own
-              // absolute waypoints, so no shift is needed.
-              let raw-target = _resolve-waypoint-to-int(wp-self, spec)
-              if use-slide-context { raw-target } else {
-                raw-target + render-base - 1
+              // (not use-slide-context) — shift every member by
+              // (render-base - 1) to land in the same absolute numbering
+              // as `rp` below. When use-slide-context, cwp is already the
+              // outer slide's own absolute waypoints, so no shift is
+              // needed — but a `not-wp` marker there must enumerate over
+              // the *outer* slide's own repeat count, not this content's.
+              let bound = if use-slide-context {
+                self.at("repeat", default: content-repeat)
+              } else {
+                content-repeat
               }
+              let raw-members = _resolve-waypoint-to-members(
+                wp-self,
+                spec,
+                bound,
+              )
+              if use-slide-context { raw-members } else {
+                raw-members.map(m => m + render-base - 1)
+              }
+            } else if type(spec) == str and spec == "h" {
+              // Bare "h" (only bare — never composed into a larger range
+              // like "h-3") is the one escape hatch for referencing the
+              // surrounding slide's current position from within
+              // subslides: — "h" lives in the *surrounding* counter, every
+              // plain number here lives in `body`'s own *local* one,
+              // and mixing the two within a single string would silently
+              // blend both numbering axes into one spec.
+              (render-base,)
+            } else if type(spec) == str and spec == "!h" {
+              _members-in-range("!" + str(render-base), render-base, rp)
+            } else if type(spec) == str {
+              // Absolute numbering, same convention as the plain-int case
+              // just below — bounds are `[render-base, rp]`.
+              _resolve-string-to-members(spec, render-base, rp)
             } else if type(spec) == int {
               // `rp` is the absolute final counter value (it already
               // includes `render-base`), so convert it to a plain stage
               // count before resolving negative indices relative to `base`.
-              utils.resolve-negative-subslides(
-                rp - render-base + 1,
-                spec,
-                base: render-base,
+              (
+                utils.resolve-negative-subslides(
+                  rp - render-base + 1,
+                  spec,
+                  base: render-base,
+                ),
               )
-            } else { rp }
+            } else { (rp,) }
+          }
+          // Where, in the *outer* slide's own numbering, this content's
+          // member list begins stepping through — `start:` if given,
+          // otherwise the outer slide's very first subslide (matching
+          // `is-visible` below, which is unconditionally `true` whenever
+          // no `start:` was given: the member list holds on its last
+          // member forever once exhausted, with nothing to gate).
+          let anchor = if start-resolved == none { 1 } else { start-resolved }
+          let target = if is-bare-auto {
+            index
+          } else {
+            let stage = calc.clamp(index - anchor + 1, 1, targets.len())
+            targets.at(stage - 1)
           }
           // Render at target (inlined from _render-at-subslide)
           let render-self = self + (waypoints: cwp, subslide: target)
@@ -2236,7 +2359,12 @@
           // layout space) before it's reached; visible from then on — held
           // forever with repeat-last: true (default), or removed again
           // once past this content's own natural duration
-          // (start + content-repeat - 1) with repeat-last: false.
+          // (start + targets.len() - 1) with repeat-last: false. Duration
+          // is measured in *exposed members* (targets.len()), not in
+          // content-repeat's full natural length — a frozen single-member
+          // spec's duration is 1 stage, not however many stages `body`
+          // happens to have overall; is-bare-auto never reaches this
+          // branch (it always has start-resolved == none).
           let is-visible = if start-resolved == none {
             true
           } else if index < start-resolved {
@@ -2244,25 +2372,34 @@
           } else if repeat-last-spec {
             true
           } else {
-            index <= start-resolved + content-repeat - 1
+            index <= start-resolved + targets.len() - 1
           }
           if cont != none and (is-visible or not need-cover) {
             result.push(cont)
           }
-          // When subslide: auto, this content's animation contributes to the
-          // outer slide's repetition count (same as an inlined reducer/block)
-          // — calc.max, not a bare assignment, so a touying-render appearing
-          // after other pause-generating siblings doesn't clobber a higher
-          // count already established. Reduces to exactly today's behavior
-          // when start: is left at its default.
-          if subslide-spec == auto {
-            repetitions = calc.max(
-              repetitions,
-              (if start-resolved == none { 1 } else { start-resolved })
-                + content-mrr
-                - 1,
-            )
-          }
+          // When subslides: auto, this content's animation contributes to
+          // the outer slide's repetition count (same as an inlined
+          // reducer/block) — calc.max, not a bare assignment, so a
+          // touying-render appearing after other pause-generating siblings
+          // doesn't clobber a higher count already established.
+          //
+          // is-bare-auto keeps using content-mrr, exactly as before it had
+          // a name: `content-mrr` (not `content-repeat`) is the historical
+          // value here, preserved untouched per its own self-advancing
+          // semantics. Every other case (auto + start:, or any explicit
+          // subslides: spec, single- or multi-member alike) now bumps by
+          // `anchor + targets.len() - 1` instead: for auto + start: this is
+          // the exact same count as before (targets.len() == content-repeat
+          // there), and for an explicit spec it newly guarantees the outer
+          // slide actually grows enough subslides to reach — and, with
+          // repeat-last: false, later remove — every member being stepped
+          // through, which an explicit spec never contributed before at all.
+          repetitions = calc.max(
+            repetitions,
+            if is-bare-auto { content-mrr } else {
+              anchor + targets.len() - 1
+            },
+          )
         } else if kind == "touying-fn-wrapper" {
           // Handle function wrappers (uncover, only, alternatives, etc.)
           // These always escape the pause zone: they handle their own subslide
@@ -2308,7 +2445,7 @@
               v => resolve-recall-fallback(
                 self,
                 v.raw-label,
-                v.at("subslide", default: none),
+                v.at("subslides", default: none),
                 v.at("base", default: auto),
               ),
             ))
@@ -2346,7 +2483,7 @@
               v => resolve-recall-fallback(
                 self,
                 v.raw-label,
-                v.at("subslide", default: none),
+                v.at("subslides", default: none),
                 v.at("base", default: auto),
               ),
             ))
@@ -2529,7 +2666,7 @@
           let recalled = resolve-recall-fallback(
             self,
             child.value.raw-label,
-            child.value.at("subslide", default: none),
+            child.value.at("subslides", default: none),
             child.value.at("base", default: auto),
           )
           if repetitions <= index or not need-cover {
@@ -3230,20 +3367,20 @@
 /// the final state directly and any explicit subslide is an error.
 ///
 /// -> content
-#let _build-native-recall(lbl, subslide, base) = {
-  let subslide = if subslide == none { auto } else { subslide }
+#let _build-native-recall(lbl, subslides, base) = {
+  let subslides = if subslides == none { auto } else { subslides }
   if (
-    subslide != auto
-      and type(subslide) != int
-      and type(subslide) != label
+    subslides != auto
+      and type(subslides) != int
+      and type(subslides) != label
       and not (
-        type(subslide) == dictionary
-          and subslide.at("kind", default: "") in waypoint-kinds
+        type(subslides) == dictionary
+          and subslides.at("kind", default: "") in waypoint-kinds
       )
   ) {
     panic(
-      "touying-recall: subslide: "
-        + repr(subslide)
+      "touying-recall: subslides: "
+        + repr(subslides)
         + " is not supported outside a whole-slide target — only "
         + "auto/none, an int subslide number, or a waypoint label/marker "
         + "are supported here.",
@@ -3265,22 +3402,22 @@
         raw-content,
         render-base,
       )
-      let target = if subslide == auto {
+      let target = if subslides == auto {
         repeat
       } else if (
-        type(subslide) == label
+        type(subslides) == label
           or (
-            type(subslide) == dictionary
-              and subslide.at("kind", default: "") in waypoint-kinds
+            type(subslides) == dictionary
+              and subslides.at("kind", default: "") in waypoint-kinds
           )
       ) {
         // cwp is always this content's own *local* (base=1) waypoint map —
         // never an outer slide's — so the resolved position must be
         // shifted by (render-base - 1) to land in the same absolute
         // numbering as `repeat` above.
-        _resolve-waypoint-to-int((waypoints: cwp), subslide) + render-base - 1
+        _resolve-waypoint-to-int((waypoints: cwp), subslides) + render-base - 1
       } else {
-        utils.resolve-negative-subslides(repeat, subslide, base: render-base)
+        utils.resolve-negative-subslides(repeat, subslides, base: render-base)
       }
       _render-at-subslide(
         minimal-self,
@@ -3291,12 +3428,12 @@
         target,
       )
     } else {
-      if subslide != auto {
+      if subslides != auto {
         panic(
           "touying-recall: label "
             + repr(lbl)
-            + " refers to content with no subslide dimension, but subslide: "
-            + repr(subslide)
+            + " refers to content with no subslide dimension, but subslides: "
+            + repr(subslides)
             + " was given.",
         )
       }

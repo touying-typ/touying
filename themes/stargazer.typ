@@ -42,10 +42,10 @@
 /// - title (string): The title of the theorem. Default is `none`.
 ///
 /// - it (content): The content of the theorem.
-#let tblock(title: none, it) = touying-fn-wrapper-raw(_tblock.with(
-  title: title,
+#let tblock(title: none, it) = touying-fn-wrapper-raw(
+  _tblock.with(title: title),
   it,
-))
+)
 
 
 /// Default slide function for the presentation.
@@ -420,10 +420,6 @@
 /// - title (content, function): is the title in the header of the slide. The default is `self => utils.display-current-heading(depth: self.slide-level)`.
 ///
 /// - header-right (content, function): is the right part of the header. The default is `self => self.info.logo`.
-///
-/// - footer (content, function): is the footer of the slide. The default is `none`.
-///
-/// - footer-right (content, function): is the right part of the footer. The default is `context utils.slide-counter.display() + " / " + utils.last-slide-number`.
 ///
 /// - progress-bar (boolean): is whether to show the progress bar in the footer. The default is `true`.
 ///

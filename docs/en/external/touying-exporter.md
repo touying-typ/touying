@@ -95,6 +95,55 @@ By #author
 ```
 
 
+### Reading inputs with `utils.get-input`
+
+Everything passed through `--sys-inputs` (or `typst compile --input key=value`) arrives in
+Typst as a string, and `sys.inputs.at(..)` hands you that string unchanged. Touying provides
+`utils.get-input`, which parses each value as Typst first, and this is the supported way to
+read command-line inputs in a Touying document — Touying reads its own command-line
+overrides through exactly this function.
+
+```typst
+#import "@preview/touying:0.7.4": *
+
+// a single value, or `none` when the key was not passed
+#let accent = utils.get-input(key: "accent")
+
+// or the whole dictionary, with every value parsed
+#let inputs = utils.get-input()
+```
+
+Anything Typst knows is parsed as Typst:
+
+| given on the command line | `utils.get-input(key: ..)` returns |
+| --- | --- |
+| `accent=red` | the colour `red` |
+| `pos=left` | the alignment `left` |
+| `size=2em`, `count=3` | the length `2em`, the integer `3` |
+| `flag=true` | `true`; likewise `false`, `none` and `auto` |
+| `config='(a: 1, b: (2, 3))'` | the dictionary |
+| `mode=handout` | the string `"handout"` |
+
+The last row is what makes this pleasant to use from a shell: a single bare word Typst does
+not recognise — letters, digits, `_` and `-` — comes back verbatim as a string, so ordinary
+values need no quoting. A key that was not passed yields `none`.
+
+Two things to keep in mind:
+
+- A bare word that *is* a Typst binding is parsed, not kept as text: `name=red` is a colour,
+  not the string `"red"`. Write `name='"red"'` if you want the string.
+- A value that is neither a bare word nor valid Typst code is a compile error, not a string:
+  `title=My Presentation` fails on the space. Pass the quotes as part of the value,
+  `title='"My Presentation"'`, or read `sys.inputs` directly for free-form text.
+
+The same applies to `touying compile`, whose `--sys-inputs` JSON values are the raw text
+Typst receives:
+
+```sh
+touying compile example.typ --sys-inputs '{"accent":"red","title":"\"My Presentation\""}'
+```
+
+
 ## Use it as a python package
 
 ```python

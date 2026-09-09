@@ -27,6 +27,42 @@ use #only("2-")[`#only` function] for not reserving space,
 However, this does not work in all cases, for example if you put `uncover` into the context expression, you will get an error.
 
 
+## Animations Inside Mark-Style Functions
+
+In the example above we reached `self` from mark-style markup with `touying-fn-wrapper-raw`. Its callback must be written as `(self: none) => ..`; writing `(self) => ..` fails with *the argument `self` is positional*.
+
+Unlike `touying-fn-wrapper`, `touying-fn-wrapper-raw` does not escape the surrounding pause zone: its positional arguments are parsed as ordinary slide content. So `#pause`, `#meanwhile` and the touying-fn-wrappers (`#only`, `#uncover`, `#effect`, ..) all work inside it, and one `touying-fn-wrapper-raw` may be nested inside another. Functions built on top of it, such as `#alert`, inherit this:
+
+```example
+>>> #import "@preview/touying:0.7.4": *
+>>> #import themes.simple: *
+>>> #show: simple-theme
+#slide[
+  #alert[First #pause Second #uncover("3-")[Third]]
+
+  #pause
+
+  Fourth
+]
+```
+
+This slide has 4 subslides. `touying-fn-wrapper` behaves differently: it hands its positional arguments straight to the wrapped function without parsing them, so a `#pause` or a nested `#uncover` inside one reaches that function as an unresolved metadata mark and touying panics with *Unsupported mark*. For that reason `touying-fn-wrapper-raw` is the better choice in most cases; reach for `touying-fn-wrapper` only when you genuinely need `last-subslide` or `repetitions`.
+
+:::note[For theme authors]
+
+The body must be passed as a *positional* argument of `touying-fn-wrapper-raw` for this to apply. Baking it into the wrapped function with `.with(..)` hides it from the parser, and animation functions inside it will panic:
+
+```typst
+// Body is invisible to the parser — #pause and #uncover inside will panic.
+#let my-block(title: none, it) = touying-fn-wrapper-raw(_my-block.with(title: title, it))
+
+// Body is parsed like ordinary slide content — animations work inside.
+#let my-block(title: none, it) = touying-fn-wrapper-raw(_my-block.with(title: title), it)
+```
+
+:::
+
+
 ## Callback-Style Functions
 
 To overcome the limitations of layout functions mentioned earlier, Touying cleverly implements always-effective `only`, `uncover`, and `alternatives` using callback functions. Specifically, you need to introduce these three functions as follows:

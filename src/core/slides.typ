@@ -45,7 +45,11 @@
 //get-config is in src/config.typ as we need the default-config.
 
 
-/// Begin the appendix of the presentation. The slide counter is frozen at the last non-appendix slide, so appendix slides do not affect the total slide count shown in footers.
+/// Begin the appendix of the presentation. The *total* slide number
+/// (`utils.last-slide-number`) is frozen at the last non-appendix slide, so
+/// appendix slides do not inflate the total shown in footers. The slide counter
+/// itself keeps advancing, so an appendix footer reads e.g. `5/3`. To stop the
+/// counter as well, use `config-common(freeze-slide-counter: true)`.
 ///
 /// Equivalent to `#show: touying-set-config.with((appendix: true), defer: true)`.
 ///
@@ -85,25 +89,25 @@
 /// #touying-recall(<my-slide>)
 ///
 /// // Recall only a specific subslide
-/// #touying-recall(<my-slide>, subslide: 2)
+/// #touying-recall(<my-slide>, subslides: 2)
 ///
 /// // Recall only the last (final) subslide
-/// #touying-recall(<my-slide>, subslide: none)
+/// #touying-recall(<my-slide>, subslides: none)
 ///
 /// // Recall the last subslide of every waypoint
-/// #touying-recall(<my-slide>, subslide: "waypoints")
+/// #touying-recall(<my-slide>, subslides: "waypoints")
 ///
 /// // Recall the subslides covered by a waypoint
-/// #touying-recall(<my-slide>, subslide: <my-waypoint>)
+/// #touying-recall(<my-slide>, subslides: <my-waypoint>)
 ///
 /// // Recall only the last subslide of a waypoint
-/// #touying-recall(<my-slide>, subslide: get-last(<my-waypoint>))
+/// #touying-recall(<my-slide>, subslides: get-last(<my-waypoint>))
 ///
 /// // Recall a labeled reducer at a specific animation stage
 /// #let my-diagram = touying-reducer.with(
 ///   reduce: cetz.canvas, cover: cetz.draw.hide.with(bounds: true), label: <my-diagram>,
 /// )
-/// #touying-recall(<my-diagram>, subslide: 1)
+/// #touying-recall(<my-diagram>, subslides: 1)
 ///
 /// // Recall arbitrary labeled static content (shown as-is)
 /// #touying-recall(<my-table>)
@@ -114,7 +118,7 @@
 ///   registered whole-slide target — a string can only match a whole-slide
 ///   recall.
 ///
-/// - subslide (none, auto, int, str, label, dictionary): Which subslide(s) to recall.
+/// - subslides (none, auto, int, str, label, dictionary): Which subslide(s) to recall.
 ///
 ///   For a whole-slide target:
 ///   - `auto` (default): recall only the final animation state of an animated element or all subslides of a whole-slide target.
@@ -124,7 +128,7 @@
 ///     last subslide of each waypoint. This shows every animation phase at
 ///     its final state.
 ///   - `label`: recall the subslides covered by a waypoint in the original
-///     slide. E.g. `subslide: <my-waypoint>`.
+///     slide. E.g. `subslides: <my-waypoint>`.
 ///   - Waypoint marker: `get-first(<wp>)`, `get-last(<wp>)`, `prev-wp(<wp>)`,
 ///     `next-wp(<wp>)` — resolves to a single subslide or waypoint range
 ///     using the recalled slide's waypoint map.
@@ -136,10 +140,12 @@
 ///   or one whose marker doesn't pin a single subslide) collapses to its
 ///   first/beginning subslide, same as the whole-slide case above; there's
 ///   no equivalent to `"waypoints"` here since there's only ever one
-///   recalled instance, not a whole slide's worth of subslides to expand.
+///   recalled instance, not a whole slide's worth of subslides to expand
+///   (`touying-render` supports exactly that, for content addressed by
+///   value instead of by label).
 ///   The content itself doesn't have to be `touying-reducer` — any labeled
 ///   content that is animated can be recalled at specific subslide
-///   positions. Passing an explicit subslide value for content with no
+///   positions. Passing an explicit subslides value for content with no
 ///   subslide dimension at all panics.
 ///
 /// - base (auto, int): Starting repetition counter for pause numbering,
@@ -158,11 +164,11 @@
 /// body:
 ///
 /// ```typ
-/// #only("2-4")[Some text, #touying-recall(<my-table>, subslide: 2) and more text.]
+/// #only("2-4")[Some text, #touying-recall(<my-table>, subslides: 2) and more text.]
 /// ```
 ///
 /// -> content
-#let touying-recall(lbl, subslide: auto, base: auto) = [#metadata((
+#let touying-recall(lbl, subslides: auto, base: auto) = [#metadata((
   kind: "touying-slide-recaller",
   label: if type(lbl) == label {
     str(lbl)
@@ -170,7 +176,7 @@
     lbl
   },
   raw-label: lbl,
-  subslide: subslide,
+  subslides: subslides,
   base: base,
 ))<touying-temporary-mark>]
 
@@ -348,8 +354,12 @@
 
     // Skip sections with mode-specific labels when not in that mode
     if check-current-mode-skip(self, last-heading-label) {
-      // Return early without the slide.
-      return (none, recaller-map, (), (), true, false)
+      // Return early without the slide, but keep `current-headings`. Resetting
+      // it here would drop the labelled heading, and every later slide of the
+      // section would then see no label and be emitted after all -- which is
+      // why the filter used to do nothing on any heading level that has a
+      // section-slide fn (level 1 in every bundled theme).
+      return (none, recaller-map, self.headings, (), true, false)
     }
     let (slide-content, callable) = if already-slide-wrapper {
       (slide-fn(self), slide-fn)
@@ -585,7 +595,7 @@
         if slide-content != none { output-slides.push(slide-content) }
       }
       let recall-entry = recaller-map.at(child.value.label)
-      let recall-subslide = child.value.at("subslide", default: auto)
+      let recall-subslide = child.value.at("subslides", default: auto)
       if recall-subslide == auto {
         output-slides.push(recall-entry.content)
       } else {

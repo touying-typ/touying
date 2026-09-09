@@ -25,12 +25,12 @@ You can initialize it using the following code:
 The `simple-theme` function accepts the following parameters:
 
 - `aspect-ratio`: The aspect ratio of the slides, which can be "16-9" or "4-3", with a default of "16-9".
-- `header`: The content displayed in the header, with a default of `utils.display-current-heading(setting: utils.fit-to-width.with(grow: false, 100%))`. You can also pass a function like `self => self.info.title`.
+- `header`: The content displayed in the header, with a default of `self => utils.display-current-heading(setting: utils.fit-to-width.with(grow: false, 100%), level: 1, depth: self.slide-level)`. You can also pass a function like `self => self.info.title`.
 - `header-right`: The content displayed on the right side of the header, with a default of `self => self.info.logo`.
 - `footer`: The content displayed in the footer, with a default of `none`. You can also pass a function like `self => self.info.author`.
 - `footer-right`: The content displayed on the right side of the footer, with a default of `context utils.slide-counter.display() + " / " + utils.last-slide-number`.
 - `primary`: The primary color of the theme, with a default of `aqua.darken(50%)`.
-- `subslide-preamble`: By default, it adds the subsection title to the current slide.
+- `subslide-preamble`: The content inserted before the body of every slide, with a default of `block(below: 1.5em, text(1.2em, weight: "bold", utils.display-current-heading(level: 2)))`, i.e. it adds the subsection title to the current slide. Pass `none` to remove it.
 
 
 ## Slide Function Family
@@ -38,22 +38,30 @@ The `simple-theme` function accepts the following parameters:
 The Simple theme provides a variety of custom slide functions:
 
 ```typst
-#centered-slide(section: ..)[
+#centered-slide(config: (:), setting: body => body, ..args)[
   ...
 ]
 ```
 
-A slide with content centered, and the `section` parameter can be used to create a new section.
+A slide with its content centered. To start a new section, write `= Title` directly, or call `#new-section-slide` below.
 
 ---
 
 ```typst
-#title-slide[
+#title-slide(config: (:), body)[
   ...
 ]
 ```
 
-Similar to `centered-slide`, this is provided for consistency with Polylux syntax.
+The same as `centered-slide` (it additionally freezes the slide counter); this is provided mainly for consistency with Polylux syntax.
+
+---
+
+```typst
+#new-section-slide(config: (:), body)
+```
+
+A centered section divider that displays the current level-1 heading. It is already registered through `config-common(new-section-slide-fn: ..)`, so it is normally triggered by writing `= Title` and does not need to be called by hand.
 
 ---
 
@@ -62,7 +70,7 @@ Similar to `centered-slide`, this is provided for consistency with Polylux synta
   config: (:),
   repeat: auto,
   setting: body => body,
-  composer: cols,
+  composer: auto,
 )[
   ...
 ]
@@ -79,6 +87,18 @@ A default slide with headers and footers, where the header corresponds to the cu
 ```
 
 Used to draw attention, it optionally accepts a foreground color (defaulting to `white`) and a background color (defaulting to `auto`, i.e., `self.colors.primary`).
+
+## Speaker Notes
+
+Simple defines its own `notes` function and registers it with `config-common(notes-fn: notes)`, so the notes panel on a second screen and in the only-notes view follows the theme's colors. It is built on top of `touying-notes`, and you can override it with your own implementation:
+
+```typst
+#show: simple-theme.with(
+  config-common(notes-fn: my-notes),
+)
+```
+
+See [Speaker Notes](../tutorials/speaker-notes.md) for details.
 
 
 ## Example
@@ -123,4 +143,3 @@ Did you know that...
 
 ...you can see the current section at the top of the slide?
 ```
-

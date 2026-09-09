@@ -41,8 +41,8 @@
 })
 
 
-/// Touying metropolis theme.
-///
+/// Touying default theme.
+/// For more configuration see the param groups `config-common`, `config-colors`, `config-page`, `config-methods`, `config-info`. `config-article` is only useful when using article mode.
 /// Example:
 ///
 /// ```typst
@@ -50,6 +50,7 @@
 /// ```
 ///
 /// - aspect-ratio (string): The aspect ratio of the slides. Default is `16-9`.
+/// 
 #let default-theme(
   aspect-ratio: "16-9",
   ..args,

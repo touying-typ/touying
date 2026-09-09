@@ -19,13 +19,13 @@ Recall the entire slide:
 
 Recall only the second subslide:
 
-#touying-recall(<animated>, subslide: 2)
+#touying-recall(<animated>, subslides: 2)
 
 == Recall subslide negative:
 
 Recall the last subslide (via negative index):
 
-#touying-recall(<animated>, subslide: -1)
+#touying-recall(<animated>, subslides: -1)
 
 == Slide with waypoints <wp-slide>
 
@@ -39,23 +39,23 @@ More B content
 == Recall none (last subslide):
 Recall only the last subslide.
 
-#touying-recall(<animated>, subslide: none)
+#touying-recall(<animated>, subslides: none)
 
-#touying-recall(<wp-slide>, subslide: none)
+#touying-recall(<wp-slide>, subslides: none)
 
 == Recall waypoints (last of each):
 Recall the last subslide of each waypoint.
 
-#touying-recall(<wp-slide>, subslide: "waypoints")
+#touying-recall(<wp-slide>, subslides: "waypoints")
 
 == Recall waypoint range:
 
 Show only the subslides covered by `<phase-b>`:
 
-#touying-recall(<wp-slide>, subslide: <phase-b>)
+#touying-recall(<wp-slide>, subslides: <phase-b>)
 
 == Recall get-last:
 
 Show only the last subslide of `<phase-b>`:
 
-#touying-recall(<wp-slide>, subslide: get-last(<phase-b>))
+#touying-recall(<wp-slide>, subslides: get-last(<phase-b>))

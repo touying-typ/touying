@@ -65,6 +65,28 @@ Use the `<touying:handout>` label to create slides that appear **only** in hando
 This slide is included when `handout: true` but invisible otherwise.
 ```
 
+## Mode-only Content
+
+The `<touying:handout>` label works on a whole slide. To control which mode a *piece* of content appears in, use these three inline markers:
+
+| Marker | Appears in |
+|---|---|
+| `#handout-only[..]` | handout mode only |
+| `#presentation-only[..]` | presentation mode only (i.e. `handout: false`) |
+| `#slides-only[..]` | both handout and presentation mode, but not in article mode |
+
+```typst
+#handout-only[This paragraph only shows up in the handout.]
+
+#presentation-only[This paragraph only shows up while presenting.]
+
+#slides-only[_Live demo here — see the code repository._]
+```
+
+When hidden, the content is removed entirely; no space is reserved for it. The body of these markers may itself contain slide-breaking elements (a heading, `#pagebreak()`, a bare `---`), and in whichever mode the content is actually visible they behave exactly as if the wrapper were not there — a heading inside `#handout-only[..]` really does start a new slide in handout mode.
+
+In article mode all three are stripped, `#handout-only` and `#presentation-only` included, regardless of the `handout` flag.
+
 ## Workflow Tip
 
 A common workflow is to keep `handout: false` (the default) while presenting, then switch to `handout: true` when exporting a PDF to share with your audience:

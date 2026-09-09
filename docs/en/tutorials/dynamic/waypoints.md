@@ -8,7 +8,7 @@ Waypoints let you name positions in your slide's animation timeline and referenc
 
 ## Basic Usage
 
-Place a `#waypoint(<label>)` to mark a named position, then use the label in `#uncover` or `#only`:
+Place a `#waypoint(<label>)` to mark a named position, then use the label in `#uncover`, `#only`, or `#effect`:
 
 ```typst
 #slide[
@@ -24,7 +24,7 @@ Each advancing waypoint (the default) creates a new subslide. Here `<step-a>` fi
 
 ## Implicit Waypoints
 
-When you pass a new label directly to `#uncover`, `#only`, or `#item-by-item`, an implicit waypoint is emitted automatically — no separate `#waypoint` call needed:
+When you pass a new label directly to `#uncover`, `#only`, `#effect`, or `#item-by-item`, an implicit waypoint is emitted automatically — no separate `#waypoint` call needed:
 
 ```typst
 #slide[
@@ -65,6 +65,26 @@ By default, waypoints advance the subslide counter. Use `advance: false` on expl
   Content at the current position.
 ]
 ```
+
+## Hierarchical Labels
+
+Waypoint labels can form a hierarchy using `:` as the separator, e.g. `<part:intro>` and `<part:main>`. Referencing the parent label `<part>` combines every waypoint whose label starts with `part:`, giving you the whole range they span:
+
+```typst
+#slide[
+  #waypoint(<part:intro>)
+  Intro
+
+  #waypoint(<part:main>)
+  Main
+
+  #uncover(<part>)[Shown from the first part: waypoint on.]
+
+  #effect(text.with(fill: red), <part:main>)[Highlighted only during main.]
+]
+```
+
+The parent label does not need to be declared on its own — it exists as soon as any waypoint uses it as a prefix. As always, labels only need to be unique within a single slide, not globally.
 
 ## Waypoint Markers
 
@@ -128,7 +148,8 @@ As previously hinted, waypoints capture the range of subslides following them an
 ```
 
 ## Explicit Waypoint Starts
-You may even set explicit start values for waypoints, both subslide indexes and other waypoints are possible.
+
+You may even set explicit start values for waypoints; both subslide indexes and other waypoints are possible. `start` belongs on `#waypoint` itself — `#uncover`, `#only` and friends take no `start` parameter — and setting it overrides `advance` as well as the waypoint's position in the content.
 
 ```typst
 #slide(composer: (1fr, 1fr))[
@@ -139,7 +160,8 @@ You may even set explicit start values for waypoints, both subslide indexes and 
   ]
   #pause
   Some remark.
-  #uncover(<done>, start: 4)[All done, even before the remark!]
+  #waypoint(<done>, start: 4)
+  #uncover(from-wp(<done>))[All done, even before the remark!]
 ][
   #waypoint(<parallel>, start: <done>)
   Explaining stuff.
@@ -147,6 +169,8 @@ You may even set explicit start values for waypoints, both subslide indexes and 
   More explanation.
 ]
 ```
+
+Here `<done>` is pinned to subslide 4, so "All done" is revealed one step ahead of the remark on subslide 5, and `<parallel>` in the second column starts wherever `<done>` does.
 
 
 ## More Examples

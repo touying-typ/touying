@@ -1,9 +1,10 @@
 #import "../utils.typ"
 #import "../extern.typ"
 #import "parser.typ": (
-  _build-native-recall, _parse-content-into-results-and-repetitions,
-  _prepare-render-context, _render-at-subslide, _resolve-marks-in-tree,
-  _resolve-waypoint-to-int, check-current-mode-skip, waypoint-kinds,
+  _build-native-recall, _members-in-range,
+  _parse-content-into-results-and-repetitions, _prepare-render-context,
+  _render-at-subslide, _resolve-marks-in-tree, _resolve-string-to-members,
+  _resolve-waypoint-to-members, check-current-mode-skip, waypoint-kinds,
 )
 
 /// Content that replaces the slide content when in article mode. Place it after your slide, before the next one.
@@ -691,7 +692,7 @@
         v.content,
         render-base,
       )
-      let spec = v.subslide
+      let spec = v.subslides
       let target = if spec == auto {
         repeat
       } else if (
@@ -702,10 +703,21 @@
           )
       ) {
         // cwp is always this content's own *local* (base=1) waypoint map —
-        // article mode has no enclosing slide context to track — so the
-        // resolved position must be shifted by (render-base - 1) to land
-        // in the same absolute numbering as `repeat` above.
-        _resolve-waypoint-to-int((waypoints: cwp), spec) + render-base - 1
+        // article mode has no enclosing slide context to track — so every
+        // resolved member must be shifted by (render-base - 1) to land in
+        // the same absolute numbering as `repeat` above. A multi-member
+        // spec has no stepping to do here (there's no outer progression to
+        // step across) — matching `subslides: auto`'s own "final,
+        // fully-revealed state" reduction just above, this shows its last
+        // (highest) member.
+        _resolve-waypoint-to-members((waypoints: cwp), spec, repeat).last()
+        +render-base - 1
+      } else if type(spec) == str and spec == "h" {
+        render-base
+      } else if type(spec) == str and spec == "!h" {
+        _members-in-range("!" + str(render-base), render-base, repeat).last()
+      } else if type(spec) == str {
+        _resolve-string-to-members(spec, render-base, repeat).last()
       } else {
         utils.resolve-negative-subslides(repeat, spec, base: render-base)
       }
@@ -732,7 +744,7 @@
       }
       _build-native-recall(
         raw-label,
-        v.at("subslide", default: none),
+        v.at("subslides", default: none),
         v.at("base", default: auto),
       )
     },
