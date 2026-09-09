@@ -46,7 +46,7 @@ Add the corresponding configurations. Refer to [Polylux](https://polylux.dev/boo
 Assuming your document is `./example.typ`, you can export the `.pdfpc` file directly using:
 
 ```sh
-typst query --root . ./example.typ --field value --one "<pdfpc-file>" > ./example.pdfpc
+typst eval --in ./example.typ 'query(<pdfpc-file>).first().value' > ./example.pdfpc
 ```
 
 With the compatibility of Touying and Polylux, you can make Polylux also support direct export by adding the following code:
