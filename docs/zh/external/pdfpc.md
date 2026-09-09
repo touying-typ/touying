@@ -46,7 +46,7 @@ Touying 与 [Polylux](https://polylux.dev/book/external/pdfpc.html) 保持一致
 假设你的文档为 `./example.typ`，则你可以通过
 
 ```sh
-typst query --root . ./example.typ --field value --one "<pdfpc-file>" > ./example.pdfpc
+typst eval --in ./example.typ 'query(<pdfpc-file>).first().value' > ./example.pdfpc
 ```
 
 直接导出 `.pdfpc` 文件。
