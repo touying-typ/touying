@@ -856,15 +856,7 @@
       self.at("auto-offset-for-heading", default: true)
         and tree.is-heading(child)
     ) {
-      let fields = child.fields()
-      let lbl = fields.remove("label", default: none)
-      let _ = fields.remove("body", default: none)
-      fields.offset = 0
-      let new-heading = if lbl != none {
-        [#heading(..fields, child.body)#child.label]
-      } else {
-        heading(..fields, child.body)
-      }
+      let new-heading = tree.reconstruct-heading(child, child.body, offset: 0)
       if new-start {
         slide-parts.push(new-heading)
       } else {
@@ -1577,24 +1569,18 @@
                 "touying:unbookmarked",
               )
           ) {
-            let fields = it.fields()
-            let _ = fields.remove("label", default: none)
-            let _ = fields.remove("body", default: none)
-            if str(it.label) == "touying:hidden" {
-              fields.numbering = none
-              fields.outlined = false
-              fields.bookmarked = false
+            let overrides = if str(it.label) == "touying:hidden" {
+              (numbering: none, outlined: false, bookmarked: false)
+            } else if str(it.label) == "touying:unnumbered" {
+              (numbering: none)
+            } else if str(it.label) == "touying:unoutlined" {
+              (outlined: false)
+            } else if str(it.label) == "touying:unbookmarked" {
+              (bookmarked: false)
+            } else {
+              (:)
             }
-            if str(it.label) == "touying:unnumbered" {
-              fields.numbering = none
-            }
-            if str(it.label) == "touying:unoutlined" {
-              fields.outlined = false
-            }
-            if str(it.label) == "touying:unbookmarked" {
-              fields.bookmarked = false
-            }
-            [#heading(..fields, it.body)#it.label]
+            tree.reconstruct-heading(it, it.body, ..overrides)
           } else {
             it
           }

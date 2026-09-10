@@ -341,29 +341,14 @@
     type(it) == content and it.func() == heading,
     message: "it must be a heading",
   )
-  let heading-args = (
-    numbering: it.numbering,
-    bookmarked: it.bookmarked,
-    depth: it.depth,
-    offset: it.offset,
-    outlined: it.outlined,
-    hanging-indent: it.hanging-indent,
-    supplement: it.supplement,
-  )
-  // Every heading argument is a scalar or content, so a shallow merge is a
-  // deep one.
-  heading-args += args.named()
-
-  if it.has("label") {
-    return [#heading(
-        ..heading-args,
-        new-body,
-      )#it.label]
-  }
-  heading(
-    ..heading-args,
-    new-body,
-  )
+  // From `fields()`, not from named reads: an unrealized heading does not
+  // know what it has not been given, and asking panics.
+  let fields = it.fields()
+  let lbl = fields.remove("label", default: none)
+  let _ = fields.remove("body", default: none)
+  fields += args.named()
+  let result = heading(..fields, new-body)
+  if lbl == none { result } else { label-it(result, lbl) }
 }
 
 
