@@ -1296,10 +1296,14 @@
               left: 1pt,
               right: 1pt,
             ))
+          } else if _contains-text(body, false) {
+            named.insert("outset", if inline { 1pt } else {
+              (top: 1pt, bottom: 2pt, left: 1pt, right: 1pt)
+            })
           } else {
-            // No outset: as the comment above says, these measure to their
-            // true bounding box, and any margin shows as an outline around
-            // the very thing being covered.
+            // Nothing with an ascender or a descender in it, so it measures to
+            // its true bounding box and any margin would show as an outline
+            // around the very thing being covered.
             named.insert("outset", 0pt)
           }
         }
