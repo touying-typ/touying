@@ -69,6 +69,91 @@
 }
 
 
+/// The element a (possibly styled) child really *is*.
+///
+/// `_flatten-children` re-wraps every child in the `styled` node it came out
+/// of, so classifying one — is this a heading? does it carry a mode label? is
+/// it a touying mark, and of which kind? — has to look underneath the styles
+/// first.
+///
+/// - it (content): The child to unwrap.
+///
+/// -> content
+#let _unstyled(it) = {
+  if utils.is-styled(it) { _unstyled(it.child) } else { it }
+}
+
+
+/// The `styled` wrappers around a child, outermost first.
+///
+/// - it (content): The child to inspect.
+///
+/// -> array
+#let _styles-of(it) = {
+  if utils.is-styled(it) { (it.styles,) + _styles-of(it.child) } else { () }
+}
+
+
+/// Put `content` back under the styles a child was wrapped in.
+///
+/// A mark carries its payload in `metadata`, so the walker pulls that payload
+/// out and emits it in the mark's place — at which point the enclosing
+/// `styled` nodes are gone. This puts them back, so that
+///
+///   #set text(size: 20pt)
+///   #article-text[Prose.]
+///
+/// still sets the prose at 20pt.
+///
+/// - child (content): The child the content came out of.
+///
+/// - content (content): The content to re-wrap.
+///
+/// -> content
+#let _restyle(child, content) = {
+  let out = content
+  // Innermost first, so the outermost wrapper ends up outermost again.
+  for styles in _styles-of(child).rev() {
+    out = utils.typst-builtin-styled(out, styles)
+  }
+  out
+}
+
+
+/// Flatten the document body into the flat list of children the article
+/// walker classifies.
+///
+/// A bare top-level `#set`/`#show` does not style the elements around it — it
+/// wraps *the entire rest of the document* in a single `styled` node. Sequence
+/// flattening alone therefore hands back one opaque child, and every heading,
+/// every `#article-text[..]` mark and every slide wrapper inside it becomes
+/// invisible to the walker: headings stop starting sections, marks are never
+/// consumed, and the end-of-article leak check reports the survivors as
+/// `Unsupported mark`. `parser.typ` recurses through `styled` for exactly this
+/// reason (`_collect-waypoints-impl`, and the `is-styled` branch of the main
+/// parse loop); article mode has to do the same.
+///
+/// The styles are pushed down onto each child rather than dropped, which is
+/// what Typst itself does when it lays a `styled` node out. Marks keep their
+/// wrappers too — `_unstyled` sees through them for classification, and
+/// `_restyle` puts them back around whatever the mark's payload renders as.
+///
+/// - it (content): The document body.
+///
+/// -> array
+#let _flatten-children(it) = {
+  if utils.is-styled(it) {
+    return _flatten-children(it.child).map(child => (
+      utils.typst-builtin-styled(child, it.styles)
+    ))
+  }
+  if utils.is-sequence(it) {
+    return it.children.map(_flatten-children).flatten()
+  }
+  (it,)
+}
+
+
 #let _wrap-section(
   items,
   images,
@@ -99,16 +184,16 @@
   // reflowed by meander, and touying-recall's own `query()` lookups need
   // breadcrumbs to behave like ordinary top-level document content, not
   // something buried inside a layout measurement pass.
-  let headings = items.filter(r => (
-    type(r) == content and r.func() == heading
-  ))
+  let is-heading = r => (
+    type(r) == content and _unstyled(r).func() == heading
+  )
+  let headings = items.filter(is-heading)
   let breadcrumbs = items.filter(r => utils.is-kind(
     r,
     "touying-recall-breadcrumb",
   ))
   let body-parts = items.filter(r => (
-    not (type(r) == content and r.func() == heading)
-      and not utils.is-kind(r, "touying-recall-breadcrumb")
+    not is-heading(r) and not utils.is-kind(r, "touying-recall-breadcrumb")
   ))
   // Unwrap blocks to expose the inner content directly. Content gets nested
   // in `block(...)` at multiple points upstream (`_article-linearize` for
@@ -501,19 +586,22 @@
   let out = ()
   let skipping-depth = none
   for child in children {
-    let is-heading = type(child) == content and child.func() == heading
+    // The child may still be wrapped in the `styled` node a top-level
+    // `#set`/`#show` put it in, so classify on what it really is.
+    let core = _unstyled(child)
+    let is-heading = type(core) == content and core.func() == heading
     if skipping-depth != none {
-      if is-heading and child.depth <= skipping-depth {
+      if is-heading and core.depth <= skipping-depth {
         skipping-depth = none
       } else {
         continue
       }
     }
-    let lbl = if type(child) == content and child.has("label") {
-      str(child.label)
+    let lbl = if type(core) == content and core.has("label") {
+      str(core.label)
     }
     if lbl != none and check-current-mode-skip(self, lbl) {
-      if is-heading { skipping-depth = child.depth }
+      if is-heading { skipping-depth = core.depth }
       continue
     }
     out.push(child)
@@ -522,12 +610,7 @@
 }
 
 #let render-content-as-article(self: none, body) = {
-  let children = if utils.is-sequence(body) {
-    body.children
-  } else {
-    (body,)
-  }
-  children = children.map(utils.sequence-to-array).flatten()
+  let children = _flatten-children(body)
   children = _filter-mode-children(self, children)
 
   // Same convention split-content-into-slides uses to turn a bare "---"/"—"
@@ -563,10 +646,11 @@
   // whole-slide target."
   let whole-slide-labels = ()
   for child in children {
-    let lbl = if type(child) == content and child.func() == heading {
-      child.at("label", default: none)
-    } else if utils.is-kind(child, "touying-slide-wrapper") {
-      child.at("label", default: none)
+    let core = _unstyled(child)
+    let lbl = if type(core) == content and core.func() == heading {
+      core.at("label", default: none)
+    } else if utils.is-kind(core, "touying-slide-wrapper") {
+      core.at("label", default: none)
     } else {
       none
     }
@@ -765,7 +849,11 @@
     let result = ()
     let current-run = ()
     for child in children {
-      if utils.is-kind(child, "touying-article-text") {
+      // A top-level `#set`/`#show` leaves every child wrapped in a `styled`
+      // node, so classify on `core` and put the styles back with `_restyle`
+      // around anything pulled out of a mark's payload.
+      let core = _unstyled(child)
+      if utils.is-kind(core, "touying-article-text") {
         let r = _render-run(use-self, current-run)
         current-run = ()
         result += r.items
@@ -774,29 +862,29 @@
         // replacing) and must survive so touying-recall inside its own
         // body can still find them.
         let headings = result.filter(item => (
-          type(item) == content and item.func() == heading
+          type(item) == content and _unstyled(item).func() == heading
         ))
         result = headings
         result += r.breadcrumbs
-        result.push(_resolve-block-recalls(child.value.body))
-      } else if utils.is-kind(child, "touying-article-only") {
+        result.push(_restyle(child, _resolve-block-recalls(core.value.body)))
+      } else if utils.is-kind(core, "touying-article-only") {
         let r = _render-run(use-self, current-run)
         current-run = ()
         result += r.items
         result += r.breadcrumbs
-        result.push(_resolve-block-recalls(child.value.body))
-      } else if utils.is-kind(child, "touying-set-config") {
+        result.push(_restyle(child, _resolve-block-recalls(core.value.body)))
+      } else if utils.is-kind(core, "touying-set-config") {
         let r = _render-run(use-self, current-run)
         current-run = ()
         result += r.items
         result += r.breadcrumbs
-        use-self = utils.merge-dicts(use-self, child.value.config)
-      } else if utils.is-kind(child, "touying-slide-wrapper") {
+        use-self = utils.merge-dicts(use-self, core.value.config)
+      } else if utils.is-kind(core, "touying-slide-wrapper") {
         let r = _render-run(use-self, current-run)
         current-run = ()
         result += r.items
         result += r.breadcrumbs
-        let slide-result = (child.value.fn)(use-self)
+        let slide-result = (core.value.fn)(use-self)
         let payload = _unwrap-article-raw(slide-result)
         let raw-content = payload.at("content", default: none)
         // Not wrapped in an extra block(): a rendered slide's own content is
@@ -806,12 +894,12 @@
         // flow does — it visibly doubles the gap when this is the first
         // thing under a heading (see e.g. "With Explicit Slide"/"Focus
         // Slide" in the article-mode test).
-        if raw-content != none { result.push(raw-content) }
-      } else if utils.is-kind(child, "touying-slides-only") {
+        if raw-content != none { result.push(_restyle(child, raw-content)) }
+      } else if utils.is-kind(core, "touying-slides-only") {
         // Stripped in article mode — an article-mode/slide-mode
         // distinction the shared parser has no notion of, so it must be
         // filtered out here rather than left for the parser to see.
-      } else if horizontal-line-to-pagebreak and child in ([—], [---]) {
+      } else if horizontal-line-to-pagebreak and core in ([—], [---]) {
         // A bare slide-separator dash — no-op in article mode (no slide
         // boundaries to break). See slides.typ's own horizontal-line
         // handling for the slide-mode equivalent.
@@ -834,9 +922,10 @@
   let current-blocks = ()
   let current-run = ()
   for child in children {
-    let is-section-heading = (
-      type(child) == content and child.func() == heading
-    )
+    // Same as the simple path above: classify on `core`, re-style anything
+    // pulled out of a mark's payload.
+    let core = _unstyled(child)
+    let is-section-heading = type(core) == content and core.func() == heading
     if (
       is-section-heading and (current-items.len() > 0 or current-run.len() > 0)
     ) {
@@ -863,7 +952,7 @@
       current-blocks = ()
     }
 
-    if utils.is-kind(child, "touying-article-text") {
+    if utils.is-kind(core, "touying-article-text") {
       let r = _render-run(use-self, current-run)
       current-run = ()
       current-items += r.items
@@ -874,51 +963,59 @@
       // replacing) and must survive so touying-recall inside its own body
       // can still find them.
       let headings = current-items.filter(item => (
-        type(item) == content and item.func() == heading
+        type(item) == content and _unstyled(item).func() == heading
       ))
       current-items = headings
       current-items += r.breadcrumbs
-      current-items.push(_resolve-block-recalls(child.value.body))
-    } else if utils.is-kind(child, "touying-article-only") {
+      current-items.push(_restyle(
+        child,
+        _resolve-block-recalls(core.value.body),
+      ))
+    } else if utils.is-kind(core, "touying-article-only") {
       let r = _render-run(use-self, current-run)
       current-run = ()
       current-items += r.items
       current-items += r.breadcrumbs
       current-images += r.images
       current-blocks += r.blocks
-      current-items.push(_resolve-block-recalls(child.value.body))
-    } else if utils.is-kind(child, "touying-set-config") {
+      current-items.push(_restyle(
+        child,
+        _resolve-block-recalls(core.value.body),
+      ))
+    } else if utils.is-kind(core, "touying-set-config") {
       let r = _render-run(use-self, current-run)
       current-run = ()
       current-items += r.items
       current-items += r.breadcrumbs
       current-images += r.images
       current-blocks += r.blocks
-      use-self = utils.merge-dicts(use-self, child.value.config)
-    } else if utils.is-kind(child, "touying-slide-wrapper") {
+      use-self = utils.merge-dicts(use-self, core.value.config)
+    } else if utils.is-kind(core, "touying-slide-wrapper") {
       let r = _render-run(use-self, current-run)
       current-run = ()
       current-items += r.items
       current-items += r.breadcrumbs
       current-images += r.images
       current-blocks += r.blocks
-      let slide-result = (child.value.fn)(use-self)
+      let slide-result = (core.value.fn)(use-self)
       let payload = _unwrap-article-raw(slide-result)
       let raw-content = payload.at("content", default: none)
       // See the matching comment in the simple path above: no extra
       // block() wrap here either. (_wrap-section's own _unwrap-blocks
       // would strip it anyway when meander wrapping is active — this just
       // avoids the double-spacing bug in the common case where it isn't.)
-      if raw-content != none { current-items.push(raw-content) }
+      if raw-content != none {
+        current-items.push(_restyle(child, raw-content))
+      }
       current-images += payload.at("images", default: ())
       current-blocks += payload.at("blocks", default: ())
     } else if is-section-heading {
       current-items.push(child)
-    } else if utils.is-kind(child, "touying-slides-only") {
+    } else if utils.is-kind(core, "touying-slides-only") {
       // Stripped in article mode — an article-mode/slide-mode
       // distinction the shared parser has no notion of, so it must be
       // filtered out here rather than left for the parser to see.
-    } else if horizontal-line-to-pagebreak and child in ([—], [---]) {
+    } else if horizontal-line-to-pagebreak and core in ([—], [---]) {
       // A bare slide-separator dash — no-op in article mode (no slide
       // boundaries to break). See slides.typ's own horizontal-line
       // handling for the slide-mode equivalent.
