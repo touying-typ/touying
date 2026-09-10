@@ -176,6 +176,65 @@
   }
 }
 
+/// The diagnostic for a touying mark that was never consumed.
+///
+/// Touying reads its marks off the document body before anything is laid out,
+/// so a mark still present at layout time is one that walk never reached.
+///
+/// When the mark names the function it came from (`#uncover`, `#alert`, …),
+/// the callback-style advice is the right one: `utils.uncover(self: self, ..)`
+/// computes in place instead of leaving a mark behind. The marks that carry no
+/// function — `#slides-only` and friends, `#article-text`, `#slide` — have no
+/// callback form, and the old wording sent those users to `utils.none`, which
+/// does not exist. For them the answer is placement.
+///
+/// - kind (str): The mark's `kind` field.
+///
+/// - fn (function, none): The function the mark came from, if it carries one.
+///
+/// - where (str): Where the mark was found, e.g. `"page 3 of the document"`.
+///
+/// -> str
+#let unsupported-mark-message(kind, fn, where) = {
+  let head = (
+    "Unsupported mark `"
+      + kind
+      + "`"
+      + if fn != none { " from `" + repr(fn) + "`" }
+      + " at "
+      + where
+      + ". "
+  )
+  if fn != none {
+    (
+      head
+        + (
+          "You can't use it inside some functions like `context`. You may want to "
+            + "use the callback-style `utils."
+            + repr(fn)
+            + "` function instead."
+        )
+    )
+  } else {
+    (
+      head
+        + (
+          "Touying consumes its marks while walking the document body, before "
+            + "anything is laid out, so this one was never reached: it sits "
+            + "inside something that walk does not enter — a `context` block, a "
+            + "container that gets measured or laid out, or the body of a slide "
+            + "function such as `#slide[..]` or `#title-slide[..]`, which touying "
+            + "renders from inside the slide rather than where you wrote it. Move "
+            + "it to the top level of your document. Mode markers in particular "
+            + "go around a slide call, not inside it: "
+            + "`#slides-only(title-slide[..])`, "
+            + "not `#title-slide[#slides-only[..]]`."
+        )
+    )
+  }
+}
+
+
 /// Field names that Typst's element constructors take *positionally* rather
 /// than by name. Rebuilding such an element from `it.fields()` with named
 /// arguments alone fails outright — `align` reports `unexpected argument:

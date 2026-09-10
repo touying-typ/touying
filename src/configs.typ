@@ -72,19 +72,10 @@
       let fn = if "fn" in marks.at(0).value { marks.at(0).value.fn } else {
         none
       }
-      let warning-msg = (
-        "Unsupported mark `"
-          + kind
-          + if fn != none {
-            "` from `" + repr(fn)
-          }
-          + "` at page "
-          + str(page-num)
-          + " in section '"
-          + str(slide-name)
-          + "'. You can't use it inside some functions like `context`. You may want to use the callback-style `utils."
-          + repr(fn)
-          + "` function instead."
+      let warning-msg = utils.unsupported-mark-message(
+        kind,
+        fn,
+        "page " + str(page-num) + " in section '" + str(slide-name) + "'",
       )
       if self.at("enable-mark-warning", default: true) {
         panic(warning-msg)
@@ -910,7 +901,7 @@
 
 /// Gets the current config at the point of the call. Returns a dict with context evaluated values.
 /// You cannot compute with the resulting values, only display it because `touying-get-config` uses a context expression internally. If you need to compute with config values use the callback `touying-fn-wrapper-raw` instead and access what you need on `self` directly.
-/// 
+///
 /// Usage:
 /// ```typc
 /// touying-get-config() // returns the whole config dict

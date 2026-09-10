@@ -538,18 +538,10 @@
     let fn = if "fn" in marks.at(0).value { marks.at(0).value.fn } else {
       none
     }
-    let warning-msg = (
-      "Unsupported mark `"
-        + kind
-        + if fn != none {
-          "` from `" + repr(fn)
-        }
-        + "` at page "
-        + str(page-num)
-        + " of the document. You can't use it inside some functions like "
-        + "`context`. You may want to use the callback-style `utils."
-        + repr(fn)
-        + "` function instead."
+    let warning-msg = utils.unsupported-mark-message(
+      kind,
+      fn,
+      "page " + str(page-num) + " of the article",
     )
     if self.at("enable-mark-warning", default: true) {
       panic(warning-msg)
