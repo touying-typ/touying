@@ -58,6 +58,8 @@
     ),
   )
 
+  #show par: set text(1em) //test that global set and show rules work
+
   = Introduction
 
   This is the introduction section. Content should flow continuously without page breaks between slides. #lorem(30)
@@ -110,16 +112,16 @@
   ]
 
   == Lists and Items
-
+#components.side-by-side[ 
   - First item #pause
   - Second item #pause
   - Third item #pause
-
+][
   + Numbered one #pause
   + Numbered two #pause
   + Numbered three #pause
-
-  #lorem(20)
+]
+  and it also tests touying `components.side-by-side` and similar is tested whether it works.
 
   == Image Content
   #slide(composer: (1fr, 1fr))[
