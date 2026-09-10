@@ -236,11 +236,20 @@
 
 
 /// Field names that Typst's element constructors take *positionally* rather
-/// than by name. Rebuilding such an element from `it.fields()` with named
-/// arguments alone fails outright — `align` reports `unexpected argument:
-/// alignment`, `link` reports `expected string, dictionary, location, or
-/// label, found content` — so these have to be pulled out of the field
-/// dictionary and passed in order, ahead of the named ones.
+/// than by name, in the order the constructor wants them.
+///
+/// Rebuilding an element from `it.fields()` with named arguments alone fails
+/// outright — `align` reports `unexpected argument: alignment`, `link` reports
+/// `expected string, dictionary, location, or label, found content` — so these
+/// have to come out of the field dictionary and lead the argument list.
+///
+/// Two entries are not plain names:
+///
+/// - `..name` means the field holds an array to be *spread*, for the variadic
+///   constructors (`polygon(..vertices)`, `curve(..components)`).
+/// - `"body"` in the list means the body is itself positional but *not* last
+///   (`math.underbrace(body, annotation)`), so the new body has to be placed
+///   at that index instead of appended.
 ///
 /// `scale` is deliberately absent: since Typst 0.15 it has no `factor` field
 /// at all, only the resolved `x`/`y`, which are named. That is also why the
@@ -259,9 +268,67 @@
     ("dest",)
   } else if f == rotate {
     ("angle",)
+  } else if f == math.class {
+    ("class",)
+  } else if f == polygon {
+    // `polygon.regular(..)` also constructs a `polygon`, with its vertices
+    // already resolved, so it needs no entry of its own.
+    ("..vertices",)
+  } else if f == curve {
+    ("..components",)
+  } else if f == raw.line {
+    ("number", "count", "text")
+  } else if (
+    f
+      in (
+        math.underbrace,
+        math.overbrace,
+        math.underbracket,
+        math.overbracket,
+        math.underparen,
+        math.overparen,
+        math.undershell,
+        math.overshell,
+      )
+  ) {
+    ("body", "annotation")
   } else {
     ()
   }
+}
+
+
+/// Call an element function with a dictionary of fields, honoring the ones
+/// that constructor insists on receiving positionally.
+///
+/// The dictionary is used as-is, so a caller that has already edited a field
+/// (as the cover methods do when they alpha a `fill`) keeps its edit. Fields
+/// named by `positional-fields` are pulled out and lead the argument list;
+/// everything in `extra` follows the rest.
+///
+/// - f (function): The element function to call.
+///
+/// - fields (dictionary): The fields to pass. Any `label` should already be
+///   removed by the caller.
+///
+/// - extra (arguments): Trailing positional arguments, typically the new body.
+///
+/// -> content
+#let call-with-fields(f, fields, ..extra) = {
+  let fields = fields
+  let leading = ()
+  for name in positional-fields(f) {
+    if name.starts-with("..") {
+      leading += fields.remove(name.slice(2), default: ())
+    } else {
+      let value = fields.remove(name, default: none)
+      // A skipped field is one the element does not carry — `place` without
+      // an alignment, `math.underbrace` without an annotation. None of the
+      // listed fields can legitimately hold `none`.
+      if value != none { leading.push(value) }
+    }
+  }
+  f(..leading, ..fields, ..extra)
 }
 
 
@@ -289,17 +356,20 @@
   let label = fields.remove("label", default: none)
   let _ = fields.remove(body-name, default: none)
   if named {
-    // Anything the constructor insists on receiving positionally has to come
-    // out of the dictionary first and lead the argument list.
-    let leading = ()
-    for name in positional-fields(it.func()) {
-      let value = fields.remove(name, default: none)
-      if value != none { leading.push(value) }
+    // `call-with-fields` handles the constructors that want some field
+    // positionally. When the body is one of those (`math.underbrace(body,
+    // annotation)`) it has to go back into the dictionary so it lands at the
+    // right index rather than after the annotation.
+    let result = if body-name in positional-fields(it.func()) {
+      fields.insert(body-name, new-body.pos().sum(default: []))
+      call-with-fields(it.func(), fields)
+    } else {
+      call-with-fields(it.func(), fields, ..new-body)
     }
     if label != none and labeled {
-      return [#(it.func())(..leading, ..fields, ..new-body)#label]
+      return [#result#label]
     } else {
-      return (it.func())(..leading, ..fields, ..new-body)
+      return result
     }
   } else {
     if label != none and labeled {
@@ -2308,10 +2378,13 @@
         } else if type(eff-fill) == gradient {
           fields.fill = update-alpha-gradient(eff-fill)
         }
+        // Via `call-with-fields`, because the variadic shapes (`polygon`,
+        // `curve`) take their geometry positionally and would otherwise
+        // error with `unexpected argument: vertices` / `components`.
         let result = if body-content != none {
-          (it.func())(..fields, body-content)
+          call-with-fields(it.func(), fields, body-content)
         } else {
-          (it.func())(..fields)
+          call-with-fields(it.func(), fields)
         }
         if label != none { [#result#label] } else { result }
       }

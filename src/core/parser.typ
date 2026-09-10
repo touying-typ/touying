@@ -1181,56 +1181,21 @@
     }
     return body
   }
-  // Recurse into any content with a .body field. Some functions (rotate,
-  // place, columns, scale, align) have positional-first params that can't
-  // be spread as named args, so they need special reconstruction.
+  // Recurse into any content with a .body field. The constructors with a
+  // positional-first parameter (align, place, columns, link, rotate, …) used
+  // to need hand-written branches here; `utils.reconstruct` knows about them
+  // now, and unlike those branches it keeps the element's label.
   if body.has("body") {
     let inner = body.at("body", default: none)
     if inner != none {
       let resolved-inner = _resolve-marks-in-tree(inner, kinds, resolve)
       if resolved-inner != inner {
-        let f = body.func()
-        if f == rotate {
-          let fields = body.fields()
-          let _ = fields.remove("angle", default: none)
-          let _ = fields.remove("body", default: none)
-          let _ = fields.remove("label", default: none)
-          let angle = if body.has("angle") { body.angle } else { 0deg }
-          return rotate(angle, ..fields, resolved-inner)
-        } else if f == place {
-          let fields = body.fields()
-          let _ = fields.remove("alignment", default: none)
-          let _ = fields.remove("body", default: none)
-          let _ = fields.remove("label", default: none)
-          let alignment = if body.has("alignment") { body.alignment } else {
-            start
-          }
-          return place(alignment, ..fields, resolved-inner)
-        } else if f == columns {
-          let args = if body.has("gutter") { (gutter: body.gutter) } else {
-            (:)
-          }
-          let count = if body.has("count") { body.count } else { 2 }
-          return columns(count, ..args, resolved-inner)
-        } else if f == scale {
-          let fields = body.fields()
-          let _ = fields.remove("body", default: none)
-          let _ = fields.remove("label", default: none)
-          let factor = fields.remove("factor", default: auto)
-          return scale(factor, ..fields, resolved-inner)
-        } else if f == align {
-          let alignment = if body.has("alignment") { body.alignment } else {
-            start
-          }
-          return align(alignment, resolved-inner)
-        } else {
-          return utils.reconstruct(
-            named: true,
-            labeled: true,
-            body,
-            resolved-inner,
-          )
-        }
+        return utils.reconstruct(
+          named: true,
+          labeled: true,
+          body,
+          resolved-inner,
+        )
       }
     }
     return body
