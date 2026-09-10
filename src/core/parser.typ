@@ -6,6 +6,27 @@
   waypoint-kinds,
 )
 
+/// A reducer's positional arguments, with any sequence among them opened up.
+///
+/// Adjacent metadata markers arrive as one sequence, so an implicit waypoint
+/// followed by a fn-wrapper would otherwise be a single argument.
+///
+/// - args (arguments): The reducer call's arguments.
+///
+/// -> array
+#let _flatten-reducer-args(args) = {
+  let flat = ()
+  for arg in args.flatten() {
+    if type(arg) == content and tree.is-sequence(arg) {
+      flat += arg.children
+    } else {
+      flat.push(arg)
+    }
+  }
+  flat
+}
+
+
 /// Parse touying reducer content and extract animation repetitions
 ///
 /// Processes reducer content (used for external packages like CeTZ, Fletcher)
@@ -40,14 +61,7 @@
   // parse the content
   // Flatten content sequences so that e.g. uncover(<label>, body) which produces
   // [implicit-waypoint-metadata + fn-wrapper-metadata] is split into separate children.
-  let flat-args = ()
-  for arg in reducer.args.flatten() {
-    if type(arg) == content and tree.is-sequence(arg) {
-      flat-args += arg.children
-    } else {
-      flat-args.push(arg)
-    }
-  }
+  let flat-args = _flatten-reducer-args(reducer.args)
   let result = ()
   for child in flat-args {
     if (
@@ -215,14 +229,7 @@
     // touying-waypoint, and touying-fn-wrapper metadata.
     // Flatten content sequences so that e.g. uncover(<label>, body) which produces
     // [implicit-waypoint-metadata + fn-wrapper-metadata] is split into separate children.
-    let flat-count-args = ()
-    for arg in value.args.flatten() {
-      if type(arg) == content and tree.is-sequence(arg) {
-        flat-count-args += arg.children
-      } else {
-        flat-count-args.push(arg)
-      }
-    }
+    let flat-count-args = _flatten-reducer-args(value.args)
     for child in flat-count-args {
       if (
         type(child) == content
@@ -519,14 +526,7 @@
         let inner-rep = repetitions
         let inner-max = repetitions
         let inner-ls = last-subslide
-        let inner-flat-args = ()
-        for arg in child.value.args.flatten() {
-          if type(arg) == content and tree.is-sequence(arg) {
-            inner-flat-args += arg.children
-          } else {
-            inner-flat-args.push(arg)
-          }
-        }
+        let inner-flat-args = _flatten-reducer-args(child.value.args)
         for inner-child in inner-flat-args {
           if (
             type(inner-child) == content
@@ -630,21 +630,6 @@
           }
         }
       }
-    } else if tree.is-styled(child) {
-      (
-        repetitions,
-        last-subslide,
-        waypoints,
-        start-overrides,
-        decl-reps,
-      ) = _collect-waypoints-impl(
-        (child.child,),
-        repetitions,
-        last-subslide,
-        waypoints,
-        start-overrides,
-        decl-reps,
-      )
     } else if (
       type(child) == content and child.func() in (table.cell, grid.cell)
     ) {
@@ -745,14 +730,8 @@
         }
       }
     } else if type(child) == content {
-      // Recurse into content with a body field
-      let body = child.at("body", default: none)
-      if body != none {
-        let inner = if tree.is-sequence(body) {
-          body.children
-        } else {
-          (body,)
-        }
+      let kids = tree.children-of(child)
+      if kids.len() > 0 {
         (
           repetitions,
           last-subslide,
@@ -760,33 +739,13 @@
           start-overrides,
           decl-reps,
         ) = _collect-waypoints-impl(
-          inner,
+          kids,
           repetitions,
           last-subslide,
           waypoints,
           start-overrides,
           decl-reps,
         )
-      }
-      // Recurse into children (table, grid, stack, etc.)
-      if child.has("children") {
-        let ch = child.at("children", default: none)
-        if ch != none and type(ch) == array {
-          (
-            repetitions,
-            last-subslide,
-            waypoints,
-            start-overrides,
-            decl-reps,
-          ) = _collect-waypoints-impl(
-            ch,
-            repetitions,
-            last-subslide,
-            waypoints,
-            start-overrides,
-            decl-reps,
-          )
-        }
       }
     }
   }
@@ -821,21 +780,8 @@
 // Find the first touying-reducer metadata dict inside content.
 // Returns the metadata value dict, or none if not found.
 #let _find-reducer-meta(c) = {
-  if type(c) != content { return none }
-  if (
-    c.func() == metadata
-      and type(c.value) == dictionary
-      and c.value.at("kind", default: none) == "touying-reducer"
-  ) {
-    return c.value
-  }
-  if tree.is-sequence(c) {
-    for child in c.children {
-      let found = _find-reducer-meta(child)
-      if found != none { return found }
-    }
-  }
-  none
+  let found = tree.find-in-tree(c, n => tree.is-kind(n, "touying-reducer"))
+  if found != none { found.value }
 }
 
 
