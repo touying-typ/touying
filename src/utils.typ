@@ -1425,19 +1425,313 @@
   )
 }
 
-/// Cover content by forcing all colors to a single flat color — a compiler-light
-/// alternative to `alpha-changing-cover`. No `context` calls are made; every
-/// color-bearing element is simply overwritten with `color`.
+// -------------------------------------
+//   Covering content
+// -------------------------------------
+//
+// Both cover methods walk the same tree. They differ in how a colour is
+// derived, and in when they give up and hand an element to `fallback-hide`.
+// `color-changing-cover` overwrites every colour with one flat value, which it
+// can do without ever reading the colour in force, so it makes no `context`
+// call; `alpha-changing-cover` reads the colour that is actually in force and
+// fades it.
+
+/// Elements that paint themselves, and so have a fill or a stroke to cover.
+/// Some of them also carry a body, which is covered in the ordinary way.
+#let _cover-shapes = (
+  rect,
+  square,
+  circle,
+  ellipse,
+  box,
+  block,
+  highlight,
+  underline,
+  overline,
+  strike,
+  table.cell,
+  grid.cell,
+  table.hline,
+  table.vline,
+  grid.hline,
+  grid.vline,
+  line,
+  polygon,
+  curve,
+  math.cancel,
+)
+
+
+/// Rebuild a stroke with a new paint, keeping its geometry.
+///
+/// - map-paint (function): `paint => paint`.
+///
+/// - s (any): The stroke value.
+///
+/// -> any
+#let _restroke(map-paint, s) = {
+  if type(s) == color {
+    map-paint(s)
+  } else if type(s) == stroke {
+    let paint = map-paint(if s.paint == auto { black } else { s.paint })
+    if paint == none { return s }
+    let args = (paint: paint)
+    if s.thickness != auto { args.thickness = s.thickness }
+    if s.cap != auto { args.cap = s.cap }
+    if s.join != auto { args.join = s.join }
+    if s.dash != auto { args.dash = s.dash }
+    if s.miter-limit != auto { args.miter-limit = s.miter-limit }
+    stroke(..args)
+  } else { s }
+}
+
+
+/// The fill a shape inherits when it sets none of its own.
+///
+/// Only meaningful inside `context`, so only the alpha method asks.
+///
+/// - f (function): The element function.
+///
+/// -> any
+#let _inherited-fill(f) = {
+  if f in (rect, square) {
+    rect.fill
+  } else if f in (circle, ellipse) {
+    circle.fill
+  } else if f == box {
+    box.fill
+  } else if f == block {
+    block.fill
+  } else if f == highlight {
+    highlight.fill
+  } else if f == table.cell {
+    table.cell.fill
+  } else if f == grid.cell {
+    grid.cell.fill
+  } else if f in (polygon, curve) {
+    polygon.fill
+  }
+}
+
+
+/// The stroke a shape inherits when it sets none of its own.
+///
+/// - f (function): The element function.
+///
+/// -> any
+#let _inherited-stroke(f) = {
+  if f in (rect, square) {
+    rect.stroke
+  } else if f in (circle, ellipse) {
+    circle.stroke
+  } else if f == box {
+    box.stroke
+  } else if f == block {
+    block.stroke
+  } else if f == line {
+    line.stroke
+  } else if f == underline {
+    underline.stroke
+  } else if f == overline {
+    overline.stroke
+  } else if f == strike {
+    strike.stroke
+  } else if f == table.cell {
+    table.cell.stroke
+  } else if f == grid.cell {
+    grid.cell.stroke
+  } else if f == table.hline {
+    table.hline.stroke
+  } else if f == table.vline {
+    table.vline.stroke
+  } else if f == grid.hline {
+    grid.hline.stroke
+  } else if f == grid.vline {
+    grid.vline.stroke
+  } else if f in (polygon, curve) {
+    polygon.stroke
+  } else if f == math.cancel {
+    math.cancel.stroke
+  }
+}
+
+
+/// Walk `it`, covering as `policy` says.
+///
+/// `method` is the recolouring to apply to a text leaf. It is threaded rather
+/// than read from the policy because it changes on the way down: inside a
+/// `styled` node or a list item, an outer `set text` already handles inherited
+/// colours, so only a leaf that sets its own may be touched again.
+///
+/// The chain is exhaustive and mutually exclusive on purpose. A code block in
+/// Typst joins every expression in it, so a missing `else` emits content twice.
+///
+/// - policy (dictionary): See `color-changing-cover` and
+///   `alpha-changing-cover`, which are the only two that build one.
+///
+/// - method (function): The recolouring for a text leaf.
+///
+/// - it (any): The content to cover.
+///
+/// -> content
+#let _cover-tree(policy, method, it) = {
+  let recurse(m, c) = _cover-tree(policy, m, c)
+  let relabel(it, result) = {
+    let lbl = it.at("label", default: none)
+    if lbl == none { result } else { tree.label-it(result, lbl) }
+  }
+
+  if type(it) != content {
+    it
+  } else if (
+    it.func() in (text, math.equation)
+      or it.func() == tree.typst-builtin-math-symbol
+  ) {
+    method(it)
+  } else if tree.is-sequence(it) {
+    it.children.map(c => recurse(method, c)).sum(default: [])
+  } else if tree.is-styled(it) {
+    tree.reconstruct-styled(
+      it,
+      (policy.styled-wrap)(recurse(policy.recolour-explicit, it.child)),
+    )
+  } else if it.func() in _cover-shapes {
+    let fields = it.fields()
+    let _ = fields.remove("label", default: none)
+    let fill = if "fill" in fields { fields.fill } else {
+      (policy.inherited-fill)(it.func())
+    }
+    let painted = fill != none and fill != auto
+    let new-fill = if painted { (policy.map-fill)(fill) }
+    // A fill this policy cannot express, or one it would flatten together with
+    // the content on top of it, goes to the fallback whole.
+    if painted and (new-fill == none or policy.hide-filled) {
+      relabel(it, (policy.fallback)(it))
+    } else {
+      let stroke = if "stroke" in fields { fields.stroke } else {
+        (policy.inherited-stroke)(it.func())
+      }
+      if stroke != none and stroke != auto {
+        fields.stroke = (policy.map-stroke)(stroke)
+      }
+      if new-fill != none { fields.fill = new-fill }
+      // The body goes positionally: most built-in constructors reject `body:`.
+      let body = fields.remove("body", default: none)
+      let result = if body == none {
+        tree.call-with-fields(it.func(), fields)
+      } else {
+        tree.call-with-fields(it.func(), fields, recurse(method, body))
+      }
+      relabel(it, result)
+    }
+  } else if it.func() in (table, grid) {
+    let fields = it.fields()
+    let _ = fields.remove("label", default: none)
+    let children = fields.remove("children")
+    let fill = fields.at("fill", default: none)
+    let new-fill = if fill != none and fill != auto { (policy.map-fill)(fill) }
+    if new-fill != none { fields.fill = new-fill }
+    let stroke = fields.at("stroke", default: none)
+    if stroke != none and stroke != auto {
+      fields.stroke = (policy.map-stroke)(stroke)
+    }
+    let result = (it.func())(
+      ..fields,
+      ..children.map(c => recurse(method, c)),
+    )
+    // A fill the policy could not express stays as it is, so the whole table
+    // has to be covered by the fallback instead.
+    relabel(it, if fill != none and new-fill == none {
+      (policy.fallback)(result)
+    } else { result })
+  } else if it.func() in (list.item, enum.item, terms.item, list, enum, terms) {
+    // The markers are generated, not part of the tree, so they are covered by
+    // the outer `set text` rather than here; explicit-only avoids covering an
+    // explicit colour twice.
+    tree.rebuild(
+      it,
+      tree.children-of(it).map(c => recurse(policy.recolour-explicit, c)),
+    )
+  } else if it.func() == footnote {
+    // A footnote's entry is laid out at the bottom of the page, outside the
+    // scope of the `set text` that covers the flow, so the colour has to
+    // travel with the body instead of being inherited.
+    let body = it.at("body", default: none)
+    tree.rebuild(it, (
+      if type(body) == content {
+        (policy.styled-wrap)(recurse(policy.recolour-explicit, body))
+      } else { body },
+    ))
+  } else if it.func() == figure {
+    let result = tree.rebuild(
+      it,
+      tree.children-of(it).map(c => recurse(method, c)),
+    )
+    // A figure's supplement and counter are generated during layout and never
+    // appear in the tree, so the caption needs a show rule of its own.
+    (policy.caption-wrap)(result)
+  } else if it.func() in (raw, cite, ref) {
+    text(fill: (policy.leaf-fill)(), it)
+  } else if (
+    it.func() in (parbreak, linebreak)
+      or tree.is-space(it)
+      or tree.is-metadata(
+        it,
+      )
+  ) {
+    it
+  } else if tree.children-of(it).len() > 0 {
+    tree.rebuild(it, tree.children-of(it).map(c => recurse(method, c)))
+  } else {
+    (policy.fallback)(it)
+  }
+}
+
+
+/// White at the alpha that fades a shape to the same lightness the covered
+/// text ends up with, so a shape that cannot be recoloured is dimmed to match
+/// rather than left bright or hidden outright.
+///
+/// Reads `text.fill`, so it must be called inside `context`.
+///
+/// - color (color): The colour covered text is forced to.
+///
+/// -> color
+#let _flat-overlay-fill(color) = {
+  let luma-of(c) = {
+    let parts = c.components(alpha: false)
+    if parts.len() == 1 { parts.at(0) } else {
+      0.299 * parts.at(0) + 0.587 * parts.at(1) + 0.114 * parts.at(2)
+    }
+  }
+  let text-luma = if type(text.fill) == std.color { luma-of(text.fill) } else {
+    0%
+  }
+  update-alpha(rgb("#ffffff"), calc.abs(luma-of(color) - text-luma))
+}
+
+
+/// Cover content by forcing every colour to one flat colour.
+///
+/// A compiler-light alternative to `alpha-changing-cover`: it overwrites
+/// colours rather than reading them, so it makes no `context` call.
 ///
 /// Example: `config-methods(cover: utils.color-changing-cover.with(color: gray))`
 ///
-/// - color (color): The color to force on all covered content. Default is `gray`.
+/// - color (color): The colour to force on covered content. Default is `gray`.
 ///
-/// - fallback-hide (func): Function used for truly opaque leaves (images, cetz, …)
-///   that cannot be recolored. Defaults to typst's `hide`. Pass `none` to leave
-///   them visible, or `cover-with-rect` / `semi-transparent-cover` to overlay them.
+/// - hide-filled (bool): Whether an element that paints its own background is
+///   handed to `fallback-hide` instead of being recoloured. Flattening such an
+///   element and the content on top of it to a single colour would leave the
+///   content unreadable, so this defaults to `true`. Set it to `false` to
+///   recolour them like everything else.
 ///
-/// - fallback-hide-args (dict): Extra named arguments forwarded to `fallback-hide`.
+/// - fallback-hide (func): Applied to what cannot be recoloured, such as
+///   images, and to filled elements while `hide-filled` is on. `auto` overlays
+///   them so they dim to match the recoloured text instead of disappearing.
+///   Pass `none` to leave them untouched.
+///
+/// - fallback-hide-args (dict): Extra named arguments for `fallback-hide`.
 ///
 /// - it (content): The content to cover.
 ///
@@ -1445,332 +1739,125 @@
 #let color-changing-cover(
   self: none,
   color: gray,
-  fallback-hide: hide,
+  hide-filled: true,
+  fallback-hide: auto,
   fallback-hide-args: (:),
   it,
 ) = {
-  let _fallback-hide = if fallback-hide == none { it => it } else {
-    fallback-hide
-  }
-
-  // Force a stroke's paint to `color`, preserving geometry (thickness, dash, …).
-  // Handles color, gradient, and auto paint (auto defaults to black).
-  let with-color-stroke(s) = {
-    if type(s) == color { color } else if (
-      type(s) == stroke
-        and (
-          s.paint == auto or type(s.paint) in (color, gradient)
-        )
+  let recolour-fields(fields) = {
+    if "fill" in fields and type(fields.fill) in (std.color, gradient) {
+      fields.fill = color
+    }
+    if (
+      "stroke" in fields and fields.stroke != none and fields.stroke != auto
     ) {
-      let a = (paint: color)
-      if s.thickness != auto { a.insert("thickness", s.thickness) }
-      if s.cap != auto { a.insert("cap", s.cap) }
-      if s.join != auto { a.insert("join", s.join) }
-      if s.dash != auto { a.insert("dash", s.dash) }
-      if s.miter-limit != auto { a.insert("miter-limit", s.miter-limit) }
-      stroke(..a)
-    } else { s }
+      fields.stroke = _restroke(_ => color, fields.stroke)
+    }
+    fields
   }
-
-  // Only modifies *explicit* fill/stroke on text nodes — no set-rule fallback.
-  // Used inside styled wrappers where the outer set text(fill: color) already
-  // handles inherited fills, avoiding double-application on explicit colors.
-  let explicit-only-color-method(it) = {
-    if it.func() == text {
-      let fields = it.fields()
-      let has-fill = (
-        "fill" in fields and type(fields.fill) in (color, gradient)
-      )
-      let has-stroke = (
-        "stroke" in fields and fields.stroke != none and fields.stroke != auto
-      )
-      if has-fill or has-stroke {
-        let label = fields.remove("label", default: none)
-        if has-fill { fields.fill = color }
-        if has-stroke { fields.stroke = with-color-stroke(fields.stroke) }
-        let result = if "body" in fields {
-          let b = fields.remove("body")
-          text(..fields, b)
-        } else { text(..fields) }
-        if label != none { [#result#label] } else { result }
-      } else { it }
-    } else { it }
+  let rebuild-text(it) = {
+    let fields = it.fields()
+    let lbl = fields.remove("label", default: none)
+    let body = fields.remove("body", default: none)
+    fields = recolour-fields(fields)
+    let result = if body == none { text(..fields) } else {
+      text(..fields, body)
+    }
+    if lbl == none { result } else { tree.label-it(result, lbl) }
   }
-
-  // _cover-fill alpha = |luma(color) - luma(text.fill)| so the white overlay
-  // fades shapes to the same effective lightness as the covered text color.
-  context {
-    let luma-of(c) = {
-      let comps = c.components(alpha: false)
-      if comps.len() == 1 {
-        comps.at(0)
-      } else {
-        0.299 * comps.at(0) + 0.587 * comps.at(1) + 0.114 * comps.at(2)
-      }
-    }
-    let _cover-fill = {
-      let normal-luma = if type(text.fill) == color {
-        luma-of(text.fill)
-      } else { 0% }
-      let cover-luma = luma-of(color)
-      update-alpha(rgb("#ffffff"), calc.abs(cover-luma - normal-luma))
-    }
-
-    let apply-cover-methods(color-method, noncolor-method, it) = {
-      if type(it) != content {
-        it
-      } else if (
-        it.func() in (text, math.equation)
-          or it.func() == tree.typst-builtin-math-symbol
-      ) {
-        color-method(it)
-      } else if tree.is-sequence(it) {
-        it
-          .children
-          .map(c => apply-cover-methods(color-method, noncolor-method, c))
-          .sum(default: [])
-      } else if tree.is-styled(it) {
-        tree.reconstruct-styled(it, {
-          set text(fill: color)
-          apply-cover-methods(
-            explicit-only-color-method,
-            noncolor-method,
-            it.child,
-          )
-        })
-      } else if it.func() == box {
-        // Gate on fill only: a box with no fill is transparent — recurse so that
-        // gradient/colored text inside is covered by normal traversal.
-        let fields = it.fields()
-        let has-fill = (
-          "fill" in fields and fields.fill != none and fields.fill != auto
-        )
-        if has-fill {
-          cover-with-rect(fill: _cover-fill, inline: true, it)
-        } else {
-          let label = fields.remove("label", default: none)
-          let b = fields.remove("body", default: none)
-          let new-b = if b != none {
-            apply-cover-methods(color-method, noncolor-method, b)
-          } else { b }
-          let result = if new-b != none { box(..fields, new-b) } else {
-            box(..fields)
-          }
-          if label != none { [#result#label] } else { result }
-        }
-      } else if it.func() == block {
-        // Same fill-only gating as box.
-        let fields = it.fields()
-        let has-fill = (
-          "fill" in fields and fields.fill != none and fields.fill != auto
-        )
-        if has-fill {
-          cover-with-rect(fill: _cover-fill, it)
-        } else {
-          let label = fields.remove("label", default: none)
-          let b = fields.remove("body", default: none)
-          let new-b = if b != none {
-            apply-cover-methods(color-method, noncolor-method, b)
-          } else { b }
-          let result = if new-b != none { block(..fields, new-b) } else {
-            block(..fields)
-          }
-          if label != none { [#result#label] } else { result }
-        }
-      } else if (
-        it.func()
-          in (
-            // Visual shapes / opaque leaves with no traversable text content — overlay directly.
-            rect,
-            square,
-            circle,
-            ellipse,
-            highlight,
-            underline,
-            overline,
-            strike,
-            math.cancel,
-            line,
-            polygon,
-            curve,
-            polygon.regular,
-            table.cell,
-            grid.cell,
-            table.hline,
-            table.vline,
-            grid.hline,
-            grid.vline,
-            image,
-          )
-      ) {
-        cover-with-rect(fill: _cover-fill, it)
-      } else if it.func() in (table, grid) {
-        // Gate on fill: a table/grid with a fill is treated as an opaque visual;
-        // without fill we recurse into cells so their text is covered normally.
-        let fields = it.fields()
-        let label = fields.remove("label", default: none)
-        let has-fill = (
-          "fill" in fields and fields.fill != none and fields.fill != auto
-        )
-        if has-fill {
-          cover-with-rect(fill: _cover-fill, it)
-        } else {
-          let children = fields.remove("children")
-          let new-children = children.map(c => apply-cover-methods(
-            color-method,
-            noncolor-method,
-            c,
-          ))
-          let result = (it.func())(..fields, ..new-children)
-          if label != none { [#result#label] } else { result }
-        }
-      } else if it.func() == figure {
-        // Traverse body and caption; body may be an image or other opaque element
-        // which noncolor-method covers, caption is always text.
-        let fields = it.fields()
-        let label = fields.remove("label", default: none)
-        let new-body = apply-cover-methods(
-          color-method,
-          noncolor-method,
-          fields.remove("body"),
-        )
-        let cap = fields.remove("caption", default: none)
-        if cap != none {
-          fields.caption = apply-cover-methods(
-            color-method,
-            noncolor-method,
-            cap,
-          )
-        }
-        let result = figure(..fields, new-body)
-        let wrapped = {
-          show figure.caption: set text(fill: color)
-          result
-        }
-        if label != none { [#wrapped#label] } else { wrapped }
-      } else if it.func() == list.item {
-        let new-body = apply-cover-methods(
-          explicit-only-color-method,
-          noncolor-method,
-          it.body,
-        )
-        list.item(new-body)
-      } else if it.func() == terms.item {
-        terms.item(
-          apply-cover-methods(color-method, noncolor-method, it.term),
-          apply-cover-methods(color-method, noncolor-method, it.description),
-        )
-      } else if it.func() == enum.item {
-        let new-body = apply-cover-methods(
-          explicit-only-color-method,
-          noncolor-method,
-          it.body,
-        )
-        let fields = it.fields()
-        if "number" in fields { enum.item(fields.number, new-body) } else {
-          enum.item(new-body)
-        }
-      } else if it.has("body") {
-        let new-body = apply-cover-methods(
-          color-method,
-          noncolor-method,
-          it.body,
-        )
-        // Via `tree.reconstruct`, which knows the elements whose defining field is
-        // positional (`align`, `place`, `columns`, `link`, `rotate`); passing
-        // every field by name is what used to make those error out here.
-        tree.reconstruct(named: true, it, new-body)
-      } else if it.has("child") {
-        let new-child = apply-cover-methods(
-          color-method,
-          noncolor-method,
-          it.child,
-        )
-        tree.reconstruct(named: true, body-name: "child", it, new-child)
-      } else if it.func() in (list, enum, terms) {
-        let fields = it.fields()
-        let label = fields.remove("label", default: none)
-        let children = fields.remove("children")
-        let new-children = children.map(c => apply-cover-methods(
-          explicit-only-color-method,
-          noncolor-method,
-          c,
-        ))
-        let result = (it.func())(..fields, ..new-children)
-        if label != none { [#result#label] } else { result }
-      } else if it.has("children") {
-        let new-children = it.children.map(c => apply-cover-methods(
-          color-method,
-          noncolor-method,
-          c,
-        ))
-        tree.reconstruct-table-like(it, new-children)
-      } else if it.func() in (raw, cite, ref) {
-        text(fill: color, it)
-      } else if (
-        it.func() in (parbreak, linebreak)
-          or tree.is-space(it)
-          or tree.is-metadata(it)
-      ) {
-        it
-      } else {
-        noncolor-method(it)
-      }
-    }
-
-    // Outer catch-all: list/enum markers, vec/mat brackets, and any other
-    // auto-generated glyphs inherit this fill. Explicit colors set by the
-    // recursion take precedence (explicit fill > set rule in Typst).
-    set text(fill: color)
-    apply-cover-methods(
-      it => {
-        let fields = it.fields()
-        let has-fill = (
-          "fill" in fields and type(fields.fill) in (color, gradient)
-        )
-        let has-stroke = (
+  let sets-own-colour(it) = {
+    let fields = it.fields()
+    (
+      ("fill" in fields and type(fields.fill) in (std.color, gradient))
+        or (
           "stroke" in fields and fields.stroke != none and fields.stroke != auto
         )
-        if it.func() == text and (has-fill or has-stroke) {
-          let label = fields.remove("label", default: none)
-          if has-fill { fields.fill = color }
-          if has-stroke { fields.stroke = with-color-stroke(fields.stroke) }
-          let result = if "body" in fields {
-            let b = fields.remove("body")
-            text(..fields, b)
-          } else { text(..fields) }
-          if label != none { [#result#label] } else { result }
-        } else {
-          set text(fill: color)
-          it
-        }
-      },
-      it => {
-        if _fallback-hide in (semi-transparent-cover, cover-with-rect) {
-          _fallback-hide(self: self, it, ..fallback-hide-args)
-        } else {
-          _fallback-hide(it)
-        }
-      },
+    )
+  }
+  // Leaving a leaf that sets no colour of its own alone matters: wrapping it
+  // in a fresh `text(..)` splits it out of the run it was shaped in, which
+  // moves smart quotes and kerning.
+  let explicit-only(it) = {
+    if it.func() == text and sets-own-colour(it) { rebuild-text(it) } else {
+      it
+    }
+  }
+
+  let policy = (
+    recolour-explicit: explicit-only,
+    styled-wrap: inner => {
+      set text(fill: color)
+      inner
+    },
+    map-fill: value => if type(value) in (std.color, gradient) { color },
+    map-stroke: value => _restroke(_ => color, value),
+    inherited-fill: _ => none,
+    inherited-stroke: _ => none,
+    leaf-fill: () => color,
+    caption-wrap: result => {
+      show figure.caption: set text(fill: color)
+      result
+    },
+    hide-filled: hide-filled,
+  )
+
+  let run(fallback) = {
+    let policy = policy
+    policy.fallback = fallback
+    set text(fill: color)
+    _cover-tree(
+      policy,
+      // A leaf that sets no colour of its own is left exactly as it is: the
+      // `set text` above already reaches it, and wrapping it in anything
+      // splits it out of the run it was shaped in, which moves smart quotes
+      // and kerning.
+      it => if it.func() == text and sets-own-colour(it) {
+        rebuild-text(it)
+      } else { it },
       it,
     )
+  }
+
+  if fallback-hide == none {
+    run(it => it)
+  } else if fallback-hide == auto {
+    // The only `context` this method uses, and the overlay has to be measured
+    // out here: inside `run`, `set text(fill: color)` makes `text.fill` report
+    // the cover colour and the overlay comes out fully transparent.
+    context {
+      let overlay = _flat-overlay-fill(color)
+      run(it => cover-with-rect(
+        fill: overlay,
+        inline: type(it) == content and it.func() == box,
+        it,
+      ))
+    }
+  } else {
+    run(fallback-hide.with(..fallback-hide-args))
   }
 }
 
 
-/// Cover content with an alpha-changing mechanism.
+/// Cover content by fading every colour towards transparency.
+///
+/// Reads the colour actually in force and lowers its alpha, so covered content
+/// keeps its own hues. That costs `context` calls; `color-changing-cover` is
+/// the cheaper option if compile time matters, at the price of a flat look.
+///
+/// Note: this covers ordinary Typst content. Diagram packages such as cetz
+/// paint outside it and are handled by `fallback-hide`.
 ///
 /// Example: `config-methods(cover: utils.alpha-changing-cover.with(alpha: 25%))`
 ///
-/// Note: This only covers normal typst content, not content produced by diagram modules like cetz. Currently cetz does not allow an easy way to apply alpha changes just like typst. On that note: if you see this cover method increasing compile times you might want to switch to `color-changing-cover` but it does not produce the same look: all covered elements will just be recolored to the same color.
+/// - alpha (ratio): The opacity to fade covered colours to. Default is `25%`.
 ///
-/// - alpha (ratio): The opacity to apply to text colors when covered. Default is `25%`.
+/// - fallback-hide (func): Applied to what cannot be faded, such as images and
+///   tiling fills. `auto` overlays them with `semi-transparent-cover` so they
+///   match the surrounding fade. Pass `none` to leave them untouched.
 ///
-/// - fallback-hide (func): The function to use to hide the content if it does not contain text. Default is typst's own `hide`. You may pass `none` to not hide non-text content. To hide content with a semi-transparent/color overlay, you can pass in `semi-transparent-cover`/`cover-with-rect.with(fill: ...)`.
+/// - fallback-hide-args (dict): Extra named arguments for `fallback-hide`.
 ///
 /// - it (content): The content to cover.
-///
-/// - fallback-hide-args (args): The arguments to pass to the fallback hide function if the content does not contain text.
 ///
 /// -> content
 #let alpha-changing-cover(
@@ -1780,34 +1867,32 @@
   fallback-hide-args: (:),
   it,
 ) = context {
-  let _fallback-hide = fallback-hide
-  let _fallback-hide-args = fallback-hide-args
-  if fallback-hide == none {
-    _fallback-hide = it => it
-  }
-  if fallback-hide == auto {
-    _fallback-hide = semi-transparent-cover
-    _fallback-hide-args = (self: self, alpha: 100% - alpha, is-fallback: true)
+  let fallback = if fallback-hide == none {
+    it => it
+  } else if fallback-hide == auto {
+    semi-transparent-cover.with(
+      self: self,
+      alpha: 100% - alpha,
+      is-fallback: true,
+    )
+  } else {
+    fallback-hide.with(..fallback-hide-args)
   }
 
-  // Reconstruct a gradient with alpha applied to every stop color.
-  // Decompose via stops()/space()/relative()/kind() and tree.reconstruct from scratch
-  // since gradients have no fields() method.
-  let update-alpha-gradient(g) = {
-    let new-stops = g
-      .stops()
-      .map(s => (update-alpha(s.first(), alpha), s.last()))
+  // A gradient has no `fields()`, so it is taken apart and put back together.
+  let fade-gradient(g) = {
+    let stops = g.stops().map(s => (update-alpha(s.first(), alpha), s.last()))
     let kind = g.kind()
     if kind == gradient.linear {
       gradient.linear(
-        ..new-stops,
+        ..stops,
         space: g.space(),
         relative: g.relative(),
         angle: g.angle(),
       )
     } else if kind == gradient.radial {
       gradient.radial(
-        ..new-stops,
+        ..stops,
         space: g.space(),
         relative: g.relative(),
         center: g.center(),
@@ -1817,7 +1902,7 @@
       )
     } else {
       gradient.conic(
-        ..new-stops,
+        ..stops,
         space: g.space(),
         relative: g.relative(),
         angle: g.angle(),
@@ -1825,405 +1910,86 @@
       )
     }
   }
-
-  // Update alpha of a stroke value — handles color, gradient, and auto paint.
-  // `auto` paint renders as black, so treat it as such.
-  let with-alpha-stroke(s) = {
-    if type(s) == color {
-      update-alpha(s, alpha)
-    } else if type(s) == stroke {
-      let new-paint = if s.paint == auto {
-        update-alpha(black, alpha)
-      } else if type(s.paint) == color {
-        update-alpha(s.paint, alpha)
-      } else if type(s.paint) == gradient {
-        update-alpha-gradient(s.paint)
-      } else { none }
-      if new-paint != none {
-        let a = (paint: new-paint)
-        if s.thickness != auto { a.insert("thickness", s.thickness) }
-        if s.cap != auto { a.insert("cap", s.cap) }
-        if s.join != auto { a.insert("join", s.join) }
-        if s.dash != auto { a.insert("dash", s.dash) }
-        if s.miter-limit != auto { a.insert("miter-limit", s.miter-limit) }
-        stroke(..a)
-      } else { s }
-    } else { s }
-  }
-
-  // Like color-method but only updates *explicit* fill/stroke on text nodes —
-  // no show-rule fallback. Used inside styled contexts to prevent double-alpha
-  // (the context set-rule above already handles inherited fills).
-  let explicit-only-color-method(it) = {
-    if it.func() == text {
-      let fields = it.fields()
-      let has-fill = (
-        "fill" in fields and type(fields.fill) in (color, gradient)
-      )
-      let has-stroke = (
-        "stroke" in fields and fields.stroke != none and fields.stroke != auto
-      )
-      if has-fill or has-stroke {
-        let label = fields.remove("label", default: none)
-        if has-fill {
-          fields.fill = if type(fields.fill) == gradient {
-            update-alpha-gradient(fields.fill)
-          } else { update-alpha(fields.fill, alpha) }
-        }
-        if has-stroke { fields.stroke = with-alpha-stroke(fields.stroke) }
-        let result = if "body" in fields {
-          let b = fields.remove("body")
-          text(..fields, b)
-        } else { text(..fields) }
-        if label != none { [#result#label] } else { result }
-      } else { it }
-    } else { it }
-  }
-
-  // Helpers to read the contextually active fill/stroke for a shape element when no
-  // explicit field is set on the element itself (i.e. it comes from an outer set rule).
-  // These closures live inside the context {} block of alpha-changing-cover so they can
-  // read contextual values directly without an extra context call.
-  let get-eff-fill(f) = {
-    if f == rect or f == square { rect.fill } else if (
-      f == circle or f == ellipse
-    ) { circle.fill } else if f == box { box.fill } else if f == block {
-      block.fill
-    } else if f == highlight { highlight.fill } else if f == table.cell {
-      table.cell.fill
-    } else if f == grid.cell { grid.cell.fill } else if (
-      f == polygon or f == curve
-    ) { polygon.fill } else { none }
-  }
-  let get-eff-stroke(f) = {
-    if f == rect or f == square { rect.stroke } else if (
-      f == circle or f == ellipse
-    ) { circle.stroke } else if f == box { box.stroke } else if f == block {
-      block.stroke
-    } else if f == line { line.stroke } else if f == underline {
-      underline.stroke
-    } else if f == overline { overline.stroke } else if f == strike {
-      strike.stroke
-    } else if f == table.cell { table.cell.stroke } else if f == grid.cell {
-      grid.cell.stroke
-    } else if f == table.hline { table.hline.stroke } else if f == table.vline {
-      table.vline.stroke
-    } else if f == grid.hline { grid.hline.stroke } else if f == grid.vline {
-      grid.vline.stroke
-    } else if f == polygon or f == curve { polygon.stroke } else if (
-      f == math.cancel
-    ) { math.cancel.stroke } else { none }
-  }
-
-  // Recursively traverse the content tree and apply:
-  //   - color-method   to text / math.equation leaves
-  //   - alpha changes to fill/stroke fields on color-bearing elements
-  //   - noncolor-method to opaque leaves (image, …) that cannot be alpha-modified
-  //
-  // The if/else-if/else chain is intentional: every branch must be mutually exclusive
-  // so that exactly one path runs per node (Typst concatenates all content expressions
-  // in a code block, so a missing else causes double-output bugs).
-  let apply-cover-methods(color-method, noncolor-method, it) = {
-    if type(it) != content {
-      // Non-content values (strings, numbers, etc.) pass through unchanged.
-      it
-    } else if (
-      it.func() in (text, math.equation)
-        or it.func() == tree.typst-builtin-math-symbol
-    ) {
-      // Leaf text / math / symbol: let the caller apply alpha to the fill.
-      color-method(it)
-    } else if tree.is-sequence(it) {
-      // Implicit sequence ([a][b], a + b): recurse into each child.
-      it
-        .children
-        .map(c => apply-cover-methods(color-method, noncolor-method, c))
-        .sum(default: [])
-    } else if tree.is-styled(it) {
-      // Reconstruct the styled wrapper; inside use `context` to read text.fill/stroke
-      // AFTER the styled rules apply, then re-apply alpha as the innermost set rule
-      // (innermost wins in Typst). Use explicit-only inside to prevent double-alpha.
-      tree.reconstruct-styled(it, context {
-        let new-fill = if type(text.fill) == color {
-          update-alpha(text.fill, alpha)
-        } else if type(text.fill) == gradient {
-          update-alpha-gradient(text.fill)
-        } else { text.fill }
-        let new-stroke = if type(text.stroke) == color {
-          update-alpha(text.stroke, alpha)
-        } else if type(text.stroke) == stroke {
-          with-alpha-stroke(text.stroke)
-        } else { text.stroke }
-        set text(fill: new-fill, stroke: new-stroke)
-        apply-cover-methods(
-          explicit-only-color-method,
-          noncolor-method,
-          it.child,
-        )
-      })
-    } else if (
-      it.func()
-        in (
-          // Shapes / decorations with fill and/or stroke — some also carry a body.
-          rect,
-          square,
-          circle,
-          ellipse,
-          box,
-          block,
-          highlight,
-          underline,
-          overline,
-          strike,
-          table.cell,
-          grid.cell,
-          table.hline,
-          table.vline,
-          grid.hline,
-          grid.vline,
-          line,
-          polygon,
-          curve,
-          polygon.regular,
-          math.cancel,
-        )
-    ) {
-      let fields = it.fields()
-      let label = fields.remove("label", default: none)
-      // Read fill: explicit field takes priority, then contextual inherited value.
-      let eff-fill = if "fill" in fields { fields.fill } else {
-        get-eff-fill(it.func())
-      }
-      if type(eff-fill) == tiling {
-        // Tiling fill can't be alpha-changed. Apply noncolor-method to the original
-        // element unchanged — modifying stroke or body first would double-cover: once
-        // from the alpha change and once from the noncolor-method overlay.
-        let result = noncolor-method(it)
-        if label != none { [#result#label] } else { result }
-      } else {
-        let eff-stroke = if "stroke" in fields { fields.stroke } else {
-          get-eff-stroke(it.func())
-        }
-        if eff-stroke != none and eff-stroke != auto {
-          fields.stroke = with-alpha-stroke(eff-stroke)
-        }
-        // Extract body so it can be passed positionally (named `body:` arg is
-        // rejected by most built-in constructors like rect, box, block, …).
-        let body-content = fields.remove("body", default: none)
-        if body-content != none {
-          body-content = apply-cover-methods(
-            color-method,
-            noncolor-method,
-            body-content,
-          )
-        }
-        if type(eff-fill) == color {
-          fields.fill = update-alpha(eff-fill, alpha)
-        } else if type(eff-fill) == gradient {
-          fields.fill = update-alpha-gradient(eff-fill)
-        }
-        // Via `tree.call-with-fields`, because the variadic shapes (`polygon`,
-        // `curve`) take their geometry positionally and would otherwise
-        // error with `unexpected argument: vertices` / `components`.
-        let result = if body-content != none {
-          tree.call-with-fields(it.func(), fields, body-content)
-        } else {
-          tree.call-with-fields(it.func(), fields)
-        }
-        if label != none { [#result#label] } else { result }
-      }
-    } else if it.func() in (table, grid) {
-      // Table / grid: alpha the table-level fill/stroke, then recurse into cells.
-      // Tiling fills can't be alpha-changed — overlay the reconstructed table instead.
-      let fields = it.fields()
-      let label = fields.remove("label", default: none)
-      let children = fields.remove("children")
-      let has-tiling-fill = "fill" in fields and type(fields.fill) == tiling
-      if "fill" in fields {
-        if type(fields.fill) == color {
-          fields.fill = update-alpha(fields.fill, alpha)
-        } else if type(fields.fill) == gradient {
-          fields.fill = update-alpha-gradient(fields.fill)
-        }
-        // tiling: leave fill unchanged — noncolor-method overlays the result below
-      }
-      if (
-        "stroke" in fields and fields.stroke != none and fields.stroke != auto
-      ) {
-        fields.stroke = with-alpha-stroke(fields.stroke)
-      }
-      let new-children = children.map(c => apply-cover-methods(
-        color-method,
-        noncolor-method,
-        c,
-      ))
-      let result = (it.func())(..fields, ..new-children)
-      let final = if has-tiling-fill { noncolor-method(result) } else { result }
-      if label != none { [#final#label] } else { final }
-    } else if it.func() == list.item {
-      // list.item: use explicit-only for body so the outer set text(fill: alpha-fill)
-      // (applied at the top level of alpha-changing-cover) handles inherited fills and
-      // the auto-generated bullet without double-alpha on explicit colors.
-      let new-body = apply-cover-methods(
-        explicit-only-color-method,
-        noncolor-method,
-        it.body,
-      )
-      list.item(new-body)
-    } else if it.func() == terms.item {
-      // terms.item has `term` and `description` — neither is named `body`.
-      terms.item(
-        apply-cover-methods(color-method, noncolor-method, it.term),
-        apply-cover-methods(color-method, noncolor-method, it.description),
-      )
-    } else if it.func() == enum.item {
-      // enum.item: positional-only `number`; use explicit-only for body.
-      let new-body = apply-cover-methods(
-        explicit-only-color-method,
-        noncolor-method,
-        it.body,
-      )
-      let fields = it.fields()
-      if "number" in fields { enum.item(fields.number, new-body) } else {
-        enum.item(new-body)
-      }
-    } else if it.func() == figure {
-      // figure: recurse into body and caption, then wrap in a show rule so the
-      // auto-generated "Figure N:" supplement is also covered.
-      let fields = it.fields()
-      let label = fields.remove("label", default: none)
-      let new-body = apply-cover-methods(
-        color-method,
-        noncolor-method,
-        fields.remove("body"),
-      )
-      // Also recurse into the caption body so explicitly-colored content inside it
-      // (e.g. text(fill: red)[…]) is covered. The show rule below still handles the
-      // auto-generated supplement which is never in the content tree.
-      let cap = fields.remove("caption", default: none)
-      if cap != none {
-        fields.caption = apply-cover-methods(color-method, noncolor-method, cap)
-      }
-      let result = (it.func())(..fields, new-body)
-      let wrapped = context {
-        let alpha-fill = update-alpha(text.fill, alpha)
-        show figure.caption: set text(fill: alpha-fill)
-        result
-      }
-      if label != none { [#wrapped#label] } else { wrapped }
-    } else if it.has("body") {
-      // Generic single-body containers: list.item, align, link,
-      // strong, emph, footnote, smallcaps, sub, super, pad, figure, quote,
-      // hide, move, scale, heading, columns, place, …
-      let new-body = apply-cover-methods(color-method, noncolor-method, it.body)
-      // Via `tree.reconstruct`, which knows the elements whose defining field is
-      // positional (`align`, `place`, `columns`, `link`, `rotate`); passing
-      // every field by name is what used to make those error out here.
-      tree.reconstruct(named: true, it, new-body)
-    } else if it.has("child") {
-      // Rare single-child wrappers not covered above.
-      let new-child = apply-cover-methods(
-        color-method,
-        noncolor-method,
-        it.child,
-      )
-      tree.reconstruct(named: true, body-name: "child", it, new-child)
-    } else if it.func() in (list, enum, terms) {
-      // list/enum/terms whole-container: use explicit-only for children to avoid
-      // double-alpha on explicitly-colored content (inherited fills are handled by
-      // the outer set text(fill: alpha-fill) at the top of alpha-changing-cover).
-      let fields = it.fields()
-      let label = fields.remove("label", default: none)
-      let children = fields.remove("children")
-      let new-children = children.map(c => apply-cover-methods(
-        explicit-only-color-method,
-        noncolor-method,
-        c,
-      ))
-      let result = (it.func())(..fields, ..new-children)
-      if label != none { [#result#label] } else { result }
-    } else if it.has("children") {
-      // Other multi-child containers (stack, …): recurse with normal color-method.
-      let new-children = it.children.map(c => apply-cover-methods(
-        color-method,
-        noncolor-method,
-        c,
-      ))
-      tree.reconstruct-table-like(it, new-children)
-    } else if it.func() == raw {
-      // Raw code blocks render as text with a different font — wrap in a text
-      // fill override so the alpha propagates into the rendered glyphs.
-      let raw-fill = if type(text.fill) == gradient {
-        update-alpha-gradient(text.fill)
-      } else { update-alpha(text.fill, alpha) }
-      text(fill: raw-fill, it)
-    } else if (
-      it.func() in (parbreak, linebreak)
-        or tree.is-space(it)
-        or tree.is-metadata(it)
-    ) {
-      // Spacing / metadata nodes carry no visible color — pass through unchanged.
-      it
-    } else {
-      // Truly opaque leaves (image, …): fall back to the caller-supplied cover.
-      noncolor-method(it)
+  let fade(value) = {
+    if type(value) == std.color {
+      update-alpha(value, alpha)
+    } else if type(value) == gradient {
+      fade-gradient(value)
     }
   }
 
-  // Outer catch-all: any content not explicitly handled by the recursion
-  // (list/enum markers, vec/mat brackets, raw glyphs, …) inherits alpha-fill
-  // because it falls under this set rule. The recursion handles explicit colors
-  // directly so they are not double-alpha'd by this rule (explicit wins over set).
-  let outer-fill = if type(text.fill) == gradient {
-    update-alpha-gradient(text.fill)
-  } else { update-alpha(text.fill, alpha) }
-  set text(fill: outer-fill)
+  let sets-own-colour(it) = {
+    let fields = it.fields()
+    (
+      ("fill" in fields and type(fields.fill) in (std.color, gradient))
+        or (
+          "stroke" in fields and fields.stroke != none and fields.stroke != auto
+        )
+    )
+  }
+  let rebuild-text(it) = {
+    let fields = it.fields()
+    let lbl = fields.remove("label", default: none)
+    let body = fields.remove("body", default: none)
+    if "fill" in fields and type(fields.fill) in (std.color, gradient) {
+      fields.fill = fade(fields.fill)
+    }
+    if (
+      "stroke" in fields and fields.stroke != none and fields.stroke != auto
+    ) {
+      fields.stroke = _restroke(fade, fields.stroke)
+    }
+    let result = if body == none { text(..fields) } else {
+      text(..fields, body)
+    }
+    if lbl == none { result } else { tree.label-it(result, lbl) }
+  }
+  let explicit-only(it) = {
+    if it.func() == text and sets-own-colour(it) { rebuild-text(it) } else {
+      it
+    }
+  }
 
-  apply-cover-methods(
-    it => {
-      // color-method is called on `text` and `math.equation` leaf nodes.
-      // For `text` elements that have an explicit fill/stroke color we update
-      // those fields directly so the alpha is baked into the element itself.
-      // For inherited fills (auto) and for math.equation we fall back to a
-      // show rule that reads `text.fill` from the rendering context.
-      let fields = it.fields()
-      let has-fill = (
-        "fill" in fields and type(fields.fill) in (color, gradient)
-      )
-      let has-stroke = (
-        "stroke" in fields and fields.stroke != none and fields.stroke != auto
-      )
-      if it.func() == text and (has-fill or has-stroke) {
-        let label = fields.remove("label", default: none)
-        if has-fill {
-          fields.fill = if type(fields.fill) == gradient {
-            update-alpha-gradient(fields.fill)
-          } else { update-alpha(fields.fill, alpha) }
-        }
-        if has-stroke {
-          fields.stroke = with-alpha-stroke(fields.stroke)
-        }
-        let result = if "body" in fields {
-          let body = fields.remove("body")
-          text(..fields, body)
+  let policy = (
+    recolour-explicit: explicit-only,
+    styled-wrap: inner => context {
+      // Read the colour after the wrapper's own rules have applied, then fade
+      // it as the innermost rule, which is the one that wins.
+      set text(
+        fill: if type(text.fill) in (std.color, gradient) {
+          fade(text.fill)
         } else {
-          text(..fields)
-        }
-        if label != none { [#result#label] } else { result }
-      } else {
-        // Inherited fill, math.equation, or symbol: set text fill so math-mode
-        // delimiters and brackets (generated by vec, mat, etc.) are also covered.
-        let inner-fill = if type(text.fill) == gradient {
-          update-alpha-gradient(text.fill)
-        } else { update-alpha(text.fill, alpha) }
-        set text(fill: inner-fill)
-        it
-      }
+          text.fill
+        },
+        stroke: if text.stroke == none { text.stroke } else {
+          _restroke(fade, text.stroke)
+        },
+      )
+      inner
     },
-    _fallback-hide.with(.._fallback-hide-args),
+    map-fill: fade,
+    map-stroke: value => _restroke(fade, value),
+    inherited-fill: _inherited-fill,
+    inherited-stroke: _inherited-stroke,
+    leaf-fill: () => fade(text.fill),
+    caption-wrap: result => context {
+      show figure.caption: set text(fill: fade(text.fill))
+      result
+    },
+    fallback: fallback,
+    hide-filled: false,
+  )
+
+  set text(fill: fade(text.fill))
+  _cover-tree(
+    policy,
+    it => if it.func() == text and sets-own-colour(it) {
+      rebuild-text(it)
+    } else { it },
     it,
   )
 }
+
 
 /// Applies the theme's primary color to text content. Used as the default `alert` method.
 ///
@@ -3761,6 +3527,15 @@
   return (left: s, right: scale(x: -100%, s))
 }
 
+/// Takes in a symbol or a dictionary of symbols and
+/// emits a 2d dict for filled|stroked-styled x left|right-orientated symbols,
+/// usable as a set of navigation symbols.
+///
+/// The dict may compose multiple different symbols and
+/// the function will try to fill in the gaps as best as possible.
+///
+/// - symbol (symbol|dictionary): the symbol to build the variants for.
+/// -> dictionary
 #let create-nav-symbols(symbol) = {
   if type(symbol) == dictionary {
     let allowed = ("filled", "stroked", "left", "right")
@@ -3793,7 +3568,7 @@
 // one. The rest have to say so by refusing to run.
 
 #let _moved(name) = panic(
-  "`utils." + name + "` moved to touying's `core/tree.typ` in 0.8.0.",
+  "`utils." + name + "` moved to `core.tree` in 0.8.0.",
 )
 
 #let typst-builtin-sequence = tree.typst-builtin-sequence
@@ -3812,23 +3587,38 @@
 #let sequence-to-array(..) = _moved("sequence-to-array")
 #let positional-fields(..) = _moved("positional-fields")
 
-#let _deprecated(name, fn) = (..args) => {
-  tree._deprecation-warning("utils." + name, "0.9.0")
+#let _deprecated(name, fn, extra: "") = (..args) => {
+  tree._deprecation-warning("utils." + name, "0.9.0", extra: extra)
   fn(..args)
 }
 
-#let label-it = _deprecated("label-it", tree.label-it)
-#let call-with-fields = _deprecated("call-with-fields", tree.call-with-fields)
-#let reconstruct = _deprecated("reconstruct", tree.reconstruct)
+#let label-it = _deprecated(
+  "label-it",
+  tree.label-it,
+  extra: "The function moved to `core.tree` in v0.8.0.",
+)
+#let call-with-fields = _deprecated(
+  "call-with-fields",
+  tree.call-with-fields,
+  extra: "The function moved to `core.tree` in v0.8.0.",
+)
+#let reconstruct = _deprecated(
+  "reconstruct",
+  tree.reconstruct,
+  extra: "The function moved to `core.tree` in v0.8.0.",
+)
 #let reconstruct-table-like = _deprecated(
   "reconstruct-table-like",
   tree.reconstruct-table-like,
+  extra: "The function moved to `core.tree` in v0.8.0.",
 )
 #let reconstruct-styled = _deprecated(
   "reconstruct-styled",
   tree.reconstruct-styled,
+  extra: "The function moved to `core.tree` in v0.8.0.",
 )
 #let reconstruct-heading = _deprecated(
   "reconstruct-heading",
   tree.reconstruct-heading,
+  extra: "The function moved to `core.tree` in v0.8.0.",
 )
