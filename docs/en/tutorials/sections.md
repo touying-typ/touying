@@ -113,7 +113,7 @@ A second group of labels filters by output mode. When a label does not match the
 
 These keywords can be combined with hyphens, and combining them means "or": `<touying:handout-presentation>` (equivalent to `<touying:slides>`) or `<touying:presentation-article>` (rendered in presentation mode and in article mode, skipped in handout mode).
 
-`<touying:never>` is the exception: it is the empty mode list, and unlike the three modes above -- which can hold at the same time and therefore combine -- it does not compose. It is only valid on its own. `<touying:never-presentation>` is not a keyword, so it filters nothing and the content renders everywhere.
+`<touying:never>` is the exception: it is the empty mode list, and thus `<touying:never-presentation>` is not a keyword, but an actual label.
 
 Use it to park a slide you are not ready to cut: a draft, an alternative version, or a section you want out of every build without commenting out markup that contains `#pause` or labels.
 

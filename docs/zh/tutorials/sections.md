@@ -116,7 +116,7 @@ Touying 识别标题上的特殊标签以控制幻灯片行为。它们分为两
 
 这些关键字可以用连字符组合，含义是「或」，例如 `<touying:handout-presentation>`（等价于 `<touying:slides>`）或 `<touying:presentation-article>`（演示模式和 article 模式下都渲染，讲义模式下跳过）。
 
-`<touying:never>` 是个例外：它表示空的模式列表。上面三种模式可以同时成立，因此可以组合；而 `never` 不能组合，只能单独使用。`<touying:never-presentation>` 不是有效的关键字，它不会过滤任何内容，带该标签的内容在所有模式下都会渲染。
+`<touying:never>` 是个例外：它表示空的模式列表，因此 `<touying:never-presentation>` 不是关键字，而是一个真实的标签。
 
 它适合用来搁置暂时不想删除的幻灯片：草稿、备选版本，或者你希望在所有构建中都排除、但又不想注释掉其中含 `#pause` 或标签的内容的小节。
 

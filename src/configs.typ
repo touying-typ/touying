@@ -909,7 +909,8 @@
 #let _prefixes = ("methods", "info", "colors", "page", "article", "store")
 
 /// Gets the current config at the point of the call. Returns a dict with context evaluated values.
-///
+/// You cannot compute with the resulting values, only display it because `touying-get-config` uses a context expression internally. If you need to compute with config values use the callback `touying-fn-wrapper-raw` instead and access what you need on `self` directly.
+/// 
 /// Usage:
 /// ```typc
 /// touying-get-config() // returns the whole config dict

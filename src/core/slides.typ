@@ -20,13 +20,13 @@
   body: body,
 ))<touying-temporary-mark>]
 
-/// Inject configuration changes into a block of content. Changes take effect only within `body`. Useful for implementing features like `#show: appendix` or changing the cover method on the fly.
+/// Inject configuration changes into a block of content. Changes take effect only within `body` or the slide you call it in. Best used as a show rule. Useful for implementing features like `#show: appendix` or changing the cover method on the fly.
 ///
 /// Example: `#let appendix(body) = touying-set-config((appendix: true), defer:true, body)` and you can use `#show: appendix` to set the appendix for the presentation.
 ///
 /// The keyword `defer` is useful for features like `appendix`, which should not take effect until the next slide starts. All following content is also then wrapped into the preamble, e.g. `counter-update`, set or other show rules. Putting content after a deferred config show rule will not render it visibly in the document.
 /// You may even use `#show: touying-set-config.with((preamble: fn), defer:true)` to set a preamble function for the next slide or do similar config changes without calling the `slide` function explicitly.
-/// Just relying on the deferred config change's ability to capture functions and running them also in the preamble is considered an antipattern.
+/// Just relying on the deferred config change's ability to capture functions and running them also in the preamble is considered an antipattern. Use the explicit fields on `#slide` instead.
 ///
 /// - config (dictionary): The new configurations for the presentation.
 ///
