@@ -212,7 +212,7 @@
         to-wrap += raw-images.map(i => cropped-to-fit(
           i.element,
           to-abs-width(i.col-fraction),
-          width-ratio(i.element),
+          width-ratio(i.img),
         ))
       }
       if wrap-image-figures {
@@ -289,6 +289,14 @@
 #let _extract-image(cont) = {
   if cont == none { return none }
   if type(cont) != content { return none }
+  // A `#set` or `#show` in force wraps the image in a `styled` node. Classify
+  // underneath it, but hand the wrapper back on the element that renders, so
+  // the rules still apply to it.
+  if tree.is-styled(cont) {
+    let inner = _extract-image(cont.child)
+    if inner == none { return none }
+    return (..inner, element: tree.restyle(cont, inner.element))
+  }
   if cont.func() == image {
     return (element: cont, img: cont, is-figure: false)
   }
@@ -301,7 +309,7 @@
   }
   // Sequence or block: dig into children to find a single image
   let children = if tree.is-sequence(cont) {
-    cont.children.filter(c => c != [ ] and c != parbreak())
+    cont.children.filter(c => c not in tree.empty-contents)
   } else if cont.func() == block {
     let body = cont.at("body", default: none)
     if body != none { (body,) } else { () }
@@ -320,6 +328,7 @@
 // These should be centered at the end of their subsection in article mode.
 #let _is-block-content(cont) = {
   if cont == none or type(cont) != content { return false }
+  if tree.is-styled(cont) { return _is-block-content(cont.child) }
   let f = cont.func()
   if f == table or f == grid { return true }
   // Figure that does NOT contain an image (e.g. wrapping a canvas or table)
@@ -416,6 +425,9 @@
       // Store the display element (figure with caption, or raw image)
       images.push((
         element: extracted.element,
+        // The bare image, whose own `width` says how much room it really
+        // needs. `element` may be a figure, or wrapped in a `styled` node.
+        img: extracted.img,
         col-fraction: col-frac,
         is-figure: extracted.is-figure,
       ))

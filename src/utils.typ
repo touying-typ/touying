@@ -1297,9 +1297,10 @@
               right: 1pt,
             ))
           } else {
-            named.insert("outset", if inline { 1pt } else {
-              (top: 1pt, bottom: 2pt, left: 1pt, right: 1pt)
-            })
+            // No outset: as the comment above says, these measure to their
+            // true bounding box, and any margin shows as an outline around
+            // the very thing being covered.
+            named.insert("outset", 0pt)
           }
         }
         if not inline {
