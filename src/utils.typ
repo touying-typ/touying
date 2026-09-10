@@ -176,6 +176,36 @@
   }
 }
 
+/// Field names that Typst's element constructors take *positionally* rather
+/// than by name. Rebuilding such an element from `it.fields()` with named
+/// arguments alone fails outright — `align` reports `unexpected argument:
+/// alignment`, `link` reports `expected string, dictionary, location, or
+/// label, found content` — so these have to be pulled out of the field
+/// dictionary and passed in order, ahead of the named ones.
+///
+/// `scale` is deliberately absent: since Typst 0.15 it has no `factor` field
+/// at all, only the resolved `x`/`y`, which are named. That is also why the
+/// bug this list fixes stayed hidden for so long — `scale` was the shape
+/// everyone tested.
+///
+/// - f (function): The element function.
+///
+/// -> array
+#let positional-fields(f) = {
+  if f == align or f == place {
+    ("alignment",)
+  } else if f == columns {
+    ("count",)
+  } else if f == link {
+    ("dest",)
+  } else if f == rotate {
+    ("angle",)
+  } else {
+    ()
+  }
+}
+
+
 /// Reconstruct a content with a new body.
 ///
 /// - body-name (str): The property name of the body field.
@@ -200,10 +230,17 @@
   let label = fields.remove("label", default: none)
   let _ = fields.remove(body-name, default: none)
   if named {
+    // Anything the constructor insists on receiving positionally has to come
+    // out of the dictionary first and lead the argument list.
+    let leading = ()
+    for name in positional-fields(it.func()) {
+      let value = fields.remove(name, default: none)
+      if value != none { leading.push(value) }
+    }
     if label != none and labeled {
-      return [#(it.func())(..fields, ..new-body)#label]
+      return [#(it.func())(..leading, ..fields, ..new-body)#label]
     } else {
-      return (it.func())(..fields, ..new-body)
+      return (it.func())(..leading, ..fields, ..new-body)
     }
   } else {
     if label != none and labeled {
@@ -1863,15 +1900,15 @@
           enum.item(new-body)
         }
       } else if it.has("body") {
-        let fields = it.fields()
-        let label = fields.remove("label", default: none)
         let new-body = apply-cover-methods(
           color-method,
           noncolor-method,
-          fields.remove("body"),
+          it.body,
         )
-        let result = (it.func())(..fields, new-body)
-        if label != none { [#result#label] } else { result }
+        // Via `reconstruct`, which knows the elements whose defining field is
+        // positional (`align`, `place`, `columns`, `link`, `rotate`); passing
+        // every field by name is what used to make those error out here.
+        reconstruct(named: true, it, new-body)
       } else if it.has("child") {
         let new-child = apply-cover-methods(
           color-method,
@@ -2302,15 +2339,11 @@
       // Generic single-body containers: list.item, align, link,
       // strong, emph, footnote, smallcaps, sub, super, pad, figure, quote,
       // hide, move, scale, heading, columns, place, …
-      let fields = it.fields()
-      let label = fields.remove("label", default: none)
-      let new-body = apply-cover-methods(
-        color-method,
-        noncolor-method,
-        fields.remove("body"),
-      )
-      let result = (it.func())(..fields, new-body)
-      if label != none { [#result#label] } else { result }
+      let new-body = apply-cover-methods(color-method, noncolor-method, it.body)
+      // Via `reconstruct`, which knows the elements whose defining field is
+      // positional (`align`, `place`, `columns`, `link`, `rotate`); passing
+      // every field by name is what used to make those error out here.
+      reconstruct(named: true, it, new-body)
     } else if it.has("child") {
       // Rare single-child wrappers not covered above.
       let new-child = apply-cover-methods(
