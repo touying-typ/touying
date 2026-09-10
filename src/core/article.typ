@@ -948,8 +948,6 @@
       let r = _render-run(use-self, current-run)
       current-run = ()
       current-items += r.items
-      current-images += r.images
-      current-blocks += r.blocks
       // article-text replaces the preceding run's visible content, but
       // breadcrumbs are invisible bookkeeping (not part of what it's
       // replacing) and must survive so touying-recall inside its own body
@@ -958,6 +956,15 @@
         type(item) == content and _unstyled(item).func() == heading
       ))
       current-items = headings
+      // Images and block-level content extracted for meander wrapping are
+      // part of that replaced content, and this is the path taken by
+      // default (`wrap-images` is on). Dropping them from `current-items`
+      // alone left them queued for `_wrap-section` to emit at the end of
+      // the section, so a `#components.side-by-side[..][..]` in front of an
+      // `#article-text[..]` still turned up in the article, alongside the
+      // prose that was supposed to stand in for it.
+      current-images = ()
+      current-blocks = ()
       current-items += r.breadcrumbs
       current-items.push(_restyle(
         child,
