@@ -1,5 +1,6 @@
 #import "../utils.typ"
 #import "../extern.typ"
+#import "tree.typ"
 #import "waypoints.typ": (
   _compute-waypoint-ranges, _resolve-waypoint-forest, _waypoint-known,
   waypoint-kinds,
@@ -41,7 +42,7 @@
   // [implicit-waypoint-metadata + fn-wrapper-metadata] is split into separate children.
   let flat-args = ()
   for arg in reducer.args.flatten() {
-    if type(arg) == content and utils.is-sequence(arg) {
+    if type(arg) == content and tree.is-sequence(arg) {
       flat-args += arg.children
     } else {
       flat-args.push(arg)
@@ -132,7 +133,7 @@
           if type(fn-result) == array {
             result += fn-result
           } else if (
-            type(fn-result) == content and utils.is-sequence(fn-result)
+            type(fn-result) == content and tree.is-sequence(fn-result)
           ) {
             for child in fn-result.children {
               result.push(child)
@@ -216,7 +217,7 @@
     // [implicit-waypoint-metadata + fn-wrapper-metadata] is split into separate children.
     let flat-count-args = ()
     for arg in value.args.flatten() {
-      if type(arg) == content and utils.is-sequence(arg) {
+      if type(arg) == content and tree.is-sequence(arg) {
         flat-count-args += arg.children
       } else {
         flat-count-args.push(arg)
@@ -404,7 +405,7 @@
   }
 
   for child in children {
-    if utils.is-sequence(child) {
+    if tree.is-sequence(child) {
       (
         repetitions,
         last-subslide,
@@ -488,7 +489,7 @@
           )
         }
       } else if kind == "touying-set-config" {
-        let inner = if utils.is-sequence(child.value.body) {
+        let inner = if tree.is-sequence(child.value.body) {
           child.value.body.children
         } else {
           (child.value.body,)
@@ -520,7 +521,7 @@
         let inner-ls = last-subslide
         let inner-flat-args = ()
         for arg in child.value.args.flatten() {
-          if type(arg) == content and utils.is-sequence(arg) {
+          if type(arg) == content and tree.is-sequence(arg) {
             inner-flat-args += arg.children
           } else {
             inner-flat-args.push(arg)
@@ -629,7 +630,7 @@
           }
         }
       }
-    } else if utils.is-styled(child) {
+    } else if tree.is-styled(child) {
       (
         repetitions,
         last-subslide,
@@ -722,7 +723,7 @@
         // to find any embedded waypoints/pauses.
         let body = child.at("body", default: none)
         if body != none {
-          let inner = if utils.is-sequence(body) {
+          let inner = if tree.is-sequence(body) {
             body.children
           } else {
             (body,)
@@ -747,7 +748,7 @@
       // Recurse into content with a body field
       let body = child.at("body", default: none)
       if body != none {
-        let inner = if utils.is-sequence(body) {
+        let inner = if tree.is-sequence(body) {
           body.children
         } else {
           (body,)
@@ -828,7 +829,7 @@
   ) {
     return c.value
   }
-  if utils.is-sequence(c) {
+  if tree.is-sequence(c) {
     for child in c.children {
       let found = _find-reducer-meta(child)
       if found != none { return found }
@@ -1132,90 +1133,6 @@
   return (parsed-results, max-repetitions)
 }
 
-/// Recursively resolve metadata marks anywhere inside a content tree.
-///
-/// Walks `body` (sequences, styled nodes, and any content with a `body` or
-/// `children` field — figure, scale, rotate, table, grid, stack, etc.)
-/// looking for `metadata` nodes whose `kind` is in `kinds`. Each match is
-/// replaced *in place* by `resolve(node-value)`; everything else in the
-/// tree (surrounding text, siblings, wrapping) is reconstructed unchanged
-/// around it. This is what lets a "passive" mark (one with no visibility
-/// of its own — `touying-fn-wrapper-raw`/`alert`, `touying-recall`'s
-/// fallback path) be embedded anywhere inside content handed to something
-/// else, not just when it's the *entire* content — e.g. `text before
-/// #alert[...] text after` nested inside `#uncover[...]`, not only a bare
-/// `#uncover[#alert[...]]`.
-///
-/// Shared by article mode's whole-body walk (`article.typ`'s
-/// `_resolve-block-recalls`) and `touying-fn-wrapper`'s own
-/// pre-processing of its positional args (nesting passive marks inside
-/// `uncover`/`only`/`alternatives`).
-///
-/// - body (content): The content to walk.
-/// - kinds (array): Metadata `kind` strings to look for and resolve.
-/// - resolve (function): Called with a matched node's `.value` dictionary;
-///   returns the content to substitute in its place.
-///
-/// -> content
-#let _resolve-marks-in-tree(body, kinds, resolve) = {
-  if type(body) != content { return body }
-  if (
-    body.func() == metadata
-      and type(body.value) == dictionary
-      and body.value.at("kind", default: none) in kinds
-  ) {
-    return resolve(body.value)
-  }
-  if utils.is-sequence(body) {
-    let parts = body.children.map(c => _resolve-marks-in-tree(
-      c,
-      kinds,
-      resolve,
-    ))
-    return parts.sum(default: [])
-  }
-  if utils.is-styled(body) {
-    let resolved-child = _resolve-marks-in-tree(body.child, kinds, resolve)
-    if resolved-child != body.child {
-      return utils.reconstruct-styled(body, resolved-child)
-    }
-    return body
-  }
-  // Recurse into any content with a .body field. The constructors with a
-  // positional-first parameter (align, place, columns, link, rotate, …) used
-  // to need hand-written branches here; `utils.reconstruct` knows about them
-  // now, and unlike those branches it keeps the element's label.
-  if body.has("body") {
-    let inner = body.at("body", default: none)
-    if inner != none {
-      let resolved-inner = _resolve-marks-in-tree(inner, kinds, resolve)
-      if resolved-inner != inner {
-        return utils.reconstruct(
-          named: true,
-          labeled: true,
-          body,
-          resolved-inner,
-        )
-      }
-    }
-    return body
-  }
-  // Recurse into content with .children (table, grid, stack)
-  if body.has("children") {
-    let kids = body.children
-    let any-changed = false
-    let new-kids = kids.map(kid => {
-      let resolved-kid = _resolve-marks-in-tree(kid, kinds, resolve)
-      if resolved-kid != kid { any-changed = true }
-      resolved-kid
-    })
-    if any-changed {
-      return utils.reconstruct-table-like(body, new-kids)
-    }
-    return body
-  }
-  body
-}
 
 /// Resolve "passive" marks anywhere inside a content tree: a
 /// `touying-fn-wrapper-raw` (e.g. `#alert`) is called in place, a
@@ -1230,7 +1147,7 @@
   body,
   self,
   resolve-recall,
-) = _resolve-marks-in-tree(
+) = tree.resolve-marks(
   body,
   ("touying-fn-wrapper-raw", "touying-slide-recaller"),
   v => if v.kind == "touying-fn-wrapper-raw" {
@@ -1400,7 +1317,7 @@
     // A touying-reducer stores its label inside the metadata dict (its own
     // attached label is the internal <touying-temporary-mark>, unaffected);
     // anything else uses its own directly-attached label.
-    let real-label = if utils.is-kind(child, "touying-reducer") {
+    let real-label = if tree.is-kind(child, "touying-reducer") {
       child.value.at("label", default: none)
     } else if (
       type(child) == content
@@ -1756,6 +1673,9 @@
     grid.cell,
     math.equation,
     heading,
+    columns,
+    place,
+    rotate,
   )
   let bodies = bodies.pos()
   let parsed-results = ()
@@ -1891,7 +1811,7 @@
     // from `items`/`last-result` alone (e.g. the #meanwhile case).
     let cover-hidden(cover-fn, items, last-result, next-is-list: false) = {
       // First non-space hidden element (borders the gap *above* the block)
-      let first-pos = items.position(item => not utils.is-space(item))
+      let first-pos = items.position(item => not tree.is-space(item))
       let first-is-list = (
         first-pos != none and _is-list-item(items.at(first-pos))
       )
@@ -1900,7 +1820,7 @@
         let found = none
         for i in range(items.len()) {
           let item = items.at(items.len() - 1 - i)
-          if utils.is-space(item) {
+          if tree.is-space(item) {
             // skip space nodes only
           } else {
             found = item
@@ -1922,7 +1842,7 @@
         let found = false
         for i in range(last-result.len()) {
           let item = last-result.at(last-result.len() - 1 - i)
-          if utils.is-space(item) {
+          if tree.is-space(item) {
             // skip space nodes only
           } else {
             found = _is-list-item(item)
@@ -1962,7 +1882,7 @@
     }
 
     // Flatten sequences and handle each child element
-    let children = if utils.is-sequence(it) {
+    let children = if tree.is-sequence(it) {
       it.children
     } else {
       (it,)
@@ -1978,7 +1898,7 @@
       let res = false
       while j < children.len() {
         let sibling = children.at(j)
-        if utils.is-space(sibling) {
+        if tree.is-space(sibling) {
           j += 1
         } else {
           res = _is-list-item(sibling)
@@ -2477,7 +2397,7 @@
             .value
             .args
             .pos()
-            .map(c => _resolve-marks-in-tree(
+            .map(c => tree.resolve-marks(
               c,
               ("touying-slide-recaller",),
               v => resolve-recall-fallback(
@@ -2690,7 +2610,7 @@
           hidden-parts = ()
         }
         result.push(child)
-      } else if utils.is-sequence(child) {
+      } else if tree.is-sequence(child) {
         // handle the sequence
         let (
           conts,
@@ -2753,7 +2673,7 @@
         repetitions = final-repetitions
         max-repetitions = calc.max(max-repetitions, inner-max-repetitions)
         last-subslide = calc.max(last-subslide, next-last-subslide)
-      } else if utils.is-styled(child) {
+      } else if tree.is-styled(child) {
         // handle styled
         let (
           reconstructed,
@@ -2769,7 +2689,7 @@
           last-subslide,
           index,
           need-cover,
-          (child, cont) => utils.typst-builtin-styled(cont, child.styles),
+          (child, cont) => tree.reconstruct-styled(child, cont),
         )
         // Propagate meanwhile effect from inside the styled element
         if final-repetitions < repetitions {
@@ -2810,7 +2730,7 @@
           last-subslide,
           index,
           need-cover,
-          (child, cont) => utils.reconstruct(
+          (child, cont) => tree.reconstruct(
             child,
             labeled: labeled(child.func()),
             cont,
@@ -2890,7 +2810,7 @@
           }
           max-repetitions = calc.max(max-repetitions, repetitions)
         }
-        let reconstructed-table = utils.reconstruct-table-like(
+        let reconstructed-table = tree.reconstruct-table-like(
           child,
           labeled: labeled(child.func()),
           conts,
@@ -2971,7 +2891,7 @@
           last-subslide,
           index,
           need-cover,
-          (child, cont) => utils.reconstruct(
+          (child, cont) => tree.reconstruct(
             named: true,
             labeled: labeled(child.func()),
             child,
@@ -3015,7 +2935,13 @@
           last-subslide,
           index,
           need-cover,
-          (child, cont) => terms.item(child.term, cont),
+          (child, cont) => tree.reconstruct(
+            named: true,
+            body-name: "description",
+            labeled: labeled(child.func()),
+            child,
+            cont,
+          ),
         )
         // Propagate meanwhile effect from inside the terms item
         if final-repetitions < repetitions {
@@ -3038,219 +2964,6 @@
         max-repetitions = calc.max(max-repetitions, inner-max-repetitions)
         last-subslide = calc.max(last-subslide, next-last-subslide)
         has-fn-wrapper = has-fn-wrapper or force-to-result
-      } else if type(child) == content and child.func() == columns {
-        // handle columns
-        let (
-          conts,
-          inner-max-repetitions,
-          next-last-subslide,
-          final-repetitions,
-          inner-has-fn-wrapper,
-        ) = _parse-content-into-results-and-repetitions(
-          self: self,
-          need-cover: repetitions <= index,
-          base: repetitions,
-          base-last-subslide: last-subslide,
-          index: index,
-          child.body,
-        )
-        has-fn-wrapper = has-fn-wrapper or inner-has-fn-wrapper
-        let args = if child.has("gutter") {
-          (gutter: child.gutter)
-        }
-        let count = if child.has("count") {
-          child.count
-        } else {
-          2
-        }
-        // Two-pass: if fn-wrappers are present and columns would be hidden,
-        // re-run with outer need-cover so fn-wrappers handle their own visibility.
-        let would-be-hidden = not (
-          calc.min(repetitions, final-repetitions) <= index or not need-cover
-        )
-        let (cont, inner-max-repetitions) = if (
-          would-be-hidden and inner-has-fn-wrapper
-        ) {
-          let (
-            conts2,
-            inner-max-repetitions2,
-            _,
-            _,
-            _,
-          ) = _parse-content-into-results-and-repetitions(
-            self: self,
-            need-cover: need-cover,
-            base: repetitions,
-            base-last-subslide: last-subslide,
-            index: index,
-            child.body,
-          )
-          (conts2.first(), inner-max-repetitions2)
-        } else {
-          (conts.first(), inner-max-repetitions)
-        }
-        // Propagate meanwhile effect from inside the columns
-        if final-repetitions < repetitions {
-          if hidden-parts.len() != 0 {
-            result.push(cover-hidden(cover, hidden-parts, result))
-            hidden-parts = ()
-          }
-          max-repetitions = calc.max(max-repetitions, repetitions)
-        }
-        if (
-          would-be-hidden and inner-has-fn-wrapper
-            or calc.min(repetitions, final-repetitions) <= index
-            or not need-cover
-        ) {
-          result.push(columns(count, ..args, cont))
-        } else {
-          hidden-parts.push(columns(count, ..args, cont))
-        }
-        repetitions = final-repetitions
-        max-repetitions = calc.max(max-repetitions, inner-max-repetitions)
-        last-subslide = calc.max(last-subslide, next-last-subslide)
-      } else if type(child) == content and child.func() == place {
-        // handle place
-        let (
-          conts,
-          inner-max-repetitions,
-          next-last-subslide,
-          final-repetitions,
-          inner-has-fn-wrapper,
-        ) = _parse-content-into-results-and-repetitions(
-          self: self,
-          need-cover: repetitions <= index,
-          base: repetitions,
-          base-last-subslide: last-subslide,
-          index: index,
-          child.body,
-        )
-        has-fn-wrapper = has-fn-wrapper or inner-has-fn-wrapper
-        let fields = child.fields()
-        let _ = fields.remove("alignment", default: none)
-        let _ = fields.remove("body", default: none)
-        let alignment = if child.has("alignment") {
-          child.alignment
-        } else {
-          start
-        }
-        // Two-pass: if fn-wrappers are present and place would be hidden,
-        // re-run with outer need-cover so fn-wrappers handle their own visibility.
-        let would-be-hidden = not (
-          calc.min(repetitions, final-repetitions) <= index or not need-cover
-        )
-        let (cont, inner-max-repetitions) = if (
-          would-be-hidden and inner-has-fn-wrapper
-        ) {
-          let (
-            conts2,
-            inner-max-repetitions2,
-            _,
-            _,
-            _,
-          ) = _parse-content-into-results-and-repetitions(
-            self: self,
-            need-cover: need-cover,
-            base: repetitions,
-            base-last-subslide: last-subslide,
-            index: index,
-            child.body,
-          )
-          (conts2.first(), inner-max-repetitions2)
-        } else {
-          (conts.first(), inner-max-repetitions)
-        }
-        // Propagate meanwhile effect from inside the place
-        if final-repetitions < repetitions {
-          if hidden-parts.len() != 0 {
-            result.push(cover-hidden(cover, hidden-parts, result))
-            hidden-parts = ()
-          }
-          max-repetitions = calc.max(max-repetitions, repetitions)
-        }
-        if (
-          would-be-hidden and inner-has-fn-wrapper
-            or calc.min(repetitions, final-repetitions) <= index
-            or not need-cover
-        ) {
-          result.push(place(alignment, ..fields, cont))
-        } else {
-          hidden-parts.push(place(alignment, ..fields, cont))
-        }
-        repetitions = final-repetitions
-        max-repetitions = calc.max(max-repetitions, inner-max-repetitions)
-        last-subslide = calc.max(last-subslide, next-last-subslide)
-      } else if type(child) == content and child.func() == rotate {
-        // handle rotate
-        let (
-          conts,
-          inner-max-repetitions,
-          next-last-subslide,
-          final-repetitions,
-          inner-has-fn-wrapper,
-        ) = _parse-content-into-results-and-repetitions(
-          self: self,
-          need-cover: repetitions <= index,
-          base: repetitions,
-          base-last-subslide: last-subslide,
-          index: index,
-          child.body,
-        )
-        has-fn-wrapper = has-fn-wrapper or inner-has-fn-wrapper
-        let fields = child.fields()
-        let _ = fields.remove("angle", default: none)
-        let _ = fields.remove("body", default: none)
-        let angle = if child.has("angle") {
-          child.angle
-        } else {
-          0deg
-        }
-        // Two-pass: if fn-wrappers are present and rotate would be hidden,
-        // re-run with outer need-cover so fn-wrappers handle their own visibility.
-        let would-be-hidden = not (
-          calc.min(repetitions, final-repetitions) <= index or not need-cover
-        )
-        let (cont, inner-max-repetitions) = if (
-          would-be-hidden and inner-has-fn-wrapper
-        ) {
-          let (
-            conts2,
-            inner-max-repetitions2,
-            _,
-            _,
-            _,
-          ) = _parse-content-into-results-and-repetitions(
-            self: self,
-            need-cover: need-cover,
-            base: repetitions,
-            base-last-subslide: last-subslide,
-            index: index,
-            child.body,
-          )
-          (conts2.first(), inner-max-repetitions2)
-        } else {
-          (conts.first(), inner-max-repetitions)
-        }
-        // Propagate meanwhile effect from inside the rotate
-        if final-repetitions < repetitions {
-          if hidden-parts.len() != 0 {
-            result.push(cover-hidden(cover, hidden-parts, result))
-            hidden-parts = ()
-          }
-          max-repetitions = calc.max(max-repetitions, repetitions)
-        }
-        if (
-          would-be-hidden and inner-has-fn-wrapper
-            or calc.min(repetitions, final-repetitions) <= index
-            or not need-cover
-        ) {
-          result.push(rotate(angle, ..fields, cont))
-        } else {
-          hidden-parts.push(rotate(angle, ..fields, cont))
-        }
-        repetitions = final-repetitions
-        max-repetitions = calc.max(max-repetitions, inner-max-repetitions)
-        last-subslide = calc.max(last-subslide, next-last-subslide)
       } else {
         if repetitions <= index or not need-cover {
           result.push(child)

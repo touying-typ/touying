@@ -1,6 +1,7 @@
 #import "../utils.typ"
 #import "../pdfpc.typ"
 #import "../components.typ"
+#import "tree.typ"
 #import "waypoints.typ": (
   _compute-waypoint-ranges, _resolve-waypoint-forest, _waypoint-known,
   waypoint-kinds,
@@ -248,7 +249,7 @@
   }
   let slide-wrapper = slide-fn(body)
   assert(
-    utils.is-kind(slide-wrapper, "touying-slide-wrapper"),
+    tree.is-kind(slide-wrapper, "touying-slide-wrapper"),
     message: "you must use `touying-slide-wrapper` in your slide function",
   )
   return ((slide-wrapper.value.fn)(self), slide-wrapper.value.fn)
@@ -307,7 +308,7 @@
     "horizontal-line-to-pagebreak",
     default: true,
   )
-  let children = if utils.is-sequence(body) {
+  let children = if tree.is-sequence(body) {
     body.children
   } else {
     (body,)
@@ -316,12 +317,12 @@
   //recursively flattens the array and checks for X-only content which is inlined when necessary. Merged loop to avoid repeatedly iterating all elements.
   let _expand-child(child) = {
     if (
-      utils.is-kind(child, "touying-article-text")
-        or utils.is-kind(child, "touying-article-only")
+      tree.is-kind(child, "touying-article-text")
+        or tree.is-kind(child, "touying-article-only")
     ) {
       return ()
     }
-    if utils.is-kind(child, "touying-slides-only") {
+    if tree.is-kind(child, "touying-slides-only") {
       let visible-in = child.value.at("visible-in", default: "slides")
       let is-visible = (
         visible-in == "slides"
@@ -329,14 +330,14 @@
           or (visible-in == "handout" and self.handout)
       )
       if not is-visible { return () }
-      let inner = if utils.is-sequence(child.value.body) {
+      let inner = if tree.is-sequence(child.value.body) {
         child.value.body.children
       } else {
         (child.value.body,)
       }
       return inner.map(_expand-child)
     }
-    if utils.is-sequence(child) {
+    if tree.is-sequence(child) {
       return child.children.map(_expand-child)
     }
     child
@@ -412,7 +413,7 @@
         and horizontal-line
         and child not in ([—], [---], [–], [--], [-])
     ) {
-      slide-parts = utils.trim(slide-parts)
+      slide-parts = tree.trim(slide-parts)
       if slide-parts != () or current-headings != () {
         let flush-self = (
           self
@@ -446,14 +447,14 @@
     // after a slide-wrapper get attached.
     if (
       last-wrapper-info.len() > 0
-        and not utils.is-kind(child, "touying-speaker-note")
+        and not tree.is-kind(child, "touying-speaker-note")
         and child not in ([], [ ], parbreak(), linebreak())
     ) {
       while last-wrapper-info.len() > 0 { let _ = last-wrapper-info.pop() }
     }
     // Main logic
-    if utils.is-kind(child, "touying-slide-wrapper") {
-      slide-parts = utils.trim(slide-parts)
+    if tree.is-kind(child, "touying-slide-wrapper") {
+      slide-parts = tree.trim(slide-parts)
       if (
         slide-parts != ()
           or _get-slide-fn(self + (headings: current-headings), default: none)
@@ -524,9 +525,9 @@
       last-wrapper-info.push((child.value.fn, slide-self))
       absorb-leading-preamble = false
     } else if (
-      utils.is-kind(child, "touying-speaker-note")
+      tree.is-kind(child, "touying-speaker-note")
         and last-wrapper-info.len() > 0
-        and utils.trim(slide-parts) == ()
+        and tree.trim(slide-parts) == ()
     ) {
       // A speaker-note immediately after a slide-wrapper: re-generate the
       // previous slide with the note injected into self so it gets processed
@@ -559,7 +560,7 @@
       while last-wrapper-info.len() > 0 { let _ = last-wrapper-info.pop() }
       last-wrapper-info.push((original-fn, new-self))
     } else if (
-      utils.is-kind(child, "touying-slide-recaller")
+      tree.is-kind(child, "touying-slide-recaller")
         and child.value.label in recaller-map
     ) {
       // Whole-slide recall: recall-entry.content is a complete,
@@ -568,7 +569,7 @@
       // entry, so flush whatever came before it first to preserve
       // ordering. This is the one recall case that's genuinely a slide
       // boundary; the fallback case below is not (see there for why).
-      slide-parts = utils.trim(slide-parts)
+      slide-parts = tree.trim(slide-parts)
       if slide-parts != () or current-headings != () {
         let flush-self = (
           self
@@ -612,7 +613,7 @@
         output-slides.push((recall-entry.callable)(recalled-self))
       }
       absorb-leading-preamble = false
-    } else if utils.is-kind(child, "touying-slide-recaller") {
+    } else if tree.is-kind(child, "touying-slide-recaller") {
       // Fallback (reducer/labeled-content) recall: not a registered
       // whole-slide target, so this is ordinary content — a labeled table,
       // a labeled reducer's animation stage, whatever — not a slide
@@ -640,7 +641,7 @@
       }
     } else if child in (pagebreak(), pagebreak(weak: true)) {
       // split content when we have a pagebreak
-      slide-parts = utils.trim(slide-parts)
+      slide-parts = tree.trim(slide-parts)
       if slide-parts != () or current-headings != () {
         let flush-self = (
           self
@@ -686,9 +687,9 @@
       } else {
         start-part.push(child)
       }
-    } else if utils.is-heading(child, depth: slide-level) {
+    } else if tree.is-heading(child, depth: slide-level) {
       let last-heading-depth = _get-last-heading-depth(current-headings)
-      slide-parts = utils.trim(slide-parts)
+      slide-parts = tree.trim(slide-parts)
       if (
         _get-slide-fn(
           self + (headings: current-headings),
@@ -702,7 +703,7 @@
           or (child.depth == 3 and new-subsubsection-slide-fn != none)
           or (child.depth == 4 and new-subsubsubsection-slide-fn != none)
       ) {
-        slide-parts = utils.trim(slide-parts)
+        slide-parts = tree.trim(slide-parts)
         if slide-parts != () or current-headings != () {
           let flush-self = (
             self
@@ -853,7 +854,7 @@
       }
     } else if (
       self.at("auto-offset-for-heading", default: true)
-        and utils.is-heading(child)
+        and tree.is-heading(child)
     ) {
       let fields = child.fields()
       let lbl = fields.remove("label", default: none)
@@ -869,7 +870,7 @@
       } else {
         start-part.push(new-heading)
       }
-    } else if utils.is-kind(child, "touying-set-config") {
+    } else if tree.is-kind(child, "touying-set-config") {
       // When absorbing leading preamble and no heading seen yet, recurse with
       // the merged config applied to self and the leading preamble prepended.
       // Unlike styled nodes, config nodes have no .child — use .value.body.
@@ -893,7 +894,7 @@
         )
       } else {
         // now the big complicated logic ...
-        slide-parts = utils.trim(slide-parts)
+        slide-parts = tree.trim(slide-parts)
         let is-deferred = child.value.at("defer", default: false)
         // In probe mode (is-new-start=false), slide-parts starts empty by
         // design — that alone must not trigger deferred. Only explicit
@@ -998,7 +999,7 @@
                 start-part.push(inner-start-part)
               }
             }
-            slide-parts = utils.trim(slide-parts)
+            slide-parts = tree.trim(slide-parts)
             if slide-parts != () or current-headings != () {
               let flush-self = (
                 merged-self
@@ -1040,7 +1041,7 @@
                 start-part.push(inner-start-part)
               }
             }
-            slide-parts = utils.trim(slide-parts)
+            slide-parts = tree.trim(slide-parts)
             if slide-parts != () or current-headings != () {
               let flush-self = (
                 merged-self
@@ -1071,7 +1072,7 @@
           }
         }
       }
-    } else if utils.is-styled(child) {
+    } else if tree.is-styled(child) {
       // When absorbing leading preamble and no heading seen yet, recurse into
       // the styled node with absorb-leading-preamble: true. The set/show rules
       // will propagate via reconstruct-styled on the output.
@@ -1090,7 +1091,7 @@
           absorb-leading-preamble: true,
           inner-body,
         )
-        output-slides.push(utils.reconstruct-styled(child, inner-result))
+        output-slides.push(tree.reconstruct-styled(child, inner-result))
       } else {
         // Split the content into slides recursively for styled content
         let (inner-start-part, slide-content-part) = split-content-into-slides(
@@ -1109,7 +1110,7 @@
             // to build slides correctly, and flush any accumulated content beforehand.
             // There is no previous slide to reconcile inner-start-part onto, so we
             // do NOT attempt to reconcile it here.
-            slide-parts = utils.trim(slide-parts)
+            slide-parts = tree.trim(slide-parts)
             if slide-parts != () or current-headings != () {
               let flush-self = (
                 self
@@ -1136,7 +1137,7 @@
               if slide-content != none { output-slides.push(slide-content) }
             }
             output-slides.push(
-              utils.reconstruct-styled(
+              tree.reconstruct-styled(
                 child,
                 split-content-into-slides(
                   self: self,
@@ -1152,7 +1153,7 @@
             // emit the new slides directly instead of using _delayed-wrapper,
             // which would hide them when show-delayed-wrapper is false.
             if inner-start-part != none {
-              let styled-start = utils.reconstruct-styled(
+              let styled-start = tree.reconstruct-styled(
                 child,
                 inner-start-part,
               )
@@ -1162,7 +1163,7 @@
                 start-part.push(styled-start)
               }
             }
-            slide-parts = utils.trim(slide-parts)
+            slide-parts = tree.trim(slide-parts)
             if slide-parts != () or current-headings != () {
               let flush-self = (
                 self
@@ -1190,7 +1191,7 @@
             }
             // Add new slides, wrapped in the same styled node so that the
             // show/set rules cascade to subsequent slides (matching Typst semantics)
-            output-slides.push(utils.reconstruct-styled(
+            output-slides.push(tree.reconstruct-styled(
               child,
               slide-content-part,
             ))
@@ -1200,9 +1201,9 @@
           // approach so that subslide animations work correctly within the styled scope
           let styled-child = {
             if inner-start-part != none {
-              utils.reconstruct-styled(child, inner-start-part)
+              tree.reconstruct-styled(child, inner-start-part)
             }
-            _delayed-wrapper(utils.reconstruct-styled(child, none))
+            _delayed-wrapper(tree.reconstruct-styled(child, none))
           }
           if new-start {
             slide-parts.push(styled-child)
@@ -1226,7 +1227,7 @@
   }
 
   // Handle the last slide
-  slide-parts = utils.trim(slide-parts)
+  slide-parts = tree.trim(slide-parts)
   if slide-parts != () or current-headings != () {
     let flush-self = (
       self

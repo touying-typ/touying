@@ -1,10 +1,11 @@
 #import "../utils.typ"
 #import "../extern.typ"
+#import "tree.typ"
 #import "parser.typ": (
   _build-native-recall, _members-in-range,
   _parse-content-into-results-and-repetitions, _prepare-render-context,
-  _render-at-subslide, _resolve-marks-in-tree, _resolve-string-to-members,
-  _resolve-waypoint-to-members, check-current-mode-skip, waypoint-kinds,
+  _render-at-subslide, _resolve-string-to-members, _resolve-waypoint-to-members,
+  check-current-mode-skip, waypoint-kinds,
 )
 
 /// Content that replaces the slide content when in article mode. Place it after your slide, before the next one.
@@ -46,18 +47,18 @@
 /// Returns: the full payload dictionary (with content, images, blocks, etc.)
 #let _unwrap-article-raw(cont) = {
   // This is where we stop unwrapping, finally found our payload!
-  if utils.is-kind(cont, "touying-article-raw") {
+  if tree.is-kind(cont, "touying-article-raw") {
     return cont.value
   }
   //unwrap all sorts of wrappers.
-  if utils.is-styled(cont) {
+  if tree.is-styled(cont) {
     return _unwrap-article-raw(cont.child)
   }
   if type(cont) == content and cont.has("body") {
     return _unwrap-article-raw(cont.body)
   }
   // Sequence - look into children, there should only be one payload child, thus we return the first.
-  if utils.is-sequence(cont) {
+  if tree.is-sequence(cont) {
     for child in cont.children {
       let result = _unwrap-article-raw(child)
       if result != none {
@@ -80,7 +81,7 @@
 ///
 /// -> content
 #let _unstyled(it) = {
-  if utils.is-styled(it) { _unstyled(it.child) } else { it }
+  if tree.is-styled(it) { _unstyled(it.child) } else { it }
 }
 
 
@@ -90,7 +91,7 @@
 ///
 /// -> array
 #let _styles-of(it) = {
-  if utils.is-styled(it) { (it.styles,) + _styles-of(it.child) } else { () }
+  if tree.is-styled(it) { (it.styles,) + _styles-of(it.child) } else { () }
 }
 
 
@@ -114,7 +115,7 @@
   let out = content
   // Innermost first, so the outermost wrapper ends up outermost again.
   for styles in _styles-of(child).rev() {
-    out = utils.typst-builtin-styled(out, styles)
+    out = tree.typst-builtin-styled(out, styles)
   }
   out
 }
@@ -132,7 +133,7 @@
 /// -> bool
 #let _is-structural(it) = {
   let core = _unstyled(it)
-  if utils.is-metadata(core) { return true }
+  if tree.is-metadata(core) { return true }
   if type(core) != content { return false }
   core.func() == heading or core in ([—], [---])
 }
@@ -172,26 +173,26 @@
 ///
 /// -> array
 #let _flatten-children(it) = {
-  if utils.is-styled(it) {
+  if tree.is-styled(it) {
     let out = ()
     let run = ()
     for child in _flatten-children(it.child) {
       if _is-structural(child) {
         if run.len() > 0 {
-          out.push(utils.typst-builtin-styled(run.sum(default: []), it.styles))
+          out.push(tree.typst-builtin-styled(run.sum(default: []), it.styles))
           run = ()
         }
-        out.push(utils.typst-builtin-styled(child, it.styles))
+        out.push(tree.typst-builtin-styled(child, it.styles))
       } else {
         run.push(child)
       }
     }
     if run.len() > 0 {
-      out.push(utils.typst-builtin-styled(run.sum(default: []), it.styles))
+      out.push(tree.typst-builtin-styled(run.sum(default: []), it.styles))
     }
     return out
   }
-  if utils.is-sequence(it) {
+  if tree.is-sequence(it) {
     return it.children.map(_flatten-children).flatten()
   }
   (it,)
@@ -234,12 +235,12 @@
     type(r) == content and _unstyled(r).func() == heading
   )
   let headings = items.filter(is-heading)
-  let breadcrumbs = items.filter(r => utils.is-kind(
+  let breadcrumbs = items.filter(r => tree.is-kind(
     r,
     "touying-recall-breadcrumb",
   ))
   let body-parts = items.filter(r => (
-    not is-heading(r) and not utils.is-kind(r, "touying-recall-breadcrumb")
+    not is-heading(r) and not tree.is-kind(r, "touying-recall-breadcrumb")
   ))
   // Unwrap blocks to expose the inner content directly. Content gets nested
   // in `block(...)` at multiple points upstream (`_article-linearize` for
@@ -263,10 +264,10 @@
       if body == none { return r }
       return _unwrap-blocks(body)
     }
-    if utils.is-styled(r) {
+    if tree.is-styled(r) {
       return (r.func())(_unwrap-blocks(r.child), r.styles)
     }
-    if utils.is-sequence(r) {
+    if tree.is-sequence(r) {
       return r.children.map(_unwrap-blocks).sum(default: none)
     }
     r
@@ -432,7 +433,7 @@
     }
   }
   // Sequence or block: dig into children to find a single image
-  let children = if utils.is-sequence(cont) {
+  let children = if tree.is-sequence(cont) {
     cont.children.filter(c => c != [ ] and c != parbreak())
   } else if cont.func() == block {
     let body = cont.at("body", default: none)
@@ -476,7 +477,7 @@
   }
   // Sequence with a single meaningful child — filter out spaces, parbreaks, and
   // other whitespace-like elements to find the "real" content.
-  if utils.is-sequence(cont) {
+  if tree.is-sequence(cont) {
     let _space-func = [#"a" b].children.at(1).func()
     let meaningful = cont.children.filter(c => {
       if c == [ ] or c == parbreak() { return false }
@@ -687,7 +688,7 @@
     let core = _unstyled(child)
     let lbl = if type(core) == content and core.func() == heading {
       core.at("label", default: none)
-    } else if utils.is-kind(core, "touying-slide-wrapper") {
+    } else if tree.is-kind(core, "touying-slide-wrapper") {
       core.at("label", default: none)
     } else {
       none
@@ -727,14 +728,14 @@
   // them all.
   let _extract-breadcrumbs(cont) = {
     if cont == none { return (breadcrumbs: (), rest: none) }
-    if utils.is-kind(cont, "touying-recall-breadcrumb") {
+    if tree.is-kind(cont, "touying-recall-breadcrumb") {
       return (breadcrumbs: (cont,), rest: none)
     }
-    if utils.is-sequence(cont) {
+    if tree.is-sequence(cont) {
       let breadcrumbs = ()
       let rest = ()
       for c in cont.children {
-        if utils.is-kind(c, "touying-recall-breadcrumb") {
+        if tree.is-kind(c, "touying-recall-breadcrumb") {
           breadcrumbs.push(c)
         } else {
           rest.push(c)
@@ -790,7 +791,7 @@
   // wrapper/table-like content) is shared with touying-fn-wrapper's own
   // nesting support in parser.typ (see _resolve-marks-in-tree there) —
   // this only supplies the per-kind resolution logic.
-  let _resolve-block-recalls(body) = _resolve-marks-in-tree(
+  let _resolve-block-recalls(body) = tree.resolve-marks(
     body,
     ("touying-render", "touying-slide-recaller"),
     v => if v.kind == "touying-render" {
@@ -891,7 +892,7 @@
       // node, so classify on `core` and put the styles back with `_restyle`
       // around anything pulled out of a mark's payload.
       let core = _unstyled(child)
-      if utils.is-kind(core, "touying-article-text") {
+      if tree.is-kind(core, "touying-article-text") {
         let r = _render-run(use-self, current-run)
         current-run = ()
         result += r.items
@@ -905,19 +906,19 @@
         result = headings
         result += r.breadcrumbs
         result.push(_restyle(child, _resolve-block-recalls(core.value.body)))
-      } else if utils.is-kind(core, "touying-article-only") {
+      } else if tree.is-kind(core, "touying-article-only") {
         let r = _render-run(use-self, current-run)
         current-run = ()
         result += r.items
         result += r.breadcrumbs
         result.push(_restyle(child, _resolve-block-recalls(core.value.body)))
-      } else if utils.is-kind(core, "touying-set-config") {
+      } else if tree.is-kind(core, "touying-set-config") {
         let r = _render-run(use-self, current-run)
         current-run = ()
         result += r.items
         result += r.breadcrumbs
         use-self = utils.merge-dicts(use-self, core.value.config)
-      } else if utils.is-kind(core, "touying-slide-wrapper") {
+      } else if tree.is-kind(core, "touying-slide-wrapper") {
         let r = _render-run(use-self, current-run)
         current-run = ()
         result += r.items
@@ -933,7 +934,7 @@
         // thing under a heading (see e.g. "With Explicit Slide"/"Focus
         // Slide" in the article-mode test).
         if raw-content != none { result.push(_restyle(child, raw-content)) }
-      } else if utils.is-kind(core, "touying-slides-only") {
+      } else if tree.is-kind(core, "touying-slides-only") {
         // Stripped in article mode — an article-mode/slide-mode
         // distinction the shared parser has no notion of, so it must be
         // filtered out here rather than left for the parser to see.
@@ -990,7 +991,7 @@
       current-blocks = ()
     }
 
-    if utils.is-kind(core, "touying-article-text") {
+    if tree.is-kind(core, "touying-article-text") {
       let r = _render-run(use-self, current-run)
       current-run = ()
       current-items += r.items
@@ -1002,21 +1003,14 @@
         type(item) == content and _unstyled(item).func() == heading
       ))
       current-items = headings
-      // Images and block-level content extracted for meander wrapping are
-      // part of that replaced content, and this is the path taken by
-      // default (`wrap-images` is on). Dropping them from `current-items`
-      // alone left them queued for `_wrap-section` to emit at the end of
-      // the section, so a `#components.side-by-side[..][..]` in front of an
-      // `#article-text[..]` still turned up in the article, alongside the
-      // prose that was supposed to stand in for it.
-      current-images = ()
+      current-images = () //nothing to do for article-text here
       current-blocks = ()
       current-items += r.breadcrumbs
       current-items.push(_restyle(
         child,
         _resolve-block-recalls(core.value.body),
       ))
-    } else if utils.is-kind(core, "touying-article-only") {
+    } else if tree.is-kind(core, "touying-article-only") {
       let r = _render-run(use-self, current-run)
       current-run = ()
       current-items += r.items
@@ -1027,7 +1021,7 @@
         child,
         _resolve-block-recalls(core.value.body),
       ))
-    } else if utils.is-kind(core, "touying-set-config") {
+    } else if tree.is-kind(core, "touying-set-config") {
       let r = _render-run(use-self, current-run)
       current-run = ()
       current-items += r.items
@@ -1035,7 +1029,7 @@
       current-images += r.images
       current-blocks += r.blocks
       use-self = utils.merge-dicts(use-self, core.value.config)
-    } else if utils.is-kind(core, "touying-slide-wrapper") {
+    } else if tree.is-kind(core, "touying-slide-wrapper") {
       let r = _render-run(use-self, current-run)
       current-run = ()
       current-items += r.items
@@ -1063,7 +1057,7 @@
         .map(b => _restyle(child, b))
     } else if is-section-heading {
       current-items.push(child)
-    } else if utils.is-kind(core, "touying-slides-only") {
+    } else if tree.is-kind(core, "touying-slides-only") {
       // Stripped in article mode — an article-mode/slide-mode
       // distinction the shared parser has no notion of, so it must be
       // filtered out here rather than left for the parser to see.

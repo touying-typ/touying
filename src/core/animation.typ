@@ -1,5 +1,6 @@
 #import "../utils.typ"
 #import "waypoints.typ": from-wp, waypoint-kinds // needed to support alternatives repeat-last with waypoints
+#import "tree.typ"
 
 
 
@@ -785,18 +786,7 @@
         + "Use a label, `get-first`, `get-last`, `prev-wp`, `next-wp` or simple slide numbers instead.",
     )
   }
-  let num-items = if utils.is-sequence(cont) {
-    cont
-      .children
-      .filter(c => (
-        type(c) == content and c.func() in (list.item, enum.item, terms.item)
-      ))
-      .len()
-  } else if cont.func() in (list, enum, terms) {
-    cont.children.len()
-  } else {
-    1
-  }
+  let num-items = tree.count-items(cont)
   if start == auto {
     // Relative: items start from the current pause position.
     touying-fn-wrapper(
@@ -990,18 +980,7 @@
         + "Use a label, `get-first`, `get-last`, `prev-wp`, `next-wp` or simple slide numbers instead.",
     )
   }
-  let num-items = if utils.is-sequence(cont) {
-    cont
-      .children
-      .filter(c => (
-        type(c) == content and c.func() in (list.item, enum.item, terms.item)
-      ))
-      .len()
-  } else if cont.func() in (list, enum, terms) {
-    cont.children.len()
-  } else {
-    1
-  }
+  let num-items = tree.count-items(cont)
   if start == auto {
     touying-fn-wrapper(
       utils.item-by-item-fn,

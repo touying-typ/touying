@@ -1,6 +1,9 @@
 #import "bundle.typ"
 #import "pdfpc.typ"
 #import "extern.typ": warning
+#import "core/tree.typ"
+
+
 /// Add page margin dictionary to another page margin dictionary.
 ///
 /// Example: `add-page-margin-dicts((top: 1cm, x: 2cm), (y: 3em))` returns `(x: 2cm, y: 3em)`
@@ -136,46 +139,6 @@
 #let loc-prior-newslide = state("touying-loc-prior-newslide", none)
 
 
-/// Remove leading and trailing empty elements from an array of content.
-///
-/// Example: `trim(([], [ ], parbreak(), linebreak(), [a], [ ], [b], [c], linebreak(), parbreak(), [ ], [ ]))` returns `([a], [ ], [b], [c])`
-///
-/// - arr (array): The array of content to trim.
-///
-/// - empty-contents (array): An array of content elements considered empty. Default is `([], [ ], parbreak(), linebreak())`.
-///
-/// -> array
-#let trim(arr, empty-contents: ([], [ ], parbreak(), linebreak())) = {
-  let i = 0
-  let j = arr.len() - 1
-  while i != arr.len() and arr.at(i) in empty-contents {
-    i += 1
-  }
-  while j != i - 1 and arr.at(j) in empty-contents {
-    j -= 1
-  }
-  arr.slice(i, j + 1)
-}
-
-
-/// Add a label to a content.
-///
-/// Example: `label-it("key", [a])` is equivalent to `[a <key>]`
-///
-/// - it (content): The content to label.
-///
-/// - label-name (str, label): The name of the label, or a label.
-///
-/// -> content
-#let label-it(it, label-name) = {
-  if type(label-name) == label {
-    [#it#label-name]
-  } else {
-    assert(type(label-name) == str, message: repr(label-name))
-    [#it#label(label-name)]
-  }
-}
-
 /// The diagnostic for a touying mark that was never consumed.
 ///
 /// Touying reads its marks off the document body before anything is laid out,
@@ -235,280 +198,6 @@
 }
 
 
-/// Field names that Typst's element constructors take *positionally* rather
-/// than by name, in the order the constructor wants them.
-///
-/// Rebuilding an element from `it.fields()` with named arguments alone fails
-/// outright — `align` reports `unexpected argument: alignment`, `link` reports
-/// `expected string, dictionary, location, or label, found content` — so these
-/// have to come out of the field dictionary and lead the argument list.
-///
-/// Two entries are not plain names:
-///
-/// - `..name` means the field holds an array to be *spread*, for the variadic
-///   constructors (`polygon(..vertices)`, `curve(..components)`).
-/// - `"body"` in the list means the body is itself positional but *not* last
-///   (`math.underbrace(body, annotation)`), so the new body has to be placed
-///   at that index instead of appended.
-///
-/// `scale` is deliberately absent: since Typst 0.15 it has no `factor` field
-/// at all, only the resolved `x`/`y`, which are named. That is also why the
-/// bug this list fixes stayed hidden for so long — `scale` was the shape
-/// everyone tested.
-///
-/// - f (function): The element function.
-///
-/// -> array
-#let positional-fields(f) = {
-  if f == align or f == place {
-    ("alignment",)
-  } else if f == columns {
-    ("count",)
-  } else if f == link {
-    ("dest",)
-  } else if f == rotate {
-    ("angle",)
-  } else if f == math.class {
-    ("class",)
-  } else if f == polygon {
-    // `polygon.regular(..)` also constructs a `polygon`, with its vertices
-    // already resolved, so it needs no entry of its own.
-    ("..vertices",)
-  } else if f == curve {
-    ("..components",)
-  } else if f == raw.line {
-    ("number", "count", "text")
-  } else if (
-    f
-      in (
-        math.underbrace,
-        math.overbrace,
-        math.underbracket,
-        math.overbracket,
-        math.underparen,
-        math.overparen,
-        math.undershell,
-        math.overshell,
-      )
-  ) {
-    ("body", "annotation")
-  } else {
-    ()
-  }
-}
-
-
-/// Call an element function with a dictionary of fields, honoring the ones
-/// that constructor insists on receiving positionally.
-///
-/// The dictionary is used as-is, so a caller that has already edited a field
-/// (as the cover methods do when they alpha a `fill`) keeps its edit. Fields
-/// named by `positional-fields` are pulled out and lead the argument list;
-/// everything in `extra` follows the rest.
-///
-/// - f (function): The element function to call.
-///
-/// - fields (dictionary): The fields to pass. Any `label` should already be
-///   removed by the caller.
-///
-/// - extra (arguments): Trailing positional arguments, typically the new body.
-///
-/// -> content
-#let call-with-fields(f, fields, ..extra) = {
-  let fields = fields
-  let leading = ()
-  for name in positional-fields(f) {
-    if name.starts-with("..") {
-      leading += fields.remove(name.slice(2), default: ())
-    } else {
-      let value = fields.remove(name, default: none)
-      // A skipped field is one the element does not carry — `place` without
-      // an alignment, `math.underbrace` without an annotation. None of the
-      // listed fields can legitimately hold `none`.
-      if value != none { leading.push(value) }
-    }
-  }
-  f(..leading, ..fields, ..extra)
-}
-
-
-/// Reconstruct a content with a new body.
-///
-/// - body-name (str): The property name of the body field.
-///
-/// - labeled (bool): Indicates whether the label of the content should be preserved.
-///
-/// - named (bool): Indicates whether to pass fields as named arguments.
-///
-/// - it (content): The content to reconstruct.
-///
-/// - new-body (content): The new body you want to replace the old body with.
-///
-/// -> content
-#let reconstruct(
-  body-name: "body",
-  labeled: true,
-  named: false,
-  it,
-  ..new-body,
-) = {
-  let fields = it.fields()
-  let label = fields.remove("label", default: none)
-  let _ = fields.remove(body-name, default: none)
-  if named {
-    // `call-with-fields` handles the constructors that want some field
-    // positionally. When the body is one of those (`math.underbrace(body,
-    // annotation)`) it has to go back into the dictionary so it lands at the
-    // right index rather than after the annotation.
-    let result = if body-name in positional-fields(it.func()) {
-      fields.insert(body-name, new-body.pos().sum(default: []))
-      call-with-fields(it.func(), fields)
-    } else {
-      call-with-fields(it.func(), fields, ..new-body)
-    }
-    if label != none and labeled {
-      return [#result#label]
-    } else {
-      return result
-    }
-  } else {
-    if label != none and labeled {
-      return [#(it.func())(..fields.values(), ..new-body)#label]
-    } else {
-      return (it.func())(..fields.values(), ..new-body)
-    }
-  }
-}
-
-/// Reconstruct a table-like content with new children.
-///
-/// - named (bool): Whether to pass fields as named arguments. Default is `true`.
-///
-/// - labeled (bool): Whether to preserve the label of the content. Default is `true`.
-///
-/// - it (content): The content to reconstruct.
-///
-/// - new-children (array): The new children to replace the old children with.
-///
-/// -> content
-#let reconstruct-table-like(named: true, labeled: true, it, new-children) = {
-  reconstruct(
-    body-name: "children",
-    named: named,
-    labeled: labeled,
-    it,
-    ..new-children,
-  )
-}
-
-
-#let typst-builtin-sequence = [].func()
-
-/// Determine if a content is a sequence (i.e. created by concatenating content with `+` or implicit adjacency).
-///
-/// Example: `is-sequence([a])` returns `true`
-///
-/// - it (content): The content to check.
-///
-/// -> bool
-#let is-sequence(it) = {
-  type(it) == content and it.func() == typst-builtin-sequence
-}
-
-
-#let typst-builtin-styled = text(red)[].func()
-
-/// Determine if a content is styled (i.e. wrapped by Typst's internal styled element when `set` or `show` rules are applied).
-///
-/// Example: `is-styled(text(fill: red)[Red])` returns `true`
-///
-/// - it (content): The content to check.
-///
-/// -> bool
-#let is-styled(it) = {
-  type(it) == content and it.func() == typst-builtin-styled
-}
-
-
-#let typst-builtin-space = [ ].func()
-
-/// Determine if a content is a space (i.e. created by using whitespace in source code).
-///
-/// Example: `is-styled([ ])` returns `true`
-///
-/// - it (content): The content to check.
-///
-/// -> bool
-#let is-space(it) = {
-  type(it) == content and it.func() == typst-builtin-space
-}
-
-#let typst-builtin-math-symbol = ($x$).body.func()
-
-/// Determine if a content is a math symbol (i.e. wrapped by Typst's internal math symbol element when math is parsed).
-///
-/// Example: `is-math-symbol($x$)` returns `true`
-///
-/// - it (content): The content to check.
-///
-/// -> bool
-#let is-math-symbol(it) = {
-  type(it) == content and it.func() == typst-builtin-math-symbol
-}
-
-
-/// Reconstruct a styled content with a new body.
-///
-/// - it (content): The content to reconstruct.
-///
-/// - new-child (content): The new child you want to replace the old body with.
-///
-/// -> content
-#let reconstruct-styled(it, new-child) = {
-  typst-builtin-styled(new-child, it.styles)
-}
-
-
-/// Determine if a content is a `metadata(...)` element.
-///
-/// Example: `is-metadata(metadata((a: 1)))` returns `true`
-///
-/// - it (content): The content to check.
-///
-/// -> bool
-#let is-metadata(it) = {
-  type(it) == content and it.func() == metadata
-}
-
-
-/// Determine if a content is a metadata with a specific kind.
-///
-/// - it (content): The content to check.
-///
-/// - kind (str): The kind string to match.
-///
-/// -> bool
-#let is-kind(it, kind) = {
-  (
-    is-metadata(it)
-      and type(it.value) == dictionary
-      and it.value.at("kind", default: none) == kind
-  )
-}
-
-
-/// Determine if a content is a heading up to specific depth.
-///
-/// - it (content): The content to check.
-///
-/// - depth (int): Maximum heading depth to consider. Default is `9999`.
-///
-/// -> bool
-#let is-heading(it, depth: 9999) = {
-  type(it) == content and it.func() == heading and it.depth <= depth
-}
-
-
 /// Call a `self => {..}` function and return the result, or wrap plain content in `[]`.
 ///
 /// - self (dictionary): The presentation context.
@@ -523,14 +212,6 @@
   return [#it]
 }
 
-// convert all sequence to array recursively, and then flatten the array
-#let sequence-to-array(it) = {
-  if is-sequence(it) {
-    it.children.map(sequence-to-array)
-  } else {
-    it
-  }
-}
 
 /// recursively checks if `it` has a text in it
 ///
@@ -538,30 +219,17 @@
 /// - transparentize-table (bool): Whether to assume tables contain text. If `false` tables will get searched completely for available text.
 /// - text-blocks (bool): Whether so search through block level elements for text.
 /// -> bool
-#let _contains-text(it, transparentize-table, text-blocks) = {
-  if type(it) != content {
-    return false
-  }
-  if it.func() in (text, math.equation) {
-    return true
-  }
-  if it.has("body") {
-    return _contains-text(it.body, transparentize-table, text-blocks)
-  }
-  if it.has("child") {
-    return _contains-text(it.child, transparentize-table, text-blocks)
-  }
-  if it.has("children") {
-    if it.func() == table {
-      return transparentize-table
-    }
-    for child in it.children {
-      if _contains-text(child, transparentize-table, text-blocks) {
-        return true
-      }
-    }
-  }
-  return false
+#let _contains-text(it, transparentize-table) = {
+  let is-text = node => (
+    type(node) == content
+      and (
+        node.func() in (text, math.equation)
+          // `raw` keeps its content in `text`, not in a body.
+          or node.has("text")
+          or (transparentize-table and node.func() == table)
+      )
+  )
+  tree.find-in-tree(it, is-text) != none
 }
 
 /// Wrap a function with a `self` parameter to make it callable as a method.
@@ -767,34 +435,6 @@
   if level == current-level {
     return current-heading
   }
-}
-
-#let reconstruct-heading(it, new-body, ..args) = {
-  assert(
-    type(it) == content and it.func() == heading,
-    message: "it must be a heading",
-  )
-  let heading-args = (
-    numbering: it.numbering,
-    bookmarked: it.bookmarked,
-    depth: it.depth,
-    offset: it.offset,
-    outlined: it.outlined,
-    hanging-indent: it.hanging-indent,
-    supplement: it.supplement,
-  )
-  if args != (:) { heading-args = merge-dicts(heading-args, args.named()) }
-
-  if it.has("label") {
-    return [#heading(
-        ..heading-args,
-        new-body,
-      )#it.label]
-  }
-  heading(
-    ..heading-args,
-    new-body,
-  )
 }
 
 
@@ -1137,6 +777,8 @@
       } else {
         it.depth * "=" + " " + markup-text(it.body) + "\n"
       }
+    } else if tree.is-styled(it) {
+      markup-text(it.child)
     } else if it.has("children") {
       it.children.map(markup-text).join()
     } else if it.has("body") {
@@ -1273,7 +915,7 @@
       let w-ratio = mutable-width / size.width
       let ratio = calc.min(h-ratio, w-ratio) * 100%
 
-      if width == auto and reflow and _contains-text(body, false, false) {
+      if width == auto and reflow and _contains-text(body, false) {
         //height is good rn, but width may be too small.
         // get the current ratio of used/available width and scale such that we fill it. use sqrt trick to allow good flow.
         // then height may again be slightly too small. repeat that.
@@ -1523,11 +1165,11 @@
     return []
   }
   //handle all sorts of weird wrappers and space-like content
-  if body.func() == typst-builtin-styled {
+  if body.func() == tree.typst-builtin-styled {
     // unwrap styled content and re-apply style after covering, to avoid the
     // cover rect being wrapped in the styled element which can cause issues
     // with certain styles (e.g. `set text-color(red)` would make the rect red)
-    return reconstruct-styled(
+    return tree.reconstruct-styled(
       body,
       cover-with-rect(
         self: self,
@@ -1539,11 +1181,11 @@
     )
   }
   //skip space/empty content
-  if body.func() in (parbreak, linebreak, typst-builtin-space, h, v) {
+  if body.func() in (parbreak, linebreak, tree.typst-builtin-space, h, v) {
     return body
   }
   // split up sequences to find actual content types
-  if body.func() == typst-builtin-sequence {
+  if body.func() == tree.typst-builtin-sequence {
     let bodies = body.children
     return bodies
       .map(b => {
@@ -1879,16 +1521,16 @@
         it
       } else if (
         it.func() in (text, math.equation)
-          or it.func() == typst-builtin-math-symbol
+          or it.func() == tree.typst-builtin-math-symbol
       ) {
         color-method(it)
-      } else if is-sequence(it) {
+      } else if tree.is-sequence(it) {
         it
           .children
           .map(c => apply-cover-methods(color-method, noncolor-method, c))
           .sum(default: [])
-      } else if is-styled(it) {
-        reconstruct-styled(it, {
+      } else if tree.is-styled(it) {
+        tree.reconstruct-styled(it, {
           set text(fill: color)
           apply-cover-methods(
             explicit-only-color-method,
@@ -2034,17 +1676,17 @@
           noncolor-method,
           it.body,
         )
-        // Via `reconstruct`, which knows the elements whose defining field is
+        // Via `tree.reconstruct`, which knows the elements whose defining field is
         // positional (`align`, `place`, `columns`, `link`, `rotate`); passing
         // every field by name is what used to make those error out here.
-        reconstruct(named: true, it, new-body)
+        tree.reconstruct(named: true, it, new-body)
       } else if it.has("child") {
         let new-child = apply-cover-methods(
           color-method,
           noncolor-method,
           it.child,
         )
-        reconstruct(named: true, body-name: "child", it, new-child)
+        tree.reconstruct(named: true, body-name: "child", it, new-child)
       } else if it.func() in (list, enum, terms) {
         let fields = it.fields()
         let label = fields.remove("label", default: none)
@@ -2062,11 +1704,13 @@
           noncolor-method,
           c,
         ))
-        reconstruct-table-like(it, new-children)
+        tree.reconstruct-table-like(it, new-children)
       } else if it.func() in (raw, cite, ref) {
         text(fill: color, it)
       } else if (
-        it.func() in (parbreak, linebreak) or is-space(it) or is-metadata(it)
+        it.func() in (parbreak, linebreak)
+          or tree.is-space(it)
+          or tree.is-metadata(it)
       ) {
         it
       } else {
@@ -2147,7 +1791,7 @@
   }
 
   // Reconstruct a gradient with alpha applied to every stop color.
-  // Decompose via stops()/space()/relative()/kind() and reconstruct from scratch
+  // Decompose via stops()/space()/relative()/kind() and tree.reconstruct from scratch
   // since gradients have no fields() method.
   let update-alpha-gradient(g) = {
     let new-stops = g
@@ -2285,21 +1929,21 @@
       it
     } else if (
       it.func() in (text, math.equation)
-        or it.func() == typst-builtin-math-symbol
+        or it.func() == tree.typst-builtin-math-symbol
     ) {
       // Leaf text / math / symbol: let the caller apply alpha to the fill.
       color-method(it)
-    } else if is-sequence(it) {
+    } else if tree.is-sequence(it) {
       // Implicit sequence ([a][b], a + b): recurse into each child.
       it
         .children
         .map(c => apply-cover-methods(color-method, noncolor-method, c))
         .sum(default: [])
-    } else if is-styled(it) {
+    } else if tree.is-styled(it) {
       // Reconstruct the styled wrapper; inside use `context` to read text.fill/stroke
       // AFTER the styled rules apply, then re-apply alpha as the innermost set rule
       // (innermost wins in Typst). Use explicit-only inside to prevent double-alpha.
-      reconstruct-styled(it, context {
+      tree.reconstruct-styled(it, context {
         let new-fill = if type(text.fill) == color {
           update-alpha(text.fill, alpha)
         } else if type(text.fill) == gradient {
@@ -2378,13 +2022,13 @@
         } else if type(eff-fill) == gradient {
           fields.fill = update-alpha-gradient(eff-fill)
         }
-        // Via `call-with-fields`, because the variadic shapes (`polygon`,
+        // Via `tree.call-with-fields`, because the variadic shapes (`polygon`,
         // `curve`) take their geometry positionally and would otherwise
         // error with `unexpected argument: vertices` / `components`.
         let result = if body-content != none {
-          call-with-fields(it.func(), fields, body-content)
+          tree.call-with-fields(it.func(), fields, body-content)
         } else {
-          call-with-fields(it.func(), fields)
+          tree.call-with-fields(it.func(), fields)
         }
         if label != none { [#result#label] } else { result }
       }
@@ -2472,10 +2116,10 @@
       // strong, emph, footnote, smallcaps, sub, super, pad, figure, quote,
       // hide, move, scale, heading, columns, place, …
       let new-body = apply-cover-methods(color-method, noncolor-method, it.body)
-      // Via `reconstruct`, which knows the elements whose defining field is
+      // Via `tree.reconstruct`, which knows the elements whose defining field is
       // positional (`align`, `place`, `columns`, `link`, `rotate`); passing
       // every field by name is what used to make those error out here.
-      reconstruct(named: true, it, new-body)
+      tree.reconstruct(named: true, it, new-body)
     } else if it.has("child") {
       // Rare single-child wrappers not covered above.
       let new-child = apply-cover-methods(
@@ -2483,7 +2127,7 @@
         noncolor-method,
         it.child,
       )
-      reconstruct(named: true, body-name: "child", it, new-child)
+      tree.reconstruct(named: true, body-name: "child", it, new-child)
     } else if it.func() in (list, enum, terms) {
       // list/enum/terms whole-container: use explicit-only for children to avoid
       // double-alpha on explicitly-colored content (inherited fills are handled by
@@ -2505,7 +2149,7 @@
         noncolor-method,
         c,
       ))
-      reconstruct-table-like(it, new-children)
+      tree.reconstruct-table-like(it, new-children)
     } else if it.func() == raw {
       // Raw code blocks render as text with a different font — wrap in a text
       // fill override so the alpha propagates into the rendered glyphs.
@@ -2514,7 +2158,9 @@
       } else { update-alpha(text.fill, alpha) }
       text(fill: raw-fill, it)
     } else if (
-      it.func() in (parbreak, linebreak) or is-space(it) or is-metadata(it)
+      it.func() in (parbreak, linebreak)
+        or tree.is-space(it)
+        or tree.is-metadata(it)
     ) {
       // Spacing / metadata nodes carry no visible color — pass through unchanged.
       it
@@ -3625,7 +3271,39 @@
     )
   }
 
-  if is-sequence(cont) {
+  if tree.is-styled(cont) {
+    return tree.reconstruct-styled(
+      cont,
+      item-by-item-fn(self: self, start: start, fn, cont.child),
+    )
+  }
+
+  if tree.is-sequence(cont) {
+    let meaningful = cont.children.filter(c => c not in tree.empty-contents)
+    if (
+      meaningful.len() == 1
+        and (
+          tree.is-styled(meaningful.first())
+            or tree.is-sequence(
+              meaningful.first(),
+            )
+        )
+    ) {
+      // A `#set` at the top of the body leaves the items inside a lone
+      // `styled` child; animate that instead of treating it as one item.
+      let inner = item-by-item-fn(
+        self: self,
+        start: start,
+        fn,
+        meaningful.first(),
+      )
+      let at = cont.children.position(c => c not in tree.empty-contents)
+      return cont
+        .children
+        .enumerate()
+        .map(((i, c)) => if i == at { inner } else { c })
+        .sum(default: [])
+    }
     // Markup list/enum/terms: items appear as list.item/enum.item/terms.item in a sequence
     let item-count = 0
     let result = ()
@@ -3651,10 +3329,14 @@
         if check-visible(self.subslide, (beginning: start + idx)) {
           fn(start + idx - self.subslide, item)
         } else {
-          reconstruct(item, fn(start + idx - self.subslide, cover(item.body)))
+          tree.rebuild(item, (
+            fn(start + idx - self.subslide, cover(
+              item.body,
+            )),
+          ))
         }
       })
-    reconstruct-table-like(cont, new-items)
+    tree.reconstruct-table-like(cont, new-items)
   } else if cont.func() == terms {
     // Programmatic terms container
     let new-items = cont
@@ -3664,13 +3346,13 @@
         if check-visible(self.subslide, (beginning: start + idx)) {
           fn(start + idx - self.subslide, item)
         } else {
-          terms.item(
+          tree.rebuild(item, (
             fn(start + idx - self.subslide, cover(item.term)),
             fn(start + idx - self.subslide, cover(item.description)),
-          )
+          ))
         }
       })
-    reconstruct-table-like(cont, new-items)
+    tree.reconstruct-table-like(cont, new-items)
   } else {
     // Fallback: show content as-is
     cont
@@ -4100,3 +3782,53 @@
 
   return nav-symbols
 }
+
+
+// -------------------------------------
+// Moved to core/tree.typ in 0.8.0
+// -------------------------------------
+//
+// A deprecation warning is content, and Typst only reports it once that
+// content is laid out, so only the functions that return content can carry
+// one. The rest have to say so by refusing to run.
+
+#let _moved(name) = panic(
+  "`utils." + name + "` moved to touying's `core/tree.typ` in 0.8.0.",
+)
+
+#let typst-builtin-sequence = tree.typst-builtin-sequence
+#let typst-builtin-styled = tree.typst-builtin-styled
+#let typst-builtin-space = tree.typst-builtin-space
+#let typst-builtin-math-symbol = tree.typst-builtin-math-symbol
+
+#let is-sequence(..) = _moved("is-sequence")
+#let is-styled(..) = _moved("is-styled")
+#let is-space(..) = _moved("is-space")
+#let is-math-symbol(..) = _moved("is-math-symbol")
+#let is-metadata(..) = _moved("is-metadata")
+#let is-kind(..) = _moved("is-kind")
+#let is-heading(..) = _moved("is-heading")
+#let trim(..) = _moved("trim")
+#let sequence-to-array(..) = _moved("sequence-to-array")
+#let positional-fields(..) = _moved("positional-fields")
+
+#let _deprecated(name, fn) = (..args) => {
+  tree._deprecation-warning("utils." + name, "0.9.0")
+  fn(..args)
+}
+
+#let label-it = _deprecated("label-it", tree.label-it)
+#let call-with-fields = _deprecated("call-with-fields", tree.call-with-fields)
+#let reconstruct = _deprecated("reconstruct", tree.reconstruct)
+#let reconstruct-table-like = _deprecated(
+  "reconstruct-table-like",
+  tree.reconstruct-table-like,
+)
+#let reconstruct-styled = _deprecated(
+  "reconstruct-styled",
+  tree.reconstruct-styled,
+)
+#let reconstruct-heading = _deprecated(
+  "reconstruct-heading",
+  tree.reconstruct-heading,
+)

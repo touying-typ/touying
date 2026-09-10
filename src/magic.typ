@@ -1,4 +1,5 @@
 #import "utils.typ"
+#import "core/tree.typ"
 
 // ---------------------------------------------------------------------
 // List, Enum, and Terms
@@ -111,9 +112,12 @@
 /// -> content
 #let nontight(lst) = {
   let fields = lst.fields()
-  fields.remove("children")
+  let _ = fields.remove("children")
+  // The label stays on the shown element, so it must not be passed to the
+  // constructor and must not be re-attached either.
+  let _ = fields.remove("label", default: none)
   fields.tight = false
-  return (lst.func())(..fields, ..lst.children)
+  (lst.func())(..fields, ..lst.children)
 }
 
 /// Apply as a show rule to make all lists, enumerations, and term lists use non-tight spacing by default (adds spacing between items).

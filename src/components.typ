@@ -1,5 +1,6 @@
 #import "utils.typ"
 #import "extern.typ": warning
+#import "core/tree.typ"
 
 #let cell = block.with(
   width: 100%,
@@ -824,7 +825,7 @@
     let first-page = sections.at(0).location().page()
     headings = headings.filter(it => it.location().page() >= first-page)
     let slides = query(<touying-metadata>).filter(it => (
-      utils.is-kind(it, "touying-new-slide")
+      tree.is-kind(it, "touying-new-slide")
         and it.location().page() >= first-page
     ))
     let current-page = here().page()
