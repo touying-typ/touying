@@ -39,163 +39,35 @@
 ))<touying-temporary-mark>]
 
 
-/// Extract the payload dictionary from a touying-article-raw metadata wrapper.
-/// In article mode, touying-slide wraps its result (content + maps) in metadata
-/// so that theme styling (set text, set page, etc.) doesn't leak into the article.
-/// This walks through styled wrappers and sequences to find and extract the payload.
+/// Whether the article walker has to see a child on its own.
 ///
-/// Returns: the full payload dictionary (with content, images, blocks, etc.)
-#let _unwrap-article-raw(cont) = {
-  // This is where we stop unwrapping, finally found our payload!
-  if tree.is-kind(cont, "touying-article-raw") {
-    return cont.value
-  }
-  //unwrap all sorts of wrappers.
-  if tree.is-styled(cont) {
-    return _unwrap-article-raw(cont.child)
-  }
-  if type(cont) == content and cont.has("body") {
-    return _unwrap-article-raw(cont.body)
-  }
-  // Sequence - look into children, there should only be one payload child, thus we return the first.
-  if tree.is-sequence(cont) {
-    for child in cont.children {
-      let result = _unwrap-article-raw(child)
-      if result != none {
-        return result
-      }
-    }
-  }
-  //return none for all other cases
-}
-
-
-/// The element a (possibly styled) child really *is*.
-///
-/// `_flatten-children` re-wraps every child in the `styled` node it came out
-/// of, so classifying one — is this a heading? does it carry a mode label? is
-/// it a touying mark, and of which kind? — has to look underneath the styles
-/// first.
-///
-/// - it (content): The child to unwrap.
-///
-/// -> content
-#let _unstyled(it) = {
-  if tree.is-styled(it) { _unstyled(it.child) } else { it }
-}
-
-
-/// The `styled` wrappers around a child, outermost first.
-///
-/// - it (content): The child to inspect.
-///
-/// -> array
-#let _styles-of(it) = {
-  if tree.is-styled(it) { (it.styles,) + _styles-of(it.child) } else { () }
-}
-
-
-/// Put `content` back under the styles a child was wrapped in.
-///
-/// A mark carries its payload in `metadata`, so the walker pulls that payload
-/// out and emits it in the mark's place — at which point the enclosing
-/// `styled` nodes are gone. This puts them back, so that
-///
-///   #set text(size: 20pt)
-///   #article-text[Prose.]
-///
-/// still sets the prose at 20pt.
-///
-/// - child (content): The child the content came out of.
-///
-/// - content (content): The content to re-wrap.
-///
-/// -> content
-#let _restyle(child, content) = {
-  let out = content
-  // Innermost first, so the outermost wrapper ends up outermost again.
-  for styles in _styles-of(child).rev() {
-    out = tree.typst-builtin-styled(out, styles)
-  }
-  out
-}
-
-
-/// Whether a child has to stay visible to the article walker on its own.
-///
-/// Marks, headings and slide-separator dashes are the only children the walk
-/// classifies; everything between two of them is summed back into a single run
-/// before it is parsed. So a run can — and must — keep one shared `styled`
-/// wrapper: see `_flatten-children`.
+/// Everything between two such children is summed back into a single run
+/// before it is parsed, so `tree.flatten-children` can keep the run under one
+/// shared `styled` wrapper.
 ///
 /// - it (content): The child to test.
 ///
 /// -> bool
 #let _is-structural(it) = {
-  let core = _unstyled(it)
+  let core = tree.unstyled(it)
   if tree.is-metadata(core) { return true }
   if type(core) != content { return false }
   core.func() == heading or core in ([—], [---])
 }
 
 
-/// Flatten the document body into the list of children the article walker
-/// classifies.
+/// The payload `touying-slide` hides in a `touying-article-raw` metadata node
+/// so that a theme's own `set` rules do not leak into the article.
 ///
-/// A bare top-level `#set`/`#show` does not style the elements around it — it
-/// wraps *the entire rest of the document* in a single `styled` node. Sequence
-/// flattening alone therefore hands back one opaque child, and every heading,
-/// every `#article-text[..]` mark and every slide wrapper inside it becomes
-/// invisible to the walker: headings stop starting sections, marks are never
-/// consumed, and the end-of-article leak check reports the survivors as
-/// `Unsupported mark`. `parser.typ` recurses through `styled` for exactly this
-/// reason (`_collect-waypoints-impl`, and the `is-styled` branch of the main
-/// parse loop); article mode has to do the same.
+/// - cont (content): The slide's return value.
 ///
-/// What it must *not* do is give every child its own copy of the styles.
-/// `styled(a b c, S)` and `styled(a, S) styled(b, S) styled(c, S)` are not the
-/// same document: Typst's realizer groups adjacent elements, and a wrapper
-/// between them stops it. `#set par(justify: true)` would turn one paragraph
-/// into one paragraph per word, `#set enum(..)` would restart the numbering at
-/// every item, `#set page(..)` would open a page per child, and a
-/// `#show regex(..)` would stop matching across a line break.
-///
-/// So only the children the walk actually classifies — marks, headings, the
-/// bare `---` separator — are peeled out individually. Each maximal run
-/// between them keeps a single shared wrapper, which is exactly the grouping
-/// the walker would have rebuilt anyway when it sums the run back together.
-///
-/// Marks keep their wrappers too: `_unstyled` sees through them for
-/// classification, and `_restyle` puts them back around whatever the mark's
-/// payload renders as.
-///
-/// - it (content): The document body.
-///
-/// -> array
-#let _flatten-children(it) = {
-  if tree.is-styled(it) {
-    let out = ()
-    let run = ()
-    for child in _flatten-children(it.child) {
-      if _is-structural(child) {
-        if run.len() > 0 {
-          out.push(tree.typst-builtin-styled(run.sum(default: []), it.styles))
-          run = ()
-        }
-        out.push(tree.typst-builtin-styled(child, it.styles))
-      } else {
-        run.push(child)
-      }
-    }
-    if run.len() > 0 {
-      out.push(tree.typst-builtin-styled(run.sum(default: []), it.styles))
-    }
-    return out
-  }
-  if tree.is-sequence(it) {
-    return it.children.map(_flatten-children).flatten()
-  }
-  (it,)
+/// -> dictionary
+#let _unwrap-article-raw(cont) = {
+  let found = tree.find-in-tree(cont, c => tree.is-kind(
+    c,
+    "touying-article-raw",
+  ))
+  if found != none { found.value }
 }
 
 
@@ -213,8 +85,8 @@
   let figure-images = images.filter(i => i.is-figure)
   // `_unstyled`, because block content extracted from a slide carries the
   // document-level `styled` wrappers the walker put back around it.
-  let other-figures = blocks.filter(b => _unstyled(b).func() == figure)
-  let other-blocks = blocks.filter(b => _unstyled(b).func() != figure)
+  let other-figures = blocks.filter(b => tree.unstyled(b).func() == figure)
+  let other-blocks = blocks.filter(b => tree.unstyled(b).func() != figure)
 
   let has-wrap-content = (
     (wrap-images and raw-images.len() > 0)
@@ -232,7 +104,7 @@
   // breadcrumbs to behave like ordinary top-level document content, not
   // something buried inside a layout measurement pass.
   let is-heading = r => (
-    type(r) == content and _unstyled(r).func() == heading
+    type(r) == content and tree.unstyled(r).func() == heading
   )
   let headings = items.filter(is-heading)
   let breadcrumbs = items.filter(r => tree.is-kind(
@@ -257,21 +129,16 @@
   // flow does — meander needs it for its own reasons (a `block` is an
   // atomic, unsplittable unit to it), but plain (non-wrapped) sections need
   // it just as much to avoid that visible extra gap.
-  let _unwrap-blocks(r) = {
-    if type(r) != content { return r }
-    if r.func() == block {
-      let body = r.at("body", default: none)
-      if body == none { return r }
-      return _unwrap-blocks(body)
-    }
-    if tree.is-styled(r) {
-      return (r.func())(_unwrap-blocks(r.child), r.styles)
-    }
-    if tree.is-sequence(r) {
-      return r.children.map(_unwrap-blocks).sum(default: none)
-    }
-    r
-  }
+  // A generated block reports `body` and nothing else; anything a user wrote
+  // carries at least one more field, and stripping it would take that field,
+  // the block's styling and its label with it.
+  let _unwrap-blocks(r) = tree.map-tree(r, node => if (
+    type(node) == content
+      and node.func() == block
+      and node.fields().keys() == ("body",)
+  ) {
+    _unwrap-blocks(node.body)
+  })
   let unwrapped = body-parts.map(_unwrap-blocks)
 
   if has-wrap-content {
@@ -627,7 +494,7 @@
   for child in children {
     // The child may still be wrapped in the `styled` node a top-level
     // `#set`/`#show` put it in, so classify on what it really is.
-    let core = _unstyled(child)
+    let core = tree.unstyled(child)
     let is-heading = type(core) == content and core.func() == heading
     if skipping-depth != none {
       if is-heading and core.depth <= skipping-depth {
@@ -649,7 +516,7 @@
 }
 
 #let render-content-as-article(self: none, body) = {
-  let children = _flatten-children(body)
+  let children = tree.flatten-children(body, structural: _is-structural)
   children = _filter-mode-children(self, children)
 
   // Same convention split-content-into-slides uses to turn a bare "---"/"—"
@@ -685,7 +552,7 @@
   // whole-slide target."
   let whole-slide-labels = ()
   for child in children {
-    let core = _unstyled(child)
+    let core = tree.unstyled(child)
     let lbl = if type(core) == content and core.func() == heading {
       core.at("label", default: none)
     } else if tree.is-kind(core, "touying-slide-wrapper") {
@@ -726,25 +593,10 @@
   // whatever else the parser produces (never nested inside other pushed
   // content), so a single level of sequence-unwrapping is enough to find
   // them all.
-  let _extract-breadcrumbs(cont) = {
-    if cont == none { return (breadcrumbs: (), rest: none) }
-    if tree.is-kind(cont, "touying-recall-breadcrumb") {
-      return (breadcrumbs: (cont,), rest: none)
-    }
-    if tree.is-sequence(cont) {
-      let breadcrumbs = ()
-      let rest = ()
-      for c in cont.children {
-        if tree.is-kind(c, "touying-recall-breadcrumb") {
-          breadcrumbs.push(c)
-        } else {
-          rest.push(c)
-        }
-      }
-      return (breadcrumbs: breadcrumbs, rest: rest.sum(default: none))
-    }
-    (breadcrumbs: (), rest: cont)
-  }
+  let _extract-breadcrumbs(cont) = tree.extract-nodes(cont, c => tree.is-kind(
+    c,
+    "touying-recall-breadcrumb",
+  ))
 
   let _render-run(self, run) = {
     if run.len() == 0 {
@@ -782,7 +634,7 @@
       },
       images: linearized.images,
       blocks: linearized.blocks,
-      breadcrumbs: extracted.breadcrumbs,
+      breadcrumbs: extracted.found,
     )
   }
 
@@ -891,7 +743,7 @@
       // A top-level `#set`/`#show` leaves every child wrapped in a `styled`
       // node, so classify on `core` and put the styles back with `_restyle`
       // around anything pulled out of a mark's payload.
-      let core = _unstyled(child)
+      let core = tree.unstyled(child)
       if tree.is-kind(core, "touying-article-text") {
         let r = _render-run(use-self, current-run)
         current-run = ()
@@ -901,17 +753,21 @@
         // replacing) and must survive so touying-recall inside its own
         // body can still find them.
         let headings = result.filter(item => (
-          type(item) == content and _unstyled(item).func() == heading
+          type(item) == content and tree.unstyled(item).func() == heading
         ))
         result = headings
         result += r.breadcrumbs
-        result.push(_restyle(child, _resolve-block-recalls(core.value.body)))
+        result.push(tree.restyle(child, _resolve-block-recalls(
+          core.value.body,
+        )))
       } else if tree.is-kind(core, "touying-article-only") {
         let r = _render-run(use-self, current-run)
         current-run = ()
         result += r.items
         result += r.breadcrumbs
-        result.push(_restyle(child, _resolve-block-recalls(core.value.body)))
+        result.push(tree.restyle(child, _resolve-block-recalls(
+          core.value.body,
+        )))
       } else if tree.is-kind(core, "touying-set-config") {
         let r = _render-run(use-self, current-run)
         current-run = ()
@@ -933,7 +789,7 @@
         // flow does — it visibly doubles the gap when this is the first
         // thing under a heading (see e.g. "With Explicit Slide"/"Focus
         // Slide" in the article-mode test).
-        if raw-content != none { result.push(_restyle(child, raw-content)) }
+        if raw-content != none { result.push(tree.restyle(child, raw-content)) }
       } else if tree.is-kind(core, "touying-slides-only") {
         // Stripped in article mode — an article-mode/slide-mode
         // distinction the shared parser has no notion of, so it must be
@@ -963,7 +819,7 @@
   for child in children {
     // Same as the simple path above: classify on `core`, re-style anything
     // pulled out of a mark's payload.
-    let core = _unstyled(child)
+    let core = tree.unstyled(child)
     let is-section-heading = type(core) == content and core.func() == heading
     if (
       is-section-heading and (current-items.len() > 0 or current-run.len() > 0)
@@ -1000,13 +856,13 @@
       // replacing) and must survive so touying-recall inside its own body
       // can still find them.
       let headings = current-items.filter(item => (
-        type(item) == content and _unstyled(item).func() == heading
+        type(item) == content and tree.unstyled(item).func() == heading
       ))
       current-items = headings
       current-images = () //nothing to do for article-text here
       current-blocks = ()
       current-items += r.breadcrumbs
-      current-items.push(_restyle(
+      current-items.push(tree.restyle(
         child,
         _resolve-block-recalls(core.value.body),
       ))
@@ -1017,7 +873,7 @@
       current-items += r.breadcrumbs
       current-images += r.images
       current-blocks += r.blocks
-      current-items.push(_restyle(
+      current-items.push(tree.restyle(
         child,
         _resolve-block-recalls(core.value.body),
       ))
@@ -1044,17 +900,17 @@
       // would strip it anyway when meander wrapping is active — this just
       // avoids the double-spacing bug in the common case where it isn't.)
       if raw-content != none {
-        current-items.push(_restyle(child, raw-content))
+        current-items.push(tree.restyle(child, raw-content))
       }
       // Content extracted for wrapping needs the same treatment as the
       // slide's own body above: a top-level `#show table: ..` must reach a
       // table that came out of a `#slide[..]`, not just a bare one.
       current-images += payload
         .at("images", default: ())
-        .map(img => img + (element: _restyle(child, img.element)))
+        .map(img => img + (element: tree.restyle(child, img.element)))
       current-blocks += payload
         .at("blocks", default: ())
-        .map(b => _restyle(child, b))
+        .map(b => tree.restyle(child, b))
     } else if is-section-heading {
       current-items.push(child)
     } else if tree.is-kind(core, "touying-slides-only") {

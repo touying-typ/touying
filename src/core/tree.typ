@@ -1,30 +1,26 @@
 // Content-tree fundamentals: recognising what a piece of Typst content is,
 // taking it apart, and putting it back together again.
-//
-// Nothing here knows anything about touying, so every other module can import
-// it without risking a cycle.
 
 #import "../extern.typ": warning
 
 
 /// Warn that a name is on its way out.
 ///
-/// The result is content, and Typst only reports the warning once that content
-/// is laid out, so a deprecated function has to return this rather than call it
-/// for its effect. A function that returns something other than content cannot
-/// carry one at all.
+/// Use only on content emitting functions, as the emitted warning also requires emitting content.
+/// Panic on value emitting functions instead.
 ///
 /// - name (str): The deprecated name.
-///
 /// - version (str): The version that removes it.
+/// - extra (str): A potential further explanation.
 ///
 /// -> content
-#let _deprecation-warning(name, version) = warning(
+#let _deprecation-warning(name, version, extra: "") = warning(
   "`"
     + name
     + "` is deprecated and will be removed in touying "
     + version
-    + ".",
+    + "."
+    + extra,
 )
 
 
@@ -33,8 +29,11 @@
 //   Recognising content
 // -------------------------------------
 
+// get not-exposed element functions
 #let typst-builtin-sequence = [].func()
-
+#let typst-builtin-styled = text(red)[].func()
+#let typst-builtin-space = [ ].func()
+#let typst-builtin-math-symbol = ($x$).body.func()
 
 /// Determine if a content is a sequence (i.e. created by concatenating content with `+` or implicit adjacency).
 ///
@@ -47,10 +46,6 @@
   type(it) == content and it.func() == typst-builtin-sequence
 }
 
-
-#let typst-builtin-styled = text(red)[].func()
-
-
 /// Determine if a content is styled (i.e. wrapped by Typst's internal styled element when `set` or `show` rules are applied).
 ///
 /// Example: `is-styled(text(fill: red)[Red])` returns `true`
@@ -61,10 +56,6 @@
 #let is-styled(it) = {
   type(it) == content and it.func() == typst-builtin-styled
 }
-
-
-#let typst-builtin-space = [ ].func()
-
 
 /// Determine if a content is a space (i.e. created by using whitespace in source code).
 ///
@@ -77,10 +68,6 @@
   type(it) == content and it.func() == typst-builtin-space
 }
 
-
-#let typst-builtin-math-symbol = ($x$).body.func()
-
-
 /// Determine if a content is a math symbol (i.e. wrapped by Typst's internal math symbol element when math is parsed).
 ///
 /// Example: `is-math-symbol($x$)` returns `true`
@@ -91,7 +78,6 @@
 #let is-math-symbol(it) = {
   type(it) == content and it.func() == typst-builtin-math-symbol
 }
-
 
 /// Determine if a content is a `metadata(...)` element.
 ///
@@ -104,11 +90,9 @@
   type(it) == content and it.func() == metadata
 }
 
-
 /// Determine if a content is a metadata with a specific kind.
 ///
 /// - it (content): The content to check.
-///
 /// - kind (str): The kind string to match.
 ///
 /// -> bool
@@ -120,11 +104,9 @@
   )
 }
 
-
 /// Determine if a content is a heading up to specific depth.
 ///
 /// - it (content): The content to check.
-///
 /// - depth (int): Maximum heading depth to consider. Default is `9999`.
 ///
 /// -> bool
@@ -147,19 +129,17 @@
   }
 }
 
+/// All the contents that we treat as empty: sequence, space, parbreak, linebreak
+#let empty-contents = ([], [ ], parbreak(), linebreak())
 
 /// Remove leading and trailing empty elements from an array of content.
 ///
 /// Example: `trim(([], [ ], parbreak(), linebreak(), [a], [ ], [b], [c], linebreak(), parbreak(), [ ], [ ]))` returns `([a], [ ], [b], [c])`
 ///
 /// - arr (array): The array of content to trim.
-///
 /// - empty-contents (array): An array of content elements considered empty. Default is `([], [ ], parbreak(), linebreak())`.
 ///
 /// -> array
-#let empty-contents = ([], [ ], parbreak(), linebreak())
-
-
 #let trim(arr, empty-contents: empty-contents) = {
   let i = 0
   let j = arr.len() - 1
@@ -178,7 +158,6 @@
 /// Example: `label-it("key", [a])` is equivalent to `[a <key>]`
 ///
 /// - it (content): The content to label.
-///
 /// - label-name (str, label): The name of the label, or a label.
 ///
 /// -> content
@@ -256,10 +235,7 @@
 /// `reconstruct` when the fields have already been changed.
 ///
 /// - f (function): The element function to call.
-///
-/// - fields (dictionary): The fields to pass. A `label` must already have been
-///   removed by the caller.
-///
+/// - fields (dictionary): The fields to pass. A `label` must already have been removed by the caller.
 /// - extra (arguments): Trailing positional arguments, usually the new body.
 ///
 /// -> content
@@ -283,13 +259,9 @@
 /// Reconstruct a content with a new body.
 ///
 /// - body-name (str): The property name of the body field.
-///
 /// - labeled (bool): Indicates whether the label of the content should be preserved.
-///
 /// - named (bool): Indicates whether to pass fields as named arguments.
-///
 /// - it (content): The content to reconstruct.
-///
 /// - new-body (content): The new body you want to replace the old body with.
 ///
 /// -> content
@@ -332,11 +304,8 @@
 /// Reconstruct a table-like content with new children.
 ///
 /// - named (bool): Whether to pass fields as named arguments. Default is `true`.
-///
 /// - labeled (bool): Whether to preserve the label of the content. Default is `true`.
-///
 /// - it (content): The content to reconstruct.
-///
 /// - new-children (array): The new children to replace the old children with.
 ///
 /// -> content
@@ -354,7 +323,6 @@
 /// Reconstruct a styled content with a new body.
 ///
 /// - it (content): The content to reconstruct.
-///
 /// - new-child (content): The new child you want to replace the old body with.
 ///
 /// -> content
@@ -362,7 +330,12 @@
   typst-builtin-styled(new-child, it.styles)
 }
 
-
+/// Reconstruct a heading with a new body
+///
+/// - it (content): The heading to reconstruct,
+/// - new-body (content): The new body for the heading.
+/// - args ():
+/// ->
 #let reconstruct-heading(it, new-body, ..args) = {
   assert(
     type(it) == content and it.func() == heading,
@@ -401,13 +374,10 @@
 /// How a piece of content holds its sub-content, as one of `"sequence"`,
 /// `"styled"`, `"metadata"`, `"figure"`, `"term"`, `"children"`, `"body"`,
 /// `"child"` or `"leaf"`.
+/// Does not determine the element function.
+/// And `"leaf"` marks a value that is not content.
 ///
-/// This is the taxonomy `children-of` and `rebuild` agree on, and the reason
-/// they can be trusted to round-trip. It says nothing about what an element
-/// *is*, only about where to look for content inside it, so a caller that
-/// cares whether something is an image or a heading still asks `it.func()`.
-///
-/// - it (any): The content to classify.
+/// - it (any): The content/object to classify.
 ///
 /// -> str
 #let shape-of(it) = {
@@ -437,7 +407,8 @@
 }
 
 
-/// The sub-content of `it`, in the order `rebuild` expects it back.
+/// Returns the sub-content of `it`, in the order `rebuild` expects it back.
+/// Can get the inner body/children fields whatever they are called.
 ///
 /// - it (any): The content to open up.
 ///
@@ -461,13 +432,11 @@
 }
 
 
-/// Put `it` back together around new sub-content, keeping its label.
+/// Put `it` back together around new sub-content, possibly keeping its label.
 ///
 /// - labeled (bool): Whether to re-attach the label.
-///
 /// - it (content): The content to rebuild.
-///
-/// - new-children (array): Replacements, as `children-of` returned them.
+/// - new-children (array): Replacements, in the order that `children-of` returns them.
 ///
 /// -> content
 #let rebuild(labeled: true, it, new-children) = {
@@ -508,9 +477,9 @@
 
 /// Rewrite a content tree.
 ///
-/// `visit` is called on every node on the way down. Return `none` to walk into
-/// the node, or content to put in its place and stop. Returning `[]` deletes
-/// it.
+/// The function `visit` is called on every node on the way down. Return `none` to walk into
+/// the node, or content to put in its place and stop.
+/// Returning the empty sequence `[]` deletes it.
 ///
 /// A node whose sub-content came back unchanged is returned as it was, so a
 /// walk that rewrites one leaf leaves the rest of the tree identical rather
@@ -518,18 +487,18 @@
 /// from inside `visit` and return the result.
 ///
 /// - labeled (bool): Whether rebuilt nodes keep their label.
-///
 /// - it (any): The root.
-///
 /// - visit (function): `it => none | content`.
 ///
 /// -> content
 #let map-tree(labeled: true, it, visit) = {
-  let replacement = visit(it)
-  if replacement != none { return replacement }
+  let potential-replacement = visit(it)
+  if potential-replacement != none { return potential-replacement }
+
   let kids = children-of(it)
   if kids.len() == 0 { return it }
   let new-kids = kids.map(k => map-tree(k, visit, labeled: labeled))
+
   if new-kids == kids { return it }
   rebuild(it, new-kids, labeled: labeled)
 }
@@ -539,19 +508,19 @@
 ///
 /// - enter (function): Whether to look inside a node. Use it to stop the
 ///   search at a boundary rather than pruning matches afterwards.
-///
 /// - it (any): The root.
-///
 /// - pred (function): `it => bool`.
 ///
 /// -> any
 #let find-in-tree(enter: it => true, it, pred) = {
   if pred(it) { return it }
   if not enter(it) { return none }
+
   for child in children-of(it) {
     let hit = find-in-tree(child, pred, enter: enter)
     if hit != none { return hit }
   }
+
   none
 }
 
@@ -560,9 +529,7 @@
 /// its value.
 ///
 /// - it (any): The root.
-///
 /// - kinds (array): Mark kinds to resolve.
-///
 /// - resolve (function): `value => content`. Returning `none` drops the mark.
 ///
 /// -> content
@@ -588,6 +555,7 @@
 /// -> int
 #let count-items(it) = {
   if is-styled(it) { return count-items(it.child) }
+
   if is-sequence(it) {
     let meaningful = it.children.filter(c => c not in empty-contents)
     // A `#set` at the top of the body leaves the items inside a lone `styled`
@@ -598,14 +566,136 @@
     ) {
       return count-items(meaningful.first())
     }
+
     return meaningful
       .filter(c => (
         type(c) == content and c.func() in (list.item, enum.item, terms.item)
       ))
       .len()
   }
+
   if type(it) == content and it.func() in (list, enum, terms) {
     return it.children.len()
   }
-  1
+
+  1 //fallback
+}
+
+
+// -------------------------------------
+//   Styles
+// -------------------------------------
+
+/// What `it` is underneath any `styled` wrappers.
+///
+/// - it (any): The content to peel.
+///
+/// -> any
+#let unstyled(it) = if is-styled(it) { unstyled(it.child) } else { it }
+
+
+/// The `styled` wrappers around `it`, outermost first.
+///
+/// - it (any): The content to inspect.
+///
+/// -> array
+#let styles-of(it) = if is-styled(it) {
+  (it.styles,) + styles-of(it.child)
+} else {
+  ()
+}
+
+
+/// Put `content` back under the styles `from` was wrapped in.
+///
+/// - from (any): The content the styles came off.
+///
+/// - content (content): What to wrap.
+///
+/// -> content
+#let restyle(from, content) = {
+  let out = content
+  // Innermost first, so the outermost wrapper ends up outermost again.
+  for styles in styles-of(from).rev() {
+    out = typst-builtin-styled(out, styles)
+  }
+  out
+}
+
+
+/// Flatten `it` into the list of children a walker classifies, keeping runs of
+/// unclassified children under one shared `styled` wrapper.
+///
+/// Giving every child its own copy of the styles would not preserve the
+/// document: Typst's realizer groups adjacent elements and a wrapper between
+/// them stops it, so `#set par(..)` would break a paragraph apart and
+/// `#set enum(..)` would restart the numbering at every boundary. Only the
+/// children `structural` accepts are peeled out on their own.
+///
+/// - structural (function): `it => bool`, the children the caller needs to see
+///   individually.
+///
+/// - it (any): The root.
+///
+/// -> array
+#let flatten-children(structural: it => false, it) = {
+  if is-styled(it) {
+    let out = ()
+    let run = ()
+    for child in flatten-children(it.child, structural: structural) {
+      if structural(child) {
+        if run.len() > 0 {
+          out.push(typst-builtin-styled(run.sum(default: []), it.styles))
+          run = ()
+        }
+        out.push(typst-builtin-styled(child, it.styles))
+      } else {
+        run.push(child)
+      }
+    }
+    if run.len() > 0 {
+      out.push(typst-builtin-styled(run.sum(default: []), it.styles))
+    }
+    return out
+  }
+  if is-sequence(it) {
+    return it
+      .children
+      .map(c => flatten-children(c, structural: structural))
+      .flatten()
+  }
+  (it,)
+}
+
+
+/// Pull every node `pred` accepts out of `it`, returning them and what is left.
+///
+/// - it (any): The root.
+///
+/// - pred (function): `it => bool`.
+///
+/// -> dictionary
+#let extract-nodes(it, pred) = {
+  if it == none { return (found: (), rest: none) }
+  if pred(it) { return (found: (it,), rest: none) }
+  if is-styled(it) {
+    let inner = extract-nodes(it.child, pred)
+    return (
+      found: inner.found,
+      rest: if inner.rest == none { none } else {
+        reconstruct-styled(it, inner.rest)
+      },
+    )
+  }
+  if is-sequence(it) {
+    let found = ()
+    let rest = ()
+    for child in it.children {
+      let inner = extract-nodes(child, pred)
+      found += inner.found
+      if inner.rest != none { rest.push(inner.rest) }
+    }
+    return (found: found, rest: rest.sum(default: none))
+  }
+  (found: (), rest: it)
 }
