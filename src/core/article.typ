@@ -120,8 +120,26 @@
 }
 
 
-/// Flatten the document body into the flat list of children the article
-/// walker classifies.
+/// Whether a child has to stay visible to the article walker on its own.
+///
+/// Marks, headings and slide-separator dashes are the only children the walk
+/// classifies; everything between two of them is summed back into a single run
+/// before it is parsed. So a run can — and must — keep one shared `styled`
+/// wrapper: see `_flatten-children`.
+///
+/// - it (content): The child to test.
+///
+/// -> bool
+#let _is-structural(it) = {
+  let core = _unstyled(it)
+  if utils.is-metadata(core) { return true }
+  if type(core) != content { return false }
+  core.func() == heading or core in ([—], [---])
+}
+
+
+/// Flatten the document body into the list of children the article walker
+/// classifies.
 ///
 /// A bare top-level `#set`/`#show` does not style the elements around it — it
 /// wraps *the entire rest of the document* in a single `styled` node. Sequence
@@ -133,19 +151,45 @@
 /// reason (`_collect-waypoints-impl`, and the `is-styled` branch of the main
 /// parse loop); article mode has to do the same.
 ///
-/// The styles are pushed down onto each child rather than dropped, which is
-/// what Typst itself does when it lays a `styled` node out. Marks keep their
-/// wrappers too — `_unstyled` sees through them for classification, and
-/// `_restyle` puts them back around whatever the mark's payload renders as.
+/// What it must *not* do is give every child its own copy of the styles.
+/// `styled(a b c, S)` and `styled(a, S) styled(b, S) styled(c, S)` are not the
+/// same document: Typst's realizer groups adjacent elements, and a wrapper
+/// between them stops it. `#set par(justify: true)` would turn one paragraph
+/// into one paragraph per word, `#set enum(..)` would restart the numbering at
+/// every item, `#set page(..)` would open a page per child, and a
+/// `#show regex(..)` would stop matching across a line break.
+///
+/// So only the children the walk actually classifies — marks, headings, the
+/// bare `---` separator — are peeled out individually. Each maximal run
+/// between them keeps a single shared wrapper, which is exactly the grouping
+/// the walker would have rebuilt anyway when it sums the run back together.
+///
+/// Marks keep their wrappers too: `_unstyled` sees through them for
+/// classification, and `_restyle` puts them back around whatever the mark's
+/// payload renders as.
 ///
 /// - it (content): The document body.
 ///
 /// -> array
 #let _flatten-children(it) = {
   if utils.is-styled(it) {
-    return _flatten-children(it.child).map(child => (
-      utils.typst-builtin-styled(child, it.styles)
-    ))
+    let out = ()
+    let run = ()
+    for child in _flatten-children(it.child) {
+      if _is-structural(child) {
+        if run.len() > 0 {
+          out.push(utils.typst-builtin-styled(run.sum(default: []), it.styles))
+          run = ()
+        }
+        out.push(utils.typst-builtin-styled(child, it.styles))
+      } else {
+        run.push(child)
+      }
+    }
+    if run.len() > 0 {
+      out.push(utils.typst-builtin-styled(run.sum(default: []), it.styles))
+    }
+    return out
   }
   if utils.is-sequence(it) {
     return it.children.map(_flatten-children).flatten()
@@ -166,8 +210,10 @@
 ) = {
   let raw-images = images.filter(i => not i.is-figure)
   let figure-images = images.filter(i => i.is-figure)
-  let other-figures = blocks.filter(b => b.func() == figure)
-  let other-blocks = blocks.filter(b => b.func() != figure)
+  // `_unstyled`, because block content extracted from a slide carries the
+  // document-level `styled` wrappers the walker put back around it.
+  let other-figures = blocks.filter(b => _unstyled(b).func() == figure)
+  let other-blocks = blocks.filter(b => _unstyled(b).func() != figure)
 
   let has-wrap-content = (
     (wrap-images and raw-images.len() > 0)
@@ -1006,8 +1052,15 @@
       if raw-content != none {
         current-items.push(_restyle(child, raw-content))
       }
-      current-images += payload.at("images", default: ())
-      current-blocks += payload.at("blocks", default: ())
+      // Content extracted for wrapping needs the same treatment as the
+      // slide's own body above: a top-level `#show table: ..` must reach a
+      // table that came out of a `#slide[..]`, not just a bare one.
+      current-images += payload
+        .at("images", default: ())
+        .map(img => img + (element: _restyle(child, img.element)))
+      current-blocks += payload
+        .at("blocks", default: ())
+        .map(b => _restyle(child, b))
     } else if is-section-heading {
       current-items.push(child)
     } else if utils.is-kind(core, "touying-slides-only") {
