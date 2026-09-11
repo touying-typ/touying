@@ -814,10 +814,12 @@
   inline: false,
 ) = (
   context {
+    // Keep every heading, even hidden or unoutlined ones: they are needed as
+    // boundaries so that their slides are not merged into the previous heading.
     let headings = query(
       heading.where(level: 1).or(heading.where(level: 2)),
-    ).filter(it => it.outlined)
-    let sections = headings.filter(it => it.level == 1)
+    )
+    let sections = headings.filter(it => it.level == 1 and it.outlined)
     if sections == () {
       return
     }
@@ -828,16 +830,35 @@
         and it.location().page() >= first-page
     ))
     let current-page = here().page()
-    let current-index = (
+    // Last section heading (discarded or not) on or before the current page.
+    let current-section = headings
+      .filter(it => it.level == 1 and it.location().page() <= current-page)
+      .at(-1, default: none)
+    let current-index = if (
+      current-section != none and not current-section.outlined
+    ) {
+      // Inside a discarded section: no column is the current one.
+      none
+    } else {
       sections.filter(it => it.location().page() <= current-page).len() - 1
-    )
+    }
     let cols = ()
     let col = ()
+    let in-discarded-section = false
     for (hd, next-hd) in headings.zip(headings.slice(1) + (none,)) {
       let next-page = if next-hd != none {
         next-hd.location().page()
       } else {
         calc.inf
+      }
+      // Discard hidden/unoutlined headings together with their slides,
+      // including the subsections of a discarded section.
+      if hd.level == 1 {
+        in-discarded-section = not hd.outlined
+      }
+      if in-discarded-section or not hd.outlined {
+        slides = slides.filter(it => it.location().page() >= next-page)
+        continue
       }
       if hd.level == 1 {
         if col != () {
@@ -912,7 +933,9 @@
       cols.push(align(left, col.sum()))
       col = ()
     }
-    if current-index < 0 or current-index >= cols.len() {
+    if current-index == none {
+      cols = cols.map(body => text(fill: utils.update-alpha(fill, alpha), body))
+    } else if current-index < 0 or current-index >= cols.len() {
       cols = cols.map(body => text(fill: fill, body))
     } else {
       cols = cols
