@@ -532,6 +532,11 @@
   children = _filter-mode-children(self, children)
   children = _expand-set-config(children)
 
+  // #article-text claims the slide it is written in, and a slide starts at a
+  // heading no deeper than this (slides.typ:686 uses the same test). Deeper
+  // headings are content inside the slide, so they do not bound it.
+  let slide-level = self.at("slide-level", default: 2)
+
   let article-cfg = self.at("article", default: (:))
   let wrap-images = article-cfg.at("wrap-images", default: true)
   let wrap-image-figures = article-cfg.at("wrap-image-figures", default: false)
@@ -759,9 +764,9 @@
     // An #article-text claims its whole section, so it cannot be applied where
     // it is written: content after it belongs to the same section and has to
     // go too. It is held here and applied when the section closes.
-    let section-start = 0
-    let section-text = none
-    let section-crumbs = ()
+    let slide-start = 0
+    let slide-text = none
+    let slide-crumbs = ()
     for child in children {
       // A top-level `#set`/`#show` leaves every child wrapped in a `styled`
       // node, so classify on `core` and put the styles back with `_restyle`
@@ -775,14 +780,14 @@
         current-run = ()
         result += r.items
         result += r.breadcrumbs
-        section-crumbs += r.breadcrumbs
-        if section-text != none {
+        slide-crumbs += r.breadcrumbs
+        if slide-text != none {
           extern.warning(
-            "#article-text: only one per section, the later one is ignored. "
-              + "Add a heading to start a new section.",
+            "#article-text: only one per slide, the later one is ignored. "
+              + "Start a new slide to write another.",
           )
         } else {
-          section-text = tree.restyle(child, _resolve-block-recalls(
+          slide-text = tree.restyle(child, _resolve-block-recalls(
             core.value.body,
           ))
         }
@@ -791,7 +796,7 @@
         current-run = ()
         result += r.items
         result += r.breadcrumbs
-        section-crumbs += r.breadcrumbs
+        slide-crumbs += r.breadcrumbs
         result.push(tree.restyle(child, _resolve-block-recalls(
           core.value.body,
         )))
@@ -800,7 +805,7 @@
         current-run = ()
         result += r.items
         result += r.breadcrumbs
-        section-crumbs += r.breadcrumbs
+        slide-crumbs += r.breadcrumbs
         // The body was spliced into `children` by _expand-set-config, so only
         // the config itself is handled here.
         use-self = utils.merge-dicts(use-self, core.value.config)
@@ -809,7 +814,7 @@
         current-run = ()
         result += r.items
         result += r.breadcrumbs
-        section-crumbs += r.breadcrumbs
+        slide-crumbs += r.breadcrumbs
         let slide-result = (core.value.fn)(use-self)
         let payload = _unwrap-article-raw(slide-result)
         let raw-content = payload.at("content", default: none)
@@ -826,18 +831,25 @@
         current-run = ()
         result += r.items
         result += r.breadcrumbs
-        section-crumbs += r.breadcrumbs
-        if section-text != none {
+        slide-crumbs += r.breadcrumbs
+        // Only a slide-level heading ends the slide, and with it the reach of
+        // a pending #article-text. A deeper one is content inside the slide.
+        let starts-slide = tree.is-heading(core, depth: slide-level)
+        if starts-slide and slide-text != none {
           result = (
-            result.slice(0, section-start) + section-crumbs + (section-text,)
+            result.slice(0, slide-start) + slide-crumbs + (slide-text,)
           )
         }
         let h = _render-run(use-self, (child,), bare: true)
         result += h.items
         result += h.breadcrumbs
-        section-start = result.len()
-        section-text = none
-        section-crumbs = ()
+        if starts-slide {
+          slide-start = result.len()
+          slide-text = none
+          slide-crumbs = ()
+        } else {
+          slide-crumbs += h.breadcrumbs
+        }
       } else if tree.is-kind(core, "touying-slides-only") {
         // Stripped in article mode — an article-mode/slide-mode
         // distinction the shared parser has no notion of, so it must be
@@ -855,9 +867,9 @@
     let r = _render-run(use-self, current-run)
     result += r.items
     result += r.breadcrumbs
-    section-crumbs += r.breadcrumbs
-    if section-text != none {
-      result = result.slice(0, section-start) + section-crumbs + (section-text,)
+    slide-crumbs += r.breadcrumbs
+    if slide-text != none {
+      result = result.slice(0, slide-start) + slide-crumbs + (slide-text,)
     }
     return result.sum(default: none) + _leak-check(self)
   }
@@ -870,11 +882,14 @@
   let current-images = ()
   let current-blocks = ()
   let current-run = ()
-  // See the simple path above: an #article-text claims its whole section, so
-  // it is held until the section closes rather than applied where written.
-  let section-start = 0
-  let section-text = none
-  let section-crumbs = ()
+  // See the simple path above: an #article-text claims its whole slide, so it
+  // is held until the slide ends rather than applied where written. A slide
+  // spans several of these float sections (every heading starts a new one), so
+  // the reach is recorded as an index into `sections`.
+  let slide-sections-start = 0
+  let slide-head = ()
+  let slide-text = none
+  let slide-crumbs = ()
   for child in children {
     // Same as the simple path above: classify on `core`, re-style anything
     // pulled out of a mark's payload.
@@ -887,21 +902,9 @@
       current-run = ()
       current-items += r.items
       current-items += r.breadcrumbs
-      section-crumbs += r.breadcrumbs
+      slide-crumbs += r.breadcrumbs
       current-images += r.images
       current-blocks += r.blocks
-      // The section is closing, so a pending #article-text takes it over:
-      // everything it rendered goes, including the floats and blocks pulled
-      // out of it, and only the breadcrumbs stay behind.
-      if section-text != none {
-        current-items = (
-          current-items.slice(0, section-start)
-            + section-crumbs
-            + (section-text,)
-        )
-        current-images = ()
-        current-blocks = ()
-      }
       if current-items.len() > 0 {
         sections.push(_wrap-section(
           current-items,
@@ -918,9 +921,29 @@
       current-items = ()
       current-images = ()
       current-blocks = ()
-      section-start = 0
-      section-text = none
-      section-crumbs = ()
+    }
+
+    // A slide-level heading ends the slide, so a pending #article-text takes
+    // it over: every float section the slide produced goes, along with the
+    // floats and blocks pulled out of them, and only the heading and the
+    // breadcrumbs stay behind.
+    if tree.is-heading(core, depth: slide-level) {
+      if slide-text != none {
+        sections = sections.slice(0, slide-sections-start)
+        sections.push(_wrap-section(
+          slide-head + slide-crumbs + (slide-text,),
+          (),
+          (),
+          wrap-images: wrap-images,
+          wrap-image-figures: wrap-image-figures,
+          wrap-other-figures: wrap-other-figures,
+          wrap-other: wrap-other,
+          wrap-align-direction: wrap-align-direction,
+          wrap-width: wrap-width,
+        ))
+      }
+      slide-text = none
+      slide-crumbs = ()
     }
 
     if tree.is-kind(core, "touying-article-text") {
@@ -930,16 +953,16 @@
       current-run = ()
       current-items += r.items
       current-items += r.breadcrumbs
-      section-crumbs += r.breadcrumbs
+      slide-crumbs += r.breadcrumbs
       current-images += r.images
       current-blocks += r.blocks
-      if section-text != none {
+      if slide-text != none {
         extern.warning(
-          "#article-text: only one per section, the later one is ignored. "
-            + "Add a heading to start a new section.",
+          "#article-text: only one per slide, the later one is ignored. "
+            + "Start a new slide to write another.",
         )
       } else {
-        section-text = tree.restyle(
+        slide-text = tree.restyle(
           child,
           _resolve-block-recalls(core.value.body),
         )
@@ -949,7 +972,7 @@
       current-run = ()
       current-items += r.items
       current-items += r.breadcrumbs
-      section-crumbs += r.breadcrumbs
+      slide-crumbs += r.breadcrumbs
       current-images += r.images
       current-blocks += r.blocks
       current-items.push(tree.restyle(
@@ -961,7 +984,7 @@
       current-run = ()
       current-items += r.items
       current-items += r.breadcrumbs
-      section-crumbs += r.breadcrumbs
+      slide-crumbs += r.breadcrumbs
       current-images += r.images
       current-blocks += r.blocks
       // The body was spliced into `children` by _expand-set-config, so only
@@ -972,7 +995,7 @@
       current-run = ()
       current-items += r.items
       current-items += r.breadcrumbs
-      section-crumbs += r.breadcrumbs
+      slide-crumbs += r.breadcrumbs
       current-images += r.images
       current-blocks += r.blocks
       let slide-result = (core.value.fn)(use-self)
@@ -998,7 +1021,12 @@
       let h = _render-run(use-self, (child,), bare: true)
       current-items += h.items
       current-items += h.breadcrumbs
-      section-start = current-items.len()
+      if tree.is-heading(core, depth: slide-level) {
+        slide-sections-start = sections.len()
+        slide-head = h.items
+      } else {
+        slide-crumbs += h.breadcrumbs
+      }
     } else if tree.is-kind(core, "touying-slides-only") {
       // Stripped in article mode — an article-mode/slide-mode
       // distinction the shared parser has no notion of, so it must be
@@ -1013,21 +1041,30 @@
   let r = _render-run(use-self, current-run)
   current-items += r.items
   current-items += r.breadcrumbs
-  section-crumbs += r.breadcrumbs
+  slide-crumbs += r.breadcrumbs
   current-images += r.images
   current-blocks += r.blocks
-  if section-text != none {
-    current-items = (
-      current-items.slice(0, section-start) + section-crumbs + (section-text,)
-    )
-    current-images = ()
-    current-blocks = ()
-  }
   if current-items.len() > 0 {
     sections.push(_wrap-section(
       current-items,
       current-images,
       current-blocks,
+      wrap-images: wrap-images,
+      wrap-image-figures: wrap-image-figures,
+      wrap-other-figures: wrap-other-figures,
+      wrap-other: wrap-other,
+      wrap-align-direction: wrap-align-direction,
+      wrap-width: wrap-width,
+    ))
+  }
+  // The document ends the last slide, so the same takeover as at a
+  // slide-level heading applies here.
+  if slide-text != none {
+    sections = sections.slice(0, slide-sections-start)
+    sections.push(_wrap-section(
+      slide-head + slide-crumbs + (slide-text,),
+      (),
+      (),
       wrap-images: wrap-images,
       wrap-image-figures: wrap-image-figures,
       wrap-other-figures: wrap-other-figures,

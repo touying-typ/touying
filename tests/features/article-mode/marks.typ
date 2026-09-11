@@ -46,6 +46,20 @@
     Inside article-only it is kept: nothing there can break a slide.
   ]
 
+  == Slide With A Subheading
+
+  Content before the subheading, part of the same slide.
+
+  === A Subheading
+
+  A `===` is deeper than `slide-level`, so it is content inside this slide
+  rather than a slide of its own, and the prose below claims it too.
+
+  #article-text[
+    This replaces the whole slide-level section: the text above, the
+    subheading, and this sentence's own neighbours.
+  ]
+
   == Untouched
 
   This section has no article-text, so it renders normally.
