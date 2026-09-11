@@ -127,3 +127,30 @@ Regular content here.#pause This text should appear semi-transparent when covere
 #pause
 
 More semi-transparent text.
+
+== Cover Reconstruction: Layout
+#show: touying-set-config.with(config-methods(
+  cover: utils.alpha-changing-cover.with(alpha: 25%),
+))
+
+Positional fields and labels must survive a cover rebuild.
+#pause
+
+#align(center)[Centered] <cov-align>
+A #link("https://typst.app")[link] in a sentence.
+#rotate(10deg, reflow: true)[Rotated]
+#block(width: 100%, height: 0.8cm, stroke: 0.5pt)[#place(top + right)[Placed] <cov-place>]
+#columns(2)[Two #colbreak() columns] <cov-columns>
+
+== Cover Reconstruction: Math and Shapes
+#show: touying-set-config.with(config-methods(
+  cover: utils.color-changing-cover.with(color: gray),
+))
+
+The same for math classes and shapes with positional vertices.
+#pause
+
+$ underbrace(a + b, "sum") quad a class("binary", star) b $
+#polygon(fill: blue, (0pt, 0pt), (20pt, 0pt), (10pt, 16pt))
+#curve(fill: red, curve.move((0pt, 0pt)), curve.line((20pt, 12pt)), curve.line((0pt, 12pt)))
+#raw("let x = 1\nlet y = 2", lang: "typst", block: true)

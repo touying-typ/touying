@@ -296,6 +296,23 @@
   This section appears in handout and article modes, but is hidden during
   a live presentation. #lorem(15)
 
+  == Article Text Inside a Slide
+
+  #slide[
+    - Terse bullet, replaced in the article
+    #article-text[
+      This prose was written inside the slide and replaces all of it. #lorem(20)
+    ]
+  ]
+
+  == Markers Inside a Slide
+
+  #slide[
+    Always visible.
+    #slides-only[_Slides only, written inside a slide body._]
+    #article-only[_Article only, written inside a slide body._]
+  ]
+
   == Conclusion
 
   This is the conclusion. The article should be continuous A4 with no slide boundaries. #lorem(30)
