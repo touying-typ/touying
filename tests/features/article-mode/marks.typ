@@ -60,6 +60,25 @@
     subheading, and this sentence's own neighbours.
   ]
 
+  == A Dash Is Eaten
+
+  Before the dash, part of this region.
+
+  ---
+
+  The article drops the separator, so this is still the same region.
+
+  #article-text[This prose claims both sides of the dash.]
+
+  == A Pagebreak Bounds The Region
+
+  This sentence survives: a `#pagebreak()` breaks the article too, so prose on
+  the far side of one never claims it.
+
+  #pagebreak()
+
+  #article-text[This prose claims only what follows the pagebreak.]
+
   == Untouched
 
   This section has no article-text, so it renders normally.

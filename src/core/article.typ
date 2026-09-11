@@ -53,7 +53,7 @@
   let core = tree.unstyled(it)
   if tree.is-metadata(core) { return true }
   if type(core) != content { return false }
-  core.func() == heading or core in ([—], [---])
+  core.func() in (heading, pagebreak) or core in ([—], [---])
 }
 
 
@@ -63,6 +63,23 @@
 /// - cont (content): The slide's return value.
 ///
 /// -> dictionary
+/// Whether this child starts a region an `#article-text` can claim.
+///
+/// A slide-level heading does, and so does a real `#pagebreak()`: the article
+/// breaks there too, so content on the far side of one is not part of the same
+/// run of prose. A bare `---` does not, since the article drops it.
+///
+/// - core (any): The child, already unstyled.
+///
+/// - slide-level (int): Headings this deep or shallower start a slide.
+///
+/// -> bool
+#let _starts-region(core, slide-level) = (
+  tree.is-heading(core, depth: slide-level)
+    or (type(core) == content and core.func() == pagebreak)
+)
+
+
 #let _unwrap-article-raw(cont) = {
   let found = tree.find-in-tree(cont, c => tree.is-kind(
     c,
@@ -773,6 +790,7 @@
       // around anything pulled out of a mark's payload.
       let core = tree.unstyled(child)
       let is-section-heading = type(core) == content and core.func() == heading
+      let starts-region = _starts-region(core, slide-level)
       if tree.is-kind(core, "touying-article-text") {
         // Rendered, not discarded: a touying-recall inside the article-text
         // body resolves against breadcrumbs left by the content it replaces.
@@ -826,16 +844,15 @@
         // thing under a heading (see e.g. "With Explicit Slide"/"Focus
         // Slide" in the article-mode test).
         if raw-content != none { result.push(tree.restyle(child, raw-content)) }
-      } else if is-section-heading {
+      } else if is-section-heading or starts-region {
         let r = _render-run(use-self, current-run)
         current-run = ()
         result += r.items
         result += r.breadcrumbs
         slide-crumbs += r.breadcrumbs
-        // Only a slide-level heading ends the slide, and with it the reach of
-        // a pending #article-text. A deeper one is content inside the slide.
-        let starts-slide = tree.is-heading(core, depth: slide-level)
-        if starts-slide and slide-text != none {
+        // A deeper heading is content inside the slide, so it neither ends the
+        // region nor limits the reach of a pending #article-text.
+        if starts-region and slide-text != none {
           result = (
             result.slice(0, slide-start) + slide-crumbs + (slide-text,)
           )
@@ -843,7 +860,7 @@
         let h = _render-run(use-self, (child,), bare: true)
         result += h.items
         result += h.breadcrumbs
-        if starts-slide {
+        if starts-region {
           slide-start = result.len()
           slide-text = none
           slide-crumbs = ()
@@ -895,8 +912,10 @@
     // pulled out of a mark's payload.
     let core = tree.unstyled(child)
     let is-section-heading = type(core) == content and core.func() == heading
+    let starts-region = _starts-region(core, slide-level)
     if (
-      is-section-heading and (current-items.len() > 0 or current-run.len() > 0)
+      (is-section-heading or starts-region)
+        and (current-items.len() > 0 or current-run.len() > 0)
     ) {
       let r = _render-run(use-self, current-run)
       current-run = ()
@@ -923,11 +942,11 @@
       current-blocks = ()
     }
 
-    // A slide-level heading ends the slide, so a pending #article-text takes
-    // it over: every float section the slide produced goes, along with the
-    // floats and blocks pulled out of them, and only the heading and the
-    // breadcrumbs stay behind.
-    if tree.is-heading(core, depth: slide-level) {
+    // The region ends here, so a pending #article-text takes it over: every
+    // float section the region produced goes, along with the floats and blocks
+    // pulled out of them, and only the boundary itself and the breadcrumbs
+    // stay behind.
+    if starts-region {
       if slide-text != none {
         sections = sections.slice(0, slide-sections-start)
         sections.push(_wrap-section(
@@ -1017,11 +1036,13 @@
       current-blocks += payload
         .at("blocks", default: ())
         .map(b => tree.restyle(child, b))
-    } else if is-section-heading {
+    } else if is-section-heading or starts-region {
       let h = _render-run(use-self, (child,), bare: true)
       current-items += h.items
       current-items += h.breadcrumbs
-      if tree.is-heading(core, depth: slide-level) {
+      if starts-region {
+        // Re-emitted verbatim if an #article-text takes the region over, so a
+        // #pagebreak() still breaks there.
         slide-sections-start = sections.len()
         slide-head = h.items
       } else {
