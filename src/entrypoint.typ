@@ -142,7 +142,6 @@
       slide-fn: _article-slide,
       article-mode: true,
       handout: true,
-      horizontal-line-to-pagebreak: false,
       reset-page-counter-to-slide-counter: false,
       reset-footnote-number-per-slide: false,
       enable-pdfpc: false,

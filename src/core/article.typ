@@ -497,18 +497,40 @@
   out
 }
 
+/// Splice the body of every `touying-set-config` node back into the walk.
+///
+/// `#show: appendix` compiles to a config node carrying the rest of the
+/// document as its body. Article mode has no slide preamble to defer to, so
+/// the config simply applies from that node on, and the body would otherwise
+/// be dropped. Splicing beats recursing here: it keeps one walk, one leak
+/// check, and one decision about wrapping.
+///
+/// - children (array): Flattened top-level children.
+///
+/// -> array
+#let _expand-set-config(children) = {
+  let out = ()
+  for child in children {
+    out.push(child)
+    let core = tree.unstyled(child)
+    if tree.is-kind(core, "touying-set-config") {
+      // restyle first, so a top-level `#set` wrapping the config node still
+      // wraps its body; flatten-children then groups the run under one shared
+      // styled node rather than one per child.
+      out += _expand-set-config(tree.flatten-children(
+        tree.restyle(child, core.value.body),
+        structural: _is-structural,
+      ))
+    }
+  }
+  out
+}
+
+
 #let render-content-as-article(self: none, body) = {
   let children = tree.flatten-children(body, structural: _is-structural)
   children = _filter-mode-children(self, children)
-
-  // Same convention split-content-into-slides uses to turn a bare "---"/"—"
-  // into a slide break — in article mode there are no slide boundaries to
-  // break, so it's a silent no-op instead (see the per-child checks below).
-  // Wrap it in #article-only[...] to force a literal dash through instead.
-  let horizontal-line-to-pagebreak = self.at(
-    "horizontal-line-to-pagebreak",
-    default: true,
-  )
+  children = _expand-set-config(children)
 
   let article-cfg = self.at("article", default: (:))
   let wrap-images = article-cfg.at("wrap-images", default: true)
@@ -581,7 +603,11 @@
     "touying-recall-breadcrumb",
   ))
 
-  let _render-run(self, run) = {
+  /// - bare (bool): Parse only. A heading is emitted as its own item, so it
+  ///   must not be wrapped in a block or handed to the linearizer, which
+  ///   would treat it as extractable block content. It still has to be parsed:
+  ///   a touying mark inside a heading is consumed here or not at all.
+  let _render-run(self, run, bare: false) = {
     if run.len() == 0 {
       return (items: (), images: (), blocks: (), breadcrumbs: ())
     }
@@ -608,6 +634,14 @@
     )
     let cont = conts.sum(default: none)
     let extracted = _extract-breadcrumbs(cont)
+    if bare {
+      return (
+        items: if extracted.rest != none { (extracted.rest,) } else { () },
+        images: (),
+        blocks: (),
+        breadcrumbs: extracted.found,
+      )
+    }
     let linearized = _article-linearize(render-self, none, (extracted.rest,))
     (
       items: if linearized.content != none {
@@ -722,32 +756,42 @@
     // rather than factored into a helper.
     let result = ()
     let current-run = ()
+    // An #article-text claims its whole section, so it cannot be applied where
+    // it is written: content after it belongs to the same section and has to
+    // go too. It is held here and applied when the section closes.
+    let section-start = 0
+    let section-text = none
+    let section-crumbs = ()
     for child in children {
       // A top-level `#set`/`#show` leaves every child wrapped in a `styled`
       // node, so classify on `core` and put the styles back with `_restyle`
       // around anything pulled out of a mark's payload.
       let core = tree.unstyled(child)
+      let is-section-heading = type(core) == content and core.func() == heading
       if tree.is-kind(core, "touying-article-text") {
+        // Rendered, not discarded: a touying-recall inside the article-text
+        // body resolves against breadcrumbs left by the content it replaces.
         let r = _render-run(use-self, current-run)
         current-run = ()
         result += r.items
-        // article-text replaces the preceding run's visible content, but
-        // breadcrumbs are invisible bookkeeping (not part of what it's
-        // replacing) and must survive so touying-recall inside its own
-        // body can still find them.
-        let headings = result.filter(item => (
-          type(item) == content and tree.unstyled(item).func() == heading
-        ))
-        result = headings
         result += r.breadcrumbs
-        result.push(tree.restyle(child, _resolve-block-recalls(
-          core.value.body,
-        )))
+        section-crumbs += r.breadcrumbs
+        if section-text != none {
+          extern.warning(
+            "#article-text: only one per section, the later one is ignored. "
+              + "Add a heading to start a new section.",
+          )
+        } else {
+          section-text = tree.restyle(child, _resolve-block-recalls(
+            core.value.body,
+          ))
+        }
       } else if tree.is-kind(core, "touying-article-only") {
         let r = _render-run(use-self, current-run)
         current-run = ()
         result += r.items
         result += r.breadcrumbs
+        section-crumbs += r.breadcrumbs
         result.push(tree.restyle(child, _resolve-block-recalls(
           core.value.body,
         )))
@@ -756,12 +800,16 @@
         current-run = ()
         result += r.items
         result += r.breadcrumbs
+        section-crumbs += r.breadcrumbs
+        // The body was spliced into `children` by _expand-set-config, so only
+        // the config itself is handled here.
         use-self = utils.merge-dicts(use-self, core.value.config)
       } else if tree.is-kind(core, "touying-slide-wrapper") {
         let r = _render-run(use-self, current-run)
         current-run = ()
         result += r.items
         result += r.breadcrumbs
+        section-crumbs += r.breadcrumbs
         let slide-result = (core.value.fn)(use-self)
         let payload = _unwrap-article-raw(slide-result)
         let raw-content = payload.at("content", default: none)
@@ -773,14 +821,33 @@
         // thing under a heading (see e.g. "With Explicit Slide"/"Focus
         // Slide" in the article-mode test).
         if raw-content != none { result.push(tree.restyle(child, raw-content)) }
+      } else if is-section-heading {
+        let r = _render-run(use-self, current-run)
+        current-run = ()
+        result += r.items
+        result += r.breadcrumbs
+        section-crumbs += r.breadcrumbs
+        if section-text != none {
+          result = (
+            result.slice(0, section-start) + section-crumbs + (section-text,)
+          )
+        }
+        let h = _render-run(use-self, (child,), bare: true)
+        result += h.items
+        result += h.breadcrumbs
+        section-start = result.len()
+        section-text = none
+        section-crumbs = ()
       } else if tree.is-kind(core, "touying-slides-only") {
         // Stripped in article mode — an article-mode/slide-mode
         // distinction the shared parser has no notion of, so it must be
         // filtered out here rather than left for the parser to see.
-      } else if horizontal-line-to-pagebreak and core in ([—], [---]) {
-        // A bare slide-separator dash — no-op in article mode (no slide
-        // boundaries to break). See slides.typ's own horizontal-line
-        // handling for the slide-mode equivalent.
+      } else if core in ([—], [---]) {
+        // A bare slide separator. It breaks slides, so it means nothing in an
+        // article and is dropped, whatever `horizontal-line-to-pagebreak`
+        // says: that config is about slide output. Inside #article-text or
+        // #article-only it survives, because those bodies are emitted whole
+        // rather than walked.
       } else {
         current-run.push(child)
       }
@@ -788,6 +855,10 @@
     let r = _render-run(use-self, current-run)
     result += r.items
     result += r.breadcrumbs
+    section-crumbs += r.breadcrumbs
+    if section-text != none {
+      result = result.slice(0, section-start) + section-crumbs + (section-text,)
+    }
     return result.sum(default: none) + _leak-check(self)
   }
 
@@ -799,6 +870,11 @@
   let current-images = ()
   let current-blocks = ()
   let current-run = ()
+  // See the simple path above: an #article-text claims its whole section, so
+  // it is held until the section closes rather than applied where written.
+  let section-start = 0
+  let section-text = none
+  let section-crumbs = ()
   for child in children {
     // Same as the simple path above: classify on `core`, re-style anything
     // pulled out of a mark's payload.
@@ -811,8 +887,21 @@
       current-run = ()
       current-items += r.items
       current-items += r.breadcrumbs
+      section-crumbs += r.breadcrumbs
       current-images += r.images
       current-blocks += r.blocks
+      // The section is closing, so a pending #article-text takes it over:
+      // everything it rendered goes, including the floats and blocks pulled
+      // out of it, and only the breadcrumbs stay behind.
+      if section-text != none {
+        current-items = (
+          current-items.slice(0, section-start)
+            + section-crumbs
+            + (section-text,)
+        )
+        current-images = ()
+        current-blocks = ()
+      }
       if current-items.len() > 0 {
         sections.push(_wrap-section(
           current-items,
@@ -829,32 +918,38 @@
       current-items = ()
       current-images = ()
       current-blocks = ()
+      section-start = 0
+      section-text = none
+      section-crumbs = ()
     }
 
     if tree.is-kind(core, "touying-article-text") {
+      // Rendered, not discarded: a touying-recall inside the article-text body
+      // resolves against breadcrumbs left by the content it replaces.
       let r = _render-run(use-self, current-run)
       current-run = ()
       current-items += r.items
-      // article-text replaces the preceding run's visible content, but
-      // breadcrumbs are invisible bookkeeping (not part of what it's
-      // replacing) and must survive so touying-recall inside its own body
-      // can still find them.
-      let headings = current-items.filter(item => (
-        type(item) == content and tree.unstyled(item).func() == heading
-      ))
-      current-items = headings
-      current-images = () //nothing to do for article-text here
-      current-blocks = ()
       current-items += r.breadcrumbs
-      current-items.push(tree.restyle(
-        child,
-        _resolve-block-recalls(core.value.body),
-      ))
+      section-crumbs += r.breadcrumbs
+      current-images += r.images
+      current-blocks += r.blocks
+      if section-text != none {
+        extern.warning(
+          "#article-text: only one per section, the later one is ignored. "
+            + "Add a heading to start a new section.",
+        )
+      } else {
+        section-text = tree.restyle(
+          child,
+          _resolve-block-recalls(core.value.body),
+        )
+      }
     } else if tree.is-kind(core, "touying-article-only") {
       let r = _render-run(use-self, current-run)
       current-run = ()
       current-items += r.items
       current-items += r.breadcrumbs
+      section-crumbs += r.breadcrumbs
       current-images += r.images
       current-blocks += r.blocks
       current-items.push(tree.restyle(
@@ -866,14 +961,18 @@
       current-run = ()
       current-items += r.items
       current-items += r.breadcrumbs
+      section-crumbs += r.breadcrumbs
       current-images += r.images
       current-blocks += r.blocks
+      // The body was spliced into `children` by _expand-set-config, so only
+      // the config itself is handled here.
       use-self = utils.merge-dicts(use-self, core.value.config)
     } else if tree.is-kind(core, "touying-slide-wrapper") {
       let r = _render-run(use-self, current-run)
       current-run = ()
       current-items += r.items
       current-items += r.breadcrumbs
+      section-crumbs += r.breadcrumbs
       current-images += r.images
       current-blocks += r.blocks
       let slide-result = (core.value.fn)(use-self)
@@ -896,15 +995,17 @@
         .at("blocks", default: ())
         .map(b => tree.restyle(child, b))
     } else if is-section-heading {
-      current-items.push(child)
+      let h = _render-run(use-self, (child,), bare: true)
+      current-items += h.items
+      current-items += h.breadcrumbs
+      section-start = current-items.len()
     } else if tree.is-kind(core, "touying-slides-only") {
       // Stripped in article mode — an article-mode/slide-mode
       // distinction the shared parser has no notion of, so it must be
       // filtered out here rather than left for the parser to see.
-    } else if horizontal-line-to-pagebreak and core in ([—], [---]) {
-      // A bare slide-separator dash — no-op in article mode (no slide
-      // boundaries to break). See slides.typ's own horizontal-line
-      // handling for the slide-mode equivalent.
+    } else if core in ([—], [---]) {
+      // See the simple path above: a slide separator means nothing in an
+      // article, and survives only inside #article-text or #article-only.
     } else {
       current-run.push(child)
     }
@@ -912,8 +1013,16 @@
   let r = _render-run(use-self, current-run)
   current-items += r.items
   current-items += r.breadcrumbs
+  section-crumbs += r.breadcrumbs
   current-images += r.images
   current-blocks += r.blocks
+  if section-text != none {
+    current-items = (
+      current-items.slice(0, section-start) + section-crumbs + (section-text,)
+    )
+    current-images = ()
+    current-blocks = ()
+  }
   if current-items.len() > 0 {
     sections.push(_wrap-section(
       current-items,
