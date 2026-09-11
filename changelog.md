@@ -234,7 +234,63 @@ Things to watch when upgrading: a `#pause` after `uncover`/`only`/`alternatives`
 
 - feat: new utilities. `utils.is-math-symbol`, `utils.sequence-to-array`, `utils.resolve-negative-subslides` (negative subslide indices resolved against a repeat count and an optional non-1 base), and `utils.rescale-image` (used by article mode's image wrapping).
 
+- **feat: mode markers and `#article-text` work inside a slide body**
+
+  A `#slide[..]` call injects config, a composer or slide-level layout, and content is meant to mean the same thing with or without one. `#slide[#slides-only[..]]` did not: a slide captures its body and renders it past the walk that resolves those marks, so it reached layout unconsumed and panicked. Which half of a slide a marker covers is now the author's choice, `#slide[a #slides-only[b] c]` keeping `b` out of the article and `#slides-only(slide[a b c])` keeping the whole slide out. `#article-text[..]` inside a slide stands in for that slide, matching what it does at document level.
+
+- **feat: `config-article(wrap-width: ..)` sets how much of the page a float takes**
+
+  Article mode linearizes a deck rather than carrying its layout over, so the composer no longer decides how a float looks. A floated element takes 50% of the text width by default, whatever width it was written at for the slide, and an image is scaled to fill it.
+
+- **feat: `color-changing-cover` gained `hide-filled`**
+
+  An element that paints its own background would be flattened together with the content on top of it, so those go to `fallback-hide` instead of being recoloured. That was previously a hard-coded list of element functions; it is a parameter now, and `fallback-hide` defaults to `auto`, dimming them to match the recoloured text.
+
 ### Fixes
+
+- **fix: covering no longer errors on `align`, `place`, `columns`, `link` or `rotate`**
+
+  The tree-rebuilding cover methods put every field of an element back as a named argument, which those five reject because their defining field is positional, so `#uncover("2-")[#align(center)[..]]` failed with `unexpected argument: alignment`. The same gap hit `polygon`, `curve`, `math.class` and the `underbrace` family. `scale` is why it stayed hidden: since Typst 0.15 it has no `factor` field, only the resolved named `x`/`y`, so the one transform everybody reaches for happened to work. Matters because v0.8.0 promotes `alpha-changing-cover` as the replacement for the deprecated `semi-transparent-cover`.
+
+- **fix: a labelled `#place`, `#rotate`, `#columns` or `#terms.item` in a slide**
+
+  The parser rebuilt those four by hand and passed the label straight into the constructor, so a labelled `#place(top + right)[..] <lbl>` was a hard compile error and a labelled `#columns(2)[..] <lbl>` silently lost its label. They go through the shared reconstruction now and keep it.
+
+- **fix: covering no longer moves content**
+
+  A text run with no colour of its own was rebuilt into a fresh `text(..)` node, which split it out of the run it was shaped in. An inline `#quote[..]` moved by 0.6pt when covered and does not now. Non-text content is also no longer given a 1pt outset, which showed as a grey outline around the very element being covered.
+
+- **fix: the two cover methods agree**
+
+  `color-changing-cover` ignored a configured `fallback-hide` for images, never touched strokes on `box`, `block`, `table` or `grid`, destroyed `table.cell`, and never entered the bodies of `underline`, `highlight` and `strike`; `alpha-changing-cover` did not cover `cite` or `ref`. Both walk one tree now, so these behave the same way.
+
+- **fix: `#item-by-item` no longer collapses when its body starts with a `#set`**
+
+  Three separate copies of "count the items" could not see through the `styled` node a `#set` or `#show` creates, so `#item-by-item[#set text(..) \ - one \ - two]` rendered one subslide instead of three.
+
+- **fix: `magic.nontight` on a labelled list**
+
+  It splatted the element's `label` into the constructor, which rejects it, so `#list([a], [b]) <lbl>` was a hard error under `nontight-list-enum-and-terms`.
+
+- **fix: speaker notes no longer lose styled content**
+
+  `utils.markup-text` dropped every `styled` subtree, so `[a #text(red)[b] c]` reached the `.pdfpc` file as "a c". It feeds the pdfpc export, so notes were silently incomplete.
+
+- **fix: a top-level `#set` or `#show` no longer breaks article mode**
+
+  Such a rule wraps the entire rest of the document in one `styled` node. Article mode did not look inside it, so headings stopped bounding sections, mode labels stopped filtering, and every `#article-text` / `#article-only` / `#slide[..]` mark in the document went unconsumed and ended the compile with `Unsupported mark`. A `#touying-recall` of a reducer failed the same way, with `refers to content with no subslide dimension`.
+
+- **fix: user blocks survive article mode**
+
+  Article mode strips the `block()` wrappers it generates itself, and was taking any block the author wrote with them, along with its fill, stroke, inset and label. This was the default configuration.
+
+- **fix: `#article-text` replaces the floats of the content it stands in for**
+
+  A `#components.side-by-side[..][..]` in front of an `#article-text[..]` still turned up in the article beside the prose meant to replace it.
+
+- **fix: waypoints inside a `terms.item` or a figure caption**
+
+  The waypoint pre-pass walked neither, while the main parse walked both, so every waypoint after one landed on the wrong subslide.
 
 - **fix: special slides announce their title as a hidden heading**
 
@@ -294,11 +350,15 @@ Almost every page was touched. The largest items:
 - docs: [pdfpc](https://touying-typ.github.io/docs/external/pdfpc) documents `end-slide`, `save-slide` and `hidden-slide` alongside speaker notes, plus bundle export. [touying-exporter](https://touying-typ.github.io/docs/external/touying-exporter) documents `utils.get-input`.
 - docs: [CeTZ integration](https://touying-typ.github.io/docs/integration/cetz) drops the stale `(uncover(..),)` array syntax from the callback-style example, and the FAQ's fletcher example likewise.
 - docs: the [FAQ](https://touying-typ.github.io/docs/faq) was substantially reworked, covering the bibliography, section-slide bodies, `touying-fn-wrapper-raw`, the cover methods, `"h"` and `"!"` subslide specs, second-screen alignments, and Tinymist in place of the discontinued Typst Preview extension.
-- docs: large Chinese translation pass covering the theme pages, FAQ, settings, sections, navigation, and the new speaker-notes page. The Chinese `settings` and `custom` pages document article mode; their English counterparts do not yet.
+- docs: new [Article Mode](https://touying-typ.github.io/docs/integration/article-mode) page covering the export modes, article themes and `available-fields`, writing for both outputs, recalling animated content, and floating images.
+- docs: new [Output Modes](https://touying-typ.github.io/docs/tutorials/output-modes) page gathering the four export modes, the four mode markers and the `<touying:..>` section labels in one place. The handout page keeps handout mode itself and links to it.
+- docs: [Complex Animations](https://touying-typ.github.io/docs/tutorials/dynamic/complex) documents `animate` (placement versus styling, priority, and that the last effect written wins), `swap` and its `stretch`, `animate-hidden` / `animate-removed`, `touying-render`, `touying-recall`, and the callback-style variants.
+- docs: large Chinese translation pass covering the theme pages, FAQ, settings, sections, navigation, and the new speaker-notes page. The Chinese `settings` and `custom` pages document article mode.
 
 ### Miscellaneous
 
 - **refactor: `src/core.typ` is split into modules.** The 6288-line file becomes `src/core/parser.typ`, `src/core/animation.typ`, `src/core/slides.typ`, `src/core/blocks.typ`, `src/core/waypoints.typ` and additionally `src/core/article.typ`, with `src/slides.typ` replaced by `src/entrypoint.typ` and the new `src/bundle.typ` holding the bundle-export helpers. `src/exports.typ` is reorganised along the same lines. The public API is unaffected except where noted above, but anything importing `touying/src/core.typ` directly has to be updated.
+- **refactor: content-tree handling is one layer, `src/core/tree.typ`.** Recognising what a piece of content is, taking it apart and putting it back together was written out in about thirty places, which had drifted apart: label handling differed per call site, several walks could not see through a `styled` node, and the two cover methods were 200-line near-copies. The new module knows nothing about touying and imports nothing, so anything can use it. `shape-of` classifies how a node holds its sub-content, `children-of` and `rebuild` are guaranteed to round-trip it, and `map-tree` walks with an identity short-circuit. Most of the fixes listed above are consequences rather than separate patches. Moved out of `utils`: the `is-*` predicates, the `typst-builtin-*` handles, `reconstruct*`, `trim`, `label-it`. `core/subslides.typ` takes visibility-spec resolution (`check-visible`, `resolve-negative-subslides`, `last-required-subslide`, …) and `resolve-waypoints` joins `core/waypoints.typ`. The old names stay in `utils`: the ones returning content forward with a deprecation warning, the rest panic naming the new module.
 - refactor: block rendering, waypoint-to-integer resolution, the equation/mitex/raw paths and the article-mode scanning functions were each unified into one implementation rather than several near-duplicates.
 - test: reference renders regenerated for Typst 0.15.0 / tytanic 0.4.0 layout drift. New suites for article mode (presentation, handout and article variants of one source), `recall-content`, `render-subslides`, `mode-never`, `notes-second-screen`, `pdfpc`, `cover-citation`, and the #395, #408 and #415 regressions.
 
