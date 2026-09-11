@@ -84,7 +84,7 @@ That holds for every slide function, so `#slides-only(title-slide[])` keeps a ti
 
 ### Replacing a slide with prose
 
-`#article-text[..]` goes further than `#article-only[..]`: it stands in for the slide it is written in, so the slide's own content never reaches the article.
+`#article-text[..]` goes further than `#article-only[..]`: it stands in for the slide it is written in, so the slide's own content never reaches the article. It claims the whole slide wherever you put it, and there is one per slide.
 
 ```example
 >>> #import "@preview/touying:0.7.4": *

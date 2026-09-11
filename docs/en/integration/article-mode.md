@@ -114,7 +114,7 @@ Because you may want to write slightly different things for each ouput target yo
 
 - `#article-only[..]` adds content that exists only in the article. Even slide-breaking elements like headings or "---" can be used in here.
 - `#slides-only[..]` shows content only when outputting slides.
-- `#article-text[..]` **replaces** the slide it is written in with prose.
+- `#article-text[..]` **replaces** the slide it is written in with prose. One per slide.
 
 `#article-text` is the interesting one. Bullet points that work on a slide usually read badly in a document, so write the prose version next to them and let each output take what it needs:
 
@@ -137,7 +137,9 @@ Because you may want to write slightly different things for each ouput target yo
 ]
 ```
 
-It replaces the whole slide it is written in, so it works the same whether the slide came from a heading or from an explicit `#slide[..]` call.
+It replaces the whole slide it is written in, so it works the same whether the slide came from a heading or from an explicit `#slide[..]` call. Where you write it does not matter: above the content it replaces, below it, or in the middle. Write only one per slide, since a second one is ignored with a warning.
+
+A bare `---` is a slide separator, so it is dropped from the article; only a real `#pagebreak()` breaks a page there. Inside `#article-text[..]` or `#article-only[..]` a `---` is kept, because nothing in those bodies can break a slide.
 
 ## Recalling animated content
 
