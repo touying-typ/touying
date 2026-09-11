@@ -1,9 +1,10 @@
 #import "../utils.typ"
 #import "../extern.typ"
 #import "tree.typ"
+#import "subslides.typ": check-visible, resolve-negative-subslides
 #import "waypoints.typ": (
   _compute-waypoint-ranges, _resolve-waypoint-forest, _waypoint-known,
-  waypoint-kinds,
+  resolve-waypoints, waypoint-kinds,
 )
 
 /// A reducer's positional arguments, with any sequence among them opened up.
@@ -1148,7 +1149,7 @@
 }
 
 #let _resolve-waypoint-to-int(self, spec) = {
-  let resolved = utils.resolve-waypoints(self, spec)
+  let resolved = resolve-waypoints(self, spec)
   if type(resolved) == int {
     resolved
   } else if type(resolved) == dictionary {
@@ -1158,7 +1159,7 @@
   }
 }
 
-/// Every subslide index in `[lo, hi]` that `utils.check-visible` accepts
+/// Every subslide index in `[lo, hi]` that `check-visible` accepts
 /// `spec` for. `check-visible` already understands every dict/string shape
 /// `subslides:` can resolve to (`(beginning:, until:)`, `(kind: "not",
 /// inner:)`, `"2-4"`, `"!2-4"`, ...), so this is the one shared primitive
@@ -1166,7 +1167,7 @@
 ///
 /// -> array (sorted, ascending)
 #let _members-in-range(spec, lo, hi) = (
-  range(lo, hi + 1).filter(idx => utils.check-visible(idx, spec))
+  range(lo, hi + 1).filter(idx => check-visible(idx, spec))
 )
 
 /// Resolve a waypoint label or dictionary marker to the full, sorted set of
@@ -1182,7 +1183,7 @@
 ///
 /// -> array (sorted, ascending, non-empty)
 #let _resolve-waypoint-to-members(self, spec, bound) = {
-  let resolved = utils.resolve-waypoints(self, spec)
+  let resolved = resolve-waypoints(self, spec)
   if type(resolved) == int {
     (resolved,)
   } else {
@@ -1453,7 +1454,7 @@
               - 1
           )
         } else {
-          utils.resolve-negative-subslides(
+          resolve-negative-subslides(
             repeat,
             recall-subslide,
             base: render-base,
@@ -2158,7 +2159,7 @@
               // includes `render-base`), so convert it to a plain stage
               // count before resolving negative indices relative to `base`.
               (
-                utils.resolve-negative-subslides(
+                resolve-negative-subslides(
                   rp - render-base + 1,
                   spec,
                   base: render-base,
@@ -3070,7 +3071,7 @@
         // numbering as `repeat` above.
         _resolve-waypoint-to-int((waypoints: cwp), subslides) + render-base - 1
       } else {
-        utils.resolve-negative-subslides(repeat, subslides, base: render-base)
+        resolve-negative-subslides(repeat, subslides, base: render-base)
       }
       _render-at-subslide(
         minimal-self,

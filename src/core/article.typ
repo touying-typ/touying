@@ -1,6 +1,7 @@
 #import "../utils.typ"
 #import "../extern.typ"
 #import "tree.typ"
+#import "subslides.typ": resolve-negative-subslides
 #import "parser.typ": (
   _build-native-recall, _members-in-range,
   _parse-content-into-results-and-repetitions, _prepare-render-context,
@@ -706,7 +707,7 @@
       } else if type(spec) == str {
         _resolve-string-to-members(spec, render-base, repeat).last()
       } else {
-        utils.resolve-negative-subslides(repeat, spec, base: render-base)
+        resolve-negative-subslides(repeat, spec, base: render-base)
       }
       _render-at-subslide(
         self,

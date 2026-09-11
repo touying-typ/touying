@@ -1,6 +1,10 @@
 #import "../utils.typ"
 #import "waypoints.typ": from-wp, waypoint-kinds // needed to support alternatives repeat-last with waypoints
 #import "tree.typ"
+#import "subslides.typ": (
+  _is-placement, _parse-subslide-indices, animate-placements,
+  last-required-subslide,
+)
 
 
 
@@ -240,7 +244,7 @@
 #let _here-last-subslide(visible-subslides) = {
   repetitions => {
     let resolved = visible-subslides.replace("h", str(repetitions))
-    (utils.last-required-subslide(resolved), (resolved-subslides: resolved))
+    (last-required-subslide(resolved), (resolved-subslides: resolved))
   }
 }
 
@@ -300,7 +304,7 @@
     }
     touying-fn-wrapper(
       utils.effect,
-      last-subslide: utils.last-required-subslide(visible-subslides),
+      last-subslide: last-required-subslide(visible-subslides),
       fn,
       visible-subslides,
       is-method: is-method,
@@ -373,7 +377,7 @@
     }
     touying-fn-wrapper(
       utils.uncover,
-      last-subslide: utils.last-required-subslide(visible-subslides),
+      last-subslide: last-required-subslide(visible-subslides),
       visible-subslides,
       uncover-cont,
       cover-fn: cover-fn,
@@ -441,7 +445,7 @@
     }
     touying-fn-wrapper(
       utils.only,
-      last-subslide: utils.last-required-subslide(visible-subslides),
+      last-subslide: last-required-subslide(visible-subslides),
       visible-subslides,
       only-cont,
     )
@@ -501,9 +505,9 @@
     last-subslide: if type(subslides-contents) == dictionary {
       calc.max(..subslides-contents
         .pairs()
-        .map(kv => utils.last-required-subslide(kv.at(0))))
+        .map(kv => last-required-subslide(kv.at(0))))
     } else {
-      calc.max(..subslides-contents.map(kv => utils.last-required-subslide(
+      calc.max(..subslides-contents.map(kv => last-required-subslide(
         kv.at(0),
       )))
     },
@@ -573,7 +577,7 @@
     touying-fn-wrapper(
       utils.alternatives-match,
       last-subslide: calc.max(
-        ..subslides.map(s => utils.last-required-subslide(s)),
+        ..subslides.map(s => last-required-subslide(s)),
       ),
       subslides-contents,
       position: position,
@@ -722,7 +726,7 @@
   }
   touying-fn-wrapper(
     utils.alternatives-cases,
-    last-subslide: calc.max(..cases.map(utils.last-required-subslide)),
+    last-subslide: calc.max(..cases.map(last-required-subslide)),
     cases,
     fn,
     position: position,
@@ -808,7 +812,7 @@
       cont,
     )
   } else if type(start) == str {
-    let parts = utils._parse-subslide-indices(start)
+    let parts = _parse-subslide-indices(start)
     if parts.len() != 1 or type(parts.first()) != int {
       panic(
         "item-by-item: `start` string must be a single number (e.g. \"3\"), "
@@ -1003,7 +1007,7 @@
       cont,
     )
   } else if type(start) == str {
-    let parts = utils._parse-subslide-indices(start)
+    let parts = _parse-subslide-indices(start)
     if parts.len() != 1 or type(parts.first()) != int {
       panic(
         "item-by-item-fn: `start` string must be a single number (e.g. \"3\"), "
@@ -1273,12 +1277,12 @@
       )
       let kind = eff.effect
       assert(
-        type(kind) == function or utils._is-placement(kind),
+        type(kind) == function or _is-placement(kind),
         message: "animate: effects.at("
           + str(i)
           + ").effect must be a function, "
           + "a swap, or one of "
-          + repr(utils.animate-placements)
+          + repr(animate-placements)
           + ", got "
           + repr(kind),
       )
@@ -1309,7 +1313,7 @@
   }
   let last-of(specs) = calc.max(
     1,
-    ..specs.map(utils.last-required-subslide),
+    ..specs.map(last-required-subslide),
   )
   if effects.any(eff => _has-here-marker(eff.subslides)) {
     // At least one spec says "h", so every spec has to be resolved against the

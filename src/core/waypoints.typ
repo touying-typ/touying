@@ -1,4 +1,3 @@
-#import "../utils.typ"
 
 
 /// ------------------------------------------------
@@ -438,4 +437,310 @@
 }
 
 
+/// Look up a waypoint label (with hierarchical prefix matching).
+///
+/// When looking up `<top>`, this also matches any child labels like
+/// `<top:sub>`, `<top:sub:deep>`, etc.  The returned range spans from
+/// the earliest `first` to the latest `last` across all matches.
+///
+/// Returns `(first: int, last: int)` or `none` when the label is unknown.
+#let _lookup-waypoint-range(waypoints, lbl-str) = {
+  let prefix = lbl-str + ":"
+  let matches = waypoints
+    .pairs()
+    .filter(p => p.at(0) == lbl-str or p.at(0).starts-with(prefix))
+  if matches.len() > 0 {
+    let first = calc.min(..matches.map(p => p.at(1).first))
+    let last = calc.max(..matches.map(p => p.at(1).last))
+    (first: first, last: last)
+  } else {
+    none
+  }
+}
 
+
+/// Resolve a (possibly shifted) waypoint reference to a concrete label string.
+///
+/// Handles nested `prev-wp` / `next-wp` chains by walking to adjacent
+/// waypoints in subslide order.  Returns `none` during a waypoint pre-pass
+/// when the label cannot be resolved.
+#let _resolve-waypoint-label(waypoints, wp, prepass: false) = {
+  if type(wp) == str {
+    wp
+  } else if type(wp) == label {
+    str(wp)
+  } else if type(wp) == dictionary {
+    let kind = wp.at("kind", default: none)
+    if kind in ("touying-waypoint-prev", "touying-waypoint-next") {
+      let base = _resolve-waypoint-label(waypoints, wp.inner, prepass: prepass)
+      if base == none { return none }
+      // Build sorted label list by first-subslide
+      let sorted = waypoints.pairs().sorted(key: p => p.at(1).first)
+      let labels = sorted.map(p => p.at(0))
+      let idx = labels.position(l => l == base)
+      // If no exact match, try hierarchical prefix match (e.g. <parent>
+      // when only <parent:a>, <parent:b> exist).  Directional: next-wp
+      // anchors to the last child (to skip past the group), prev-wp
+      // anchors to the first child (to land before the group).
+      // When an exact parent label exists, it is used directly.
+      if idx == none {
+        let prefix = base + ":"
+        let children = labels
+          .enumerate()
+          .filter(p => p.at(1).starts-with(prefix))
+        if children.len() > 0 {
+          idx = if kind == "touying-waypoint-next" {
+            children.last().at(0)
+          } else {
+            children.first().at(0)
+          }
+        }
+      }
+      if idx == none {
+        if prepass { return none }
+        assert(false, message: "Unknown waypoint label: <" + base + ">")
+      }
+      let amount = wp.at("amount", default: 1)
+      let step = if kind == "touying-waypoint-prev" { -amount } else { amount }
+      let new-idx = idx + step
+      if new-idx < 0 or new-idx >= labels.len() {
+        if prepass { return none }
+        let dir = if kind == "touying-waypoint-prev" { "previous" } else {
+          "next"
+        }
+        assert(
+          false,
+          message: "No "
+            + dir
+            + " waypoint "
+            + str(amount)
+            + " step(s) from <"
+            + base
+            + ">",
+        )
+      }
+      labels.at(new-idx)
+    } else if kind in ("touying-waypoint-first", "touying-waypoint-last") {
+      // get-first / get-last — extract embedded label
+      wp.label
+    } else if kind in ("touying-waypoint-from", "touying-waypoint-until") {
+      // from-wp / until-wp — recurse into inner
+      _resolve-waypoint-label(waypoints, wp.inner, prepass: prepass)
+    } else {
+      if prepass { return none }
+      panic("Cannot resolve waypoint label from " + repr(wp))
+    }
+  } else {
+    if prepass { return none }
+    panic("Cannot resolve waypoint label from " + repr(wp))
+  }
+}
+
+
+/// Resolve waypoint labels in a visible-subslides specification.
+///
+/// Recursively replaces label references and waypoint marker dictionaries
+/// (`get-first`, `get-last`, `from-wp`, `until-wp`, `prev-wp`, `next-wp`) with
+/// their resolved subslide numbers / ranges using the waypoint mapping from
+/// `self.waypoints`.
+///
+/// Supports hierarchical labels: if `<part>` is not an exact match, all
+/// waypoints whose name starts with `part:` are combined into a single range.
+///
+/// When an array contains `from-wp` / `until-wp` markers the elements are
+/// combined into a bounded range (min of beginnings, max of ends):
+/// `(from-wp(<a>), until-wp(<b>))` yields the range from `<a>` to just before `<b>`.
+///
+/// - self (dictionary): The presentation context containing `waypoints`.
+///
+/// - visible-subslides: The visible-subslides specification to resolve.
+///
+/// -> int | str | array | dictionary
+#let resolve-waypoints(self, visible-subslides) = {
+  let waypoints = self.at("waypoints", default: (:))
+  let prepass = self.at("_waypoint-prepass", default: false)
+
+  // --- label ----------------------------------------------------------
+  if type(visible-subslides) == label {
+    let lbl = str(visible-subslides)
+    let range = _lookup-waypoint-range(waypoints, lbl)
+    if range == none {
+      if prepass { return (beginning: 1, until: 1) }
+      assert(false, message: "Unknown waypoint label: <" + lbl + ">")
+    }
+    (beginning: range.first, until: range.last)
+
+    // --- dictionary (waypoint markers) ----------------------------------
+  } else if type(visible-subslides) == dictionary {
+    let kind = visible-subslides.at("kind", default: none)
+
+    if kind == "touying-waypoint-first" {
+      let lbl = visible-subslides.label
+      let range = _lookup-waypoint-range(waypoints, lbl)
+      if range == none {
+        if prepass { return 1 }
+        assert(false, message: "Unknown waypoint label: <" + lbl + ">")
+      }
+      range.first
+    } else if kind == "touying-waypoint-last" {
+      let lbl = visible-subslides.label
+      let range = _lookup-waypoint-range(waypoints, lbl)
+      if range == none {
+        if prepass { return 1 }
+        assert(false, message: "Unknown waypoint label: <" + lbl + ">")
+      }
+      range.last
+    } else if kind == "touying-waypoint-from" {
+      let inner = visible-subslides.inner
+      let inner-kind = if type(inner) == dictionary {
+        inner.at("kind", default: none)
+      } else { none }
+      if inner-kind in ("touying-waypoint-first", "touying-waypoint-last") {
+        // Resolve get-first/get-last to a concrete subslide number
+        let resolved = resolve-waypoints(self, inner)
+        (beginning: resolved)
+      } else {
+        let lbl = _resolve-waypoint-label(
+          waypoints,
+          inner,
+          prepass: prepass,
+        )
+        if lbl == none {
+          if prepass { return (beginning: 1) }
+          assert(
+            false,
+            message: "Cannot resolve waypoint reference in from-wp()",
+          )
+        }
+        let range = _lookup-waypoint-range(waypoints, lbl)
+        if range == none {
+          if prepass { return (beginning: 1) }
+          assert(false, message: "Unknown waypoint label: <" + lbl + ">")
+        }
+        (beginning: range.first)
+      }
+    } else if kind == "touying-waypoint-until" {
+      let inner = visible-subslides.inner
+      let inner-kind = if type(inner) == dictionary {
+        inner.at("kind", default: none)
+      } else { none }
+      if inner-kind in ("touying-waypoint-first", "touying-waypoint-last") {
+        // Resolve get-first/get-last to a concrete subslide number
+        let resolved = resolve-waypoints(self, inner)
+        (until: resolved - 1)
+      } else {
+        let lbl = _resolve-waypoint-label(
+          waypoints,
+          inner,
+          prepass: prepass,
+        )
+        if lbl == none {
+          if prepass { return (until: 1) }
+          assert(
+            false,
+            message: "Cannot resolve waypoint reference in until-wp()",
+          )
+        }
+        let range = _lookup-waypoint-range(waypoints, lbl)
+        if range == none {
+          if prepass { return (until: 1) }
+          assert(false, message: "Unknown waypoint label: <" + lbl + ">")
+        }
+        (until: range.first - 1)
+      }
+    } else if kind in ("touying-waypoint-prev", "touying-waypoint-next") {
+      let lbl = _resolve-waypoint-label(
+        waypoints,
+        visible-subslides,
+        prepass: prepass,
+      )
+      if lbl == none {
+        if prepass { return (beginning: 1, until: 1) }
+        assert(
+          false,
+          message: "Cannot resolve shifted waypoint reference",
+        )
+      }
+      let range = _lookup-waypoint-range(waypoints, lbl)
+      if range == none {
+        if prepass { return (beginning: 1, until: 1) }
+        assert(false, message: "Unknown waypoint label: <" + lbl + ">")
+      }
+      (beginning: range.first, until: range.last)
+    } else if kind == "touying-waypoint-not" {
+      // Negate: resolve inner waypoint to a range, then wrap for check-visible.
+      let inner = visible-subslides.inner
+      let inner-kind = if type(inner) == dictionary {
+        inner.at("kind", default: none)
+      } else { none }
+      if inner-kind != none {
+        // Inner is another waypoint marker — resolve it first.
+        let resolved = resolve-waypoints(self, inner)
+        (kind: "not", inner: resolved)
+      } else {
+        // Inner is a plain label string — look up its range directly.
+        let lbl = _resolve-waypoint-label(waypoints, inner, prepass: prepass)
+        if lbl == none {
+          if prepass { return (kind: "not", inner: (beginning: 1, until: 1)) }
+          assert(
+            false,
+            message: "Cannot resolve waypoint reference in not-wp()",
+          )
+        }
+        let range = _lookup-waypoint-range(waypoints, lbl)
+        if range == none {
+          if prepass { return (kind: "not", inner: (beginning: 1, until: 1)) }
+          assert(false, message: "Unknown waypoint label: <" + lbl + ">")
+        }
+        (kind: "not", inner: (beginning: range.first, until: range.last))
+      }
+    } else {
+      visible-subslides
+    }
+
+    // --- array ----------------------------------------------------------
+  } else if type(visible-subslides) == array {
+    // If the array contains from/until range markers, span the full range.
+    let has-range-markers = visible-subslides.any(s => (
+      type(s) == dictionary
+        and s.at("kind", default: "")
+          in ("touying-waypoint-from", "touying-waypoint-until")
+    ))
+    if has-range-markers {
+      // Range construction: combine from/until markers into a single range.
+      // Multiple `from-wp`s → take earliest (min); multiple `until-wp`s → take latest (max).
+      // This spans the whole duration from the first `from-wp` to the last `until-wp`.
+      let resolved = visible-subslides.map(s => resolve-waypoints(self, s))
+      let beginning = none
+      let end = none
+      for r in resolved {
+        if type(r) == dictionary {
+          if "beginning" in r {
+            beginning = if beginning == none {
+              r.beginning
+            } else {
+              calc.min(beginning, r.beginning)
+            }
+          }
+          if "until" in r {
+            end = if end == none { r.until } else { calc.max(end, r.until) }
+          }
+        }
+      }
+      let result = (:)
+      if beginning != none {
+        result.insert("beginning", beginning)
+      }
+      if end != none {
+        result.insert("until", end)
+      }
+      result
+    } else {
+      visible-subslides.map(s => resolve-waypoints(self, s))
+    }
+
+    // --- pass-through (int, str, etc.) ----------------------------------
+  } else {
+    visible-subslides
+  }
+}

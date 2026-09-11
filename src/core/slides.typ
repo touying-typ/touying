@@ -2,9 +2,10 @@
 #import "../pdfpc.typ"
 #import "../components.typ"
 #import "tree.typ"
+#import "subslides.typ": check-visible, resolve-negative-subslides
 #import "waypoints.typ": (
   _compute-waypoint-ranges, _resolve-waypoint-forest, _waypoint-known,
-  waypoint-kinds,
+  resolve-waypoints, waypoint-kinds,
 )
 #import "parser.typ": (
   _collect-waypoints, _parse-content-into-results-and-repetitions,
@@ -1910,14 +1911,14 @@
       }
     }
     //negative indices in string not defined/supported, and they can even have ! for inversion.
-    let handout-subslides = utils.resolve-negative-subslides(
+    let handout-subslides = resolve-negative-subslides(
       self.repeat,
       handout-subslides,
     )
 
     // Render only the subslides that match handout-subslides
     let handout-subslide-indices = range(1, repeat + 1).filter(
-      i => utils.check-visible(i, handout-subslides),
+      i => check-visible(i, handout-subslides),
     )
     // Fall back to the last subslide if none match
     if handout-subslide-indices.len() == 0 {
@@ -1988,7 +1989,7 @@
       (repeat,)
     } else if type(recall-spec) == int {
       // Explicit single subslide
-      (utils.resolve-negative-subslides(self.repeat, recall-spec),)
+      (resolve-negative-subslides(self.repeat, recall-spec),)
     } else if type(recall-spec) == str and recall-spec == "waypoints" {
       // "waypoints" → last subslide of every waypoint
       let wp-map = self.at("waypoints", default: (:))
@@ -2000,7 +2001,7 @@
       }
     } else if type(recall-spec) == label or type(recall-spec) == dictionary {
       // Waypoint label or marker — resolve using the slide's waypoint map
-      let resolved = utils.resolve-waypoints(self, recall-spec)
+      let resolved = resolve-waypoints(self, recall-spec)
       if type(resolved) == int {
         (resolved,)
       } else if type(resolved) == dictionary {
