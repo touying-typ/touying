@@ -77,7 +77,7 @@
       show: block.with(width: 100%, height: auto)
       grid(
         columns: self.store.footer-columns,
-        rows: 1.5em,
+        rows: auto,
         cell(fill: self.colors.primary, utils.call-or-display(
           self,
           self.store.footer-a,
