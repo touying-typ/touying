@@ -87,18 +87,9 @@ When hidden, the content is removed entirely; no space is reserved for it. The b
 
 In article mode all three are stripped, `#handout-only` and `#presentation-only` included, regardless of the `handout` flag.
 
-### Around a Slide, Not Inside It
+A marker works just as well inside a slide's body as around the call, and the difference is what it covers: `#slide[a #slides-only[b] c]` keeps `b` out of the article and leaves `a` and `c` in, while `#slides-only(slide[a b c])` keeps the whole slide out.
 
-These markers wrap *document content*, so put them **around** a call to a slide function, never inside its body:
-
-```typst
-#slides-only(title-slide[Only in the slide deck])   // correct
-#title-slide[#slides-only[..]]                      // panics
-```
-
-A slide function does not lay its body out where you wrote it — it hands touying a description of the slide, and the body is rendered later, from inside that slide. A mode marker in there is never reached by the walk over the document that is supposed to strip it, and the compile ends with `Unsupported mark 'touying-slides-only'`. (`#pause` and friends are different: those are read by the parser, which *does* look inside a slide body.)
-
-`#slides-only(title-slide(..))` is worth knowing for its own sake. A plain `#title-slide[..]` still renders in article mode, inline and right after the article theme's own title block, so the title material appears twice.
+The title slide is the common case for the second form. A `#title-slide(..)` on its own still renders in the article, inline and right after the article theme's own title block, so the title material appears twice. `#slides-only(title-slide(..))` keeps it out.
 
 ## Workflow Tip
 

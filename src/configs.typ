@@ -2,6 +2,7 @@
 #import "utils.typ"
 #import "magic.typ"
 #import "extern.typ"
+#import "core/parser.typ"
 #import "core/slides.typ": slide, touying-notes, touying-slide
 #import "core/animation.typ": touying-slide-wrapper
 #import "core/blocks.typ": touying-fn-wrapper-raw
@@ -72,7 +73,7 @@
       let fn = if "fn" in marks.at(0).value { marks.at(0).value.fn } else {
         none
       }
-      let warning-msg = utils.unsupported-mark-message(
+      let warning-msg = parser.unsupported-mark-message(
         kind,
         fn,
         "page " + str(page-num) + " in section '" + str(slide-name) + "'",

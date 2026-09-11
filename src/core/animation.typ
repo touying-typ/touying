@@ -88,12 +88,6 @@
 /// #handout-only[This content is only visible in handout mode.]
 /// ```
 ///
-///
-/// The wrapper goes *around* a slide call, never inside its body:
-/// `#slides-only(title-slide[..])`, not `#title-slide[#slides-only[..]]`. A
-/// slide function's body is rendered from inside the slide, past the walk over
-/// the document that strips these marks, so one left in there panics with
-/// `Unsupported mark`.
 /// - body (content): The content to display in handout mode.
 ///
 /// -> content
@@ -115,12 +109,6 @@
 /// #presentation-only[This content is only visible in presentation mode.]
 /// ```
 ///
-///
-/// The wrapper goes *around* a slide call, never inside its body:
-/// `#slides-only(title-slide[..])`, not `#title-slide[#slides-only[..]]`. A
-/// slide function's body is rendered from inside the slide, past the walk over
-/// the document that strips these marks, so one left in there panics with
-/// `Unsupported mark`.
 /// - body (content): The content to display in presentation mode.
 ///
 /// -> content
@@ -151,12 +139,6 @@
 /// ]
 /// ```
 ///
-///
-/// The wrapper goes *around* a slide call, never inside its body:
-/// `#slides-only(title-slide[..])`, not `#title-slide[#slides-only[..]]`. A
-/// slide function's body is rendered from inside the slide, past the walk over
-/// the document that strips these marks, so one left in there panics with
-/// `Unsupported mark`.
 /// - body (content): The slides-only content.
 ///
 /// -> content

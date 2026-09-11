@@ -9,7 +9,8 @@
 )
 #import "parser.typ": (
   _collect-waypoints, _parse-content-into-results-and-repetitions,
-  _resolve-waypoint-to-int, check-current-mode-skip,
+  _resolve-waypoint-to-int, check-current-mode-skip, expand-mode-marks,
+  mark-visible-in-mode,
 )
 #import "animation.typ": touying-slide-wrapper
 #import "article.typ": (
@@ -324,13 +325,7 @@
       return ()
     }
     if tree.is-kind(child, "touying-slides-only") {
-      let visible-in = child.value.at("visible-in", default: "slides")
-      let is-visible = (
-        visible-in == "slides"
-          or (visible-in == "presentation" and not self.handout)
-          or (visible-in == "handout" and self.handout)
-      )
-      if not is-visible { return () }
+      if not mark-visible-in-mode(self, child.value) { return () }
       let inner = if tree.is-sequence(child.value.body) {
         child.value.body.children
       } else {
@@ -1660,7 +1655,16 @@
       )
     }
   }
-  let bodies = bodies.pos()
+  // Resolve Mode markers here, so that a `#slide[..]` around the same content behaves the same
+  // way. A callback-style body is expanded when it is called, since only then
+  // is its `self` known.
+  let bodies = bodies
+    .pos()
+    .map(b => if type(b) == function {
+      s => expand-mode-marks(s, b(s))
+    } else {
+      expand-mode-marks(self, b)
+    })
 
   // Slide and subslide preamble functions for setup and metadata
   let slide-preamble(self) = {
@@ -1802,6 +1806,14 @@
   if self.at("article-mode", default: false) {
     // Article mode: render last subslide inline, no page breaks, no preambles.
     self.subslide = repeat
+    // `#article-text[..]` stands in for the slide it is written in, so when a
+    // body carries one, that prose *is* the slide's article content and the
+    // slide's own content is never parsed at all.
+    let prose = tree.find-in-tree(
+      bodies.filter(b => type(b) == content).sum(default: []),
+      c => tree.is-kind(c, "touying-article-text"),
+    )
+    let bodies = if prose == none { bodies } else { (prose.value.body,) }
     let (conts, _, _, _, _) = _parse-content-into-results-and-repetitions(
       self: self,
       index: repeat,

@@ -7,6 +7,122 @@
   resolve-waypoints, waypoint-kinds,
 )
 
+/// The diagnostic for a touying mark that was never consumed.
+///
+/// Touying reads its marks off the document body before anything is laid out,
+/// so a mark still present at layout time is one that walk never reached.
+///
+/// When the mark names the function it came from (`#uncover`, `#alert`, …),
+/// the callback-style advice is the right one: `utils.uncover(self: self, ..)`
+/// computes in place instead of leaving a mark behind. The marks that carry no
+/// function — `#slides-only` and friends, `#article-text`, `#slide` — have no
+/// callback form, and the old wording sent those users to `utils.none`, which
+/// does not exist. For them the answer is placement.
+///
+/// - kind (str): The mark's `kind` field.
+///
+/// - fn (function, none): The function the mark came from, if it carries one.
+///
+/// - where (str): Where the mark was found, e.g. `"page 3 of the document"`.
+///
+/// -> str
+#let unsupported-mark-message(kind, fn, where) = {
+  // A named function reprs as its bare name; a closure as `(..) => ..`. Only
+  // the former can be spelled back to the user as `utils.<name>`.
+  let name = if fn == none { none } else { repr(fn) }
+  let named = (
+    name != none and name.match(regex("^[\\p{L}_][\\p{L}\\p{N}_-]*$")) != none
+  )
+  let head = (
+    "Unsupported mark `"
+      + kind
+      + "`"
+      + (if named { " from `" + name + "`" } else { "" })
+      + " at "
+      + where
+      + ". "
+  )
+  if named {
+    head + "Use the callback-style `utils." + name + "` instead."
+  } else {
+    (
+      head
+        + (
+          "Touying resolves its marks before layout and never reached this one: "
+            + "it is nested inside something the walk does not enter, such as a "
+            + "`context` block or a measured container. Move it to the top level "
+            + "of your document."
+        )
+    )
+  }
+}
+
+
+/// Whether a mode marker's body belongs in this output mode.
+///
+/// - self (dictionary): The presentation context.
+///
+/// - value (dictionary): The marker's metadata value.
+///
+/// -> bool
+#let mark-visible-in-mode(self, value) = {
+  let article = self.at("article-mode", default: false)
+  let kind = value.at("kind", default: none)
+  if kind == "touying-slides-only" {
+    let visible-in = value.at("visible-in", default: "slides")
+    (
+      not article
+        and (
+          visible-in == "slides"
+            or (visible-in == "presentation" and not self.handout)
+            or (visible-in == "handout" and self.handout)
+        )
+    )
+  } else if kind in ("touying-article-only", "touying-article-text") {
+    article
+  } else {
+    false
+  }
+}
+
+
+/// Splice in the bodies of the mode markers that belong in this output, and
+/// drop the ones that do not.
+///
+/// A `#slide[..]` call is meant to be optional, so content has to mean the
+/// same thing with or without one. That means these markers cannot only be
+/// resolved while walking the document: a slide captures its body in a
+/// closure, and whatever is left inside it would otherwise survive to layout
+/// time as an unconsumed mark.
+///
+/// - self (dictionary): The presentation context.
+///
+/// - body (any): The content to expand.
+///
+/// -> content
+#let expand-mode-marks(self, body) = tree.map-tree(body, node => {
+  if tree.is-metadata(node) and type(node.value) == dictionary {
+    let kind = node.value.at("kind", default: none)
+    if kind in ("touying-slides-only", "touying-article-only") {
+      if mark-visible-in-mode(self, node.value) {
+        expand-mode-marks(self, node.value.body)
+      } else {
+        []
+      }
+    } else if (
+      kind == "touying-article-text"
+        and not mark-visible-in-mode(
+          self,
+          node.value,
+        )
+    ) {
+      // In a slide deck there is nothing for the prose to stand in for.
+      []
+    }
+  }
+})
+
+
 /// A reducer's positional arguments, with any sequence among them opened up.
 ///
 /// Adjacent metadata markers arrive as one sequence, so an implicit waypoint

@@ -6,7 +6,7 @@
   _build-native-recall, _members-in-range,
   _parse-content-into-results-and-repetitions, _prepare-render-context,
   _render-at-subslide, _resolve-string-to-members, _resolve-waypoint-to-members,
-  check-current-mode-skip, waypoint-kinds,
+  check-current-mode-skip, unsupported-mark-message, waypoint-kinds,
 )
 
 /// Content that replaces the slide content when in article mode. Place it after your slide, before the next one.
@@ -465,7 +465,7 @@
     let fn = if "fn" in marks.at(0).value { marks.at(0).value.fn } else {
       none
     }
-    let warning-msg = utils.unsupported-mark-message(
+    let warning-msg = unsupported-mark-message(
       kind,
       fn,
       "page " + str(page-num) + " of the article",
