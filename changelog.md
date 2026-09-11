@@ -101,6 +101,8 @@ Things to watch when upgrading: a `#pause` after `uncover`/`only`/`alternatives`
 
   Compiling with `config-common(export-mode: "article")`, or with `typst compile slides.typ --input export-mode=article`, renders the whole deck as a continuous document instead of pages: no slide breaks, animations collapsed to their final state, images optionally floated to the side. `export-mode` accepts `"slides"` (the default, where the `handout` flag decides), `"presentation"`, `"handout"` and `"article"`. `config-common(article-mode: true)` is the raw switch behind it.
 
+  Article mode linearizes a deck rather than carrying its layout over, so a composer's columns become flowing text and a floated element takes `config-article(wrap-width: ..)` of the text width, 50% by default, whatever width it was written at for the slide. See [Article Mode](https://touying-typ.github.io/docs/integration/article-mode).
+
   ```typst
   #show: simple-theme.with(
     config-common(
@@ -123,6 +125,8 @@ Things to watch when upgrading: a `#pause` after `uncover`/`only`/`alternatives`
 - **feat: mode-only content and mode labels**
 
   Four inline markers select content by output target: `#article-only[..]`, `#handout-only[..]`, `#presentation-only[..]` and `#slides-only[..]`, the last meaning both slide modes but not the article. Hidden content is removed entirely and reserves no space, and the body can contain slide-breaking elements, so a heading inside `#handout-only[..]` really does start a new slide in handout mode.
+
+  A marker works inside a slide's body as well as around the call, and which one you write decides what it covers: `#slide[a #slides-only[b] c]` keeps `b` out of the article and leaves the rest, while `#slides-only(slide[a b c])` keeps the whole slide out. `#article-text[..]` inside a slide stands in for that slide, matching what it does at document level. See [Output Modes](https://touying-typ.github.io/docs/tutorials/output-modes).
 
   The same choice exists per slide as heading and slide labels: `<touying:presentation>`, `<touying:handout>`, `<touying:slides>` and `<touying:article>`, combinable with hyphens, where `<touying:presentation-article>` means "or". The new `<touying:never>` is the Typst equivalent of `\iffalse`. It parks a slide out of every render without you having to comment out markup. See [Handout Mode](https://touying-typ.github.io/docs/tutorials/dynamic/handout) and [Sections and Headings](https://touying-typ.github.io/docs/tutorials/sections).
 
@@ -220,7 +224,7 @@ Things to watch when upgrading: a `#pause` after `uncover`/`only`/`alternatives`
 
 - **feat: better covering, with `alpha-changing-cover` and `color-changing-cover` reworked** ([#112](https://github.com/touying-typ/touying/issues/112))
 
-  `utils.alpha-changing-cover` is now the recommended semi-transparent cover, replacing the deprecated `semi-transparent-cover` above. It governs every stylable colour, inherits the outer scope's colour when an element declares none, understands gradients and tilings, and converts spot colours to Oklch before opacifying. Its automatic fallback alpha depends on the lightness of the colour it is dimming, and the fallback path is used far more sparingly, so images and diagrams no longer turn into grey blocks. `utils.color-changing-cover` remains the compile-cheap alternative that flattens everything to one colour. See [Cover Function](https://touying-typ.github.io/docs/tutorials/dynamic/cover).
+  `utils.alpha-changing-cover` is now the recommended semi-transparent cover, replacing the deprecated `semi-transparent-cover` above. It governs every stylable colour, inherits the outer scope's colour when an element declares none, understands gradients and tilings, and converts spot colours to Oklch before opacifying. Its automatic fallback alpha depends on the lightness of the colour it is dimming, and the fallback path is used far more sparingly, so images and diagrams no longer turn into grey blocks. `utils.color-changing-cover` remains the compile-cheap alternative that flattens everything to one colour: it overwrites colours instead of reading them, so it makes no `context` call. Both walk the same tree, so they treat strokes, table cells and the bodies of `underline`, `highlight` and `strike` alike, and neither moves the content it covers. Where an element paints its own background, flattening it together with the content on top would leave that unreadable, so `color-changing-cover(hide-filled: true)` (the default) hands those to `fallback-hide`, which now defaults to `auto` and dims them to match the recoloured text. See [Cover Function](https://touying-typ.github.io/docs/tutorials/dynamic/cover).
 
 - **feat: `components.left-mid-right` places content in three columns** ([#397](https://github.com/touying-typ/touying/pull/397), thanks @thomas-saigre)
 
@@ -232,37 +236,11 @@ Things to watch when upgrading: a `#pause` after `uncover`/`only`/`alternatives`
 
   `touying-get-config("common.handout")` resolves now, and `touying-get-config().common` returns the flat top-level keys as a subtree, which is what the docstring always claimed. Naming a category under it, such as `common.store`, panics with a clear message instead of silently missing.
 
-- feat: new utilities. `utils.is-math-symbol`, `utils.sequence-to-array`, `utils.resolve-negative-subslides` (negative subslide indices resolved against a repeat count and an optional non-1 base), and `utils.rescale-image` (used by article mode's image wrapping).
-
-- **feat: mode markers and `#article-text` work inside a slide body**
-
-  A `#slide[..]` call injects config, a composer or slide-level layout, and content is meant to mean the same thing with or without one. `#slide[#slides-only[..]]` did not: a slide captures its body and renders it past the walk that resolves those marks, so it reached layout unconsumed and panicked. Which half of a slide a marker covers is now the author's choice, `#slide[a #slides-only[b] c]` keeping `b` out of the article and `#slides-only(slide[a b c])` keeping the whole slide out. `#article-text[..]` inside a slide stands in for that slide, matching what it does at document level.
-
-- **feat: `config-article(wrap-width: ..)` sets how much of the page a float takes**
-
-  Article mode linearizes a deck rather than carrying its layout over, so the composer no longer decides how a float looks. A floated element takes 50% of the text width by default, whatever width it was written at for the slide, and an image is scaled to fill it.
-
-- **feat: `color-changing-cover` gained `hide-filled`**
-
-  An element that paints its own background would be flattened together with the content on top of it, so those go to `fallback-hide` instead of being recoloured. That was previously a hard-coded list of element functions; it is a parameter now, and `fallback-hide` defaults to `auto`, dimming them to match the recoloured text.
-
-### Fixes
-
-- **fix: covering no longer errors on `align`, `place`, `columns`, `link` or `rotate`**
-
-  The tree-rebuilding cover methods put every field of an element back as a named argument, which those five reject because their defining field is positional, so `#uncover("2-")[#align(center)[..]]` failed with `unexpected argument: alignment`. The same gap hit `polygon`, `curve`, `math.class` and the `underbrace` family. `scale` is why it stayed hidden: since Typst 0.15 it has no `factor` field, only the resolved named `x`/`y`, so the one transform everybody reaches for happened to work. Matters because v0.8.0 promotes `alpha-changing-cover` as the replacement for the deprecated `semi-transparent-cover`.
+- feat: new utilities. `tree.is-math-symbol` and `tree.sequence-to-array` in the new `core/tree.typ`, `subslides.resolve-negative-subslides` (negative subslide indices resolved against a repeat count and an optional non-1 base) in `core/subslides.typ`, and `utils.rescale-image`.
 
 - **fix: a labelled `#place`, `#rotate`, `#columns` or `#terms.item` in a slide**
 
   The parser rebuilt those four by hand and passed the label straight into the constructor, so a labelled `#place(top + right)[..] <lbl>` was a hard compile error and a labelled `#columns(2)[..] <lbl>` silently lost its label. They go through the shared reconstruction now and keep it.
-
-- **fix: covering no longer moves content**
-
-  A text run with no colour of its own was rebuilt into a fresh `text(..)` node, which split it out of the run it was shaped in. An inline `#quote[..]` moved by 0.6pt when covered and does not now. Non-text content is also no longer given a 1pt outset, which showed as a grey outline around the very element being covered.
-
-- **fix: the two cover methods agree**
-
-  `color-changing-cover` ignored a configured `fallback-hide` for images, never touched strokes on `box`, `block`, `table` or `grid`, destroyed `table.cell`, and never entered the bodies of `underline`, `highlight` and `strike`; `alpha-changing-cover` did not cover `cite` or `ref`. Both walk one tree now, so these behave the same way.
 
 - **fix: `#item-by-item` no longer collapses when its body starts with a `#set`**
 
@@ -275,18 +253,6 @@ Things to watch when upgrading: a `#pause` after `uncover`/`only`/`alternatives`
 - **fix: speaker notes no longer lose styled content**
 
   `utils.markup-text` dropped every `styled` subtree, so `[a #text(red)[b] c]` reached the `.pdfpc` file as "a c". It feeds the pdfpc export, so notes were silently incomplete.
-
-- **fix: a top-level `#set` or `#show` no longer breaks article mode**
-
-  Such a rule wraps the entire rest of the document in one `styled` node. Article mode did not look inside it, so headings stopped bounding sections, mode labels stopped filtering, and every `#article-text` / `#article-only` / `#slide[..]` mark in the document went unconsumed and ended the compile with `Unsupported mark`. A `#touying-recall` of a reducer failed the same way, with `refers to content with no subslide dimension`.
-
-- **fix: user blocks survive article mode**
-
-  Article mode strips the `block()` wrappers it generates itself, and was taking any block the author wrote with them, along with its fill, stroke, inset and label. This was the default configuration.
-
-- **fix: `#article-text` replaces the floats of the content it stands in for**
-
-  A `#components.side-by-side[..][..]` in front of an `#article-text[..]` still turned up in the article beside the prose meant to replace it.
 
 - **fix: waypoints inside a `terms.item` or a figure caption**
 
@@ -358,7 +324,7 @@ Almost every page was touched. The largest items:
 ### Miscellaneous
 
 - **refactor: `src/core.typ` is split into modules.** The 6288-line file becomes `src/core/parser.typ`, `src/core/animation.typ`, `src/core/slides.typ`, `src/core/blocks.typ`, `src/core/waypoints.typ` and additionally `src/core/article.typ`, with `src/slides.typ` replaced by `src/entrypoint.typ` and the new `src/bundle.typ` holding the bundle-export helpers. `src/exports.typ` is reorganised along the same lines. The public API is unaffected except where noted above, but anything importing `touying/src/core.typ` directly has to be updated.
-- **refactor: content-tree handling is one layer, `src/core/tree.typ`.** Recognising what a piece of content is, taking it apart and putting it back together was written out in about thirty places, which had drifted apart: label handling differed per call site, several walks could not see through a `styled` node, and the two cover methods were 200-line near-copies. The new module knows nothing about touying and imports nothing, so anything can use it. `shape-of` classifies how a node holds its sub-content, `children-of` and `rebuild` are guaranteed to round-trip it, and `map-tree` walks with an identity short-circuit. Most of the fixes listed above are consequences rather than separate patches. Moved out of `utils`: the `is-*` predicates, the `typst-builtin-*` handles, `reconstruct*`, `trim`, `label-it`. `core/subslides.typ` takes visibility-spec resolution (`check-visible`, `resolve-negative-subslides`, `last-required-subslide`, …) and `resolve-waypoints` joins `core/waypoints.typ`. The old names stay in `utils`: the ones returning content forward with a deprecation warning, the rest panic naming the new module.
+- **refactor: content-tree handling is one layer, `src/core/tree.typ`.** Recognising what a piece of content is, taking it apart and putting it back together was written out in about thirty places, which had drifted apart: label handling differed per call site, and several walks could not see through a `styled` node, so a `#set` or `#show` rule in force made them miss what they were looking for. The new module knows nothing about touying and imports nothing, so anything can use it. `shape-of` classifies how a node holds its sub-content, `children-of` and `rebuild` are guaranteed to round-trip it, and `map-tree` walks with an identity short-circuit. Moved out of `utils`: the `is-*` predicates, the `typst-builtin-*` handles, `reconstruct*`, `trim`, `label-it`. `core/subslides.typ` takes visibility-spec resolution (`check-visible`, `resolve-negative-subslides`, `last-required-subslide`, …) and `resolve-waypoints` joins `core/waypoints.typ`. The old names stay in `utils`: the ones returning content forward with a deprecation warning, the rest panic naming the new module.
 - refactor: block rendering, waypoint-to-integer resolution, the equation/mitex/raw paths and the article-mode scanning functions were each unified into one implementation rather than several near-duplicates.
 - test: reference renders regenerated for Typst 0.15.0 / tytanic 0.4.0 layout drift. New suites for article mode (presentation, handout and article variants of one source), `recall-content`, `render-subslides`, `mode-never`, `notes-second-screen`, `pdfpc`, `cover-citation`, and the #395, #408 and #415 regressions.
 
