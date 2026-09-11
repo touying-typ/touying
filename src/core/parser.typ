@@ -9,15 +9,12 @@
 
 /// The diagnostic for a touying mark that was never consumed.
 ///
-/// Touying reads its marks off the document body before anything is laid out,
-/// so a mark still present at layout time is one that walk never reached.
-///
-/// When the mark names the function it came from (`#uncover`, `#alert`, …),
-/// the callback-style advice is the right one: `utils.uncover(self: self, ..)`
-/// computes in place instead of leaving a mark behind. The marks that carry no
-/// function — `#slides-only` and friends, `#article-text`, `#slide` — have no
-/// callback form, and the old wording sent those users to `utils.none`, which
-/// does not exist. For them the answer is placement.
+/// There are two different answers, and which one applies turns on whether the
+/// mark can name the function it came from. `#uncover` and friends can, and
+/// for those `utils.uncover(self: self, ..)` computes in place rather than
+/// leaving a mark behind. `#slides-only`, `#article-text` and `#slide` carry
+/// an anonymous closure or nothing at all and have no callback form, so for
+/// them the answer is where the mark sits, not how it is called.
 ///
 /// - kind (str): The mark's `kind` field.
 ///
