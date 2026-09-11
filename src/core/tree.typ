@@ -180,6 +180,11 @@
 /// order it wants them. Empty for the constructors that take everything by
 /// name, which is most of them.
 ///
+/// `image` is deliberately absent even though its `source` is positional: an
+/// image's source is a path resolved relative to the file it was written in,
+/// so a rebuilt one looks for it next to whichever file rebuilt it. Failing
+/// loudly is better than that.
+///
 /// Two kinds of entry are not plain field names. `..name` marks a field whose
 /// array value is spread, as in `polygon(..vertices)`. A `"body"` entry marks
 /// a constructor whose body is positional but not last, as in

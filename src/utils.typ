@@ -1674,7 +1674,7 @@
 ///   handed to `fallback-hide` instead of being recoloured. Flattening such an
 ///   element and the content on top of it to a single colour would leave the
 ///   content unreadable, so this defaults to `true`. Set it to `false` to
-///   recolour them like everything else.
+///   recolour them like everything else. Applies to images, rect, ... so that content is still visible.
 ///
 /// - fallback-hide (func): Applied to what cannot be recoloured, such as
 ///   images, and to filled elements while `hide-filled` is on. `auto` overlays

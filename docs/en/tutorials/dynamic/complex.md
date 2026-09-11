@@ -139,3 +139,102 @@ The `alternatives` function displays a series of different content in different 
 ```
 
 As you can see, `alternatives` can automatically expand to the most suitable width and height, a capability that `only` and `uncover` lack. In fact, `alternatives` has other parameters, such as `start: 2`, `repeat-last: true`, and `position: center + horizon`. For more usage, refer to [Polylux](https://polylux.dev/book/dynamic/alternatives.html).
+## animate
+
+`only`, `uncover` and `alternatives` each do one thing. `#animate` lets you attach several effects to one piece of content and say on which subslides each applies.
+
+```example
+>>> #import "@preview/touying:0.7.4": *
+>>> #import themes.simple: *
+>>> #show: simple-theme
+#slide[
+  #animate(
+    [The same words, three ways.],
+    effects: (
+      (effect: "cover", subslides: 1),
+      (effect: (body, ..) => text(fill: blue, body), subslides: 2),
+      (effect: (body, ..) => text(fill: red, strong(body)), subslides: "3-"),
+    ),
+  )
+]
+```
+
+Each effect is a dictionary with three keys. `effect` is what to do, `subslides` says when, exactly as in `uncover`, and `priority` breaks ties. `subslides` defaults to `"1-"` and `priority` to `1`.
+
+### Two kinds of effect
+
+Effects fall into two classes that combine differently.
+
+**Placements** decide whether the content appears at all: the strings `"cover"`, `"remove"` and `"show"`, and the function `swap(..)`. Exactly one placement applies per subslide, so they cannot stack. **Styles** are any function you pass, and all of them apply, nested inside one another.
+
+A style function takes `(body, ..)` and returns content. A plain `text.with(fill: red)` will not do, because touying calls it with a named `self` as well to allow you to condition on the subslide or other config; write `(body, ..) => text(fill: red, body)`. The cover methods work directly as styles, so `utils.alpha-changing-cover` is a valid effect.
+
+### Which one wins
+
+Every `#animate` starts with an implicit `"show"` placement at priority `0`, so writing any placement of your own replaces it. Among the placements active on a subslide the highest priority wins, and ties go to the last one written. For styles, priority only sets the nesting order: the lowest is innermost, and within one priority the last written is innermost, so it wins any property both of them set.
+
+The rule is the same in both classes: **the last effect you wrote wins**, a placement by being the one used, a style by ending up innermost.
+
+### animate-hidden and animate-removed
+
+`#animate-hidden(..)` and `#animate-removed(..)` are `#animate` with a `"cover"` or `"remove"` placement underlying your effects, at priority `0`. These are a shorthands if you need the content hidden or removed initially.
+
+### Space
+
+`"cover"` reserves the content's space, `"remove"` reserves none, exactly as `uncover` and `only` do.
+
+`swap(replacement)` puts something else in its place and lets the layout reflow. With `swap(replacement, stretch: true)` the replacement joins the reserved space instead, so the block keeps one size across every subslide, the way `alternatives` does.
+
+```example
+>>> #import "@preview/touying:0.7.4": *
+>>> #import themes.simple: *
+>>> #show: simple-theme
+#slide[
+  #animate(
+    [before],
+    effects: ((effect: swap([after], stretch: true), subslides: "2-"),),
+  )
+]
+```
+
+## touying-render
+
+`#touying-render(body, subslides: ..)` renders a piece of content at chosen animation stages, wherever you put it. The content is animated as usual, but you decide which frames appear:
+
+```example
+>>> #import "@preview/touying:0.7.4": *
+>>> #import themes.simple: *
+>>> #show: simple-theme
+#let steps = [first #pause second #pause third]
+
+== The Steps
+#steps
+
+== Just the Middle
+#touying-render(steps, subslides: 2, base: 1)
+```
+
+`subslides` takes the same specs as `uncover`, including ranges like `"2-4"` and `"h"` for the current position, and it may step through a whole range rather than a single frame. `base:` sets the subslide the content counts from, and `start:` and `repeat-last:` behave as in `alternatives`.
+
+Pass an explicit `base:` for self-contained content. With `base: auto` the content resolves against the enclosing slide's own animation, which is what you want for `"h"` and rarely what you want for anything else.
+
+## touying-recall
+
+Where `touying-render` takes content you have in a variable, `#touying-recall(<label>)` takes content that is already somewhere in the document. The label has to sit on something that has subslides of its own, such as a labelled block containing a `#pause`, or a labelled `touying-reducer`:
+
+```example
+>>> #import "@preview/touying:0.7.4": *
+>>> #import themes.simple: *
+>>> #show: simple-theme
+== The Construction
+#box[the frame #pause and the inscribed circle]<fig>
+
+== Later
+At its first stage that was #touying-recall(<fig>, subslides: 1).
+```
+
+`subslides` picks the stage, and `base:` has the same meaning as above. This is what makes an animated diagram usable in [Article Mode](../../integration/article-mode), where only the final frame would otherwise survive.
+
+## Callback-style variants
+
+All function of course have their callback counterpart in `utils`. Use those if you cannot or don't want to use the self-counting animation functions. 

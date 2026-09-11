@@ -81,6 +81,7 @@
   wrap-other-figures: false,
   wrap-other: false,
   wrap-align-direction: right,
+  wrap-width: 50%,
 ) = {
   let raw-images = images.filter(i => not i.is-figure)
   let figure-images = images.filter(i => i.is-figure)
@@ -154,72 +155,44 @@
     body-content = if body-content == none { [] } else { body-content }
 
     // Meander measures each obstacle in an unbounded context to compute its
-    // page tiling, so a percentage width (e.g. `50%`) silently resolves to
-    // `0pt` there — obstacles need an absolute size. Resolve the actual
-    // content width via `layout` first and convert `col-fraction` to an
-    // absolute length, the same trick the old wrap-it-based code used.
+    // page tiling, so a percentage width silently resolves to `0pt` there.
+    // Resolve the real content width with `layout` first.
     result.push(layout(size => {
-      let content-width = size.width
-      let to-abs-width(col-fraction) = (col-fraction * 1pt).pt() * content-width
+      let float-width = size.width * wrap-width
 
-      // An image's own explicit `width` (e.g. `width: 80%`) is relative to
-      // its column, not the full content area, so extract just the ratio
-      // part to shrink the reserved obstacle to the image's actual size —
-      // otherwise the reserved column stays at the full composer fraction
-      // and wrapped text leaves a dead gap next to a narrower image instead
-      // of flowing into the unused space.
-      let width-ratio(element) = {
-        let w = if type(element) == content {
-          element.at("width", default: auto)
-        } else {
-          auto
-        }
-        if type(w) == ratio {
-          (w * 1pt).pt()
-        } else if type(w) == relative {
-          (w.ratio * 1pt).pt()
-        } else {
-          1.0
-        }
-      }
-
-      // Images/figures often carry their own explicit width that's narrower
-      // than the obstacle column, so the element must also be aligned to
-      // `wrap-align-direction` inside the box — otherwise it sits at the
-      // box's default (left) edge, leaving a gap between it and the page
-      // margin the box is actually anchored to.
+      // Article mode linearizes; it does not carry the deck's layout over. So
+      // a float takes `wrap-width` of the page whatever width was written for
+      // the slide, and the image is made to fill it.
       //
-      // The image can't just be re-boxed at its already-shrunk final width:
-      // its own ratio/relative `width` would resolve against that smaller
-      // box a second time, shrinking it again (e.g. `width: 80%` inside an
-      // 80%-sized box renders at 64%). And it can't be rebuilt without the
-      // `width` field either — `image()`'s `source` is a path that resolves
-      // lexically relative to the file it's written in, so reconstructing
-      // the element from a different file (this one) breaks relative paths.
-      // Instead, render it at its correct size inside a box matching its
-      // *own* resolving context (the full column), then crop that box down
-      // to the image's actual footprint with an aligned, clipped outer box.
-      let cropped-to-fit(element, col-width, ratio) = box(
-        width: col-width * ratio,
-        clip: true,
-        align(
-          wrap-align-direction,
-          box(width: col-width, align(wrap-align-direction, element)),
-        ),
-      )
+      // Not by rebuilding the image: an `image`'s source is a path resolved
+      // relative to the file it was written in, so one reconstructed here
+      // would look for it next to this file. Instead it is boxed at the width
+      // where its own percentage resolves to the target, which is what the
+      // older `utils.rescale-image` did.
+      let fill-images(element) = tree.map-tree(element, node => {
+        if type(node) == content and node.func() == image {
+          let declared = node.at("width", default: auto)
+          let ratio = if type(declared) == ratio {
+            (declared * 1pt).pt()
+          } else if type(declared) == relative {
+            (declared.ratio * 1pt).pt()
+          } else { 1.0 }
+          box(
+            width: float-width,
+            clip: true,
+            box(width: float-width / calc.max(ratio, 0.01), node),
+          )
+        }
+      })
 
       let to-wrap = ()
       if wrap-images {
-        to-wrap += raw-images.map(i => cropped-to-fit(
-          i.element,
-          to-abs-width(i.col-fraction),
-          width-ratio(i.img),
-        ))
+        to-wrap += raw-images.map(i => fill-images(i.element))
       }
       if wrap-image-figures {
         to-wrap += figure-images.map(i => box(
-          width: to-abs-width(i.col-fraction),
-          align(wrap-align-direction, i.element),
+          width: float-width,
+          align(wrap-align-direction, fill-images(i.element)),
         ))
       }
       if wrap-other-figures {
@@ -399,41 +372,37 @@
     )
   }
 
-  // Compute column fractions from composer to scale images correctly.
-  // E.g. (1fr, 1fr) → each column is 50% of page width.
-  let col-fractions = ()
-  if type(composer) == array and composer.len() == conts.len() {
-    let total = composer.fold(0fr, (acc, c) => if type(c) == fraction {
-      acc + c
-    } else { acc })
-    if total > 0fr {
-      col-fractions = composer.map(c => if type(c) == fraction {
-        c / total * 100%
-      } else { 100% })
-    }
-  }
-
   let images = ()
   let text-parts = ()
   let block-parts = ()
 
-  for (i, cont) in conts.enumerate() {
+  let wrap-images = article-cfg.at("wrap-images", default: true)
+
+  for cont in conts {
     let extracted = _extract-image(cont)
     if extracted != none {
-      let col-frac = if col-fractions.len() > i { col-fractions.at(i) } else {
-        100%
-      }
-      // Store the display element (figure with caption, or raw image)
+      // The display element may be a figure, or wrapped in a `styled` node.
       images.push((
         element: extracted.element,
-        // The bare image, whose own `width` says how much room it really
-        // needs. `element` may be a figure, or wrapped in a `styled` node.
-        img: extracted.img,
-        col-fraction: col-frac,
         is-figure: extracted.is-figure,
       ))
     } else if _is-block-content(cont) {
       block-parts.push(cont)
+    } else if wrap-images {
+      // An image written in the flow floats too, not only one that happens to
+      // sit alone in a composer column: whether a deck put it in a column is
+      // layout, and article mode does not carry the deck's layout over.
+      //
+      // `extract-nodes` walks sequences and styles but not into a body, so an
+      // image inside a figure or a box stays where it is and is left to
+      // `wrap-image-figures` and `wrap-other`.
+      let pulled = tree.extract-nodes(cont, c => (
+        type(c) == content and c.func() == image
+      ))
+      for img in pulled.found {
+        images.push((element: img, is-figure: false))
+      }
+      if pulled.rest != none { text-parts.push(pulled.rest) }
     } else {
       text-parts.push(cont)
     }
@@ -546,6 +515,7 @@
   let wrap-image-figures = article-cfg.at("wrap-image-figures", default: false)
   let wrap-other-figures = article-cfg.at("wrap-other-figures", default: false)
   let wrap-other = article-cfg.at("wrap-other", default: false)
+  let wrap-width = article-cfg.at("wrap-width", default: 50%)
   let wrap-align-direction = article-cfg.at(
     "wrap-align-direction",
     default: right,
@@ -853,6 +823,7 @@
           wrap-other-figures: wrap-other-figures,
           wrap-other: wrap-other,
           wrap-align-direction: wrap-align-direction,
+          wrap-width: wrap-width,
         ))
       }
       current-items = ()
@@ -953,6 +924,7 @@
       wrap-other-figures: wrap-other-figures,
       wrap-other: wrap-other,
       wrap-align-direction: wrap-align-direction,
+      wrap-width: wrap-width,
     ))
   }
 

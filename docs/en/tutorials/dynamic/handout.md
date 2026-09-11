@@ -65,31 +65,9 @@ Use the `<touying:handout>` label to create slides that appear **only** in hando
 This slide is included when `handout: true` but invisible otherwise.
 ```
 
-## Mode-only Content
+## Content for One Mode Only
 
-The `<touying:handout>` label works on a whole slide. To control which mode a *piece* of content appears in, use these three inline markers:
-
-| Marker | Appears in |
-|---|---|
-| `#handout-only[..]` | handout mode only |
-| `#presentation-only[..]` | presentation mode only (i.e. `handout: false`) |
-| `#slides-only[..]` | both handout and presentation mode, but not in article mode |
-
-```typst
-#handout-only[This paragraph only shows up in the handout.]
-
-#presentation-only[This paragraph only shows up while presenting.]
-
-#slides-only[_Live demo here — see the code repository._]
-```
-
-When hidden, the content is removed entirely; no space is reserved for it. The body of these markers may itself contain slide-breaking elements (a heading, `#pagebreak()`, a bare `---`), and in whichever mode the content is actually visible they behave exactly as if the wrapper were not there — a heading inside `#handout-only[..]` really does start a new slide in handout mode.
-
-In article mode all three are stripped, `#handout-only` and `#presentation-only` included, regardless of the `handout` flag.
-
-A marker works just as well inside a slide's body as around the call, and the difference is what it covers: `#slide[a #slides-only[b] c]` keeps `b` out of the article and leaves `a` and `c` in, while `#slides-only(slide[a b c])` keeps the whole slide out.
-
-The title slide is the common case for the second form. A `#title-slide(..)` on its own still renders in the article, inline and right after the article theme's own title block, so the title material appears twice. `#slides-only(title-slide(..))` keeps it out.
+`#handout-only[..]`, `#presentation-only[..]`, `#slides-only[..]` and `#article-only[..]` keep a piece of content out of the modes it does not suit. They are covered in [Output Modes](../output-modes).
 
 ## Workflow Tip
 

@@ -730,6 +730,8 @@
 /// - wrap-other (bool): Wrap blocks (cetz canvases, tables, etc.) to the side. Default is `false`.
 /// - wrap-align-direction (direction): The direction to wrap the content when `wrap-images`, `wrap-image-figures`, `wrap-other-figures`, or `wrap-other` is true. It can be either `left` or `right`. Default is `right`.
 ///
+/// - wrap-width (ratio): How much of the text width a floated element takes. Article mode linearizes the deck rather than carrying its layout over, so this applies whatever width the element was given for the slide, and an image is scaled to fill it. Default is `50%`.
+///
 /// -> dictionary
 #let config-article(
   available-fields: _default,
@@ -739,6 +741,7 @@
   wrap-other-figures: _default,
   wrap-other: _default,
   wrap-align-direction: _default,
+  wrap-width: _default,
   ..args,
 ) = {
   assert(args.pos().len() == 0, message: "Unexpected positional arguments.")
@@ -751,6 +754,7 @@
       wrap-other-figures: wrap-other-figures,
       wrap-other: wrap-other,
       wrap-align-direction: wrap-align-direction,
+      wrap-width: wrap-width,
     ))
       + args.named(),
   )
@@ -894,6 +898,7 @@
     wrap-other-figures: false,
     wrap-other: false,
     wrap-align-direction: right,
+    wrap-width: 50%,
   ),
   config-store(),
 )
