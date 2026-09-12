@@ -137,9 +137,9 @@ Because you may want to write slightly different things for each ouput target yo
 ]
 ```
 
-It replaces the whole slide it is written in, so it works the same whether the slide came from a heading or from an explicit `#slide[..]` call. Where you write it does not matter: above the content it replaces, below it, or in the middle. Write only one per slide, since a second one is ignored with a warning.
+It replaces the whole slide it is written in, so it works the same whether the slide came from a heading or from an explicit `#slide[..]` call. Where you write it does not matter: above the content it replaces, below it, or in the middle. Only one `#article-text[..]` block per slide is allowed.
 
-A slide here is a heading no deeper than `slide-level` (`=` and `==` by default), so a `===` under it is content inside the slide and is replaced along with the rest. A bare `---` is swallowed too: it is a slide separator, and the article drops it. A `#pagebreak()` is the one thing that does divide a slide, because the article breaks there as well, so prose on one side of one never claims the other. Inside `#article-text[..]` or `#article-only[..]` a `---` is kept, because nothing in those bodies can break a slide.
+A slide here is a heading no deeper than `slide-level` (`=` and `==` by default), so a `===` under it is content inside the slide and is replaced along with the rest. A bare `---` is ignored: it is a slide separator, and the article drops it. A `#pagebreak()` is the one thing that does divide a slide, because the article breaks there as well. If your section uses `#pagebreak()` instead of `---` you may thus use one `article-text` for each part. Inside `#article-text[..]` or `#article-only[..]` a `---` is kept, because nothing in those bodies can break a slide.
 
 ## Recalling animated content
 

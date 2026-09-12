@@ -26,6 +26,16 @@ If you like it, consider [giving a star ⭐ on GitHub](https://github.com/touyin
 - **Correct bookmarks** — proper PDF outline and page numbers out of the box
 - **End-to-end ecosystem** — generate and check complete decks with the [SeaSlides Skill](https://github.com/touying-typ/seaslides), then edit them WYSIWYG and present in [Tylina](https://tylina.github.io/)
 
+## Version 0.8.0 (yaaay)
+
+A big release, and the first that requires **Typst 0.15**.
+
+The main new feature is **article mode**: the same source file compiles either to slides or to a flowing prose document, with animations collapsed to their final state and images optionally floated to the side. **Two new animation** entry points come with it. `touying-render` renders a piece of content at chosen animation stages, and `animate` combines visibility and styling on one piece of content. `touying-recall` was extended from whole slides to any labelled element. `touying-fn-wrapper-raw` now parses and nests its body, so `#alert[.. #pause ..]` works, and much more besides. `.pdfpc` files can be written directly as bundle assets instead of through a separate `typst query` step. The footnote bibliography was rebuilt on real Typst bibliographies, and the speaker-note panel is now a theme-supplied function with documentation to match. Internally, `src/core.typ` (6288 lines) was split into modules and the content handling was unified and several functions (mainly out of utils) moved places.
+
+Things to watch when upgrading: a `#pause` after `uncover`/`only`/`alternatives` no longer skips the subslides they reserve (they wrongfully did so in v0.7.x), the footnote-bibliography config changed shape, `semi-transparent-cover` is deprecated, and on a second screen the page background is confined to the slide half. There is a migration guide below, and a separate one for theme authors at the end. Most documentation pages were rewritten or corrected.
+
+For more see the detailed [changelog](./changelog.md).
+
 ## Documents & Help
 
 - [Full documentation and references](https://touying-typ.github.io/) (English & Chinese)
