@@ -732,6 +732,8 @@
 ///
 /// - wrap-width (ratio): How much of the text width a floated element takes. Article mode linearizes the deck rather than carrying its layout over, so this applies whatever width the element was given for the slide, and an image is scaled to fill it. Default is `50%`.
 ///
+/// - linearize (auto, bool, dict): Whether a container that only arranges content is flattened into the prose. `auto` (the default) linearizes `#columns(..)`, and a `table` or `grid` that declares no header or footer: declaring one is what says its rows and columns carry meaning, and `components.cols` and `side-by-side` build a grid and never declare one. `true` or `false` force it for all three. A dict sets them apart, e.g. `(table: false, grid: auto, columns: true)`. A figure's body is never flattened.
+///
 /// -> dictionary
 #let config-article(
   available-fields: _default,
@@ -742,6 +744,7 @@
   wrap-other: _default,
   wrap-align-direction: _default,
   wrap-width: _default,
+  linearize: _default,
   ..args,
 ) = {
   assert(args.pos().len() == 0, message: "Unexpected positional arguments.")
@@ -755,6 +758,7 @@
       wrap-other: wrap-other,
       wrap-align-direction: wrap-align-direction,
       wrap-width: wrap-width,
+      linearize: linearize,
     ))
       + args.named(),
   )
@@ -899,6 +903,7 @@
     wrap-other: false,
     wrap-align-direction: right,
     wrap-width: 50%,
+    linearize: auto,
   ),
   config-store(),
 )

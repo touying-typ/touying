@@ -32,6 +32,7 @@ The page belongs to the article theme now, not to the slide theme.
 - **No page breaks between slides.** Content flows, and a heading starts a section rather than a slide.
 - **Animations collapse.** Each slide is rendered at its final subslide, so `#pause` and `#uncover` leave their content in place and covered content appears as it does at the end.
 - **The page belongs to the article theme**, not to the slide theme. Slide-level styling such as the header, the footer and the 16:9 page is dropped.
+- **Layout is linearized.** A container that only arranges content is flattened into the prose, because the article is not trying to preserve the deck's layout. See [Linearized layout](#linearized-layout).
 
 ```example
 >>> #import "@preview/touying:0.7.4": *
@@ -174,6 +175,38 @@ An animated diagram is one slide with several subslides, and the article renders
 
 `subslides` picks the stage. Pass `base:` when the recall is not the first thing on its slide, since the stage numbers are counted from the enclosing flow.
 See the documentation of the function for more details. Another similar function is `touying-render` which takes in content and renders it at a subslide.
+
+## Linearized layout
+
+An article is one column of prose, so a container that exists only to arrange things on a slide is flattened into that flow. The slide composer, `#columns(..)` and `components.side-by-side[..][..]` all come apart, one part after the other.
+
+A `table` or `grid` is different, because it may carry meaning in its rows and columns. Touying takes a **declared header or footer** as the statement that it does: with one, the table keeps its structure; without one, it is treated as a layout device and flattened. `components.cols` and `side-by-side` build a grid and never declare a header, which is why they linearize.
+
+```example
+>>> #import "@preview/touying:0.7.4": *
+>>> #import themes.simple: *
+>>> #show: simple-theme.with(config-common(export-mode: "article"))
+== Two Ways To Use A Table
+
+#components.side-by-side[Left half.][Right half.]
+
+#table(
+  columns: 2,
+  table.header([Element], [Kept]),
+  [with a header], [yes],
+  [without one], [no],
+)
+```
+
+A figure's body is never flattened, whatever it holds: a figure is a captioned, referenceable unit.
+
+`config-article(linearize: ..)` overrides the rule. `auto` is the default described above, `true` and `false` force it for `table`, `grid` and `columns` alike, and a dict sets them apart:
+
+```typst
+#show: simple-theme.with(
+  config-article(linearize: (table: false, grid: auto, columns: true)),
+)
+```
 
 ## Floating images to the side
 

@@ -313,6 +313,39 @@
   return none
 }
 
+/// Whether a table or grid declares a header or a footer.
+///
+/// That is the one explicit statement that its rows and columns carry meaning,
+/// which is what separates data from a plain layout device: `components.cols`
+/// and `side-by-side` build a grid and never declare one. A header *column*
+/// cannot be declared in Typst yet, so a table that has only those reads as
+/// layout here.
+///
+/// - cont (content): A table or grid element.
+///
+/// -> bool
+#let _has-header(cont) = {
+  cont.children.any(c => (
+    type(c) == content
+      and c.func() in (table.header, table.footer, grid.header, grid.footer)
+  ))
+}
+
+
+/// The cells of a table or grid, in order, with the lines dropped.
+///
+/// - cont (content): A table or grid element.
+///
+/// -> array
+#let _cells-of(cont) = {
+  cont
+    .children
+    .filter(c => type(c) == content and c.func() in (table.cell, grid.cell))
+    .map(c => c.at("body", default: none))
+    .filter(c => c != none)
+}
+
+
 // Check if content is block-level (table, grid, figure without image,
 // box with explicit dimensions, or a block/sequence whose only meaningful
 // child is block-level).
@@ -367,6 +400,52 @@
 //           to be centered at the end of the subsection
 #let _article-linearize(self, composer, conts) = {
   let article-cfg = self.at("article", default: (:))
+
+  // A container that only arranges content, with no structure of its own,
+  // is flattened into the prose: the article linearizes, it does not carry
+  // the deck's layout over. `columns` is always one. A table or grid is one
+  // only until it declares a header or footer, which is where its rows and
+  // columns start to mean something.
+  let linearize-cfg = article-cfg.at("linearize", default: auto)
+  let wanted(cont) = {
+    let f = cont.func()
+    let key = if f == table { "table" } else if f == grid { "grid" } else if (
+      f == columns
+    ) { "columns" } else { return false }
+    let setting = if type(linearize-cfg) == dictionary {
+      linearize-cfg.at(key, default: auto)
+    } else {
+      linearize-cfg
+    }
+    if setting == auto {
+      f == columns or not _has-header(cont)
+    } else {
+      setting
+    }
+  }
+  let flatten(cont) = tree.map-tree(cont, node => {
+    if type(node) != content { return none }
+    // A figure is a captioned, referenceable unit, so its body stays whole
+    // however it is built. Returning it unchanged also stops the descent.
+    if node.func() == figure { return node }
+    if not wanted(node) { return none }
+    let inner = if node.func() == columns {
+      // The column break belongs to the columns being removed: left in a
+      // single-column flow it would break the page instead.
+      let body = node.at("body", default: none)
+      if body == none { none } else {
+        tree.map-tree(body, n => if (
+          type(n) == content and n.func() == colbreak
+        ) { [] })
+      }
+    } else {
+      _cells-of(node).join(parbreak())
+    }
+    // Flattened again, so a grid nested in a grid comes apart too.
+    if inner == none { [] } else { flatten(inner) }
+  })
+  let conts = conts.map(flatten)
+
   let any-wrapping = (
     article-cfg.at("wrap-images", default: true)
       or article-cfg.at("wrap-image-figures", default: false)

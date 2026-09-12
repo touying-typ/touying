@@ -79,6 +79,34 @@
 
   #article-text[This prose claims only what follows the pagebreak.]
 
+  == Linearizing Layout
+
+  A `#columns(..)` only arranges content, so the article flattens it:
+
+  #columns(2)[Left of the column break. #colbreak() Right of it.]
+
+  So does a grid that declares no header, which is what
+  `components.side-by-side` builds:
+
+  #components.side-by-side[First half of the pair.][Second half of the pair.]
+
+  A declared header says the rows and columns carry meaning, so this one keeps
+  its structure:
+
+  #table(
+    columns: 2,
+    table.header([Element], [Kept]),
+    [table with header], [yes],
+    [grid without one], [no],
+  )
+
+  A figure's body is never flattened, however it is built:
+
+  #figure(
+    table(columns: 2, [A], [B], [1], [2]),
+    caption: [A table inside a figure keeps its structure.],
+  )
+
   == Untouched
 
   This section has no article-text, so it renders normally.
