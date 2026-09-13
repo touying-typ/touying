@@ -298,6 +298,7 @@
 #let focus-slide(config: (:), body) = touying-slide-wrapper(self => {
   self = utils.merge-dicts(
     self,
+    config,
     config-common(freeze-slide-counter: true),
     // 3em: was 2em scaled by the focus text's own `set text(size: 1.5em)`.
     config-page(fill: self.colors.primary, margin: 3em),

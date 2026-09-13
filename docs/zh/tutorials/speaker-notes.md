@@ -123,7 +123,7 @@ pdfpc 会把备注当作 Markdown 来渲染。`mode` 控制 Touying 如何把一
 记录进文档的 pdfpc 元数据中。把它写成 PDF 旁边的一个 `.pdfpc` 文件，
 pdfpc 的备注、overlay 结构和计时就都来自于此。
 
-产生这个文件有两种方式 —— 编译之后执行一次 `typst query`，或者在 bundle 导出时使用
+产生这个文件有两种方式 —— 编译之后执行一次 `typst eval`，或者在 bundle 导出时使用
 `#pdfpc.bundle-assets()`，后者不需要第二条命令。两者都在 [pdfpc](../external/pdfpc.md)
 页面上有介绍，那里还说明了用于设置演讲时长、倒计时和幻灯片切换效果的 `#pdfpc.config(..)`。
 

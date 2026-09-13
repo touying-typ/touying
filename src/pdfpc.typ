@@ -5,7 +5,7 @@
 
 /// Generate pdfpc metadata for the presentation. Called internally in the preamble when `enable-pdfpc` is `true`.
 ///
-/// The result carries the `<pdfpc-file>` label. Turn it into a `.pdfpc` file either with `#pdfpc.bundle-assets()` in a bundle export, or with the shell command `typst query --root . ./example.typ --field value --one "<pdfpc-file>" > ./example.pdfpc`.
+/// The result carries the `<pdfpc-file>` label. Turn it into a `.pdfpc` file either with `#pdfpc.bundle-assets()` in a bundle export, or with the shell command `typst eval --in ./example.typ 'query(<pdfpc-file>).first().value' > ./example.pdfpc`.
 ///
 /// - loc (location): A location inside the presentation. It tells the slides of this presentation apart from those of the other documents in a bundle export.
 ///
@@ -86,7 +86,7 @@
 
 /// Write the pdfpc metadata of every presentation in a bundle export to a `.pdfpc` file next to it.
 ///
-/// Since Typst 0.15 a single compilation can emit a whole bundle of files, which is how a `.pdfpc` file can be produced without the extra `typst query` invocation documented on `pdfpc-file`:
+/// Since Typst 0.15 a single compilation can emit a whole bundle of files, which is how a `.pdfpc` file can be produced without the extra `typst eval` invocation documented on `pdfpc-file`:
 ///
 /// ```sh
 /// typst compile --features bundle --format bundle --root . ./example.typ ./out
@@ -136,7 +136,7 @@
       // Re-use the metadata the presentation itself assembled, so that the
       // scoping and the pdfpc format live in exactly one place. There is one
       // `<pdfpc-file>` per presentation; should a user have emitted further
-      // ones by hand, the last one wins, as with `typst query --one`.
+      // ones by hand, the last one wins, as with a query taking `.first()`.
       let files = query(selector(<pdfpc-file>).within(doc.location()))
       if files.len() == 0 {
         continue
@@ -179,7 +179,7 @@
 ]
 
 
-/// Configuration for the pdfpc export. You can export the pdfpc file by shell command `typst query --root . ./example.typ --field value --one "<pdfpc-file>" > ./example.pdfpc`.
+/// Configuration for the pdfpc export. You can export the pdfpc file by shell command `typst eval --in ./example.typ 'query(<pdfpc-file>).first().value' > ./example.pdfpc`.
 ///
 /// Example:
 ///

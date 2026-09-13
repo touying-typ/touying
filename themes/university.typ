@@ -294,6 +294,7 @@
   }
   self = utils.merge-dicts(
     self,
+    config,
     config-common(freeze-slide-counter: true),
     // 2em: was 1em scaled by the focus text's own `set text(size: 2em)`.
     config-page(margin: 2em, ..args),

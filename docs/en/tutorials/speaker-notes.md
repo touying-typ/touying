@@ -123,7 +123,7 @@ With `enable-pdfpc: true` (the default) Touying records every note in the docume
 pdfpc metadata, alongside the slide structure. Written out as a `.pdfpc` file next to
 your PDF, that is what gives pdfpc its notes, its overlay structure and its timings.
 
-There are two ways to produce the file — a `typst query` after compiling, or
+There are two ways to produce the file — a `typst eval` after compiling, or
 `#pdfpc.bundle-assets()` during a bundle export, which needs no second command. Both are
 covered on the [pdfpc](../external/pdfpc.md) page, along with `#pdfpc.config(..)` for
 talk duration, a countdown and slide transitions.

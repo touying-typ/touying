@@ -165,7 +165,7 @@
 ///
 /// - enable-pdfpc (bool): Whether to add `<pdfpc-file>` label for querying. Default is `true`.
 ///
-///   You can export the .pdfpc file directly using: `typst query --root . ./example.typ --field value --one "<pdfpc-file>" > ./example.pdfpc`
+///   You can export the .pdfpc file directly using: `typst eval --in ./example.typ 'query(<pdfpc-file>).first().value' > ./example.pdfpc`
 ///
 /// - enable-mark-warning (bool): Whether to enable the mark warning. Default is `true`.
 ///

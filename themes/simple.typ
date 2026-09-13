@@ -143,6 +143,7 @@
 ) = touying-slide-wrapper(self => {
   self = utils.merge-dicts(
     self,
+    config,
     config-common(freeze-slide-counter: true),
     // 3em, not the theme's 2em: the focus text used to be enlarged by a
     // `set text(size: 1.5em)` around the whole slide, which scaled this
