@@ -210,7 +210,10 @@
 
   show cite.where(form: "normal"): it => (
     context {
-      let label-str = str(here().page()) + str(it.key)
+      let label-str = "touying-footnote-bib:" + str(it.key)
+      if type(self)==dictionary and not self.at("article-mode", default:false) {
+        label-str = label-str + str(here().page()) //dedup in slides mode per page. in article mode that is not stable
+      }
       let bibitem = {
         show: body => {
           show regex("^\[\d+\]\s"): it => ""
