@@ -114,7 +114,8 @@
       inner.children
     } else { (inner,) }
     let is-mark = k => (
-      tree.is-kind(k, "touying-linearize") or tree.is-kind(k, "touying-graphic-marker")
+      tree.is-kind(k, "touying-linearize")
+        or tree.is-kind(k, "touying-graphic-marker")
     )
     if kids.any(is-mark) {
       let rest = kids.filter(k => not is-mark(k)).sum(default: [])
@@ -344,7 +345,10 @@
   // Article mode alone reads the mark, and it is the only mode where the
   // wrapper would not have to be taken out again afterwards.
   parsed-results.push(if self.at("article-mode", default: false) {
-    block[#metadata((kind: "touying-graphic-marker", func: reducer.reduce))#drawn]
+    block[#metadata((
+        kind: "touying-graphic-marker",
+        func: reducer.reduce,
+      ))#drawn]
   } else { drawn })
   max-repetitions = calc.max(max-repetitions, repetitions)
   max-repetitions = calc.max(max-repetitions, last-subslide)
@@ -1655,8 +1659,13 @@
       }
     }
   }
-  // Helper function to parse child content and reconstruct
-  // Returns a 5-tuple:
+  // Parse a container's sub-content and rebuild the container around it.
+  //
+  // `body-field` names where the sub-content lives: "children" spreads several
+  // (table, grid, stack), anything else is one body, and "body-or-none"
+  // tolerates its absence.
+  //
+  // Returns a 6-tuple:
   //   - reconstructed-content: the reconstructed container content
   //   - max-repetitions: maximum repetitions found inside the content
   //   - next-last-subslide: maximum last-subslide of any fn-wrappers found (0 if none)
@@ -1664,6 +1673,9 @@
   //   - force-to-result: true when fn-wrappers were found inside a pause zone and the
   //       returned `reconstructed-content` was produced with proper inner covering;
   //       the caller MUST push this content directly to `result` (not `hidden-parts`).
+  //   - inner-has-fn-wrapper: whether a fn-wrapper was found at all. A wrapper
+  //       decides its own visibility, so an enclosing container has to know one
+  //       is in there even when this level did not have to force anything.
   let parse-and-reconstruct(
     self,
     child,
@@ -1674,10 +1686,16 @@
     need-cover,
     reconstruct-fn,
   ) = {
-    let body-content = if body-field == "body-or-none" {
-      child.at("body", default: none)
+    // A table-like element holds its sub-content as several children rather
+    // than one body, so it is parsed by spreading them and rebuilt from the
+    // whole array. Everything else parses one body and rebuilds from one.
+    let spread = body-field == "children"
+    let body-content = if spread {
+      child.children
+    } else if body-field == "body-or-none" {
+      (child.at("body", default: none),)
     } else {
-      child.at(body-field)
+      (child.at(body-field),)
     }
     let (
       conts,
@@ -1691,9 +1709,9 @@
       base: repetitions,
       base-last-subslide: last-subslide,
       index: index,
-      body-content,
+      ..body-content,
     )
-    let cont = conts.first()
+    let cont = if spread { conts } else { conts.first() }
     // Two-pass: if fn-wrappers are present inside a pause zone, re-run the inner parse
     // with the outer need-cover so that fn-wrappers handle their own visibility and
     // non-fn-wrapper content is properly covered by the inner mechanism.
@@ -1713,15 +1731,16 @@
         base: repetitions,
         base-last-subslide: last-subslide,
         index: index,
-        body-content,
+        ..body-content,
       )
-      let cont2 = conts2.first()
+      let cont2 = if spread { conts2 } else { conts2.first() }
       return (
         reconstruct-fn(child, cont2),
         inner-max-repetitions2,
         next-last-subslide,
         final-repetitions,
         true,
+        inner-has-fn-wrapper,
       )
     }
     return (
@@ -1730,6 +1749,7 @@
       next-last-subslide,
       final-repetitions,
       false,
+      inner-has-fn-wrapper,
     )
   }
   // Content function sets for different handling categories
@@ -2770,6 +2790,7 @@
           next-last-subslide,
           final-repetitions,
           force-to-result,
+          inner-has-fn-wrapper,
         ) = parse-and-reconstruct(
           self,
           child,
@@ -2800,7 +2821,7 @@
         repetitions = final-repetitions
         max-repetitions = calc.max(max-repetitions, inner-max-repetitions)
         last-subslide = calc.max(last-subslide, next-last-subslide)
-        has-fn-wrapper = has-fn-wrapper or force-to-result
+        has-fn-wrapper = has-fn-wrapper or inner-has-fn-wrapper
       } else if (
         type(child) == content and child.func() in list-item-functions
       ) {
@@ -2811,6 +2832,7 @@
           next-last-subslide,
           final-repetitions,
           force-to-result,
+          inner-has-fn-wrapper,
         ) = parse-and-reconstruct(
           self,
           child,
@@ -2845,52 +2867,32 @@
         repetitions = final-repetitions
         max-repetitions = calc.max(max-repetitions, inner-max-repetitions)
         last-subslide = calc.max(last-subslide, next-last-subslide)
-        has-fn-wrapper = has-fn-wrapper or force-to-result
+        has-fn-wrapper = has-fn-wrapper or inner-has-fn-wrapper
       } else if (
         type(child) == content and child.func() in table-like-functions
       ) {
         // handle the table-like
         let (
-          conts,
+          reconstructed,
           inner-max-repetitions,
           next-last-subslide,
           final-repetitions,
+          force-to-result,
           inner-has-fn-wrapper,
-        ) = _parse-content-into-results-and-repetitions(
-          self: self,
-          need-cover: repetitions <= index,
-          base: repetitions,
-          base-last-subslide: last-subslide,
-          index: index,
-          ..child.children,
+        ) = parse-and-reconstruct(
+          self,
+          child,
+          "children",
+          repetitions,
+          last-subslide,
+          index,
+          need-cover,
+          (child, conts) => tree.reconstruct-table-like(
+            child,
+            labeled: labeled(child.func()),
+            conts,
+          ),
         )
-        has-fn-wrapper = has-fn-wrapper or inner-has-fn-wrapper
-        // Two-pass: if fn-wrappers are present and container would be hidden,
-        // re-run with outer need-cover so fn-wrappers handle their own visibility.
-        let would-be-hidden = not (
-          calc.min(repetitions, final-repetitions) <= index or not need-cover
-        )
-        let (conts, inner-max-repetitions) = if (
-          would-be-hidden and inner-has-fn-wrapper
-        ) {
-          let (
-            conts2,
-            inner-max-repetitions2,
-            _,
-            _,
-            _,
-          ) = _parse-content-into-results-and-repetitions(
-            self: self,
-            need-cover: need-cover,
-            base: repetitions,
-            base-last-subslide: last-subslide,
-            index: index,
-            ..child.children,
-          )
-          (conts2, inner-max-repetitions2)
-        } else {
-          (conts, inner-max-repetitions)
-        }
         // Propagate meanwhile effect from inside the table/grid/stack
         if final-repetitions < repetitions {
           if hidden-parts.len() != 0 {
@@ -2899,23 +2901,19 @@
           }
           max-repetitions = calc.max(max-repetitions, repetitions)
         }
-        let reconstructed-table = tree.reconstruct-table-like(
-          child,
-          labeled: labeled(child.func()),
-          conts,
-        )
         if (
-          would-be-hidden and inner-has-fn-wrapper
+          force-to-result
             or calc.min(repetitions, final-repetitions) <= index
             or not need-cover
         ) {
-          result.push(reconstructed-table)
+          result.push(reconstructed)
         } else {
-          hidden-parts.push(reconstructed-table)
+          hidden-parts.push(reconstructed)
         }
         repetitions = final-repetitions
         max-repetitions = calc.max(max-repetitions, inner-max-repetitions)
         last-subslide = calc.max(last-subslide, next-last-subslide)
+        has-fn-wrapper = has-fn-wrapper or inner-has-fn-wrapper
       } else if type(child) == content and child.func() == footnote {
         if repetitions <= index or not need-cover {
           if labeled(child.func()) and child.has("label") {
@@ -2972,6 +2970,7 @@
           next-last-subslide,
           final-repetitions,
           force-to-result,
+          inner-has-fn-wrapper,
         ) = parse-and-reconstruct(
           self,
           child,
@@ -3007,7 +3006,7 @@
         repetitions = final-repetitions
         max-repetitions = calc.max(max-repetitions, inner-max-repetitions)
         last-subslide = calc.max(last-subslide, next-last-subslide)
-        has-fn-wrapper = has-fn-wrapper or force-to-result
+        has-fn-wrapper = has-fn-wrapper or inner-has-fn-wrapper
       } else if type(child) == content and child.func() == terms.item {
         // handle the terms item
         let (
@@ -3016,6 +3015,7 @@
           next-last-subslide,
           final-repetitions,
           force-to-result,
+          inner-has-fn-wrapper,
         ) = parse-and-reconstruct(
           self,
           child,
@@ -3052,7 +3052,7 @@
         repetitions = final-repetitions
         max-repetitions = calc.max(max-repetitions, inner-max-repetitions)
         last-subslide = calc.max(last-subslide, next-last-subslide)
-        has-fn-wrapper = has-fn-wrapper or force-to-result
+        has-fn-wrapper = has-fn-wrapper or inner-has-fn-wrapper
       } else {
         if repetitions <= index or not need-cover {
           result.push(child)
