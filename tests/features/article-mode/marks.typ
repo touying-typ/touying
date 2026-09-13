@@ -3,14 +3,14 @@
 #import themes.simple: *
 
 /// Shared content for the two article-mode mark tests, which differ only in
-/// `wrap-images`: it picks between article mode's two walks, and only the
-/// content-extraction one (`true`) was covered before.
+/// whether images float: that picks between article mode's two walks, and only
+/// the content-extraction one (`true`) was covered before.
 ///
-/// - wrap (bool): The `wrap-images` setting.
+/// - wrap (bool): The `wrap: (image: ..)` setting.
 #let render(wrap) = [
   #show: simple-theme.with(
     config-common(export-mode: "article"),
-    config-article(wrap-images: wrap),
+    config-article(wrap: (image: wrap)),
     config-info(title: [Article Marks], author: [Test Author]),
   )
 
@@ -99,6 +99,13 @@
     [table with header], [yes],
     [grid without one], [no],
   )
+
+  The two markers decide one place for themselves, whatever the rule says. A
+  label works inside the marker or on the call, and follows the content:
+
+  #article-linearize[#table(columns: 2, table.header([Forced], [Flat]), [a], [b]) <tab:flat>]
+
+  #article-keep-layout[#components.side-by-side[Forced][Kept]] <lbl:kept>
 
   A figure's body is never flattened, however it is built:
 

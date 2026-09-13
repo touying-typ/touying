@@ -171,6 +171,28 @@
 }
 
 
+/// Put a label a discarded wrapper carried onto the content that replaces it.
+///
+/// A label sits on one element, so content that came apart into a sequence
+/// gets a block to hold it, and so does an element that already carries a
+/// label of its own: Typst allows only one per element.
+///
+/// - cont (any): The rebuilt content.
+///
+/// - lbl (label, none): The label to reattach, or `none` to do nothing.
+///
+/// -> any
+#let relabel(cont, lbl) = {
+  if lbl == none { return cont }
+  let free = (
+    type(cont) == content
+      and not is-sequence(cont)
+      and cont.at("label", default: none) == none
+  )
+  label-it(if free { cont } else { block(cont) }, lbl)
+}
+
+
 
 // -------------------------------------
 //   Rebuilding content

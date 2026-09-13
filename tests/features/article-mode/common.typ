@@ -1,4 +1,5 @@
 #import "../../../lib.typ": *
+#import "@preview/cetz:0.4.2"
 
 #import themes.article: article-theme
 #import themes.simple: *
@@ -48,8 +49,17 @@
     ),
     config-article(
       //general article mode config, nothing theme specific here. those stuff should be put into the theme via `.with` when specifiying it above.
-      wrap-images: true,
-      wrap-image-figures: true,
+      wrap: (
+        image: true,
+        // A figure holding an image floats; one holding a table does not,
+        // which is a distinction only a predicate can draw.
+        overrides: (
+          (target: el => el.func() == figure and el.body.func() == image),
+          // A reducer marks its own output, so a drawing package's graphic can
+          // be targeted even though it renders to anonymous content.
+          (target: graphic-marker-of(cetz.canvas), align: left, width: 40%),
+        ),
+      ),
       available-fields: (
         // don't pass if you use ef-document for rendering as it does not have those fields.
         title: "info.title",
@@ -135,8 +145,6 @@
   == Animated CeTZ Canvas
 
   //import and bindings
-  #import "@preview/cetz:0.4.2"
-
   #let cetz-canvas = touying-reducer.with(
     reduce: cetz.canvas,
     cover: cetz.draw.hide.with(bounds: true),

@@ -1257,17 +1257,6 @@
 }
 
 
-// Assemble a subsection's content with optional wrapping.
-//
-// - items: text/heading content
-// - images: array of (element, width, is-figure) dicts
-// - blocks: array of block-level content (tables, canvases, etc.)
-// - wrap-images: wrap raw images via wrap-it (default: true)
-// - wrap-image-figures: wrap image figures via wrap-it (default: false)
-// - wrap-other-figures: wrap other figures via wrap-it (default: false)
-// - wrap-other: wrap other content via wrap-it (default: false)
-// - wrap-align-direction: direction to align wrapped content (default: right)
-
 // get negative pad for header and footer
 #let _get-negative-pad(self) = {
   let margin = self.page.margin

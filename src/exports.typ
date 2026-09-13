@@ -15,7 +15,10 @@
   from-wp, get-first, get-last, next-wp, not-wp, prev-wp, until-wp, waypoint,
 )
 // rendering logic: for article-mode and slides-mode: rely on parser.typ for parsing the metadata
-#import "core/article.typ": article-only, article-text
+#import "core/article.typ": (
+  article-keep-layout, article-linearize, article-only, article-text,
+  graphic-marker, graphic-marker-of,
+)
 #import "core/slides.typ": (
   appendix, empty-slide, slide, touying-notes, touying-recall,
   touying-set-config, touying-slide,

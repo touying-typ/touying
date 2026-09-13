@@ -29,9 +29,9 @@ The page belongs to the article theme now, not to the slide theme.
 
 ## What changes
 
-- **No page breaks between slides.** Content flows, and a heading starts a section rather than a slide.
+- **No page breaks between sections.** Content flows, and a heading starts a section rather than a slide.
 - **Animations collapse.** Each slide is rendered at its final subslide, so `#pause` and `#uncover` leave their content in place and covered content appears as it does at the end.
-- **The page belongs to the article theme**, not to the slide theme. Slide-level styling such as the header, the footer and the 16:9 page is dropped.
+- **The layout and style belong to the article theme**, not to the slide theme. Slide-level styling such as the header, the footer and the 16:9 page is dropped.
 - **Layout is linearized.** A container that only arranges content is flattened into the prose, because the article is not trying to preserve the deck's layout. See [Linearized layout](#linearized-layout).
 
 ```example
@@ -178,9 +178,9 @@ See the documentation of the function for more details. Another similar function
 
 ## Linearized layout
 
-An article is one column of prose, so a container that exists only to arrange things on a slide is flattened into that flow. The slide composer, `#columns(..)` and `components.side-by-side[..][..]` all come apart, one part after the other.
+An article is one column of prose, so a container that exists only to arrange things on a slide should get flattened into that flow. The slide composer, `#columns(..)` and `components.side-by-side[..][..]` by default all get linearized. 
 
-A `table` or `grid` is different, because it may carry meaning in its rows and columns. Touying takes a **declared header or footer** as the statement that it does: with one, the table keeps its structure; without one, it is treated as a layout device and flattened. `components.cols` and `side-by-side` build a grid and never declare a header, which is why they linearize.
+A `table` or `grid` is different, because it may carry meaning via its structure. By default touying takes a **declared header or footer** as proof of structural meaning: with one, the table keeps its structure; without one, it is treated as a layout device and is flattened. `components.cols` and `side-by-side` internally build a grid but don't declare a header, which is why they linearize.
 
 ```example
 >>> #import "@preview/touying:0.7.4": *
@@ -198,9 +198,9 @@ A `table` or `grid` is different, because it may carry meaning in its rows and c
 )
 ```
 
-A figure's body is never flattened, whatever it holds: a figure is a captioned, referenceable unit.
+`config-article(linearize: ..)` allows you to customize this behaviour. `auto` is the default described above, `true` and `false` force it generally, and a dict sets it for each element function (`"columns"`, `"grid"`, `"table"`) individually. For `"columns"` an `auto` simply means `true`, since a `#columns(..)` never carries structure of its own.
 
-`config-article(linearize: ..)` overrides the rule. `auto` is the default described above, `true` and `false` force it for `table`, `grid` and `columns` alike, and a dict sets them apart:
+A figure's body is never flattened as its caption gives its layout meaning.
 
 ```typst
 #show: simple-theme.with(
@@ -208,25 +208,72 @@ A figure's body is never flattened, whatever it holds: a figure is a captioned, 
 )
 ```
 
-## Floating images to the side
+`#article-linearize[..]` and `#article-keep-layout[..]` allow you to override the global config per element.
 
-A full-width image that suits a slide wastes a page in an article. Touying can float images onto one side and wrap the text around them:
+```typst
+#article-linearize[#components.side-by-side[left][right]]
+
+#article-keep-layout[#table(columns: 2, [a], [b]) <tab:x>]
+```
+Note that content inside `#article-only` or `#article-text` is always kept as written, and the above markers panic when written inside.
+
+## Floating Blocks to the Side
+
+To improve reading flow touying can automatically wrap images to one side automatically via the `config-article(wrap: ..)`. 
+
+Figures and Tables that are not wrapped get centered at the bottom of the parent section. To place it as a floating figure use `article-only`/`article-text` instead. All other blocks (including images) are exlcuded from this and instead place in the text flow where the linearizer thinks they belong.
 
 ```typst
 #show: simple-theme.with(
   config-common(export-mode: "article"),
-  config-article(
-    wrap-images: true,          // raw images, on by default
-    wrap-image-figures: true,   // images with a caption
-    wrap-other-figures: false,  // other captioned blocks
-    wrap-other: false,          // tables, canvases, ...
-    wrap-align-direction: right,
-    wrap-width: 50%,        // how much of the text width a float takes
-  ),
+  config-article(wrap: (
+    width: 50%,     // how much of the text width a float takes
+    align: right,   // which side it goes to
+    image: true,    // raw images, on by default
+    table: false,
+  )),
 )
 ```
 
-Article mode linearizes the deck rather than carrying its layout over, so a float takes `wrap-width` of the text width, 50% by default, whatever width the element was given for the slide. An image is scaled to fill that. Whether you wrote it in a composer column or on its own line makes no difference.
+You may specifc width and align once globally and decide whether to use wrapping per element function `table`, `image`, `figure`, ...
+
+You may also override these global defaults per element function:
+
+```typst
+config-article(wrap: (
+  image: (align: right, width: 30%),
+  table: (align: left, width: 45%),
+))
+```
+
+You may also specify more complicated element selections. Sadly typst selectors don't work for this, which is why you must specify a predicate instead.
+
+```typst
+config-article(wrap: (
+  image: true,
+  overrides: (
+    // a figure holding an image floats; one holding a table does not
+    (target: el => el.func() == figure and el.body.func() == image,
+     align: left, width: 35%),
+  ),
+))
+```
+
+Note that the predicate sees the content tree, where a figure's `kind` is still `auto`, so ask about `el.body.func()` rather than `el.kind`.
+
+A graphic drawn by a package such as [cetz](https://typst.app/universe/package/cetz) or [fletcher](https://typst.app/universe/package/fletcher) is context content by the time the article collects its floats. `touying-reducer` therefore marks its own output with the function that drew it (e.g. `cetz.canvas`), and `graphic-marker-of` builds the matching predicate:
+
+```typst
+#import "@preview/cetz:0.4.2"
+
+config-article(wrap: (
+  overrides: (
+    (target: graphic-marker-of(cetz.canvas), align: left, width: 40%),
+  ),
+))
+```
+
+A diagram that is not animated never goes through a reducer, so mark it yourself with `#graphic-marker(cetz.canvas, ..)` and the same predicate will find it. The mark is invisible and is taken out again before anything is rendered, in both outputs.
 
 Wrapping is done with [meander](https://typst.app/universe/package/meander), which is only loaded for sections that really have something to wrap.
 

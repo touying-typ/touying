@@ -40,6 +40,165 @@
 ))<touying-temporary-mark>]
 
 
+// The scope of #article-linearize / #article-keep-layout is a block, tagged by
+// an invisible metadata child rather than by a label: a label here would
+// collide with the one a reader attaches to the call, and Typst allows only
+// one per element. In slide output the metadata renders nothing and the block
+// is all that is left, so these wrap a container, not a sentence.
+#let _linearize-mark(on) = metadata((kind: "touying-linearize", on: on))
+
+/// The direct children of a marker block's body.
+///
+/// - node (any): The candidate wrapper.
+///
+/// -> array
+#let _marker-children(node) = {
+  if type(node) != content or node.func() != block { return () }
+  let body = node.at("body", default: none)
+  if body == none { return () }
+  if tree.is-sequence(body) { body.children } else { (body,) }
+}
+
+
+/// The metadata value a marker block of this kind carries, or `none`.
+///
+/// - node (any): The candidate wrapper.
+///
+/// - kind (str): The mark kind.
+///
+/// -> dictionary, none
+#let _marker-value(node, kind) = {
+  for k in _marker-children(node) {
+    if tree.is-kind(k, kind) { return k.value }
+  }
+  none
+}
+
+
+/// A marker block's body, with the mark itself taken out.
+///
+/// Only the block's own children are dropped, so a nested marker keeps its
+/// mark until its own block is unwrapped.
+///
+/// - node (any): The marker wrapper.
+///
+/// - kind (str): The mark kind.
+///
+/// -> any
+#let _marker-body(node, kind) = (
+  _marker-children(node).filter(k => not tree.is-kind(k, kind)).sum(default: [])
+)
+
+
+#let _linearize-force(node) = {
+  let v = _marker-value(node, "touying-linearize")
+  if v == none { none } else { v.on }
+}
+
+
+/// Mark `body` as a graphic drawn by `fn`, so that `config-article(wrap: ..)`
+/// can target it.
+///
+/// A drawing package's output is ordinary content by the time the article
+/// collects its floats, with nothing left to name it by, so the mark travels
+/// with it. `touying-reducer` applies this itself; use it for a static diagram
+/// that is not animated.
+///
+/// Example: `#graphic-marker(cetz.canvas, cetz.canvas(..))`
+///
+/// - fn (function): The drawing function, such as `cetz.canvas`.
+///
+/// - body (content): The graphic.
+///
+/// -> content
+#let graphic-marker(fn, body) = block[#metadata((
+    kind: "touying-graphic-marker",
+    func: fn,
+  ))#body]
+
+
+/// A `target` predicate matching graphics drawn by `fn`.
+///
+/// Example: `config-article(wrap: (overrides: ((target: graphic-marker-of(cetz.canvas), align: left),)))`
+///
+/// - fn (function): The drawing function the mark carries.
+///
+/// -> function
+#let graphic-marker-of(fn) = el => {
+  let v = _marker-value(el, "touying-graphic-marker")
+  v != none and v.at("func", default: none) == fn
+}
+
+
+/// Take the graphic marks back out, once they have done their matching.
+///
+/// The wrapper is ours, so neither it nor the mark should reach the page or a
+/// reader's `query`. A label the reader put on the call moves onto the graphic.
+///
+/// - cont (any): The content to clean.
+///
+/// -> any
+#let _strip-graphic-markers(cont) = tree.map-tree(cont, node => {
+  if _marker-value(node, "touying-graphic-marker") == none { return none }
+  tree.relabel(
+    _strip-graphic-markers(_marker-body(node, "touying-graphic-marker")),
+    node.at("label", default: none),
+  )
+})
+
+
+/// Refuse a layout marker inside an `#article-only` or `#article-text` body.
+///
+/// Those bodies only ever reach the article, so there is no slide layout left
+/// to decide about: whatever is written there is what the article gets.
+///
+/// - body (any): The enclosing mark's body.
+///
+/// - name (str): The enclosing mark, for the message.
+///
+/// -> any
+#let _reject-layout-markers(body, name) = {
+  if (
+    tree.find-in-tree(body, c => tree.is-kind(c, "touying-linearize")) != none
+  ) {
+    panic(
+      "`#article-linearize` and `#article-keep-layout` have no meaning inside `#"
+        + name
+        + "`, which only ever reaches the article. Write the layout you want "
+        + "there directly.",
+    )
+  }
+  body
+}
+
+
+/// Flatten the layout containers in `body` into the article's prose, whatever
+/// `config-article(linearize: ..)` would decide for them.
+///
+/// Label the element itself rather than the call, so the label survives the
+/// rebuild: `#article-linearize[#table(..) <tab:x>]`.
+///
+/// Example: `#article-linearize(components.side-by-side[a][b])`
+///
+/// - body (content): The content whose containers to flatten.
+///
+/// -> content
+#let article-linearize(body) = block[#_linearize-mark(true)#body]
+
+
+/// Keep the layout containers in `body` as they are, whatever
+/// `config-article(linearize: ..)` would decide for them.
+///
+/// Same scoping and labelling as `article-linearize`.
+///
+/// Example: `#article-keep-layout[#table(columns: 2, [a], [b]) <tab:x>]`
+///
+/// - body (content): The content whose containers to leave alone.
+///
+/// -> content
+#let article-keep-layout(body) = block[#_linearize-mark(false)#body]
+
+
 /// Whether the article walker has to see a child on its own.
 ///
 /// Everything between two such children is summed back into a single run
@@ -89,30 +248,119 @@
 }
 
 
+/// Normalise `config-article(wrap: ..)` into an ordered list of float specs.
+///
+/// Each spec is `(match: element => bool, width: ratio, align: alignment)`, and
+/// the first whose `match` accepts a candidate decides how it floats. A
+/// candidate no spec accepts stays in the flow.
+///
+/// `overrides` come first, so a predicate can carve out a case an element name
+/// cannot express, such as a figure that holds an image. Element names are
+/// matched on the name of the element function, which is why the two forms
+/// exist at all: a dictionary key is a string, while `target` has to be a
+/// predicate, since Typst cannot tell an element function from a closure (both
+/// are `function`) and offers no way to test content against a selector.
+///
+/// - article-cfg (dictionary): The `article` config group.
+///
+/// -> array
+#let _wrap-config(article-cfg) = {
+  let wrap = article-cfg.at("wrap", default: (:))
+  if type(wrap) == bool { wrap = (overrides: ((target: _ => wrap),)) }
+  assert(
+    type(wrap) == dictionary,
+    message: "config-article(wrap:) takes a dictionary. Got: " + repr(wrap),
+  )
+  let base-width = wrap.at("width", default: 50%)
+  let base-align = wrap.at("align", default: right)
+
+  let spec(v, match) = {
+    if v == none or v == false { return none }
+    if v == true { return (match: match, width: base-width, align: base-align) }
+    if type(v) in (ratio, relative, length) {
+      return (match: match, width: v, align: base-align)
+    }
+    if type(v) == alignment {
+      return (match: match, width: base-width, align: v)
+    }
+    if type(v) == dictionary {
+      return (
+        match: match,
+        width: v.at("width", default: base-width),
+        align: v.at("align", default: base-align),
+      )
+    }
+    panic(
+      "config-article(wrap:): a float takes `false`, `true`, a width, an "
+        + "alignment, or a dictionary of them. Got: "
+        + repr(v),
+    )
+  }
+
+  let specs = ()
+  for rule in wrap.at("overrides", default: ()) {
+    assert(
+      type(rule) == dictionary and "target" in rule,
+      message: "config-article(wrap:): every entry of `overrides` is a dictionary "
+        + "with a `target` predicate. Got: "
+        + repr(rule),
+    )
+    let target = rule.target
+    assert(
+      type(target) == function,
+      message: "config-article(wrap:): `target` is a predicate taking an "
+        + "element and returning a bool, such as "
+        + "`el => el.func() == figure`. Got: "
+        + repr(target),
+    )
+    let rest = rule
+    let _ = rest.remove("target")
+    let s = spec(if rest.len() == 0 { true } else { rest }, target)
+    if s != none { specs.push(s) }
+  }
+  for (key, v) in wrap {
+    if key in ("width", "align", "overrides") { continue }
+    let s = spec(v, el => repr(el.func()) == key)
+    if s != none { specs.push(s) }
+  }
+  specs
+}
+
+
+/// The first spec that accepts this element, or `none` if it stays in the flow.
+///
+/// - specs (array): From `_wrap-config`.
+///
+/// - element (any): The float candidate.
+///
+/// -> dictionary, none
+#let _wrap-spec-for(specs, element) = {
+  let el = tree.unstyled(element)
+  if type(el) != content { return none }
+  for s in specs {
+    if (s.match)(el) { return s }
+  }
+  none
+}
+
+
 #let _wrap-section(
   items,
   images,
   blocks,
-  wrap-images: true,
-  wrap-image-figures: false,
-  wrap-other-figures: false,
-  wrap-other: false,
-  wrap-align-direction: right,
-  wrap-width: 50%,
+  wrap: (),
 ) = {
-  let raw-images = images.filter(i => not i.is-figure)
-  let figure-images = images.filter(i => i.is-figure)
-  // `_unstyled`, because block content extracted from a slide carries the
+  // Every candidate is matched the same way, whether it came out of the flow
+  // as an image or was pulled aside as a block. `tree.unstyled` inside
+  // _wrap-spec-for, because content extracted from a slide carries the
   // document-level `styled` wrappers the walker put back around it.
-  let other-figures = blocks.filter(b => tree.unstyled(b).func() == figure)
-  let other-blocks = blocks.filter(b => tree.unstyled(b).func() != figure)
+  let candidates = images.map(i => i.element) + blocks
+  let floated = candidates
+    .map(c => (element: c, spec: _wrap-spec-for(wrap, c)))
+    .filter(c => c.spec != none)
+  let unfloated = candidates.filter(c => _wrap-spec-for(wrap, c) == none)
 
-  let has-wrap-content = (
-    (wrap-images and raw-images.len() > 0)
-      or (wrap-image-figures and figure-images.len() > 0)
-      or (wrap-other-figures and other-figures.len() > 0)
-      or (wrap-other and other-blocks.len() > 0)
-  )
+  let has-wrap-content = floated.len() > 0
 
   let result = ()
 
@@ -174,65 +422,65 @@
     // Meander measures each obstacle in an unbounded context to compute its
     // page tiling, so a percentage width silently resolves to `0pt` there.
     // Resolve the real content width with `layout` first.
-    result.push(layout(size => {
-      let float-width = size.width * wrap-width
+    // The obstacle widths are a share of the text width, which only a
+    // measurement can resolve. It has to be meander's own: wrapping `reflow`
+    // in a `layout` moves the origin its `place(top + left)` anchors to from
+    // the page to the current flow position, so its page offset comes out as
+    // zero, it sizes the first page as if it started at the top, and the text
+    // runs past the bottom margin by however far down the page the section
+    // began. `query.parent-size` resolves the same width from inside.
+    result.push(meander.reflow({
+      import meander: *
+      callback(env: (size: query.parent-size()), env => {
+        //rescale an image bc its relative width cannot change so we wrap it inside a container such the resulting size is correct.
+        let fill-images(element, float-width) = tree.map-tree(element, node => {
+          if (type(node) == std.content and node.func() == image) {
+            let declared = node.at("width", default: auto)
+            let ratio = if type(declared) == ratio {
+              (declared * 1pt).pt()
+            } else if type(declared) == relative {
+              (declared.ratio * 1pt).pt()
+            } else { 1.0 }
+            
+            box(
+              width: float-width,
+              clip: true,
+              box(width: float-width / calc.max(ratio, 0.01), node),
+            )
+          }
+        })
 
-      // Article mode linearizes; it does not carry the deck's layout over. So
-      // a float takes `wrap-width` of the page whatever width was written for
-      // the slide, and the image is made to fill it.
-      //
-      // Not by rebuilding the image: an `image`'s source is a path resolved
-      // relative to the file it was written in, so one reconstructed here
-      // would look for it next to this file. Instead it is boxed at the width
-      // where its own percentage resolves to the target, which is what the
-      // older `utils.rescale-image` did.
-      let fill-images(element) = tree.map-tree(element, node => {
-        if type(node) == content and node.func() == image {
-          let declared = node.at("width", default: auto)
-          let ratio = if type(declared) == ratio {
-            (declared * 1pt).pt()
-          } else if type(declared) == relative {
-            (declared.ratio * 1pt).pt()
-          } else { 1.0 }
-          box(
-            width: float-width,
-            clip: true,
-            box(width: float-width / calc.max(ratio, 0.01), node),
+        let floats = floated.map(c => {
+          let w = env.size.width * c.spec.width
+          let filled = fill-images(_strip-graphic-markers(c.element), w)
+          // A bare image already fills the width exactly. Anything else is
+          // boxed to it, so the width means the same thing for a table or a
+          // canvas as it does for an image.
+          (
+            align: c.spec.align,
+            body: if tree.unstyled(_strip-graphic-markers(c.element)).func()
+              == image { filled } else {
+              box(width: w, align(c.spec.align, filled))
+            },
           )
+        })
+
+        // Each kind can take its own side, so the floats are grouped by side
+        // and each group stacked into one obstacle: meander offsets
+        // obstacles, not the elements inside them.
+        let sides = ()
+        for f in floats {
+          if f.align not in sides { sides.push(f.align) }
         }
-      })
-
-      let to-wrap = ()
-      if wrap-images {
-        to-wrap += raw-images.map(i => fill-images(i.element))
-      }
-      if wrap-image-figures {
-        to-wrap += figure-images.map(i => box(
-          width: float-width,
-          align(wrap-align-direction, fill-images(i.element)),
-        ))
-      }
-      if wrap-other-figures {
-        to-wrap += other-figures
-      }
-      if wrap-other {
-        to-wrap += other-blocks
-      }
-
-      // Stack all wrapped elements into a single obstacle so they occupy one
-      // column together, rather than computing per-element offsets.
-      let obstacle = if to-wrap.len() == 1 {
-        to-wrap.first()
-      } else {
-        stack(dir: ttb, spacing: 1em, ..to-wrap)
-      }
-
-      meander.reflow({
-        import meander: *
-        placed(top + wrap-align-direction, obstacle)
+        for side in sides {
+          let group = floats.filter(f => f.align == side).map(f => f.body)
+          placed(top + side, if group.len() == 1 { group.first() } else {
+            stack(dir: ttb, spacing: 1em, ..group)
+          })
+        }
         container()
-        content(body-content)
       })
+      content(body-content)
     }))
   } else {
     result += headings
@@ -240,32 +488,9 @@
     result += unwrapped
   }
 
-  // Non-wrapped raw images → centered at end
-  if not wrap-images {
-    for img in raw-images {
-      result.push(align(center, img.element))
-    }
-  }
-
-  // Non-wrapped figures → centered at end
-  if not wrap-image-figures {
-    for fig in figure-images {
-      result.push(align(center, fig.element))
-    }
-  }
-
-  // Non-wrapped other figures → centered at end
-  if not wrap-other-figures {
-    for fig in other-figures {
-      result.push(align(center, fig))
-    }
-  }
-
-  // Non-wrapped block content → centered at end
-  if not wrap-other {
-    for b in other-blocks {
-      result.push(align(center, b))
-    }
+  // Whatever no spec accepts → centered at the end of the section
+  for c in unfloated {
+    result.push(align(center, _strip-graphic-markers(c)))
   }
 
   result.sum(default: none)
@@ -338,11 +563,21 @@
 ///
 /// -> array
 #let _cells-of(cont) = {
-  cont
-    .children
+  let _cell-bodies(kids) = kids
     .filter(c => type(c) == content and c.func() in (table.cell, grid.cell))
     .map(c => c.at("body", default: none))
-    .filter(c => c != none)
+  let out = ()
+  for c in cont.children {
+    if type(c) != content { continue }
+    // A header or footer holds its cells one level down, so flattening past
+    // it, which only happens when asked, must not drop what it says.
+    if c.func() in (table.header, table.footer, grid.header, grid.footer) {
+      out += _cell-bodies(c.children)
+    } else {
+      out += _cell-bodies((c,))
+    }
+  }
+  out.filter(c => c != none)
 }
 
 
@@ -401,17 +636,18 @@
 #let _article-linearize(self, composer, conts) = {
   let article-cfg = self.at("article", default: (:))
 
-  // A container that only arranges content, with no structure of its own,
-  // is flattened into the prose: the article linearizes, it does not carry
-  // the deck's layout over. `columns` is always one. A table or grid is one
-  // only until it declares a header or footer, which is where its rows and
-  // columns start to mean something.
+  // A container that only arranges content, with no structure of its own, is
+  // flattened into the prose: the article linearizes, it does not carry the
+  // deck's layout over. `columns` is always one. A table or grid is one only
+  // until it declares a header or footer, which is where its rows and columns
+  // start to mean something.
   let linearize-cfg = article-cfg.at("linearize", default: auto)
-  let wanted(cont) = {
+  let wanted(cont, force) = {
     let f = cont.func()
     let key = if f == table { "table" } else if f == grid { "grid" } else if (
       f == columns
     ) { "columns" } else { return false }
+    if force != none { return force }
     let setting = if type(linearize-cfg) == dictionary {
       linearize-cfg.at(key, default: auto)
     } else {
@@ -423,12 +659,25 @@
       setting
     }
   }
-  let flatten(cont) = tree.map-tree(cont, node => {
+  let flatten(cont, force: none) = tree.map-tree(cont, node => {
     if type(node) != content { return none }
     // A figure is a captioned, referenceable unit, so its body stays whole
     // however it is built. Returning it unchanged also stops the descent.
     if node.func() == figure { return node }
-    if not wanted(node) { return none }
+    // #article-linearize / #article-keep-layout force the decision for exactly
+    // their own block. The block is ours and goes away with the mark, unless
+    // the reader labelled the call, in which case it stays to carry the label.
+    let marked = _linearize-force(node)
+    if marked != none {
+      let inner = flatten(
+        _marker-body(node, "touying-linearize"),
+        force: marked,
+      )
+      // The marker's own block goes with the mark. A label the reader put on
+      // the call is carried over to whatever now stands in its place.
+      return tree.relabel(inner, node.at("label", default: none))
+    }
+    if not wanted(node, force) { return none }
     let inner = if node.func() == columns {
       // The column break belongs to the columns being removed: left in a
       // single-column flow it would break the page instead.
@@ -442,16 +691,19 @@
       _cells-of(node).join(parbreak())
     }
     // Flattened again, so a grid nested in a grid comes apart too.
-    if inner == none { [] } else { flatten(inner) }
+    if inner == none { [] } else {
+      // A label on the container outlives it, so #link and query still reach
+      // what the reader named. A Typst reference needs a figure either way.
+      tree.relabel(flatten(inner, force: force), node.at(
+        "label",
+        default: none,
+      ))
+    }
   })
   let conts = conts.map(flatten)
 
-  let any-wrapping = (
-    article-cfg.at("wrap-images", default: true)
-      or article-cfg.at("wrap-image-figures", default: false)
-      or article-cfg.at("wrap-other-figures", default: false)
-      or article-cfg.at("wrap-other", default: false)
-  )
+  let wrap = _wrap-config(article-cfg)
+  let any-wrapping = wrap.len() > 0
 
   // Distinct top-level bodies (e.g. a composer's separate column contents)
   // are joined with an explicit parbreak() rather than wrapped in their own
@@ -462,7 +714,9 @@
   // _unwrap-blocks strips block wrappers back out downstream anyway.
   if not any-wrapping {
     return (
-      content: if conts.len() == 0 { none } else { conts.join(parbreak()) },
+      content: if conts.len() == 0 { none } else {
+        _strip-graphic-markers(conts.join(parbreak()))
+      },
       images: (),
       blocks: (),
     )
@@ -471,8 +725,6 @@
   let images = ()
   let text-parts = ()
   let block-parts = ()
-
-  let wrap-images = article-cfg.at("wrap-images", default: true)
 
   for cont in conts {
     let extracted = _extract-image(cont)
@@ -484,29 +736,32 @@
       ))
     } else if _is-block-content(cont) {
       block-parts.push(cont)
-    } else if wrap-images {
-      // An image written in the flow floats too, not only one that happens to
-      // sit alone in a composer column: whether a deck put it in a column is
-      // layout, and article mode does not carry the deck's layout over.
+    } else {
+      // A float written in running prose floats too, not only one that happens
+      // to sit alone in a composer column: whether a deck put it in a column is
+      // layout, and article mode does not carry the deck's layout over. Only
+      // what a spec accepts is pulled out, so anything nothing floats stays
+      // where it was written rather than moving to the section's end.
       //
       // `extract-nodes` walks sequences and styles but not into a body, so an
-      // image inside a figure or a box stays where it is and is left to
-      // `wrap-image-figures` and `wrap-other`.
+      // image inside a figure or a box stays where it is, to be matched as the
+      // figure or the box it sits in.
       let pulled = tree.extract-nodes(cont, c => (
-        type(c) == content and c.func() == image
+        _wrap-spec-for(wrap, c) != none
       ))
-      for img in pulled.found {
-        images.push((element: img, is-figure: false))
+      for el in pulled.found {
+        images.push((
+          element: el,
+          is-figure: tree.unstyled(el).func() == figure,
+        ))
       }
       if pulled.rest != none { text-parts.push(pulled.rest) }
-    } else {
-      text-parts.push(cont)
     }
   }
 
   (
     content: if text-parts.len() == 0 { none } else {
-      text-parts.join(parbreak())
+      _strip-graphic-markers(text-parts.join(parbreak()))
     },
     images: images,
     blocks: block-parts,
@@ -557,7 +812,7 @@
 // fn-wrappers, etc.) for free, rather than a separate, hand-rolled,
 // necessarily-incomplete reimplementation of the same dispatch.
 //
-// - self (dictionary): The presentation context (must have article-mode: true and optionally article config like wrap-images)
+// - self (dictionary): The presentation context (must have article-mode: true and optionally article config like `wrap`)
 // - body (content): The content to render
 //
 // -> content
@@ -634,18 +889,8 @@
   let slide-level = self.at("slide-level", default: 2)
 
   let article-cfg = self.at("article", default: (:))
-  let wrap-images = article-cfg.at("wrap-images", default: true)
-  let wrap-image-figures = article-cfg.at("wrap-image-figures", default: false)
-  let wrap-other-figures = article-cfg.at("wrap-other-figures", default: false)
-  let wrap-other = article-cfg.at("wrap-other", default: false)
-  let wrap-width = article-cfg.at("wrap-width", default: 50%)
-  let wrap-align-direction = article-cfg.at(
-    "wrap-align-direction",
-    default: right,
-  )
-  let any-wrapping = (
-    wrap-images or wrap-image-figures or wrap-other-figures or wrap-other
-  )
+  let wrap = _wrap-config(article-cfg)
+  let any-wrapping = wrap.len() > 0
 
   // Build the article-mode whole-slide-label set: labels attached to
   // headings or explicit #slide[...] wrappers, which touying-recall must
@@ -884,8 +1129,9 @@
               + "Start a new slide to write another.",
           )
         } else {
-          slide-text = tree.restyle(child, _resolve-block-recalls(
-            core.value.body,
+          slide-text = tree.restyle(child, _reject-layout-markers(
+            _resolve-block-recalls(core.value.body),
+            "article-text",
           ))
         }
       } else if tree.is-kind(core, "touying-article-only") {
@@ -894,8 +1140,9 @@
         result += r.items
         result += r.breadcrumbs
         slide-crumbs += r.breadcrumbs
-        result.push(tree.restyle(child, _resolve-block-recalls(
-          core.value.body,
+        result.push(tree.restyle(child, _reject-layout-markers(
+          _resolve-block-recalls(core.value.body),
+          "article-only",
         )))
       } else if tree.is-kind(core, "touying-set-config") {
         let r = _render-run(use-self, current-run)
@@ -1008,12 +1255,7 @@
           current-items,
           current-images,
           current-blocks,
-          wrap-images: wrap-images,
-          wrap-image-figures: wrap-image-figures,
-          wrap-other-figures: wrap-other-figures,
-          wrap-other: wrap-other,
-          wrap-align-direction: wrap-align-direction,
-          wrap-width: wrap-width,
+          wrap: wrap,
         ))
       }
       current-items = ()
@@ -1032,12 +1274,7 @@
           slide-head + slide-crumbs + (slide-text,),
           (),
           (),
-          wrap-images: wrap-images,
-          wrap-image-figures: wrap-image-figures,
-          wrap-other-figures: wrap-other-figures,
-          wrap-other: wrap-other,
-          wrap-align-direction: wrap-align-direction,
-          wrap-width: wrap-width,
+          wrap: wrap,
         ))
       }
       slide-text = none
@@ -1062,7 +1299,10 @@
       } else {
         slide-text = tree.restyle(
           child,
-          _resolve-block-recalls(core.value.body),
+          _reject-layout-markers(
+            _resolve-block-recalls(core.value.body),
+            "article-text",
+          ),
         )
       }
     } else if tree.is-kind(core, "touying-article-only") {
@@ -1075,7 +1315,10 @@
       current-blocks += r.blocks
       current-items.push(tree.restyle(
         child,
-        _resolve-block-recalls(core.value.body),
+        _reject-layout-markers(
+          _resolve-block-recalls(core.value.body),
+          "article-only",
+        ),
       ))
     } else if tree.is-kind(core, "touying-set-config") {
       let r = _render-run(use-self, current-run)
@@ -1149,12 +1392,7 @@
       current-items,
       current-images,
       current-blocks,
-      wrap-images: wrap-images,
-      wrap-image-figures: wrap-image-figures,
-      wrap-other-figures: wrap-other-figures,
-      wrap-other: wrap-other,
-      wrap-align-direction: wrap-align-direction,
-      wrap-width: wrap-width,
+      wrap: wrap,
     ))
   }
   // The document ends the last slide, so the same takeover as at a
@@ -1165,12 +1403,7 @@
       slide-head + slide-crumbs + (slide-text,),
       (),
       (),
-      wrap-images: wrap-images,
-      wrap-image-figures: wrap-image-figures,
-      wrap-other-figures: wrap-other-figures,
-      wrap-other: wrap-other,
-      wrap-align-direction: wrap-align-direction,
-      wrap-width: wrap-width,
+      wrap: wrap,
     ))
   }
 

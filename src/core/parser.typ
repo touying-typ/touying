@@ -98,6 +98,32 @@
 ///
 /// -> content
 #let expand-mode-marks(self, body) = tree.map-tree(body, node => {
+  // #article-linearize, #article-keep-layout and #graphic-marker each wrap
+  // their body in a block tagged by an invisible metadata child. Only article
+  // mode reads those tags, and neither the block nor the tag should reach a
+  // reader's `query`, so in slide output the wrapper is unwrapped here and its
+  // label moved onto what is left. Only the block's own children are dropped:
+  // a nested marker keeps its tag until its own block is unwrapped.
+  if (
+    not self.at("article-mode", default: false)
+      and type(node) == content
+      and node.func() == block
+  ) {
+    let inner = node.at("body", default: none)
+    let kids = if inner == none { () } else if tree.is-sequence(inner) {
+      inner.children
+    } else { (inner,) }
+    let is-mark = k => (
+      tree.is-kind(k, "touying-linearize") or tree.is-kind(k, "touying-graphic-marker")
+    )
+    if kids.any(is-mark) {
+      let rest = kids.filter(k => not is-mark(k)).sum(default: [])
+      return tree.relabel(
+        expand-mode-marks(self, rest),
+        node.at("label", default: none),
+      )
+    }
+  }
   if tree.is-metadata(node) and type(node.value) == dictionary {
     let kind = node.value.at("kind", default: none)
     if kind in ("touying-slides-only", "touying-article-only") {
@@ -311,12 +337,15 @@
         + ". Please report this at https://github.com/touying-typ/touying/issues",
     )
   }
-  parsed-results.push(
-    (reducer.reduce)(
-      ..reducer.kwargs,
-      result,
-    ),
+  let drawn = (reducer.reduce)(
+    ..reducer.kwargs,
+    result,
   )
+  // Article mode alone reads the mark, and it is the only mode where the
+  // wrapper would not have to be taken out again afterwards.
+  parsed-results.push(if self.at("article-mode", default: false) {
+    block[#metadata((kind: "touying-graphic-marker", func: reducer.reduce))#drawn]
+  } else { drawn })
   max-repetitions = calc.max(max-repetitions, repetitions)
   max-repetitions = calc.max(max-repetitions, last-subslide)
   return (parsed-results, max-repetitions)
