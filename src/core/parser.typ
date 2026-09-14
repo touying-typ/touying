@@ -932,6 +932,57 @@
 }
 
 
+
+/// Link anchor naming the content a waypoint owns.
+///
+/// A waypoint marks a position in both time and space: the content that
+/// belongs to it is everything from the marker up to the next waypoint, or to
+/// the end of the body. The anchor therefore sits at the *end* of that run, so
+/// a `#link` lands on the content the waypoint names rather than on a subslide
+/// number. That position is well defined without subslides, which is what lets
+/// article mode emit the same anchor.
+///
+/// A waypoint label is only unique within its slide, so the anchor joins the
+/// enclosing slide's label with the waypoint's: `<intro>` + `<more>` gives
+/// `<intro.more>`. Returns `none` for an unlabelled slide, so nothing is
+/// emitted where no unique name exists.
+///
+/// - slide-label (label, none): The enclosing slide's label.
+/// - wp-label (str): The waypoint's own label, already a string.
+///
+/// -> content or none
+#let waypoint-anchor(slide-label, wp-label, wp-map: none, index: none) = {
+  if slide-label == none {
+    return none
+  }
+  // The parser walks the body once per subslide, so without this the anchor
+  // would be emitted on every one of them and `#link` would resolve to the
+  // first rather than to the waypoint's own content. `wp-map` is absent in
+  // article mode, which renders the body once and needs no gate.
+  if wp-map != none {
+    let range = wp-map.at(wp-label, default: none)
+    if range == none or index != range.last {
+      return none
+    }
+  }
+  // An empty labelled element, not `tree.label-it([], ..)`: a label on empty
+  // content does not survive the walk, while one riding a `metadata` node does.
+  [#metadata("touying-slide-waypoint-link-anchor")#label(str(slide-label) + "." + wp-label)]
+}
+
+
+/// The enclosing slide's label, or `none` when it carries none.
+///
+/// -> label or none
+#let slide-label-of(self) = {
+  let headings = self.at("headings", default: ())
+  if headings == () or not headings.last().has("label") {
+    return none
+  }
+  headings.last().label
+}
+
+
 /// Parse touying equation content and extract animation repetitions
 ///
 /// Processes equation content with pause and meanwhile markers, returning
@@ -1798,6 +1849,11 @@
   // recursive calls).  Used by the two-pass escape hatch so that fn-wrappers
   // inside a pause zone can handle their own visibility.
   let has-fn-wrapper = false
+  // The waypoint whose content run is still open, so its link anchor can be
+  // emitted at the *end* of that run: when the next waypoint starts, or after
+  // the loop when none follows. See `waypoint-anchor`.
+  let open-waypoint = none
+  let slide-label = slide-label-of(self)
   // get cover function from self
   let cover = self.methods.cover.with(self: self)
 
@@ -2665,7 +2721,17 @@
               max-repetitions = calc.max(max-repetitions, repetitions)
             }
           }
-          // No visible output.
+          // No visible output of its own. The previous waypoint's run ends
+          // here, so its anchor lands before this one's content begins.
+          if open-waypoint != none {
+            result.push(waypoint-anchor(
+              slide-label,
+              open-waypoint,
+              wp-map: wp,
+              index: index,
+            ))
+          }
+          open-waypoint = lbl
         } else if kind == "touying-implicit-waypoint" {
           // Implicit waypoint: advance repetitions if this is the defining occurrence.
           // Fires on the standard sequential trigger (first == repetitions+1) OR
@@ -3062,6 +3128,16 @@
           hidden-parts.push(child)
         }
       }
+    }
+    // The last waypoint's run ends with the body, so its anchor goes here.
+    if open-waypoint != none {
+      result.push(waypoint-anchor(
+        slide-label,
+        open-waypoint,
+        wp-map: self.at("waypoints", default: (:)),
+        index: index,
+      ))
+      open-waypoint = none
     }
     // clear the hidden-parts when end
     if hidden-parts.len() != 0 {

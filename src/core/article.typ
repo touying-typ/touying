@@ -6,7 +6,8 @@
   _build-native-recall, _members-in-range,
   _parse-content-into-results-and-repetitions, _prepare-render-context,
   _render-at-subslide, _resolve-string-to-members, _resolve-waypoint-to-members,
-  check-current-mode-skip, unsupported-mark-message, waypoint-kinds,
+  check-current-mode-skip, unsupported-mark-message, waypoint-anchor,
+  waypoint-kinds,
 )
 
 /// Content that replaces the slide content when in article mode. Place it after your slide, before the next one.
@@ -441,7 +442,7 @@
             } else if type(declared) == relative {
               (declared.ratio * 1pt).pt()
             } else { 1.0 }
-            
+
             box(
               width: float-width,
               clip: true,
@@ -878,6 +879,57 @@
 }
 
 
+/// Place the waypoint link anchors, the article-mode counterpart of the
+/// parser's own pass.
+///
+/// A waypoint owns the content from its marker up to the next waypoint, or to
+/// the end of its slide, and its anchor sits at the end of that run — the same
+/// position slides mode uses, minus the subslide gate, since article mode
+/// renders the body once. A heading no deeper than `slide-level` starts a new
+/// slide and so closes any open run, because a waypoint never reaches past the
+/// slide it was written in.
+///
+/// -> array
+#let _place-waypoint-anchors(self, children, slide-level) = {
+  let out = ()
+  let slide-label = none
+  let open-waypoint = none
+
+  for child in children {
+    let core = tree.unstyled(child)
+    let is-slide-heading = (
+      type(core) == content
+        and core.func() == heading
+        and core.depth <= slide-level
+    )
+
+    let is-waypoint = tree.is-kind(core, "touying-waypoint")
+    if is-slide-heading or is-waypoint {
+      if open-waypoint != none {
+        let anchor = waypoint-anchor(slide-label, open-waypoint)
+        if anchor != none { out.push(anchor) }
+        open-waypoint = none
+      }
+
+      if is-slide-heading {
+        slide-label = if core.has("label") { core.label }
+      } else {
+        open-waypoint = core.value.label
+      }
+    }
+
+    out.push(child)
+  }
+
+  if open-waypoint != none {
+    let anchor = waypoint-anchor(slide-label, open-waypoint)
+    if anchor != none { out.push(anchor) }
+  }
+  
+  out
+}
+
+
 #let render-content-as-article(self: none, body) = {
   let children = tree.flatten-children(body, structural: _is-structural)
   children = _filter-mode-children(self, children)
@@ -887,6 +939,8 @@
   // heading no deeper than this (slides.typ:686 uses the same test). Deeper
   // headings are content inside the slide, so they do not bound it.
   let slide-level = self.at("slide-level", default: 2)
+
+  children = _place-waypoint-anchors(self, children, slide-level)
 
   let article-cfg = self.at("article", default: (:))
   let wrap = _wrap-config(article-cfg)

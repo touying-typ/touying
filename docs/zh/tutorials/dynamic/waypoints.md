@@ -170,6 +170,10 @@ sidebar_position: 7
 ]
 ```
 
+## 全局链接锚点
+
+路标还会在其捕获内容的末尾——也就是该路标最后一个 subslide 处——发出一个链接锚点。如果你的幻灯片标记为 `<myslide>`，路标标记为 `<first-wp>`，那么你就可以通过 `<myslide.first-wp>` 来引用它。
+
 ## 更多示例
 
 有关路标功能的完整示例——包括回调风格的幻灯片、与 CeTZ 和 Fletcher 的集成、`recall-subslide` 以及边界情况——请参阅 [`examples/waypoints.typ`](https://github.com/touying-typ/touying/blob/main/examples/waypoints.typ)。

@@ -172,6 +172,10 @@ You may even set explicit start values for waypoints; both subslide indexes and 
 
 Here `<done>` is pinned to subslide 4, so "All done" is revealed one step ahead of the remark on subslide 5, and `<parallel>` in the second column starts wherever `<done>` does.
 
+## Global Link Anchors
+
+A waypoint also emits a link anchor at the end of its captured content, meaning also at the last subslide of the waypoint. If your slide is labelled `<myslide>` and the waypoint `first-wp>` then you can refer to it via `<myslide.first-wp>`.
+
 
 ## More Examples
 

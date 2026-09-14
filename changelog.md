@@ -260,6 +260,8 @@ Things to watch when upgrading: a `#pause` after `uncover`/`only`/`alternatives`
 
   `touying-get-config("common.handout")` resolves now, and `touying-get-config().common` returns the flat top-level keys as a subtree, which is what the docstring always claimed. Naming a category under it, such as `common.store`, panics with a clear message instead of silently missing.
 
+- **feat: waypoints now emit a globally linkable anchor `<slide.waypoint>`** for a slide labelled `<slide>` and a waypoint named `<waypoint>`. You can use this to create links that refer to the last subslide of a waypoint. The anchor is placed immediately before the next waypoint or as the last content element on the slide.
+
 - feat: new utilities. `tree.is-math-symbol` and `tree.sequence-to-array` in the new `core/tree.typ`, `subslides.resolve-negative-subslides` (negative subslide indices resolved against a repeat count and an optional non-1 base) in `core/subslides.typ`, and `utils.rescale-image`.
 
 - **fix: a labelled `#place`, `#rotate`, `#columns` or `#terms.item` in a slide**
