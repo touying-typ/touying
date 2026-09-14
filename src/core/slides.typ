@@ -1890,7 +1890,9 @@
           components.page-container(
             self: self,
             clip: self.at("clip", default: false),
-            detect-overflow: self.at("detect-overflow", default: true),
+            // Reached only when `breakable` is false, which is the condition
+            // `auto` defers to — so here `auto` and `true` both mean detect.
+            detect-overflow: self.at("detect-overflow", default: auto) != false,
             slide-body,
           )
         }
@@ -1977,7 +1979,8 @@
           components.page-container(
             self: subslide-self,
             clip: subslide-self.at("clip", default: false),
-            detect-overflow: subslide-self.at("detect-overflow", default: true),
+            detect-overflow: subslide-self.at("detect-overflow", default: auto)
+              != false,
             slide-body,
           )
         }
@@ -2074,7 +2077,7 @@
           components.page-container(
             self: self,
             clip: self.at("clip", default: false),
-            detect-overflow: self.at("detect-overflow", default: true),
+            detect-overflow: self.at("detect-overflow", default: auto) != false,
             slide-body,
           )
         }
@@ -2113,7 +2116,7 @@
           components.page-container(
             self: self,
             clip: self.at("clip", default: false),
-            detect-overflow: self.at("detect-overflow", default: true),
+            detect-overflow: self.at("detect-overflow", default: auto) != false,
             slide-body,
           )
         }

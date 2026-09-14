@@ -58,7 +58,7 @@
   config-common(
     show-bibliography-as-footnote: true,
     breakable: true,
-    detect-overflow: true,
+    //detect-overflow: true, //leave at auto instead
     clip: true,
   ),
 )

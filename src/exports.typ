@@ -19,6 +19,7 @@
   article-keep-layout, article-linearize, article-only, article-text,
   graphic-marker, graphic-marker-of,
 )
+#import "core/parser.typ": measure
 #import "core/slides.typ": (
   appendix, empty-slide, slide, touying-notes, touying-recall,
   touying-set-config, touying-slide,

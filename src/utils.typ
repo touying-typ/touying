@@ -762,7 +762,7 @@
     //nice just a multiplication
     to-convert = container-dimension * to-convert
   } else {
-    to-convert = measure(v(to-convert)).height //get in pt if em
+    to-convert = std.measure(v(to-convert)).height //get in pt if em
   }
   to-convert
 }
@@ -770,7 +770,7 @@
 #let _limit-content-width(width: none, body, container-size) = {
   let mutable-width = width
   if width == none {
-    mutable-width = calc.min(container-size.width, measure(body).width)
+    mutable-width = calc.min(container-size.width, std.measure(body).width)
   } else {
     mutable-width = _size-to-pt(width, container-size.width)
   }
@@ -844,7 +844,7 @@
       )
 
       //get size of the content when boxed to the prescale width, which is the initial size before scaling, may be different from the container-width
-      let size = measure(boxed-content)
+      let size = std.measure(boxed-content)
       if size.height == 0pt or size.width == 0pt {
         return body
       }
@@ -866,14 +866,13 @@
         // then height may again be slightly too small. repeat that.
 
         let adjust-width(ratio, body, boxed-content, size) = {
-          let w-ratio = (
-            measure(scale(
+          let w-ratio = (std.measure(scale(
               ratio,
               boxed-content,
               origin: top + left,
               reflow: true,
             )).width
-              / size.width
+            / size.width
           )
 
           let _boxed-content = block(
@@ -885,14 +884,13 @@
         }
 
         let adjust-height(ratio, body, boxed-content, size) = {
-          let h-ratio = (
-            measure(scale(
+          let h-ratio = (std.measure(scale(
               ratio,
               boxed-content,
               origin: top + left,
               reflow: true,
             )).height
-              / size.height
+            / size.height
           )
 
           let _boxed-content = block(
@@ -901,14 +899,13 @@
           )
           ratio *= calc.sqrt(1 / h-ratio)
 
-          h-ratio = (
-            measure(scale(
+          h-ratio = (std.measure(scale(
               ratio,
               _boxed-content,
               origin: top + left,
               reflow: true,
             )).height
-              / size.height
+            / size.height
           )
           ratio /= h-ratio
 
@@ -928,13 +925,15 @@
         }
         if not force-height {
           //fix the width one last time linearly.
-          let scaled-width = measure(scale(
-            ratio,
-            boxed-content,
-            origin: top + left,
-            reflow: true,
-          )).width
-          let current-box-width = measure(boxed-content).width
+          let scaled-width = std.measure(
+            scale(
+              ratio,
+              boxed-content,
+              origin: top + left,
+              reflow: true,
+            ),
+          ).width
+          let current-box-width = std.measure(boxed-content).width
           boxed-content = box(
             width: current-box-width * (mutable-width / scaled-width),
             body,
@@ -1004,7 +1003,7 @@
   }
 
   layout(layout-size => {
-    let content-width = measure(body).width
+    let content-width = std.measure(body).width
     let width = _size-to-pt(width, layout-size.width)
     if (
       content-width != 0pt
@@ -1166,11 +1165,13 @@
     context {
       // Measure a reference character wrapped in par() to pick up show rules
       // like `show par: set text(2em)` that affect rendered text size.
-      let h = measure(par(text(
-        top-edge: "bounds",
-        bottom-edge: "bounds",
-        [Xg],
-      ))).height
+      let h = std.measure(
+        par(text(
+          top-edge: "bounds",
+          bottom-edge: "bounds",
+          [Xg],
+        ))
+      ).height
       strike(
         stroke: 1.6 * h + fill,
         offset: -0.35 * h,
@@ -1204,9 +1205,9 @@
         if body.func() == align {
           m-body = par(body.body)
         }
-        let body-size = measure(m-body)
+        let body-size = std.measure(m-body)
         let bounding-width = calc.min(body-size.width, layout-size.width)
-        let wrapped-body-size = measure(box(m-body, width: bounding-width))
+        let wrapped-body-size = std.measure(box(m-body, width: bounding-width))
 
         let named = cover-args.named()
         if "width" not in named {
@@ -1225,9 +1226,9 @@
           )
           if is-text-like-body {
             let real-text-size = if new-body-func != none {
-              measure(new-body-func([Xg])).height
+              std.measure(new-body-func([Xg])).height
             } else {
-              measure(body).height
+              std.measure(body).height
             }
             let top-outset = if inline { 0.35 * real-text-size } else {
               0.15 * real-text-size
@@ -1269,7 +1270,7 @@
           (body.has("body") and body.body != none and body.body.func() == text)
             or body.func() in (align, math.equation)
         ) {
-          ((1.52 * measure(new-body-func([Xg])).height / text.size) - 1)
+          ((1.52 * std.measure(new-body-func([Xg])).height / text.size) - 1)
         } else { 0 }
         let extra-top = (
           extra * if block.above == auto { par.spacing } else { block.above }
@@ -2235,7 +2236,7 @@
         seen.push(key)
         let reserved = render(config, reserving-only: true)
         if reserved != none {
-          sizes.push(measure(reserved.first()))
+          sizes.push(std.measure(reserved.first()))
         }
       }
       if sizes.len() == 0 {
@@ -2291,7 +2292,7 @@
 
   if stretch {
     context {
-      let sizes = contents.map(c => measure(c))
+      let sizes = contents.map(c => std.measure(c))
       let max-width = calc.max(..sizes.map(sz => sz.width))
       let max-height = calc.max(..sizes.map(sz => sz.height))
       for (i, (_, content)) in subslides-contents.enumerate() {
@@ -2868,7 +2869,7 @@
 
     let visible-width = obstacle-width * inv * 0.95
     let dx-offset = obstacle-width * inv * 0.025
-    let img-size = measure(display-el, width: visible-width)
+    let img-size = std.measure(display-el, width: visible-width)
     let other-direction = if align-direction == right { 1 } else { -1 }
 
     stack(

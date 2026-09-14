@@ -21,7 +21,7 @@
         list.marker
       }
     }
-    let hanging-indent = measure(current-marker).width + .6em + .3pt
+    let hanging-indent = std.measure(current-marker).width + .6em + .3pt
     set terms(hanging-indent: hanging-indent)
     if type(list.marker) == array {
       terms.item(
@@ -202,7 +202,7 @@
         // counting and leaking its own entry. `measure` discards those side
         // effects and keeps only the width, which is all a placeholder needs.
         let fake = footnote(numbering: numbering, [])
-        box(width: measure(footnote-style(fake)).width)
+        box(width: std.measure(footnote-style(fake)).width)
       }
     }
     it
@@ -211,7 +211,9 @@
   show cite.where(form: "normal"): it => (
     context {
       let label-str = "touying-footnote-bib:" + str(it.key)
-      if type(self)==dictionary and not self.at("article-mode", default:false) {
+      if (
+        type(self) == dictionary and not self.at("article-mode", default: false)
+      ) {
         label-str = label-str + str(here().page()) //dedup in slides mode per page. in article mode that is not stable
       }
       let bibitem = {

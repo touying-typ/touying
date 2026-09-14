@@ -163,7 +163,7 @@
         }
 
         // Phase 1: measure height with all lazy-v markers hidden.
-        let measured-size = measure(block(
+        let measured-size = std.measure(block(
           width: container-size.width,
           body,
         ))
@@ -201,7 +201,7 @@
         }
 
         // Phase 1: measure width with all lazy-h markers hidden.
-        let measured-size = measure(block(
+        let measured-size = std.measure(block(
           height: container-size.height,
           body,
         ))
@@ -309,8 +309,8 @@
 ) = layout(size => {
   let n = calc.min(
     calc.ceil(
-      measure(body).height
-        / (size.height - measure(start).height - measure(end).height),
+      std.measure(body).height
+        / (size.height - std.measure(start).height - std.measure(end).height),
     ),
     max-count,
   )
@@ -1061,31 +1061,64 @@
     sticky: false,
     stroke: (:),
   )
+  let _warn-overflow(self: none, available-size, content-size, axis) = {
+    if content-size <= available-size {
+      return
+    }
+    warning(
+      "detecting slide content overflow at page "
+        + repr(here().page())
+        + " (slide "
+        + str(utils.slide-counter.get().last())
+        + ", subslide "
+        + str(self.subslide)
+        + ", content "
+        + axis
+        + ": "
+        + repr(content-size)
+        + ", available "
+        + axis
+        + ": "
+        + repr(available-size)
+        + ").",
+    )
+  }
+
   if detect-overflow {
     // Detect and warn on overflow
     layout(container-size => {
-      let content-size = measure(block(
+      let content-size = std.measure(block(
         ..tight-block-args,
         width: container-size.width,
         body,
       ))
-      let content-height = content-size.height
-      let available-height = container-size.height
-      if content-height > available-height {
-        warning(
-          "detecting slide content overflow at page "
-            + repr(here().page())
-            + " (slide "
-            + str(utils.slide-counter.get().last())
-            + ", subslide "
-            + str(self.subslide)
-            + ", content height: "
-            + repr(content-height)
-            + ", available height: "
-            + repr(available-height)
-            + ").",
-        )
-      } else if content-height == 0pt {
+      _warn-overflow(
+        self: self,
+        container-size.height,
+        content-size.height,
+        "height",
+      )
+      // Now for width: 3 cases
+      // 1) content does not overflow the width in which case the outest check does not work
+      // 2) content overflows but only because it is not broken into new lines in this case height changes when the width is fixed
+      // 3) content does overflow in width and height is fixed which is only possible for blocks that truly overflow.
+      let natural-size = std.measure(body)
+      if natural-size.width > container-size.width {
+        let at-full = std.measure(block(
+          ..tight-block-args,
+          width: container-size.width,
+          body,
+        ))
+        if at-full.height == natural-size.height {
+          _warn-overflow(
+            self: self,
+            container-size.width,
+            natural-size.width,
+            "width",
+          )
+        }
+      }
+      if content-size.height == 0pt {
         warning(
           "detecting slide content is empty at page "
             + repr(here().page())
@@ -1093,10 +1126,8 @@
             + str(utils.slide-counter.get().last())
             + ", subslide "
             + str(self.subslide)
-            + ", content height: "
-            + repr(content-height)
-            + ", available height: "
-            + repr(available-height)
+            + ", content height: 0pt, available height: "
+            + repr(container-size.height)
             + ").",
         )
       }

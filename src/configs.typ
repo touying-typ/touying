@@ -123,7 +123,7 @@
 ///
 /// - clip (bool): Whether to clip overflowing slide content when `breakable` is `false`. When `true`, content that exceeds the slide height will be visually truncated. When `false`, overflowing content remains visible but does not create new pages. Only takes effect when `breakable` is `false`. Default is `false`.
 ///
-/// - detect-overflow (bool): Whether to detect and warn on slide content overflow when `breakable` is `false`. When `true`, a layout measurement is performed and a warning is emitted if the content height exceeds the available slide height, which is useful for catching overflow early in agentic workflows without aborting compilation. When `false`, no overflow detection is performed. Only takes effect when `breakable` is `false`. Default is `true`.
+/// - detect-overflow (auto, bool): Whether to detect and warn on slide content overflow. When enabled, a layout measurement is performed and a warning is emitted if the content height exceeds the available slide height, which is useful for catching overflow early in agentic workflows without aborting compilation. `auto` means enabled when `breakable` is false.
 ///
 /// - handout (bool): Whether to enable the handout mode. By default, it retains only the last subslide of each slide, but this can be overridden via `handout-subslides`. Default is `false`.
 ///
@@ -767,7 +767,10 @@
   config-common(
     breakable: true,
     clip: false,
-    detect-overflow: true,
+    // `auto`: detect whenever `breakable` is false, which is the only time a
+    // fixed slide height exists to measure against. An explicit `true` is a
+    // request that also warns when `breakable` makes it impossible.
+    detect-overflow: auto,
     handout: false,
     handout-subslides: none,
     slide-level: 2,

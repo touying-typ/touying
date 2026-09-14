@@ -4,6 +4,7 @@
 #import "core/slides.typ": split-content-into-slides, touying-slide
 #import "core/animation.typ": touying-slide-wrapper
 #import "magic.typ"
+#import "extern.typ": warning
 
 #import "../themes/article.typ": article-theme as _default-article-theme
 
@@ -151,6 +152,18 @@
         init: (self: none, body) => body,
       )),
     ))
+  }
+
+  // warn if both breakable and detect-overflow are set in slides mode
+  if (
+    not self.at("article-mode", default: false)
+      and self.at("detect-overflow", default: auto) == true
+      and self.at("breakable", default: true)
+  ) {
+    warning(
+      "`config-common(detect-overflow: true)` cannot take effect while "
+        + "`breakable` is true."
+    )
   }
 
   show: body => {

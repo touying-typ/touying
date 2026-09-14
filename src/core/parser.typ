@@ -2957,7 +2957,9 @@
               // an isolated, discarded layout, so only the resulting width (not
               // the side effects) survives - which is all a placeholder needs.
               let fake = footnote(numbering: footnote.numbering, [])
-              box(width: measure(footnote-style(fake)).width)
+              // `std.measure`: this module defines its own `measure` below, and
+              // a plain name here would be a trap for anyone moving this code.
+              box(width: std.measure(footnote-style(fake)).width)
             }
           })
         }
@@ -3100,13 +3102,13 @@
     )
     mrr
   } else {
-    let (_, mrr, _, _, _) = _parse-content-into-results-and-repetitions(
+    let (_, mrr, ls, _, _) = _parse-content-into-results-and-repetitions(
       self: self + (waypoints: (:), subslide: 9999),
       base: render-base,
       index: 9999,
       inline-content,
     )
-    mrr
+    calc.max(mrr, ls)
   }
   let repeat = calc.max(max-rep-raw, ..resolved-wp.values(), 1)
   let cwp = _compute-waypoint-ranges(resolved-wp, repeat, so, dr)
@@ -3246,3 +3248,100 @@
   }
 }
 
+
+
+/// Measure content that may contain touying animations.
+///
+/// Typst's own `measure` sees touying's animation functions as bare metadata
+/// marks, which occupy no space: `std.measure(#uncover("2-")[U])` returns a height
+/// of `0pt`, while the same content written with `#pause` measures correctly.
+/// This parses the body the way a slide would, renders it at one subslide, and
+/// measures *that*, so the result matches what the slide will actually show.
+///
+/// It is a drop-in replacement of the normal `measure` function.
+/// Like `measure`, this must be called from a context — and it deliberately
+/// opens none of its own, so it returns a *dictionary* the caller can compute
+/// with rather than opaque content. It also inherits the caller's region, so
+/// it behaves correctly inside `layout`:
+///
+/// ```typst
+/// #import "@preview/touying:0.8.0": measure
+/// #context {
+///   let body = [...] //some animated content
+///   let h = measure(body, width: 100%).height
+///   // ... use h in arithmetic ...
+/// }
+/// ```
+///
+/// - body (content): The content to measure.
+///
+/// - subslide (auto, none, int, label, dictionary): Which subslide to measure.
+///   - `auto` (default): the last subslide, i.e. the fully revealed state.
+///     Content with no animations has exactly one, so this is the whole of it.
+///   - `none`: the largest width and height over *every* subslide. Each
+///     dimension is maximised independently.
+///   - `int`: that subslide, counted in `body`'s own numbering (see `base`).
+///   - a waypoint label or marker: resolved against `body`'s own waypoints.
+///
+/// - base (auto, int): Starting value of `body`'s internal subslide counter,
+///   exactly as in `touying-render`. `auto` (default) means `1`, so a
+///   `subslide` number here means the same thing it would there.
+///
+/// - args (any): Everything else is forwarded to `measure` unchanged, so
+///   `width` and `height` work as usual.
+///
+/// -> dictionary
+#let measure(body, subslide: auto, base: auto, ..args) = {
+  // The cover method only has to reserve space, never to look right: nothing
+  // measured here is shown. `hide` keeps the covered content's own size, which
+  // is exactly what a measurement needs.
+  let minimal-self = (
+    methods: (cover: utils.method-wrapper(hide)),
+    waypoints: (:),
+    subslide: 1,
+  )
+  let render-base = if base == auto { 1 } else { base }
+  let (reducer-data, cwp, repeat, _) = _prepare-render-context(
+    minimal-self,
+    body,
+    render-base,
+  )
+  let render-at(target) = _render-at-subslide(
+    minimal-self,
+    body,
+    reducer-data,
+    cwp,
+    render-base,
+    target,
+  )
+  if subslide == none {
+    // Maximise each dimension independently over every subslide: the widest
+    // and the tallest subslide need not be the same one.
+    // `std.measure`: this module now binds `measure` to this very function,
+    // so a bare call would recurse.
+    let sizes = range(render-base, render-base + repeat).map(
+      target => std.measure(render-at(target), ..args),
+    )
+    (
+      width: calc.max(..sizes.map(s => s.width)),
+      height: calc.max(..sizes.map(s => s.height)),
+    )
+  } else {
+    let target = if subslide == auto {
+      render-base + repeat - 1
+    } else if (
+      type(subslide) == label
+        or (
+          type(subslide) == dictionary
+            and subslide.at("kind", default: "") in waypoint-kinds
+        )
+    ) {
+      // `cwp` is body's own local waypoint map, so shift the resolved position
+      // into the same numbering as `repeat` above — as `touying-recall` does.
+      _resolve-waypoint-to-int((waypoints: cwp), subslide) + render-base - 1
+    } else {
+      resolve-negative-subslides(repeat, subslide, base: render-base)
+    }
+    std.measure(render-at(target), ..args)
+  }
+}

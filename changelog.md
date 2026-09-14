@@ -103,6 +103,12 @@ Things to watch when upgrading: a `#pause` after `uncover`/`only`/`alternatives`
 
   Note: Negative numbers in a *string* spec are a different notation and are unaffected: `"-2"` is the open range "up to subslide 2", not "second from last".
 
+- **fix: overflow detection also checks width.** It only ever compared height, so an element too wide to fit, a fixed-width block level element did not trigger an overflow warning.
+
+- **feat!: `config-common(detect-overflow:)` defaults to `auto`** (was `true`). This is the opposite of what is set for `breakable` and in case both are `true` a warning is emitted that no overflow can be detected. 
+
+- **feat!: `#measure` shadows `std.measure` and also measures animated content properly** It still works as expected, needing a surrounding `layout` or `context`, and in addition to a `width` and `height` optionally supports an integer `subslide` and an integer `base` which set the subslide and subslide base to render the content at before it is measured.
+
 ### Migration Guide
 
 1. **Bump your compiler** to Typst 0.15.0 or newer.
