@@ -951,7 +951,13 @@
 /// - wp-label (str): The waypoint's own label, already a string.
 ///
 /// -> content or none
-#let waypoint-anchor(slide-label, wp-label, wp-map: none, index: none) = {
+#let waypoint-anchor(
+  slide-label,
+  wp-label,
+  wp-map: none,
+  index: none,
+  rendered: none,
+) = {
   if slide-label == none {
     return none
   }
@@ -961,13 +967,40 @@
   // article mode, which renders the body once and needs no gate.
   if wp-map != none {
     let range = wp-map.at(wp-label, default: none)
-    if range == none or index != range.last {
+    if range == none {
+      return none
+    }
+    // Where the link anchor is injected:
+    //   1. `range.last` itself, when it is rendered;
+    //   2. otherwise the first rendered subslide after it — the content has
+    //      fully revealed by then, so that page still carries it;
+    //   3. otherwise only earlier subslides are rendered: take the last of
+    //      them, and only if it is past where this waypoint begins, so a page
+    //      showing none of its content gets no anchor.
+    // `rendered: none` means every subslide is rendered, which makes (1) hold
+    // trivially and leaves presentation mode on the `range.last` path.
+    let target = if rendered == none {
+      range.last
+    } else {
+      let at-or-after = rendered.filter(i => i >= range.last)
+      if at-or-after != () {
+        // Covers both (1) and (2): the minimum is `range.last` when rendered.
+        at-or-after.first()
+      } else if rendered != () and rendered.last() > range.first {
+        rendered.last()
+      } else {
+        return none
+      }
+    }
+    if index != target {
       return none
     }
   }
   // An empty labelled element, not `tree.label-it([], ..)`: a label on empty
   // content does not survive the walk, while one riding a `metadata` node does.
-  [#metadata("touying-slide-waypoint-link-anchor")#label(str(slide-label) + "." + wp-label)]
+  [#metadata("touying-slide-waypoint-link-anchor")#label(
+      str(slide-label) + "." + wp-label,
+    )]
 }
 
 
@@ -2729,6 +2762,7 @@
               open-waypoint,
               wp-map: wp,
               index: index,
+              rendered: self.at("rendered-subslides", default: none),
             ))
           }
           open-waypoint = lbl
@@ -3136,6 +3170,7 @@
         open-waypoint,
         wp-map: self.at("waypoints", default: (:)),
         index: index,
+        rendered: self.at("rendered-subslides", default: none),
       ))
       open-waypoint = none
     }

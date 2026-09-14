@@ -1870,6 +1870,8 @@
     if handout-subslides == none {
       // Original behavior: render only the last subslide
       self.subslide = repeat
+      // Emit the waypoint link anchors here since they have nowhere else to go
+      self.rendered-subslides = (repeat,)
       let (conts, _, _, _, _) = _parse-content-into-results-and-repetitions(
         self: self,
         index: repeat,
@@ -1944,6 +1946,8 @@
       let is-last = pos == handout-subslide-indices.len() - 1
       let subslide-self = self
       subslide-self.subslide = i
+      // The subslides that actually reach the document, for `waypoint-anchor`.
+      subslide-self.rendered-subslides = handout-subslide-indices
       // Disable frozen states for handout multi-subslide rendering
       subslide-self.enable-frozen-states-and-counters = false
       // For non-first subslides, mark as a secondary handout page so that
