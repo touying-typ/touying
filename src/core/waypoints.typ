@@ -62,6 +62,18 @@
     type(lbl) == label,
     message: "waypoint: expected a label, got " + str(type(lbl)),
   )
+  // `start` is an absolute position (it acts like a `jump(start)` here), so
+  // anything below 1 has no meaning. A negative value used to be inserted into
+  // the waypoint map raw and then clamped, making `start: -1` and `start: -2`
+  // both behave as "from the first subslide" instead of counting back from the
+  // last one. Counting back is not definable here in any case: this waypoint is
+  // itself part of the flow that decides where the positions are.
+  assert(
+    type(start) != int or start >= 1,
+    message: "waypoint: `start` must be a subslide position >= 1, got "
+      + repr(start)
+      + ". Reference another waypoint by label to position this one relative to it.",
+  )
   let start-value = if type(start) == label {
     str(start)
   } else {

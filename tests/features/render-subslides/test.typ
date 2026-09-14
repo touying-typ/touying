@@ -60,6 +60,13 @@
 == Contiguous range steps through every member
 #touying-render(stages("range"), subslides: "2-4")
 
+== A negative int counts back from this render's last stage
+// `touying-render` resolves its spec after the parse pass has fixed the stage count
+// `stages` has four stages, so -1 is stage 4 and -2 is stage 3.
+#touying-render(stages("neg-last"), subslides: -1)
+
+#touying-render(stages("neg-second-last"), subslides: -2)
+
 == Negated range collapses its gap onto the next member
 #touying-render(stages("negated"), subslides: "!2-3")
 
@@ -100,6 +107,19 @@
   assert.eq(query(label("negated-2")).len(), 0)
   assert.eq(query(label("negated-3")).len(), 0)
   assert.eq(query(label("negated-4")).len(), 1)
+
+  // --- negative ints resolve against the render's own stage count (4):
+  // -1 is the last stage, -2 the second-to-last, each a single frozen
+  // stage just like the plain-int case above ---
+  assert.eq(query(label("neg-last-1")).len(), 0)
+  assert.eq(query(label("neg-last-2")).len(), 0)
+  assert.eq(query(label("neg-last-3")).len(), 0)
+  assert.eq(query(label("neg-last-4")).len(), 1)
+
+  assert.eq(query(label("neg-second-last-1")).len(), 0)
+  assert.eq(query(label("neg-second-last-2")).len(), 0)
+  assert.eq(query(label("neg-second-last-3")).len(), 1)
+  assert.eq(query(label("neg-second-last-4")).len(), 0)
 
   // --- bare "h": pins render-base (1 here, since base: auto and this
   // slide has no #pause of its own before the call) — single frame ---

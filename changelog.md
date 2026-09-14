@@ -85,6 +85,24 @@ Things to watch when upgrading: a `#pause` after `uncover`/`only`/`alternatives`
 
 - **fix!: `utils.handout-only` is removed** — use the top-level `#handout-only[..]`. It is a parser mark rather than a callback, so it can contain slide-breaking content. See [Handout Mode](https://touying-typ.github.io/docs/tutorials/dynamic/handout).
 
+- **fix!: negative subslide indices now panic on the animation functions** instead of silently doing the wrong thing.
+
+  A negative index means "counted back from the last subslide", which only has a stable meaning once the subslide count is fixed. `config-common(handout-subslides: -1)`, `#touying-recall(.., subslides: -1)` and `#touying-render(.., subslides: -1)` resolve their spec after parsing has settled the count, so they accept negatives.
+
+  `#only`, `#uncover`, `#effect`, `#alternatives`, `#alternatives-match`, `#alternatives-cases`, `#animate` and `#item-by-item` are parsed as part of the flow they sit in, and now a negative index is panicked on, not ignored. Use waypoints if you need such behaviour.
+
+  ```typst
+  // Before: rendered nothing, silently
+  #only(-1)[Last]
+  // After: a waypoint names the position and keeps naming it
+  A #pause B #waypoint(<end>) C
+  #only(get-last(<end>))[Last]
+  ```
+
+  `#waypoint(start:)` is restricted the same way and now requires a position `>= 1`. Reference another waypoint by label to position one relative to another.
+
+  Note: Negative numbers in a *string* spec are a different notation and are unaffected: `"-2"` is the open range "up to subslide 2", not "second from last".
+
 ### Migration Guide
 
 1. **Bump your compiler** to Typst 0.15.0 or newer.
@@ -269,6 +287,8 @@ Things to watch when upgrading: a `#pause` after `uncover`/`only`/`alternatives`
   Still open: an opaque cover that is not `hide`, such as `cover-with-rect`, together with `cover-hides-footnote: true` leaks the entry.
 
 - **fix: a footnote bibliography no longer prevents convergence** ([#395](https://github.com/touying-typ/touying/issues/395)) — fixed by the bibliography rework above. Verified across 30 size × breakable/detect-overflow combinations that previously warned *document did not converge within five attempts*. A CI step runs the regression with `--warnings promote`.
+
+- fix: `#uncover`, `#only` and the other fn-wrappers stay visible inside a `grid` or `table` that sits behind a `#pause`. A fn-wrapper decides its own visibility, so it escapes the surrounding pause zone, but a table-like container worked out whether it would be hidden *before* re-parsing its cells and then reused that stale answer, covering a wrapper that had already revealed itself. Nesting made no difference: a `grid` inside a `block` was affected too
 
 - fix: a bibliography no longer needs a preceding `pagebreak()` to render. `---` slide breaks inside mode-only content are handled as slide breaks, while `pagebreak()` stays a page break
 

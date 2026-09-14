@@ -3,7 +3,7 @@
 #import "tree.typ"
 #import "subslides.typ": (
   _is-placement, _parse-subslide-indices, animate-placements,
-  last-required-subslide,
+  assert-no-negative-subslides, last-required-subslide,
 )
 
 
@@ -254,6 +254,7 @@
 ///
 /// - is-method (bool): Whether the function is a method function. Default is `false`.
 #let effect(fn, visible-subslides, cont, is-method: false) = {
+  assert-no-negative-subslides("effect", visible-subslides)
   if visible-subslides == auto {
     // auto: resolve to current repetitions at placement time, no advance.
     touying-fn-wrapper(
@@ -329,6 +330,7 @@
 ///
 /// -> content
 #let uncover(visible-subslides, uncover-cont, cover-fn: auto) = {
+  assert-no-negative-subslides("uncover", visible-subslides)
   if visible-subslides == auto {
     // auto: resolve to current repetitions at placement time, no advance.
     touying-fn-wrapper(
@@ -399,6 +401,7 @@
 ///
 /// -> content
 #let only(visible-subslides, only-cont) = {
+  assert-no-negative-subslides("only", visible-subslides)
   if visible-subslides == auto {
     // auto: resolve to current repetitions at placement time, no advance.
     touying-fn-wrapper(
@@ -467,6 +470,7 @@
     subslides-contents.map(kv => kv.at(0))
   }
   for key in keys {
+    assert-no-negative-subslides("alternatives-match", key)
     if type(key) == label {
       panic(
         "alternatives-match: waypoint labels are not supported. Use alternatives() with the at: parameter instead.",
@@ -533,6 +537,8 @@
   at: none,
   ..args,
 ) = {
+  // no need to assert for `at` since it only allows waypoints.
+  assert-no-negative-subslides("alternatives: `start`", start)
   if at != none {
     // Waypoint-based alternatives: map each label to its corresponding body
     let bodies = args.pos()
@@ -691,6 +697,7 @@
 ) = {
   // Validate: alternatives-cases doesn't support waypoints, only numeric subslide specs
   for case in cases {
+    assert-no-negative-subslides("alternatives-cases", case)
     if type(case) == label {
       panic(
         "alternatives-cases: waypoint labels are not supported. Use alternatives() with the at: parameter instead.",
@@ -761,6 +768,7 @@
 ///
 /// -> content
 #let item-by-item(start: auto, cont) = {
+  assert-no-negative-subslides("item-by-item: `start`", start)
   if (
     type(start) == dictionary
       and start.at("kind", default: none)
@@ -939,6 +947,7 @@
 ///
 /// -> content
 #let item-by-item-fn(start: auto, fn, cont) = {
+  assert-no-negative-subslides("item-by-item-fn: `start`", start)
   if type(fn) == str {
     assert(
       fn in item-by-item-functions.keys(),
@@ -1269,6 +1278,10 @@
           + repr(kind),
       )
       let subslides = eff.at("subslides", default: "1-")
+      assert-no-negative-subslides(
+        "animate: effects.at(" + str(i) + ").subslides",
+        subslides,
+      )
       assert(
         subslides != auto,
         message: "animate: effects.at("

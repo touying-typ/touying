@@ -201,3 +201,48 @@
     )
   }
 }
+
+
+/// Reject negative subslide indices on the animation surfaces.
+///
+/// A negative index means "counted back from the last subslide", so it can
+/// only be resolved once the total number of subslides is already fixed.
+/// That is true for `handout-subslides`, `touying-recall` and
+/// `touying-render`, which resolve their spec after the parse pass has
+/// settled the count — those keep using `resolve-negative-subslides`.
+///
+/// It is *not* true for `uncover`, `only`, `effect`, `alternatives` and the
+/// rest of the animation surface. Those are parsed as part of the flow they
+/// sit in, so `-1` would resolve against a total that content *after* them is
+/// still free to change: adding one `#pause` further down the slide silently
+/// moves what `#only(-1)` refers to. Waypoints exist for that intent and are
+/// stable, so a negative index is rejected here rather than given an unstable
+/// meaning.
+///
+/// Only bare negative integers are rejected, including inside an array.
+/// Negative numbers in a *string* spec are a different notation entirely
+/// (`"-2"` is the open range "up to 2", not "second from last"), so strings
+/// pass through untouched.
+///
+/// - name (str): The calling function, used in the panic message.
+/// - spec (any): The visibility spec to check.
+#let assert-no-negative-subslides(name, spec) = {
+  let check(s) = {
+    if type(s) == int and s < 0 {
+      panic(
+        name
+          + ": negative subslide indices are not supported, got "
+          + repr(s)
+          + "The number of subslides is not yet fixed here — a later `#pause` "
+          + "would silently change what it refers to. Use a waypoint label "
+          + "(e.g. `<my-wp>` with `get-last(<my-wp>)`) to refer to a position "
+          + "that stays put, or an absolute index.",
+      )
+    } else if type(s) == array {
+      for item in s {
+        check(item)
+      }
+    }
+  }
+  check(spec)
+}
