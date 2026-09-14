@@ -4,7 +4,7 @@ sidebar_position: 3
 
 # 数学公式动画
 
-Touying 还提供了一个独特且十分有用的功能，即数学公式动画，它让你可以方便地在数学公式里使用 `pause` 和 `meanwhile`。
+数学公式和其他内容一样可以做动画：直接在 `$ .. $` 里写 `#pause`、`#meanwhile`、`#only`、`#uncover` 或 `#alternatives` 即可。在数学模式下，不带 `#` 的 `pause` 同样有效。
 
 ## 简单动画
 
@@ -29,25 +29,46 @@ Touying 还提供了一个独特且十分有用的功能，即数学公式动画
 ```
 
 
-我们使用 `touying-equation` 函数来实现在数学公式文本内部使用 `pause` 和 `meanwhile`（事实上，你也能用 `#pause` 或者 `#pause;`）。
-
 正如你料想的一样，数学公式会分步显示，这很适合给让演讲者演示自己的数学公式推理思路。
 
 
 ## 复杂动画
 
-事实上，我们也可以使用 `only`、`uncover` 和 `alternatives`：
+`only`、`uncover`、`effect` 和 `alternatives` 在公式内部同样可用：
 
 ```example
 >>> #import "@preview/touying:0.7.4": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
-#slide(repeat: 3, self => [
-  #let (uncover, only, alternatives) = utils.methods(self)
+#slide[
+  $
+    f(x) &= #pause x^2 + 2x + #uncover("3-")[1]  \
+         &= #pause (x + 1)^2  \
+  $
+]
+```
 
-  $
-    f(x) &= pause x^2 + 2x + uncover("3-", 1)  \
-         &= pause (x + 1)^2  \
-  $
-])
+## 在 `frac`、`mat` 等数学元素内部
+
+动画同样可以进入那些把内容存放在自己字段里的数学元素，例如 `frac`、`mat`、
+`vec`、`cases`、`binom`、`root`、`attach`、`accent` 以及各类括号函数：
+
+```example
+>>> #import "@preview/touying:0.7.4": *
+>>> #import themes.simple: *
+>>> #show: simple-theme
+#slide[
+  $ frac(a #pause + b, c) $
+
+  $ mat(a, #pause b; c, d) $
+
+  $ a^(2 #pause + 1) $
+]
+```
+
+唯一的例外是重音符号的 *accent* 参数（`accent(x, hat)` 中的 `hat`）：Typst 把它存
+为单个符号而非内容，因此无法就地做动画。请改为整体替换该元素：
+
+```typst
+#alternatives($accent(x, hat)$, $accent(x, tilde)$)
 ```

@@ -105,6 +105,8 @@ Things to watch when upgrading: a `#pause` after `uncover`/`only`/`alternatives`
 
 - **fix: overflow detection also checks width.** It only ever compared height, so an element too wide to fit, a fixed-width block level element did not trigger an overflow warning.
 
+- **feat!: `touying-equation` is finally deprecated**. All its uses are superseded through other means and the normal equation animations are even more capable now allowing you to write animation functions all math layout function like `mat` or `frac`. 
+
 - **feat!: `config-common(detect-overflow:)` defaults to `auto`** (was `true`). This is the opposite of what is set for `breakable` and in case both are `true` a warning is emitted that no overflow can be detected. 
 
 - **feat!: `#measure` shadows `std.measure` and also measures animated content properly** It still works as expected, needing a surrounding `layout` or `context`, and in addition to a `width` and `height` optionally supports an integer `subslide` and an integer `base` which set the subslide and subslide base to render the content at before it is measured.
@@ -145,6 +147,19 @@ Things to watch when upgrading: a `#pause` after `uncover`/`only`/`alternatives`
 - **feat: `themes.article`, a plain A4 article theme**
 
   The default target of `article-theme: auto`. It does not depend on the presentation framework, so it also works standalone for papers and reports. It is meant as an example; any article-like theme can be used instead.
+
+
+- **feat: animations work inside math elements** — `frac`, `mat`, `vec`, `cases`, `binom`, `root`, `attach`, `accent`, `cancel`, `lr` and the brace family.
+
+  `#pause`, `#uncover`, `#only` and `#alternatives` inside one of these used to abort the compile with `Unsupported mark`, claiming the mark was somewhere the walk could not enter. It was reachable all along: these elements keep their sub-content in named fields of their own (`frac`'s `num`/`denom`, `mat`'s `rows`, `attach`'s scripts) rather than in `body` or `children`, and the content walk only knew the latter two, so it treated them as leaves.
+
+  ```typst
+  $ frac(a #pause + b, c) $
+  $ mat(a, #pause b; c, d) $
+  $ a^(2 #pause + 1) $
+  ```
+
+  Styling fields are untouched by this: an animated `mat` keeps its `delim` and `row-gap`, an `accent` its `size` and `dotless`. The one thing that cannot animate is an accent's *accent* argument, which Typst stores as a single symbol rather than as content — swap the whole element with `#alternatives` instead.
 
 - **feat: mode-only content and mode labels**
 

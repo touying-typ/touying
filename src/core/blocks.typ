@@ -1,5 +1,6 @@
 #import "../utils.typ"
 #import "../extern.typ"
+#import "tree.typ"
 
 /// ------------------------------------------------
 /// Slide block functions via metadata markers
@@ -93,24 +94,31 @@
   supplement: auto,
   scope: (:),
   body,
-) = [#metadata((
-  kind: "touying-equation",
-  block: block,
-  numbering: numbering,
-  supplement: supplement,
-  scope: scope,
-  body: {
-    if type(body) == function {
-      body
-    } else if type(body) == str {
-      body
-    } else if type(body) == content and body.has("text") {
-      body.text
-    } else {
-      panic("Unsupported type: " + str(type(body)))
-    }
-  },
-))<touying-temporary-mark>]
+) = [#tree._deprecation-warning(
+    "touying-equation",
+    "0.9.0",
+    extra: " Write the equation directly instead: `$ f(x) = #pause x^2 $`. "
+      + "Plain math animates everywhere now, including inside `frac`, `mat`, "
+      + "`attach` and the other math elements, which this function never "
+      + "supported.",
+  )#metadata((
+    kind: "touying-equation",
+    block: block,
+    numbering: numbering,
+    supplement: supplement,
+    scope: scope,
+    body: {
+      if type(body) == function {
+        body
+      } else if type(body) == str {
+        body
+      } else if type(body) == content and body.has("text") {
+        body.text
+      } else {
+        panic("Unsupported type: " + str(type(body)))
+      }
+    },
+  ))<touying-temporary-mark>]
 
 
 /// Touying can integrate with `mitex` to display math equations.

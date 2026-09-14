@@ -313,7 +313,7 @@ Explicit phase.
 #uncover(<dup>)[Second use — same label, no extra pause.]
 
 // -----------------------------------------------
-// Test 19: Waypoints with touying-equation
+// Test 19: Waypoints with an animated equation
 // -----------------------------------------------
 
 == Equation with Waypoints
@@ -657,14 +657,14 @@ After the group.
 
 
 // -----------------------------------------------
-// Test 37: touying-equation then waypoint
+// Test 37: equation block then waypoint
 // -----------------------------------------------
 
 == Equation Block then Waypoint
 
 Before equation.
 
-#touying-equation(`f(x) = pause x^2`)
+$ f(x) = pause x^2 $
 
 #waypoint(<after-eq-block>)
 
@@ -696,17 +696,15 @@ After raw text via waypoint.
 
 
 // -----------------------------------------------
-// Test 39: touying-equation with 2 pauses then waypoint + from-wp
+// Test 39: equation with 2 pauses then waypoint + from-wp
 // -----------------------------------------------
 
 == Multi-pause Equation then Waypoint
 
-#touying-equation(
-  `
-  f(x) &= pause x^2 + 2x + 1 \
-       &= pause (x + 1)^2
-`,
-)
+$
+  f(x) & = pause x^2 + 2x + 1 \
+       & = pause (x + 1)^2
+$
 
 #waypoint(<after-multi-eq>)
 

@@ -227,7 +227,27 @@
   } else if f == terms.item {
     ("term",)
   } else if f == math.class {
-    ("class",)
+    ("class", "body")
+  } else if f == math.frac {
+    ("num", "denom")
+  } else if f == math.root {
+    // `radicand` is positional and `index` optional, so `sqrt(x)` is a `root`
+    // carrying only `radicand`. `call-with-fields` skips an absent positional
+    // field, which leaves the remaining ones in the right order either way.
+    ("index", "radicand")
+  } else if f == math.binom {
+    // `lower` is variadic (`binom(n, k, j)` is valid), hence the spread.
+    ("upper", "..lower")
+  } else if f == math.accent {
+    ("base", "accent")
+  } else if f == math.vec or f == math.cases {
+    ("..children",)
+  } else if f == math.attach {
+    // Only `base` is positional; every script is a named argument.
+    ("base",)
+  } else if f == math.mat {
+    // One positional argument per row, each an array of cells.
+    ("..rows",)
   } else if f == polygon {
     // `polygon.regular(..)` constructs a `polygon` with resolved vertices.
     ("..vertices",)
@@ -383,6 +403,41 @@
 //   Walking content
 // -------------------------------------
 
+// Math elements whose sub-content sits in named fields, mapped to those field
+// names in the order `children-of` returns them. Only fields actually present
+// are visited: `attach` carries just the scripts it was given. `mat`'s `rows`
+// and `cases`' delim-like fields hold arrays, which `children-of` flattens and
+// `rebuild` puts back with the same shape.
+//
+// `vec`, `cases`, `lr`, `underline` and friends are absent on purpose: their
+// content is already in `children` or `body`, which the generic shapes below
+// handle.
+// Keyed by `repr` of the element function: a dictionary needs string keys, and
+// `repr(math.frac)` is just `"frac"`.
+#let _math-multi-field = (
+  frac: ("num", "denom"),
+  mat: ("rows",),
+  root: ("index", "radicand"),
+  binom: ("upper", "lower"),
+  // for math.accent: Only `base`, the `accent` field is a single-codepoint symbol, not content
+  // to walk into, and rebuilding it from a walked value fails outright.
+  accent: ("base",),
+  attach: ("base", "t", "b", "tl", "tr", "bl", "br"),
+  underbrace: ("body", "annotation"),
+  overbrace: ("body", "annotation"),
+  underbracket: ("body", "annotation"),
+  overbracket: ("body", "annotation"),
+  class: ("body",),
+)
+
+
+/// The content-bearing fields `it` actually carries, in `children-of` order.
+///
+/// -> array
+#let _math-fields(it) = {
+  _math-multi-field.at(repr(it.func()), default: ()).filter(f => it.has(f))
+}
+
 /// How a piece of content holds its sub-content, as one of `"sequence"`,
 /// `"styled"`, `"metadata"`, `"figure"`, `"term"`, `"children"`, `"body"`,
 /// `"child"` or `"leaf"`.
@@ -407,6 +462,12 @@
     "figure"
   } else if f == terms.item {
     "term"
+  } else if repr(f) in _math-multi-field {
+    // Math elements hold their sub-content in named fields of their own
+    // (`frac`'s num/denom, `mat`'s rows, `attach`'s scripts) rather than in
+    // `body`/`children`, so without this they look like leaves and a `#pause`
+    // inside one is never reached by the walk.
+    "math"
   } else if it.has("children") {
     "children"
   } else if it.has("body") {
@@ -436,6 +497,14 @@
     if caption == none { (it.body,) } else { (it.body, caption) }
   } else if shape == "term" {
     (it.term, it.description)
+  } else if shape == "math" {
+    // `mat`'s `rows` is an array of arrays; flatten so every cell is visited
+    // like any other child. `rebuild` restores the shape from the element's
+    // own fields, so nothing here has to remember it.
+    _math-fields(it)
+      .map(f => it.at(f))
+      .map(v => if type(v) == array { v.flatten() } else { (v,) })
+      .flatten()
   } else if shape == "body" {
     (it.body,)
   } else {
@@ -469,6 +538,49 @@
       it,
       new-children.first(),
     )
+  } else if shape == "math" {
+    let fields = it.fields()
+    let lbl = fields.remove("label", default: none)
+    let rest = new-children
+    // Hand each field back exactly as many children as it gave up, so an
+    // array-valued field (`mat`'s rows) is rebuilt row by row.
+    for f in _math-fields(it) {
+      let old-value = it.at(f)
+      if type(old-value) == array {
+        let rebuilt = ()
+        for row in old-value {
+          if type(row) == array {
+            rebuilt.push(rest.slice(0, row.len()))
+            rest = rest.slice(row.len())
+          } else {
+            rebuilt.push(rest.first())
+            rest = rest.slice(1)
+          }
+        }
+        fields.insert(f, rebuilt)
+      } else {
+        fields.insert(f, rest.first())
+        rest = rest.slice(1)
+      }
+    }
+    // `root` is built directly: its `index` is positional *and* optional
+    // (`sqrt(x)` is a `root` carrying only `radicand`), while
+    // `call-with-fields` skips any positional field holding `none` — which
+    // would slide `radicand` into the `index` slot. `math.root(none, x)` is
+    // exactly `sqrt(x)`.
+    let result = if it.func() == math.root {
+      // `sqrt(x)` is a `root` with no `index` at all, and rebuilding it as
+      // `root(none, x)` renders identically but is no longer `==` the
+      // original, which `map-tree`'s identity short-circuit relies on.
+      if "index" in fields {
+        math.root(fields.index, fields.radicand)
+      } else {
+        math.sqrt(fields.radicand)
+      }
+    } else {
+      call-with-fields(it.func(), fields)
+    }
+    if lbl != none and labeled { [#result#lbl] } else { result }
   } else if shape == "figure" or shape == "term" {
     // Two fields to replace at once, which `reconstruct` cannot express.
     let fields = it.fields()

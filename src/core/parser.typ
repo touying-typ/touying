@@ -1773,8 +1773,15 @@
     // A table-like element holds its sub-content as several children rather
     // than one body, so it is parsed by spreading them and rebuilt from the
     // whole array. Everything else parses one body and rebuilds from one.
-    let spread = body-field == "children"
-    let body-content = if spread {
+    // "tree" defers to `tree.children-of`, which knows where each shape keeps
+    // its sub-content — including the math elements that hold theirs in named
+    // fields of their own (`frac`'s num/denom, `mat`'s rows, `attach`'s
+    // scripts). Like "children" it spreads, and `tree.rebuild` puts the shape
+    // back, so one mode covers all of them.
+    let spread = body-field in ("children", "tree")
+    let body-content = if body-field == "tree" {
+      tree.children-of(child)
+    } else if body-field == "children" {
       child.children
     } else if body-field == "body-or-none" {
       (child.at("body", default: none),)
@@ -1864,11 +1871,30 @@
     square,
     table.cell,
     grid.cell,
-    math.equation,
     heading,
     columns,
     place,
     rotate,
+    math.equation,
+    // Math containers whose sub-content is a plain body or children. The
+    // named-field ones (frac, mat, attach, ...) take the `tree.shape-of`
+    // branch above instead.
+    math.lr,
+    math.abs,
+    math.norm,
+    math.floor,
+    math.ceil,
+    math.round,
+    math.cancel,
+    math.scripts,
+    math.limits,
+    math.upright,
+    math.italic,
+    math.bold,
+    math.display,
+    math.inline,
+    math.script,
+    math.sscript,
   )
   let bodies = bodies.pos()
   let parsed-results = ()
@@ -3063,6 +3089,50 @@
             }
           })
         }
+      } else if (
+        type(child) == content
+          and (
+            tree.shape-of(child) == "math"
+              or child.func() in (math.vec, math.cases)
+          )
+      ) {
+        // Math elements keep their sub-content in named fields of their own,
+        // so `tree.children-of`/`tree.rebuild` do the taking apart and putting
+        // back. Without this a `#pause` inside `frac(..)` or `mat(..)` is
+        // never reached and reports itself as an unsupported mark.
+        //
+        // `vec`/`cases` hold theirs in `children`, which `tree` also handles;
+        // they come here rather than through the single-body allowlist below.
+        let (
+          reconstructed,
+          inner-max-repetitions,
+          next-last-subslide,
+          final-repetitions,
+          force-to-result,
+          inner-has-fn-wrapper,
+        ) = parse-and-reconstruct(
+          self,
+          child,
+          "tree",
+          repetitions,
+          last-subslide,
+          index,
+          need-cover,
+          (c, new) => tree.rebuild(c, new),
+        )
+        if (
+          force-to-result
+            or calc.min(repetitions, final-repetitions) <= index
+            or not need-cover
+        ) {
+          result.push(reconstructed)
+        } else {
+          hidden-parts.push(reconstructed)
+        }
+        repetitions = final-repetitions
+        max-repetitions = calc.max(max-repetitions, inner-max-repetitions)
+        last-subslide = calc.max(last-subslide, next-last-subslide)
+        has-fn-wrapper = has-fn-wrapper or inner-has-fn-wrapper
       } else if (
         type(child) == content and child.func() in reconstructable-functions
       ) {

@@ -5,7 +5,10 @@
   _is-placement, _parse-subslide-indices, animate-placements,
   assert-no-negative-subslides, last-required-subslide,
 )
-
+#import "blocks.typ": (
+  alert, speaker-note, touying-equation, touying-fn-wrapper-raw, touying-mitex,
+  touying-raw, touying-reducer,
+)
 
 
 /// ------------------------------------------------
@@ -43,10 +46,6 @@
   advances-flow: advances-flow,
 ))<touying-temporary-mark>]
 
-#import "blocks.typ": (
-  alert, speaker-note, touying-equation, touying-fn-wrapper-raw, touying-mitex,
-  touying-raw, touying-reducer,
-)
 /// Wrapper for a slide function to make it can receive `self` as an argument.
 ///
 /// Notice: This function is necessary for the slide function to work in Touying.
