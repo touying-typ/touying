@@ -52,9 +52,9 @@ Things to watch when upgrading:
 - `semi-transparent-cover` is deprecated in favor of `alpha-changing-cover` and `color-changing-cover`, and 
 - on a second screen the page background is confined to the slide half
 
-There is a migration guide below, and a separate one for theme authors at the end. Most documentation pages were rewritten or corrected.
+Most documentation pages were rewritten or corrected.
 
-For more information see the detailed [changelog](./changelog.md).
+For more information, a migration guide, and a separate one for theme authors, see the detailed [changelog](./changelog.md).
 
 ## Documents & Help
 
