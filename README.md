@@ -48,7 +48,8 @@ Internally, `src/core.typ` (6288 lines) was split into modules and the content h
 
 Things to watch when upgrading: 
 - a `#pause` after `uncover`/`only`/`alternatives` no longer skips the subslides they reserve (they wrongfully did so in v0.7.x), 
-- the footnote-bibliography config changed shape, - `semi-transparent-cover` is deprecated in favor of `alpha-changing-cover` and `color-changing-cover`, and 
+- the footnote-bibliography config changed shape, 
+- `semi-transparent-cover` is deprecated in favor of `alpha-changing-cover` and `color-changing-cover`, and 
 - on a second screen the page background is confined to the slide half
 
 There is a migration guide below, and a separate one for theme authors at the end. Most documentation pages were rewritten or corrected.
