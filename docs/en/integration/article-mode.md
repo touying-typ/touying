@@ -111,7 +111,7 @@ If the theme has no title block of its own, either give `config-article(title-bl
 
 ## Writing for both outputs
 
-Because you may want to write slightly different things for each ouput target you may select what goes in which via 3 functions. They are covered in full in [Output Modes](../tutorials/output-modes); in short:
+Because you may want to write slightly different things for each output target, you can select what goes in each with three functions. They are covered in full in [Output Modes](../tutorials/output-modes); in short:
 
 - `#article-only[..]` adds content that exists only in the article. Even slide-breaking elements like headings or "---" can be used in here.
 - `#slides-only[..]` shows content only when outputting slides.
@@ -219,9 +219,9 @@ Note that content inside `#article-only` or `#article-text` is always kept as wr
 
 ## Floating Blocks to the Side
 
-To improve reading flow touying can automatically wrap images to one side automatically via the `config-article(wrap: ..)`. 
+To improve reading flow, Touying can wrap images to one side via `config-article(wrap: ..)`.
 
-Figures and Tables that are not wrapped get centered at the bottom of the parent section. To place it as a floating figure use `article-only`/`article-text` instead. All other blocks (including images) are exlcuded from this and instead place in the text flow where the linearizer thinks they belong.
+Figures and tables that are not wrapped are centered at the bottom of the parent section. To place one in the text flow, use `article-only`/`article-text` instead. All other blocks (including images) remain where the linearizer places them in the text flow.
 
 ```typst
 #show: simple-theme.with(
@@ -235,7 +235,7 @@ Figures and Tables that are not wrapped get centered at the bottom of the parent
 )
 ```
 
-You may specifc width and align once globally and decide whether to use wrapping per element function `table`, `image`, `figure`, ...
+You may specify `width` and `align` once globally and decide whether to use wrapping per element function: `table`, `image`, `figure`, and so on.
 
 You may also override these global defaults per element function:
 

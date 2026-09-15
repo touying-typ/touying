@@ -148,7 +148,7 @@ Things to watch when upgrading: a `#pause` after `uncover`/`only`/`alternatives`
 
   Compiling with `config-common(export-mode: "article")`, or with `typst compile slides.typ --input export-mode=article`, renders the whole deck as a continuous document instead of pages: no slide breaks, animations collapsed to their final state, images optionally floated to the side. `export-mode` accepts `"slides"` (the default, where the `handout` flag decides), `"presentation"`, `"handout"` and `"article"`. `config-common(article-mode: true)` is the raw switch behind it.
 
-  Article mode linearizes a deck rather than carrying its layout over, so a composer's columns become flowing text and a floated element takes `config-article(wrap-width: ..)` of the text width, 50% by default, whatever width it was written at for the slide. See [Article Mode](https://touying-typ.github.io/docs/integration/article-mode).
+  Article mode linearizes a deck rather than carrying its layout over, so a composer's columns become flowing text and a floated element takes `config-article(wrap: (width: ..))` of the text width, 50% by default, whatever width it was written at for the slide. See [Article Mode](https://touying-typ.github.io/docs/integration/article-mode).
 
   ```typst
   #show: simple-theme.with(
@@ -157,7 +157,7 @@ Things to watch when upgrading: a `#pause` after `uncover`/`only`/`alternatives`
       article-theme: themes.article.article-theme.with(numbering: "1.1"),
     ),
     config-article(
-      wrap-images: true,
+      wrap: (image: true),
       available-fields: (title: "info.title"),
     ),
   )
@@ -384,7 +384,7 @@ Things to watch when upgrading: a `#pause` after `uncover`/`only`/`alternatives`
 
 Almost every page was touched. The largest items:
 
-- **docs: new [Article Mode](https://touying-typ.github.io/docs/integration/article-mode) tutorial** #TODO! As it is mainly meant for integrating other themes for article style documents it goes into integration.
+- **docs: new [Article Mode](https://touying-typ.github.io/docs/integration/article-mode) tutorial** under Integration, since its main use is pairing an article theme with a slide theme.
 
 - **docs: new [Speaker Notes](https://touying-typ.github.io/docs/tutorials/speaker-notes) tutorial** (English and Chinese), covering where notes attach, the second screen, presenter view, per-subslide notes, markdown notes for pdfpc, exporting, and styling the panel. 
 - docs: [Custom Themes](https://touying-typ.github.io/docs/themes/custom) gains sections on customizing the speaker-note panel, making a special slide's title discoverable with a hidden heading, and why helper components should use `touying-fn-wrapper-raw`. [Build Your Own Theme](https://touying-typ.github.io/docs/tutorials/build-your-own-theme) gains a matching "Customizing the Notes" section.
