@@ -200,6 +200,28 @@
 #let article-keep-layout(body) = block[#_linearize-mark(false)#body]
 
 
+/// A child as the article walk wants to see it: unstyled, and with a slide's
+/// metadata taken out of the block it rides in.
+///
+/// `touying-slide-wrapper` wraps its metadata in a block so that a label on the
+/// call (`#slide[..]<intro>`) has an element of its own rather than colliding
+/// with `<touying-temporary-mark>`. Every `is-kind(.., "touying-slide-wrapper")`
+/// test here predates that block and expects the bare node.
+///
+/// - it (any): The child.
+///
+/// -> any
+#let _core-of(it) = {
+  let core = tree.unstyled(it)
+  if (
+    type(core) == content
+      and tree.is-kind(core.at("body", default: none), "touying-slide-wrapper")
+  ) {
+    return core.body
+  }
+  core
+}
+
 /// Whether the article walker has to see a child on its own.
 ///
 /// Everything between two such children is summed back into a single run
@@ -210,7 +232,7 @@
 ///
 /// -> bool
 #let _is-structural(it) = {
-  let core = tree.unstyled(it)
+  let core = _core-of(it)
   if tree.is-metadata(core) { return true }
   if type(core) != content { return false }
   core.func() in (heading, pagebreak) or core in ([—], [---])
@@ -828,7 +850,7 @@
   for child in children {
     // The child may still be wrapped in the `styled` node a top-level
     // `#set`/`#show` put it in, so classify on what it really is.
-    let core = tree.unstyled(child)
+    let core = _core-of(child)
     let is-heading = type(core) == content and core.func() == heading
     if skipping-depth != none {
       if is-heading and core.depth <= skipping-depth {
@@ -864,7 +886,7 @@
   let out = ()
   for child in children {
     out.push(child)
-    let core = tree.unstyled(child)
+    let core = _core-of(child)
     if tree.is-kind(core, "touying-set-config") {
       // restyle first, so a top-level `#set` wrapping the config node still
       // wraps its body; flatten-children then groups the run under one shared
@@ -896,7 +918,7 @@
   let open-waypoint = none
 
   for child in children {
-    let core = tree.unstyled(child)
+    let core = _core-of(child)
     let is-slide-heading = (
       type(core) == content
         and core.func() == heading
@@ -957,7 +979,7 @@
   // whole-slide target."
   let whole-slide-labels = ()
   for child in children {
-    let core = tree.unstyled(child)
+    let core = _core-of(child)
     let lbl = if type(core) == content and core.func() == heading {
       core.at("label", default: none)
     } else if tree.is-kind(core, "touying-slide-wrapper") {
@@ -1166,7 +1188,7 @@
       // A top-level `#set`/`#show` leaves every child wrapped in a `styled`
       // node, so classify on `core` and put the styles back with `_restyle`
       // around anything pulled out of a mark's payload.
-      let core = tree.unstyled(child)
+      let core = _core-of(child)
       let is-section-heading = type(core) == content and core.func() == heading
       let starts-region = _starts-region(core, slide-level)
       if tree.is-kind(core, "touying-article-text") {
@@ -1290,7 +1312,7 @@
   for child in children {
     // Same as the simple path above: classify on `core`, re-style anything
     // pulled out of a mark's payload.
-    let core = tree.unstyled(child)
+    let core = _core-of(child)
     let is-section-heading = type(core) == content and core.func() == heading
     let starts-region = _starts-region(core, slide-level)
     if (

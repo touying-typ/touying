@@ -217,7 +217,7 @@
 ///
 /// - default-frozen-counters (array): The default frozen counters for the frozen states and counters. The default value is `(counter(math.equation), counter(figure.where(kind: table)), counter(figure.where(kind: image)))`.
 ///
-/// - label-only-on-last-subslide (array): We only label some contents in the last subslide, which is useful for ref equations, figures, footnotes, and theorems with multiple subslides. Default is `(figure, math.equation, footnote)`.
+/// - label-only-on-last-subslide (array): Element functions whose label is attached only on a slide's last subslide. A slide body is parsed once per subslide, so without this a labelled element emits its label on every rendered page and `#ref` to it becomes ambiguous. Useful for referencing equations, figures, footnotes, code blocks and theorems that span several subslides. Default is `(figure, math.equation, heading, footnote)`. Wrap a figure around other content to also get the effect. (see https://typst.app/docs/reference/model/ref/ on why)
 ///
 /// - preamble (function): The function to run before each slide. Default is `none`.
 ///
@@ -816,7 +816,12 @@
     default-frozen-states: _default-frozen-states,
     frozen-counters: (),
     default-frozen-counters: _default-frozen-counters,
-    label-only-on-last-subslide: (figure, math.equation, heading, footnote),
+    label-only-on-last-subslide: (
+      figure,
+      math.equation,
+      heading,
+      footnote,
+    ),
     preamble: none,
     default-preamble: _default-preamble,
     slide-preamble: none,

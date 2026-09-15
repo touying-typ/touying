@@ -61,12 +61,11 @@
 /// - fn (function): The function that will be called with an argument `self` like `self => { .. }`.
 ///
 /// -> content
-#let touying-slide-wrapper(fn) = [#metadata((
+#let touying-slide-wrapper(fn) = block[#metadata((
   kind: "touying-slide-wrapper",
   fn: fn,
 ))<touying-temporary-mark>]
-
-
+//wrapping in a block to allow user labels to attach
 
 
 /// Display content only in handout mode. (not presentation)

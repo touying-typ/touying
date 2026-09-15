@@ -243,13 +243,38 @@
 // - body (content): The slide content to render
 //
 // -> content
+/// Take a `touying-slide-wrapper` out of the block it is emitted in.
+///
+/// The block exists so that a label written on the call (`#slide[..]<intro>`)
+/// has somewhere to live: Typst allows one label per element, so a label on the
+/// metadata node itself would collide with `<touying-temporary-mark>`. Returns
+/// the node unchanged when it is not such a wrapper.
+///
+/// - it (any): The candidate wrapper.
+///
+/// -> any
+#let _unwrap-slide-wrapper(it) = {
+  if (
+    type(it) != content
+      or it.func() != block
+      or not tree.is-kind(it.at("body", default: none), "touying-slide-wrapper")
+  ) {
+    return it
+  }
+  // A label written on the call lives on the block; move it onto the metadata,
+  // which is what every dispatch site reads.
+  let lbl = it.at("label", default: none)
+  if lbl == none { it.body } else { [#metadata(it.body.value)#lbl] }
+}
+
+
 #let _call-slide-fn(self, fn, body) = {
   let slide-fn = if fn == auto {
     _get-slide-fn(self)
   } else {
     fn
   }
-  let slide-wrapper = slide-fn(body)
+  let slide-wrapper = _unwrap-slide-wrapper(slide-fn(body))
   assert(
     tree.is-kind(slide-wrapper, "touying-slide-wrapper"),
     message: "you must use `touying-slide-wrapper` in your slide function",
@@ -336,7 +361,7 @@
     if tree.is-sequence(child) {
       return child.children.map(_expand-child)
     }
-    child
+    _unwrap-slide-wrapper(child)
   }
   children = children.map(_expand-child).flatten()
 
@@ -766,7 +791,10 @@
             while last-wrapper-info.len() > 0 {
               let _ = last-wrapper-info.pop()
             }
-            last-wrapper-info.push((wrapper.value.fn, heading-slide-self))
+            last-wrapper-info.push((
+              _unwrap-slide-wrapper(wrapper).value.fn,
+              heading-slide-self,
+            ))
           }
         } else if (
           child.depth == 2
@@ -792,7 +820,10 @@
             while last-wrapper-info.len() > 0 {
               let _ = last-wrapper-info.pop()
             }
-            last-wrapper-info.push((wrapper.value.fn, heading-slide-self))
+            last-wrapper-info.push((
+              _unwrap-slide-wrapper(wrapper).value.fn,
+              heading-slide-self,
+            ))
           }
         } else if (
           child.depth == 3
@@ -818,7 +849,10 @@
             while last-wrapper-info.len() > 0 {
               let _ = last-wrapper-info.pop()
             }
-            last-wrapper-info.push((wrapper.value.fn, heading-slide-self))
+            last-wrapper-info.push((
+              _unwrap-slide-wrapper(wrapper).value.fn,
+              heading-slide-self,
+            ))
           }
         } else if (
           child.depth == 4
@@ -844,7 +878,10 @@
             while last-wrapper-info.len() > 0 {
               let _ = last-wrapper-info.pop()
             }
-            last-wrapper-info.push((wrapper.value.fn, heading-slide-self))
+            last-wrapper-info.push((
+              _unwrap-slide-wrapper(wrapper).value.fn,
+              heading-slide-self,
+            ))
           }
         }
       }
@@ -2171,7 +2208,7 @@
       composer: composer,
       ..bodies,
     )
-    (wrapper.value.fn)(self)
+    (_unwrap-slide-wrapper(wrapper).value.fn)(self)
   } else {
     touying-slide(
       self: self,

@@ -202,7 +202,7 @@
       width: (1.0 / 0.8) * 40%,
       touying-recall(<my-img>),
     )]]
-    We can even recall a table that is defined in a later slide at one of its subslides.
+    We can even recall content that is defined in a later slide at one of its subslides. This does not work for slides though.
     #touying-recall(<my-table>, subslides: 1)
   ]
 

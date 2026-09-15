@@ -70,3 +70,26 @@ The one exception is an accent's *accent* argument (the `hat` in `accent(x, hat)
 ```typst
 #alternatives($accent(x, hat)$, $accent(x, tilde)$)
 ```
+
+## Referencing animated content
+
+Typst only lets you write `@label` for a few element kinds — figures, equations,
+headings and footnotes. Everything else has to be wrapped in a figure. So to reference an animated code block or a reducer graphic, wrap it:
+
+```typst
+#figure(
+  touying-raw(```py
+x = 1
+# pause
+y = 2
+```),
+)<my-code>
+
+See @my-code.
+```
+
+The figure gives you a caption and a `kind` as well. A label attached directly to the raw block
+still works for `#link(<my-code>)[jump there]`, which needs no figure.
+
+A label on animated content should not be repeated on each subslide. `config-common(label-only-on-last-subslide: ..)` controls which
+element functions' labels are deduplicated.

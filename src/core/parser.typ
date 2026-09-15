@@ -1016,6 +1016,28 @@
 }
 
 
+/// Whether a label should be attached on this subslide.
+///
+/// A slide body is parsed once per subslide, so content carrying a user label
+/// would otherwise emit it on every rendered page, making `#ref` to it
+/// ambiguous. `label-only-on-last-subslide` names the element functions that
+/// hold their label back until the slide's last subslide.
+///
+/// - self (dictionary): The presentation context.
+/// - func (function): The element function the label would land on.
+///
+/// -> bool
+#let label-on-this-subslide(self, func) = {
+  not (
+    "repeat" in self
+      and "subslide" in self
+      and "label-only-on-last-subslide" in self
+      and func in self.label-only-on-last-subslide
+      and self.subslide != self.repeat
+  )
+}
+
+
 /// Parse touying equation content and extract animation repetitions
 ///
 /// Processes equation content with pause and meanwhile markers, returning
@@ -1111,7 +1133,9 @@
     ),
   )
   if (
-    eqt-metadata.has("label") and eqt-metadata.label != <touying-temporary-mark>
+    eqt-metadata.has("label")
+      and eqt-metadata.label != <touying-temporary-mark>
+      and label-on-this-subslide(self, math.equation)
   ) {
     equation = [#equation#eqt-metadata.label]
   }
@@ -1201,7 +1225,9 @@
     result.sum(default: ""),
   )
   if (
-    eqt-metadata.has("label") and eqt-metadata.label != <touying-temporary-mark>
+    eqt-metadata.has("label")
+      and eqt-metadata.label != <touying-temporary-mark>
+      and label-on-this-subslide(self, math.equation)
   ) {
     equation = [#equation#eqt-metadata.label]
   }
@@ -1301,7 +1327,9 @@
   }
   let raw-block = raw(result-text, lang: raw-data.lang, block: raw-data.block)
   if (
-    raw-metadata.has("label") and raw-metadata.label != <touying-temporary-mark>
+    raw-metadata.has("label")
+      and raw-metadata.label != <touying-temporary-mark>
+      and label-on-this-subslide(self, raw)
   ) {
     raw-block = [#raw-block#raw-metadata.label]
   }
@@ -1472,15 +1500,7 @@
   show-delayed-wrapper: false,
   ..bodies,
 ) = {
-  let labeled(func) = {
-    return not (
-      "repeat" in self
-        and "subslide" in self
-        and "label-only-on-last-subslide" in self
-        and func in self.label-only-on-last-subslide
-        and self.subslide != self.repeat
-    )
-  }
+  let labeled(func) = label-on-this-subslide(self, func)
   // Determine the "real" recall-relevant label for `child`, if any, and —
   // only on the slide's own last subslide, to avoid attaching the same
   // real label more than once across multiple rendered pages — emit an
@@ -2223,15 +2243,19 @@
           // subslide, so the label always points at the reducer's true
           // final state, and so a multi-subslide slide doesn't attach the
           // same real label more than once across multiple rendered pages.
+          // Either spelling: the `label:` argument, or a label written outside
+          // the call (`#touying-reducer(..)<x>`), which lands on this metadata
+          // node and would otherwise be dropped. The argument wins when both
+          // are given.
+          let outer-label = child.at("label", default: none)
           let real-label = child.value.at("label", default: none)
+          if real-label == none and outer-label != <touying-temporary-mark> {
+            real-label = outer-label
+          }
           let cont = if (
             cont != none
               and real-label != none
-              and self.at("subslide", default: none)
-                == self.at(
-                  "repeat",
-                  default: none,
-                )
+              and label-on-this-subslide(self, tree.typst-builtin-context)
           ) {
             [#block(cont)#real-label]
           } else {

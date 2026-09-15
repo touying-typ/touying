@@ -34,6 +34,7 @@
 #let typst-builtin-styled = text(red)[].func()
 #let typst-builtin-space = [ ].func()
 #let typst-builtin-math-symbol = ($x$).body.func()
+#let typst-builtin-context = (context []).func()
 
 /// Determine if a content is a sequence (i.e. created by concatenating content with `+` or implicit adjacency).
 ///
