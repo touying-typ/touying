@@ -815,10 +815,12 @@
   inline: false,
 ) = (
   context {
+    // Keep every heading, even hidden or unoutlined ones: they are needed as
+    // boundaries so that their slides are not merged into the previous heading.
     let headings = query(
       heading.where(level: 1).or(heading.where(level: 2)),
-    ).filter(it => it.outlined)
-    let sections = headings.filter(it => it.level == 1)
+    )
+    let sections = headings.filter(it => it.level == 1 and it.outlined)
     if sections == () {
       return
     }
@@ -829,9 +831,18 @@
         and it.location().page() >= first-page
     ))
     let current-page = here().page()
-    let current-index = (
+    // Last section heading (discarded or not) on or before the current page.
+    let current-section = headings
+      .filter(it => it.level == 1 and it.location().page() <= current-page)
+      .at(-1, default: none)
+    let current-index = if (
+      current-section != none and not current-section.outlined
+    ) {
+      // Inside a discarded section: no column is the current one.
+      none
+    } else {
       sections.filter(it => it.location().page() <= current-page).len() - 1
-    )
+    }
     let cols = ()
     let col = ()
     for (hd, next-hd) in headings.zip(headings.slice(1) + (none,)) {
@@ -839,6 +850,18 @@
         next-hd.location().page()
       } else {
         calc.inf
+      }
+      // Discard hidden/unoutlined headings.
+      // The subsections are still shown since that is how typst outline works.
+      if not hd.outlined {
+        // A hidden *section* still starts a new column, so that its surviving
+        // subsections are not drawn under the previous section's heading.
+        if hd.level == 1 and col != () {
+          cols.push(align(left, col.sum()))
+          col = ()
+        }
+        slides = slides.filter(it => it.location().page() >= next-page)
+        continue
       }
       if hd.level == 1 {
         if col != () {
@@ -913,7 +936,9 @@
       cols.push(align(left, col.sum()))
       col = ()
     }
-    if current-index < 0 or current-index >= cols.len() {
+    if current-index == none {
+      cols = cols.map(body => text(fill: utils.update-alpha(fill, alpha), body))
+    } else if current-index < 0 or current-index >= cols.len() {
       cols = cols.map(body => text(fill: fill, body))
     } else {
       cols = cols
