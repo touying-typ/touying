@@ -149,9 +149,9 @@
   assert.eq(measure(wp-body, subslide: <second>).height, 40pt)
   assert.eq(measure(wp-body, subslide: get-last(<second>)).height, 40pt)
 
-  // Waypoint advances need a second measurement after the provisional map is
-  // available. Otherwise the following pause is counted one stage too early
-  // and `auto` stops at the middle state.
+  // Waypoint advances must be measured against a provisional map. Otherwise
+  // the following pause is counted one stage too early and `auto` stops at the
+  // middle state.
   let advancing-wp-body = [
     #only("h")[#block(height: 10pt)[first]]
     #waypoint(<advancing-measure-waypoint>)
