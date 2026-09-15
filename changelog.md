@@ -111,6 +111,23 @@ Things to watch when upgrading: a `#pause` after `uncover`/`only`/`alternatives`
 
 - **feat!: `#measure` shadows `std.measure` and also measures animated content properly** It still works as expected, needing a surrounding `layout` or `context`, and in addition to a `width` and `height` optionally supports an integer `subslide` and an integer `base` which set the subslide and subslide base to render the content at before it is measured.
 
+- **feat!: reducer bindings are lambdas taking the package module**, instead of a path spelled as an array of strings with optional trailing `arguments(..)`.
+
+  ```typst
+  // Before
+  #let touying-reducer-bindings = (
+    reduce: ("canvas",),
+    cover: ("draw", "hide", arguments(bounds: true)),
+  )
+  // After
+  #let touying-reducer-bindings = (
+    reduce: module => module.canvas,
+    cover: module => module.draw.hide.with(bounds: true),
+  )
+  ```
+
+  The old no longer works and this is also the shape `touying-reduce` now expects.
+
 ### Migration Guide
 
 1. **Bump your compiler** to Typst 0.15.0 or newer.
@@ -328,6 +345,20 @@ Things to watch when upgrading: a `#pause` after `uncover`/`only`/`alternatives`
 - fix: cover spacing ([#387](https://github.com/touying-typ/touying/issues/387), [#405](https://github.com/touying-typ/touying/pull/405))
 
 - fix: reducer elements are covered individually rather than as one block ([#371](https://github.com/touying-typ/touying/issues/371), [#381](https://github.com/touying-typ/touying/pull/381))
+
+- **fix: `touying-reducer` hands `reduce` and `cover` the element shape the package itself uses**, so a package whose drawing function takes `..args` rather than one array now binds without any adapter.
+
+  A package's element is whatever its element constructor returns, and that differs: a CeTZ `rect(..)` and an alchemist `molecule(..)` are each a one-element array, while a fletcher `node(..)` is content and a lilaq `plot(..)` is a dictionary. Writing the body as a code block (`#cetz-canvas({ rect(..); circle(..) })`) makes Typst join those arrays into one, so the reducer received the elements already unpacked and had to guess how to put one back together when covering it. It always wrapped, which is right for CeTZ and alchemist and wrong for everything else.
+
+  The two call styles are distinguishable where the arguments arrive, before any flattening: a code block is a single array-typed positional argument, while elements passed directly are separate arguments. The reducer now records that per item and gives each side back what it started with — `cover` gets a whole element, and `reduce` gets one array for a block body or spread arguments for a variadic one such as `lq.diagram(..plots)`.
+
+  ```typst
+  // lilaq, whose plots are dictionaries and whose diagram takes `..plots`
+  #let lq-diagram = touying-reducer.with(
+    reduce: lq.diagram,
+    cover: plot => plot + (x: (), y: (), label: none),
+  )
+  ```
 
 - fix: callback-style usage works again ([#374](https://github.com/touying-typ/touying/issues/374), [#380](https://github.com/touying-typ/touying/pull/380))
 

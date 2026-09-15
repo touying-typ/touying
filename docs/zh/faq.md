@@ -730,43 +730,7 @@ Slide with a custom header and footer.
 
 ## config-common 配置参考
 
-### config-common 有哪些常用配置项？
-
-`config-common` 是 Touying 的核心配置函数，以下是常用配置项及其默认值和说明：
-
-| 配置项 | 默认值 | 说明 |
-|--------|--------|------|
-| `handout` | `false` | 讲义模式，禁用动画 |
-| `slide-level` | `2` | 控制哪个标题级别创建新幻灯片 |
-| `frozen-counters` | `()` | 冻结计数器列表 |
-| `show-strong-with-alert` | `true` | 粗体文本使用 alert 样式 |
-| `show-notes-on-second-screen` | `none` | 第二屏幕演讲者备注（`none`/`top`/`bottom`/`left`/`right`） |
-| `horizontal-line-to-pagebreak` | `true` | 将 `---` 水平线转换为分页符 |
-| `nontight-list-enum-and-terms` | `false` | 列表项间距控制 |
-| `show-hide-set-list-marker-none` | `true` | `#pause` 后隐藏列表标记 |
-| `show-bibliography-as-footnote` | `false` | 参考文献显示为脚注 |
-| `scale-list-items` | `none` | 缩放列表项大小 |
-| `new-section-slide-fn` | `none` | 章节幻灯片函数 |
-| `freeze-slide-counter` | `false` | 冻结幻灯片计数器 |
-| `enable-pdfpc` | `true` | 启用 pdfpc 支持 |
-| `breakable` | `true` | 是否允许幻灯片内容溢出到下一页 |
-| `clip` | `false` | 是否裁剪溢出内容（仅在 `breakable: false` 时生效） |
-| `detect-overflow` | `true` | 是否检测溢出并报错（仅在 `breakable: false` 时生效） |
-| `handout-subslides` | `none` | 讲义模式下保留哪些子幻灯片（语法同 `visible-subslides`），`none` 表示只保留最后一张 |
-| `default-composer` | `auto` | `slide` 的 `composer` 为 `auto` 时使用的默认组合器 |
-| `show-only-notes` | `false` | 以演讲者备注为页面主体，幻灯片缩略显示在角落 |
-| `notes-fn` | `touying-notes` | 渲染演讲者备注面板的函数（第二屏幕与 `show-only-notes` 共用） |
-| `footnote-style` | `auto` | 自定义脚注标记的显示方式，相当于 `show footnote: ..` |
-| `cover-hides-footnote` | `auto` | `cover` 方法是否真正隐藏内容，决定被 `#pause` 遮住的脚注如何处理 |
-| `export-mode` | `"slides"` | 导出模式：`slides`/`presentation`/`handout`/`article` |
-| `article-mode` | `false` | 文章模式；一般请改用 `export-mode` |
-| `article-theme` | `auto` | 文章模式使用的主题，`auto` 表示 Touying 内置的 article 主题 |
-
-`export-mode` 也可以从命令行设置，无需修改源文件：
-
-```bash
-typst compile slides.typ --input export-mode=article
-```
+`config-common` 是 Touying 的核心配置函数，常用配置项及其默认值参见[全局设置](./tutorials/settings.md)中的配置函数一览。
 
 ### 如何防止幻灯片内容溢出到下一页？
 
@@ -877,26 +841,6 @@ Content here.
 == Second Slide
 
 Created by `---`.
-```
-
-### 如何让列表项在 #pause 后隐藏标记符号？
-
-`show-hide-set-list-marker-none: true` 会在 `#pause` 后隐藏列表标记：
-
-```typst
-#show: simple-theme.with(
-  config-common(show-hide-set-list-marker-none: true),
-)
-```
-
-### 如何缩放列表项大小？
-
-使用 `scale-list-items: 0.8` 将列表项缩小到原始大小的 80%：
-
-```typst
-#show: simple-theme.with(
-  config-common(scale-list-items: 0.8),
-)
 ```
 
 ---

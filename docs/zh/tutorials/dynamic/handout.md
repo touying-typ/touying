@@ -40,21 +40,7 @@ Third item.
 
 默认情况下，讲义模式只保留每张幻灯片的**最后一个**子幻灯片。
 
-## 使用 `export-mode` 切换
-
-`config-common(handout: true)` 需要修改源文件。如果你不想改动源文件，可以改用 `export-mode`：
-
-```typst
-config-common(export-mode: "handout")
-```
-
-它还可以直接在命令行上传入，这样导出讲义时完全不需要改动源文件：
-
-```bash
-typst compile slides.typ --input export-mode=handout handout.pdf
-```
-
-`export-mode` 的取值为 `"slides"`（默认）、`"presentation"`、`"handout"` 和 `"article"`。`"handout"` 会设置 `handout: true`，`"presentation"` 会设置 `handout: false`，而 `"article"` 则会进入 article（文章）模式，把幻灯片渲染成连续的文章。
+也可以改用 `config-common(export-mode: "handout")` 来设置讲义模式，这样还可以在命令行上通过 `--input export-mode=handout` 直接指定，完全不需要修改源文件。参见[输出模式](../output-modes)。
 
 ## 选择保留哪个子幻灯片
 
@@ -83,23 +69,7 @@ This slide is included when `handout: true` but invisible otherwise.
 
 ## 仅在某一模式下显示的内容
 
-`<touying:handout>` 标签作用于整张幻灯片。如果只想控制局部内容出现在哪种模式下，可以使用下面三个行内标记：
-
-| 标记 | 出现在 |
-|---|---|
-| `#handout-only[..]` | 仅讲义模式 |
-| `#presentation-only[..]` | 仅演示模式（即 `handout: false`） |
-| `#slides-only[..]` | 讲义模式和演示模式，但不出现在 article 模式 |
-
-```typst
-#handout-only[这段文字只在讲义中出现。]
-
-#presentation-only[这段文字只在演示时出现。]
-
-#slides-only[_现场演示——请参见代码仓库。_]
-```
-
-被隐藏时内容会被完全移除，不会保留空间。这三个标记的正文自身也可以包含分页元素（标题、`#pagebreak()`、单独一行的 `---`），在该内容确实可见的模式下，它们的行为与没有这层包装时完全一致。在 article 模式下，这三个标记的内容都会被整体去掉。
+`#handout-only[..]`、`#presentation-only[..]`、`#slides-only[..]` 和 `#article-only[..]` 可以让一段内容只出现在适合它的模式里。详见[输出模式](../output-modes)。
 
 ## 工作流建议
 

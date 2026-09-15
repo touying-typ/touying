@@ -115,6 +115,23 @@ Things to watch when upgrading: a `#pause` after `uncover`/`only`/`alternatives`
 
 - **feat!: `#measure` shadows `std.measure` and also measures animated content properly** It still works as expected, needing a surrounding `layout` or `context`, and in addition to a `width` and `height` optionally supports an integer `subslide` and an integer `base` which set the subslide and subslide base to render the content at before it is measured.
 
+- **feat!: reducer bindings are lambdas taking the package module**, instead of a path spelled as an array of strings with optional trailing `arguments(..)`.
+
+  ```typst
+  // Before
+  #let touying-reducer-bindings = (
+    reduce: ("canvas",),
+    cover: ("draw", "hide", arguments(bounds: true)),
+  )
+  // After
+  #let touying-reducer-bindings = (
+    reduce: module => module.canvas,
+    cover: module => module.draw.hide.with(bounds: true),
+  )
+  ```
+
+  The old no longer works and this is also the shape `touying-reduce` now expects.
+
 ### Migration Guide
 
 1. **Bump your compiler** to Typst 0.15.0 or newer.
@@ -313,6 +330,10 @@ Things to watch when upgrading: a `#pause` after `uncover`/`only`/`alternatives`
 
   Still open: an opaque cover that is not `hide`, such as `cover-with-rect`, together with `cover-hides-footnote: true` leaks the entry.
 
+- **fix: a note-style citation after a `#pause` no longer leaks its footnote onto the earlier subslides** ([#414](https://github.com/touying-typ/touying/pull/414), thanks @SchrodingerBlume)
+
+  [#399](https://github.com/touying-typ/touying/pull/399) fixed a literal `#footnote` shown before its `#pause`, but a citation in a CSL note style such as `chicago-notes` still leaked. Such a citation only becomes a footnote during the layout pass, after the body scan `cover-hides-footnote` relies on, so `hide()` suppressed the marker while the entry it had queued still rendered at the bottom of the page. `cite` and `ref` now follow the same three-way branch as `footnote`: under a genuinely hiding cover the citation is not rendered at all, so no entry is created, and it appears normally once revealed. This also fixes packages that emit footnotes through a `show std.cite` rule.
+
 - **fix: a footnote bibliography no longer prevents convergence** ([#395](https://github.com/touying-typ/touying/issues/395)) — fixed by the bibliography rework above. Verified across 30 size × breakable/detect-overflow combinations that previously warned *document did not converge within five attempts*. A CI step runs the regression with `--warnings promote`.
 
 - fix: `#uncover`, `#only` and the other fn-wrappers stay visible inside a `grid` or `table` that sits behind a `#pause`. A fn-wrapper decides its own visibility, so it escapes the surrounding pause zone, but a table-like container worked out whether it would be hidden *before* re-parsing its cells and then reused that stale answer, covering a wrapper that had already revealed itself. Nesting made no difference: a `grid` inside a `block` was affected too
@@ -328,6 +349,20 @@ Things to watch when upgrading: a `#pause` after `uncover`/`only`/`alternatives`
 - fix: cover spacing ([#387](https://github.com/touying-typ/touying/issues/387), [#405](https://github.com/touying-typ/touying/pull/405))
 
 - fix: reducer elements are covered individually rather than as one block ([#371](https://github.com/touying-typ/touying/issues/371), [#381](https://github.com/touying-typ/touying/pull/381))
+
+- **fix: `touying-reducer` hands `reduce` and `cover` the element shape the package itself uses**, so a package whose drawing function takes `..args` rather than one array now binds without any adapter.
+
+  A package's element is whatever its element constructor returns, and that differs: a CeTZ `rect(..)` and an alchemist `molecule(..)` are each a one-element array, while a fletcher `node(..)` is content and a lilaq `plot(..)` is a dictionary. Writing the body as a code block (`#cetz-canvas({ rect(..); circle(..) })`) makes Typst join those arrays into one, so the reducer received the elements already unpacked and had to guess how to put one back together when covering it. It always wrapped, which is right for CeTZ and alchemist and wrong for everything else.
+
+  The two call styles are distinguishable where the arguments arrive, before any flattening: a code block is a single array-typed positional argument, while elements passed directly are separate arguments. The reducer now records that per item and gives each side back what it started with — `cover` gets a whole element, and `reduce` gets one array for a block body or spread arguments for a variadic one such as `lq.diagram(..plots)`.
+
+  ```typst
+  // lilaq, whose plots are dictionaries and whose diagram takes `..plots`
+  #let lq-diagram = touying-reducer.with(
+    reduce: lq.diagram,
+    cover: plot => plot + (x: (), y: (), label: none),
+  )
+  ```
 
 - fix: callback-style usage works again ([#374](https://github.com/touying-typ/touying/issues/374), [#380](https://github.com/touying-typ/touying/pull/380))
 

@@ -152,20 +152,46 @@
 /// Adjacent metadata markers arrive as one sequence, so an implicit waypoint
 /// followed by a fn-wrapper would otherwise be a single argument.
 ///
+/// Returns `(items, from-array)` where `from-array` records, per item, whether
+/// it came out of an array-typed positional argument. That happens when the
+/// user writes the body as a code block (`#cetz-canvas({ rect(..); circle(..) })`)
+/// and the package's elements are themselves arrays: Typst joins `array[1] +
+/// array[1]` into one `array[2]`, so every item in it was a whole element in
+/// the package's own representation. Covering such an item has to hand it back
+/// as `(item,)`, or the package sees half an element -- `cetz.draw.hide` only
+/// hides an array, and alchemist's `hide` iterates its body expecting elements.
+/// Elements passed directly (`#lq-diagram(plot-a, pause, plot-b)`) are already
+/// whole and must stay bare.
+///
 /// - args (arguments): The reducer call's arguments.
 ///
-/// -> array
-#let _flatten-reducer-args(args) = {
+/// -> (array, array)
+#let _flatten-reducer-args-tagged(args) = {
   let flat = ()
-  for arg in args.flatten() {
-    if type(arg) == content and tree.is-sequence(arg) {
-      flat += arg.children
-    } else {
-      flat.push(arg)
+  let from-array = ()
+  for arg in args {
+    let nested = type(arg) == array
+    let items = if nested { arg.flatten() } else { (arg,) }
+    for item in items {
+      if type(item) == content and tree.is-sequence(item) {
+        for child in item.children {
+          flat.push(child)
+          from-array.push(nested)
+        }
+      } else {
+        flat.push(item)
+        from-array.push(nested)
+      }
     }
   }
-  flat
+  (flat, from-array)
 }
+
+/// The items of `_flatten-reducer-args-tagged`, for callers that only count
+/// repetitions and never cover anything.
+///
+/// -> array
+#let _flatten-reducer-args(args) = _flatten-reducer-args-tagged(args).first()
 
 
 /// Parse touying reducer content and extract animation repetitions
@@ -202,9 +228,15 @@
   // parse the content
   // Flatten content sequences so that e.g. uncover(<label>, body) which produces
   // [implicit-waypoint-metadata + fn-wrapper-metadata] is split into separate children.
-  let flat-args = _flatten-reducer-args(reducer.args)
+  let (flat-args, from-array) = _flatten-reducer-args-tagged(reducer.args)
+  // Covering hands the item back in the shape the package gave it: whole
+  // elements stay bare, items unpacked from a joined code block are re-wrapped.
+  // See `_flatten-reducer-args-tagged`.
+  let cover-item(i, item) = if from-array.at(i) { cover((item,)) } else {
+    cover(item)
+  }
   let result = ()
-  for child in flat-args {
+  for (child-index, child) in flat-args.enumerate() {
     if (
       type(child) == content
         and child.func() == metadata
@@ -309,7 +341,7 @@
         if repetitions <= index {
           result.push(child)
         } else {
-          let r = cover((child,))
+          let r = cover-item(child-index, child)
           if type(r) == array { result += r } else { result.push(r) }
         }
       }
@@ -317,7 +349,7 @@
       if repetitions <= index {
         result.push(child)
       } else {
-        let r = cover((child,))
+        let r = cover-item(child-index, child)
         if type(r) == array { result += r } else { result.push(r) }
       }
     }
@@ -346,10 +378,15 @@
         + ". Please report this at https://github.com/touying-typ/touying/issues",
     )
   }
-  let drawn = (reducer.reduce)(
-    ..reducer.kwargs,
-    result,
-  )
+  // Hand `reduce` back the shape the call site used: a body written as a code
+  // block (`#cetz-canvas({ .. })`) arrives as one array argument and is passed
+  // on as one array, while elements passed directly (`#lq-diagram(a, pause, b)`)
+  // are spread again, for a `reduce` like `lq.diagram` that takes `..plots`.
+  let drawn = if from-array.any(nested => nested) {
+    (reducer.reduce)(..reducer.kwargs, result)
+  } else {
+    (reducer.reduce)(..reducer.kwargs, ..result)
+  }
   // Article mode alone reads the mark, and it is the only mode where the
   // wrapper would not have to be taken out again afterwards.
   parsed-results.push(if self.at("article-mode", default: false) {

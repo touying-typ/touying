@@ -287,7 +287,7 @@
 /// ```
 ///
 /// - package (module): The external package to integrate with touying. It should expose its name for auto-binding to work (e.g. `cetz`).
-/// - bindings (dictionary): Optional explicit bindings for the reduce and cover functions. Should be a dictionary with keys `reduce` and `cover`, where the values are paths (as arrays of strings) with an optionally last entry being arguments to pass to the function. If any fields are `none`, it checks whether the package has `touying-reducer-bindings` otherwise touying will look up predefined bindings in `extern.auto-reducer-bindings` based on the package name.
+/// - bindings (dictionary): Optional explicit bindings for the reduce and cover functions. Should be a dictionary with keys `reduce` and `cover`, where each value is a closure taking in the module and returning the function you need: e.g. `mod=>mod.hide`. If any fields are `none`, it checks whether the package has `touying-reducer-bindings` otherwise touying will look up predefined bindings in `extern.auto-reducer-bindings` based on the package name.
 /// - args (arguments): The positional and named arguments passed to the reduce function.
 /// -> content
 #let touying-reduce(package, bindings: (reduce: none, cover: none), ..args) = {
@@ -297,22 +297,14 @@
   )
   let pckg = dictionary(package)
 
-  let parse-binding(pckg, binding) = {
-    //base case without arguments
-    if binding.len() == 0 {
-      return pckg
-    }
-    let curr = binding.remove(0)
-    if type(curr) == arguments and binding.len() == 0 {
-      pckg.with(..curr)
-    } else if type(curr) == str {
-      parse-binding(dictionary(pckg).at(curr), binding)
-    } else {
+  let parse-binding(package, binding) = {
+    if type(binding) != function {
       panic(
-        "Invalid binding for reduce(): expected a path of strings leading to a function, with an optional last argument, got "
+        "Invalid binding for reduce(): expected a function taking the package module, e.g. `module => module.canvas`, got "
           + repr(binding),
       )
     }
+    binding(package)
   }
   assert(
     type(bindings) == dictionary

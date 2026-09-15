@@ -72,3 +72,23 @@ sidebar_position: 3
 ```typst
 #alternatives($accent(x, hat)$, $accent(x, tilde)$)
 ```
+
+## 引用带动画的内容
+
+Typst 只允许对少数几类元素写 `@label`——figure、equation、heading 和 footnote。其他一切都必须包在 figure 里。因此，如果要引用一个带动画的代码块或者 reducer 图形，请把它包起来：
+
+```typst
+#figure(
+  touying-raw(```py
+x = 1
+# pause
+y = 2
+```),
+)<my-code>
+
+See @my-code.
+```
+
+figure 同时还会给你一个 caption 和一个 `kind`。如果直接把 label 挂在 raw 代码块上，`#link(<my-code>)[jump there]` 依然可以正常工作，这种用法不需要 figure。
+
+带动画的内容上的 label 不应该在每张子幻灯片上都重复出现。`config-common(label-only-on-last-subslide: ..)` 控制哪些元素函数的 label 会被去重。

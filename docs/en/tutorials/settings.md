@@ -63,6 +63,55 @@ The `date` can accept `datetime` format and `content` format, and the date displ
 config-common(datetime-format: "[year]-[month]-[day]")
 ```
 
+## Config Functions Overview
+
+All of Touying's configuration is passed to a theme through a set of `config-*` functions, whose returned dictionaries are merged into `self`:
+
+| Function | Purpose |
+|------|------|
+| `config-common(..)` | General configuration: `slide-fn`, `slide-level`, `handout`, `preamble`, `frozen-counters` and more. |
+| `config-page(..)` | Page configuration: `paper`, `margin`, `header`, `footer`, `fill` and more, mirroring the parameters of `set page(..)`. |
+| `config-info(..)` | Presentation metadata, covered above. |
+| `config-colors(..)` | The theme's color palette, accessed via `self.colors`. |
+| `config-methods(..)` | Theme methods such as `init` and `alert`, accessed via `self.methods`. |
+| `config-store(..)` | Custom storage fields for the theme, accessed via `self.store`. |
+| `config-article(..)` | Layout options for article mode, covered below. |
+
+### The Speaker-Note Panel
+
+`config-common(notes-fn: ..)` decides how the speaker-note panel is rendered, and both the second-screen output and `show-only-notes` mode use it. It takes `(self: none, note: none, slide-preview: none)` and returns content; the default is `touying-notes`. A theme overrides it the same way it would override `slide-fn`. See [Speaker Notes](./speaker-notes.md) for details.
+
+### Output Modes and Article Mode
+
+| Key | Default | Description |
+|----|--------|------|
+| `config-common(export-mode: ..)` | `"slides"` | The output mode: `"slides"`, `"presentation"`, `"handout"` or `"article"`. Can also be set from the command line with `--input export-mode=article`. |
+| `config-common(article-mode: ..)` | `false` | A direct switch into article mode. Prefer `export-mode` instead. |
+| `config-common(article-theme: ..)` | `auto` | The theme used in article mode; `auto` means Touying's own `themes.article`. |
+
+`config-article(..)` configures the layout used in article mode, such as floating images to the side, choosing a title block, and passing config fields through to the article theme:
+
+```typst
+#import "@preview/touying:0.7.4": *
+#import themes.simple: *
+#import themes.article: article-theme
+
+#show: simple-theme.with(
+  config-info(title: [Title], author: [Author], date: datetime.today()),
+  config-common(
+    export-mode: "article",
+    article-theme: article-theme.with(numbering: "1.1"),
+  ),
+  config-article(
+    wrap-images: true,
+    title-block-fn: auto,
+    available-fields: (title: "info.title"),
+  ),
+)
+```
+
+In the body, `#article-only[..]`, `#article-text[..]`, `#slides-only[..]` and `#presentation-only[..]` switch content in or out depending on the output target. See [Article Mode](../integration/article-mode) for the full picture.
+
 ## Preamble
 
 The `config-common(preamble: ...)` option lets you run setup code on every slide without repeating it manually. This is useful when integrating packages like `codly`:
@@ -160,6 +209,7 @@ For custom figure kinds, pass `counter(figure.where(kind: "Name"))` rather than 
 config-common(frozen-counters: (theorem-counter,))
 ```
 
+Do not confuse `frozen-counters` with `config-common(freeze-slide-counter: true)`: the latter freezes the slide counter itself, keeping a slide from taking up a slide number. See [Slide Counters and Progress](./progress/counters.md).
 
 ## Accessing Config Information
 

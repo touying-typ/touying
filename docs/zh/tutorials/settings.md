@@ -112,12 +112,6 @@ Touying 的所有配置都通过一组 `config-*` 函数传给主题，它们返
 )
 ```
 
-:::note[注意]
-
-`title-block-fn: auto` 会使用内置的标题块，它读取 `document.date`，因此必须同时通过 `config-info(date: ..)` 设置日期，否则编译会报 `type auto has no method \`display\`` 的错误。
-
-:::
-
 在正文里，`#article-only[..]`、`#article-text[..]`、`#slides-only[..]` 和 `#presentation-only[..]` 可以按输出目标切换内容。
 
 ## 前言（Preamble）

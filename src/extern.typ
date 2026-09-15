@@ -13,16 +13,16 @@
 // ==================================
 #let auto-reducer-bindings = (
   "cetz": (
-    "reduce": ("canvas",),
-    "cover": ("draw", "hide", arguments(bounds: true)),
+    "reduce": module => module.canvas,
+    "cover": module => module.draw.hide.with(bounds: true),
   ),
-  //fletcher does not expose its name, so we detect via repr, see core.typ
+  //fletcher does not expose its name, so we detect via repr, see touying-reduce
   "fletcher": (
-    "reduce": ("diagram",),
-    "cover": ("hide",),
+    "reduce": module => module.diagram,
+    "cover": module => module.hide,
   ),
   "alchemist": (
-    "reduce": ("skeletize",),
-    "cover": ("hide",),
+    "reduce": module => module.skeletize,
+    "cover": module => module.hide,
   ),
 )

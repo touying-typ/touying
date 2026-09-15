@@ -40,6 +40,8 @@ Third item.
 
 By default, handout mode keeps only the **last** subslide of each slide.
 
+Handout mode can also be set with `config-common(export-mode: "handout")`, which can in turn be passed on the command line with `--input export-mode=handout` without touching the source file at all. See [Output Modes](../output-modes).
+
 ## Choosing Which Subslide to Keep
 
 You can choose a specific subslide (or a set of subslides) to keep in handout output with `handout-subslides`:
@@ -80,3 +82,5 @@ A common workflow is to keep `handout: false` (the default) while presenting, th
 // When building the handout PDF
 #show: my-theme.with(config-common(handout: true))
 ```
+
+If you would rather not touch the source file at all, use `--input export-mode=handout` from the command line instead, as noted above.

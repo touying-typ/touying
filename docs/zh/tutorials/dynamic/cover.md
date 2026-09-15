@@ -55,6 +55,12 @@ config-methods(cover: utils.alpha-changing-cover)
 - 真正隐藏内容的 cover 方法不能生成真实的脚注，否则在内容尚未显示时，脚注条目就已经出现在分隔线下方了。因此 Touying 会改为绘制一个占位标记，以保留同样的宽度。
 - 仅改变视觉效果的 cover 方法（例如 `alpha-changing-cover` 和 `color-changing-cover`）会生成真实的脚注，只是和其余被遮盖的内容一样被淡化。
 
-由于 Typst 无法检查任意 `cover` 函数的行为，`auto` 只能通过身份来识别 Touying 自带的默认方法。所以如果您自定义的 `cover` 方法同样会真正隐藏内容，请显式地设置 `config-common(cover-hides-footnote: true)`。
+由于 Typst 无法检查任意 `cover` 函数的行为，`auto` 只能**通过身份**来识别 Touying 自带的默认方法：它会比较 `self.methods.cover` 与 `utils.hiding-cover` 是否是同一个函数。像 `(self: none, body) => hide(body)` 这样手写的包装函数，即便行为完全相同，也是一个不同的函数值，因此 `auto` 会把它归为「仅改变视觉效果」，导致被遮盖内容中的脚注变成真实脚注，在内容显示之前就已出现。要么直接使用 `utils.hiding-cover` 本身，要么显式地声明：
 
-如果您想自定义脚注标记的样式，请使用 `config-common(footnote-style: ..)`，也就是您原本会传给 `show footnote: ..` 的那个函数。Touying 会把它安装为 `show footnote: footnote-style`，并同时用它来绘制上面提到的占位标记，从而让真实脚注和占位标记保持一致。
+```typst
+config-common(cover-hides-footnote: true)
+```
+
+设为 `false` 则会强制反过来，即便使用了真正隐藏内容的 cover 方法，也依然生成真实脚注。
+
+如果您想自定义脚注标记的样式，请使用 `config-common(footnote-style: ..)`，也就是您原本会传给 `show footnote: ..` 的那个函数。Touying 会把它安装为 `show footnote: footnote-style`，并同时用它来绘制上面提到的占位标记，从而让真实脚注和占位标记保持一致。您自己写的 `show footnote: it => ..` 规则只会作用于真实的、已显示的脚注，不会影响占位标记。

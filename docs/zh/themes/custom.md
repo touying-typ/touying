@@ -151,59 +151,6 @@ Content.
 #thanks-slide()
 ```
 
-## 支持 Article 模式
-
-Article 模式让同一份源文件既能输出幻灯片，也能输出连续排版的文章。用 `config-common(export-mode: "article")` 开启，用 `article-theme` 指定排版文章时使用的主题 —— 默认是 `auto`，即 touying 内置的 `themes.article`。
-
-```typst
-#show: simple-theme.with(
-  config-common(
-    export-mode: "article",
-    article-theme: themes.article.article-theme.with(numbering: "1.1"),
-  ),
-)
-```
-
-`themes.article` 是一个不依赖幻灯片框架的普通 A4 文章主题，它既可以这样配对使用，也可以单独用来排论文和报告；你当然也可以换成任何其他文章主题。
-
-幻灯片主题和文章主题之间通过 `config-article(available-fields: ..)` 传递字段，它是一个从配置路径到文章主题参数名的映射。此外还有两个写作用的标记：
-
-- `#article-text[..]`：写在一页幻灯片之后，在文章输出中替换掉这页的内容，方便你为要点写一段散文。
-- `#article-only[..]`：只在文章输出中出现的内容，不会替换任何幻灯片，适合放附录、方法细节等。
-
-```example
-#import "@preview/touying:0.7.4": *
-#import themes.simple: *
-
-#show: simple-theme.with(
-  aspect-ratio: "16-9",
-  config-common(
-    export-mode: "article",
-    article-theme: themes.article.article-theme.with(numbering: "1.1"),
-  ),
-  config-article(
-    available-fields: (title: "info.title", author: "info.author"),
-  ),
-  config-info(title: [My Presentation], author: [Author Name]),
-)
-
-= Section
-
-== Slide
-
-- a bullet for the audience
-
-#article-text[
-  A prose paragraph that replaces the slide's bullet points in the article.
-]
-
-#article-only[
-  == Appendix
-
-  Only in the article.
-]
-```
-
 ## 需要访问 `self` 的辅助函数
 
 主题里的辅助组件（例如 stargazer 的 `tblock`）常常需要读取 `self.colors`。这时请优先使用 `touying-fn-wrapper-raw`：它像 `#alert` 一样就地展开，不会打断 `#pause` / `#uncover` 等动画结构，因此包出来的组件可以正常参与动画。
