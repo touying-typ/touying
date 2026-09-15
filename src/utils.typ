@@ -1550,8 +1550,7 @@
   if type(it) != content {
     it
   } else if (
-    it.func() in (text, math.equation)
-      or it.func() == tree.typst-builtin-math-symbol
+    it.func() == text or it.func() == tree.typst-builtin-math-symbol
   ) {
     method(it)
   } else if tree.is-sequence(it) {
