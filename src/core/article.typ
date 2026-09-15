@@ -3,8 +3,7 @@
 #import "tree.typ"
 #import "subslides.typ": resolve-negative-subslides
 #import "parser.typ": (
-  _build-native-recall, _members-in-range,
-  _parse-content-into-results-and-repetitions, _prepare-render-context,
+  _build-native-recall, _members-in-range, _prepare-render-context,
   _render-at-subslide, _resolve-string-to-members, _resolve-waypoint-to-members,
   check-current-mode-skip, unsupported-mark-message, waypoint-anchor,
   waypoint-kinds,
@@ -1047,27 +1046,31 @@
       return (items: (), images: (), blocks: (), breadcrumbs: ())
     }
     let joined = run.sum(default: none)
-    // touying-slide always sets self.subslide before any parsing, even the
-    // probe pass (slides.typ:1759) — utils.uncover/only and friends read
-    // self.subslide directly, so it must be present from the start.
-    let probe-self = self + (subslide: 1)
-    let (_, repetitions, last-subslide, _, _) = (
-      _parse-content-into-results-and-repetitions(
-        self: probe-self,
-        base: 1,
-        index: 1,
-        joined,
-      )
-    )
-    let repeat = calc.max(repetitions, last-subslide, 1)
-    let render-self = self + (repeat: repeat, subslide: repeat)
-    let (conts, _, _, _, _) = _parse-content-into-results-and-repetitions(
-      self: render-self,
-      index: repeat,
-      show-delayed-wrapper: true,
+    // Prepare this run exactly like an explicit slide: named waypoints must be
+    // resolved before `uncover(<wp>)` and friends parse the final state. A bare
+    // article run used to skip this step and failed on every named waypoint.
+    let (reducer-data, cwp, repeat, _) = _prepare-render-context(
+      self,
       joined,
+      1,
     )
-    let cont = conts.sum(default: none)
+    let render-self = (
+      self
+        + (
+          waypoints: cwp,
+          repeat: repeat,
+          subslide: repeat,
+        )
+    )
+    let cont = _render-at-subslide(
+      render-self,
+      joined,
+      reducer-data,
+      cwp,
+      1,
+      repeat,
+      show-delayed-wrapper: true,
+    )
     let extracted = _extract-breadcrumbs(cont)
     if bare {
       return (
@@ -1129,16 +1132,17 @@
               and spec.at("kind", default: "") in waypoint-kinds
           )
       ) {
-        // cwp is always this content's own *local* (base=1) waypoint map —
-        // article mode has no enclosing slide context to track — so every
-        // resolved member must be shifted by (render-base - 1) to land in
-        // the same absolute numbering as `repeat` above. A multi-member
-        // spec has no stepping to do here (there's no outer progression to
-        // step across) — matching `subslides: auto`'s own "final,
-        // fully-revealed state" reduction just above, this shows its last
-        // (highest) member.
-        _resolve-waypoint-to-members((waypoints: cwp), spec, repeat).last()
-        +render-base - 1
+        // Article mode has no enclosing slide waypoint map to inherit. This
+        // content's own map was collected from `render-base`, so its members
+        // already use the same absolute numbering as `repeat`. A multi-member
+        // spec has no outer progression to step across here, so show its last
+        // (highest) member, matching `auto`'s final-state reduction above.
+        _resolve-waypoint-to-members(
+          (waypoints: cwp),
+          spec,
+          repeat,
+          base: render-base,
+        ).last()
       } else if type(spec) == str and spec == "h" {
         render-base
       } else if type(spec) == str and spec == "!h" {

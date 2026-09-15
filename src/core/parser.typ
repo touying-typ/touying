@@ -957,10 +957,10 @@
 /// - bodies (content): The content bodies to scan.
 ///
 /// -> (dictionary, dictionary)
-#let _collect-waypoints(..bodies) = {
+#let _collect-waypoints(base: 1, ..bodies) = {
   let (_, _, waypoints, start-overrides, decl-reps) = _collect-waypoints-impl(
     bodies.pos(),
-    1,
+    base,
     0,
     (:),
     (:),
@@ -971,11 +971,14 @@
 
 
 
-// Find the first touying-reducer metadata dict inside content.
-// Returns the metadata value dict, or none if not found.
+// Return a reducer's metadata when the whole value is one reducer.
+//
+// A reducer nested inside otherwise-arbitrary content must go through the
+// ordinary content parser. Treating the first reducer anywhere in the tree as
+// the whole value drops every sibling and wrapper around it when rendering or
+// measuring that content.
 #let _find-reducer-meta(c) = {
-  let found = tree.find-in-tree(c, n => tree.is-kind(n, "touying-reducer"))
-  if found != none { found.value }
+  if tree.is-kind(c, "touying-reducer") { c.value }
 }
 
 
@@ -1483,16 +1486,16 @@
 ///
 /// - self (dictionary): carries the `waypoints` map `spec` is resolved against.
 /// - spec (label, dictionary): the waypoint reference to resolve.
-/// - bound (int): the local `1..bound` range used to enumerate the members
-///   of a negated (`not-wp`) marker, whose own range is unbounded above.
+/// - bound (int): Upper bound used to enumerate a range marker.
+/// - base (int): Lower bound, for content whose own numbering starts above 1.
 ///
 /// -> array (sorted, ascending, non-empty)
-#let _resolve-waypoint-to-members(self, spec, bound) = {
+#let _resolve-waypoint-to-members(self, spec, bound, base: 1) = {
   let resolved = resolve-waypoints(self, spec)
   if type(resolved) == int {
     (resolved,)
   } else {
-    _members-in-range(resolved, 1, bound)
+    _members-in-range(resolved, base, bound)
   }
 }
 
@@ -1602,7 +1605,7 @@
       )
       calc.max(mrr, ls)
     }
-    let provisional-repeat = calc.max(probe((:)), ..resolved-wp.values(), 1)
+    let provisional-repeat = calc.max(..resolved-wp.values(), 1)
     let provisional-cwp = _compute-waypoint-ranges(
       resolved-wp,
       provisional-repeat,
@@ -1707,32 +1710,48 @@
         // (see this function's own doc comment for why they can't be
         // called directly).
         let reducer-data = _find-reducer-meta(raw-content)
-        let (raw-wp, so, dr) = _collect-waypoints(raw-content)
+        let (raw-wp, so, dr) = _collect-waypoints(
+          base: render-base,
+          raw-content,
+        )
         let resolved-wp = _resolve-waypoint-forest(raw-wp, so)
-        let max-rep-raw = if reducer-data != none {
+        let probe(wp) = if reducer-data != none {
           let (_, mrr) = _parse-touying-reducer(
-            self: minimal-self + (waypoints: (:), subslide: 9999),
+            self: minimal-self + (waypoints: wp, subslide: 9999),
             base: render-base,
             index: 9999,
             reducer-data,
           )
           mrr
         } else {
-          let (
-            _,
-            mrr,
-            ls,
-            _,
-            _,
-          ) = _parse-content-into-results-and-repetitions(
-            self: minimal-self + (waypoints: (:), subslide: 9999),
-            base: render-base,
-            index: 9999,
-            raw-content,
+          let (_, mrr, ls, _, _) = (
+            _parse-content-into-results-and-repetitions(
+              self: minimal-self + (waypoints: wp, subslide: 9999),
+              base: render-base,
+              index: 9999,
+              raw-content,
+            )
           )
           calc.max(mrr, ls)
         }
-        let repeat = calc.max(max-rep-raw, ..resolved-wp.values(), 1)
+        let waypoint-floor = calc.max(
+          render-base,
+          ..resolved-wp.values(),
+          1,
+        )
+        let provisional-cwp = _compute-waypoint-ranges(
+          resolved-wp,
+          waypoint-floor,
+          so,
+          dr,
+        )
+        let max-rep-raw = probe(provisional-cwp)
+        let repeat = calc.max(
+          max-rep-raw,
+          render-base,
+          ..resolved-wp.values(),
+          1,
+        )
         let cwp = _compute-waypoint-ranges(resolved-wp, repeat, so, dr)
         let target = if recall-subslide == auto {
           repeat
@@ -1743,21 +1762,9 @@
                 and recall-subslide.at("kind", default: "") in waypoint-kinds
             )
         ) {
-          // cwp is always this content's own *local* (base=1) waypoint
-          // map — never an outer slide's — so the resolved position must
-          // be shifted by (render-base - 1) to land in the same absolute
-          // numbering as `repeat`/`max-rep-raw` above. Kept as one
-          // parenthesized expression: a bare `+`/`-` starting a new line
-          // in a Typst code block is parsed as its own statement (unary
-          // +/-), not a continuation of the previous line — splitting
-          // this across lines without wrapping it silently produced three
-          // sibling int values that Typst then tried (and failed) to
-          // join, instead of one arithmetic expression.
-          (
-            _resolve-waypoint-to-int((waypoints: cwp), recall-subslide)
-              + render-base
-              - 1
-          )
+          // The content waypoint map was collected from `render-base`, so it
+          // already uses the same absolute numbering as `repeat`.
+          _resolve-waypoint-to-int((waypoints: cwp), recall-subslide)
         } else {
           resolve-negative-subslides(
             repeat - render-base + 1,
@@ -2369,7 +2376,10 @@
           }
           // Compute render context (inlined from _prepare-render-context)
           let reducer-data = _find-reducer-meta(inline-content)
-          let (raw-wp, so, dr) = _collect-waypoints(inline-content)
+          let (raw-wp, so, dr) = _collect-waypoints(
+            base: render-base,
+            inline-content,
+          )
           let resolved-wp = _resolve-waypoint-forest(raw-wp, so)
           // Probe `body`'s own natural stage count by walking it at an index
           // past every conceivable stage. `last-subslide` counts for just as
@@ -2402,24 +2412,27 @@
             )
             calc.max(mrr, ls)
           }
-          // Two passes, because the waypoint map and the repeat count are
-          // mutually dependent: `_compute-waypoint-ranges` needs a repeat
-          // count to close every range against, but a waypoint's own implicit
-          // advance only fires for a label that's *in* the map — so a
-          // single pass over an empty map silently drops that advance, and
-          // everything the advance pushes forward with it. Pass one measures
-          // against no waypoints at all, pass two re-measures against the
-          // provisional map that first measurement makes computable. Their
-          // start positions come from `_collect-waypoints`' own static walk
-          // (`resolved-wp`), so the second pass can only ever grow the count.
+          // A reference to a waypoint must already resolve during the probe.
+          // Its statically collected start positions provide a provisional
+          // map; the probe then supplies the final repeat bound for its ranges.
+          let waypoint-floor = calc.max(
+            render-base,
+            ..resolved-wp.values(),
+            1,
+          )
           let provisional-cwp = _compute-waypoint-ranges(
             resolved-wp,
-            calc.max(probe((:)), ..resolved-wp.values(), 1),
+            waypoint-floor,
             so,
             dr,
           )
           let content-mrr = probe(provisional-cwp)
-          let content-repeat = calc.max(content-mrr, ..resolved-wp.values(), 1)
+          let content-repeat = calc.max(
+            content-mrr,
+            render-base,
+            ..resolved-wp.values(),
+            1,
+          )
           let content-cwp = _compute-waypoint-ranges(
             resolved-wp,
             content-repeat,
@@ -2443,7 +2456,7 @@
           // start: is resolved against the *outer* slide's own waypoints
           // (self.waypoints) — a completely separate lookup from cwp above,
           // which resolves subslide: against either this content's own
-          // local waypoints or (when use-slide-context) the outer ones.
+          // waypoints or (when use-slide-context) the outer ones.
           let start-resolved = if start-spec == auto {
             none
           } else if (
@@ -2467,19 +2480,19 @@
           let is-bare-auto = subslides-spec == auto and start-resolved == none
           // For every other case, `subslides:` resolves to an ordered,
           // non-empty list of this content's own absolute subslide
-          // indices (`render-base`-shifted, matching `rp`'s own
+          // indices (collected from `render-base`, matching `rp`'s own
           // convention) — a single-point spec (a plain int, `get-first`,
           // `get-last`, ...) simply comes back as a one-element list, so
           // the stepping logic just below needs no cardinality special
           // case: `auto` + `start:` steps through this content's *entire*
           // natural range (unchanged from before — now just reframed as
-          // the identity member list `1..content-repeat` instead of a
+          // the identity member list `render-base..content-repeat` instead of a
           // bespoke clamp formula), and an explicit range/waypoint/string
           // spec steps through whatever subset it captures.
           let targets = if is-bare-auto {
             () // unused; is-bare-auto short-circuits before this is read
           } else if subslides-spec == auto {
-            range(1, content-repeat + 1)
+            range(render-base, content-repeat + 1)
           } else {
             let spec = subslides-spec
             let wp-self = self + (waypoints: cwp)
@@ -2490,26 +2503,20 @@
                     and spec.at("kind", default: "") in waypoint-kinds
                 )
             ) {
-              // cwp may be this content's own *local* (base=1) waypoint map
-              // (not use-outer-waypoints) — shift every member by
-              // (render-base - 1) to land in the same absolute numbering
-              // as `rp` below. When use-outer-waypoints, cwp is already the
-              // outer slide's own absolute waypoints, so no shift is
-              // needed — but a `not-wp` marker there must enumerate over
-              // the *outer* slide's own repeat count, not this content's.
+              // Both maps already use absolute positions. A `not-wp` marker
+              // over the outer map must enumerate the outer slide's repeat
+              // count; one over the content map starts at `render-base`.
               let bound = if use-outer-waypoints {
                 self.at("repeat", default: content-repeat)
               } else {
                 content-repeat
               }
-              let raw-members = _resolve-waypoint-to-members(
+              _resolve-waypoint-to-members(
                 wp-self,
                 spec,
                 bound,
+                base: if use-outer-waypoints { 1 } else { render-base },
               )
-              if use-outer-waypoints { raw-members } else {
-                raw-members.map(m => m + render-base - 1)
-              }
             } else if type(spec) == str and spec == "h" {
               // Bare "h" (only bare — never composed into a larger range
               // like "h-3") is the one escape hatch for referencing the
@@ -2618,8 +2625,8 @@
           // other case (auto + start:, or any explicit subslides: spec,
           // single- or multi-member alike) contributes
           // `anchor + targets.len() - 1`: for auto + start: that's the same
-          // count as before (targets.len() == content-repeat there), and for
-          // an explicit spec it guarantees the outer slide actually grows
+          // stage count as before (`content-repeat - render-base + 1`), and
+          // for an explicit spec it guarantees the outer slide actually grows
           // enough subslides to reach — and, with repeat-last: false, later
           // remove — every member being stepped through.
           last-subslide = calc.max(
@@ -3385,7 +3392,10 @@
 /// - `max-rep-raw`: raw max repetitions from the content's animation (before waypoints)
 #let _prepare-render-context(self, inline-content, render-base) = {
   let reducer-data = _find-reducer-meta(inline-content)
-  let (raw-wp, so, dr) = _collect-waypoints(inline-content)
+  let (raw-wp, so, dr) = _collect-waypoints(
+    base: render-base,
+    inline-content,
+  )
   let resolved-wp = _resolve-waypoint-forest(raw-wp, so)
   let probe(wp) = if reducer-data != none {
     let (_, mrr) = _parse-touying-reducer(
@@ -3404,19 +3414,24 @@
     )
     calc.max(mrr, ls)
   }
-  // A waypoint's implicit advance only fires once that waypoint is in the
-  // resolved map. Build a provisional map from the first measurement, then
-  // measure again so content following the advance contributes to the final
-  // stage. The inline touying-render path above uses the same two passes.
-  let provisional-repeat = calc.max(probe((:)), ..resolved-wp.values(), 1)
+  // A waypoint reference has to be resolvable during the first measurement,
+  // while its range still needs a repeat bound. Start with the positions the
+  // static waypoint walk already knows, then measure against that provisional
+  // map and close the ranges again over the measured extent.
+  let waypoint-floor = calc.max(render-base, ..resolved-wp.values(), 1)
   let provisional-cwp = _compute-waypoint-ranges(
     resolved-wp,
-    provisional-repeat,
+    waypoint-floor,
     so,
     dr,
   )
   let max-rep-raw = probe(provisional-cwp)
-  let repeat = calc.max(max-rep-raw, ..resolved-wp.values(), 1)
+  let repeat = calc.max(
+    max-rep-raw,
+    render-base,
+    ..resolved-wp.values(),
+    1,
+  )
   let cwp = _compute-waypoint-ranges(resolved-wp, repeat, so, dr)
   (reducer-data, cwp, repeat, max-rep-raw)
 }
@@ -3432,6 +3447,7 @@
   cwp,
   render-base,
   target,
+  show-delayed-wrapper: false,
 ) = {
   let render-self = self + (waypoints: cwp, subslide: target)
   if reducer-data != none {
@@ -3447,6 +3463,7 @@
       self: render-self,
       base: render-base,
       index: target,
+      show-delayed-wrapper: show-delayed-wrapper,
       inline-content,
     )
     conts.sum(default: none)
@@ -3515,11 +3532,9 @@
               and subslides.at("kind", default: "") in waypoint-kinds
           )
       ) {
-        // cwp is always this content's own *local* (base=1) waypoint map —
-        // never an outer slide's — so the resolved position must be
-        // shifted by (render-base - 1) to land in the same absolute
-        // numbering as `repeat` above.
-        _resolve-waypoint-to-int((waypoints: cwp), subslides) + render-base - 1
+        // cwp is this content's own map, collected from the same render base
+        // as its pauses, so its positions are already absolute.
+        _resolve-waypoint-to-int((waypoints: cwp), subslides)
       } else {
         resolve-negative-subslides(
           repeat - render-base + 1,
@@ -3646,9 +3661,9 @@
             and subslide.at("kind", default: "") in waypoint-kinds
         )
     ) {
-      // `cwp` is body's own local waypoint map, so shift the resolved position
-      // into the same numbering as `repeat` above — as `touying-recall` does.
-      _resolve-waypoint-to-int((waypoints: cwp), subslide) + render-base - 1
+      // `cwp` was collected from `render-base`, so its positions use the same
+      // absolute numbering as `repeat`.
+      _resolve-waypoint-to-int((waypoints: cwp), subslide)
     } else {
       resolve-negative-subslides(
         repeat - render-base + 1,

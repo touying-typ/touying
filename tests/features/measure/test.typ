@@ -160,6 +160,24 @@
     #only("h")[#block(height: 30pt)[third]]
   ]
   assert.eq(measure(advancing-wp-body, subslide: auto).height, 30pt)
+
+  // Waypoints use the same absolute numbering as an explicit base. The
+  // second waypoint below is stage 4, and its own range ends there.
+  let offset-wp-body = [
+    #waypoint(<offset-measure-a>, advance: false)
+    #only("h")[#block(height: 20pt)[a]]
+    #pause
+    #waypoint(<offset-measure-b>, advance: false)
+    #only(<offset-measure-b>)[#block(height: 40pt)[b]]
+  ]
+  assert.eq(
+    measure(
+      offset-wp-body,
+      base: 3,
+      subslide: get-last(<offset-measure-b>),
+    ).height,
+    40pt,
+  )
 }
 
 == Inside layout, and returning a value
@@ -197,4 +215,9 @@
   // neither is zero.
   assert(measure(red, subslide: 1).height > 0pt)
   assert.eq(measure(red, subslide: none).height, measure(red).height)
+
+  // Finding a reducer nested in arbitrary content must not turn that reducer
+  // into the whole measurement target and discard its siblings.
+  let compound = [#box(width: 80pt, height: 10pt)#red]
+  assert(measure(compound).width >= 80pt)
 }

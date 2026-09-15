@@ -29,6 +29,11 @@
 
 #touying-render(waypoint-stages, subslides: auto)
 
+== A named waypoint in ordinary article content
+
+#waypoint(<article-bare-waypoint>)
+#uncover(<article-bare-waypoint>)[visible #label("article-bare-visible")]
+
 #let nested-offset-stages = [
   #only("h")[first #label("article-nested-base-first")]
   #pause
@@ -68,6 +73,7 @@
   assert.eq(query(label("article-render-waypoint-first")).len(), 0)
   assert.eq(query(label("article-render-waypoint-second")).len(), 0)
   assert.eq(query(label("article-render-waypoint-third")).len(), 1)
+  assert.eq(query(label("article-bare-visible")).len(), 1)
   assert.eq(query(label("article-nested-base-first")).len(), 0)
   assert.eq(query(label("article-nested-base-last")).len(), 1)
   assert.eq(query(label("article-nested-waypoint-first")).len(), 0)

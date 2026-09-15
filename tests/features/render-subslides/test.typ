@@ -89,6 +89,36 @@
   base: 1,
 )
 
+== Waypoint positions share an explicit base's absolute numbering
+#let offset-wp-stages = [
+  #waypoint(<offset-a>, advance: false)
+  #only("h")[A #label("offset-wp-a")]
+  #pause
+  #waypoint(<offset-b>, advance: false)
+  #only(<offset-b>)[B #label("offset-wp-b")]
+]
+#touying-render(
+  offset-wp-stages,
+  subslides: get-last(<offset-b>),
+  base: 3,
+)
+
+== Auto plus start steps only through stages at or after an explicit base
+#let offset-auto-stages = [
+  #only("h")[First #label("offset-auto-first")]
+  #pause
+  #only("h")[Second #label("offset-auto-second")]
+]
+#touying-render(
+  offset-auto-stages,
+  subslides: auto,
+  base: 3,
+  start: 1,
+  repeat-last: false,
+)
+#only(1)[outer one #label("offset-auto-outer-1")]
+#only(2)[outer two #label("offset-auto-outer-2")]
+
 #context {
   // --- plain int: unchanged single-frame behavior ---
   assert.eq(query(label("int-1")).len(), 0)
@@ -144,4 +174,20 @@
   assert.eq(query(label("last-wp-a")).len(), 0)
   assert.eq(query(label("last-wp-b")).len(), 0)
   assert.eq(query(label("last-wp-b2")).len(), 1)
+
+  // The first waypoint is at absolute stage 3 and the second at 4. Its last
+  // member must be 4, not a local range endpoint shifted twice.
+  assert.eq(query(label("offset-wp-a")).len(), 0)
+  assert.eq(query(label("offset-wp-b")).len(), 1)
+
+  // `auto` + `start` exposes the natural stage list. With base 3 that list is
+  // (3, 4), so the two inner stages align with outer subslides 1 and 2.
+  assert.eq(
+    query(label("offset-auto-first")).first().location().page(),
+    query(label("offset-auto-outer-1")).first().location().page(),
+  )
+  assert.eq(
+    query(label("offset-auto-second")).first().location().page(),
+    query(label("offset-auto-outer-2")).first().location().page(),
+  )
 }
