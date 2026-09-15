@@ -35,6 +35,12 @@ jobs:
         # warning), so promoting warnings suite-wide would fail them.
         run: tt run --warnings promote issues/i395-bibliography-convergence
 
+      - name: Run export-mode input regression test
+        run: >-
+          typst compile --root . --input export-mode=presentation
+          tests/features/export-mode-input/test.typ
+          "$RUNNER_TEMP/export-mode-input.pdf"
+
       - name: Run bundle regression test
         run: >-
           typst compile --features bundle --format bundle --root .

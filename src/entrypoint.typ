@@ -100,6 +100,9 @@
   let _export-mode = utils.get-input(key: "export-mode")
   if (_export-mode != none) {
     self.insert("export-mode", _export-mode)
+    // Command-line output selection is documented as overriding everything
+    // in the source, including the low-level article-mode compatibility flag.
+    self.insert("article-mode", _export-mode == "article")
   }
 
   // resolve export-mode and apply handout flag
