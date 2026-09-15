@@ -218,7 +218,11 @@
           // cause the slide count to be underestimated
           max-repetitions = calc.max(max-repetitions, repetitions)
         } else {
-          max-repetitions = calc.max(max-repetitions, repetitions)
+          max-repetitions = calc.max(
+            max-repetitions,
+            repetitions,
+            last-subslide,
+          )
           repetitions = child.value.n
           last-subslide = 0
         }
@@ -230,7 +234,11 @@
         let lbl = child.value.label
         let wp-start = child.value.at("start", default: auto)
         if wp-start != auto and lbl in wp {
-          max-repetitions = calc.max(max-repetitions, repetitions)
+          max-repetitions = calc.max(
+            max-repetitions,
+            repetitions,
+            last-subslide,
+          )
           repetitions = wp.at(lbl).first
           last-subslide = 0
         } else if (
@@ -389,7 +397,11 @@
             repetitions += child.value.n
             max-repetitions = calc.max(max-repetitions, repetitions)
           } else {
-            max-repetitions = calc.max(max-repetitions, repetitions)
+            max-repetitions = calc.max(
+              max-repetitions,
+              repetitions,
+              last-subslide,
+            )
             repetitions = child.value.n
             last-subslide = 0
           }
@@ -585,7 +597,6 @@
           repetitions += child.value.n
         } else {
           repetitions = child.value.n
-          last-subslide = 0
         }
       } else if kind == "touying-waypoint" {
         if not _waypoint-known(waypoints, child.value.label) {
@@ -686,7 +697,7 @@
                 inner-rep += inner-child.value.n
                 inner-max = calc.max(inner-max, inner-rep)
               } else {
-                inner-max = calc.max(inner-max, inner-rep)
+                inner-max = calc.max(inner-max, inner-rep, inner-ls)
                 inner-rep = inner-child.value.n
                 inner-ls = 0
               }
@@ -792,7 +803,6 @@
             repetitions += child.body.value.n
           } else {
             repetitions = child.body.value.n
-            last-subslide = 0
           }
         } else if kind == "touying-waypoint" {
           if not _waypoint-known(waypoints, child.body.value.label) {
@@ -1954,7 +1964,11 @@
             repetitions += it.body.value.n
           } else {
             // absolute jump
-            max-repetitions = calc.max(max-repetitions, repetitions)
+            max-repetitions = calc.max(
+              max-repetitions,
+              repetitions,
+              last-subslide,
+            )
             repetitions = it.body.value.n
             last-subslide = 0
           }
@@ -1965,7 +1979,11 @@
           let wp-start = it.body.value.at("start", default: auto)
           if wp-start != auto and lbl in wp {
             // Explicit start: absolute jump to the resolved position.
-            max-repetitions = calc.max(max-repetitions, repetitions)
+            max-repetitions = calc.max(
+              max-repetitions,
+              repetitions,
+              last-subslide,
+            )
             repetitions = wp.at(lbl).first
             last-subslide = 0
           } else if it.body.value.at("advance", default: true) and lbl in wp {
@@ -2199,7 +2217,11 @@
               ))
               hidden-parts = ()
             }
-            max-repetitions = calc.max(max-repetitions, repetitions)
+            max-repetitions = calc.max(
+              max-repetitions,
+              repetitions,
+              last-subslide,
+            )
             repetitions = child.value.n
             last-subslide = 0
           }
@@ -2786,7 +2808,11 @@
           let wp-start = child.value.at("start", default: auto)
           if wp-start != auto and lbl in wp {
             // Explicit start: absolute jump to the resolved position.
-            max-repetitions = calc.max(max-repetitions, repetitions)
+            max-repetitions = calc.max(
+              max-repetitions,
+              repetitions,
+              last-subslide,
+            )
             repetitions = wp.at(lbl).first
             last-subslide = 0
           } else if child.value.at("advance", default: true) and lbl in wp {
