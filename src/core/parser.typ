@@ -2243,15 +2243,7 @@
           // subslide, so the label always points at the reducer's true
           // final state, and so a multi-subslide slide doesn't attach the
           // same real label more than once across multiple rendered pages.
-          // Either spelling: the `label:` argument, or a label written outside
-          // the call (`#touying-reducer(..)<x>`), which lands on this metadata
-          // node and would otherwise be dropped. The argument wins when both
-          // are given.
-          let outer-label = child.at("label", default: none)
           let real-label = child.value.at("label", default: none)
-          if real-label == none and outer-label != <touying-temporary-mark> {
-            real-label = outer-label
-          }
           let cont = if (
             cont != none
               and real-label != none
