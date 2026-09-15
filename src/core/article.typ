@@ -289,7 +289,10 @@
 /// -> array
 #let _wrap-config(article-cfg) = {
   let wrap = article-cfg.at("wrap", default: (:))
-  if type(wrap) == bool { wrap = (overrides: ((target: _ => wrap),)) }
+  if type(wrap) == bool {
+    if not wrap { return () }
+    wrap = (overrides: ((target: _ => true),))
+  }
   assert(
     type(wrap) == dictionary,
     message: "config-article(wrap:) takes a dictionary. Got: " + repr(wrap),
@@ -474,7 +477,14 @@
         })
 
         let floats = floated.map(c => {
-          let w = env.size.width * c.spec.width
+          let width = c.spec.width
+          let w = if type(width) == ratio {
+            env.size.width * width
+          } else if type(width) == relative {
+            env.size.width * width.ratio + width.length
+          } else {
+            width
+          }
           let filled = fill-images(_strip-graphic-markers(c.element), w)
           // A bare image already fills the width exactly. Anything else is
           // boxed to it, so the width means the same thing for a table or a
