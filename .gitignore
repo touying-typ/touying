@@ -3,5 +3,8 @@
 .DS_Store
 
 *.pdf
+# Keep the built example PDFs: a reader can see what a deck looks like in each
+# output mode without compiling it first.
+!examples/*.pdf
 *.pdfpc
 nohup.out
