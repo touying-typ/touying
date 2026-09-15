@@ -118,16 +118,27 @@
   assert.eq(measure(staged, subslide: -3).height, 20pt)
 
   // `base` shifts the body's internal *counter*, exactly as in
-  // `touying-render`. The specs written inside the body stay absolute, so with
-  // `base: 3` the valid range becomes 3..5 while `only("3")` still means 3 —
-  // it is the counter that moves, not the numbering the body was written in.
+  // `touying-render`. The specs written inside the body stay absolute, so at
+  // `base: 3` the first two specs below have already passed and `only("3")`
+  // is the one visible stage.
   assert.eq(measure(staged, base: 3, subslide: 3).height, 60pt)
-  assert.eq(measure(staged, base: 3, subslide: 4).height, 0pt)
   // `base` does move a *relative* spec: "h" means "wherever the counter is",
   // so it lands on `base` rather than on 1.
   let here-spec = [#only("h")[#block(height: 25pt)[h]]]
   assert.eq(measure(here-spec, base: 1, subslide: 1).height, 25pt)
   assert.eq(measure(here-spec, base: 3, subslide: 3).height, 25pt)
+  assert.eq(measure(here-spec, base: 3, subslide: auto).height, 25pt)
+
+  // The repeat value produced by the parser is an absolute final counter.
+  // `auto` and negative indices must not add `base` to it a second time.
+  let offset-stages = [
+    #only("h")[#block(height: 20pt)[first]]
+    #pause
+    #only("h")[#block(height: 40pt)[last]]
+  ]
+  assert.eq(measure(offset-stages, base: 3, subslide: auto).height, 40pt)
+  assert.eq(measure(offset-stages, base: 3, subslide: -1).height, 40pt)
+  assert.eq(measure(offset-stages, base: 3, subslide: -2).height, 20pt)
 
   // A waypoint label resolves against the body's own waypoints.
   let wp-body = [
@@ -137,6 +148,18 @@
   ]
   assert.eq(measure(wp-body, subslide: <second>).height, 40pt)
   assert.eq(measure(wp-body, subslide: get-last(<second>)).height, 40pt)
+
+  // Waypoint advances need a second measurement after the provisional map is
+  // available. Otherwise the following pause is counted one stage too early
+  // and `auto` stops at the middle state.
+  let advancing-wp-body = [
+    #only("h")[#block(height: 10pt)[first]]
+    #waypoint(<advancing-measure-waypoint>)
+    #only("h")[#block(height: 20pt)[second]]
+    #pause
+    #only("h")[#block(height: 30pt)[third]]
+  ]
+  assert.eq(measure(advancing-wp-body, subslide: auto).height, 30pt)
 }
 
 == Inside layout, and returning a value

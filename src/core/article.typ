@@ -1143,7 +1143,11 @@
       } else if type(spec) == str {
         _resolve-string-to-members(spec, render-base, repeat).last()
       } else {
-        resolve-negative-subslides(repeat, spec, base: render-base)
+        resolve-negative-subslides(
+          repeat - render-base + 1,
+          spec,
+          base: render-base,
+        )
       }
       _render-at-subslide(
         self,

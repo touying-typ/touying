@@ -1713,7 +1713,7 @@
           let (
             _,
             mrr,
-            _,
+            ls,
             _,
             _,
           ) = _parse-content-into-results-and-repetitions(
@@ -1722,7 +1722,7 @@
             index: 9999,
             raw-content,
           )
-          mrr
+          calc.max(mrr, ls)
         }
         let repeat = calc.max(max-rep-raw, ..resolved-wp.values(), 1)
         let cwp = _compute-waypoint-ranges(resolved-wp, repeat, so, dr)
@@ -1752,7 +1752,7 @@
           )
         } else {
           resolve-negative-subslides(
-            repeat,
+            repeat - render-base + 1,
             recall-subslide,
             base: render-base,
           )
@@ -2324,6 +2324,16 @@
           let inline-content = child.value.content
           let subslides-spec = child.value.subslides
           let use-slide-context = child.value.at("base", default: auto) == auto
+          // Article mode has no enclosing animation progression or waypoint
+          // map to inherit. With an automatic base it still starts at the
+          // current parser counter, but resolves waypoints from its own body.
+          let use-outer-waypoints = (
+            use-slide-context
+              and not self.at(
+                "article-mode",
+                default: false,
+              )
+          )
           let render-base = if use-slide-context { repetitions } else {
             child.value.base
           }
@@ -2408,14 +2418,15 @@
             so,
             dr,
           )
-          // When using slide context (auto), use the slide's waypoints
-          // for target resolution; otherwise use the content's own waypoints.
+          // With an automatic base in slide mode, use the enclosing slide's
+          // waypoints for target resolution. An explicit base — or article
+          // mode, which has no enclosing progression — uses the content's own.
           // The repeat bound is always the content's own repeat count
           // (`content-repeat`, already computed with `render-base` baked in
           // via `_parse-touying-reducer`/`_parse-content-into-results-and-repetitions`
           // above) — `self.repeat` is the *enclosing slide's* pause count,
           // which is unrelated to how many stages this rendered content has.
-          let cwp = if use-slide-context {
+          let cwp = if use-outer-waypoints {
             self.at("waypoints", default: (:))
           } else {
             content-cwp
@@ -2472,13 +2483,13 @@
                 )
             ) {
               // cwp may be this content's own *local* (base=1) waypoint map
-              // (not use-slide-context) — shift every member by
+              // (not use-outer-waypoints) — shift every member by
               // (render-base - 1) to land in the same absolute numbering
-              // as `rp` below. When use-slide-context, cwp is already the
+              // as `rp` below. When use-outer-waypoints, cwp is already the
               // outer slide's own absolute waypoints, so no shift is
               // needed — but a `not-wp` marker there must enumerate over
               // the *outer* slide's own repeat count, not this content's.
-              let bound = if use-slide-context {
+              let bound = if use-outer-waypoints {
                 self.at("repeat", default: content-repeat)
               } else {
                 content-repeat
@@ -2488,7 +2499,7 @@
                 spec,
                 bound,
               )
-              if use-slide-context { raw-members } else {
+              if use-outer-waypoints { raw-members } else {
                 raw-members.map(m => m + render-base - 1)
               }
             } else if type(spec) == str and spec == "h" {
@@ -3368,9 +3379,9 @@
   let reducer-data = _find-reducer-meta(inline-content)
   let (raw-wp, so, dr) = _collect-waypoints(inline-content)
   let resolved-wp = _resolve-waypoint-forest(raw-wp, so)
-  let max-rep-raw = if reducer-data != none {
+  let probe(wp) = if reducer-data != none {
     let (_, mrr) = _parse-touying-reducer(
-      self: self + (waypoints: (:), subslide: 9999),
+      self: self + (waypoints: wp, subslide: 9999),
       base: render-base,
       index: 9999,
       reducer-data,
@@ -3378,13 +3389,25 @@
     mrr
   } else {
     let (_, mrr, ls, _, _) = _parse-content-into-results-and-repetitions(
-      self: self + (waypoints: (:), subslide: 9999),
+      self: self + (waypoints: wp, subslide: 9999),
       base: render-base,
       index: 9999,
       inline-content,
     )
     calc.max(mrr, ls)
   }
+  // A waypoint's implicit advance only fires once that waypoint is in the
+  // resolved map. Build a provisional map from the first measurement, then
+  // measure again so content following the advance contributes to the final
+  // stage. The inline touying-render path above uses the same two passes.
+  let provisional-repeat = calc.max(probe((:)), ..resolved-wp.values(), 1)
+  let provisional-cwp = _compute-waypoint-ranges(
+    resolved-wp,
+    provisional-repeat,
+    so,
+    dr,
+  )
+  let max-rep-raw = probe(provisional-cwp)
   let repeat = calc.max(max-rep-raw, ..resolved-wp.values(), 1)
   let cwp = _compute-waypoint-ranges(resolved-wp, repeat, so, dr)
   (reducer-data, cwp, repeat, max-rep-raw)
@@ -3490,7 +3513,11 @@
         // numbering as `repeat` above.
         _resolve-waypoint-to-int((waypoints: cwp), subslides) + render-base - 1
       } else {
-        resolve-negative-subslides(repeat, subslides, base: render-base)
+        resolve-negative-subslides(
+          repeat - render-base + 1,
+          subslides,
+          base: render-base,
+        )
       }
       _render-at-subslide(
         minimal-self,
@@ -3594,7 +3621,7 @@
     // and the tallest subslide need not be the same one.
     // `std.measure`: this module now binds `measure` to this very function,
     // so a bare call would recurse.
-    let sizes = range(render-base, render-base + repeat).map(
+    let sizes = range(render-base, repeat + 1).map(
       target => std.measure(render-at(target), ..args),
     )
     (
@@ -3603,7 +3630,7 @@
     )
   } else {
     let target = if subslide == auto {
-      render-base + repeat - 1
+      repeat
     } else if (
       type(subslide) == label
         or (
@@ -3615,7 +3642,11 @@
       // into the same numbering as `repeat` above — as `touying-recall` does.
       _resolve-waypoint-to-int((waypoints: cwp), subslide) + render-base - 1
     } else {
-      resolve-negative-subslides(repeat, subslide, base: render-base)
+      resolve-negative-subslides(
+        repeat - render-base + 1,
+        subslide,
+        base: render-base,
+      )
     }
     std.measure(render-at(target), ..args)
   }
