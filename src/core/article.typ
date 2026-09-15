@@ -217,7 +217,10 @@
     type(core) == content
       and tree.is-kind(core.at("body", default: none), "touying-slide-wrapper")
   ) {
-    return core.body
+    let lbl = core.at("label", default: none)
+    return if lbl == none { core.body } else {
+      [#metadata(core.body.value)#lbl]
+    }
   }
   core
 }
