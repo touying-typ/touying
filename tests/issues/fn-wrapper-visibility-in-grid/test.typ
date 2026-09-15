@@ -19,9 +19,15 @@
 Visible from the start.
 #pause
 
-#grid(columns: 2, [#uncover("1-")[DEEP grid]], [x])
+#grid(
+  columns: 2,
+  [#uncover("1-")[DEEP grid]], [x],
+)
 
-#table(columns: 2, [#uncover("1-")[DEEP table]], [x])
+#table(
+  columns: 2,
+  [#uncover("1-")[DEEP table]], [x],
+)
 
 #stack(dir: ltr, [#uncover("1-")[DEEP stack]], [ x])
 
@@ -36,4 +42,8 @@ Visible from the start.
 Visible from the start.
 #pause
 
-#block[#grid(columns: 1, [#uncover("1-")[DEEP nested]], [x])]
+#block[#grid(
+  columns: 1,
+  [#uncover("1-")[DEEP nested]],
+  [x],
+)]

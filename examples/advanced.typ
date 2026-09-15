@@ -18,17 +18,17 @@
     title: [Advanced Touying],
     subtitle: [Animation, layout, recall — and one source for two outputs],
     author: [The Touying Authors],
-    date: datetime(day:1, month:1, year:2042),
+    date: datetime(day: 1, month: 1, year: 2042),
   ),
   config-common(new-section-slide-fn: none),
   config-article(
     available-fields: (
       title: "info.title",
       author: "info.author",
-      date: "info.date"
+      date: "info.date",
     ),
     //title-block-fn is kept at default and by routing the above to it we get block you see
-  )
+  ),
 )
 
 // Source shown next to the thing it produces. Small enough to sit beside a
@@ -38,11 +38,11 @@
   fill: luma(240),
   inset: 7pt,
   radius: 4pt,
-  
+
   align(left, text(size: 0.72em, raw(block: true, lang: "typst", code))),
 ))
 
-#show raw.where(block:false): set text(fill: orange.darken(15%))
+#show raw.where(block: false): set text(fill: orange.darken(15%))
 
 #show link: it => {
   set text(fill: blue.lighten(20%))
@@ -53,8 +53,8 @@
 #slides-only(title-slide())
 
 #article-only[
-#heading(level:2, numbering: none)[_Abstract_]
-This document is the article output of the example `advanced.typ` and showcases all the normal presentation does as well but written in prose. See at the #link(<article-mode>)[end] or the source directly for how that is done. 
+  #heading(level: 2, numbering: none)[_Abstract_]
+  This document is the article output of the example `advanced.typ` and showcases all the normal presentation does as well but written in prose. See at the #link(<article-mode>)[end] or the source directly for how that is done.
 ]
 
 = Animating mathematics
@@ -103,13 +103,15 @@ The same holds for a matrix, cell by cell:
 `#uncover` and `#only` work in math too, so a derivation can grow a term at a
 time while the layout stays put:
 
-#src("$ f(x) &= x^2 #uncover(\"2-\")[$+ 2x$]#uncover(\"3-\")[$+ 1$] \\\n     #only(\"3-\")[$&= (x + 1)^2$] $")
+#src(
+  "$ f(x) &= x^2 #uncover(\"2-\")[$+ 2x$]#uncover(\"3-\")[$+ 1$] \\\n     #only(\"3-\")[$&= (x + 1)^2$] $",
+)
 
 #v(0.5em)
 
 $
   f(x) &= x^2 #uncover("2-")[$+ 2x$] #uncover("3-")[$+ 1$] \
-       #only("3-")[$&= (x + 1)^2$]
+  #only("3-")[$&= (x + 1)^2$]
 $
 
 #pause
@@ -125,8 +127,10 @@ appear. `#only` removes it, which is why the second line arrives late.
   derivation is $f(x) = x^2 + 2x + 1 = (x + 1)^2$.
 
   Written as:
-  #src("$ f(x) &= x^2 #uncover(\"2-\")[$+ 2x$] #uncover(\"3-\")[$+ 1$] \\
-       #only(\"3-\")[$&= (x + 1)^2$] $")
+  #src(
+    "$ f(x) &= x^2 #uncover(\"2-\")[$+ 2x$] #uncover(\"3-\")[$+ 1$] \\
+       #only(\"3-\")[$&= (x + 1)^2$] $",
+  )
 ]
 
 = Choosing between versions
@@ -140,22 +144,26 @@ the surrounding layout never jumps:
   columns: (1.15fr, 1fr),
   column-gutter: 1.2em,
   src("#alternatives(stretch: true)[first][second][third]"),
-  box(stroke:red+2pt, text(1.4em, alternatives(stretch: true)[first][second][third])),
+  box(stroke: red + 2pt, text(1.4em, alternatives(
+    stretch: true,
+  )[first][second][third])),
 )
 
 #jump(3)
 
-`#alternatives-cases` is the same idea driven by a function, which e.g. allows writing a 
+`#alternatives-cases` is the same idea driven by a function, which e.g. allows writing a
 list where one row is highlighted at a time. The strings say which subslides
 each case covers:
 
-#src("#alternatives-cases((\"3\", \"4\", \"5\"), case => {
+#src(
+  "#alternatives-cases((\"3\", \"4\", \"5\"), case => {
   let rows = (\"chlorophyll\", \"carotene\", \"anthocyanin\")
   stack(dir: ltr, spacing: 1.2em,
     ..rows.enumerate().map(((i, r)) => {
       if i == case { strong(r) } else { text(fill: gray, r) }
   }),)
-})")
+})",
+)
 
 #v(0.4em)
 
@@ -164,9 +172,11 @@ each case covers:
   stack(
     dir: ltr,
     spacing: 1.2em,
-    ..rows.enumerate().map(((i, r)) => {
-      if i == case { strong(r) } else { text(fill: gray, r) }
-    }),
+    ..rows
+      .enumerate()
+      .map(((i, r)) => {
+        if i == case { strong(r) } else { text(fill: gray, r) }
+      }),
   )
 }))
 
@@ -179,13 +189,15 @@ each case covers:
   That may look like this:
   #src("#alternatives(stretch: true)[first][second][third]")
   or this
-  #src("#alternatives-cases((\"3\", \"4\", \"5\"), case => {
+  #src(
+    "#alternatives-cases((\"3\", \"4\", \"5\"), case => {
     let rows = (\"chlorophyll\", \"carotene\", \"anthocyanin\")
     stack(dir: ltr, spacing: 1.2em,
       ..rows.enumerate().map(((i, r)) => {
         if i == case { strong(r) } else { text(fill: gray, r) }
     }),)
-  })")
+  })",
+  )
 
   More in #link("https://touying-typ.github.io/docs/tutorials/dynamic/complex")[Docs/Complex Animations].
 ]
@@ -197,14 +209,16 @@ range. A *placement*  decides whether the body is shown, covered or removed; a
 *styling* function wraps it. The last one written wins a tie but you can also use `priority`.\
 There are 4 placements: `"show"`, `"cover"`, `"remove"` and `swap()`. The default effect uses the placement `"show"` with subslides `"1-"` and priority `0` which is why "Photosynthesis" shows on the first subslide.
 
-#src("#animate(
+#src(
+  "#animate(
   [Photosynthesis],
   effects: (
     (effect: swap([Respiration], stretch: true), subslides: \"2-\"),
     (effect: (body, self: none) => text(fill: red, body), subslides: \"3-\"),
     (effect: swap([Photosynthesis], stretch: true), subslides: 4, priority: 2)
   ),
-)")
+)",
+)
 
 #v(0.5em)
 
@@ -216,7 +230,7 @@ There are 4 placements: `"show"`, `"cover"`, `"remove"` and `swap()`. The defaul
       effect: (body, self: none) => text(fill: red, body),
       subslides: "3-",
     ),
-    (effect: swap([Photosynthesis], stretch: true), subslides: 4, priority: 2)
+    (effect: swap([Photosynthesis], stretch: true), subslides: 4, priority: 2),
   ),
 )))
 
@@ -232,14 +246,16 @@ There are 4 placements: `"show"`, `"cover"`, `"remove"` and `swap()`. The defaul
   written wins a tie, and `priority` overrides that ordering.
 
   That may look like this:
-  #src("#animate(
+  #src(
+    "#animate(
     [Photosynthesis],
     effects: (
       (effect: swap([Respiration], stretch: true), subslides: \"2-\"),
       (effect: (body, self: none) => text(fill: red, body), subslides: \"3-\"),
       (effect: swap([Photosynthesis], stretch: true), subslides: 4, priority: 2)
     ),
-  )")
+  )",
+  )
 ]
 
 = Reusing content
@@ -249,13 +265,15 @@ There are 4 placements: `"show"`, `"cover"`, `"remove"` and `swap()`. The defaul
 Counting subslides breaks the moment you insert a `#pause` above. A waypoint
 names a position instead, and everything referring to it follows:
 
-#src("#waypoint(<detail>, advance:false)
+#src(
+  "#waypoint(<detail>, advance:false)
 #uncover(<detail>)[This line names `<detail>`, not \"subslide 2\".]
 #pause
 #only(get-last(<detail>))[`#get-last` pins the waypoint's final subslide — useful when a range should end exactly where a phase does.]
 #waypoint(<other-stuff>)
 Waypoints capture all subslides up until the next waypoint.
-")
+",
+)
 
 #v(0.4em)
 
@@ -288,13 +306,15 @@ Numbers stay correct here no matter what is added before the waypoint.
   claiming a new subslide of its own.
 
   That may look like this:
-  #src("#waypoint(<detail>, advance:false)
+  #src(
+    "#waypoint(<detail>, advance:false)
 #uncover(<detail>)[This line names `<detail>`, not \"subslide 2\".]
 #pause
 #only(get-last(<detail>))[`#get-last` pins the waypoint's final subslide — useful when a range should end exactly where a phase does.]
 #waypoint(<other-stuff>)
 Waypoints capture all subslides up until the next waypoint.
-")
+",
+  )
 
   More in #link("https://touying-typ.github.io/docs/tutorials/dynamic/waypoints")[Docs/Waypoints] or #link("https://github.com/touying-typ/touying/blob/main/examples/waypoints.typ")[Examples/Waypoints].
 ]
@@ -304,11 +324,13 @@ Waypoints capture all subslides up until the next waypoint.
 A slide can carry a label either via the heading or the slide function, and `#touying-recall` brings it back later — handy
 for a summary that should show the finished state of an earlier build:
 
-#src("== Shared heading
+#src(
+  "== Shared heading
 #slide[.. first ..]<intro-a>
 #slide[.. second ..]<intro-b>
 
-#touying-recall(<intro-b>)")
+#touying-recall(<intro-b>)",
+)
 
 #pause
 
@@ -322,11 +344,13 @@ You may also pass in a subslide index, range or waypoint to recall whatever stag
   skipped.
 
   That may look like this:
-  #src("== Shared heading
+  #src(
+    "== Shared heading
 #slide[.. first ..]<intro-a>
 #slide[.. second ..]<intro-b>
 
-#touying-recall(<intro-b>)")
+#touying-recall(<intro-b>)",
+  )
 ]
 
 == Rendering Content
@@ -334,9 +358,10 @@ You may also pass in a subslide index, range or waypoint to recall whatever stag
 You may also store some content in a variable and render only subslides of it via `#touying-render`.
 
 #grid(
-  columns:(1fr, 1fr),
+  columns: (1fr, 1fr),
   gutter: 1.2em,
-  src("#let my-table = table(
+  src(
+    "#let my-table = table(
   columns: 2,
   [Header 1], [Header 2],
   pause, [Cell 1],
@@ -344,9 +369,9 @@ You may also store some content in a variable and render only subslides of it vi
   [Cell 3], [Cell 4],
 )
 
-#touying-render(my-table, subslides: 2)"
+#touying-render(my-table, subslides: 2)",
   ),
-  align(horizon+center)[
+  align(horizon + center)[
     #let my-table = table(
       columns: 2,
       [Header 1], [Header 2],
@@ -356,7 +381,7 @@ You may also store some content in a variable and render only subslides of it vi
     )
 
     #touying-render(my-table, subslides: 2)
-  ]
+  ],
 )
 
 #pause
@@ -371,7 +396,8 @@ It does not have to be a single element but can be even a reveal sequence leavin
   steps can be left out.
 
   That may look like this:
-  #src("#let my-table = table(
+  #src(
+    "#let my-table = table(
   columns: 2,
   [Header 1], [Header 2],
   pause, [Cell 1],
@@ -379,7 +405,8 @@ It does not have to be a single element but can be even a reveal sequence leavin
   [Cell 3], [Cell 4],
 )
 
-#touying-render(my-table, subslides: 2)")
+#touying-render(my-table, subslides: 2)",
+  )
 
   More in #link("https://touying-typ.github.io/docs/tutorials/dynamic/complex")[Docs/Complex Animations].
 ]
@@ -394,14 +421,16 @@ system, so `pause` inside a `cetz.canvas` means what it means everywhere else:
 #grid(
   columns: (1.05fr, 1fr),
   column-gutter: 1.2em,
-  src("#let cetz-canvas = touying-reduce.with(cetz)
+  src(
+    "#let cetz-canvas = touying-reduce.with(cetz)
 
 #cetz-canvas({
   import cetz.draw: *
   circle((0, 0), radius: 1)
   (pause,)
   line((-1, 0), (1, 0))
-})"),
+})",
+  ),
   align(horizon + center, cetz-canvas({
     import cetz.draw: *
     circle((0, 0), radius: 1)
@@ -428,14 +457,16 @@ You may also use the synonym `touying-diagram` instead of `touying-reduce`.
   for the diagrams these packages usually draw.
 
   That may look like this:
-  #src("#let cetz-canvas = touying-reduce.with(cetz)
+  #src(
+    "#let cetz-canvas = touying-reduce.with(cetz)
 
 #cetz-canvas({
   import cetz.draw: *
   circle((0, 0), radius: 1)
   (pause,)
   line((-1, 0), (1, 0))
-})")
+})",
+  )
 
   More in #link("https://touying-typ.github.io/docs/integration/cetz")[Docs/CeTZ integration].
 ]
@@ -443,16 +474,16 @@ You may also use the synonym `touying-diagram` instead of `touying-reduce`.
 == Two columns, and what the article does with them
 
 #slide[
-  A slide can be split into multiple columns via 
+  A slide can be split into multiple columns via
   #src("#slide[left][right]") or by passing in an explicit `composer` to split the columns differently:
   #src("#slide(composer:(2fr, 1fr))[left][right]")
 ][
-#pause
+  #pause
 
-An article has no slide to divide, so a composer's columns are flattened back
-into running text. That is usually what you want when the same source has to
-read as prose — and when it is not, `#article-keep-layout[..]` holds a
-container together: usable on columns, grids, tables. Tables and grids are by default linearized if they have no heading or footer. Read more in the docs on how to configure this.
+  An article has no slide to divide, so a composer's columns are flattened back
+  into running text. That is usually what you want when the same source has to
+  read as prose — and when it is not, `#article-keep-layout[..]` holds a
+  container together: usable on columns, grids, tables. Tables and grids are by default linearized if they have no heading or footer. Read more in the docs on how to configure this.
 ]
 
 #article-text[
@@ -486,7 +517,7 @@ see #link("https://touying-typ.github.io/docs/tutorials/output-modes")[Output Mo
 #pause
 
 #slides-only[
-  You are reading the #touying-fn-wrapper-raw((self:none)=>{
+  You are reading the #touying-fn-wrapper-raw((self: none) => {
     if self.handout [Handout] else [Presentation]
   }), so this paragraph — written inside
   `#slides-only[..]` — is visible and the article's paragraph is not.
@@ -543,10 +574,12 @@ build only makes sense in stages. Set this via `#touying-set-config` or pass it 
   `#touying-set-config` or pass it as an argument to a `#slide` call.
 
   That may look like this:
-  #src("#presentation-only[.. only in the live talk ..]
+  #src(
+    "#presentation-only[.. only in the live talk ..]
 #handout-only[.. only in the printed handout ..]
 
-#slide(config: config-common(handout-subslides: (1, 3)))[.. ..]")
+#slide(config: config-common(handout-subslides: (1, 3)))[.. ..]",
+  )
 
   More in #link("https://touying-typ.github.io/docs/tutorials/dynamic/handout")[Docs/Handout Mode].
 ]

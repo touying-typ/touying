@@ -722,19 +722,19 @@
 ///   ])
 /// },
 /// ```
-/// 
+///
 /// - available-fields (dict): The fields from the config to pass to the article-theme. A dict mapping config to the theme fields. E.g. (the-title: "info.title", the-author: "info.author") will pass the config-info fields `title` and `author` in the config to the theme as `the-title` and `the-author`. Default is (:), which passes no fields.
-/// 
+///
 /// - title-block-fn (function): A function returning the title block to show at the beginning of the rendered article. If your theme has an automatic function for this you don't need it. And you can always use `#article-only` before the first slide to show your custom title block. Default is `none`.
-/// 
+///
 /// - wrap (dictionary, bool): Which elements float to the side of the text (done with `meander`), and how. Every key other than `width`, `align` and `overrides` names an element function, so `image: true` (the default) floats raw images according to the specified width and alignment defaults, `table: (align: left)` floats tables to left instead. Each takes `false` to stay in the flow, `true` for the shared defaults, or a dictionary of overrides. Tables and figures that do not float are centered at the bottom of the section and all other elements are kept inline. `overrides` is an array of dictionaries with a `target` predicate, for cases a name cannot express. \ Example: \ `config-article(wrap: (
 ///   width: 40%,
 ///   image: true,
 ///   table: (align: left, width: 30%),
 ///   overrides: ((
-///     target: el => el.func() == figure and 
-///       el.body.func() == image, 
-///     align: left, 
+///     target: el => el.func() == figure and
+///       el.body.func() == image,
+///     align: left,
 ///     width: 40%
 ///   ),)
 /// ))`.\ Recalled or Rendered content is never wrapped. A graphic via `touying-reduce/graphic` is by default not wrapped, but touying marks its graphics in article mode with a graphics marker which you can select via: `graphic-marker-of(cetz.canvas)` for an animated cetz canvas. You can also mark your own graphics to allow the predicate to match: `#graphic-marker(cetz.canvas)[#cetz.canvas(..)]`.

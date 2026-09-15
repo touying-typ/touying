@@ -866,13 +866,18 @@
         // then height may again be slightly too small. repeat that.
 
         let adjust-width(ratio, body, boxed-content, size) = {
-          let w-ratio = (std.measure(scale(
-              ratio,
-              boxed-content,
-              origin: top + left,
-              reflow: true,
-            )).width
-            / size.width
+          let w-ratio = (
+            std
+              .measure(
+                scale(
+                  ratio,
+                  boxed-content,
+                  origin: top + left,
+                  reflow: true,
+                ),
+              )
+              .width
+              / size.width
           )
 
           let _boxed-content = block(
@@ -884,13 +889,16 @@
         }
 
         let adjust-height(ratio, body, boxed-content, size) = {
-          let h-ratio = (std.measure(scale(
-              ratio,
-              boxed-content,
-              origin: top + left,
-              reflow: true,
-            )).height
-            / size.height
+          let h-ratio = (
+            std
+              .measure(scale(
+                ratio,
+                boxed-content,
+                origin: top + left,
+                reflow: true,
+              ))
+              .height
+              / size.height
           )
 
           let _boxed-content = block(
@@ -899,13 +907,16 @@
           )
           ratio *= calc.sqrt(1 / h-ratio)
 
-          h-ratio = (std.measure(scale(
-              ratio,
-              _boxed-content,
-              origin: top + left,
-              reflow: true,
-            )).height
-            / size.height
+          h-ratio = (
+            std
+              .measure(scale(
+                ratio,
+                _boxed-content,
+                origin: top + left,
+                reflow: true,
+              ))
+              .height
+              / size.height
           )
           ratio /= h-ratio
 
@@ -925,14 +936,16 @@
         }
         if not force-height {
           //fix the width one last time linearly.
-          let scaled-width = std.measure(
-            scale(
-              ratio,
-              boxed-content,
-              origin: top + left,
-              reflow: true,
-            ),
-          ).width
+          let scaled-width = std
+            .measure(
+              scale(
+                ratio,
+                boxed-content,
+                origin: top + left,
+                reflow: true,
+              ),
+            )
+            .width
           let current-box-width = std.measure(boxed-content).width
           boxed-content = box(
             width: current-box-width * (mutable-width / scaled-width),
@@ -1165,13 +1178,15 @@
     context {
       // Measure a reference character wrapped in par() to pick up show rules
       // like `show par: set text(2em)` that affect rendered text size.
-      let h = std.measure(
-        par(text(
-          top-edge: "bounds",
-          bottom-edge: "bounds",
-          [Xg],
-        ))
-      ).height
+      let h = std
+        .measure(
+          par(text(
+            top-edge: "bounds",
+            bottom-edge: "bounds",
+            [Xg],
+          )),
+        )
+        .height
       strike(
         stroke: 1.6 * h + fill,
         offset: -0.35 * h,

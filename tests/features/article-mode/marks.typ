@@ -103,14 +103,22 @@
   The two markers decide one place for themselves, whatever the rule says. A
   label works inside the marker or on the call, and follows the content:
 
-  #article-linearize[#table(columns: 2, table.header([Forced], [Flat]), [a], [b]) <tab:flat>]
+  #article-linearize[#table(
+    columns: 2,
+    table.header([Forced], [Flat]),
+    [a], [b],
+  ) <tab:flat>]
 
   #article-keep-layout[#components.side-by-side[Forced][Kept]] <lbl:kept>
 
   A figure's body is never flattened, however it is built:
 
   #figure(
-    table(columns: 2, [A], [B], [1], [2]),
+    table(
+      columns: 2,
+      [A], [B],
+      [1], [2],
+    ),
     caption: [A table inside a figure keeps its structure.],
   )
 

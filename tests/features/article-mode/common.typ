@@ -122,15 +122,15 @@
   ]
 
   == Lists and Items
-#components.side-by-side[ 
-  - First item #pause
-  - Second item #pause
-  - Third item #pause
-][
-  + Numbered one #pause
-  + Numbered two #pause
-  + Numbered three #pause
-]
+  #components.side-by-side[
+    - First item #pause
+    - Second item #pause
+    - Third item #pause
+  ][
+    + Numbered one #pause
+    + Numbered two #pause
+    + Numbered three #pause
+  ]
   and it also tests touying `components.side-by-side` and similar is tested whether it works.
 
   == Image Content

@@ -162,7 +162,7 @@
   ) {
     warning(
       "`config-common(detect-overflow: true)` cannot take effect while "
-        + "`breakable` is true."
+        + "`breakable` is true.",
     )
   }
 

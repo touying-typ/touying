@@ -947,7 +947,7 @@
     let anchor = waypoint-anchor(slide-label, open-waypoint)
     if anchor != none { out.push(anchor) }
   }
-  
+
   out
 }
 
