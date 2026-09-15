@@ -81,17 +81,17 @@ More B content
 #waypoint(<range-c>)
 
 //we need the context call here inside the callback so it only gets triggered after all internal computations are finished not not immediately at the start when the fn-wrapper-raw is parsed. Only at the end of parsing do we have the waypoint ranges fix
-#touying-fn-wrapper-raw((self:none) => context {
+#touying-fn-wrapper-raw((self: none) => context {
   assert.eq(
     self.waypoints.at("range-a"),
     (first: 1, last: 4),
   )
   assert.eq(
     self.waypoints.at("range-b"),
-    (first:1, last:2)
+    (first: 1, last: 2),
   )
   assert.eq(
     self.waypoints.at("range-c"),
-    (first: 3, last:4)
+    (first: 3, last: 4),
   )
 })
