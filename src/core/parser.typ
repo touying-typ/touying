@@ -3113,6 +3113,21 @@
             }
           })
         }
+      } else if type(child) == content and child.func() in (cite, ref) {
+        // A note-style citation only becomes a footnote during layout, after
+        // the scan above, so `hide()` drops the marker while its queued entry
+        // still reaches the page. Same three branches as `footnote`.
+        if repetitions <= index or not need-cover {
+          result.push(child)
+        } else if not utils.cover-hides-footnote(self) {
+          hidden-parts.push(child)
+        } else {
+          hidden-parts.push({
+            show cite: none
+            show ref: none
+            child
+          })
+        }
       } else if (
         type(child) == content
           and (

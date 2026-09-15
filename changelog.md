@@ -309,6 +309,10 @@ Things to watch when upgrading: a `#pause` after `uncover`/`only`/`alternatives`
 
   Still open: an opaque cover that is not `hide`, such as `cover-with-rect`, together with `cover-hides-footnote: true` leaks the entry.
 
+- **fix: a note-style citation after a `#pause` no longer leaks its footnote onto the earlier subslides** ([#414](https://github.com/touying-typ/touying/pull/414), thanks @SchrodingerBlume)
+
+  [#399](https://github.com/touying-typ/touying/pull/399) fixed a literal `#footnote` shown before its `#pause`, but a citation in a CSL note style such as `chicago-notes` still leaked. Such a citation only becomes a footnote during the layout pass, after the body scan `cover-hides-footnote` relies on, so `hide()` suppressed the marker while the entry it had queued still rendered at the bottom of the page. `cite` and `ref` now follow the same three-way branch as `footnote`: under a genuinely hiding cover the citation is not rendered at all, so no entry is created, and it appears normally once revealed. This also fixes packages that emit footnotes through a `show std.cite` rule.
+
 - **fix: a footnote bibliography no longer prevents convergence** ([#395](https://github.com/touying-typ/touying/issues/395)) — fixed by the bibliography rework above. Verified across 30 size × breakable/detect-overflow combinations that previously warned *document did not converge within five attempts*. A CI step runs the regression with `--warnings promote`.
 
 - fix: `#uncover`, `#only` and the other fn-wrappers stay visible inside a `grid` or `table` that sits behind a `#pause`. A fn-wrapper decides its own visibility, so it escapes the surrounding pause zone, but a table-like container worked out whether it would be hidden *before* re-parsing its cells and then reused that stale answer, covering a wrapper that had already revealed itself. Nesting made no difference: a `grid` inside a `block` was affected too
