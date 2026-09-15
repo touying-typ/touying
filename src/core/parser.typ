@@ -1585,23 +1585,31 @@
     let probe-reducer-data = _find-reducer-meta(child)
     let (raw-wp, so, dr) = _collect-waypoints(child)
     let resolved-wp = _resolve-waypoint-forest(raw-wp, so)
-    let max-rep-raw = if probe-reducer-data != none {
+    let probe(wp) = if probe-reducer-data != none {
       let (_, mrr) = _parse-touying-reducer(
-        self: self + (waypoints: (:), subslide: 9999),
+        self: self + (waypoints: wp, subslide: 9999),
         base: 1,
         index: 9999,
         probe-reducer-data,
       )
       mrr
     } else {
-      let (_, mrr, _, _, _) = _parse-content-into-results-and-repetitions(
-        self: self + (waypoints: (:), subslide: 9999),
+      let (_, mrr, ls, _, _) = _parse-content-into-results-and-repetitions(
+        self: self + (waypoints: wp, subslide: 9999),
         base: 1,
         index: 9999,
         child,
       )
-      mrr
+      calc.max(mrr, ls)
     }
+    let provisional-repeat = calc.max(probe((:)), ..resolved-wp.values(), 1)
+    let provisional-cwp = _compute-waypoint-ranges(
+      resolved-wp,
+      provisional-repeat,
+      so,
+      dr,
+    )
+    let max-rep-raw = probe(provisional-cwp)
     let own-repeat = calc.max(max-rep-raw, ..resolved-wp.values(), 1)
     if own-repeat <= 1 { return none }
     let breadcrumb-label = label(str(real-label) + ":touying-recall-breadcrumb")
