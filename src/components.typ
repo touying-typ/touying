@@ -844,19 +844,21 @@
     }
     let cols = ()
     let col = ()
-    let in-discarded-section = false
     for (hd, next-hd) in headings.zip(headings.slice(1) + (none,)) {
       let next-page = if next-hd != none {
         next-hd.location().page()
       } else {
         calc.inf
       }
-      // Discard hidden/unoutlined headings together with their slides,
-      // including the subsections of a discarded section.
-      if hd.level == 1 {
-        in-discarded-section = not hd.outlined
-      }
-      if in-discarded-section or not hd.outlined {
+      // Discard hidden/unoutlined headings.
+      // The subsections are still shown since that is how typst outline works.
+      if not hd.outlined {
+        // A hidden *section* still starts a new column, so that its surviving
+        // subsections are not drawn under the previous section's heading.
+        if hd.level == 1 and col != () {
+          cols.push(align(left, col.sum()))
+          col = ()
+        }
         slides = slides.filter(it => it.location().page() >= next-page)
         continue
       }
