@@ -260,6 +260,10 @@
   } else if f == math.attach {
     // Only `base` is positional; every script is a named argument.
     ("base",)
+  } else if f == math.stretch {
+    ("body",)
+  } else if f == math.op {
+    ("text",)
   } else if f == math.mat {
     // One positional argument per row, each an array of cells.
     ("..rows",)
@@ -457,7 +461,13 @@
   overbrace: ("body", "annotation"),
   underbracket: ("body", "annotation"),
   overbracket: ("body", "annotation"),
+  underparen: ("body", "annotation"),
+  overparen: ("body", "annotation"),
+  undershell: ("body", "annotation"),
+  overshell: ("body", "annotation"),
   class: ("body",),
+  stretch: ("body",),
+  op: ("text",),
 )
 
 
