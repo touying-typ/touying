@@ -391,6 +391,17 @@ Things to watch when upgrading: a `#pause` after `uncover`/`only`/`alternatives`
 
   `#meanwhile` only worked at the top level and across several slide bodies, but inside a single container — `block`, `grid`, `table`, `stack`, a figure caption — the container was parsed as one unit and reported only where the counter *ended*. This meant the whole container stayed hidden until its last element appeared.
 
+- **fix: nontight lists are still nontight after covering**
+
+  ```typst
+  - alpha
+  - beta
+
+  #pause
+  - gamma
+  - delta
+  ```
+
 - fix: callback-style usage works again ([#374](https://github.com/touying-typ/touying/issues/374), [#380](https://github.com/touying-typ/touying/pull/380))
 
 - fix: empty output slides are no longer indexed when adding last-page metadata ([#382](https://github.com/touying-typ/touying/pull/382))
@@ -433,7 +444,7 @@ Almost every page was touched. The largest items:
 ### Miscellaneous
 
 - **refactor: `src/core.typ` is split into modules.** The 6288-line file becomes `src/core/parser.typ`, `src/core/animation.typ`, `src/core/slides.typ`, `src/core/blocks.typ`, `src/core/waypoints.typ` and additionally `src/core/article.typ`, with `src/slides.typ` replaced by `src/entrypoint.typ` and the new `src/bundle.typ` holding the bundle-export helpers. `src/exports.typ` is reorganised along the same lines. The public API is unaffected except where noted above, but anything importing `touying/src/core.typ` directly has to be updated.
-- **refactor: content-tree handling is one layer, `src/core/tree.typ`.** Recognising what a piece of content is, taking it apart and putting it back together was written out in about thirty places, which had drifted apart: label handling differed per call site, and several walks could not see through a `styled` node, so a `#set` or `#show` rule in force made them miss what they were looking for. The new module knows nothing about touying and imports nothing, so anything can use it. `shape-of` classifies how a node holds its sub-content, `children-of` and `rebuild` are guaranteed to round-trip it, and `map-tree` walks with an identity short-circuit. Moved out of `utils`: the `is-*` predicates, the `typst-builtin-*` handles, `reconstruct*`, `trim`, `label-it`. `core/subslides.typ` takes visibility-spec resolution (`check-visible`, `resolve-negative-subslides`, `last-required-subslide`, …) and `resolve-waypoints` joins `core/waypoints.typ`. The old names stay in `utils`: the ones returning content forward with a deprecation warning, the rest panic naming the new module.
+- **refactor: content-tree handling is one layer, `src/core/tree.typ`.** Recognising what a piece of content is, taking it apart and putting it back together was written out in about thirty places, which had drifted apart: label handling differed per call site, and several walks could not see through a `styled` node, so a `#set` or `#show` rule in force made them miss what they were looking for. The new module knows nothing about touying and imports nothing, so anything can use it. `shape-of` classifies how a node holds its sub-content, `children-of` and `rebuild` are guaranteed to round-trip it, and `map-tree` walks with an identity short-circuit. Moved out of `utils`: the `is-*` predicates, the `typst-builtin-*` handles, `reconstruct*`, `trim`, `label-it`. `core/subslides.typ` takes visibility-spec resolution (`check-visible`, `resolve-negative-subslides`, `last-required-subslide`, …) and `resolve-waypoints` joins `core/waypoints.typ`. `tree` additionally holds what is known about item runs: how Typst gathers adjacent `list.item`/`enum.item`/`terms.item` children into a container, and what a parbreak between two runs does to it, as `get-list-like-runs-among`, `contains-nontight-list-like`, `get-list-like-run-ending-at`, `build-list-like-from` and `get-row-spacing-of-list-like`, which is what let the two covering paths above be made to agree. Deciding what to cover stays with touying; these only describe the shape. The old names stay in `utils`: the ones returning content forward with a deprecation warning, the rest panic naming the new module.
 - refactor: block rendering, waypoint-to-integer resolution, the equation/mitex/raw paths and the article-mode scanning functions were each unified into one implementation rather than several near-duplicates.
 - test: reference renders regenerated for Typst 0.15.0 / tytanic 0.4.0 layout drift. New suites for article mode (presentation, handout and article variants of one source), `recall-content`, `render-subslides`, `mode-never`, `notes-second-screen`, `pdfpc`, `cover-citation`, and the #395, #408 and #415 regressions.
 

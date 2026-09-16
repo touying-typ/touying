@@ -2071,6 +2071,89 @@
 // Author: Andreas Kröpelin
 
 
+/// Resolve a visibility spec to a form `check-visible` understands.
+///
+/// `resolved-subslides` is supplied by the `last-subslide` callback at
+/// placement time and already has its `"h"` replaced by the repetitions
+/// counter, so it takes precedence over the spec the user wrote.
+///
+/// - spec (int, array, str, label, dictionary): The spec the caller was given.
+/// - resolved-spec (int, array, str, label, dictionary, none): The
+///   placement-time replacement, or `none` to use `spec`.
+/// -> int | array | str | dictionary
+#let _get-resolved-subslides(self, spec, resolved-spec) = resolve-waypoints(
+  self,
+  if resolved-spec != none { resolved-spec } else { spec },
+)
+
+
+/// Pick the cover function to hide content with: the caller's override when it
+/// gave one, otherwise the theme's cover method bound to `self`.
+///
+/// - cover-fn (function, auto): The caller's override, or `auto`.
+/// -> function
+#let _get-cover-fn(self, cover-fn) = if cover-fn != auto {
+  cover-fn
+} else {
+  self.methods.cover.with(self: self)
+}
+
+
+/// Resolve `item-by-item`'s `start` to a concrete subslide number.
+///
+/// The forms `start` accepts:
+/// - an int, used directly,
+/// - a label or waypoint marker dictionary, resolved against the waypoint map,
+/// - a string holding exactly one number, parsed as a subslide spec.
+///
+/// A waypoint that resolves to a range yields the range's first subslide, and
+/// one that resolves to nothing at all falls back to 1 so that an unresolved
+/// waypoint still renders rather than aborting the compile.
+///
+/// - start (int, label, str, dictionary): The starting subslide or waypoint.
+/// -> int
+#let _get-item-by-item-start(self, start) = {
+  if type(start) == int {
+    start
+  } else if (
+    type(start) == label
+      or (
+        type(start) == dictionary and start.at("kind", default: none) != none
+      )
+  ) {
+    let resolved = resolve-waypoints(self, start)
+    if type(resolved) == int {
+      resolved
+    } else if type(resolved) == dictionary and "beginning" in resolved {
+      resolved.beginning
+    } else if type(resolved) == dictionary and "first" in resolved {
+      resolved.first
+    } else {
+      1
+    }
+  } else if type(start) == str {
+    let parts = _parse-subslide-indices(start)
+    if parts.len() == 1 and type(parts.first()) == int {
+      parts.first()
+    } else {
+      panic(
+        "item-by-item: `start` string must be a single number (e.g. \"3\"), "
+          + "not a range or multi-value spec. Got: \""
+          + start
+          + "\".",
+      )
+    }
+  } else {
+    panic(
+      "item-by-item: `start` must be an integer, a string with a single number, "
+        + "a waypoint label, or a single-position waypoint marker "
+        + "(get-first, get-last, prev-wp, next-wp). Got: "
+        + str(type(start)),
+    )
+  }
+}
+
+
 /// Take effect in some subslides.
 ///
 /// Example: `#effect(text.with(fill: red), "2-")[Something]` will display `[Something]` if the current slide is 2 or later.
@@ -2104,10 +2187,11 @@
   if is-method {
     fn
   } else {
-    let visible-subslides = if resolved-subslides != none {
-      resolved-subslides
-    } else { visible-subslides }
-    let visible-subslides = resolve-waypoints(self, visible-subslides)
+    let visible-subslides = _get-resolved-subslides(
+      self,
+      visible-subslides,
+      resolved-subslides,
+    )
     if check-visible(self.subslide, visible-subslides) {
       fn(cont)
     } else {
@@ -2153,13 +2237,12 @@
   cover-fn: auto,
   resolved-subslides: none,
 ) = {
-  let visible-subslides = if resolved-subslides != none {
-    resolved-subslides
-  } else { visible-subslides }
-  let visible-subslides = resolve-waypoints(self, visible-subslides)
-  let cover = if cover-fn != auto { cover-fn } else {
-    self.methods.cover.with(self: self)
-  }
+  let visible-subslides = _get-resolved-subslides(
+    self,
+    visible-subslides,
+    resolved-subslides,
+  )
+  let cover = _get-cover-fn(self, cover-fn)
   if check-visible(self.subslide, visible-subslides) {
     uncover-cont
   } else {
@@ -2202,10 +2285,11 @@
   only-cont,
   resolved-subslides: none,
 ) = {
-  let visible-subslides = if resolved-subslides != none {
-    resolved-subslides
-  } else { visible-subslides }
-  let visible-subslides = resolve-waypoints(self, visible-subslides)
+  let visible-subslides = _get-resolved-subslides(
+    self,
+    visible-subslides,
+    resolved-subslides,
+  )
   if check-visible(self.subslide, visible-subslides) {
     only-cont
   }
@@ -2241,11 +2325,10 @@
   // replaced by the placement-time repetitions counter.
   let specs = effects
     .enumerate()
-    .map(((i, eff)) => resolve-waypoints(
+    .map(((i, eff)) => _get-resolved-subslides(
       self,
-      if resolved-subslides != none {
-        resolved-subslides.at(i)
-      } else { eff.subslides },
+      eff.subslides,
+      if resolved-subslides != none { resolved-subslides.at(i) } else { none },
     ))
 
   // What applies at subslide `idx`: the one winning placement, and the styles
@@ -2546,47 +2629,7 @@
     fn = (idx, it) => it
   }
   let cover = self.methods.cover.with(self: self)
-  let item-funcs = (list.item, enum.item, terms.item)
-
-  // Resolve waypoint-based start to a concrete subslide number.
-  let start = if type(start) == int {
-    start
-  } else if (
-    type(start) == label
-      or (
-        type(start) == dictionary and start.at("kind", default: none) != none
-      )
-  ) {
-    let resolved = resolve-waypoints(self, start)
-    if type(resolved) == int {
-      resolved
-    } else if type(resolved) == dictionary and "beginning" in resolved {
-      resolved.beginning
-    } else if type(resolved) == dictionary and "first" in resolved {
-      resolved.first
-    } else {
-      1
-    }
-  } else if type(start) == str {
-    let parts = _parse-subslide-indices(start)
-    if parts.len() == 1 and type(parts.first()) == int {
-      parts.first()
-    } else {
-      panic(
-        "item-by-item: `start` string must be a single number (e.g. \"3\"), "
-          + "not a range or multi-value spec. Got: \""
-          + start
-          + "\".",
-      )
-    }
-  } else {
-    panic(
-      "item-by-item: `start` must be an integer, a string with a single number, "
-        + "a waypoint label, or a single-position waypoint marker "
-        + "(get-first, get-last, prev-wp, next-wp). Got: "
-        + type(start),
-    )
-  }
+  let start = _get-item-by-item-start(self, start)
 
   if tree.is-styled(cont) {
     return tree.reconstruct-styled(
@@ -2595,8 +2638,23 @@
     )
   }
 
+  // Covering an item costs its container two things, and each is corrected
+  // below. `cover-hidden` in `core/parser.typ` corrects the same two on the
+  // `#pause` path.
+  //
+  // A covered item stops being laid out as a row, so the container loses that
+  // row's height and everything below creeps upwards as items are revealed.
+  //
+  // A non-tight container additionally loses its wider pitch, because the
+  // parbreak that widened it only counts while the run is in one piece.
+  //
+  // Both corrections apply per segment: the consecutive items of one run that
+  // are either all covered or all visible. Revealing an item splits a run into
+  // two segments, which is what has to be stitched back to the layout the run
+  // had in one piece.
   if tree.is-sequence(cont) {
     let meaningful = cont.children.filter(c => c not in tree.empty-contents)
+
     if (
       meaningful.len() == 1
         and (
@@ -2615,291 +2673,154 @@
         meaningful.first(),
       )
       let at = cont.children.position(c => c not in tree.empty-contents)
+
       return cont
         .children
         .enumerate()
         .map(((i, c)) => if i == at { inner } else { c })
         .sum(default: [])
     }
-    // Markup list/enum/terms: items appear as list.item/enum.item/terms.item in a sequence
-    //
-    // A covered item stops being laid out as a list row, so the enclosing list
-    // loses that row's height and everything below it creeps up as items are
-    // revealed. Consecutive covered items are therefore buffered and flushed as
-    // one covered block carrying the list's own row spacing, which reserves the
-    // rows the items would have occupied. `_item-row-spacing` decides what that
-    // spacing is: the same rule `cover-hidden` applies on the `#pause` path.
-    // A blank line between two item runs does not split them into two lists:
-    // Typst keeps one list and makes it non-tight, which both widens the row
-    // pitch and lowers where the list starts. Covering the run on one side of
-    // the break would let the other revert to tight and move every one of its
-    // rows, so when a parbreak separates item runs each run is emitted as an
-    // explicit `tight: false` container and keeps the wider pitch throughout.
-    let body-is-nontight = {
-      let seen-item = false
-      let seen-break = false
-      let res = false
-      for child in cont.children {
-        if type(child) != content {
-          // not an element
-        } else if child.func() in item-funcs {
-          if seen-break and seen-item {
-            res = true
-            break
-          }
-          seen-item = true
-        } else if child.func() == parbreak {
-          if seen-item {
-            seen-break = true
-          }
-        } else if not tree.is-space(child) {
-          // Any other content ends the list outright.
-          seen-item = false
-          seen-break = false
+    // The runs Typst will gather this body's items into.
+    let runs = tree.get-list-like-runs-among(cont.children)
+
+    // Which run each item belongs to and its 1-based position in it, keyed by
+    // the item's index in `cont.children`.
+    let placement = (:)
+    for run in runs {
+      let rank = 0
+      for index in range(run.start, run.end) {
+        if tree.is-list-like-item(cont.children.at(index)) {
+          rank += 1
+          placement.insert(str(index), (run: run, rank: rank))
         }
       }
-      res
     }
 
-    // Which item indices belong to a run of two or more same-kind items, i.e.
-    // sit in a real list? A lone item is its own list and has no row spacing to
-    // preserve, so covering it needs the natural block spacing instead.
-    let in-list = {
-      let flags = ()
-      let run = 0
-      let run-kind = none
-      // Close the current run: mark its members according to its length.
-      let close(flags, run) = flags + (run > 1,) * run
-      for child in cont.children {
-        if type(child) == content and child.func() in item-funcs {
-          if run-kind != none and run-kind != child.func() {
-            flags = close(flags, run)
-            run = 0
-          }
-          run-kind = child.func()
-          run += 1
-        } else if type(child) == content and not tree.is-space(child) {
-          // A parbreak keeps one non-tight list; anything else ends it. Either
-          // way the items around it are still rows of a list only if that list
-          // has more than one of them, which the run length already says.
-          if child.func() != parbreak {
-            flags = close(flags, run)
-            run = 0
-            run-kind = none
-          }
-        }
+    // Cover a segment and hand back a block that reserves the rows its items
+    // would have occupied.
+    let build-covered-block-with-row-gaps(
+      items,
+      run,
+      first-number,
+      opens-container: false,
+    ) = {
+      // A container of one item has no row gap to preserve.
+      if run.items.len() == 1 {
+        return (block(cover(items.sum())),)
       }
-      close(flags, run)
-    }
-
-    let item-count = 0
-    let result = ()
-    // Covered items awaiting a flush, and the item that set their kind.
-    // `*-first` is the 1-based position of the buffer's first item in the body,
-    // which is where a rebuilt enum's numbering has to continue from.
-    let pending-first = 1
-    let visible-first = 1
-    let pending = ()
-    let pending-kind = none
-    // Visible items awaiting a flush; only buffered when the body is non-tight,
-    // since they then have to be re-emitted as an explicit non-tight container.
-    let visible = ()
-    let visible-kind = none
-    // Kind of the item run emitted last, so a covered run can tell whether it
-    // continues that list or opens one of its own.
-    let prev-kind = none
-    // Whether the buffered covered run sits in a real list.
-    let pending-in-list = false
-
-    // Wrap a run of items in its container, so an explicit `tight: false`
-    // survives the covering of a neighbouring run.
-    // `first-number` is the position of the run's first item within the whole
-    // body. An enum rebuilt as its own container would otherwise restart its
-    // numbering at 1, so each run has to be told where it continues from.
-    let _as-nontight(items, kind, first-number) = {
-      if kind == enum.item {
-        enum(tight: false, start: first-number, ..items)
-      } else if kind == terms.item {
-        terms(tight: false, ..items)
-      } else {
-        list(tight: false, ..items)
-      }
-    }
-
-    // The gap between two rows of a list of `kind`. With `spacing` set the user
-    // named it; left `auto` it is derived from the paragraph metrics, which is
-    // `par.spacing` for a non-tight list and `par.leading` for a tight one.
-    let _item-row-spacing(kind, nontight) = {
-      let spacing = if kind == list.item {
-        list.spacing
-      } else if kind == enum.item {
-        enum.spacing
-      } else {
-        terms.spacing
-      }
-      if spacing != auto {
-        spacing
-      } else if nontight {
-        par.spacing
-      } else {
-        par.leading
-      }
-    }
-
-    // The buffered covered items as one block that keeps their rows. Pure: a
-    // closure cannot write back to `pending`/`result`, so the caller clears the
-    // buffer itself.
-    let flush(items, kind, nontight, prev-kind, inside-list, first-number) = {
-      if items.len() == 0 {
-        return ()
-      }
-      // A lone item is a list of its own, so there is no row spacing to restore
-      // and the natural block spacing is already right.
-      if not inside-list {
-        return (context block(above: auto, below: auto, cover(items.sum())),)
-      }
-      // The covered run has to reserve the same rows it would have occupied, so
-      // a non-tight list's run keeps the wider pitch here too. This holds for a
-      // lone covered item as well: it is still a row of the non-tight list, and
-      // its own height is what the visible rows are spaced against.
-      let body = if nontight {
-        _as-nontight(items, kind, first-number)
-      } else {
+      let body = if run.tight {
         items.sum()
+      } else {
+        // Rebuilt as its own container, so `first-number` is where an enum
+        // keeps counting from.
+        tree.build-list-like-from(
+          items,
+          tight: false,
+          first-number: first-number,
+        )
       }
-      // Row spacing is the gap *inside* one list. A covered run that opens a
-      // list of its own -- because the run before it was a different kind -- is
-      // separated from it by paragraph spacing instead.
-      let opens-new-list = prev-kind != none and prev-kind != kind
+      // The row gap reads the active styles, so only a context can resolve it.
       (
-        context block(
-          above: if opens-new-list {
-            par.spacing
-          } else {
-            _item-row-spacing(kind, nontight)
-          },
-          below: _item-row-spacing(kind, nontight),
-          cover(body),
-        ),
+        context {
+          let gap = tree.get-row-spacing-of-list-like(
+            run.kind,
+            tight: run.tight,
+          )
+          block(
+            // A segment that opens a container is separated from what
+            // precedes it by paragraph spacing rather than a row gap.
+            above: if opens-container { par.spacing } else { gap },
+            below: gap,
+            cover(body),
+          )
+        },
       )
     }
 
-    // The buffered visible items, re-emitted as an explicit non-tight container
-    // when the body is non-tight so they keep their pitch and origin.
-    let flush-visible(items, kind, first-number) = {
-      if items.len() == 0 {
-        return ()
+    // The segment being gathered, and where its finished content accumulates.
+    let empty-segment = (items: (), covered: false, run: none, first-number: 1)
+
+    let result = ()
+    let item-count = 0
+    let current = empty-segment
+    let preceding-run = none
+
+    // A finished segment as the content it contributes: covered segments need a
+    // reserving block, visible ones only a container when the run is non-tight.
+    let emit(segment, preceding-run) = {
+      let run = segment.run
+      if segment.covered {
+        build-covered-block-with-row-gaps(
+          segment.items,
+          run,
+          segment.first-number,
+          opens-container: preceding-run != none
+            and preceding-run.start != run.start,
+        )
+      } else if run.tight {
+        segment.items
+      } else {
+        (
+          tree.build-list-like-from(
+            segment.items,
+            tight: false,
+            first-number: segment.first-number,
+          ),
+        )
       }
-      (_as-nontight(items, kind, first-number),)
     }
 
-    for child in cont.children {
-      if type(child) == content and child.func() in item-funcs {
-        if check-visible(self.subslide, (beginning: start + item-count)) {
-          // A visible item ends any covered run before it.
-          if pending.len() != 0 {
-            result += flush(
-              pending,
-              pending-kind,
-              body-is-nontight,
-              prev-kind,
-              pending-in-list,
-              pending-first,
-            )
-            prev-kind = pending-kind
-            pending = ()
-            pending-kind = none
-          }
-          let shown = fn(start + item-count - self.subslide, child)
-          if body-is-nontight {
-            // Buffer it: the run is re-emitted as one non-tight container once
-            // it ends, which is what keeps its rows from re-tightening.
-            if visible-kind != none and visible-kind != child.func() {
-              result += flush-visible(visible, visible-kind, visible-first)
-              prev-kind = visible-kind
-              visible = ()
-            }
-            if visible.len() == 0 { visible-first = item-count + 1 }
-            visible-kind = child.func()
-            visible.push(shown)
-          } else {
-            result.push(shown)
-            prev-kind = child.func()
-          }
-        } else {
-          // Only items of the same kind share a list, so a kind change starts a
-          // new covered run.
-          if pending-kind != none and pending-kind != child.func() {
-            result += flush(
-              pending,
-              pending-kind,
-              body-is-nontight,
-              prev-kind,
-              pending-in-list,
-              pending-first,
-            )
-            prev-kind = pending-kind
-            pending = ()
-          }
-          // A covered run starts after the visible run before it, so that run
-          // has to be emitted first or the two would swap places.
-          if visible.len() != 0 {
-            result += flush-visible(visible, visible-kind, visible-first)
-            prev-kind = visible-kind
-            visible = ()
-            visible-kind = none
-          }
-          pending-kind = child.func()
-          if pending.len() == 0 {
-            pending-in-list = in-list.at(item-count, default: false)
-          }
-          pending.push(fn(start + item-count - self.subslide, child))
-        }
-        item-count += 1
-      } else {
-        // Anything that is not a space ends both runs: a parbreak separates two
-        // runs of one non-tight list, other content ends the list outright.
-        if not tree.is-space(child) {
-          if visible.len() != 0 {
-            result += flush-visible(visible, visible-kind, visible-first)
-            prev-kind = visible-kind
-            visible = ()
-            visible-kind = none
-          }
-          if pending.len() != 0 {
-            result += flush(
-              pending,
-              pending-kind,
-              body-is-nontight,
-              prev-kind,
-              pending-in-list,
-              pending-first,
-            )
-            prev-kind = pending-kind
-            pending = ()
-            pending-kind = none
-          }
-          // Only a parbreak keeps the runs in one list; any other content ends
-          // the list, so the next covered run opens a fresh one.
-          if not (type(child) == content and child.func() == parbreak) {
-            prev-kind = none
-          }
-        }
-        result.push(fn(start + item-count - self.subslide, child))
+    // Walk the children, closing a segment wherever its run or its visibility
+    // changes and passing everything that is not an item straight through.
+    for (index, child) in cont.children.enumerate() {
+      let place = placement.at(str(index), default: none)
+      let run = if place == none { none } else { place.run }
+      let is-covered = (
+        run != none
+          and not check-visible(self.subslide, (beginning: start + item-count))
+      )
+      let continues-segment = (
+        run != none
+          and current.items.len() != 0
+          and current.run.start == run.start
+          and current.covered == is-covered
+      )
+
+      if not continues-segment and current.items.len() != 0 {
+        result += emit(current, preceding-run)
+        preceding-run = current.run
+        current = empty-segment
       }
+
+      let styled = fn(start + item-count - self.subslide, child)
+
+      // Not an item: it passes through, and may end the container.
+      if run == none {
+        // A parbreak holds a non-tight container together, so the run before it
+        // is still what a later segment continues. Anything else ends it.
+        if not tree.is-space(child) and not tree.is-parbreak(child) {
+          preceding-run = none
+        }
+        result.push(styled)
+        continue
+      }
+
+      // An item: it opens the segment if there is none, then joins it.
+
+      if current.items.len() == 0 {
+        current.run = run
+        current.covered = is-covered
+        current.first-number = place.rank
+      }
+      current.items.push(styled)
+      item-count += 1
     }
-    result += flush-visible(visible, visible-kind, visible-first)
-    if visible.len() != 0 {
-      prev-kind = visible-kind
+
+    // The last segment has no following child to close it.
+    if current.items.len() != 0 {
+      result += emit(current, preceding-run)
     }
-    result += flush(
-      pending,
-      pending-kind,
-      body-is-nontight,
-      prev-kind,
-      pending-in-list,
-      pending-first,
-    )
+
     result.sum(default: [])
   } else if cont.func() == list or cont.func() == enum {
     // Programmatic list/enum container

@@ -2094,265 +2094,183 @@
     let result = ()
     let hidden-parts = ()
 
-    // Helper: is this content element a list/enum/terms item?
-    let _is-list-item(it) = (
-      type(it) == content
-        and (
-          it.func() == list.item
-            or it.func() == enum.item
-            or it.func() == terms.item
-        )
-    )
-
-    /// Flush the hidden-parts buffer as covered content.  `last-result` is the
-    /// current visible result array at the flush point.  We only wrap in
-    /// `block(spacing: par.leading)` when the last visible element AND the first
-    /// hidden element are both list/enum/terms items — i.e. a list interrupted
-    /// by `#pause`.  In all other cases (text→list, list→text, text→text) the
-    /// default paragraph spacing is correct.
-    let spacing-is-auto(it) = {
-      if it.func() == list.item {
-        list.spacing == auto
-      } else if it.func() == enum.item {
-        enum.spacing == auto
-      } else if it.func() == terms.item {
-        terms.spacing == auto
-      } else {
-        false
-      }
-    }
-    // The spacing that should border a covered run next to the list/enum/terms
-    // item `it`. When the list spacing is `auto` we fall back to paragraph-
-    // derived spacing (nontight -> par.spacing, tight -> par.leading); otherwise
-    // the user set an explicit value we can read off directly.
-    let list-spacing-for(it, nontight: false) = {
-      if spacing-is-auto(it) {
-        // would yield `auto` which is a par.spacing for the block.
-        if nontight or self.at("nontight-list-enum-and-terms", default: true) {
-          //cannot set list thightness via set rule somehow. if user uses magic.nontight locally we can't detect that, so we just assume he only uses the config. thus this might break.
-          par.spacing
-        } else {
-          par.leading
-        }
-      } else if it.func() == list.item {
-        list.spacing
-      } else if it.func() == enum.item {
-        enum.spacing
-      } else if it.func() == terms.item {
-        terms.spacing
-      } else {
-        par.spacing
-      }
-    }
-    // `next-is-list` is a look-ahead hint: is the first *following* visible
-    // element (after this covered run) a list/enum/terms item? It is needed to
-    // correct the spacing *below* the covered block, which cannot be derived
-    // from `items`/`last-result` alone (e.g. the #meanwhile case).
-    // Rewrite the trailing run of visible list/enum/terms items in `result`
-    // into an explicit non-tight container.
+    // -------------------------------------
+    //   Covering lists of items without moving rows
     //
-    // A parbreak between two item runs makes Typst build ONE non-tight list, so
-    // the visible rows sit `par.spacing` apart and the list starts lower. Once
-    // the run after the parbreak is covered, the parbreak no longer separates
-    // two runs and the remaining items revert to tight: every visible row moves,
-    // including the first, which is nowhere near the covered content. Spacing on
-    // the covered block cannot undo that, because a block after a list never
-    // moves the list. The tightness has to be asserted on the visible items
-    // themselves, which means re-emitting them as `list(tight: false, ..)`.
-    // A covered run already emitted into `result` for an earlier part of this
-    // same list. `cover-hidden` wraps such a run in a `context` block, so it is
-    // the one non-item element that does not end the list: it stands in for
-    // items that still belong to it.
-    let _is-covered-block(it) = (
-      type(it) == content and repr(it.func()) == "context"
-    )
+    //   Covering part of an item run costs the container the rows those items
+    //   occupied, and its wider pitch when a parbreak had made it non-tight.
+    //   `item-by-item-fn` in `utils.typ` corrects the same two.
+    // -------------------------------------
 
-    let force-nontight-tail(result, sep-here: true) = {
-      // `sep-here` says on which side of the cover boundary the separating
-      // parbreak fell. Before it, it is the last element of this visible run
-      // and must stay one, so it is held aside and only what precedes it is
-      // rewritten. Past it, the parbreak is among the covered items and the run
-      // to rewrite ends at the tail itself.
-      let end = result.len()
-      while end > 0 and tree.is-space(result.at(end - 1)) {
-        end -= 1
+    // The gap bordering a covered run next to the item `it`, or paragraph
+    // spacing when `it` is not an item.
+    //
+    // Only the `nontight-list-enum-and-terms` config is touying's own; it makes
+    // every container non-tight and so decides the `auto` fallback.
+    let get-spacing-bordering(it, nontight: false) = {
+      if not tree.is-list-like-item(it) {
+        return par.spacing
       }
-      if end == 0 { return result }
+      tree.get-row-spacing-of-list-like(
+        it.func(),
+        tight: not (
+          nontight or self.at("nontight-list-enum-and-terms", default: true)
+        ),
+      )
+    }
+
+    // Rewrite the run of visible items that `result` ends in as an explicitly
+    // non-tight container.
+    //
+    // Covering the run after the parbreak leaves the parbreak separating
+    // nothing, so the remaining items revert to tight and every visible row
+    // moves. A block after a container cannot move it, so the tightness has to
+    // be asserted on the visible items themselves.
+    //
+    // `parbreak-is-visible` says which side of the boundary the parbreak fell:
+    // - before it, it is this run's last element and is held aside,
+    // - past it, it is among the covered items and the run ends at the tail.
+    let rebuild-visible-tail-nontight(result, parbreak-is-visible: true) = {
+      // Trailing spaces are not part of the run and are put back untouched.
+      let content-end = result.len()
+      while content-end > 0 and tree.is-space(result.at(content-end - 1)) {
+        content-end -= 1
+      }
+      if content-end == 0 { return result }
+
+      // Nothing to do when the parbreak was expected here but is not.
       if (
-        sep-here
-          and not (
-            type(result.at(end - 1)) == content
-              and result.at(end - 1).func() == parbreak
-          )
+        parbreak-is-visible and not tree.is-parbreak(result.at(content-end - 1))
       ) {
         return result
       }
-      // `run-end` is the index just past the last item of the run to rewrite:
-      // before the held-aside parbreak, or at the tail when there is none.
-      let trailing = if sep-here { result.slice(end - 1) } else {
-        result.slice(end)
+
+      // The held-aside parbreak, if it is on this side, plus those spaces.
+      let run-end = if parbreak-is-visible { content-end - 1 } else {
+        content-end
       }
-      let run-end = if sep-here { end - 1 } else { end }
-      // Walk back over the items of this list. Space and parbreak nodes are
-      // stepped over: a parbreak does not end the list, it only makes it
-      // non-tight, so the run continues through it. So is a covered block
-      // already emitted for an earlier run of this same list -- it stands in
-      // for items that are still part of it. Anything else -- text, a
-      // linebreak, an item of another kind -- ends the list for real.
-      let start = run-end
-      let kind = none
-      let i = run-end
-      while i > 0 {
-        let item = result.at(i - 1)
-        if (
-          tree.is-space(item)
-            or (type(item) == content and item.func() == parbreak)
-            or not _is-list-item(item) and _is-covered-block(item)
-        ) {
-          i -= 1
-        } else if (
-          _is-list-item(item) and (kind == none or item.func() == kind)
-        ) {
-          kind = item.func()
-          i -= 1
-          start = i
-        } else {
-          break
-        }
-      }
-      // A single item is not a list, so there is no tightness to preserve.
-      let tail = result
-        .slice(start, run-end)
-        .filter(item => _is-list-item(item))
-      if tail.len() < 2 { return result }
-      // `list`/`enum`/`terms` take their items as positional arguments; the
-      // container function is the item function's parent element.
-      let container = if kind == list.item {
-        list
-      } else if kind == enum.item {
-        enum
-      } else {
-        terms
-      }
-      result.slice(0, start) + (container(tight: false, ..tail),) + trailing
+      let kept-tail = result.slice(run-end)
+
+      // A covered run emitted earlier stands in for items of this same
+      // container, so it is the one non-item element that does not end it.
+      // `cover-hidden` wraps it in a `context` block.
+      let run = tree.get-list-like-run-ending-at(
+        result,
+        run-end,
+        opaque: el-func => el-func == tree.typst-builtin-context,
+      )
+
+      // A container of one item has no tightness to preserve.
+      if run.items.len() < 2 { return result }
+
+      (
+        result.slice(0, run.start)
+          + (tree.build-list-like-from(run.items, tight: false),)
+          + kept-tail
+      )
     }
 
-    /// Cover a run of hidden elements.
-    ///
-    /// Returns `(result, covered)`: `result` is `last-result`, rewritten when
-    /// the covered run forces the visible items before it to stay non-tight,
-    /// and `covered` is the content to append after it.
-    let cover-hidden(cover-fn, items, last-result, next-is-list: false) = {
-      // First non-space hidden element (borders the gap *above* the block)
-      let first-pos = items.position(item => not tree.is-space(item))
-      let first-is-list = (
-        first-pos != none and _is-list-item(items.at(first-pos))
-      )
-      // Last non-space hidden element (borders the gap *below* the block)
-      let last-hidden-item = {
-        let found = none
-        for i in range(items.len()) {
-          let item = items.at(items.len() - 1 - i)
-          if tree.is-space(item) {
-            // skip space nodes only
-          } else {
-            found = item
-            break
-          }
-        }
-        found
-      }
-      let last-hidden-is-list = (
-        last-hidden-item != none and _is-list-item(last-hidden-item)
-      )
+    // The covered items as the body to hand to the cover method.
+    //
+    // The reserved rows include the gaps between the covered items. Covered as
+    // a bare sequence they lay out tight and reserve too little, so a non-tight
+    // run is rebuilt as its own container.
+    let build-covered-body(items, is-nontight) = {
+      // A trailing mark or metadata follows the container rather than belonging
+      // to it, so the scan ends just past the last item.
+      let steps-back = items.rev().position(tree.is-list-like-item)
+      if steps-back == none { return items.sum() }
 
-      // Last non-space visible element (walk result backwards).
-      // We only skip space nodes — parbreaks and linebreaks are meaningful
-      // separators.  A parbreak between the last visible list item and the
-      // hidden zone means the user broke the implicit list with a blank line,
-      // so paragraph spacing should be used instead of list spacing.
-      let last-is-list = {
-        let found = false
-        for i in range(last-result.len()) {
-          let item = last-result.at(last-result.len() - 1 - i)
-          if tree.is-space(item) {
-            // skip space nodes only
-          } else {
-            found = _is-list-item(item)
-            break
-          }
-        }
-        found
-      }
-      // A parbreak among the covered items makes the list Typst builds from
-      // this run non-tight, which spaces every row by par.spacing rather than
-      // par.leading. The covered block has to reserve that same gap.
-      let run-is-nontight = items.any(item => (
-        type(item) == content and item.func() == parbreak
-      ))
-      // Does a parbreak separate the visible tail from this covered run? The
-      // `#pause` sits after the blank line, so the parbreak ends up as the last
-      // visible element rather than among the covered items. When it does, and
-      // items stand on both sides of it, the two runs were one non-tight list
-      // and the visible one has to be told to stay non-tight.
-      // Is a parbreak anywhere across this cover boundary -- at the end of the
-      // visible run, or among the covered items? A parbreak does not split the
-      // items into two lists; it makes the one list they form non-tight, and
-      // that widened pitch applies to every row on both sides of it. So
-      // wherever it falls relative to the cover, the visible run was part of a
-      // non-tight list and has to be re-emitted as one.
-      let split-by-parbreak = {
-        let is-parbreak(item) = (
-          type(item) == content and item.func() == parbreak
+      let run-end = items.len() - steps-back
+      let run = tree.get-list-like-run-ending-at(items, run-end)
+      if not is-nontight or run.items.len() < 2 { return items.sum() }
+
+      (
+        items.slice(0, run.start).sum(default: [])
+          + tree.build-list-like-from(run.items, tight: false)
+          + items.slice(run-end).sum(default: [])
+      )
+    }
+
+    /// Cover a run of hidden elements, correcting the container spacing it
+    /// would otherwise cost.
+    ///
+    /// Returns `(result, covered)`:
+    /// - `result` is `last-result`, rewritten when the covered run forces the
+    ///   visible items before it to stay non-tight,
+    /// - `covered` is the content to append after it.
+    ///
+    /// `next-is-list` and `rest` are look-ahead the caller supplies, since a
+    /// `#pause` splits one container across several calls.
+    let cover-hidden(
+      cover-fn,
+      items,
+      last-result,
+      next-is-list: false,
+      rest: (),
+    ) = {
+      // The elements bordering the gaps above and below the block. Only spaces
+      // are skipped: a parbreak or linebreak there is the user breaking the
+      // container deliberately, which the decisions below have to see.
+      let first-hidden = tree.find-first-non-space(items)
+      let last-hidden-item = tree.find-last-non-space(items)
+      let last-visible-item = tree.find-last-non-space(last-result)
+
+      // A gap only needs correcting where items sit on both of its sides.
+      let first-hidden-is-item = tree.is-list-like-item(first-hidden)
+      let last-hidden-is-item = tree.is-list-like-item(last-hidden-item)
+      let last-visible-is-item = tree.is-list-like-item(last-visible-item)
+
+      // Would Typst have built one non-tight container across this boundary?
+      // A parbreak widens the container its items form, and that pitch applies
+      // to every row on both sides. Items of different kinds are separate
+      // containers regardless, so a parbreak between those changes nothing.
+      //
+      // The parbreak can fall on either side, so the question is asked of the
+      // visible tail and the covered items together, as the source had them.
+      let visible-run = tree.get-list-like-run-ending-at(
+        last-result,
+        last-result.len(),
+      )
+      // `rest` is what follows the cover, which a later `#pause` has not yet
+      // reached but which still belongs to the same container.
+      let span = last-result.slice(visible-run.start) + items + rest
+      let list-is-nontight = tree.contains-nontight-list-like(span)
+      let covered = cover-fn(build-covered-body(items, list-is-nontight))
+      // A gap needs a reserved row only where items sit on both sides:
+      // - above, a container interrupted by a `#pause`,
+      // - below, a `#meanwhile` revealing further items after the cover.
+      //
+      // Each side is decided on its own; anything else keeps `auto` spacing.
+      let gap-above-needs-row = first-hidden-is-item and last-visible-is-item
+      let gap-below-needs-row = last-hidden-is-item and next-is-list
+
+      // Items of different kinds are two containers, separated by paragraph
+      // spacing rather than a row gap.
+      let opens-new-container = (
+        gap-above-needs-row and first-hidden.func() != last-visible-item.func()
+      )
+      // Covering one side of a non-tight container would let the other revert
+      // to tight, so the visible run is re-emitted as an explicit container.
+      let result = if first-hidden-is-item and list-is-nontight {
+        rebuild-visible-tail-nontight(
+          last-result,
+          parbreak-is-visible: tree.is-parbreak(last-visible-item),
         )
-        let in-visible = {
-          let found = false
-          for i in range(last-result.len()) {
-            let item = last-result.at(last-result.len() - 1 - i)
-            if tree.is-space(item) {
-              // skip space nodes only
-            } else {
-              found = is-parbreak(item)
-              break
-            }
-          }
-          found
-        }
-        in-visible or items.any(is-parbreak)
-      }
-      let covered = cover-fn(items.sum())
-      // The gap *above* the covered block is broken when the last visible and
-      // first hidden elements are both list items (a list interrupted by a
-      // #pause). The gap *below* is broken symmetrically when the last hidden
-      // and the next visible elements are both list items — e.g. a #meanwhile
-      // that reveals further list items right after a covered run. Each side is
-      // corrected independently; a paragraph / break / end on either side keeps
-      // the natural (auto) spacing.
-      let above-needs = first-is-list and last-is-list
-      let below-needs = last-hidden-is-list and next-is-list
-      // A parbreak stands between the visible items and this covered run of
-      // items, so the two were one non-tight list. Re-emit the visible run as
-      // an explicit non-tight list, or it re-tightens and every visible row
-      // moves once the run after the parbreak is covered.
-      // A parbreak on either side of this cover boundary means the items on
-      // both sides formed one non-tight list, whose wider pitch applies to
-      // every row. Covering one side would let the other revert to tight, so
-      // the visible run is re-emitted as an explicitly non-tight container.
-      let result = if first-is-list and (split-by-parbreak or run-is-nontight) {
-        force-nontight-tail(last-result, sep-here: split-by-parbreak)
       } else {
         last-result
       }
-      let covered = if above-needs or below-needs {
-        // construct a block around the covered content that corrects spacing.
+      let covered = if gap-above-needs-row or gap-below-needs-row {
         context block(
-          above: if above-needs {
-            list-spacing-for(items.at(first-pos), nontight: run-is-nontight)
+          above: if opens-new-container {
+            par.spacing
+          } else if gap-above-needs-row {
+            get-spacing-bordering(first-hidden, nontight: list-is-nontight)
           } else {
             auto
           },
-          below: if below-needs {
-            list-spacing-for(last-hidden-item, nontight: run-is-nontight)
+          below: if gap-below-needs-row {
+            get-spacing-bordering(last-hidden-item, nontight: list-is-nontight)
           } else {
             auto
           },
@@ -2371,24 +2289,47 @@
       (it,)
     }
 
-    // Look ahead from `from-index`: is the first following non-space sibling a
-    // list/enum/terms item? Used at flush sites to decide whether a covered run
-    // needs list-spacing *below* it (the visible-list-after-covered case, e.g.
-    // #meanwhile). Stops at the first non-space element, so an intervening
-    // parbreak/linebreak (an intentional list break) correctly yields false.
-    let next-sibling-is-list(from-index) = {
-      let j = from-index + 1
-      let res = false
-      while j < children.len() {
-        let sibling = children.at(j)
-        if tree.is-space(sibling) {
-          j += 1
-        } else {
-          res = _is-list-item(sibling)
-          break
+    // -------------------------------------
+    //   Looking ahead for the rest of a container
+    //
+    //   A `#pause` splits one container across several `cover-hidden` calls, so
+    //   what follows the cover has to be read off `children`.
+    // -------------------------------------
+
+    // Is the first sibling after `from-index` an item? A covered run needs a
+    // gap reserved below it only then, as after a `#meanwhile`.
+    //
+    // Only spaces are stepped over, so a parbreak or linebreak yields false.
+    let next-sibling-is-item(from-index) = {
+      let index = from-index + 1
+      while index < children.len() {
+        let sibling = children.at(index)
+        if not tree.is-space(sibling) {
+          return tree.is-list-like-item(sibling)
         }
+        index += 1
       }
-      res
+      false
+    }
+
+    // The rest of the container after `from-index`. A parbreak further down
+    // still widens the whole container, so a call seeing only the items before
+    // it would reserve the tight pitch.
+    let get-list-continuation-after(from-index, kind) = {
+      let continuation = ()
+      let index = from-index + 1
+      while index < children.len() {
+        let sibling = children.at(index)
+        let belongs = (
+          tree.is-space(sibling)
+            or tree.is-parbreak(sibling)
+            or (tree.is-list-like-item(sibling) and sibling.func() == kind)
+        )
+        if not belongs { break }
+        continuation.push(sibling)
+        index += 1
+      }
+      continuation
     }
 
     // Process each child element for animation markers and content types
@@ -2423,7 +2364,7 @@
                   cover,
                   hidden-parts,
                   result,
-                  next-is-list: next-sibling-is-list(_child_i),
+                  next-is-list: next-sibling-is-item(_child_i),
                 )
                 result = covered.result
                 result.push(covered.covered)
@@ -2440,7 +2381,7 @@
                   cover,
                   hidden-parts,
                   result,
-                  next-is-list: next-sibling-is-list(_child_i),
+                  next-is-list: next-sibling-is-item(_child_i),
                 )
                 result = covered.result
                 result.push(covered.covered)
@@ -3131,7 +3072,27 @@
         // clear the hidden-parts when encounter linebreak or parbreak
         if hidden-parts.len() != 0 {
           {
-            let covered = cover-hidden(cover, hidden-parts, result)
+            // This parbreak may be the one that makes the container
+            // non-tight, and the items it applies to are still ahead, so hand
+            // them over along with the parbreak itself.
+            let hidden-run = tree.get-list-like-run-ending-at(
+              hidden-parts,
+              hidden-parts.len(),
+            )
+            let covered = cover-hidden(
+              cover,
+              hidden-parts,
+              result,
+              rest: if hidden-run.kind == none { () } else {
+                (
+                  (child,)
+                    + get-list-continuation-after(
+                      _child_i,
+                      hidden-run.kind,
+                    )
+                )
+              },
+            )
             result = covered.result
             result.push(covered.covered)
           }
