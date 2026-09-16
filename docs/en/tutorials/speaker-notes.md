@@ -136,6 +136,6 @@ place: several notes on one slide are concatenated into that slide's entry.
 
 ## Styling the panel
 
-The panel that shows your notes — the second screen or the only-notes view — is drawn by the theme, through a `notes` function that goes in `config-common(notes-fn: ..)`. Every bundled theme sets it, so the notes come out looking like the rest of the theme. 
+The panel that shows your notes — the second screen or the only-notes view — is drawn by the theme, through a `notes` function that goes in `config-common(notes-fn: ..)`. Every bundled theme sets it, so the notes come out looking like the rest of the theme.
 
 The default without a theme is `touying-notes`, which handles the layout and leaves the styling to you: `header`, `header-fill`, `fill`, `note-setting` and `preview-setting`. Writing one for your own theme is covered in [Build Your Own Theme](build-your-own-theme.md).

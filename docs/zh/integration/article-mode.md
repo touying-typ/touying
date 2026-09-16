@@ -236,6 +236,8 @@ figure 的 body 永远不会被拉平，因为它的 caption 赋予了其版式�
 
 你可以只设置一次全局的 width 和 align，再决定每个元素函数——`table`、`image`、`figure`……——是否使用环绕。
 
+作为顶层简写，`wrap: false` 会完全关闭环绕，而 `wrap: true` 会使用默认宽度与对齐方式环绕所有可抽取的候选元素。
+
 你也可以按元素函数覆盖这些全局默认值：
 
 ```typst

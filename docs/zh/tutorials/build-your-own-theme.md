@@ -452,7 +452,7 @@ A slide with a title and an *important* information.
 ```
 
 
-## 自定义 Notes
+## 自定义 Notes {#customizing-the-notes}
 
 最后一个方面是自定义我们的备注。
 从 Touying 0.8.0 起，你可以通过编写一个 `notes` 函数、并把它传给 `config-common(notes-fn: notes)`，来详细描述备注应该长什么样。

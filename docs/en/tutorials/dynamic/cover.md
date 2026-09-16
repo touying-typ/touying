@@ -14,7 +14,7 @@ The default `cover` function is the [hide](https://typst.app/docs/reference/layo
 
 ## Updating the Cover Function
 
-In some cases, you might want to use your own `cover` function. In that case, you can set your own `cover` function using: 
+In some cases, you might want to use your own `cover` function. In that case, you can set your own `cover` function using:
 
 ```typst
 config-methods(cover: utils.hiding-cover)
@@ -39,7 +39,7 @@ The `utils.alpha-changing-cover` method works by changing all colors it encounte
 
 If you notice your project compiling slowly you can try switching to `utils.color-changing-cover` which just makes everything grey.
 
-Both methods cannot change all colors displayed. Some contents like images or tilings cannot be interfered with. As such both methods utilize a fallback hide which aims to mimic the same effect by overlaying the content with a grey semi-transparent rectangle via `utils.semi-transparent-rect`. Using that function as default is no longer recommended as it has multiple not to be fixed bugs. 
+Both methods cannot change all colors displayed. Some contents like images or tilings cannot be interfered with. As such both methods utilize a fallback hide which aims to mimic the same effect by overlaying the content with a grey semi-transparent rectangle via `utils.semi-transparent-rect`. Using that function as default is no longer recommended as it has multiple not to be fixed bugs.
 
 :::
 

@@ -75,7 +75,7 @@ Content with the custom color.
 
 备注面板不使用 `config-page(..)`：背景请直接传给 `fill` 和 `header-fill`。
 
-更完整的走查见[创建自己的主题 · 自定义 Notes](../tutorials/build-your-own-theme.md#自定义-notes)。
+更完整的走查见[创建自己的主题 · 自定义 Notes](../tutorials/build-your-own-theme.md#customizing-the-notes)。
 
 ```example
 #import "@preview/touying:0.8.0": *

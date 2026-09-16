@@ -109,9 +109,9 @@ Things to watch when upgrading: a `#pause` after `uncover`/`only`/`alternatives`
 
 - **fix: overflow detection also checks width.** It only ever compared height, so an element too wide to fit, a fixed-width block level element did not trigger an overflow warning.
 
-- **feat!: `touying-equation` is finally deprecated**. All its uses are superseded through other means and the normal equation animations are even more capable now allowing you to write animation functions all math layout function like `mat` or `frac`. 
+- **feat!: `touying-equation` is finally deprecated**. All its uses are superseded through other means and the normal equation animations are even more capable now allowing you to write animation functions all math layout function like `mat` or `frac`.
 
-- **feat!: `config-common(detect-overflow:)` defaults to `auto`** (was `true`). This is the opposite of what is set for `breakable` and in case both are `true` a warning is emitted that no overflow can be detected. 
+- **feat!: `config-common(detect-overflow:)` defaults to `auto`** (was `true`). This is the opposite of what is set for `breakable` and in case both are `true` a warning is emitted that no overflow can be detected.
 
 - **feat!: `#measure` shadows `std.measure` and also measures animated content properly** It still works as expected, needing a surrounding `layout` or `context`, and in addition to a `width` and `height` optionally supports an integer `subslide` and an integer `base` which set the subslide and subslide base to render the content at before it is measured.
 
@@ -163,7 +163,7 @@ Things to watch when upgrading: a `#pause` after `uncover`/`only`/`alternatives`
   )
   ```
 
-  Two markers let you write for the article target. `#article-text[..]` replaces the content of the slide it is written in, wherever in that slide you write it, so you can give a prose paragraph instead of bullet points. `#article-only[..]` adds content that appears only in the article (for more see mode-only content below). The new `config-article(..)` group covers article-side layout: `wrap` for side-floating (done with `meander`) of certain elements; `linearize` for how much of the deck's layout comes apart (by default a `#columns(..)`, a composer and a `side-by-side` do; a `table` or `grid` only until it declares a header or footer), `#article-linearize[..]` / `#article-keep-layout[..]` mark this per element; plus an optional `title-block-fn`, and lastly `available-fields`: a mapping that hands configuration values such as `info.title` through to the article theme's own parameters. See [Docs/Article Mode](docs/en/integration/article-mode.md) for more details.
+  Two markers let you write for the article target. `#article-text[..]` replaces the content of the slide it is written in, wherever in that slide you write it, so you can give a prose paragraph instead of bullet points. `#article-only[..]` adds content that appears only in the article (for more see mode-only content below). The new `config-article(..)` group covers article-side layout: `wrap` for side-floating (done with `meander`) of certain elements; `linearize` for how much of the deck's layout comes apart (by default a `#columns(..)`, a composer and a `side-by-side` do; a `table` or `grid` only until it declares a header or footer), `#article-linearize[..]` / `#article-keep-layout[..]` mark this per element; plus an optional `title-block-fn`, and lastly `available-fields`: a mapping that hands configuration values such as `info.title` through to the article theme's own parameters. See [Docs/Article Mode](./integration/article-mode.md) for more details.
 
 - **feat: `themes.article`, a plain A4 article theme**
 
@@ -386,7 +386,7 @@ Almost every page was touched. The largest items:
 
 - **docs: new [Article Mode](https://touying-typ.github.io/docs/integration/article-mode) tutorial** under Integration, since its main use is pairing an article theme with a slide theme.
 
-- **docs: new [Speaker Notes](https://touying-typ.github.io/docs/tutorials/speaker-notes) tutorial** (English and Chinese), covering where notes attach, the second screen, presenter view, per-subslide notes, markdown notes for pdfpc, exporting, and styling the panel. 
+- **docs: new [Speaker Notes](https://touying-typ.github.io/docs/tutorials/speaker-notes) tutorial** (English and Chinese), covering where notes attach, the second screen, presenter view, per-subslide notes, markdown notes for pdfpc, exporting, and styling the panel.
 - docs: [Custom Themes](https://touying-typ.github.io/docs/themes/custom) gains sections on customizing the speaker-note panel, making a special slide's title discoverable with a hidden heading, and why helper components should use `touying-fn-wrapper-raw`. [Build Your Own Theme](https://touying-typ.github.io/docs/tutorials/build-your-own-theme) gains a matching "Customizing the Notes" section.
 - docs: [Cover Function](https://touying-typ.github.io/docs/tutorials/dynamic/cover) rewritten around `alpha-changing-cover` and `color-changing-cover`, with a new section on `cover-hides-footnote` explaining why `auto` recognises a hiding cover by identity, so a hand-written `(self: none, body) => hide(body)` is classified visual-only and its footnotes appear before the reveal.
 - docs: [Sections and Headings](https://touying-typ.github.io/docs/tutorials/sections) now separates the labels that change how a heading is presented from the labels that filter by output mode, and warns that `<touying:hidden>` does not suppress the slide or its number, which `config-common(freeze-slide-counter: true)` does.
@@ -624,7 +624,7 @@ It's not a big update, but it's the first touying release since typst 0.13 was r
 
 - feat: add auto style for display-current-heading.
   - For users, you can use `show heading: set text(blue)` to change color for heading in some themes like `dewdrop`.
-  - For theme creator, you can use syntax like `utils.display-current-heading(level: 1, style: auto)` to achieve the same result. 
+  - For theme creator, you can use syntax like `utils.display-current-heading(level: 1, style: auto)` to achieve the same result.
 - feat: apply config-info information to `set document`.
 - feat: set `stretch: false` by default for `alternatives` functions. This is **a minor breaking change**, but I think it would be more intuitive: no auto empty space.
 
@@ -835,7 +835,7 @@ For detailed changes to specific themes, you can refer to the `themes` directory
 
 ### Fixes
 
-- **fix:** make nested includes work correctly. 
+- **fix:** make nested includes work correctly.
 - **fix:** disable multi-page slides from creating the same section multiple times.
 
 ## Breaking changes

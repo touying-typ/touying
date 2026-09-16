@@ -178,7 +178,7 @@ See the documentation of the function for more details. Another similar function
 
 ## Linearized layout
 
-An article is one column of prose, so a container that exists only to arrange things on a slide should get flattened into that flow. The slide composer, `#columns(..)` and `components.side-by-side[..][..]` by default all get linearized. 
+An article is one column of prose, so a container that exists only to arrange things on a slide should get flattened into that flow. The slide composer, `#columns(..)` and `components.side-by-side[..][..]` by default all get linearized.
 
 A `table` or `grid` is different, because it may carry meaning via its structure. By default touying takes a **declared header or footer** as proof of structural meaning: with one, the table keeps its structure; without one, it is treated as a layout device and is flattened. `components.cols` and `side-by-side` internally build a grid but don't declare a header, which is why they linearize.
 
@@ -236,6 +236,8 @@ Figures and tables that are not wrapped are centered at the bottom of the parent
 ```
 
 You may specify `width` and `align` once globally and decide whether to use wrapping per element function: `table`, `image`, `figure`, and so on.
+
+As a top-level shorthand, `wrap: false` disables wrapping entirely, while `wrap: true` wraps every extractable candidate with the default width and alignment.
 
 You may also override these global defaults per element function:
 

@@ -30,7 +30,7 @@ If you like it, consider [giving a star ⭐ on GitHub](https://github.com/touyin
 
 A big release, and the first that requires **Typst 0.15**.
 
-The main new feature is **article mode**: the same source file compiles either to slides or to a flowing prose document, with animations collapsed to their final state and images optionally floated to the side. 
+The main new feature is **article mode**: the same source file compiles either to slides or to a flowing prose document, with animations collapsed to their final state and images optionally floated to the side.
 
 **Two new animation** entry points come with it.
 - `touying-render` renders a piece of content at chosen animation stages, and
@@ -42,14 +42,14 @@ Other improvements:
 - `touying-fn-wrapper-raw` now parses and nests its body, so `#alert[.. #pause ..]` works, and much more besides
 - `.pdfpc` files can be written directly as bundle assets instead of through a separate `typst query` step
 - the footnote bibliography was rebuilt on real Typst bibliographies, and
-- the speaker-note panel is now a theme-supplied function with documentation to match. 
+- the speaker-note panel is now a theme-supplied function with documentation to match.
 
 Internally, `src/core.typ` (6288 lines) was split into modules and the content handling was unified and several functions (mainly out of utils) moved places.
 
 Things to watch when upgrading:
-- a `#pause` after `uncover`/`only`/`alternatives` no longer skips the subslides they reserve (they wrongfully did so in v0.7.x), 
-- the footnote-bibliography config changed shape, 
-- `semi-transparent-cover` is deprecated in favor of `alpha-changing-cover` and `color-changing-cover`, and 
+- a `#pause` after `uncover`/`only`/`alternatives` no longer skips the subslides they reserve (they wrongfully did so in v0.7.x),
+- the footnote-bibliography config changed shape,
+- `semi-transparent-cover` is deprecated in favor of `alpha-changing-cover` and `color-changing-cover`, and
 - on a second screen the page background is confined to the slide half
 
 Most documentation pages were rewritten or corrected.

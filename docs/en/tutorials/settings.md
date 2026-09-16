@@ -103,7 +103,7 @@ All of Touying's configuration is passed to a theme through a set of `config-*` 
     article-theme: article-theme.with(numbering: "1.1"),
   ),
   config-article(
-    wrap-images: true,
+    wrap: (image: true),
     title-block-fn: auto,
     available-fields: (title: "info.title"),
   ),
@@ -266,4 +266,3 @@ If you set custom keys via `touying-set-config`, they become available immediate
 When accessing custom config, you must use the string key form (`touying-get-config("random.dict.value")`) rather than chaining dictionary access (`touying-get-config("random.dict").value`), because the latter attempts to access `.value` on a content element, which will fail.
 
 :::
-

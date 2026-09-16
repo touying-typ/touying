@@ -237,4 +237,4 @@ At its first stage that was #touying-recall(<fig>, subslides: 1).
 
 ## Callback-style variants
 
-All function of course have their callback counterpart in `utils`. Use those if you cannot or don't want to use the self-counting animation functions. 
+All function of course have their callback counterpart in `utils`. Use those if you cannot or don't want to use the self-counting animation functions.
