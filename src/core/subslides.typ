@@ -233,7 +233,7 @@
         name
           + ": negative subslide indices are not supported, got "
           + repr(s)
-          + "The number of subslides is not yet fixed here — a later `#pause` "
+          + ". The number of subslides is not yet fixed here — a later `#pause` "
           + "would silently change what it refers to. Use a waypoint label "
           + "(e.g. `<my-wp>` with `get-last(<my-wp>)`) to refer to a position "
           + "that stays put, or an absolute index.",
