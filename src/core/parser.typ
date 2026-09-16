@@ -147,51 +147,26 @@
 })
 
 
-/// A reducer's positional arguments, with any sequence among them opened up.
+/// Every touying mark in `args`, in document order.
 ///
-/// Adjacent metadata markers arrive as one sequence, so an implicit waypoint
-/// followed by a fn-wrapper would otherwise be a single argument.
+/// For the passes that only need to count repetitions and never cover or
+/// render anything, so they can ignore the structure the marks sit in.
 ///
-/// Returns `(items, from-array)` where `from-array` records, per item, whether
-/// it came out of an array-typed positional argument. That happens when the
-/// user writes the body as a code block (`#cetz-canvas({ rect(..); circle(..) })`)
-/// and the package's elements are themselves arrays: Typst joins `array[1] +
-/// array[1]` into one `array[2]`, so every item in it was a whole element in
-/// the package's own representation. Covering such an item has to hand it back
-/// as `(item,)`, or the package sees half an element -- `cetz.draw.hide` only
-/// hides an array, and alchemist's `hide` iterates its body expecting elements.
-/// Elements passed directly (`#lq-diagram(plot-a, pause, plot-b)`) are already
-/// whole and must stay bare.
-///
-/// - args (arguments): The reducer call's arguments.
-///
-/// -> (array, array)
-#let _flatten-reducer-args-tagged(args) = {
-  let flat = ()
-  let from-array = ()
-  for arg in args {
-    let nested = type(arg) == array
-    let items = if nested { arg.flatten() } else { (arg,) }
-    for item in items {
-      if type(item) == content and tree.is-sequence(item) {
-        for child in item.children {
-          flat.push(child)
-          from-array.push(nested)
-        }
-      } else {
-        flat.push(item)
-        from-array.push(nested)
-      }
-    }
-  }
-  (flat, from-array)
-}
-
-/// The items of `_flatten-reducer-args-tagged`, for callers that only count
-/// repetitions and never cover anything.
+/// - args (array): The reducer call's positional arguments.
 ///
 /// -> array
-#let _flatten-reducer-args(args) = _flatten-reducer-args-tagged(args).first()
+#let _flatten-reducer-args(args) = {
+  let marks = ()
+  let collect(node) = {
+    if tree.is-touying-mark(node) { return (node,) }
+    let kids = if type(node) == array { node } else { tree.children-of(node) }
+    kids.map(collect).flatten()
+  }
+  for arg in args {
+    marks += collect(arg)
+  }
+  marks
+}
 
 
 /// Parse touying reducer content and extract animation repetitions
@@ -205,12 +180,30 @@
 /// - reducer (dictionary): The reducer configuration
 ///
 /// -> (array, int)
+/// Whether a label should be attached on this subslide.
+///
+/// A slide body is parsed once per subslide, so content carrying a user label
+/// would otherwise emit it on every rendered page, making `#ref` to it
+/// ambiguous. `label-only-on-last-subslide` names the element functions that
+/// hold their label back until the slide's last subslide.
+///
+/// - self (dictionary): The presentation context.
+/// - func (function): The element function the label would land on.
+///
+/// -> bool
+#let label-on-this-subslide(self, func) = {
+  not (
+    "repeat" in self
+      and "subslide" in self
+      and "label-only-on-last-subslide" in self
+      and func in self.label-only-on-last-subslide
+      and self.subslide != self.repeat
+  )
+}
+
+
 #let _parse-touying-reducer(self: none, base: 1, index: 1, reducer) = {
   let parsed-results = ()
-  // repetitions
-  let repetitions = base
-  let max-repetitions = repetitions
-  let last-subslide = 0
   // get cover function from self
   let cover = reducer.cover
   // Build a modified self whose cover method uses the reducer's cover function,
@@ -225,150 +218,201 @@
       ),
     ),
   )
-  // parse the content
-  // Flatten content sequences so that e.g. uncover(<label>, body) which produces
-  // [implicit-waypoint-metadata + fn-wrapper-metadata] is split into separate children.
-  let (flat-args, from-array) = _flatten-reducer-args-tagged(reducer.args)
-  // Covering hands the item back in the shape the package gave it: whole
-  // elements stay bare, items unpacked from a joined code block are re-wrapped.
-  // See `_flatten-reducer-args-tagged`.
-  let cover-item(i, item) = if from-array.at(i) { cover((item,)) } else {
-    cover(item)
+  let waypoints = self.at("waypoints", default: (:))
+  // true if the node should only get its subslide at the end
+  let held-back(node) = (
+    type(node) == content
+      and node.has("label")
+      and node.label != <touying-temporary-mark>
+      and not label-on-this-subslide(self, node.func())
+  )
+  let holds-back(node) = {
+    if held-back(node) { return true }
+    if type(node) == array { return node.any(holds-back) }
+    if type(node) != content { return false }
+    tree.children-of(node).any(holds-back)
   }
-  let result = ()
-  for (child-index, child) in flat-args.enumerate() {
-    if (
-      type(child) == content
-        and child.func() == metadata
-        and type(child.value) == dictionary
-    ) {
-      let kind = child.value.at("kind", default: none)
-      if kind == "touying-jump/pause/meanwhile" {
-        if child.value.relative {
-          repetitions += child.value.n
-          // Track the peak repetitions so that a subsequent negative jump doesn't
-          // cause the slide count to be underestimated
-          max-repetitions = calc.max(max-repetitions, repetitions)
-        } else {
-          max-repetitions = calc.max(
-            max-repetitions,
-            repetitions,
-            last-subslide,
-          )
-          repetitions = child.value.n
-          last-subslide = 0
-        }
-      } else if kind == "touying-waypoint" {
-        // Waypoint inside reducer: advance repetitions if applicable.
-        // Only implicit/explicit waypoints supported, no waypoint markers.
-        // Never pushed to result.
-        let wp = self.at("waypoints", default: (:))
-        let lbl = child.value.label
-        let wp-start = child.value.at("start", default: auto)
-        if wp-start != auto and lbl in wp {
-          max-repetitions = calc.max(
-            max-repetitions,
-            repetitions,
-            last-subslide,
-          )
-          repetitions = wp.at(lbl).first
-          last-subslide = 0
-        } else if (
-          child.value.at("advance", default: true) and lbl in wp
-        ) {
-          let first = wp.at(lbl).first
-          if first == repetitions + 1 {
-            repetitions = first
+
+  // Walk `nodes` in order, carrying the animation state, and return the items
+  // to hand on together with that state.
+  //
+  // The walk goes only as deep as the marks do, and puts every container back
+  // together on the way out, so a package keeps whatever structure it was
+  // handed: the array a code block joins its elements into, the sequence
+  // algorithmic's `Assign` returns, the nested list algol reads as its
+  // indentation. A node with no mark below it is a leaf, and that whole node
+  // is what `cover` sees, because a cover function like `cetz.draw.hide` is
+  // written for one of the package's own elements, not for its pieces.
+  //
+  // -> (array, int, int, int)
+  let visit(
+    nodes,
+    repetitions,
+    max-repetitions,
+    last-subslide,
+    wrap-leaf: false,
+  ) = {
+    let out = ()
+    for child in nodes {
+      if tree.is-touying-mark(child) {
+        let kind = child.value.kind
+        if kind == "touying-jump/pause/meanwhile" {
+          if child.value.relative {
+            repetitions += child.value.n
+            // Track the peak repetitions so that a subsequent negative jump
+            // doesn't cause the slide count to be underestimated
             max-repetitions = calc.max(max-repetitions, repetitions)
-          }
-        }
-      } else if kind == "touying-implicit-waypoint" {
-        // Implicit waypoint inside reducer: same firing logic as the outer parser.
-        let wp = self.at("waypoints", default: (:))
-        let lbl = child.value.label
-        if lbl in wp {
-          let first = wp.at(lbl).first
-          if first == repetitions + 1 {
-            repetitions = first
-            max-repetitions = calc.max(max-repetitions, repetitions)
-          }
-        }
-      } else if kind == "touying-fn-wrapper" {
-        // Handle function wrappers (uncover, only, alternatives, etc.)
-        // These always escape the pause zone: they handle their own visibility.
-        let extra-args = (:)
-        if child.value.last-subslide != none {
-          let resolved = if type(child.value.last-subslide) == function {
-            let (callback-last-subslide, callback-extra-args) = (
-              child.value.last-subslide
-            )(
+          } else {
+            max-repetitions = calc.max(
+              max-repetitions,
               repetitions,
+              last-subslide,
             )
-            extra-args = callback-extra-args
-            callback-last-subslide
-          } else {
-            child.value.last-subslide
+            repetitions = child.value.n
+            last-subslide = 0
           }
-          last-subslide = calc.max(last-subslide, resolved)
-          if child.value.at("advances-flow", default: false) {
-            repetitions = calc.max(repetitions, resolved)
-            max-repetitions = calc.max(max-repetitions, repetitions)
-          }
-        }
-        let fn-result = (child.value.fn)(
-          self: reducer-self,
-          ..child.value.args,
-          ..extra-args,
-        )
-        // only() returns none when hidden — don't push none to the result.
-        // Flatten arrays (CeTZ draw commands) and content sequences (e.g.
-        // alternatives returning joined only() results) so the reduce function
-        // sees the same flat items as it would in the callback pathway.
-        if fn-result != none {
-          if type(fn-result) == array {
-            result += fn-result
+        } else if kind == "touying-waypoint" {
+          // Waypoint inside reducer: advance repetitions if applicable.
+          // Only implicit/explicit waypoints supported, no waypoint markers.
+          // Never pushed to the result.
+          let lbl = child.value.label
+          let wp-start = child.value.at("start", default: auto)
+          if wp-start != auto and lbl in waypoints {
+            max-repetitions = calc.max(
+              max-repetitions,
+              repetitions,
+              last-subslide,
+            )
+            repetitions = waypoints.at(lbl).first
+            last-subslide = 0
           } else if (
-            type(fn-result) == content and tree.is-sequence(fn-result)
+            child.value.at("advance", default: true) and lbl in waypoints
           ) {
-            for child in fn-result.children {
-              result.push(child)
+            let first = waypoints.at(lbl).first
+            if first == repetitions + 1 {
+              repetitions = first
+              max-repetitions = calc.max(max-repetitions, repetitions)
             }
-          } else {
-            result.push(fn-result)
+          }
+        } else if kind == "touying-implicit-waypoint" {
+          // Implicit waypoint inside reducer: same firing logic as the outer
+          // parser.
+          let lbl = child.value.label
+          if lbl in waypoints {
+            let first = waypoints.at(lbl).first
+            if first == repetitions + 1 {
+              repetitions = first
+              max-repetitions = calc.max(max-repetitions, repetitions)
+            }
+          }
+        } else if kind == "touying-fn-wrapper" {
+          // Handle function wrappers (uncover, only, alternatives, etc.)
+          // These always escape the pause zone: they handle their own
+          // visibility.
+          let extra-args = (:)
+          if child.value.last-subslide != none {
+            let resolved = if type(child.value.last-subslide) == function {
+              let (callback-last-subslide, callback-extra-args) = (
+                child.value.last-subslide
+              )(repetitions)
+              extra-args = callback-extra-args
+              callback-last-subslide
+            } else {
+              child.value.last-subslide
+            }
+            last-subslide = calc.max(last-subslide, resolved)
+            if child.value.at("advances-flow", default: false) {
+              repetitions = calc.max(repetitions, resolved)
+              max-repetitions = calc.max(max-repetitions, repetitions)
+            }
+          }
+          let fn-result = (child.value.fn)(
+            self: reducer-self,
+            ..child.value.args,
+            ..extra-args,
+          )
+          // only() returns none when hidden — don't push none to the result.
+          // Flatten arrays (CeTZ draw commands) and content sequences (e.g.
+          // alternatives returning joined only() results) so the reduce
+          // function sees the same flat items as it would in the callback
+          // pathway.
+          if fn-result != none {
+            if type(fn-result) == array {
+              out += fn-result
+            } else if (
+              type(fn-result) == content and tree.is-sequence(fn-result)
+            ) {
+              out += fn-result.children
+            } else {
+              out.push(fn-result)
+            }
           }
         }
+      } else if type(child) == array and tree.has-touying-mark(child) {
+        // A code block joins the package's elements into one array, so this
+        // array holds several elements and the marks between them. Its items
+        // are visited with `wrap-leaf` set, because joining is what took each
+        // element's own `array[1]` apart: `cetz.draw.hide` and alchemist's
+        // `hide` both want that array back, not the bare item inside it.
+        // The array itself is handed on, keeping the one-array shape a block
+        // body's `reduce` expects.
+        let (items, rep, maxrep, ls) = visit(
+          child,
+          repetitions,
+          max-repetitions,
+          last-subslide,
+          wrap-leaf: true,
+        )
+        repetitions = rep
+        max-repetitions = maxrep
+        last-subslide = ls
+        out.push(items)
+      } else if (
+        type(child) != array
+          and (tree.has-touying-mark(child) or holds-back(child))
+      ) {
+        // A container with marks inside, or holding a label that this subslide
+        // must not emit: visit its sub-content and put the container back
+        // around the result, dropping its own label when it is held back.
+        let (items, rep, maxrep, ls) = visit(
+          tree.children-of(child),
+          repetitions,
+          max-repetitions,
+          last-subslide,
+        )
+        repetitions = rep
+        max-repetitions = maxrep
+        last-subslide = ls
+        out.push(tree.rebuild(child, items, labeled: not held-back(child)))
+      } else if repetitions <= index {
+        out.push(child)
+      } else if wrap-leaf {
+        // Inside a joined block the element was handed over re-wrapped, so a
+        // cover that returns an array is returning elements to splice back
+        // into the block, as `cetz.draw.hide` does.
+        let r = cover((child,))
+        if type(r) == array { out += r } else { out.push(r) }
       } else {
-        if repetitions <= index {
-          result.push(child)
-        } else {
-          let r = cover-item(child-index, child)
-          if type(r) == array { result += r } else { result.push(r) }
-        }
-      }
-    } else {
-      if repetitions <= index {
-        result.push(child)
-      } else {
-        let r = cover-item(child-index, child)
-        if type(r) == array { result += r } else { result.push(r) }
+        // Elsewhere the element went in whole and comes back whole, even when
+        // the element's own shape is an array, as algorithmic's is.
+        out.push(cover(child))
       }
     }
+    (out, repetitions, max-repetitions, last-subslide)
   }
+
+  let (result, repetitions, max-repetitions, last-subslide) = visit(
+    reducer.args,
+    base,
+    base,
+    0,
+  )
+
   // Safety net: filter out any remaining touying metadata nodes before passing
   // to the external reduce function (e.g. fletcher.diagram, cetz.canvas).
   // All touying metadata should already be handled above — if this filter
   // catches anything, it indicates a bug in the reducer's metadata handling.
-  let leaked = result.filter(child => {
-    if not (
-      type(child) == content
-        and child.func() == metadata
-        and type(child.value) == dictionary
-    ) {
-      return false
-    }
-    let kind = child.value.at("kind", default: none)
-    type(kind) == str and kind.starts-with("touying-")
-  })
+  let leaked = result.filter(tree.is-touying-mark)
   if leaked.len() > 0 {
     let kinds = leaked.map(c => c.value.at("kind", default: "unknown"))
     assert(
@@ -382,11 +426,7 @@
   // block (`#cetz-canvas({ .. })`) arrives as one array argument and is passed
   // on as one array, while elements passed directly (`#lq-diagram(a, pause, b)`)
   // are spread again, for a `reduce` like `lq.diagram` that takes `..plots`.
-  let drawn = if from-array.any(nested => nested) {
-    (reducer.reduce)(..reducer.kwargs, result)
-  } else {
-    (reducer.reduce)(..reducer.kwargs, ..result)
-  }
+  let drawn = (reducer.reduce)(..reducer.kwargs, ..result)
   // Article mode alone reads the mark, and it is the only mode where the
   // wrapper would not have to be taken out again afterwards.
   parsed-results.push(if self.at("article-mode", default: false) {
@@ -1060,28 +1100,6 @@
     return none
   }
   headings.last().label
-}
-
-
-/// Whether a label should be attached on this subslide.
-///
-/// A slide body is parsed once per subslide, so content carrying a user label
-/// would otherwise emit it on every rendered page, making `#ref` to it
-/// ambiguous. `label-only-on-last-subslide` names the element functions that
-/// hold their label back until the slide's last subslide.
-///
-/// - self (dictionary): The presentation context.
-/// - func (function): The element function the label would land on.
-///
-/// -> bool
-#let label-on-this-subslide(self, func) = {
-  not (
-    "repeat" in self
-      and "subslide" in self
-      and "label-only-on-last-subslide" in self
-      and func in self.label-only-on-last-subslide
-      and self.subslide != self.repeat
-  )
 }
 
 

@@ -105,6 +105,20 @@
   )
 }
 
+/// Determine if a content is one of touying's own marks, of any kind.
+///
+/// - it (content): The content to check.
+///
+/// -> bool
+#let is-touying-mark(it) = {
+  if not (is-metadata(it) and type(it.value) == dictionary) {
+    return false
+  }
+  let kind = it.value.at("kind", default: none)
+  type(kind) == str and kind.starts-with("touying-")
+}
+
+
 /// Determine if a content is a heading up to specific depth.
 ///
 /// - it (content): The content to check.
@@ -511,6 +525,21 @@
   } else {
     ()
   }
+}
+
+
+/// Whether `it` is, or holds anywhere below it, one of touying's own marks.
+///
+/// Tells a walk whether a node has to be taken apart to reach a mark, or can
+/// be handled whole.
+///
+/// - it (any): The node to search.
+///
+/// -> bool
+#let has-touying-mark(it) = {
+  if is-touying-mark(it) { return true }
+  if type(it) == array { return it.any(has-touying-mark) }
+  children-of(it).any(has-touying-mark)
 }
 
 
