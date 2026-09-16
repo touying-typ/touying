@@ -1749,7 +1749,6 @@
   fallback-hide-args: (:),
   it,
 ) = {
-
   let recolour-fields(fields) = {
     if "fill" in fields and type(fields.fill) in (std.color, gradient) {
       fields.fill = color
@@ -1900,150 +1899,154 @@
   fallback-hide: auto,
   fallback-hide-args: (:),
   it,
-) = if self == cover-kind-query { "recolour" } else { context {
-  let fallback = if fallback-hide == none {
-    it => it
-  } else if fallback-hide == auto {
-    semi-transparent-cover.with(
-      self: self,
-      alpha: 100% - alpha,
-      is-fallback: true,
-    )
-  } else {
-    fallback-hide.with(..fallback-hide-args)
-  }
-
-  // A gradient has no `fields()`, so it is taken apart and put back together.
-  let fade-gradient(g) = {
-    let stops = g.stops().map(s => (update-alpha(s.first(), alpha), s.last()))
-    let kind = g.kind()
-    if kind == gradient.linear {
-      gradient.linear(
-        ..stops,
-        space: g.space(),
-        relative: g.relative(),
-        angle: g.angle(),
-      )
-    } else if kind == gradient.radial {
-      gradient.radial(
-        ..stops,
-        space: g.space(),
-        relative: g.relative(),
-        center: g.center(),
-        radius: g.radius(),
-        focal-center: g.focal-center(),
-        focal-radius: g.focal-radius(),
+) = if self == cover-kind-query { "recolour" } else {
+  context {
+    let fallback = if fallback-hide == none {
+      it => it
+    } else if fallback-hide == auto {
+      semi-transparent-cover.with(
+        self: self,
+        alpha: 100% - alpha,
+        is-fallback: true,
       )
     } else {
-      gradient.conic(
-        ..stops,
-        space: g.space(),
-        relative: g.relative(),
-        angle: g.angle(),
-        center: g.center(),
+      fallback-hide.with(..fallback-hide-args)
+    }
+
+    // A gradient has no `fields()`, so it is taken apart and put back together.
+    let fade-gradient(g) = {
+      let stops = g.stops().map(s => (update-alpha(s.first(), alpha), s.last()))
+      let kind = g.kind()
+      if kind == gradient.linear {
+        gradient.linear(
+          ..stops,
+          space: g.space(),
+          relative: g.relative(),
+          angle: g.angle(),
+        )
+      } else if kind == gradient.radial {
+        gradient.radial(
+          ..stops,
+          space: g.space(),
+          relative: g.relative(),
+          center: g.center(),
+          radius: g.radius(),
+          focal-center: g.focal-center(),
+          focal-radius: g.focal-radius(),
+        )
+      } else {
+        gradient.conic(
+          ..stops,
+          space: g.space(),
+          relative: g.relative(),
+          angle: g.angle(),
+          center: g.center(),
+        )
+      }
+    }
+    let fade(value) = {
+      if type(value) == std.color {
+        update-alpha(value, alpha)
+      } else if type(value) == gradient {
+        fade-gradient(value)
+      }
+    }
+
+    let sets-own-colour(it) = {
+      let fields = it.fields()
+      (
+        ("fill" in fields and type(fields.fill) in (std.color, gradient))
+          or (
+            "stroke" in fields
+              and fields.stroke != none
+              and fields.stroke != auto
+          )
       )
     }
-  }
-  let fade(value) = {
-    if type(value) == std.color {
-      update-alpha(value, alpha)
-    } else if type(value) == gradient {
-      fade-gradient(value)
+    let rebuild-text(it) = {
+      let fields = it.fields()
+      let lbl = fields.remove("label", default: none)
+      let body = fields.remove("body", default: none)
+      if "fill" in fields and type(fields.fill) in (std.color, gradient) {
+        fields.fill = fade(fields.fill)
+      }
+      if (
+        "stroke" in fields and fields.stroke != none and fields.stroke != auto
+      ) {
+        fields.stroke = _restroke(fade, fields.stroke)
+      }
+      let result = if body == none { text(..fields) } else {
+        text(..fields, body)
+      }
+      if lbl == none { result } else { tree.label-it(result, lbl) }
     }
-  }
+    let explicit-only(it) = {
+      if it.func() == text and sets-own-colour(it) { rebuild-text(it) } else {
+        it
+      }
+    }
 
-  let sets-own-colour(it) = {
-    let fields = it.fields()
-    (
-      ("fill" in fields and type(fields.fill) in (std.color, gradient))
-        or (
-          "stroke" in fields and fields.stroke != none and fields.stroke != auto
+    let policy = (
+      recolour-explicit: explicit-only,
+      styled-wrap: inner => context {
+        // Read the colour after the wrapper's own rules have applied, then fade
+        // it as the innermost rule, which is the one that wins.
+        set text(
+          fill: if type(text.fill) in (std.color, gradient) {
+            fade(text.fill)
+          } else {
+            text.fill
+          },
+          stroke: if text.stroke == none { text.stroke } else {
+            _restroke(fade, text.stroke)
+          },
         )
+        inner
+      },
+      map-fill: fade,
+      map-stroke: value => _restroke(fade, value),
+      inherited-fill: _inherited-fill,
+      inherited-stroke: _inherited-stroke,
+      leaf-fill: () => fade(text.fill),
+      caption-wrap: result => context {
+        show figure.caption: set text(fill: fade(text.fill))
+        result
+      },
+      fallback: fallback,
+      fallback-for-filled: false,
+    )
+
+    // Early exit via `self`: see `color-changing-cover` for why a caption is
+    // covered by a show rule around the figure rather than by rebuilding it.
+    if self == cover-caption-query {
+      return {
+        show figure.caption: _cap => {
+          show tree.typst-builtin-styled: _it => if (
+            not _it.child.has("label")
+              or _it.child.label != _caption-covered-label
+          ) {
+            set text(fill: fade(text.fill))
+            [#_it.child#_caption-covered-label]
+          } else {
+            _it
+          }
+          set text(fill: fade(text.fill))
+          _cap
+        }
+        it
+      }
+    }
+
+    set text(fill: fade(text.fill))
+    _cover-tree(
+      policy,
+      it => if it.func() == text and sets-own-colour(it) {
+        rebuild-text(it)
+      } else { it },
+      it,
     )
   }
-  let rebuild-text(it) = {
-    let fields = it.fields()
-    let lbl = fields.remove("label", default: none)
-    let body = fields.remove("body", default: none)
-    if "fill" in fields and type(fields.fill) in (std.color, gradient) {
-      fields.fill = fade(fields.fill)
-    }
-    if (
-      "stroke" in fields and fields.stroke != none and fields.stroke != auto
-    ) {
-      fields.stroke = _restroke(fade, fields.stroke)
-    }
-    let result = if body == none { text(..fields) } else {
-      text(..fields, body)
-    }
-    if lbl == none { result } else { tree.label-it(result, lbl) }
-  }
-  let explicit-only(it) = {
-    if it.func() == text and sets-own-colour(it) { rebuild-text(it) } else {
-      it
-    }
-  }
-
-  let policy = (
-    recolour-explicit: explicit-only,
-    styled-wrap: inner => context {
-      // Read the colour after the wrapper's own rules have applied, then fade
-      // it as the innermost rule, which is the one that wins.
-      set text(
-        fill: if type(text.fill) in (std.color, gradient) {
-          fade(text.fill)
-        } else {
-          text.fill
-        },
-        stroke: if text.stroke == none { text.stroke } else {
-          _restroke(fade, text.stroke)
-        },
-      )
-      inner
-    },
-    map-fill: fade,
-    map-stroke: value => _restroke(fade, value),
-    inherited-fill: _inherited-fill,
-    inherited-stroke: _inherited-stroke,
-    leaf-fill: () => fade(text.fill),
-    caption-wrap: result => context {
-      show figure.caption: set text(fill: fade(text.fill))
-      result
-    },
-    fallback: fallback,
-    fallback-for-filled: false,
-  )
-
-  // Early exit via `self`: see `color-changing-cover` for why a caption is
-  // covered by a show rule around the figure rather than by rebuilding it.
-  if self == cover-caption-query {
-    return {
-      show figure.caption: _cap => {
-        show tree.typst-builtin-styled: _it => if (
-          not _it.child.has("label")
-            or _it.child.label != _caption-covered-label
-        ) {
-          set text(fill: fade(text.fill))
-          [#_it.child#_caption-covered-label]
-        } else {
-          _it
-        }
-        set text(fill: fade(text.fill))
-        _cap
-      }
-      it
-    }
-  }
-
-  set text(fill: fade(text.fill))
-  _cover-tree(
-    policy,
-    it => if it.func() == text and sets-own-colour(it) {
-      rebuild-text(it)
-    } else { it },
-    it,
-  )
-} }
+}
 
 
 /// Applies the theme's primary color to text content. Used as the default `alert` method.
@@ -2619,20 +2622,284 @@
         .sum(default: [])
     }
     // Markup list/enum/terms: items appear as list.item/enum.item/terms.item in a sequence
+    //
+    // A covered item stops being laid out as a list row, so the enclosing list
+    // loses that row's height and everything below it creeps up as items are
+    // revealed. Consecutive covered items are therefore buffered and flushed as
+    // one covered block carrying the list's own row spacing, which reserves the
+    // rows the items would have occupied. `_item-row-spacing` decides what that
+    // spacing is: the same rule `cover-hidden` applies on the `#pause` path.
+    // A blank line between two item runs does not split them into two lists:
+    // Typst keeps one list and makes it non-tight, which both widens the row
+    // pitch and lowers where the list starts. Covering the run on one side of
+    // the break would let the other revert to tight and move every one of its
+    // rows, so when a parbreak separates item runs each run is emitted as an
+    // explicit `tight: false` container and keeps the wider pitch throughout.
+    let body-is-nontight = {
+      let seen-item = false
+      let seen-break = false
+      let res = false
+      for child in cont.children {
+        if type(child) != content {
+          // not an element
+        } else if child.func() in item-funcs {
+          if seen-break and seen-item {
+            res = true
+            break
+          }
+          seen-item = true
+        } else if child.func() == parbreak {
+          if seen-item {
+            seen-break = true
+          }
+        } else if not tree.is-space(child) {
+          // Any other content ends the list outright.
+          seen-item = false
+          seen-break = false
+        }
+      }
+      res
+    }
+
+    // Which item indices belong to a run of two or more same-kind items, i.e.
+    // sit in a real list? A lone item is its own list and has no row spacing to
+    // preserve, so covering it needs the natural block spacing instead.
+    let in-list = {
+      let flags = ()
+      let run = 0
+      let run-kind = none
+      // Close the current run: mark its members according to its length.
+      let close(flags, run) = flags + (run > 1,) * run
+      for child in cont.children {
+        if type(child) == content and child.func() in item-funcs {
+          if run-kind != none and run-kind != child.func() {
+            flags = close(flags, run)
+            run = 0
+          }
+          run-kind = child.func()
+          run += 1
+        } else if type(child) == content and not tree.is-space(child) {
+          // A parbreak keeps one non-tight list; anything else ends it. Either
+          // way the items around it are still rows of a list only if that list
+          // has more than one of them, which the run length already says.
+          if child.func() != parbreak {
+            flags = close(flags, run)
+            run = 0
+            run-kind = none
+          }
+        }
+      }
+      close(flags, run)
+    }
+
     let item-count = 0
     let result = ()
+    // Covered items awaiting a flush, and the item that set their kind.
+    // `*-first` is the 1-based position of the buffer's first item in the body,
+    // which is where a rebuilt enum's numbering has to continue from.
+    let pending-first = 1
+    let visible-first = 1
+    let pending = ()
+    let pending-kind = none
+    // Visible items awaiting a flush; only buffered when the body is non-tight,
+    // since they then have to be re-emitted as an explicit non-tight container.
+    let visible = ()
+    let visible-kind = none
+    // Kind of the item run emitted last, so a covered run can tell whether it
+    // continues that list or opens one of its own.
+    let prev-kind = none
+    // Whether the buffered covered run sits in a real list.
+    let pending-in-list = false
+
+    // Wrap a run of items in its container, so an explicit `tight: false`
+    // survives the covering of a neighbouring run.
+    // `first-number` is the position of the run's first item within the whole
+    // body. An enum rebuilt as its own container would otherwise restart its
+    // numbering at 1, so each run has to be told where it continues from.
+    let _as-nontight(items, kind, first-number) = {
+      if kind == enum.item {
+        enum(tight: false, start: first-number, ..items)
+      } else if kind == terms.item {
+        terms(tight: false, ..items)
+      } else {
+        list(tight: false, ..items)
+      }
+    }
+
+    // The gap between two rows of a list of `kind`. With `spacing` set the user
+    // named it; left `auto` it is derived from the paragraph metrics, which is
+    // `par.spacing` for a non-tight list and `par.leading` for a tight one.
+    let _item-row-spacing(kind, nontight) = {
+      let spacing = if kind == list.item {
+        list.spacing
+      } else if kind == enum.item {
+        enum.spacing
+      } else {
+        terms.spacing
+      }
+      if spacing != auto {
+        spacing
+      } else if nontight {
+        par.spacing
+      } else {
+        par.leading
+      }
+    }
+
+    // The buffered covered items as one block that keeps their rows. Pure: a
+    // closure cannot write back to `pending`/`result`, so the caller clears the
+    // buffer itself.
+    let flush(items, kind, nontight, prev-kind, inside-list, first-number) = {
+      if items.len() == 0 {
+        return ()
+      }
+      // A lone item is a list of its own, so there is no row spacing to restore
+      // and the natural block spacing is already right.
+      if not inside-list {
+        return (context block(above: auto, below: auto, cover(items.sum())),)
+      }
+      // The covered run has to reserve the same rows it would have occupied, so
+      // a non-tight list's run keeps the wider pitch here too. This holds for a
+      // lone covered item as well: it is still a row of the non-tight list, and
+      // its own height is what the visible rows are spaced against.
+      let body = if nontight {
+        _as-nontight(items, kind, first-number)
+      } else {
+        items.sum()
+      }
+      // Row spacing is the gap *inside* one list. A covered run that opens a
+      // list of its own -- because the run before it was a different kind -- is
+      // separated from it by paragraph spacing instead.
+      let opens-new-list = prev-kind != none and prev-kind != kind
+      (
+        context block(
+          above: if opens-new-list {
+            par.spacing
+          } else {
+            _item-row-spacing(kind, nontight)
+          },
+          below: _item-row-spacing(kind, nontight),
+          cover(body),
+        ),
+      )
+    }
+
+    // The buffered visible items, re-emitted as an explicit non-tight container
+    // when the body is non-tight so they keep their pitch and origin.
+    let flush-visible(items, kind, first-number) = {
+      if items.len() == 0 {
+        return ()
+      }
+      (_as-nontight(items, kind, first-number),)
+    }
+
     for child in cont.children {
       if type(child) == content and child.func() in item-funcs {
         if check-visible(self.subslide, (beginning: start + item-count)) {
-          result.push(fn(start + item-count - self.subslide, child))
+          // A visible item ends any covered run before it.
+          if pending.len() != 0 {
+            result += flush(
+              pending,
+              pending-kind,
+              body-is-nontight,
+              prev-kind,
+              pending-in-list,
+              pending-first,
+            )
+            prev-kind = pending-kind
+            pending = ()
+            pending-kind = none
+          }
+          let shown = fn(start + item-count - self.subslide, child)
+          if body-is-nontight {
+            // Buffer it: the run is re-emitted as one non-tight container once
+            // it ends, which is what keeps its rows from re-tightening.
+            if visible-kind != none and visible-kind != child.func() {
+              result += flush-visible(visible, visible-kind, visible-first)
+              prev-kind = visible-kind
+              visible = ()
+            }
+            if visible.len() == 0 { visible-first = item-count + 1 }
+            visible-kind = child.func()
+            visible.push(shown)
+          } else {
+            result.push(shown)
+            prev-kind = child.func()
+          }
         } else {
-          result.push(fn(start + item-count - self.subslide, cover(child)))
+          // Only items of the same kind share a list, so a kind change starts a
+          // new covered run.
+          if pending-kind != none and pending-kind != child.func() {
+            result += flush(
+              pending,
+              pending-kind,
+              body-is-nontight,
+              prev-kind,
+              pending-in-list,
+              pending-first,
+            )
+            prev-kind = pending-kind
+            pending = ()
+          }
+          // A covered run starts after the visible run before it, so that run
+          // has to be emitted first or the two would swap places.
+          if visible.len() != 0 {
+            result += flush-visible(visible, visible-kind, visible-first)
+            prev-kind = visible-kind
+            visible = ()
+            visible-kind = none
+          }
+          pending-kind = child.func()
+          if pending.len() == 0 {
+            pending-in-list = in-list.at(item-count, default: false)
+          }
+          pending.push(fn(start + item-count - self.subslide, child))
         }
         item-count += 1
       } else {
+        // Anything that is not a space ends both runs: a parbreak separates two
+        // runs of one non-tight list, other content ends the list outright.
+        if not tree.is-space(child) {
+          if visible.len() != 0 {
+            result += flush-visible(visible, visible-kind, visible-first)
+            prev-kind = visible-kind
+            visible = ()
+            visible-kind = none
+          }
+          if pending.len() != 0 {
+            result += flush(
+              pending,
+              pending-kind,
+              body-is-nontight,
+              prev-kind,
+              pending-in-list,
+              pending-first,
+            )
+            prev-kind = pending-kind
+            pending = ()
+            pending-kind = none
+          }
+          // Only a parbreak keeps the runs in one list; any other content ends
+          // the list, so the next covered run opens a fresh one.
+          if not (type(child) == content and child.func() == parbreak) {
+            prev-kind = none
+          }
+        }
         result.push(fn(start + item-count - self.subslide, child))
       }
     }
+    result += flush-visible(visible, visible-kind, visible-first)
+    if visible.len() != 0 {
+      prev-kind = visible-kind
+    }
+    result += flush(
+      pending,
+      pending-kind,
+      body-is-nontight,
+      prev-kind,
+      pending-in-list,
+      pending-first,
+    )
     result.sum(default: [])
   } else if cont.func() == list or cont.func() == enum {
     // Programmatic list/enum container

@@ -1884,16 +1884,21 @@
     // `final-repetitions` cannot show: a `#meanwhile` rewinds it to run beside
     // what came before, and a later `#pause` winds it forward again.
     let would-be-hidden = not (
-      calc.min(repetitions, final-repetitions) <= index
-        or not need-cover
+      calc.min(repetitions, final-repetitions) <= index or not need-cover
     )
     // A `#meanwhile` inside rewound the counter far enough to put part of this
     // body on the current subslide, even though the body neither starts nor
     // ends there. Only the minimum shows that: a rewind that a later `#pause`
     // winds forward again leaves the end value identical to no rewind at all.
-    let meanwhile-dips-visible = would-be-hidden and inner-min-repetitions <= index
+    let meanwhile-dips-visible = (
+      would-be-hidden and inner-min-repetitions <= index
+    )
     if would-be-hidden and (inner-has-fn-wrapper or meanwhile-dips-visible) {
-      let (conts2, inner-max-repetitions2, ..) = _parse-content-into-results-and-repetitions(
+      let (
+        conts2,
+        inner-max-repetitions2,
+        ..,
+      ) = _parse-content-into-results-and-repetitions(
         self: self,
         need-cover: need-cover,
         base: repetitions,
@@ -2120,10 +2125,10 @@
     // item `it`. When the list spacing is `auto` we fall back to paragraph-
     // derived spacing (nontight -> par.spacing, tight -> par.leading); otherwise
     // the user set an explicit value we can read off directly.
-    let list-spacing-for(it) = {
+    let list-spacing-for(it, nontight: false) = {
       if spacing-is-auto(it) {
         // would yield `auto` which is a par.spacing for the block.
-        if self.at("nontight-list-enum-and-terms", default: true) {
+        if nontight or self.at("nontight-list-enum-and-terms", default: true) {
           //cannot set list thightness via set rule somehow. if user uses magic.nontight locally we can't detect that, so we just assume he only uses the config. thus this might break.
           par.spacing
         } else {
@@ -2143,6 +2148,100 @@
     // element (after this covered run) a list/enum/terms item? It is needed to
     // correct the spacing *below* the covered block, which cannot be derived
     // from `items`/`last-result` alone (e.g. the #meanwhile case).
+    // Rewrite the trailing run of visible list/enum/terms items in `result`
+    // into an explicit non-tight container.
+    //
+    // A parbreak between two item runs makes Typst build ONE non-tight list, so
+    // the visible rows sit `par.spacing` apart and the list starts lower. Once
+    // the run after the parbreak is covered, the parbreak no longer separates
+    // two runs and the remaining items revert to tight: every visible row moves,
+    // including the first, which is nowhere near the covered content. Spacing on
+    // the covered block cannot undo that, because a block after a list never
+    // moves the list. The tightness has to be asserted on the visible items
+    // themselves, which means re-emitting them as `list(tight: false, ..)`.
+    // A covered run already emitted into `result` for an earlier part of this
+    // same list. `cover-hidden` wraps such a run in a `context` block, so it is
+    // the one non-item element that does not end the list: it stands in for
+    // items that still belong to it.
+    let _is-covered-block(it) = (
+      type(it) == content and repr(it.func()) == "context"
+    )
+
+    let force-nontight-tail(result, sep-here: true) = {
+      // `sep-here` says on which side of the cover boundary the separating
+      // parbreak fell. Before it, it is the last element of this visible run
+      // and must stay one, so it is held aside and only what precedes it is
+      // rewritten. Past it, the parbreak is among the covered items and the run
+      // to rewrite ends at the tail itself.
+      let end = result.len()
+      while end > 0 and tree.is-space(result.at(end - 1)) {
+        end -= 1
+      }
+      if end == 0 { return result }
+      if (
+        sep-here
+          and not (
+            type(result.at(end - 1)) == content
+              and result.at(end - 1).func() == parbreak
+          )
+      ) {
+        return result
+      }
+      // `run-end` is the index just past the last item of the run to rewrite:
+      // before the held-aside parbreak, or at the tail when there is none.
+      let trailing = if sep-here { result.slice(end - 1) } else {
+        result.slice(end)
+      }
+      let run-end = if sep-here { end - 1 } else { end }
+      // Walk back over the items of this list. Space and parbreak nodes are
+      // stepped over: a parbreak does not end the list, it only makes it
+      // non-tight, so the run continues through it. So is a covered block
+      // already emitted for an earlier run of this same list -- it stands in
+      // for items that are still part of it. Anything else -- text, a
+      // linebreak, an item of another kind -- ends the list for real.
+      let start = run-end
+      let kind = none
+      let i = run-end
+      while i > 0 {
+        let item = result.at(i - 1)
+        if (
+          tree.is-space(item)
+            or (type(item) == content and item.func() == parbreak)
+            or not _is-list-item(item) and _is-covered-block(item)
+        ) {
+          i -= 1
+        } else if (
+          _is-list-item(item) and (kind == none or item.func() == kind)
+        ) {
+          kind = item.func()
+          i -= 1
+          start = i
+        } else {
+          break
+        }
+      }
+      // A single item is not a list, so there is no tightness to preserve.
+      let tail = result
+        .slice(start, run-end)
+        .filter(item => _is-list-item(item))
+      if tail.len() < 2 { return result }
+      // `list`/`enum`/`terms` take their items as positional arguments; the
+      // container function is the item function's parent element.
+      let container = if kind == list.item {
+        list
+      } else if kind == enum.item {
+        enum
+      } else {
+        terms
+      }
+      result.slice(0, start) + (container(tight: false, ..tail),) + trailing
+    }
+
+    /// Cover a run of hidden elements.
+    ///
+    /// Returns `(result, covered)`: `result` is `last-result`, rewritten when
+    /// the covered run forces the visible items before it to stay non-tight,
+    /// and `covered` is the content to append after it.
     let cover-hidden(cover-fn, items, last-result, next-is-list: false) = {
       // First non-space hidden element (borders the gap *above* the block)
       let first-pos = items.position(item => not tree.is-space(item))
@@ -2185,6 +2284,42 @@
         }
         found
       }
+      // A parbreak among the covered items makes the list Typst builds from
+      // this run non-tight, which spaces every row by par.spacing rather than
+      // par.leading. The covered block has to reserve that same gap.
+      let run-is-nontight = items.any(item => (
+        type(item) == content and item.func() == parbreak
+      ))
+      // Does a parbreak separate the visible tail from this covered run? The
+      // `#pause` sits after the blank line, so the parbreak ends up as the last
+      // visible element rather than among the covered items. When it does, and
+      // items stand on both sides of it, the two runs were one non-tight list
+      // and the visible one has to be told to stay non-tight.
+      // Is a parbreak anywhere across this cover boundary -- at the end of the
+      // visible run, or among the covered items? A parbreak does not split the
+      // items into two lists; it makes the one list they form non-tight, and
+      // that widened pitch applies to every row on both sides of it. So
+      // wherever it falls relative to the cover, the visible run was part of a
+      // non-tight list and has to be re-emitted as one.
+      let split-by-parbreak = {
+        let is-parbreak(item) = (
+          type(item) == content and item.func() == parbreak
+        )
+        let in-visible = {
+          let found = false
+          for i in range(last-result.len()) {
+            let item = last-result.at(last-result.len() - 1 - i)
+            if tree.is-space(item) {
+              // skip space nodes only
+            } else {
+              found = is-parbreak(item)
+              break
+            }
+          }
+          found
+        }
+        in-visible or items.any(is-parbreak)
+      }
       let covered = cover-fn(items.sum())
       // The gap *above* the covered block is broken when the last visible and
       // first hidden elements are both list items (a list interrupted by a
@@ -2195,16 +2330,29 @@
       // the natural (auto) spacing.
       let above-needs = first-is-list and last-is-list
       let below-needs = last-hidden-is-list and next-is-list
-      if above-needs or below-needs {
+      // A parbreak stands between the visible items and this covered run of
+      // items, so the two were one non-tight list. Re-emit the visible run as
+      // an explicit non-tight list, or it re-tightens and every visible row
+      // moves once the run after the parbreak is covered.
+      // A parbreak on either side of this cover boundary means the items on
+      // both sides formed one non-tight list, whose wider pitch applies to
+      // every row. Covering one side would let the other revert to tight, so
+      // the visible run is re-emitted as an explicitly non-tight container.
+      let result = if first-is-list and (split-by-parbreak or run-is-nontight) {
+        force-nontight-tail(last-result, sep-here: split-by-parbreak)
+      } else {
+        last-result
+      }
+      let covered = if above-needs or below-needs {
         // construct a block around the covered content that corrects spacing.
         context block(
           above: if above-needs {
-            list-spacing-for(items.at(first-pos))
+            list-spacing-for(items.at(first-pos), nontight: run-is-nontight)
           } else {
             auto
           },
           below: if below-needs {
-            list-spacing-for(last-hidden-item)
+            list-spacing-for(last-hidden-item, nontight: run-is-nontight)
           } else {
             auto
           },
@@ -2213,6 +2361,7 @@
       } else {
         covered
       }
+      (result: result, covered: covered)
     }
 
     // Flatten sequences and handle each child element
@@ -2269,12 +2418,16 @@
             // If we jumped back into the visible zone, flush hidden-parts in order
             // (so they appear before subsequent visible content, not after it)
             if hidden-parts.len() != 0 and repetitions <= index {
-              result.push(cover-hidden(
-                cover,
-                hidden-parts,
-                result,
-                next-is-list: next-sibling-is-list(_child_i),
-              ))
+              {
+                let covered = cover-hidden(
+                  cover,
+                  hidden-parts,
+                  result,
+                  next-is-list: next-sibling-is-list(_child_i),
+                )
+                result = covered.result
+                result.push(covered.covered)
+              }
               hidden-parts = ()
             }
           } else {
@@ -2282,12 +2435,16 @@
             // Visible content (e.g. list items) may follow directly, so look
             // ahead to correct the spacing below the covered run.
             if hidden-parts.len() != 0 {
-              result.push(cover-hidden(
-                cover,
-                hidden-parts,
-                result,
-                next-is-list: next-sibling-is-list(_child_i),
-              ))
+              {
+                let covered = cover-hidden(
+                  cover,
+                  hidden-parts,
+                  result,
+                  next-is-list: next-sibling-is-list(_child_i),
+                )
+                result = covered.result
+                result.push(covered.covered)
+              }
               hidden-parts = ()
             }
             max-repetitions = calc.max(
@@ -2700,7 +2857,11 @@
           // the correct order relative to subsequent visible content (fn-wrappers
           // always render in-place and never go through hidden-parts themselves).
           if hidden-parts.len() != 0 {
-            result.push(cover-hidden(cover, hidden-parts, result))
+            {
+              let covered = cover-hidden(cover, hidden-parts, result)
+              result = covered.result
+              result.push(covered.covered)
+            }
             hidden-parts = ()
           }
           result.push((child.value.fn)(
@@ -2765,7 +2926,11 @@
           // Propagate a #meanwhile that fired inside the wrapper
           if meanwhile-escaped {
             if hidden-parts.len() != 0 {
-              result.push(cover-hidden(cover, hidden-parts, result))
+              {
+                let covered = cover-hidden(cover, hidden-parts, result)
+                result = covered.result
+                result.push(covered.covered)
+              }
               hidden-parts = ()
             }
             max-repetitions = calc.max(max-repetitions, repetitions)
@@ -2781,7 +2946,9 @@
           if (
             would-be-hidden
               and (
-                inner-has-fn-wrapper or meanwhile-escaped or meanwhile-dips-visible
+                inner-has-fn-wrapper
+                  or meanwhile-escaped
+                  or meanwhile-dips-visible
               )
           ) {
             // Two-pass: the body has to decide its own visibility, so re-run it
@@ -2789,7 +2956,11 @@
             // hidden-parts. A fn-wrapper directly inside a hidden wrapper would
             // otherwise be covered twice; a #meanwhile needs the inner parse to
             // cover what comes before it while revealing what comes after.
-            let (conts2, inner-max-repetitions2, ..) = _parse-content-into-results-and-repetitions(
+            let (
+              conts2,
+              inner-max-repetitions2,
+              ..,
+            ) = _parse-content-into-results-and-repetitions(
               self: self,
               need-cover: need-cover,
               base: repetitions,
@@ -2841,7 +3012,11 @@
             self,
             (methods: (cover: (self: none, body) => [])),
           )
-          let (note-conts, note-max-rep, ..) = _parse-content-into-results-and-repetitions(
+          let (
+            note-conts,
+            note-max-rep,
+            ..,
+          ) = _parse-content-into-results-and-repetitions(
             self: note-self,
             need-cover: true,
             base: 1,
@@ -2955,7 +3130,11 @@
       } else if child == linebreak() or child == parbreak() {
         // clear the hidden-parts when encounter linebreak or parbreak
         if hidden-parts.len() != 0 {
-          result.push(cover-hidden(cover, hidden-parts, result))
+          {
+            let covered = cover-hidden(cover, hidden-parts, result)
+            result = covered.result
+            result.push(covered.covered)
+          }
           hidden-parts = ()
         }
         result.push(child)
@@ -2991,7 +3170,11 @@
         let (cont, inner-max-repetitions) = if (
           would-be-hidden and (inner-has-fn-wrapper or meanwhile-dips-visible)
         ) {
-          let (conts2, inner-max-repetitions2, ..) = _parse-content-into-results-and-repetitions(
+          let (
+            conts2,
+            inner-max-repetitions2,
+            ..,
+          ) = _parse-content-into-results-and-repetitions(
             self: self,
             need-cover: need-cover,
             base: repetitions,
@@ -3006,7 +3189,11 @@
         // Propagate meanwhile effect from inside the sequence
         if final-repetitions < repetitions {
           if hidden-parts.len() != 0 {
-            result.push(cover-hidden(cover, hidden-parts, result))
+            {
+              let covered = cover-hidden(cover, hidden-parts, result)
+              result = covered.result
+              result.push(covered.covered)
+            }
             hidden-parts = ()
           }
           max-repetitions = calc.max(max-repetitions, repetitions)
@@ -3048,7 +3235,11 @@
         // Propagate meanwhile effect from inside the styled element
         if final-repetitions < repetitions {
           if hidden-parts.len() != 0 {
-            result.push(cover-hidden(cover, hidden-parts, result))
+            {
+              let covered = cover-hidden(cover, hidden-parts, result)
+              result = covered.result
+              result.push(covered.covered)
+            }
             hidden-parts = ()
           }
           max-repetitions = calc.max(max-repetitions, repetitions)
@@ -3097,7 +3288,11 @@
         // Propagate meanwhile effect from inside the list item
         if final-repetitions < repetitions {
           if hidden-parts.len() != 0 {
-            result.push(cover-hidden(cover, hidden-parts, result))
+            {
+              let covered = cover-hidden(cover, hidden-parts, result)
+              result = covered.result
+              result.push(covered.covered)
+            }
             hidden-parts = ()
           }
           max-repetitions = calc.max(max-repetitions, repetitions)
@@ -3146,7 +3341,11 @@
         // Propagate meanwhile effect from inside the table/grid/stack
         if final-repetitions < repetitions {
           if hidden-parts.len() != 0 {
-            result.push(cover-hidden(cover, hidden-parts, result))
+            {
+              let covered = cover-hidden(cover, hidden-parts, result)
+              result = covered.result
+              result.push(covered.covered)
+            }
             hidden-parts = ()
           }
           max-repetitions = calc.max(max-repetitions, repetitions)
@@ -3371,7 +3570,11 @@
         // Propagate meanwhile effect from inside the reconstructable element
         if final-repetitions < repetitions {
           if hidden-parts.len() != 0 {
-            result.push(cover-hidden(cover, hidden-parts, result))
+            {
+              let covered = cover-hidden(cover, hidden-parts, result)
+              result = covered.result
+              result.push(covered.covered)
+            }
             hidden-parts = ()
           }
           max-repetitions = calc.max(max-repetitions, repetitions)
@@ -3420,7 +3623,11 @@
         // Propagate meanwhile effect from inside the terms item
         if final-repetitions < repetitions {
           if hidden-parts.len() != 0 {
-            result.push(cover-hidden(cover, hidden-parts, result))
+            {
+              let covered = cover-hidden(cover, hidden-parts, result)
+              result = covered.result
+              result.push(covered.covered)
+            }
             hidden-parts = ()
           }
           max-repetitions = calc.max(max-repetitions, repetitions)
@@ -3461,7 +3668,11 @@
     }
     // clear the hidden-parts when end
     if hidden-parts.len() != 0 {
-      result.push(cover-hidden(cover, hidden-parts, result))
+      {
+        let covered = cover-hidden(cover, hidden-parts, result)
+        result = covered.result
+        result.push(covered.covered)
+      }
       hidden-parts = ()
     }
     parsed-results.push(result.sum(default: []))
