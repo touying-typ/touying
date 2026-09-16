@@ -118,16 +118,27 @@
   assert.eq(measure(staged, subslide: -3).height, 20pt)
 
   // `base` shifts the body's internal *counter*, exactly as in
-  // `touying-render`. The specs written inside the body stay absolute, so with
-  // `base: 3` the valid range becomes 3..5 while `only("3")` still means 3 —
-  // it is the counter that moves, not the numbering the body was written in.
+  // `touying-render`. The specs written inside the body stay absolute, so at
+  // `base: 3` the first two specs below have already passed and `only("3")`
+  // is the one visible stage.
   assert.eq(measure(staged, base: 3, subslide: 3).height, 60pt)
-  assert.eq(measure(staged, base: 3, subslide: 4).height, 0pt)
   // `base` does move a *relative* spec: "h" means "wherever the counter is",
   // so it lands on `base` rather than on 1.
   let here-spec = [#only("h")[#block(height: 25pt)[h]]]
   assert.eq(measure(here-spec, base: 1, subslide: 1).height, 25pt)
   assert.eq(measure(here-spec, base: 3, subslide: 3).height, 25pt)
+  assert.eq(measure(here-spec, base: 3, subslide: auto).height, 25pt)
+
+  // The repeat value produced by the parser is an absolute final counter.
+  // `auto` and negative indices must not add `base` to it a second time.
+  let offset-stages = [
+    #only("h")[#block(height: 20pt)[first]]
+    #pause
+    #only("h")[#block(height: 40pt)[last]]
+  ]
+  assert.eq(measure(offset-stages, base: 3, subslide: auto).height, 40pt)
+  assert.eq(measure(offset-stages, base: 3, subslide: -1).height, 40pt)
+  assert.eq(measure(offset-stages, base: 3, subslide: -2).height, 20pt)
 
   // A waypoint label resolves against the body's own waypoints.
   let wp-body = [
@@ -137,6 +148,36 @@
   ]
   assert.eq(measure(wp-body, subslide: <second>).height, 40pt)
   assert.eq(measure(wp-body, subslide: get-last(<second>)).height, 40pt)
+
+  // Waypoint advances must be measured against a provisional map. Otherwise
+  // the following pause is counted one stage too early and `auto` stops at the
+  // middle state.
+  let advancing-wp-body = [
+    #only("h")[#block(height: 10pt)[first]]
+    #waypoint(<advancing-measure-waypoint>)
+    #only("h")[#block(height: 20pt)[second]]
+    #pause
+    #only("h")[#block(height: 30pt)[third]]
+  ]
+  assert.eq(measure(advancing-wp-body, subslide: auto).height, 30pt)
+
+  // Waypoints use the same absolute numbering as an explicit base. The
+  // second waypoint below is stage 4, and its own range ends there.
+  let offset-wp-body = [
+    #waypoint(<offset-measure-a>, advance: false)
+    #only("h")[#block(height: 20pt)[a]]
+    #pause
+    #waypoint(<offset-measure-b>, advance: false)
+    #only(<offset-measure-b>)[#block(height: 40pt)[b]]
+  ]
+  assert.eq(
+    measure(
+      offset-wp-body,
+      base: 3,
+      subslide: get-last(<offset-measure-b>),
+    ).height,
+    40pt,
+  )
 }
 
 == Inside layout, and returning a value
@@ -174,4 +215,9 @@
   // neither is zero.
   assert(measure(red, subslide: 1).height > 0pt)
   assert.eq(measure(red, subslide: none).height, measure(red).height)
+
+  // Finding a reducer nested in arbitrary content must not turn that reducer
+  // into the whole measurement target and discard its siblings.
+  let compound = [#box(width: 80pt, height: 10pt)#red]
+  assert(measure(compound).width >= 80pt)
 }

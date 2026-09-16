@@ -64,6 +64,18 @@
 )
 #only("h")[TAIL #label("resv-tail")]
 
+== A nested reducer does not replace its surrounding content
+
+#let nested-reducer = touying-reducer(
+  reduce: it => it.sum(default: none),
+  cover: it => it.map(hide),
+  ([inside], pause, [later]),
+)
+#touying-render(
+  [before #label("compound-before") #nested-reducer after #label("compound-after")],
+  subslides: 1,
+)
+
 == Assertions
 #context {
   // --- 1. three `only` stages, no pause anywhere: all three must play ---
@@ -88,4 +100,10 @@
     query(label("resv-tail")).first().location().page(),
     query(label("resv-1")).first().location().page(),
   )
+
+  // A reducer is only a special whole-body rendering target when it is the
+  // body itself. Finding one nested in arbitrary content must not discard its
+  // siblings.
+  assert.eq(query(label("compound-before")).len(), 1)
+  assert.eq(query(label("compound-after")).len(), 1)
 }

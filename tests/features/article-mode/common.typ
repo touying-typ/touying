@@ -137,7 +137,7 @@
   #slide(composer: (1fr, 1fr))[
     Here is some text alongside an image. The image should be wrapped to the side in article mode when
 
-    `wrap-images` is enabled. #lorem(80)
+    image wrapping is enabled. #lorem(80)
   ][
     #image("./image.png", width: 80%)<my-img>
   ]
