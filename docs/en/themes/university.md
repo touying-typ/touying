@@ -11,7 +11,7 @@ This aesthetically pleasing theme is courtesy of [Pol Dellaiera](https://github.
 You can initialize the theme with the following code:
 
 ```typst
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import themes.university: *
 
 #import "@preview/numbly:0.1.0": numbly
@@ -143,7 +143,7 @@ See [Speaker Notes](../tutorials/speaker-notes.md) for details.
 ## Example
 
 ```example
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import themes.university: *
 
 #import "@preview/numbly:0.1.0": numbly

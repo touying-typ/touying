@@ -67,7 +67,7 @@ Parameters:
 ## Practical Example: Fitting a Table to the Slide
 
 ```example
->>> #import "@preview/touying:0.7.4": *
+>>> #import "@preview/touying:0.8.0": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
 #slide[
@@ -85,7 +85,7 @@ Parameters:
 ## Fitting a Heading to Full Width
 
 ```example
->>> #import "@preview/touying:0.7.4": *
+>>> #import "@preview/touying:0.8.0": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
 #slide[

@@ -13,7 +13,7 @@ The Dewdrop theme features an elegantly designed navigation, including two modes
 You can initialize it using the following code:
 
 ```typst
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import themes.dewdrop: *
 
 #import "@preview/numbly:0.1.0": numbly
@@ -148,7 +148,7 @@ See [Speaker Notes](../tutorials/speaker-notes.md) for details.
 ## Example
 
 ```example
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import themes.dewdrop: *
 
 #import "@preview/numbly:0.1.0": numbly

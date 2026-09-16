@@ -11,7 +11,7 @@ sidebar_position: 2
 一般而言，1 级、2 级和 3 级标题分别用来对应 section、subsection 和 subsubsection，例如 dewdrop 主题。
 
 ```example
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import themes.dewdrop: *
 
 #show: dewdrop-theme.with(aspect-ratio: "16-9")
@@ -28,7 +28,7 @@ Hello, Touying!
 但是很多时候我们并不需要 subsection，因此也会使用 1 级和 2 级标题来分别对应 section 和 title，例如 university 主题。
 
 ```example
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import themes.university: *
 
 #show: university-theme.with(aspect-ratio: "16-9")
@@ -60,7 +60,7 @@ Hello, Touying!
 在 Touying 中显示目录很简单：
 
 ```example
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import themes.simple: *
 #import "@preview/numbly:0.1.0": numbly
 
@@ -137,7 +137,7 @@ Touying 识别标题上的特殊标签以控制幻灯片行为。它们分为两
 示例——使用 `<touying:hidden>` 让目录页的标题不参与编号、不进入目录、不生成 PDF 书签（这张幻灯片本身仍会渲染）：
 
 ```example
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import themes.simple: *
 #import "@preview/numbly:0.1.0": numbly
 
@@ -163,7 +163,7 @@ Content.
 如果你希望连幻灯片编号本身也不再递增，请改用 `config-common(freeze-slide-counter: true)`。
 
 ```example
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import themes.simple: *
 
 #show: simple-theme

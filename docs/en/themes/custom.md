@@ -16,7 +16,7 @@ Both approaches are described in detail in the [Build Your Own Theme](../tutoria
 For minor adjustments to an existing theme, you do not need to create a separate theme file. You can override individual settings inline:
 
 ```example
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import themes.metropolis: *
 
 #show: metropolis-theme.with(
@@ -46,11 +46,11 @@ Content with the custom color.
 To make deeper structural changes, copy the theme source file to your project:
 
 1. Download the relevant file from `themes/` in the Touying repository (e.g., `themes/metropolis.typ`).
-2. Change the import at the top from `#import "../src/exports.typ": *` to `#import "@preview/touying:0.7.4": *`.
+2. Change the import at the top from `#import "../src/exports.typ": *` to `#import "@preview/touying:0.8.0": *`.
 3. Import the local copy instead of the built-in theme.
 
 ```typst
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import "metropolis.typ": *   // your local copy
 
 #show: metropolis-theme.with(
@@ -79,7 +79,7 @@ The notes panel does not use `config-page(..)`: pass backgrounds to `fill` and `
 For a fuller walkthrough, see [Build Your Own Theme · Customizing the Notes](../tutorials/build-your-own-theme.md#customizing-the-notes).
 
 ```example
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import themes.metropolis: *
 
 #let my-notes(self: none, ..args) = touying-notes(
@@ -126,7 +126,7 @@ place(hide(heading(
 `hide` makes it invisible, `place` keeps it from taking up any layout space, and `outlined: false` together with `bookmarked: false` keeps it out of the outline and the PDF bookmarks — but `utils.display-current-heading` still finds it. The `outline-slide` of aqua, dewdrop, metropolis and stargazer, as well as stargazer's `ending-slide`, all use this pattern.
 
 ```example
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import themes.simple: *
 
 #let thanks-slide(config: (:), title: [Thanks!]) = touying-slide-wrapper(self => {

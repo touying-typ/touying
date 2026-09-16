@@ -12,7 +12,7 @@ sidebar_position: 5
 你可以通过下面的代码来初始化：
 
 ```typst
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import themes.aqua: *
 
 #show: aqua-theme.with(
@@ -120,7 +120,7 @@ Aqua 定义了自己的 `notes` 函数，并通过 `config-common(notes-fn: note
 ## 示例
 
 ```example
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import themes.aqua: *
 
 #show: aqua-theme.with(

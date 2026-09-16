@@ -11,7 +11,7 @@ sidebar_position: 3
 让我们先来看一个例子：
 
 ```example
->>> #import "@preview/touying:0.7.4": *
+>>> #import "@preview/touying:0.8.0": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
 #slide[
@@ -37,7 +37,7 @@ sidebar_position: 3
 `only`、`uncover`、`effect` 和 `alternatives` 在公式内部同样可用：
 
 ```example
->>> #import "@preview/touying:0.7.4": *
+>>> #import "@preview/touying:0.8.0": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
 #slide[
@@ -54,7 +54,7 @@ sidebar_position: 3
 `vec`、`cases`、`binom`、`root`、`attach`、`accent` 以及各类括号函数：
 
 ```example
->>> #import "@preview/touying:0.7.4": *
+>>> #import "@preview/touying:0.8.0": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
 #slide[

@@ -29,7 +29,7 @@ utils.display-current-short-heading(level: 2)
 你可以在自定义页眉中使用这些工具函数：
 
 ```example
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import themes.default: *
 
 #show: default-theme.with(
@@ -63,7 +63,7 @@ Touying 提供了若干渐进式目录工具函数，以下是最常用的几种
 [`components.progressive-outline()`](https://touying-typ.github.io/docs/reference/components/progressive-outline) 渲染一个高亮当前章节、灰显其他章节的目录——这是主题演示文稿中的常见模式：
 
 ```example
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import themes.dewdrop: *
 
 #show: dewdrop-theme.with(aspect-ratio: "16-9")
@@ -88,7 +88,7 @@ Content.
 [`components.custom-progressive-outline()`](https://touying-typ.github.io/docs/reference/components/custom-progressive-outline) 允许你为渐进式目录指定各种样式规则，灵活性更强，但需要自行配置所有参数。
 
 ```example
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import themes.dewdrop: *
 
 #show: dewdrop-theme.with(aspect-ratio: "16-9")
@@ -128,7 +128,7 @@ Content.
 示例用法如下：
 
 ```example
->>>#import "@preview/touying:0.7.4": *
+>>>#import "@preview/touying:0.8.0": *
 >>>#import themes.simple: *
 >>>#show: simple-theme
 >>>#set heading(numbering: "1.1")

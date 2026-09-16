@@ -11,7 +11,7 @@ sidebar_position: 4
 你可以通过下面的代码来初始化：
 
 ```typst
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import themes.university: *
 
 #import "@preview/numbly:0.1.0": numbly
@@ -142,7 +142,7 @@ University 定义了自己的 `notes` 函数，并通过 `config-common(notes-fn
 ## 示例
 
 ```example
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import themes.university: *
 
 #import "@preview/numbly:0.1.0": numbly

@@ -20,7 +20,7 @@ Note the use of `.display()` rather than `.get()`: `.get()` returns the counter 
 Use it in a custom footer:
 
 ```example
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import themes.default: *
 
 #show: default-theme.with(
@@ -69,7 +69,7 @@ The `#context` here must be followed by a content block. Written as `#context ut
 The `appendix` show rule freezes only the **denominator** — `utils.last-slide-number`, the total slide count — so appendix slides do not change the total shown in the footer. The slide counter `utils.slide-counter` keeps advancing, so a footer in the appendix reads something like `5 / 3`:
 
 ```example
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import themes.simple: *
 
 #show: simple-theme
