@@ -94,7 +94,7 @@ Touying 的所有配置都通过一组 `config-*` 函数传给主题，它们返
 `config-article(..)` 用于配置 article 模式下的排版，例如把图片浮动到侧边、指定标题块，以及把配置字段传给 article 主题：
 
 ```typst
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import themes.simple: *
 #import themes.article: article-theme
 
@@ -105,12 +105,18 @@ Touying 的所有配置都通过一组 `config-*` 函数传给主题，它们返
     article-theme: article-theme.with(numbering: "1.1"),
   ),
   config-article(
-    wrap-images: true,
+    wrap: (image: true),
     title-block-fn: auto,
     available-fields: (title: "info.title"),
   ),
 )
 ```
+
+:::note[注意]
+
+`title-block-fn: auto` 会使用内置的标题块并读取 `document` 元数据；当日期仍为 `auto` 时，会自动使用当天日期。
+
+:::
 
 在正文里，`#article-only[..]`、`#article-text[..]`、`#slides-only[..]` 和 `#presentation-only[..]` 可以按输出目标切换内容。
 
@@ -131,7 +137,7 @@ Touying 的所有配置都通过一组 `config-*` 函数传给主题，它们返
 
 你可以使用 `#show: touying-set-config.with(...)` 覆盖当前及其后所有幻灯片的任意配置，用法与普通的 `show`/`set` 规则相同：
 ```example
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import themes.simple: *
 
 #show: simple-theme.with(aspect-ratio: "16-9")

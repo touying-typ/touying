@@ -25,8 +25,12 @@
 ///    article-theme: article-theme.with(numbering: "1.1"),
 ///   ),
 ///   config-article(
-///     wrap-images: true,
-///     wrap-image-figures: true,
+///     wrap: (
+///       image: true,
+///       overrides: ((
+///         target: el => el.func() == figure and el.body.func() == image,
+///       ),),
+///     ),
 ///     available-fields: (
 ///       // specify config fields that should be passed to the article theme.
 ///       title: "info.title",

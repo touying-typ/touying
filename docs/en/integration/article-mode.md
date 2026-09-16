@@ -14,7 +14,7 @@ typst compile --input export-mode=article talk.typ talk.pdf   # article
 `--input export-mode=article` wins over whatever the file says, so the same source builds both outputs without editing it. If you prefer to fix the mode in the file, set it in the config:
 
 ```example
->>> #import "@preview/touying:0.7.4": *
+>>> #import "@preview/touying:0.8.0": *
 >>> #import themes.simple: *
 #show: simple-theme.with(
   config-common(export-mode: "article"),
@@ -35,7 +35,7 @@ The page belongs to the article theme now, not to the slide theme.
 - **Layout is linearized.** A container that only arranges content is flattened into the prose, because the article is not trying to preserve the deck's layout. See [Linearized layout](#linearized-layout).
 
 ```example
->>> #import "@preview/touying:0.7.4": *
+>>> #import "@preview/touying:0.8.0": *
 >>> #import themes.simple: *
 #show: simple-theme.with(
   config-common(export-mode: "article"),
@@ -51,7 +51,7 @@ Ordinary content. #pause This appears on a second subslide in the deck, and inli
 Touying ships a plain article theme and uses it by default. Any theme that takes a body works, including document themes from Universe:
 
 ```example
->>> #import "@preview/touying:0.7.4": *
+>>> #import "@preview/touying:0.8.0": *
 >>> #import themes.simple: *
 #import "@preview/arkheion:0.1.0": arkheion
 
@@ -67,7 +67,7 @@ Rendered by arkheion rather than by touying's own article theme.
 The theme is a function applied to the whole article, so configure it with `.with(..)` when you name it:
 
 ```example
->>> #import "@preview/touying:0.7.4": *
+>>> #import "@preview/touying:0.8.0": *
 >>> #import themes.simple: *
 #import themes.article: article-theme
 
@@ -90,7 +90,7 @@ Numbered by the article theme.
 An article theme usually wants a title and an author of its own. `config-article(available-fields: ..)` maps entries from your touying config onto the theme's parameters, so you write them once in `config-info` or elsewhere:
 
 ```example
->>> #import "@preview/touying:0.7.4": *
+>>> #import "@preview/touying:0.8.0": *
 >>> #import themes.simple: *
 #import "@preview/arkheion:0.1.0": arkheion
 
@@ -111,7 +111,7 @@ If the theme has no title block of its own, either give `config-article(title-bl
 
 ## Writing for both outputs
 
-Because you may want to write slightly different things for each ouput target you may select what goes in which via 3 functions. They are covered in full in [Output Modes](../tutorials/output-modes); in short:
+Because you may want to write slightly different things for each output target, you can select what goes in each with three functions. They are covered in full in [Output Modes](../tutorials/output-modes); in short:
 
 - `#article-only[..]` adds content that exists only in the article. Even slide-breaking elements like headings or "---" can be used in here.
 - `#slides-only[..]` shows content only when outputting slides.
@@ -120,7 +120,7 @@ Because you may want to write slightly different things for each ouput target yo
 `#article-text` is the interesting one. Bullet points that work on a slide usually read badly in a document, so write the prose version next to them and let each output take what it needs:
 
 ```example
->>> #import "@preview/touying:0.7.4": *
+>>> #import "@preview/touying:0.8.0": *
 >>> #import themes.simple: *
 #show: simple-theme.with(
   config-common(export-mode: "article"),
@@ -147,7 +147,7 @@ A slide here is a heading no deeper than `slide-level` (`=` and `==` by default)
 An animated diagram is one slide with several subslides, and the article renders only the last. When the intermediate stages carry the argument, `#touying-recall` puts a chosen one back into the prose:
 
 ```example
->>> #import "@preview/touying:0.7.4": *
+>>> #import "@preview/touying:0.8.0": *
 >>> #import themes.simple: *
 >>> #show: simple-theme.with(config-common(export-mode: "article"))
 #import "@preview/cetz:0.4.2"
@@ -178,12 +178,12 @@ See the documentation of the function for more details. Another similar function
 
 ## Linearized layout
 
-An article is one column of prose, so a container that exists only to arrange things on a slide should get flattened into that flow. The slide composer, `#columns(..)` and `components.side-by-side[..][..]` by default all get linearized. 
+An article is one column of prose, so a container that exists only to arrange things on a slide should get flattened into that flow. The slide composer, `#columns(..)` and `components.side-by-side[..][..]` by default all get linearized.
 
 A `table` or `grid` is different, because it may carry meaning via its structure. By default touying takes a **declared header or footer** as proof of structural meaning: with one, the table keeps its structure; without one, it is treated as a layout device and is flattened. `components.cols` and `side-by-side` internally build a grid but don't declare a header, which is why they linearize.
 
 ```example
->>> #import "@preview/touying:0.7.4": *
+>>> #import "@preview/touying:0.8.0": *
 >>> #import themes.simple: *
 >>> #show: simple-theme.with(config-common(export-mode: "article"))
 == Two Ways To Use A Table
@@ -219,9 +219,9 @@ Note that content inside `#article-only` or `#article-text` is always kept as wr
 
 ## Floating Blocks to the Side
 
-To improve reading flow touying can automatically wrap images to one side automatically via the `config-article(wrap: ..)`. 
+To improve reading flow, Touying can wrap images to one side via `config-article(wrap: ..)`.
 
-Figures and Tables that are not wrapped get centered at the bottom of the parent section. To place it as a floating figure use `article-only`/`article-text` instead. All other blocks (including images) are exlcuded from this and instead place in the text flow where the linearizer thinks they belong.
+Figures and tables that are not wrapped are centered at the bottom of the parent section. To place one in the text flow, use `article-only`/`article-text` instead. All other blocks (including images) remain where the linearizer places them in the text flow.
 
 ```typst
 #show: simple-theme.with(
@@ -235,7 +235,9 @@ Figures and Tables that are not wrapped get centered at the bottom of the parent
 )
 ```
 
-You may specifc width and align once globally and decide whether to use wrapping per element function `table`, `image`, `figure`, ...
+You may specify `width` and `align` once globally and decide whether to use wrapping per element function: `table`, `image`, `figure`, and so on.
+
+As a top-level shorthand, `wrap: false` disables wrapping entirely, while `wrap: true` wraps every extractable candidate with the default width and alignment.
 
 You may also override these global defaults per element function:
 
@@ -282,7 +284,7 @@ Wrapping is done with [meander](https://typst.app/universe/package/meander), whi
 **A title slide renders inline.** `#title-slide(..)` is a slide like any other, so in the article it appears as well and the title material shows up twice. Wrap the call to keep it out:
 
 ```example
->>> #import "@preview/touying:0.7.4": *
+>>> #import "@preview/touying:0.8.0": *
 >>> #import themes.simple: *
 >>> #show: simple-theme.with(config-common(export-mode: "article"))
 #slides-only(title-slide[])
