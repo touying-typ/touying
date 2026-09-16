@@ -7,7 +7,7 @@ sidebar_position: 9
 演讲者备注是写给你自己、而不是写给听众看的内容。你把它写在它所属的那张幻灯片旁边，而 Touying 会保证它不会出现在幻灯片本身里。
 
 ```example
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import themes.simple: *
 #show: simple-theme
 

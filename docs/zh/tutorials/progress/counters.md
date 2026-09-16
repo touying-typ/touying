@@ -20,7 +20,7 @@ Touying 提供了一组计数器和工具函数，用于追踪和显示演示文
 在自定义页脚中使用：
 
 ```example
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import themes.default: *
 
 #show: default-theme.with(
@@ -69,7 +69,7 @@ metropolis 和 aqua 主题的进度条即以此方式实现。
 `appendix` show 规则只冻结**分母**，即 `utils.last-slide-number`（幻灯片总数），使附录幻灯片不改变页脚中显示的总数。幻灯片计数器 `utils.slide-counter` 仍然继续递增，因此附录中的页脚会显示形如 `5 / 3` 的编号：
 
 ```example
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import themes.simple: *
 
 #show: simple-theme

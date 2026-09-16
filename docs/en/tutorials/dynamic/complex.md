@@ -12,7 +12,7 @@ Thanks to the syntax provided by [Polylux](https://polylux.dev/book/dynamic/synt
 We can use mark-style functions, which are very convenient to use.
 
 ```example
->>> #import "@preview/touying:0.7.4": *
+>>> #import "@preview/touying:0.8.0": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
 At subslide #touying-fn-wrapper-raw((self: none) => str(self.subslide)), we can
@@ -34,7 +34,7 @@ In the example above we reached `self` from mark-style markup with `touying-fn-w
 Unlike `touying-fn-wrapper`, `touying-fn-wrapper-raw` does not escape the surrounding pause zone: its positional arguments are parsed as ordinary slide content. So `#pause`, `#meanwhile` and the touying-fn-wrappers (`#only`, `#uncover`, `#effect`, ..) all work inside it, and one `touying-fn-wrapper-raw` may be nested inside another. Functions built on top of it, such as `#alert`, inherit this:
 
 ```example
->>> #import "@preview/touying:0.7.4": *
+>>> #import "@preview/touying:0.8.0": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
 #slide[
@@ -68,7 +68,7 @@ The body must be passed as a *positional* argument of `touying-fn-wrapper-raw` f
 To overcome the limitations of layout functions mentioned earlier, Touying cleverly implements always-effective `only`, `uncover`, and `alternatives` using callback functions. Specifically, you need to introduce these three functions as follows:
 
 ```example
->>> #import "@preview/touying:0.7.4": *
+>>> #import "@preview/touying:0.8.0": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
 #slide(repeat: 3, self => [
@@ -125,7 +125,7 @@ You may also have noticed that `#pause` actually uses the `cover` function, prov
 The `alternatives` function displays a series of different content in different subslides. For example:
 
 ```example
->>> #import "@preview/touying:0.7.4": *
+>>> #import "@preview/touying:0.8.0": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
 #slide(repeat: 3, self => [
@@ -144,7 +144,7 @@ As you can see, `alternatives` can automatically expand to the most suitable wid
 `only`, `uncover` and `alternatives` each do one thing. `#animate` lets you attach several effects to one piece of content and say on which subslides each applies.
 
 ```example
->>> #import "@preview/touying:0.7.4": *
+>>> #import "@preview/touying:0.8.0": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
 #slide[
@@ -186,7 +186,7 @@ The rule is the same in both classes: **the last effect you wrote wins**, a plac
 `swap(replacement)` puts something else in its place and lets the layout reflow. With `swap(replacement, stretch: true)` the replacement joins the reserved space instead, so the block keeps one size across every subslide, the way `alternatives` does.
 
 ```example
->>> #import "@preview/touying:0.7.4": *
+>>> #import "@preview/touying:0.8.0": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
 #slide[
@@ -202,7 +202,7 @@ The rule is the same in both classes: **the last effect you wrote wins**, a plac
 `#touying-render(body, subslides: ..)` renders a piece of content at chosen animation stages, wherever you put it. The content is animated as usual, but you decide which frames appear:
 
 ```example
->>> #import "@preview/touying:0.7.4": *
+>>> #import "@preview/touying:0.8.0": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
 #let steps = [first #pause second #pause third]
@@ -223,7 +223,7 @@ Pass an explicit `base:` for self-contained content. With `base: auto` the conte
 Where `touying-render` takes content you have in a variable, `#touying-recall(<label>)` takes content that is already somewhere in the document. The label has to sit on something that has subslides of its own, such as a labelled block containing a `#pause`, or a labelled `touying-reducer`:
 
 ```example
->>> #import "@preview/touying:0.7.4": *
+>>> #import "@preview/touying:0.8.0": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
 == The Construction

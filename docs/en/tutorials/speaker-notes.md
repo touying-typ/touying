@@ -7,7 +7,7 @@ sidebar_position: 9
 A speaker note is content meant for you, not for the audience. You write it inline, next to the slide it belongs to, and Touying keeps it out of the slides themselves.
 
 ```example
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import themes.simple: *
 #show: simple-theme
 

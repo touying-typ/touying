@@ -11,7 +11,7 @@ This theme is created by [@pride7](https://github.com/pride7), featuring beautif
 You can initialize it with the following code:
 
 ```typst
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import themes.aqua: *
 
 #show: aqua-theme.with(
@@ -123,7 +123,7 @@ See [Speaker Notes](../tutorials/speaker-notes.md) for details.
 ## Example
 
 ```example
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import themes.aqua: *
 
 #show: aqua-theme.with(

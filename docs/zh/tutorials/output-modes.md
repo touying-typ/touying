@@ -18,7 +18,7 @@ sidebar_position: 10
 在 config 中设置：
 
 ```example
->>> #import "@preview/touying:0.7.4": *
+>>> #import "@preview/touying:0.8.0": *
 >>> #import themes.simple: *
 #show: simple-theme.with(
   config-common(export-mode: "article"),
@@ -49,7 +49,7 @@ typst compile --input export-mode=article talk.typ paper.pdf
 | `#article-only[..]` | 仅 article 模式 |
 
 ```example
->>> #import "@preview/touying:0.7.4": *
+>>> #import "@preview/touying:0.8.0": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
 == What Each Mode Keeps
@@ -70,7 +70,7 @@ typst compile --input export-mode=article talk.typ paper.pdf
 一个标记既可以写在幻灯片 body 内部，也可以包住整次调用，二者的区别在于它覆盖的范围：
 
 ```example
->>> #import "@preview/touying:0.7.4": *
+>>> #import "@preview/touying:0.8.0": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
 #slide[a #slides-only[b] c]
@@ -87,7 +87,7 @@ typst compile --input export-mode=article talk.typ paper.pdf
 `#article-text[..]` 比 `#article-only[..]` 更进一步：它会取代它所写在的那张幻灯片，因此这张幻灯片本身的内容永远不会出现在文章里。无论你把它写在哪里，它都会占据整张幻灯片，并且每张幻灯片只能有一个——这里的"一张幻灯片"指的是一个不深于 `slide-level` 的 heading，加上它下面直到下一个 heading（如果有 `#pagebreak()` 的话则是到 `#pagebreak()`）为止的全部内容。
 
 ```example
->>> #import "@preview/touying:0.7.4": *
+>>> #import "@preview/touying:0.8.0": *
 >>> #import themes.simple: *
 >>> #show: simple-theme.with(config-common(export-mode: "article"))
 == Why This Matters
@@ -108,7 +108,7 @@ typst compile --input export-mode=article talk.typ paper.pdf
 上面这些标记接受内容作为参数。你也可以改用标签标记，把它们直接写在 heading 上。
 
 ```example
->>> #import "@preview/touying:0.7.4": *
+>>> #import "@preview/touying:0.8.0": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
 == Always Here

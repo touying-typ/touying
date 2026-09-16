@@ -16,7 +16,7 @@ sidebar_position: 7
 对于对现有主题的微小调整，你不需要创建单独的主题文件。可以直接内联覆盖各项设置：
 
 ```example
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import themes.metropolis: *
 
 #show: metropolis-theme.with(
@@ -46,11 +46,11 @@ Content with the custom color.
 若需要进行更深层的结构性修改，可以将主题源文件复制到项目中：
 
 1. 从 Touying 仓库的 `themes/` 目录下载对应文件（例如 `themes/metropolis.typ`）。
-2. 将文件顶部的导入从 `#import "../src/exports.typ": *` 改为 `#import "@preview/touying:0.7.4": *`。
+2. 将文件顶部的导入从 `#import "../src/exports.typ": *` 改为 `#import "@preview/touying:0.8.0": *`。
 3. 在项目中导入本地副本，而不是内置主题。
 
 ```typst
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import "metropolis.typ": *   // your local copy
 
 #show: metropolis-theme.with(
@@ -78,7 +78,7 @@ Content with the custom color.
 更完整的走查见[创建自己的主题 · 自定义 Notes](../tutorials/build-your-own-theme.md#自定义-notes)。
 
 ```example
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import themes.metropolis: *
 
 #let my-notes(self: none, ..args) = touying-notes(
@@ -125,7 +125,7 @@ place(hide(heading(
 `hide` 让它不可见，`place` 让它不占版面空间，`outlined: false` 与 `bookmarked: false` 让它不进入大纲和 PDF 书签 —— 但 `utils.display-current-heading` 仍然能找到它。aqua、dewdrop、metropolis、stargazer 的 `outline-slide`，以及 stargazer 的 `ending-slide`，都用了这个模式。
 
 ```example
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import themes.simple: *
 
 #let thanks-slide(config: (:), title: [Thanks!]) = touying-slide-wrapper(self => {

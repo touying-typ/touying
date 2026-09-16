@@ -81,7 +81,7 @@ Choose the workflow that fits how you want to work with Touying:
 Then create a `.typ` file with the following content:
 
 ```typst
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import themes.simple: *
 
 #show: simple-theme.with(aspect-ratio: "16-9")
@@ -118,7 +118,7 @@ For the full feature set — cover mode, callback-style animations, `#uncover`, 
 For a comprehensive example showcasing university theme, theorems, CeTZ/Fletcher animations, speaker notes, and more. You can also use the `#slide[..]` format to access more powerful features provided by Touying.
 
 ```typst
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import themes.university: *
 #import "@preview/cetz:0.5.2"
 #import "@preview/fletcher:0.5.8" as fletcher: node, edge

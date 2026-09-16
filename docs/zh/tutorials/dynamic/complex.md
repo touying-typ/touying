@@ -12,7 +12,7 @@ sidebar_position: 2
 我们可以使用标记风格的函数，用起来十分方便。
 
 ```example
->>> #import "@preview/touying:0.7.4": *
+>>> #import "@preview/touying:0.8.0": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
 At subslide #touying-fn-wrapper-raw((self: none) => str(self.subslide)), we can
@@ -34,7 +34,7 @@ use #only("2-")[`#only` function] for not reserving space,
 与 `touying-fn-wrapper` 不同，`touying-fn-wrapper-raw` 不会脱离 pause 流程，它的正文会像普通的幻灯片内容一样被解析。因此 `#pause`、`#meanwhile` 以及 `#only`、`#uncover`、`#effect` 都可以写在它的内部，多个 `touying-fn-wrapper-raw` 之间也可以相互嵌套。基于它实现的函数（例如 `#alert`）同样如此：
 
 ```example
->>> #import "@preview/touying:0.7.4": *
+>>> #import "@preview/touying:0.8.0": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
 #slide[
@@ -67,7 +67,7 @@ body 必须作为 `touying-fn-wrapper-raw` 的*位置*参数传入，这一点�
 为了避免上文提到的布局函数的限制，Touying 利用回调函数巧妙实现了总是能生效的 `only`、`uncover` 和 `alternatives`，具体来说，您要这样引入这三个函数：
 
 ```example
->>> #import "@preview/touying:0.7.4": *
+>>> #import "@preview/touying:0.8.0": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
 #slide(repeat: 3, self => [
@@ -125,7 +125,7 @@ body 必须作为 `touying-fn-wrapper-raw` 的*位置*参数传入，这一点�
 `alternatives` 函数表示在不同的 subslides 中展示一系列不同的内容，例如
 
 ```example
->>> #import "@preview/touying:0.7.4": *
+>>> #import "@preview/touying:0.8.0": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
 #slide(repeat: 3, self => [
@@ -145,7 +145,7 @@ body 必须作为 `touying-fn-wrapper-raw` 的*位置*参数传入，这一点�
 `only`、`uncover` 和 `alternatives` 各自只做一件事。`#animate` 则允许你为同一段内容附加多个效果，并指定每个效果分别在哪些子幻灯片上生效。
 
 ```example
->>> #import "@preview/touying:0.7.4": *
+>>> #import "@preview/touying:0.8.0": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
 #slide[
@@ -187,7 +187,7 @@ body 必须作为 `touying-fn-wrapper-raw` 的*位置*参数传入，这一点�
 `swap(replacement)` 会把别的内容放在原处，并让版式重新排布。加上 `swap(replacement, stretch: true)` 后，替换内容会改为占据原先保留的空间，这样这个区块在每张子幻灯片上都保持同一个尺寸，效果与 `alternatives` 相同。
 
 ```example
->>> #import "@preview/touying:0.7.4": *
+>>> #import "@preview/touying:0.8.0": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
 #slide[
@@ -203,7 +203,7 @@ body 必须作为 `touying-fn-wrapper-raw` 的*位置*参数传入，这一点�
 `#touying-render(body, subslides: ..)` 会把一段内容渲染到你选定的某几个动画阶段，无论你把它写在哪里。内容照常带有动画效果，但由你决定哪些帧会出现：
 
 ```example
->>> #import "@preview/touying:0.7.4": *
+>>> #import "@preview/touying:0.8.0": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
 #let steps = [first #pause second #pause third]
@@ -224,7 +224,7 @@ body 必须作为 `touying-fn-wrapper-raw` 的*位置*参数传入，这一点�
 `touying-render` 接受的是你存在变量里的内容，而 `#touying-recall(<label>)` 接受的则是文档中已经存在于某处的内容。这个 label 必须挂在一个自身带有子幻灯片的对象上，比如一个内部含有 `#pause` 的带标签代码块，或者一个带标签的 `touying-reducer`：
 
 ```example
->>> #import "@preview/touying:0.7.4": *
+>>> #import "@preview/touying:0.8.0": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
 == The Construction

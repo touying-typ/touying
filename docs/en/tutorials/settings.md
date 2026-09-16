@@ -92,7 +92,7 @@ All of Touying's configuration is passed to a theme through a set of `config-*` 
 `config-article(..)` configures the layout used in article mode, such as floating images to the side, choosing a title block, and passing config fields through to the article theme:
 
 ```typst
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import themes.simple: *
 #import themes.article: article-theme
 
@@ -130,7 +130,7 @@ However you may also set this locally for individual slides, see below.
 You can override any configuration for all following slides and the current one, using `#show: touying-set-config.with(...)`, just like you would write a `show`/`set`-rule normally.
 
 ```example
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import themes.simple: *
 
 #show: simple-theme.with(aspect-ratio: "16-9")

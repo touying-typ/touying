@@ -11,7 +11,7 @@ sidebar_position: 2
 [`lr-navigation`](https://touying-typ.github.io/docs/reference/core/lr-navigation) 可创建可点击的上一页与下一页控件，支持按幻灯片、子幻灯片（物理页面）或两者同时导航。
 
 ```example
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import themes.simple: *
 
 #show: simple-theme.with(
@@ -52,7 +52,7 @@ Now the page-level links can jump between full slides.
 这种模式非常适合放在页眉中，在不使用完整侧边栏或进度条的情况下提供简洁的进度反馈。
 
 ```example
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import themes.simple: *
 
 #show: simple-theme.with(
@@ -94,7 +94,7 @@ Touying 没有提供单独的 `sidebar-navigation` 函数。实际上，侧边�
 使用此风格最快捷的方法是启用 dewdrop 内置的侧边栏导航并调整其选项：
 
 ```example
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import themes.dewdrop: *
 
 #show: dewdrop-theme.with(

@@ -11,7 +11,7 @@ Math equations animate like any other content: write `#pause`, `#meanwhile`, `#o
 Let's start with an example:
 
 ```example
->>> #import "@preview/touying:0.7.4": *
+>>> #import "@preview/touying:0.8.0": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
 #slide[
@@ -35,7 +35,7 @@ The equation is displayed step by step, which suits presenting a derivation one 
 `only`, `uncover`, `effect` and `alternatives` work inside an equation as well:
 
 ```example
->>> #import "@preview/touying:0.7.4": *
+>>> #import "@preview/touying:0.8.0": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
 #slide[
@@ -53,7 +53,7 @@ fields, such as `frac`, `mat`, `vec`, `cases`, `binom`, `root`, `attach`,
 `accent` and the brace family:
 
 ```example
->>> #import "@preview/touying:0.7.4": *
+>>> #import "@preview/touying:0.8.0": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
 #slide[

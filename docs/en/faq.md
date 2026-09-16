@@ -11,7 +11,7 @@ sidebar_position: 4
 Import a theme and apply it with `#show`:
 
 ```example
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import themes.simple: *
 #show: simple-theme
 = Section
@@ -28,7 +28,7 @@ Available themes: `simple`, `default`, `metropolis`, `aqua`, `dewdrop`, `stargaz
 Pass a `config-colors(...)` argument to your theme:
 
 ```example
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import themes.simple: *
 
 #show: simple-theme.with(
@@ -50,7 +50,7 @@ The header now uses the custom primary color.
 Theme colors live on `self.colors`. In ordinary slide content, wrap a function with `touying-fn-wrapper-raw` so Touying can pass the current slide context as `self`:
 
 ```example
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import themes.simple: *
 
 #show: simple-theme.with(aspect-ratio: "16-9")
@@ -82,7 +82,7 @@ You may still use `touying-fn-wrapper`, but the `raw` variant does not escape th
 Use `slide` with a `composer` argument to split content into columns:
 
 ```example
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import themes.simple: *
 #show: simple-theme
 #slide(composer: (1fr, 1fr))[
@@ -104,7 +104,7 @@ For unequal widths, adjust the fractions, e.g. `(2fr, 1fr)`.
 Use Typst's `place` function for absolute positioning:
 
 ```example
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import themes.simple: *
 #show: simple-theme
 #slide[
@@ -121,7 +121,7 @@ Use Typst's `place` function for absolute positioning:
 Use `utils.fit-to-height` or `utils.fit-to-width`:
 
 ```example
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import themes.simple: *
 #show: simple-theme
 #slide[
@@ -142,7 +142,7 @@ Use `utils.fit-to-height` or `utils.fit-to-width`:
 Use `components.adaptive-columns` wrapping Typst's built-in `outline`:
 
 ```example
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import themes.simple: *
 
 #show: simple-theme.with(aspect-ratio: "16-9")
@@ -172,7 +172,7 @@ The `<touying:hidden>` label hides the outline slide from the outline itself.
 Some themes generate an automatic section slide (often an outline or section overview) when they see a new top-level section (`=`). Disable those generated section slides with `config-common(new-section-slide-fn: none)`, then keep only the main outline slide you write yourself:
 
 ```example
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import themes.metropolis: *
 
 #show: metropolis-theme.with(
@@ -198,7 +198,7 @@ Some themes generate an automatic section slide (often an outline or section ove
 Use the `numbly` package together with `#set heading(numbering: ...)`:
 
 ```example
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import themes.simple: *
 #import "@preview/numbly:0.1.0": numbly
 
@@ -224,7 +224,7 @@ Use the `numbly` package together with `#set heading(numbering: ...)`:
 Use `components.progressive-outline` to highlight the current section:
 
 ```example
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import themes.dewdrop: *
 
 #show: dewdrop-theme.with(aspect-ratio: "16-9")
@@ -249,7 +249,7 @@ Use `components.progressive-outline` to highlight the current section:
 Set `config-common(show-bibliography-as-footnote: true)` and call the bibliography at the end of your slideshow. If the style of your bibliography does this automatically, like `"chicago-notes"` don't set this to `true`.
 
 ```example
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import themes.simple: *
 
 #let bib = bytes(
@@ -290,7 +290,7 @@ This may happen automatically if the slide you place the bibliography on has mor
 Use the `#speaker-note[...]` function anywhere in a slide:
 
 ```example
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import themes.simple: *
 #show: simple-theme
 #slide[
@@ -334,7 +334,7 @@ This is compatible with presenter tools like [pdfpc](https://pdfpc.github.io/) a
 Use `utils.slide-counter.display()` for the current slide number and `utils.last-slide-number` for the total:
 
 ```example
->>>#import "@preview/touying:0.7.4": *
+>>>#import "@preview/touying:0.8.0": *
 >>>#import themes.simple: *
 
 #show: simple-theme.with(
@@ -362,7 +362,7 @@ Still counting.
 Add the `<touying:unnumbered>` label to the heading:
 
 ```example
->>>#import "@preview/touying:0.7.4": *
+>>>#import "@preview/touying:0.8.0": *
 >>>#import themes.simple: *
 >>>#show: simple-theme
 = Title Slide <touying:unnumbered>
@@ -381,7 +381,7 @@ This slide is counted.
 Apply `#show: appendix` after your main content. Slides after this point do not increment the slide counter:
 
 ```example
->>>#import "@preview/touying:0.7.4": *
+>>>#import "@preview/touying:0.8.0": *
 >>>#import themes.simple: *
 >>>
 >>>#show: simple-theme.with(aspect-ratio: "16-9")
@@ -414,7 +414,7 @@ This slide is in the appendix and does not increment the main counter.
 Place `#pause` between content blocks within a `#slide`:
 
 ```example
->>>#import "@preview/touying:0.7.4": *
+>>>#import "@preview/touying:0.8.0": *
 >>>#import themes.simple: *
 >>>#show: simple-theme
 #slide[
@@ -435,7 +435,7 @@ Place `#pause` between content blocks within a `#slide`:
 Use `#only("...")` to show content on particular subslides, or `#uncover("...")` to show it while reserving its space:
 
 ```example
->>>#import "@preview/touying:0.7.4": *
+>>>#import "@preview/touying:0.8.0": *
 >>>#import themes.simple: *
 >>>#show: simple-theme
 #slide[
@@ -453,7 +453,7 @@ For more details see the [*dynamics* section](./tutorials/dynamic/simple.md).
 `#pause` uses metadata injection that does not work inside `context { ... }` blocks. Use the callback-style `slide` instead to access `self.subslide`. But you must specify the `repeat` count yourself.
 
 ```example
->>>#import "@preview/touying:0.7.4": *
+>>>#import "@preview/touying:0.8.0": *
 >>>#import themes.simple: *
 >>>#show: simple-theme
 #slide(repeat: 3, self => {
@@ -473,7 +473,7 @@ All auto-counting animation functions are based on `touying-fn-wrapper` which ca
 Use `touying-reduce` or the alias `touying-diagram` to wrap CeTZ canvas so Touying can animate it: Note the array syntax `(•,)` around animation commands.
 
 ```example
->>> #import "@preview/touying:0.7.4": *
+>>> #import "@preview/touying:0.8.0": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
 #import "@preview/cetz:0.5.2"
@@ -495,7 +495,7 @@ Use `touying-reduce` or the alias `touying-diagram` to wrap CeTZ canvas so Touyi
 Use `touying-reduce` to wrap Fletcher diagrams so Touying can automatically find the Fletcher reducer bindings:
 
 ```example
->>> #import "@preview/touying:0.7.4": *
+>>> #import "@preview/touying:0.8.0": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
 #import "@preview/fletcher:0.5.8" as fletcher: diagram, node, edge
@@ -518,7 +518,7 @@ Note that fletcher does not need the array syntax, writing it is also okay howev
 Use `#alternatives` to swap between different content versions:
 
 ```example
->>>#import "@preview/touying:0.7.4": *
+>>>#import "@preview/touying:0.8.0": *
 >>>#import themes.simple: *
 >>>#show: simple-theme
 #slide[
@@ -548,7 +548,7 @@ In handout mode, only the final subslide of each slide is output.
 Use a `#set text(...)` rule before or after your theme setup:
 
 ```example
->>>#import "@preview/touying:0.7.4": *
+>>>#import "@preview/touying:0.8.0": *
 >>>#import themes.metropolis: *
 >>>
 >>>#show: metropolis-theme.with(
@@ -576,7 +576,7 @@ For math, also set the math font:
 Use `#set par(justify: true)`:
 
 ```example
->>>#import "@preview/touying:0.7.4": *
+>>>#import "@preview/touying:0.8.0": *
 >>>#import themes.simple: *
 >>>#show: simple-theme
 
@@ -597,7 +597,7 @@ Use `#set par(justify: true)`:
 Set `config-common(new-section-slide-fn: none)`:
 
 ```example
->>>#import "@preview/touying:0.7.4": *
+>>>#import "@preview/touying:0.8.0": *
 >>>#import themes.metropolis: *
 >>>
 #show: metropolis-theme.with(
@@ -619,7 +619,7 @@ By default touying has `config-common(receive-body-for-new-section-slide-fn: fal
 
 
 ```example
->>>#import "@preview/touying:0.7.4": *
+>>>#import "@preview/touying:0.8.0": *
 >>>#import themes.metropolis: *
 >>>
 #show: metropolis-theme.with(
@@ -645,7 +645,7 @@ You can only add speaker notes to the section slide if `receive-body-...` is tru
 This makes it suitable for slides such as an outline slide that should remain in the PDF, but should not appear in outlines/bookmarks or create an extra section slide:
 
 ```example
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import themes.simple: *
 #show: simple-theme
 == Outline <touying:hidden>
@@ -666,7 +666,7 @@ If you need to temporarily remove a slide, delete or comment out the correspondi
 Use the `<touying:unoutlined>` label:
 
 ```example
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import themes.simple: *
 #show: simple-theme
 == Outline <touying:hidden>
@@ -693,7 +693,7 @@ Also appears in the outline.
 Use `config-common(slide-level: ...)`. The default varies by theme:
 
 ```example
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import themes.simple: *
 
 #show: simple-theme.with(
@@ -719,7 +719,7 @@ Sub-subheadings do not create new slides.
 Use `config-page(header: ..., footer: ...)`:
 
 ```example
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import themes.default: *
 
 #show: default-theme.with(
@@ -772,7 +772,7 @@ Related parameters:
 You can also switch these settings mid-presentation using `touying-set-config`:
 
 ```example
->>> #import "@preview/touying:0.7.4": *
+>>> #import "@preview/touying:0.8.0": *
 >>> #import themes.simple: *
 >>> #show: simple-theme.with(config-common(breakable: false))
 == This slide's overflow will be clipped
@@ -788,7 +788,7 @@ You can also switch these settings mid-presentation using `touying-set-config`:
 Use `config-methods(cover: utils.alpha-changing-cover)`:
 
 ```example
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import themes.simple: *
 
 #show: simple-theme.with(
@@ -812,7 +812,7 @@ The default is `utils.hiding-cover`.
 Use `config-common(preamble: ...)` and `subslide-preamble`:
 
 ```example
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import themes.simple: *
 
 #show: simple-theme.with(
@@ -839,7 +839,7 @@ More content.
 Set `horizontal-line-to-pagebreak: true` (default) and use `---` to create page breaks:
 
 ```example
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import themes.simple: *
 
 #show: simple-theme.with(
@@ -906,7 +906,7 @@ To contribute to Touying:
 Use `config-info(...)`:
 
 ```example
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import themes.metropolis: *
 
 #show: metropolis-theme.with(
@@ -935,7 +935,7 @@ Content here.
 Use `touying-set-config` around the content you want to change:
 
 ```example
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import themes.simple: *
 #show: simple-theme
 #slide[
@@ -960,7 +960,7 @@ Use `touying-get-config` at the position you want to know the config. The config
 > If you write this inside a slide that has local config, the local config will be returned instead of the global config.
 
 ```example
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import themes.simple: *
 #show: simple-theme.with(
   config-info(author: "Beautiful Name")
@@ -994,7 +994,7 @@ Import `lib.typ` from the main entry file and use `include` for sections:
 
 ```typst
 // main.typ
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import themes.simple: *
 
 #show: simple-theme.with(aspect-ratio: "16-9")
@@ -1011,7 +1011,7 @@ Each included file uses headings normally — no extra imports needed in each fi
 Use `utils.display-current-heading(...)` or `utils.display-current-short-heading(...)`:
 
 ```example
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import themes.default: *
 
 #show: default-theme.with(
@@ -1035,7 +1035,7 @@ The header shows the current section name.
 Import both packages and use `#pin`/`#pinit-highlight` inside slides as normal:
 
 ```example
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import "@preview/pinit:0.2.2": *
 #import themes.simple: *
 
@@ -1066,7 +1066,7 @@ Touying uses `uniwarn` for its warnings with the namespace `touying`.
 We bind the functions into touying so you can directly do
 
 ```typst
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 
 //to disable the warnings emitted by touying
 #touying-disable-warnings

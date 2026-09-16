@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.8.0 (unreleased)
+## v0.8.0
 
 A big release, and the first that requires **Typst 0.15**.
 

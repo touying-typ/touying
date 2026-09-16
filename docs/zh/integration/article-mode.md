@@ -14,7 +14,7 @@ typst compile --input export-mode=article talk.typ talk.pdf   # 文章
 `--input export-mode=article` 的优先级高于文件本身的设置，因此同一份源文件无需修改就能同时构建出两种输出。如果你更倾向于把模式固定写在文件里，可以在 config 中设置：
 
 ```example
->>> #import "@preview/touying:0.7.4": *
+>>> #import "@preview/touying:0.8.0": *
 >>> #import themes.simple: *
 #show: simple-theme.with(
   config-common(export-mode: "article"),
@@ -35,7 +35,7 @@ The page belongs to the article theme now, not to the slide theme.
 - **布局会被线性化。** 一个只用来排布内容的容器会被拉平进正文中，因为文章并不追求保留幻灯片的布局。参见[线性化布局](#线性化布局)。
 
 ```example
->>> #import "@preview/touying:0.7.4": *
+>>> #import "@preview/touying:0.8.0": *
 >>> #import themes.simple: *
 #show: simple-theme.with(
   config-common(export-mode: "article"),
@@ -51,7 +51,7 @@ Ordinary content. #pause This appears on a second subslide in the deck, and inli
 Touying 自带一个朴素的文章主题，并默认使用它。任何接受 body 的主题都可以使用，包括 Universe 上的文档类主题：
 
 ```example
->>> #import "@preview/touying:0.7.4": *
+>>> #import "@preview/touying:0.8.0": *
 >>> #import themes.simple: *
 #import "@preview/arkheion:0.1.0": arkheion
 
@@ -67,7 +67,7 @@ Rendered by arkheion rather than by touying's own article theme.
 主题是一个作用于整篇文章的函数，因此在指定它的同时用 `.with(..)` 来配置它：
 
 ```example
->>> #import "@preview/touying:0.7.4": *
+>>> #import "@preview/touying:0.8.0": *
 >>> #import themes.simple: *
 #import themes.article: article-theme
 
@@ -90,7 +90,7 @@ Numbered by the article theme.
 文章主题通常需要自己的 title 和 author。`config-article(available-fields: ..)` 会把你 touying config 中的条目映射到主题自己的参数上，这样你只需要在 `config-info` 或别处写一次：
 
 ```example
->>> #import "@preview/touying:0.7.4": *
+>>> #import "@preview/touying:0.8.0": *
 >>> #import themes.simple: *
 #import "@preview/arkheion:0.1.0": arkheion
 
@@ -120,7 +120,7 @@ The title above came from `config-info`.
 `#article-text` 是其中最有意思的一个。在幻灯片上效果不错的要点列表，写进文档里往往读起来很别扭，因此你可以在它们旁边写好对应的散文版本，让每种输出各取所需：
 
 ```example
->>> #import "@preview/touying:0.7.4": *
+>>> #import "@preview/touying:0.8.0": *
 >>> #import themes.simple: *
 #show: simple-theme.with(
   config-common(export-mode: "article"),
@@ -147,7 +147,7 @@ The title above came from `config-info`.
 一个带动画的图表，本质上是一张有多个子幻灯片的幻灯片，而文章只会渲染最后一个。当中间的阶段承载着论证过程时，`#touying-recall` 可以把其中某一个阶段放回正文中：
 
 ```example
->>> #import "@preview/touying:0.7.4": *
+>>> #import "@preview/touying:0.8.0": *
 >>> #import themes.simple: *
 >>> #show: simple-theme.with(config-common(export-mode: "article"))
 #import "@preview/cetz:0.4.2"
@@ -182,7 +182,7 @@ The title above came from `config-info`.
 `table` 或 `grid` 则有所不同，因为它们的结构本身可能承载着含义。默认情况下，touying 把**声明了 header 或 footer** 视为结构具有含义的证据：有的话，table 保留其结构；没有的话，就把它当作单纯的排版手段而拉平。`components.cols` 和 `side-by-side` 内部都会构建一个 grid，但并不声明 header，这就是它们会被线性化的原因。
 
 ```example
->>> #import "@preview/touying:0.7.4": *
+>>> #import "@preview/touying:0.8.0": *
 >>> #import themes.simple: *
 >>> #show: simple-theme.with(config-common(export-mode: "article"))
 == Two Ways To Use A Table
@@ -281,7 +281,7 @@ config-article(wrap: (
 **标题幻灯片会内联渲染。** `#title-slide(..)` 和其他幻灯片一样也是一张幻灯片，因此在文章中它同样会出现，标题材料就会显示两次。把这次调用包起来，可以避免它出现在文章里：
 
 ```example
->>> #import "@preview/touying:0.7.4": *
+>>> #import "@preview/touying:0.8.0": *
 >>> #import themes.simple: *
 >>> #show: simple-theme.with(config-common(export-mode: "article"))
 #slides-only(title-slide[])

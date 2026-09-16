@@ -101,7 +101,7 @@ By #author
 Touying 自己读取命令行覆盖项时用的正是这个函数。
 
 ```typst
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 
 // 单个值；如果没有传入该 key，则为 `none`
 #let accent = utils.get-input(key: "accent")

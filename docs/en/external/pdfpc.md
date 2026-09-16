@@ -64,7 +64,7 @@ typst eval --in ./example.typ 'query(<pdfpc-file>).first().value' > ./example.pd
 With the compatibility of Touying and Polylux, you can make Polylux also support direct export by adding the following code:
 
 ```typst
-#import "@preview/touying:0.7.4"
+#import "@preview/touying:0.8.0"
 
 #context touying.pdfpc.pdfpc-file(here())
 ```
@@ -77,7 +77,7 @@ call to `#pdfpc.bundle-assets()` at the top level of your file, i.e. outside of
 every `#document(..)`:
 
 ```typst
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import themes.simple: *
 
 #pdfpc.bundle-assets()

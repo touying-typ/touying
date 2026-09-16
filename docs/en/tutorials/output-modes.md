@@ -18,7 +18,7 @@ One source file can produce more than one document. Touying calls these output m
 Set it in the config:
 
 ```example
->>> #import "@preview/touying:0.7.4": *
+>>> #import "@preview/touying:0.8.0": *
 >>> #import themes.simple: *
 #show: simple-theme.with(
   config-common(export-mode: "article"),
@@ -49,7 +49,7 @@ Four markers keep a piece of content out of the modes it does not suit:
 | `#article-only[..]` | article mode only |
 
 ```example
->>> #import "@preview/touying:0.7.4": *
+>>> #import "@preview/touying:0.8.0": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
 == What Each Mode Keeps
@@ -70,7 +70,7 @@ When a marker's content is not wanted, it is removed outright and reserves no sp
 A marker works both inside a slide's body and around the call, and the difference is what it covers:
 
 ```example
->>> #import "@preview/touying:0.7.4": *
+>>> #import "@preview/touying:0.8.0": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
 #slide[a #slides-only[b] c]
@@ -87,7 +87,7 @@ That holds for every slide function, so `#slides-only(title-slide[])` keeps a ti
 `#article-text[..]` goes further than `#article-only[..]`: it stands in for the slide it is written in, so the slide's own content never reaches the article. It claims the whole slide wherever you put it, and there is one per slide, a slide being a heading no deeper than `slide-level` plus everything under it, up to the next heading, or `#pagebreak()` if there is one.
 
 ```example
->>> #import "@preview/touying:0.7.4": *
+>>> #import "@preview/touying:0.8.0": *
 >>> #import themes.simple: *
 >>> #show: simple-theme.with(config-common(export-mode: "article"))
 == Why This Matters
@@ -108,7 +108,7 @@ This is the usual way to write a talk that also has to read as a document. See [
 The markers above take content. You can instead use the label markers on headings.
 
 ```example
->>> #import "@preview/touying:0.7.4": *
+>>> #import "@preview/touying:0.8.0": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
 == Always Here

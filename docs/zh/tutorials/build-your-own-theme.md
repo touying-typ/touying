@@ -22,12 +22,12 @@ sidebar_position: 10
 如果你想在本地修改一个 Touying 内部的 themes，而不是自己从零开始创建，你可以选择通过下面的方式实现：
 
 1. 将 `themes` 目录下的 [主题代码](https://github.com/touying-typ/touying/tree/main/themes) 复制到本地，例如将 `themes/university.typ` 复制到本地 `university.typ` 中。
-2. 将 `university.typ` 文件顶部的 `#import "../src/exports.typ": *` 命令替换为 `#import "@preview/touying:0.7.4": *`
+2. 将 `university.typ` 文件顶部的 `#import "../src/exports.typ": *` 命令替换为 `#import "@preview/touying:0.8.0": *`
 
 然后就可以通过
 
 ```typst
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import "university.typ": *
 
 #show: university-theme.with(
@@ -54,7 +54,7 @@ sidebar_position: 10
 如果只是你自己使用，你可以直接导入 Touying：
 
 ```typst
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 ```
 
 如果你希望这个主题作为 Touying 的一部分，放置在 Touying `themes` 目录下，那你应该将上面的导入语句改为
@@ -78,7 +78,7 @@ sidebar_position: 10
 
 ```example
 // bamboo.typ
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 
 #let bamboo-theme(
   aspect-ratio: "16-9",
@@ -99,7 +99,7 @@ sidebar_position: 10
 }
 
 // main.typ
-<<< #import "@preview/touying:0.7.4": *
+<<< #import "@preview/touying:0.8.0": *
 <<< #import "bamboo.typ": *
 
 #show: bamboo-theme.with(aspect-ratio: "16-9")
@@ -202,7 +202,7 @@ config-methods(alert: utils.alert-with-primary-color)
 而我们还需要自定义一个 `slide` 方法，其中接收 `#let slide(title: auto, ..args) = touying-slide-wrapper(self => {..})`，回调函数中 `self` 是回调函数所必须的参数，用于获取最新的 `self`；而第二个 `title` 则是用于更新 `self.store.title`，以便在 header 中显示出来；第三个 `..args` 是用于收集剩余的参数，并传到 `touying-slide(self: self, ..args)` 里，这也是让 Touying `slide` 功能正常生效所必须的。并且，我们需要在 `bamboo-theme` 函数里使用 `config-methods(slide: slide)` 注册这个方法。
 ```example
 // bamboo.typ
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 
 #let slide(title: auto, ..args) = touying-slide-wrapper(self => {
   if title != auto {
@@ -277,7 +277,7 @@ config-methods(alert: utils.alert-with-primary-color)
 
 
 // main.typ
-<<< #import "@preview/touying:0.7.4": *
+<<< #import "@preview/touying:0.8.0": *
 <<< #import "bamboo.typ": *
 
 #show: bamboo-theme.with(aspect-ratio: "16-9")
@@ -300,7 +300,7 @@ A slide with a title and an *important* information.
 
 ```example
 // bamboo.typ
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 
 #let slide(title: auto, ..args) = touying-slide-wrapper(self => {
   if title != auto {
@@ -422,7 +422,7 @@ A slide with a title and an *important* information.
 
 
 // main.typ
-<<< #import "@preview/touying:0.7.4": *
+<<< #import "@preview/touying:0.8.0": *
 <<< #import "bamboo.typ": *
 
 #show: bamboo-theme.with(
@@ -466,7 +466,7 @@ A slide with a title and an *important* information.
 
 ```example
 // bamboo.typ
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 
 #let slide(title: auto, ..args) = touying-slide-wrapper(self => {
   if title != auto {
@@ -604,7 +604,7 @@ A slide with a title and an *important* information.
 
 
 // main.typ
-<<< #import "@preview/touying:0.7.4": *
+<<< #import "@preview/touying:0.8.0": *
 <<< #import "bamboo.typ": *
 
 #show: bamboo-theme.with(

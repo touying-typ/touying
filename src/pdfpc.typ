@@ -101,7 +101,7 @@
 /// Example:
 ///
 /// ```typ
-/// #import "@preview/touying:0.7.4": *
+/// #import "@preview/touying:0.8.0": *
 /// #import themes.simple: *
 ///
 /// #pdfpc.bundle-assets()
