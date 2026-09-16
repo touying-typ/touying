@@ -290,6 +290,18 @@
 }
 
 
+/// Fields an element carries once realized but its constructor does not accept,
+/// keyed by `repr` of the element function.
+///
+/// Inside a show rule an element is realized: Typst has filled in the fields it
+/// synthesizes from the surroundings (a caption's `kind`, `supplement`,
+/// `counter`, ...). Handing those back to the constructor is an error, so they
+/// are dropped when such an element is rebuilt.
+#let _synthesized-fields = (
+  "caption": ("kind", "supplement", "counter", "numbering"),
+)
+
+
 /// Call an element function with a dictionary of fields, passing positionally
 /// the ones its constructor takes positionally.
 ///
@@ -303,6 +315,9 @@
 /// -> content
 #let call-with-fields(f, fields, ..extra) = {
   let fields = fields
+  for name in _synthesized-fields.at(repr(f), default: ()) {
+    let _ = fields.remove(name, default: none)
+  }
   let leading = ()
   for name in positional-fields(f) {
     if name.starts-with("..") {

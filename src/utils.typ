@@ -1039,6 +1039,28 @@
     }
   })
 }
+/// the string cover methods expect on self to return their kind
+/// see cover-kind below
+#let cover-kind-query = "touying-cover-kind-query"
+
+
+/// What kind of cover `fn` is: `"recolour"` if it restyles the content it
+/// covers, `"paint"` if it draws over it, `"hide"` if it removes it.
+///
+/// - fn (function): The configured cover method.
+///
+/// -> str
+#let cover-kind(fn) = {
+  let answer = fn(self: cover-kind-query, [])
+  if type(answer) == str { answer } else if (
+    type(answer) == content and answer.func() == hide
+  ) { "hide" } else { "paint" }
+}
+
+
+/// used to break a show rule recursion when covering captions via show rules without reconstructing the content
+#let _caption-covered-label = <touying-caption-covered>
+
 /// true for all typst content that is not inline.
 #let is-block(it) = {
   // whenever sth is wrapped in a box it is automatically inlined.
@@ -1374,6 +1396,9 @@
   ..cover-args,
   body,
 ) = {
+  // See `cover-kind`: announce what this method is, so a caller can tell a
+  // painting cover from a recolouring one without inspecting the function.
+  if self == cover-kind-query { return "paint" }
   if not is-fallback {
     warning(
       "Using `semi-transparent-cover` as the main cover method is not recommended as it may produce inconsistent results. Use the `alpha-changing-cover` with its auto fallback instead, which should guarantee a consistent look.",
@@ -1710,6 +1735,7 @@
   fallback-hide-args: (:),
   it,
 ) = {
+
   let recolour-fields(fields) = {
     if "fill" in fields and type(fields.fill) in (std.color, gradient) {
       fields.fill = color
@@ -1784,6 +1810,34 @@
     )
   }
 
+  if self == cover-kind-query { return "recolour" }
+  // Early exit via `self`: cover the caption of `it` rather than `it` itself.
+  // A caption cannot be covered by rebuilding it -- the supplement and counter
+  // are generated during layout, and rebuilding turns the caption into a block
+  // that breaks away from its supplement -- so it is covered by a show rule
+  // wrapped around the figure instead. The inner rule reaches a colour the
+  // user set inside the caption, which the outer `set` cannot override, and
+  // the metadata marks a run already covered so the rule does not match its
+  // own output.
+  if self == "cover-caption" {
+    return {
+      show figure.caption: _cap => {
+        show tree.typst-builtin-styled: _it => if (
+          not _it.child.has("label")
+            or _it.child.label != _caption-covered-label
+        ) {
+          set text(fill: color)
+          [#_it.child#_caption-covered-label]
+        } else {
+          _it
+        }
+        set text(fill: color)
+        _cap
+      }
+      it
+    }
+  }
+
   if fallback-hide == none {
     run(it => it)
   } else if fallback-hide == auto {
@@ -1832,7 +1886,7 @@
   fallback-hide: auto,
   fallback-hide-args: (:),
   it,
-) = context {
+) = if self == cover-kind-query { "recolour" } else { context {
   let fallback = if fallback-hide == none {
     it => it
   } else if fallback-hide == auto {
@@ -1946,6 +2000,27 @@
     hide-filled: false,
   )
 
+  // Early exit via `self`: see `color-changing-cover` for why a caption is
+  // covered by a show rule around the figure rather than by rebuilding it.
+  if self == "cover-caption" {
+    return {
+      show figure.caption: _cap => {
+        show tree.typst-builtin-styled: _it => if (
+          not _it.child.has("label")
+            or _it.child.label != _caption-covered-label
+        ) {
+          set text(fill: fade(text.fill))
+          [#_it.child#_caption-covered-label]
+        } else {
+          _it
+        }
+        set text(fill: fade(text.fill))
+        _cap
+      }
+      it
+    }
+  }
+
   set text(fill: fade(text.fill))
   _cover-tree(
     policy,
@@ -1954,7 +2029,7 @@
     } else { it },
     it,
   )
-}
+} }
 
 
 /// Applies the theme's primary color to text content. Used as the default `alert` method.

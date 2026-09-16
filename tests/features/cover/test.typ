@@ -14,8 +14,8 @@
 Regular content here.#pause This content appears |with semi-transparent cover effect. Math: $E = m c^(f f)_g$ and also Raw: `inline code` and Quote: #quote(block: false)[This is a quote.]
 
 #figure(
-  rect(fill: red),
-  caption: [A red rectangle.],
+  { rect(fill: red); pause; rect(fill: blue, height: 8pt) },
+  caption: [A red rectangle. #pause Caption tail.],
 )
 
 == Text Blocks with Semi-transparent Cover
@@ -51,8 +51,8 @@ Regular content here.#pause This content appears |with semi-transparent cover ef
 Content that gets hidden completely when covered.#pause New content replaces the old content entirely.
 
 #figure(
-  rect(fill: red),
-  caption: [A red rectangle.],
+  { rect(fill: red); pause; rect(fill: blue, height: 8pt) },
+  caption: [A red rectangle. #pause Caption tail.],
 )
 
 == Color Changing Cover
@@ -65,8 +65,8 @@ Regular content here.#pause This text should appear in gray when covered.
   rgb("#239dad"),
 )
 #figure(
-  rect(fill: pantone.tint(40%)),
-  caption: [A red rectangle.],
+  { rect(fill: pantone.tint(40%)); pause; rect(fill: blue, height: 8pt) },
+  caption: [A red rectangle. #pause Caption tail.],
 )
 
 #pause
@@ -85,8 +85,8 @@ More text with gray cover effect.
 Regular content here.#pause This text should appear in gray when covered, and non-text content should be covered with a semi-transparent gray rectangle.
 
 #figure(
-  rect(fill: red),
-  caption: [A red rectangle.],
+  { rect(fill: red); pause; rect(fill: blue, height: 8pt) },
+  caption: [A red rectangle. #pause Caption tail.],
 )
 
 #pause
@@ -100,8 +100,8 @@ More text with the same effect.
 Regular content here.#pause This text should appear semi-transparent when covered.
 
 #figure(
-  rect(fill: pantone.tint(40%)),
-  caption: [A red rectangle.],
+  { rect(fill: pantone.tint(40%)); pause; rect(fill: blue, height: 8pt) },
+  caption: [A red rectangle. #pause Caption tail.],
 )
 
 #pause
@@ -120,8 +120,8 @@ More semi-transparent text.
 Regular content here.#pause This text should appear semi-transparent when covered, and non-text content should be covered with a semi-transparent gray overlay.
 
 #figure(
-  rect(fill: red),
-  caption: [A red rectangle.],
+  { rect(fill: red); pause; rect(fill: blue, height: 8pt) },
+  caption: [A red rectangle. #pause Caption tail.],
 )
 
 #pause

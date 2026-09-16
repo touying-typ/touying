@@ -1934,6 +1934,7 @@
   let reconstructable-functions = (
     pad,
     figure,
+    figure.caption,
     quote,
     strong,
     emph,
@@ -2000,6 +2001,17 @@
   let slide-label = slide-label-of(self)
   // get cover function from self
   let cover = self.methods.cover.with(self: self)
+  // the cover method applied to a figure to cover its caption with supplement and numbering when it should be fully covered.
+  let cover-caption = if (
+    utils.cover-kind(self.methods.cover) == "recolour"
+  ) {
+    self.methods.cover.with(self: "cover-caption")
+  } else {
+    it => {
+      show figure.caption: _cap => cover(_cap)
+      it
+    }
+  }
 
   // Main parsing loop: process each content item and handle animations
   for item in bodies {
@@ -3248,6 +3260,11 @@
       } else if (
         type(child) == content and child.func() in reconstructable-functions
       ) {
+        // A figure holds a caption as well as a body, so it is walked in
+        // "tree" mode: `tree.children-of` hands back `(body, caption)` and the
+        // two are parsed one after the other, the caption continuing from
+        // where the body left off. `tree.rebuild` puts the figure back.
+        let is-figure = child.func() == figure
         let (
           reconstructed,
           inner-max-repetitions,
@@ -3258,18 +3275,40 @@
         ) = parse-and-reconstruct(
           self,
           child,
-          "body-or-none",
+          if is-figure { "tree" } else { "body-or-none" },
           repetitions,
           last-subslide,
           index,
           need-cover,
-          (child, cont) => tree.reconstruct(
-            named: true,
-            labeled: labeled(child.func()),
-            child,
-            cont,
-          ),
+          (child, cont) => if is-figure {
+            tree.rebuild(labeled: labeled(child.func()), child, cont)
+          } else {
+            tree.reconstruct(
+              named: true,
+              labeled: labeled(child.func()),
+              child,
+              cont,
+            )
+          },
         )
+        // Cover a figure's caption if the caption should not be visible at all
+        if is-figure and child.caption != none and need-cover {
+          let (_, _, _, after-body, _) = (
+            _parse-content-into-results-and-repetitions(
+              self: self,
+              need-cover: false,
+              base: repetitions,
+              base-last-subslide: last-subslide,
+              index: index,
+              child.body,
+            )
+          )
+          if repetitions <= index and after-body > index {
+            // `reconstructed` already carries the caption the walk produced,
+            // with its own marks resolved; only the covering is missing.
+            reconstructed = cover-caption(reconstructed)
+          }
+        }
         // Propagate meanwhile effect from inside the reconstructable element
         if final-repetitions < repetitions {
           if hidden-parts.len() != 0 {
