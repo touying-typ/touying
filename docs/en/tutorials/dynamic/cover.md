@@ -20,43 +20,73 @@ In some cases, you might want to use your own `cover` function. In that case, yo
 config-methods(cover: utils.hiding-cover)
 ```
 
-If your custom method genuinely hides its content (footnotes included), set `config-common(cover-hides-footnote: true)`. See [Footnotes and the Cover Function](#footnotes-and-the-cover-function) below for why this matters.
+See [Writing Your Own Cover Function](#writing-your-own-cover-function) below for what touying expects of a method you write yourself.
 
-## Alpha-Changing Cover Function
+## Alpha and Color Changing Cover Function
 
-Touying supports a semi-transparent cover function, which can be enabled by adding:
+Touying supports a semi-transparenting cover function, which can be enabled by setting:
 
 ```typst
 config-methods(cover: utils.alpha-changing-cover)
 ```
 
-You can adjust the transparency through the `alpha: ..` parameter.
+You can adjust the transparency through the `alpha: ..` parameter by adding `.with(alpha: 30%)`.
+
+Or you may try its cousin `utils.color-changing-cover` which changes all colors to the one specified.
 
 
 :::tip[Internals]
 
 The `utils.alpha-changing-cover` method works by changing all colors it encounters to have a lower alpha value. This can be costly because we need to access typst's context at every level of nested style or context.
 
-If you notice your project compiling slowly you can try switching to `utils.color-changing-cover` which just makes everything grey.
+If you notice your project compiling slowly you can try switching to `utils.color-changing-cover`.
 
-Both methods cannot change all colors displayed. Some contents like images or tilings cannot be interfered with. As such both methods utilize a fallback hide which aims to mimic the same effect by overlaying the content with a grey semi-transparent rectangle via `utils.semi-transparent-rect`. Using that function as default is no longer recommended as it has multiple not to be fixed bugs. 
+Both methods cannot change all colors displayed. Some contents like images or tilings cannot be interfered with. As such both methods utilize a `fallback-hide` which aims to mimic the same effect by overlaying the content with a gray semi-transparent rectangle via `utils.semi-transparent-cover`. Using that function as main semi-transparent-cover is no longer recommended as it has multiple not to be fixed bugs. 
 
 :::
 
+### Covering Filled Shapes
 
-## Footnotes and the Cover Function
-
-`cover-hides-footnote` defaults to `auto`: only touying's own default `cover` method is treated as genuinely hiding its content, and every other method is treated as visual-only. This decides how a footnote covered by `#pause` is rendered:
-
-- A genuinely-hiding cover method must not create a real footnote at all. The entry would show up under the separator line while the content it belongs to is still hidden, so touying draws a placeholder marker instead, reserving the same width.
-- A visual-only cover method (`utils.alpha-changing-cover`, `utils.color-changing-cover`) does create the real footnote; it is merely recolored or de-emphasized along with the rest of the covered content.
-
-Typst cannot inspect what an arbitrary `cover` function does, so `auto` can only recognize touying's own default method **by identity**: it compares `self.methods.cover` against `utils.hiding-cover`. A hand-written wrapper such as `(self: none, body) => hide(body)` is a different function value even though it behaves identically, so `auto` classifies it as visual-only, and footnotes inside covered content become real footnotes that appear before the reveal. Either use `utils.hiding-cover` itself, or say so explicitly:
+An element that paints its own background should usually not be recolored: the shape and the text on top of it would both be forced to the same color, leaving the text unreadable. Imagine an image becoming a gray rectangle.
+`utils.color-changing-cover` can therefore hand filled elements to the fallback hide instead, controlled by `fallback-for-filled: true` (the default). Turn it off to recolor them like everything else, so the slide greys uniformly:
 
 ```typst
-config-common(cover-hides-footnote: true)
+config-methods(cover: utils.color-changing-cover.with(fallback-for-filled: false))
 ```
 
-`false` forces the opposite, so a hiding cover method will emit real footnotes anyway.
+`utils.alpha-changing-cover` has no such parameter — lowering alpha dims a shape without flattening it against its content.
 
-If you want to customize how footnote markers look, use `config-common(footnote-style: ..)`, i.e. the function you would otherwise pass to `show footnote: ..`. Touying installs it as `show footnote: footnote-style` and also uses it to draw the placeholder marker described above, so real footnotes and placeholders stay visually consistent. A `show footnote: it => ..` rule you write yourself would only reach real, revealed footnotes, not the placeholder.
+## Writing Your Own Cover Function
+
+A cover function takes `self` as a named argument and the content to cover positionally, and returns the covered content:
+
+```typst
+#let my-cover(self: none, body) = block(hide(body))
+
+config-methods(cover: my-cover)
+```
+
+### Announce what your method does
+
+Touying needs to know whether your method *removes* or *hides* the content it covers or merely *restyles* it, because that changes how a covered footnote has to be rendered:
+
+- A method that removes content must not create a real footnote at all — the entry would appear below the separator line while the content it belongs to is still hidden. Touying draws a placeholder marker instead, reserving the same width.
+- A method that only restyles should create the real footnote and let it be dimmed along with everything else.
+
+So answer `utils.cover-kind-query` when you are asked for it:
+
+```typst
+#let my-cover(self: none, body) = if self == utils.cover-kind-query {
+  "hide"
+} else {
+  block(hide(body))
+}
+```
+
+Return `"hide"` if your method removes/hides content, `"recolour"` if it restyles it, or `"paint"` if it draws over it.
+
+Every method touying ships answers this. A method that does not answer is guessed at from what it returns, which recognizes a plain `hide` but not one wrapped in a `block` or `place` — which is why announcing is worth the one line.
+
+### Customizing footnote markers
+
+Use `config-common(footnote-style: ..)`, i.e. the function you would otherwise pass to `show footnote: ..`. Touying installs it as `show footnote: footnote-style` and also uses it to draw the placeholder marker described above, so real footnotes and placeholders stay visually consistent. A `show footnote: it => ..` rule you write yourself would only reach real, revealed footnotes, not the placeholder.

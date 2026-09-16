@@ -190,35 +190,53 @@
 
 /// The default `cover` method (wraps Typst's own `hide`) and touying's default value
 /// for `config-methods(cover: ..)`. Exposed as a stable, comparable value (rather than
-/// only living as a private default in `configs.typ`) so other code can check
-/// `self.methods.cover == utils.hiding-cover` as a best-effort way to tell whether
-/// covering is genuinely invisible, as opposed to a visual-only style like
-/// `color-changing-cover`/`alpha-changing-cover`.
+/// only living as a private default in `configs.typ`) so it can be named and
+/// reconfigured like any other cover method.
 ///
-/// This is only identity comparison, so it cannot recognize a hand-written cover
-/// function that happens to also just call `hide` - use the `cover-hides-footnote`
-/// config to override the result explicitly where that distinction matters.
+/// To tell whether a configured method genuinely removes content, ask
+/// `cover-kind` rather than comparing against this by identity: `.with(..)`
+/// produces a different function value, so identity would miss it.
 ///
 /// -> function
 #let hiding-cover = method-wrapper(hide)
 
-/// Resolve the `cover-hides-footnote` config: whether the presentation's configured
-/// `cover` method genuinely hides content (as opposed to a visual-only style like
-/// `color-changing-cover`/`alpha-changing-cover`). Explicit `true`/`false` is
-/// returned as-is; `auto` (the default) falls back to comparing `self.methods.cover`
-/// against `hiding-cover` by identity - see `hiding-cover` for that check's limits.
+/// the string cover methods expect on self to return their kind
+/// see cover-kind below
+#let cover-kind-query = "touying-cover-kind-query"
+
+
+/// What kind of cover `fn` is: `"recolour"` if it restyles the content it
+/// covers, `"paint"` if it draws over it, `"hide"` if it removes it.
+///
+/// - fn (function): The configured cover method.
+///
+/// -> str
+#let cover-kind(fn) = {
+  let answer = fn(self: cover-kind-query, [])
+  if type(answer) == str { answer } else if (
+    type(answer) == content and answer.func() == hide
+  ) { "hide" } else { "paint" }
+}
+
+
+/// Whether the presentation's configured `cover` method genuinely removes the
+/// content it covers, rather than merely restyling it.
+///
+/// This decides how a footnote covered by `#pause` is rendered: a method that
+/// removes content must not create a real footnote at all, because the entry
+/// would appear below the separator while the content it belongs to is still
+/// hidden. A method that only restyles should create the real footnote and let
+/// it be dimmed along with everything else.
+///
+/// The method is asked what it is, via `cover-kind`. A method that does not
+/// answer is read from what it returns, which recognises a plain `hide` but not
+/// one wrapped in a `block` or `place` -- such a method should answer the query
+/// itself. See `cover-kind-query`.
 ///
 /// - self (dictionary): The presentation context.
 ///
 /// -> bool
-#let cover-hides-footnote(self) = {
-  let configured = self.at("cover-hides-footnote", default: auto)
-  if configured == auto {
-    self.methods.cover == hiding-cover
-  } else {
-    configured
-  }
-}
+#let cover-hides-footnote(self) = cover-kind(self.methods.cover) == "hide"
 
 
 /// Extract all method functions from `self` and bind `self` as their first named argument.
@@ -1039,25 +1057,6 @@
     }
   })
 }
-/// the string cover methods expect on self to return their kind
-/// see cover-kind below
-#let cover-kind-query = "touying-cover-kind-query"
-
-
-/// What kind of cover `fn` is: `"recolour"` if it restyles the content it
-/// covers, `"paint"` if it draws over it, `"hide"` if it removes it.
-///
-/// - fn (function): The configured cover method.
-///
-/// -> str
-#let cover-kind(fn) = {
-  let answer = fn(self: cover-kind-query, [])
-  if type(answer) == str { answer } else if (
-    type(answer) == content and answer.func() == hide
-  ) { "hide" } else { "paint" }
-}
-
-
 /// used to break a show rule recursion when covering captions via show rules without reconstructing the content
 #let _caption-covered-label = <touying-caption-covered>
 
@@ -1596,7 +1595,7 @@
     let new-fill = if painted { (policy.map-fill)(fill) }
     // A fill this policy cannot express, or one it would flatten together with
     // the content on top of it, goes to the fallback whole.
-    if painted and (new-fill == none or policy.hide-filled) {
+    if painted and (new-fill == none or policy.fallback-for-filled) {
       relabel(it, (policy.fallback)(it))
     } else {
       let stroke = if "stroke" in fields { fields.stroke } else {
@@ -1711,14 +1710,14 @@
 ///
 /// - color (color): The colour to force on covered content. Default is `gray`.
 ///
-/// - hide-filled (bool): Whether an element that paints its own background is
+/// - fallback-for-filled (bool): Whether an element that paints its own background is
 ///   handed to `fallback-hide` instead of being recoloured. Flattening such an
 ///   element and the content on top of it to a single colour would leave the
 ///   content unreadable, so this defaults to `true`. Set it to `false` to
 ///   recolour them like everything else. Applies to images, rect, ... so that content is still visible.
 ///
 /// - fallback-hide (func): Applied to what cannot be recoloured, such as
-///   images, and to filled elements while `hide-filled` is on. `auto` overlays
+///   images, and to filled elements while `fallback-for-filled` is on. `auto` overlays
 ///   them so they dim to match the recoloured text instead of disappearing.
 ///   Pass `none` to leave them untouched.
 ///
@@ -1730,7 +1729,7 @@
 #let color-changing-cover(
   self: none,
   color: gray,
-  hide-filled: true,
+  fallback-for-filled: true,
   fallback-hide: auto,
   fallback-hide-args: (:),
   it,
@@ -1790,7 +1789,7 @@
       show figure.caption: set text(fill: color)
       result
     },
-    hide-filled: hide-filled,
+    fallback-for-filled: fallback-for-filled,
   )
 
   let run(fallback) = {
@@ -1997,7 +1996,7 @@
       result
     },
     fallback: fallback,
-    hide-filled: false,
+    fallback-for-filled: false,
   )
 
   // Early exit via `self`: see `color-changing-cover` for why a caption is

@@ -1038,7 +1038,7 @@
     // probe pass (slides.typ:1759) — utils.uncover/only and friends read
     // self.subslide directly, so it must be present from the start.
     let probe-self = self + (subslide: 1)
-    let (_, repetitions, last-subslide, _, _) = (
+    let (_, repetitions, last-subslide, ..) = (
       _parse-content-into-results-and-repetitions(
         self: probe-self,
         base: 1,
@@ -1048,7 +1048,7 @@
     )
     let repeat = calc.max(repetitions, last-subslide, 1)
     let render-self = self + (repeat: repeat, subslide: repeat)
-    let (conts, _, _, _, _) = _parse-content-into-results-and-repetitions(
+    let (conts, ..) = _parse-content-into-results-and-repetitions(
       self: render-self,
       index: repeat,
       show-delayed-wrapper: true,

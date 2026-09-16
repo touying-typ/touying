@@ -795,6 +795,20 @@ This content is shown with a low alpha cover.
 
 你也可以使用 `utils.color-changing-cover`，它的编译速度通常更快。默认值是 `utils.hiding-cover`。
 
+### 如何修改脚注标记的样式？
+
+请使用 `config-common(footnote-style: ..)`，也就是你原本会传给 `show footnote: ..` 的那个函数：
+
+```typst
+#show: simple-theme.with(
+  config-common(footnote-style: it => super(emph(it))),
+)
+```
+
+你自己编写的 `show footnote: it => ..` 规则只会作用于真实的、已显示的脚注。仍被 `#pause` 遮盖的脚注还不是真实脚注——Touying 会在其位置绘制一个保留宽度的占位标记——因此你的规则无法作用于它，两者看起来就会不一致。而 `footnote-style` 对二者都会生效。
+
+关于被遮盖的脚注为何这样绘制，以及自定义 `cover` 方法需要声明什么，请参阅[编写你自己的 Cover 函数](./tutorials/dynamic/cover.md#编写你自己的-cover-函数)。
+
 ### 如何使用 preamble 在每张幻灯片前插入内容？
 
 使用 `config-common(preamble: ...)` 在每张幻灯片前插入固定内容，`subslide-preamble` 在子幻灯片前插入：

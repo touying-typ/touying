@@ -1812,8 +1812,7 @@
       _,
       repetitions,
       last-subslide,
-      _,
-      _,
+      ..,
     ) = _parse-content-into-results-and-repetitions(
       self: self,
       base: 1,
@@ -1851,7 +1850,7 @@
       c => tree.is-kind(c, "touying-article-text"),
     )
     let bodies = if prose == none { bodies } else { (prose.value.body,) }
-    let (conts, _, _, _, _) = _parse-content-into-results-and-repetitions(
+    let (conts, ..) = _parse-content-into-results-and-repetitions(
       self: self,
       index: repeat,
       show-delayed-wrapper: true,
@@ -1909,7 +1908,7 @@
       self.subslide = repeat
       // Emit the waypoint link anchors here since they have nowhere else to go
       self.rendered-subslides = (repeat,)
-      let (conts, _, _, _, _) = _parse-content-into-results-and-repetitions(
+      let (conts, ..) = _parse-content-into-results-and-repetitions(
         self: self,
         index: repeat,
         show-delayed-wrapper: true,
@@ -1996,7 +1995,7 @@
       let (header-i, footer-i, body-transform-i) = _get-header-footer(
         subslide-self,
       )
-      let (conts, _, _, _, _) = _parse-content-into-results-and-repetitions(
+      let (conts, ..) = _parse-content-into-results-and-repetitions(
         self: subslide-self,
         index: i,
         show-delayed-wrapper: is-last,
@@ -2096,7 +2095,7 @@
       )
       self.subslide = i
       let (header, footer, body-transform) = _get-header-footer(self)
-      let (conts, _, _, _, _) = _parse-content-into-results-and-repetitions(
+      let (conts, ..) = _parse-content-into-results-and-repetitions(
         self: self,
         index: i,
         show-delayed-wrapper: i == repeat,
@@ -2134,7 +2133,7 @@
       let delayed-args = if i == repeat {
         (show-delayed-wrapper: true)
       }
-      let (conts, _, _, _, _) = _parse-content-into-results-and-repetitions(
+      let (conts, ..) = _parse-content-into-results-and-repetitions(
         self: self,
         index: i,
         ..delayed-args,

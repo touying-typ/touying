@@ -807,6 +807,20 @@ This content is shown with a low alpha cover.
 You may also use `utils.color-changing-cover` wich should be faster to compile.
 The default is `utils.hiding-cover`.
 
+### How do I change how footnote markers look?
+
+Use `config-common(footnote-style: ..)`, i.e. the function you would otherwise pass to `show footnote: ..`:
+
+```typst
+#show: simple-theme.with(
+  config-common(footnote-style: it => super(emph(it))),
+)
+```
+
+A `show footnote: it => ..` rule of your own only reaches real, revealed footnotes. A footnote still covered by `#pause` is not a real footnote yet -- touying draws a width-reserving placeholder in its place -- so your rule would not reach it and the two would look different. `footnote-style` is used for both.
+
+See [Writing Your Own Cover Function](./tutorials/dynamic/cover.md#writing-your-own-cover-function) for why a covered footnote is drawn that way, and what a custom `cover` method has to declare.
+
 ### How do I use preamble to insert content before every slide?
 
 Use `config-common(preamble: ...)` and `subslide-preamble`:

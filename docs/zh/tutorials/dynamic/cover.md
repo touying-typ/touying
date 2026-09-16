@@ -24,43 +24,74 @@ config-methods(cover: utils.hiding-cover)
 
 方法来设置您自己的 `cover` 函数。
 
-如果您的自定义方法会真正地隐藏内容（包括脚注），请设置 `config-common(cover-hides-footnote: true)`。
+关于自己编写的方法需要满足什么，请参阅下方的[编写你自己的 Cover 函数](#编写你自己的-cover-函数)。
 
 
-## Alpha 变化 Cover 函数
+## Alpha 与颜色变化 Cover 函数
 
-Touying 提供了 Alpha 变化 Cover 函数的支持，只需要加入
+Touying 提供了半透明化的 Cover 函数，只需设置
 
 ```typst
 config-methods(cover: utils.alpha-changing-cover)
 ```
 
-即可开启，其中你可以通过 `alpha: ..` 参数调节透明度。
+即可开启。你可以通过 `.with(alpha: 30%)` 添加 `alpha: ..` 参数来调节透明度。
+
+你也可以试试它的同类 `utils.color-changing-cover`，它会把所有颜色都改成指定的那一种。
 
 
 :::tip[原理]
 
 `utils.alpha-changing-cover` 的工作方式是将遇到的所有颜色的 alpha 值降低。由于需要在每一层嵌套的样式或上下文中访问 Typst 的 context，这可能会有一定的性能开销。
 
-如果你发现项目编译变慢，可以尝试切换到 `utils.color-changing-cover`，它会将所有内容变为灰色。
+如果你发现项目编译变慢，可以尝试切换到 `utils.color-changing-cover`。
 
-这两种方法并不能改变所有显示的颜色。图片或平铺等内容无法被干预。因此，两种方法都使用了一个备用的 hide 机制，通过 `utils.semi-transparent-rect` 叠加一个灰色半透明矩形来模拟相同效果。不再推荐将该函数作为默认选项，因为它存在若干已知但不会修复的问题。
+这两种方法并不能改变所有显示的颜色。图片或平铺等内容无法被干预。因此，两种方法都使用了 `fallback-hide`，通过 `utils.semi-transparent-cover` 叠加一个灰色半透明矩形来模拟相同效果。不再推荐把该函数当作主要的 semi-transparent-cover 使用，因为它存在若干已知但不会修复的问题。
 
 :::
 
-## 脚注与 Cover 函数
+### 遮盖带填充的图形
 
-`cover-hides-footnote` 默认为 `auto`：只有 Touying 自带的默认 `cover` 方法会被当作「真正隐藏内容」，其余方法一律按「仅改变视觉效果」处理。这个判断决定了被 `#pause` 遮盖的脚注如何渲染：
-
-- 真正隐藏内容的 cover 方法不能生成真实的脚注，否则在内容尚未显示时，脚注条目就已经出现在分隔线下方了。因此 Touying 会改为绘制一个占位标记，以保留同样的宽度。
-- 仅改变视觉效果的 cover 方法（例如 `alpha-changing-cover` 和 `color-changing-cover`）会生成真实的脚注，只是和其余被遮盖的内容一样被淡化。
-
-由于 Typst 无法检查任意 `cover` 函数的行为，`auto` 只能**通过身份**来识别 Touying 自带的默认方法：它会比较 `self.methods.cover` 与 `utils.hiding-cover` 是否是同一个函数。像 `(self: none, body) => hide(body)` 这样手写的包装函数，即便行为完全相同，也是一个不同的函数值，因此 `auto` 会把它归为「仅改变视觉效果」，导致被遮盖内容中的脚注变成真实脚注，在内容显示之前就已出现。要么直接使用 `utils.hiding-cover` 本身，要么显式地声明：
+自带背景填充的元素通常不应被重新着色：图形和其上的文字会被强制成同一种颜色，文字将无法辨认。设想一张图片变成了一个灰色矩形。
+因此 `utils.color-changing-cover` 可以转而把带填充的元素交给备用叠加层处理，这由 `fallback-for-filled: true`（默认值）控制。将其关闭即可像其余内容一样对它们重新着色，使整张幻灯片统一变灰：
 
 ```typst
-config-common(cover-hides-footnote: true)
+config-methods(cover: utils.color-changing-cover.with(fallback-for-filled: false))
 ```
 
-设为 `false` 则会强制反过来，即便使用了真正隐藏内容的 cover 方法，也依然生成真实脚注。
+`utils.alpha-changing-cover` 没有该参数——降低透明度只会让图形变淡，而不会使它与其内容混为一色。
 
-如果您想自定义脚注标记的样式，请使用 `config-common(footnote-style: ..)`，也就是您原本会传给 `show footnote: ..` 的那个函数。Touying 会把它安装为 `show footnote: footnote-style`，并同时用它来绘制上面提到的占位标记，从而让真实脚注和占位标记保持一致。您自己写的 `show footnote: it => ..` 规则只会作用于真实的、已显示的脚注，不会影响占位标记。
+## 编写你自己的 Cover 函数
+
+Cover 函数以具名参数接收 `self`，以位置参数接收待遮盖的内容，并返回遮盖后的内容：
+
+```typst
+#let my-cover(self: none, body) = block(hide(body))
+
+config-methods(cover: my-cover)
+```
+
+### 声明你的方法做了什么
+
+Touying 需要知道你的方法是**移除**或**隐藏**所遮盖的内容，还是仅仅**改变其样式**，因为这会改变被遮盖脚注的渲染方式：
+
+- 移除内容的方法绝不能生成真实的脚注——脚注条目会出现在分隔线下方，而它所属的内容却仍被隐藏。因此 Touying 会改为绘制一个占位标记，并保留相同的宽度。
+- 仅改变样式的方法则应当生成真实的脚注，并让它与其余内容一同被淡化。
+
+所以，当被询问 `utils.cover-kind-query` 时，请作出回答：
+
+```typst
+#let my-cover(self: none, body) = if self == utils.cover-kind-query {
+  "hide"
+} else {
+  block(hide(body))
+}
+```
+
+如果你的方法会移除或隐藏内容，返回 `"hide"`；如果只是改变样式，返回 `"recolour"`；如果是在内容之上绘制，返回 `"paint"`。
+
+Touying 自带的每个方法都会作出回答，包括通过 `.with(..)` 重新配置过的方法。未作回答的方法只能根据其返回值来推测，这能识别出直接的 `hide`，却识别不出被 `block` 或 `place` 包裹的 `hide`——这正是值得多写这一行来声明的原因。
+
+### 自定义脚注标记
+
+请使用 `config-common(footnote-style: ..)`，也就是你原本会传给 `show footnote: ..` 的那个函数。Touying 会将其安装为 `show footnote: footnote-style`，并同样用它来绘制上文提到的占位标记，从而让真实脚注与占位标记在视觉上保持一致。而你自己编写的 `show footnote: it => ..` 规则只会作用于真实的、已显示的脚注，不会作用于占位标记。

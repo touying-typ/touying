@@ -73,16 +73,15 @@ Regular content here.#pause This text should appear in gray when covered.
 
 More text with gray cover effect.
 
-== Color Changing Cover with Color Fallback Overlay
+== Color Changing Cover without Filled Fallback
 #show: touying-set-config.with(config-methods(
   cover: utils.color-changing-cover.with(
     color: gray,
-    fallback-hide: utils.cover-with-rect,
-    fallback-hide-args: (fill: gray.transparentize(50%)),
+    fallback-for-filled: false
   ),
 ))
 
-Regular content here.#pause This text should appear in gray when covered, and non-text content should be covered with a semi-transparent gray rectangle.
+Regular content here.#pause This text should appear in gray when covered, and so should non-text content: with the filled fallback off, a filled shape is recoloured like everything else rather than being overlaid.
 
 #figure(
   { rect(fill: red); pause; rect(fill: blue, height: 8pt) },

@@ -1612,7 +1612,7 @@
       )
       mrr
     } else {
-      let (_, mrr, _, _, _) = _parse-content-into-results-and-repetitions(
+      let (_, mrr, ..) = _parse-content-into-results-and-repetitions(
         self: self + (waypoints: (:), subslide: 9999),
         base: 1,
         index: 9999,
@@ -1728,13 +1728,7 @@
           )
           mrr
         } else {
-          let (
-            _,
-            mrr,
-            _,
-            _,
-            _,
-          ) = _parse-content-into-results-and-repetitions(
+          let (_, mrr, ..) = _parse-content-into-results-and-repetitions(
             self: minimal-self + (waypoints: (:), subslide: 9999),
             base: render-base,
             index: 9999,
@@ -1791,13 +1785,7 @@
           )
           r.sum(default: none)
         } else {
-          let (
-            conts,
-            _,
-            _,
-            _,
-            _,
-          ) = _parse-content-into-results-and-repetitions(
+          let (conts, ..) = _parse-content-into-results-and-repetitions(
             self: render-self,
             base: render-base,
             index: target,
@@ -1879,6 +1867,7 @@
       next-last-subslide,
       final-repetitions,
       inner-has-fn-wrapper,
+      inner-min-repetitions,
     ) = _parse-content-into-results-and-repetitions(
       self: self,
       need-cover: repetitions <= index,
@@ -1891,17 +1880,20 @@
     // Two-pass: if fn-wrappers are present inside a pause zone, re-run the inner parse
     // with the outer need-cover so that fn-wrappers handle their own visibility and
     // non-fn-wrapper content is properly covered by the inner mechanism.
+    // `inner-min-repetitions` is the lowest the counter reached inside, which
+    // `final-repetitions` cannot show: a `#meanwhile` rewinds it to run beside
+    // what came before, and a later `#pause` winds it forward again.
     let would-be-hidden = not (
-      calc.min(repetitions, final-repetitions) <= index or not need-cover
+      calc.min(repetitions, final-repetitions) <= index
+        or not need-cover
     )
-    if would-be-hidden and inner-has-fn-wrapper {
-      let (
-        conts2,
-        inner-max-repetitions2,
-        _,
-        _,
-        _,
-      ) = _parse-content-into-results-and-repetitions(
+    // A `#meanwhile` inside rewound the counter far enough to put part of this
+    // body on the current subslide, even though the body neither starts nor
+    // ends there. Only the minimum shows that: a rewind that a later `#pause`
+    // winds forward again leaves the end value identical to no rewind at all.
+    let meanwhile-dips-visible = would-be-hidden and inner-min-repetitions <= index
+    if would-be-hidden and (inner-has-fn-wrapper or meanwhile-dips-visible) {
+      let (conts2, inner-max-repetitions2, ..) = _parse-content-into-results-and-repetitions(
         self: self,
         need-cover: need-cover,
         base: repetitions,
@@ -1917,6 +1909,7 @@
         final-repetitions,
         true,
         inner-has-fn-wrapper,
+        inner-min-repetitions,
       )
     }
     return (
@@ -1926,6 +1919,7 @@
       final-repetitions,
       false,
       inner-has-fn-wrapper,
+      inner-min-repetitions,
     )
   }
   // Content function sets for different handling categories
@@ -1987,6 +1981,12 @@
   // repetitions
   let repetitions = base
   let max-repetitions = repetitions
+  // The lowest the counter reaches anywhere in this parse. `repetitions` on
+  // its own reports where the parse ended, which cannot show a `#meanwhile`
+  // that rewound and was then wound forward again by a later `#pause`; a
+  // caller deciding whether any of this content is on the current subslide
+  // needs the dip, not the end.
+  let min-repetitions = repetitions
   // last-subslide by touying-fn-wrapper — inherit outer context so waypoints
   // placed after multi-subslide fn-wrappers fire correctly inside sub-sequences.
   let last-subslide = base-last-subslide
@@ -2029,6 +2029,7 @@
         if kind == "touying-jump/pause/meanwhile" {
           if it.body.value.relative {
             repetitions += it.body.value.n
+            min-repetitions = calc.min(min-repetitions, repetitions)
           } else {
             // absolute jump
             max-repetitions = calc.max(
@@ -2037,6 +2038,7 @@
               last-subslide,
             )
             repetitions = it.body.value.n
+            min-repetitions = calc.min(min-repetitions, repetitions)
             last-subslide = 0
           }
           continue
@@ -2052,11 +2054,13 @@
               last-subslide,
             )
             repetitions = wp.at(lbl).first
+            min-repetitions = calc.min(min-repetitions, repetitions)
             last-subslide = 0
           } else if it.body.value.at("advance", default: true) and lbl in wp {
             let first = wp.at(lbl).first
             if first == repetitions + 1 {
               repetitions = first
+              min-repetitions = calc.min(min-repetitions, repetitions)
               max-repetitions = calc.max(max-repetitions, repetitions)
             }
           }
@@ -2068,6 +2072,7 @@
             let first = wp.at(lbl).first
             if first == repetitions + 1 {
               repetitions = first
+              min-repetitions = calc.min(min-repetitions, repetitions)
               max-repetitions = calc.max(max-repetitions, repetitions)
             }
           }
@@ -2257,6 +2262,7 @@
         if kind == "touying-jump/pause/meanwhile" {
           if child.value.relative {
             repetitions += child.value.n
+            min-repetitions = calc.min(min-repetitions, repetitions)
             // Track the peak repetitions so that a subsequent negative jump doesn't
             // cause the slide count to be underestimated
             max-repetitions = calc.max(max-repetitions, repetitions)
@@ -2290,6 +2296,7 @@
               last-subslide,
             )
             repetitions = child.value.n
+            min-repetitions = calc.min(min-repetitions, repetitions)
             last-subslide = 0
           }
         } else if kind in ("touying-equation", "touying-mitex", "touying-raw") {
@@ -2315,6 +2322,7 @@
             hidden-parts.push(cont)
           }
           repetitions = nextrepetitions
+          min-repetitions = calc.min(min-repetitions, repetitions)
         } else if kind == "touying-reducer" {
           // Handle external package reducers (CeTZ, Fletcher) with animations
           let (conts, nextrepetitions) = _parse-touying-reducer(
@@ -2348,6 +2356,7 @@
             hidden-parts.push(cont)
           }
           repetitions = nextrepetitions
+          min-repetitions = calc.min(min-repetitions, repetitions)
         } else if kind == "touying-render" {
           // Render inline content at a specific subslide.
           // In slide mode, default (auto) renders at the current slide index.
@@ -2400,13 +2409,7 @@
             )
             mrr
           } else {
-            let (
-              _,
-              mrr,
-              ls,
-              _,
-              _,
-            ) = _parse-content-into-results-and-repetitions(
+            let (_, mrr, ls, ..) = _parse-content-into-results-and-repetitions(
               self: self + (waypoints: wp, subslide: 9999),
               base: render-base,
               index: 9999,
@@ -2573,13 +2576,7 @@
             )
             r.sum(default: none)
           } else {
-            let (
-              conts,
-              _,
-              _,
-              _,
-              _,
-            ) = _parse-content-into-results-and-repetitions(
+            let (conts, ..) = _parse-content-into-results-and-repetitions(
               self: render-self,
               base: render-base,
               index: target,
@@ -2713,6 +2710,7 @@
             ..extra-args,
           ))
           repetitions = nextrepetitions
+          min-repetitions = calc.min(min-repetitions, repetitions)
         } else if kind == "touying-fn-wrapper-raw" {
           // Handle raw function wrappers (e.g. #alert). First resolve any
           // touying-recall fallback found anywhere inside this one's own
@@ -2747,6 +2745,7 @@
             next-last-subslide,
             final-repetitions,
             inner-has-fn-wrapper,
+            inner-min-repetitions,
           ) = _parse-content-into-results-and-repetitions(
             self: self,
             need-cover: repetitions <= index,
@@ -2771,19 +2770,26 @@
             }
             max-repetitions = calc.max(max-repetitions, repetitions)
           }
-          if would-be-hidden and (inner-has-fn-wrapper or meanwhile-escaped) {
+          // The end value cannot show a `#meanwhile` that a later `#pause` wound
+          // forward again, so the two-pass also triggers on the minimum reached
+          // inside. This only re-parses the body so it covers itself per mark;
+          // `would-be-hidden` still uses the entry repetitions, so no content
+          // before the rewind is revealed.
+          let meanwhile-dips-visible = (
+            would-be-hidden and inner-min-repetitions <= index
+          )
+          if (
+            would-be-hidden
+              and (
+                inner-has-fn-wrapper or meanwhile-escaped or meanwhile-dips-visible
+              )
+          ) {
             // Two-pass: the body has to decide its own visibility, so re-run it
             // with the outer need-cover and push to result rather than
             // hidden-parts. A fn-wrapper directly inside a hidden wrapper would
             // otherwise be covered twice; a #meanwhile needs the inner parse to
             // cover what comes before it while revealing what comes after.
-            let (
-              conts2,
-              inner-max-repetitions2,
-              _,
-              _,
-              _,
-            ) = _parse-content-into-results-and-repetitions(
+            let (conts2, inner-max-repetitions2, ..) = _parse-content-into-results-and-repetitions(
               self: self,
               need-cover: need-cover,
               base: repetitions,
@@ -2814,6 +2820,8 @@
             max-repetitions = calc.max(max-repetitions, inner-max-repetitions)
           }
           repetitions = final-repetitions
+          min-repetitions = calc.min(min-repetitions, repetitions)
+          min-repetitions = calc.min(min-repetitions, inner-min-repetitions)
           last-subslide = calc.max(last-subslide, next-last-subslide)
         } else if kind == "touying-speaker-note" {
           // Handle speaker notes with optional #pause markers inside the note body.
@@ -2833,13 +2841,7 @@
             self,
             (methods: (cover: (self: none, body) => [])),
           )
-          let (
-            note-conts,
-            note-max-rep,
-            _,
-            _,
-            _,
-          ) = _parse-content-into-results-and-repetitions(
+          let (note-conts, note-max-rep, ..) = _parse-content-into-results-and-repetitions(
             self: note-self,
             need-cover: true,
             base: 1,
@@ -2881,11 +2883,13 @@
               last-subslide,
             )
             repetitions = wp.at(lbl).first
+            min-repetitions = calc.min(min-repetitions, repetitions)
             last-subslide = 0
           } else if child.value.at("advance", default: true) and lbl in wp {
             let first = wp.at(lbl).first
             if first == repetitions + 1 {
               repetitions = first
+              min-repetitions = calc.min(min-repetitions, repetitions)
               max-repetitions = calc.max(max-repetitions, repetitions)
             }
           }
@@ -2912,6 +2916,7 @@
             let first = wp.at(lbl).first
             if first == repetitions + 1 {
               repetitions = first
+              min-repetitions = calc.min(min-repetitions, repetitions)
               max-repetitions = calc.max(max-repetitions, repetitions)
             }
           }
@@ -2962,6 +2967,7 @@
           next-last-subslide,
           final-repetitions,
           inner-has-fn-wrapper,
+          inner-min-repetitions,
         ) = _parse-content-into-results-and-repetitions(
           self: self,
           need-cover: repetitions <= index,
@@ -2976,16 +2982,16 @@
         let would-be-hidden = not (
           calc.min(repetitions, final-repetitions) <= index or not need-cover
         )
+        // As in `parse-and-reconstruct`: a `#meanwhile` inside may have rewound
+        // far enough to put part of this sequence on the current subslide even
+        // though it neither starts nor ends there, which only the minimum shows.
+        let meanwhile-dips-visible = (
+          would-be-hidden and inner-min-repetitions <= index
+        )
         let (cont, inner-max-repetitions) = if (
-          would-be-hidden and inner-has-fn-wrapper
+          would-be-hidden and (inner-has-fn-wrapper or meanwhile-dips-visible)
         ) {
-          let (
-            conts2,
-            inner-max-repetitions2,
-            _,
-            _,
-            _,
-          ) = _parse-content-into-results-and-repetitions(
+          let (conts2, inner-max-repetitions2, ..) = _parse-content-into-results-and-repetitions(
             self: self,
             need-cover: need-cover,
             base: repetitions,
@@ -3006,7 +3012,7 @@
           max-repetitions = calc.max(max-repetitions, repetitions)
         }
         if (
-          would-be-hidden and inner-has-fn-wrapper
+          would-be-hidden and (inner-has-fn-wrapper or meanwhile-dips-visible)
             or calc.min(repetitions, final-repetitions) <= index
             or not need-cover
         ) {
@@ -3015,7 +3021,9 @@
           hidden-parts.push(cont)
         }
         repetitions = final-repetitions
+        min-repetitions = calc.min(min-repetitions, repetitions)
         max-repetitions = calc.max(max-repetitions, inner-max-repetitions)
+        min-repetitions = calc.min(min-repetitions, inner-min-repetitions)
         last-subslide = calc.max(last-subslide, next-last-subslide)
       } else if tree.is-styled(child) {
         // handle styled
@@ -3026,6 +3034,7 @@
           final-repetitions,
           force-to-result,
           inner-has-fn-wrapper,
+          inner-min-repetitions,
         ) = parse-and-reconstruct(
           self,
           child,
@@ -3054,7 +3063,9 @@
           hidden-parts.push(reconstructed)
         }
         repetitions = final-repetitions
+        min-repetitions = calc.min(min-repetitions, repetitions)
         max-repetitions = calc.max(max-repetitions, inner-max-repetitions)
+        min-repetitions = calc.min(min-repetitions, inner-min-repetitions)
         last-subslide = calc.max(last-subslide, next-last-subslide)
         has-fn-wrapper = has-fn-wrapper or inner-has-fn-wrapper
       } else if (
@@ -3068,6 +3079,7 @@
           final-repetitions,
           force-to-result,
           inner-has-fn-wrapper,
+          inner-min-repetitions,
         ) = parse-and-reconstruct(
           self,
           child,
@@ -3100,7 +3112,9 @@
           hidden-parts.push(reconstructed)
         }
         repetitions = final-repetitions
+        min-repetitions = calc.min(min-repetitions, repetitions)
         max-repetitions = calc.max(max-repetitions, inner-max-repetitions)
+        min-repetitions = calc.min(min-repetitions, inner-min-repetitions)
         last-subslide = calc.max(last-subslide, next-last-subslide)
         has-fn-wrapper = has-fn-wrapper or inner-has-fn-wrapper
       } else if (
@@ -3114,6 +3128,7 @@
           final-repetitions,
           force-to-result,
           inner-has-fn-wrapper,
+          inner-min-repetitions,
         ) = parse-and-reconstruct(
           self,
           child,
@@ -3146,7 +3161,9 @@
           hidden-parts.push(reconstructed)
         }
         repetitions = final-repetitions
+        min-repetitions = calc.min(min-repetitions, repetitions)
         max-repetitions = calc.max(max-repetitions, inner-max-repetitions)
+        min-repetitions = calc.min(min-repetitions, inner-min-repetitions)
         last-subslide = calc.max(last-subslide, next-last-subslide)
         has-fn-wrapper = has-fn-wrapper or inner-has-fn-wrapper
       } else if type(child) == content and child.func() == footnote {
@@ -3234,6 +3251,7 @@
           final-repetitions,
           force-to-result,
           inner-has-fn-wrapper,
+          inner-min-repetitions,
         ) = parse-and-reconstruct(
           self,
           child,
@@ -3254,7 +3272,9 @@
           hidden-parts.push(reconstructed)
         }
         repetitions = final-repetitions
+        min-repetitions = calc.min(min-repetitions, repetitions)
         max-repetitions = calc.max(max-repetitions, inner-max-repetitions)
+        min-repetitions = calc.min(min-repetitions, inner-min-repetitions)
         last-subslide = calc.max(last-subslide, next-last-subslide)
         has-fn-wrapper = has-fn-wrapper or inner-has-fn-wrapper
       } else if (
@@ -3272,6 +3292,7 @@
           final-repetitions,
           force-to-result,
           inner-has-fn-wrapper,
+          inner-min-repetitions,
         ) = parse-and-reconstruct(
           self,
           child,
@@ -3291,9 +3312,14 @@
             )
           },
         )
-        // Cover a figure's caption if the caption should not be visible at all
+        // Cover a figure's caption when none of it is on this subslide. The
+        // caption sits after the body, so it is parsed from where the body
+        // ended; `calc.min` of that start against where the caption ends is
+        // the same test the other branches use to honour a `#meanwhile`, which
+        // rewinds the counter and can be wound forward again by a later
+        // `#pause`.
         if is-figure and child.caption != none and need-cover {
-          let (_, _, _, after-body, _) = (
+          let (_, _, _, after-body, ..) = (
             _parse-content-into-results-and-repetitions(
               self: self,
               need-cover: false,
@@ -3303,10 +3329,43 @@
               child.body,
             )
           )
-          if repetitions <= index and after-body > index {
-            // `reconstructed` already carries the caption the walk produced,
-            // with its own marks resolved; only the covering is missing.
-            reconstructed = cover-caption(reconstructed)
+          // `caption-min` is the lowest the counter reaches inside the
+          // caption, so a `#meanwhile` that rewinds it to run alongside the
+          // body is honoured even when a later `#pause` winds it forward
+          // again -- which the end value alone cannot show.
+          let (_, _, _, _, _, caption-min) = (
+            _parse-content-into-results-and-repetitions(
+              self: self,
+              need-cover: false,
+              base: after-body,
+              base-last-subslide: last-subslide,
+              index: index,
+              child.caption,
+            )
+          )
+          if repetitions <= index and caption-min > index {
+            // The walk covered the caption's content as it went, and covering
+            // it a second time through the show rule breaks it away from its
+            // supplement onto a line of its own. Re-parse it with covering
+            // off -- the marks are still resolved, so nothing escapes -- and
+            // let `cover-caption` cover it once, supplement included.
+            let (uncovered-caption, ..) = (
+              _parse-content-into-results-and-repetitions(
+                self: self,
+                need-cover: false,
+                base: after-body,
+                base-last-subslide: last-subslide,
+                index: index,
+                child.caption,
+              )
+            )
+            reconstructed = cover-caption(
+              tree.rebuild(
+                labeled: labeled(child.func()),
+                reconstructed,
+                (reconstructed.body, uncovered-caption.first()),
+              ),
+            )
           }
         }
         // Propagate meanwhile effect from inside the reconstructable element
@@ -3327,7 +3386,9 @@
           hidden-parts.push(reconstructed)
         }
         repetitions = final-repetitions
+        min-repetitions = calc.min(min-repetitions, repetitions)
         max-repetitions = calc.max(max-repetitions, inner-max-repetitions)
+        min-repetitions = calc.min(min-repetitions, inner-min-repetitions)
         last-subslide = calc.max(last-subslide, next-last-subslide)
         has-fn-wrapper = has-fn-wrapper or inner-has-fn-wrapper
       } else if type(child) == content and child.func() == terms.item {
@@ -3339,6 +3400,7 @@
           final-repetitions,
           force-to-result,
           inner-has-fn-wrapper,
+          inner-min-repetitions,
         ) = parse-and-reconstruct(
           self,
           child,
@@ -3373,7 +3435,9 @@
           hidden-parts.push(reconstructed)
         }
         repetitions = final-repetitions
+        min-repetitions = calc.min(min-repetitions, repetitions)
         max-repetitions = calc.max(max-repetitions, inner-max-repetitions)
+        min-repetitions = calc.min(min-repetitions, inner-min-repetitions)
         last-subslide = calc.max(last-subslide, next-last-subslide)
         has-fn-wrapper = has-fn-wrapper or inner-has-fn-wrapper
       } else {
@@ -3403,12 +3467,14 @@
     parsed-results.push(result.sum(default: []))
   }
   max-repetitions = calc.max(max-repetitions, repetitions)
+  min-repetitions = calc.min(min-repetitions, repetitions)
   return (
     parsed-results,
     max-repetitions,
     last-subslide,
     repetitions,
     has-fn-wrapper,
+    min-repetitions,
   )
 }
 
@@ -3434,7 +3500,7 @@
     )
     mrr
   } else {
-    let (_, mrr, ls, _, _) = _parse-content-into-results-and-repetitions(
+    let (_, mrr, ls, ..) = _parse-content-into-results-and-repetitions(
       self: self + (waypoints: (:), subslide: 9999),
       base: render-base,
       index: 9999,
@@ -3469,7 +3535,7 @@
     )
     r.sum(default: none)
   } else {
-    let (conts, _, _, _, _) = _parse-content-into-results-and-repetitions(
+    let (conts, ..) = _parse-content-into-results-and-repetitions(
       self: render-self,
       base: render-base,
       index: target,
