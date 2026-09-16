@@ -1011,15 +1011,6 @@
 
 
 
-// Find the first touying-reducer metadata dict inside content.
-// Returns the metadata value dict, or none if not found.
-#let _find-reducer-meta(c) = {
-  let found = tree.find-in-tree(c, n => tree.is-kind(n, "touying-reducer"))
-  if found != none { found.value }
-}
-
-
-
 /// Link anchor naming the content a waypoint owns.
 ///
 /// A waypoint marks a position in both time and space: the content that
@@ -1600,7 +1591,9 @@
     // Probe this child's own standalone repeat count (inlined from
     // _prepare-render-context — can't call it directly, it's defined later
     // in this file and itself depends on this function).
-    let probe-reducer-data = _find-reducer-meta(child)
+    let probe-reducer-data = if tree.is-kind(child, "touying-reducer") {
+      child.value
+    }
     let (raw-wp, so, dr) = _collect-waypoints(child)
     let resolved-wp = _resolve-waypoint-forest(raw-wp, so)
     let max-rep-raw = if probe-reducer-data != none {
@@ -1716,7 +1709,9 @@
         // Inlined from _prepare-render-context/_render-at-subslide
         // (see this function's own doc comment for why they can't be
         // called directly).
-        let reducer-data = _find-reducer-meta(raw-content)
+        let reducer-data = if tree.is-kind(raw-content, "touying-reducer") {
+          raw-content.value
+        }
         let (raw-wp, so, dr) = _collect-waypoints(raw-content)
         let resolved-wp = _resolve-waypoint-forest(raw-wp, so)
         let max-rep-raw = if reducer-data != none {
@@ -2487,7 +2482,12 @@
             repeat-last-spec = true
           }
           // Compute render context (inlined from _prepare-render-context)
-          let reducer-data = _find-reducer-meta(inline-content)
+          let reducer-data = if tree.is-kind(
+            inline-content,
+            "touying-reducer",
+          ) {
+            inline-content.value
+          }
           let (raw-wp, so, dr) = _collect-waypoints(inline-content)
           let resolved-wp = _resolve-waypoint-forest(raw-wp, so)
           // Probe `body`'s own natural stage count by walking it at an index
@@ -3660,7 +3660,12 @@
 /// - `repeat`: max repetitions (including waypoints)
 /// - `max-rep-raw`: raw max repetitions from the content's animation (before waypoints)
 #let _prepare-render-context(self, inline-content, render-base) = {
-  let reducer-data = _find-reducer-meta(inline-content)
+  // Only a value that is *entirely* one reducer takes the reducer path. A
+  // reducer nested in other content goes through the ordinary parser, which
+  // keeps the siblings and wrappers around it.
+  let reducer-data = if tree.is-kind(inline-content, "touying-reducer") {
+    inline-content.value
+  }
   let (raw-wp, so, dr) = _collect-waypoints(inline-content)
   let resolved-wp = _resolve-waypoint-forest(raw-wp, so)
   let max-rep-raw = if reducer-data != none {
