@@ -92,6 +92,23 @@ Touying 需要知道你的方法是**移除**或**隐藏**所遮盖的内容，�
 
 Touying 自带的每个方法都会作出回答，包括通过 `.with(..)` 重新配置过的方法。未作回答的方法只能根据其返回值来推测，这能识别出直接的 `hide`，却识别不出被 `block` 或 `place` 包裹的 `hide`——这正是值得多写这一行来声明的原因。
 
+### 遮盖图表标题
+
+如果你回答了 `"recolour"`，Touying 还可能把 `utils.cover-caption-query` 作为 `self` 传给你。图表标题无法通过遮盖你所收到的内容来遮盖：其 `Figure 1:` 前缀与编号是在排版阶段生成的，并不属于这部分内容，因此它们会保持未遮盖；而直接遮盖 caption 元素本身又会把它变成块级元素，从而另起一行。请改为返回一个包裹住所收内容的 `show figure.caption` 规则：
+
+```typst
+#let my-cover(self: none, body) = if self == utils.cover-kind-query {
+  "recolour"
+} else if self == utils.cover-caption-query {
+  show figure.caption: set text(fill: gray)
+  body
+} else {
+  text(fill: gray, body)
+}
+```
+
+隐藏或覆盖绘制的方法不会被询问——对它们而言，图表标题会像其他内容一样被整体遮盖。
+
 ### 自定义脚注标记
 
 请使用 `config-common(footnote-style: ..)`，也就是你原本会传给 `show footnote: ..` 的那个函数。Touying 会将其安装为 `show footnote: footnote-style`，并同样用它来绘制上文提到的占位标记，从而让真实脚注与占位标记在视觉上保持一致。而你自己编写的 `show footnote: it => ..` 规则只会作用于真实的、已显示的脚注，不会作用于占位标记。

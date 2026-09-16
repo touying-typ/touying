@@ -87,6 +87,23 @@ Return `"hide"` if your method removes/hides content, `"recolour"` if it restyle
 
 Every method touying ships answers this. A method that does not answer is guessed at from what it returns, which recognizes a plain `hide` but not one wrapped in a `block` or `place` — which is why announcing is worth the one line.
 
+### Covering a figure caption
+
+If you answered `"recolour"`, touying may also hand you `utils.cover-caption-query` as `self`. A caption cannot be covered by covering the content you are given: its `Figure 1:` supplement and number are generated during layout and are not part of that content, so they would stay uncovered, and covering the caption element itself turns it into a block that breaks away onto its own line. Return a `show figure.caption` rule wrapped around what you are handed instead:
+
+```typst
+#let my-cover(self: none, body) = if self == utils.cover-kind-query {
+  "recolour"
+} else if self == utils.cover-caption-query {
+  show figure.caption: set text(fill: gray)
+  body
+} else {
+  text(fill: gray, body)
+}
+```
+
+Methods that hide or paint are not asked — for them the caption is covered whole like anything else.
+
 ### Customizing footnote markers
 
 Use `config-common(footnote-style: ..)`, i.e. the function you would otherwise pass to `show footnote: ..`. Touying installs it as `show footnote: footnote-style` and also uses it to draw the placeholder marker described above, so real footnotes and placeholders stay visually consistent. A `show footnote: it => ..` rule you write yourself would only reach real, revealed footnotes, not the placeholder.

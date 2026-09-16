@@ -2005,7 +2005,7 @@
   let cover-caption = if (
     utils.cover-kind(self.methods.cover) == "recolour"
   ) {
-    self.methods.cover.with(self: "cover-caption")
+    self.methods.cover.with(self: utils.cover-caption-query)
   } else {
     it => {
       show figure.caption: _cap => cover(_cap)

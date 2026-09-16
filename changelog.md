@@ -280,7 +280,7 @@ Things to watch when upgrading: a `#pause` after `uncover`/`only`/`alternatives`
 
 - **feat: better covering, with `alpha-changing-cover` and `color-changing-cover` reworked** ([#112](https://github.com/touying-typ/touying/issues/112))
 
-  `utils.alpha-changing-cover` is now the recommended semi-transparent cover, replacing the deprecated `semi-transparent-cover` above. It governs every stylable colour, inherits the outer scope's colour when an element declares none, understands gradients and tilings, and converts spot colours to Oklch before opacifying. Its automatic fallback alpha depends on the lightness of the colour it is dimming, and the fallback path is used far more sparingly, so images and diagrams no longer turn into grey blocks. `utils.color-changing-cover` remains the compile-cheap alternative that flattens everything to one colour: it overwrites colours instead of reading them, so it makes no `context` call. Both walk the same tree, so they treat strokes, table cells and the bodies of `underline`, `highlight` and `strike` alike, and neither moves the content it covers. Where an element paints its own background, flattening it together with the content on top would leave that unreadable, so `color-changing-cover(hide-filled: true)` (the default) hands those to `fallback-hide`, which now defaults to `auto` and dims them to match the recoloured text. See [Cover Function](https://touying-typ.github.io/docs/tutorials/dynamic/cover).
+  `utils.alpha-changing-cover(alpha: ratio)` is now the recommended semi-transparent cover, replacing the deprecated `semi-transparent-cover` above. It governs every stylable colour (neither images nor tilings). It uses a `fallback-hide` for content it cannot restyle instead, which overlays a transparentized rectangle. `utils.color-changing-cover(color:color)` remains the compile-cheap alternative that flattens everything to one colour: it overwrites colours instead of reading them, so it makes no `context` call. Where an element paints its own background (images or rects or similar), flattening it together with the content on top would leave that unreadable, so `color-changing-cover(fallback-for-filled: true)` (the default) hands those to `fallback-hide` early. You may specify the fallback hide and its arguments as well. See [Cover Function](https://touying-typ.github.io/docs/tutorials/dynamic/cover).
 
 - **feat: `components.left-mid-right` places content in three columns** ([#397](https://github.com/touying-typ/touying/pull/397), thanks @thomas-saigre)
 
@@ -322,13 +322,12 @@ Things to watch when upgrading: a `#pause` after `uncover`/`only`/`alternatives`
 
 - **fix: a citation covered by a visual-only method stays a real citation**
 
-  `color-changing-cover` sent citations to the `hide` fallback, so the marker vanished while the bibliography entry it queues stayed behind. `@key` is a `ref` in the content tree and only becomes a `cite` during layout, so neither func was in the recolourable set. Both are now, and a citation is recoloured like `raw` rather than hidden. Separately, `magic.bibliography-as-footnote` decided whether to draw a width-reserving placeholder by looking for a `hide` element instead of asking `utils.cover-hides-footnote`. It asks the config now, so it agrees with the parser's own footnote branch.
+  `color-changing-cover` sent citations to the `hide` fallback, so the marker vanished while the bibliography entry it queues stayed behind. `@key` is a `ref` in the content tree and only becomes a `cite` during layout, so neither func was in the recolourable set. Both are now, and a citation is recoloured like `raw` rather than hidden. Before covering footnotes we now look what cover method is used and use a replacement or cover it, so it agrees with the parser's own footnote branch.
 
-  Still open: an opaque cover that is not `hide`, such as `cover-with-rect`, together with `cover-hides-footnote: true` leaks the entry.
 
 - **fix: a note-style citation after a `#pause` no longer leaks its footnote onto the earlier subslides** ([#414](https://github.com/touying-typ/touying/pull/414), thanks @SchrodingerBlume)
 
-  [#399](https://github.com/touying-typ/touying/pull/399) fixed a literal `#footnote` shown before its `#pause`, but a citation in a CSL note style such as `chicago-notes` still leaked. Such a citation only becomes a footnote during the layout pass, after the body scan `cover-hides-footnote` relies on, so `hide()` suppressed the marker while the entry it had queued still rendered at the bottom of the page. `cite` and `ref` now follow the same three-way branch as `footnote`: under a genuinely hiding cover the citation is not rendered at all, so no entry is created, and it appears normally once revealed. This also fixes packages that emit footnotes through a `show std.cite` rule.
+  [#399](https://github.com/touying-typ/touying/pull/399) fixed a literal `#footnote` shown before its `#pause`, but a citation in a CSL note style such as `chicago-notes` still leaked. Such a citation only becomes a footnote during the layout pass, after the body scan that decides this, so `hide()` suppressed the marker while the entry it had queued still rendered at the bottom of the page. `cite` and `ref` now follow the same three-way branch as `footnote`: under a genuinely hiding cover the citation is not rendered at all, so no entry is created, and it appears normally once revealed. This also fixes packages that emit footnotes through a `show std.cite` rule.
 
 - **fix: a footnote bibliography no longer prevents convergence** ([#395](https://github.com/touying-typ/touying/issues/395)) — fixed by the bibliography rework above. Verified across 30 size × breakable/detect-overflow combinations that previously warned *document did not converge within five attempts*. A CI step runs the regression with `--warnings promote`.
 
@@ -350,7 +349,7 @@ Things to watch when upgrading: a `#pause` after `uncover`/`only`/`alternatives`
 
   A package's element is whatever its element constructor returns, and that differs: a CeTZ `rect(..)` and an alchemist `molecule(..)` are each a one-element array, while a fletcher `node(..)` is content and a lilaq `plot(..)` is a dictionary. Writing the body as a code block (`#cetz-canvas({ rect(..); circle(..) })`) makes Typst join those arrays into one, so the reducer received the elements already unpacked and had to guess how to put one back together when covering it. It always wrapped, which is right for CeTZ and alchemist and wrong for everything else.
 
-  The two call styles are distinguishable where the arguments arrive, before any flattening: a code block is a single array-typed positional argument, while elements passed directly are separate arguments. The reducer now records that per item and gives each side back what it started with — `cover` gets a whole element, and `reduce` gets one array for a block body or spread arguments for a variadic one such as `lq.diagram(..plots)`.
+  The shape is no longer guessed, because it is no longer taken apart. The reducer walks its arguments as a tree and rebuilds every container it descended into, so each side gets back exactly what it was handed: `cover` sees a whole element, and `reduce` sees one array for a block body or spread arguments for a variadic one such as `lq.diagram(..plots)`.
 
   ```typst
   // lilaq, whose plots are dictionaries and whose diagram takes `..plots`
@@ -359,6 +358,38 @@ Things to watch when upgrading: a `#pause` after `uncover`/`only`/`alternatives`
     cover: plot => plot + (x: (), y: (), label: none),
   )
   ```
+
+- **feat: a cover method can declare what kind of cover it is**
+
+  Whether a covered footnote may become a real footnote depends on whether the cover method removes its content or merely restyles it, and Typst cannot inspect a function to find out. Up to v0.7.4 touying recognised its own method by comparing function values, which `.with(..)` defeats.Such a method was treated as visual-only and its footnotes appeared before the reveal.
+
+  A cover method is now asked. It receives `utils.cover-kind-query` as `self` and answers `"hide"`, `"recolour"` or `"paint"`:
+
+  ```typst
+  #let my-cover(self: none, body) = if self == utils.cover-kind-query {
+    "hide"
+  } else {
+    block(hide(body))
+  }
+  ```
+  This also influences how captions are covered. For more details see [Docs/Writing Your Own Cover Function](https://touying-typ.github.io/docs/tutorials/dynamic/cover#writing-your-own-cover-function).
+
+- **fix: a `#pause`, `#uncover` and `#meanwhile` inside a figure caption**
+
+  A caption was parsed as a plain body, no animation in it was allowed. A figure is now walked as a tree: body and caption are parsed in turn, the caption continuing from where the body left off.
+  When the figure body is not yet visible, the caption is covered along with it, supplement and numbering included.
+
+  This required some technical things, see [Docs/Writing Your Own Cover Function](https://touying-typ.github.io/docs/tutorials/dynamic/cover#writing-your-own-cover-function) if you are using your own cover methods.
+
+- **fix: a `#meanwhile` inside a container is no longer swallowed by a later `#pause`**
+
+  ```typst
+  A #pause B
+
+  #block[#meanwhile FIRST #pause SECOND]   // `FIRST` was hidden on subslide 1
+  ```
+
+  `#meanwhile` only worked at the top level and across several slide bodies, but inside a single container — `block`, `grid`, `table`, `stack`, a figure caption — the container was parsed as one unit and reported only where the counter *ended*. This meant the whole container stayed hidden until its last element appeared.
 
 - fix: callback-style usage works again ([#374](https://github.com/touying-typ/touying/issues/374), [#380](https://github.com/touying-typ/touying/pull/380))
 
@@ -384,7 +415,7 @@ Almost every page was touched. The largest items:
 
 - **docs: new [Speaker Notes](https://touying-typ.github.io/docs/tutorials/speaker-notes) tutorial** (English and Chinese), covering where notes attach, the second screen, presenter view, per-subslide notes, markdown notes for pdfpc, exporting, and styling the panel. 
 - docs: [Custom Themes](https://touying-typ.github.io/docs/themes/custom) gains sections on customizing the speaker-note panel, making a special slide's title discoverable with a hidden heading, and why helper components should use `touying-fn-wrapper-raw`. [Build Your Own Theme](https://touying-typ.github.io/docs/tutorials/build-your-own-theme) gains a matching "Customizing the Notes" section.
-- docs: [Cover Function](https://touying-typ.github.io/docs/tutorials/dynamic/cover) rewritten around `alpha-changing-cover` and `color-changing-cover`, with a new section on `cover-hides-footnote` explaining why `auto` recognises a hiding cover by identity, so a hand-written `(self: none, body) => hide(body)` is classified visual-only and its footnotes appear before the reveal.
+- docs: [Cover Function](https://touying-typ.github.io/docs/tutorials/dynamic/cover) rewritten around `alpha-changing-cover` and `color-changing-cover`, with a section on covering filled shapes and one on writing your own cover method, including the `cover-kind` protocol it should answer. A new FAQ entry points at `config-common(footnote-style: ..)` for restyling footnote markers.
 - docs: [Sections and Headings](https://touying-typ.github.io/docs/tutorials/sections) now separates the labels that change how a heading is presented from the labels that filter by output mode, and warns that `<touying:hidden>` does not suppress the slide or its number, which `config-common(freeze-slide-counter: true)` does.
 - docs: [Counters](https://touying-typ.github.io/docs/tutorials/progress/counters) and the sections page corrected on `appendix`, which freezes only the denominator (`utils.last-slide-number`) while `utils.slide-counter` keeps advancing, so an appendix footer reads `4 / 2`.
 - docs: [Complex Animations](https://touying-typ.github.io/docs/tutorials/dynamic/complex) explains what can be nested inside `touying-fn-wrapper-raw` versus `touying-fn-wrapper`, including the `.with(..)` trap for theme authors.

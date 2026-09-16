@@ -205,6 +205,21 @@
 #let cover-kind-query = "touying-cover-kind-query"
 
 
+/// Passed as `self` to a `"recolour"` cover method to ask it for a show rule
+/// that covers a figure's caption, rather than to cover anything directly.
+///
+/// A caption cannot be covered by rebuilding it: its supplement and number are
+/// generated during layout and are not in the content tree, so covering only
+/// what is there leaves a bare `Figure 1:` behind, and covering the caption
+/// element itself turns it into a block that breaks away onto its own line. The
+/// method is therefore asked for a `show figure.caption` rule, which it returns
+/// wrapped around the figure it is handed.
+///
+/// Only recolouring methods are asked. A method that hides or paints covers the
+/// caption whole, which needs no such rule.
+#let cover-caption-query = "cover-caption"
+
+
 /// What kind of cover `fn` is: `"recolour"` if it restyles the content it
 /// covers, `"paint"` if it draws over it, `"hide"` if it removes it.
 ///
@@ -1818,7 +1833,7 @@
   // user set inside the caption, which the outer `set` cannot override, and
   // the metadata marks a run already covered so the rule does not match its
   // own output.
-  if self == "cover-caption" {
+  if self == cover-caption-query {
     return {
       show figure.caption: _cap => {
         show tree.typst-builtin-styled: _it => if (
@@ -2001,7 +2016,7 @@
 
   // Early exit via `self`: see `color-changing-cover` for why a caption is
   // covered by a show rule around the figure rather than by rebuilding it.
-  if self == "cover-caption" {
+  if self == cover-caption-query {
     return {
       show figure.caption: _cap => {
         show tree.typst-builtin-styled: _it => if (
