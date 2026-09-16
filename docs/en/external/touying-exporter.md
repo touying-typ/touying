@@ -1,10 +1,12 @@
 ---
-sidebar_position: 1
+sidebar_position: 2
 ---
 
 # Touying Exporter
 
 [touying-exporter](https://github.com/touying-typ/touying-exporter) is a command-line tool that exports Touying presentations to various formats. It is designed to be used with Touying presentations, but it can also be used with other Typst files. Export presentation slides in various formats for Touying.
+
+For an interactive editor and presenter with experimental editable PPTX export, we recommend [Tylina](./tylina.md). Use touying-exporter when you need command-line automation or HTML export.
 
 ## Touying Template
 
@@ -104,7 +106,7 @@ read command-line inputs in a Touying document — Touying reads its own command
 overrides through exactly this function.
 
 ```typst
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 
 // a single value, or `none` when the key was not passed
 #let accent = utils.get-input(key: "accent")

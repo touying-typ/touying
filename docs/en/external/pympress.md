@@ -1,5 +1,5 @@
 ---
-sidebar_position: 3
+sidebar_position: 4
 ---
 
 # Pympress
@@ -10,7 +10,7 @@ sidebar_position: 3
 ## Speaker Notes
 
 ```typst
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import themes.university: *
 
 #show: university-theme.with(
@@ -43,4 +43,3 @@ Meanwhile, #pause we can also use `#meanwhile` to #pause display other content s
 Then we can use the pympress to show it.
 
 ![image](https://github.com/touying-typ/touying/assets/34951714/afbe17cb-46d4-4507-90e8-959c53de95d5)
-

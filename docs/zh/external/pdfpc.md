@@ -1,5 +1,5 @@
 ---
-sidebar_position: 4
+sidebar_position: 5
 ---
 
 # pdfpc
@@ -74,7 +74,7 @@ typst eval --in ./example.typ 'query(<pdfpc-file>).first().value' > ./example.pd
 借助 Touying 与 Polylux 的兼容性，你可以让 Polylux 也支持直接导出，只需要加入下面的代码即可。
 
 ```typst
-#import "@preview/touying:0.7.4"
+#import "@preview/touying:0.8.0"
 
 #context touying.pdfpc.pdfpc-file(here())
 ```
@@ -86,7 +86,7 @@ typst eval --in ./example.typ 'query(<pdfpc-file>).first().value' > ./example.pd
 `#document(..)` 之外，加入 `#pdfpc.bundle-assets()`：
 
 ```typst
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import themes.simple: *
 
 #pdfpc.bundle-assets()

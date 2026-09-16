@@ -1,10 +1,12 @@
 ---
-sidebar_position: 1
+sidebar_position: 2
 ---
 
 # Touying Exporter
 
 [touying-exporter](https://github.com/touying-typ/touying-exporter) 是一个命令行工具，用于将 Touying 演示文稿导出为各种格式。它是专为 Touying 演示文稿设计的，但也可以用于其他 Typst 文件。用于 Touying 的导出演示文稿幻灯片工具。
+
+如果需要交互式编辑、放映和实验性的可编辑 PPTX 导出，我们推荐使用 [Tylina](./tylina.md)；需要命令行自动化或 HTML 导出时，再使用 touying-exporter。
 
 ## Touying 模板
 
@@ -101,7 +103,7 @@ By #author
 Touying 自己读取命令行覆盖项时用的正是这个函数。
 
 ```typst
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 
 // 单个值；如果没有传入该 key，则为 `none`
 #let accent = utils.get-input(key: "accent")
