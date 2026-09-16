@@ -234,7 +234,7 @@
 /// #let fletcher-diagram = touying-reduce.with(fletcher)
 /// ```
 ///
-/// - reduce (function): The external drawing function. It should accept an array of drawing commands and return rendered content (e.g. `cetz.canvas` or `fletcher.diagram`).
+/// - reduce (function): The external drawing function. A body passed as one array is handed back as one array (e.g. `cetz.canvas`); directly passed elements are spread as positional arguments (e.g. `lq.diagram`).
 ///
 /// - cover (function): Called with a drawing command when that command should be hidden on the current subslide. Should produce invisible but space-preserving content (e.g. `cetz.draw.hide.with(bounds: true)` or `fletcher.hide`).
 ///
