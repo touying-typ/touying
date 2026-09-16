@@ -22,7 +22,7 @@ If you like it, consider [giving a star ⭐ on GitHub](https://github.com/touyin
 - **Rich animations** — `#pause`, `#meanwhile`, math equation animations, CeTZ & Fletcher support
 - **Heading-based slides** — write presentations like a document, no boilerplate
 - **Speaker notes** — dual-screen support via tools like PowerPoint, HTML or pympress
-- **Export** — Builtin PDF export, PPTX and HTML via [touying-exporter](https://github.com/touying-typ/touying-exporter)
+- **Export** — built-in PDF export; experimental editable or visual-fidelity PPTX with speaker notes in [Tylina](https://tylina.github.io/); CLI PPTX and HTML via [touying-exporter](https://github.com/touying-typ/touying-exporter)
 - **Correct bookmarks** — proper PDF outline and page numbers out of the box
 - **End-to-end ecosystem** — generate and check complete decks with the [SeaSlides Skill](https://github.com/touying-typ/seaslides), then edit them WYSIWYG and present in [Tylina](https://tylina.github.io/)
 
@@ -58,12 +58,12 @@ For more information, a migration guide, and a separate one for theme authors, s
 
 ## Documents & Help
 
+- **Recommended workflow:** [open the Touying example in Tylina Web](https://tylina.github.io/app/?repo=https%3A%2F%2Fgithub.com%2Ftouying-typ%2Ftouying&provider=github&ref=main&load=dependencies&main=examples%2Fsimple.typ&file=examples%2Fsimple.typ&view=slides) to edit, present, and export it—including experimental editable PPTX
 - [Full documentation and references](https://touying-typ.github.io/) (English & Chinese)
 - [Ask DeepWiki](https://deepwiki.com/touying-typ/touying) or [Ask Zread](https://zread.ai/touying-typ/touying) for AI-assisted help
 - [Gallery](https://github.com/touying-typ/touying/wiki) — slides made by the community
 - [Universe](https://typst.app/universe/search/?q=touying) — Diverse touying themes on Typst Universe
 - [SeaSlides Skill](https://github.com/touying-typ/seaslides) — AI-native deck generation, quality checks, and PDF/PNG/PPTX export
-- [Tylina](https://tylina.github.io/) — local-first WYSIWYG Typst editing, templates, agents, and presenting
 - [Share slides instantly on GitHub](https://gistd.myriad-dreamin.com/touying-typ/touying/blob/main/examples/simple.typ?g-mode=slide) with [gistd](https://github.com/Myriad-Dreamin/gistd) or [export](https://github.com/touying-typ/touying-exporter) slides to PPTX and HTML formats and show presentation [online](https://touying-typ.github.io/touying-template/).
 
 
@@ -71,8 +71,7 @@ For more information, a migration guide, and a separate one for theme authors, s
 
 Choose the workflow that fits how you want to work with Touying:
 
-- Use [Tylina](https://tylina.github.io/) for a local-first WYSIWYG desktop editor with templates,
-  AI agents, slide management, and presenting built in.
+- **Recommended:** [open this repository's simple example in Tylina Web](https://tylina.github.io/app/?repo=https%3A%2F%2Fgithub.com%2Ftouying-typ%2Ftouying&provider=github&ref=main&load=dependencies&main=examples%2Fsimple.typ&file=examples%2Fsimple.typ&view=slides). It loads dependencies on demand and opens directly in Slides view; no installation is required.
 - Use the [Typst Web App](https://typst.app/) to edit and compile in the browser.
 - Install [Typst](https://typst.app/) locally and use [Tinymist LSP](https://github.com/Myriad-Dreamin/tinymist)
   in an editor with LSP support, including the [VS Code extension](https://marketplace.visualstudio.com/items?itemName=myriad-dreamin.tinymist),
@@ -367,25 +366,34 @@ deeper visual review.
 
 ### Tylina — WYSIWYG Typst editing and presenting
 
-[Tylina](https://tylina.github.io/) is a local-first, document-first, AI-native WYSIWYG Typst
-desktop editor. The typeset page is the editor—not merely a preview: click, select, and type on the
-rendered document, then open Source Lens or Split when source-level control is needed. Tylina can
-connect your own ACP agent, run the SeaSlides Skill in the current project, browse Tylina Slides and
-Typst Universe templates, manage slide thumbnails and speaker notes, reorder pages, and present the
-deck. The standard `.typ` source remains canonical throughout.
+[Tylina](https://tylina.github.io/) is our recommended AI-native, document-first, WYSIWYG Typst
+editor and presenter, available in the browser and as a desktop app. The typeset page
+is the editor—not merely a preview: edit it directly, or open Source Lens or Split for source-level
+control. Its document-aware agents can edit, compile, and check the same canonical `.typ` workspace
+while every change remains reviewable. Tylina also manages slides and speaker notes, reorders pages,
+and presents the deck.
 
 <p align="center">
-  <strong><a href="https://tylina.github.io/download/">Download Tylina</a> · <a href="https://tylina.github.io/demo/">Watch the editing demo</a></strong>
+  <strong><a href="https://tylina.github.io/app/?repo=https%3A%2F%2Fgithub.com%2Ftouying-typ%2Ftouying&amp;provider=github&amp;ref=main&amp;load=dependencies&amp;main=examples%2Fsimple.typ&amp;file=examples%2Fsimple.typ&amp;view=slides">Open the Touying example in Tylina Web</a> · <a href="https://tylina.github.io/download/">Download the desktop app</a></strong>
 </p>
 
+Tylina has two PowerPoint export modes, both preserving speaker notes:
+
+- **Editable (experimental):** text, simple inline math, supported images and shapes, and supported
+  links become native PowerPoint objects. Complex content remains in ordered vector fallback layers;
+  fonts and line wrapping can differ in PowerPoint, so this mode is not pixel-identical.
+- **Visual fidelity:** each slide is a rendered image, preserving the layout but not editable text.
+
+See the [Tylina integration guide](https://touying-typ.github.io/docs/external/tylina) for details.
+
 <p align="center">
-  <a href="https://tylina.github.io/"><img src="./assets/readme/seaslides-tylina-slides.png" width="100%" alt="A Touying deck generated by the SeaSlides Skill and opened in the Tylina Slides workspace, with thumbnails, a WYSIWYG typeset canvas, and an ACP agent panel"></a><br>
+  <a href="https://tylina.github.io/app/?repo=https%3A%2F%2Fgithub.com%2Ftouying-typ%2Ftouying&amp;provider=github&amp;ref=main&amp;load=dependencies&amp;main=examples%2Fsimple.typ&amp;file=examples%2Fsimple.typ&amp;view=slides"><img src="./assets/readme/seaslides-tylina-slides.png" width="100%" alt="A Touying deck generated by the SeaSlides Skill and opened in the Tylina Slides workspace, with thumbnails, a WYSIWYG typeset canvas, and an ACP agent panel"></a><br>
   <sub>Generate with the SeaSlides Skill, then inspect, edit, reorder, and present in Tylina.</sub>
 </p>
 
 <p align="center">
   <a href="https://tylina.github.io/"><img src="./assets/readme/seaslides-tylina-templates.png" width="100%" alt="The Tylina template browser showing Tylina Slides and Typst Universe collections with a Touying presentation theme preview"></a><br>
-  <sub>Start from a curated presentation design or browse the wider Typst Universe without leaving the desktop workflow.</sub>
+  <sub>Start from a curated presentation design or browse the wider Typst Universe without leaving Tylina.</sub>
 </p>
 
 
