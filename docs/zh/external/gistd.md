@@ -1,10 +1,12 @@
 ---
-sidebar_position: 2
+sidebar_position: 3
 ---
 
 # Gistd
 
 [Gistd](https://github.com/Myriad-Dreamin/gistd) 即时分享 [typst](https://typst.app) 文档到 Git 和其他网络存储。最重要的特性是它基于 typst.ts 来编译 typst 文档，你可以选择并复制文本！
+
+如果需要完整的可编辑工作区、放映工具，以及可编辑或视觉保真的 PPTX 导出，请使用首选的 [Tylina 集成](./tylina.md)。
 
 - [全球节点 (Cloudflare CDN)](https://gistd.myriad-dreamin.com)
 - [亚洲区域 (镜像)](https://gistd-cn.myriad-dreamin.com)
@@ -35,7 +37,7 @@ https://gistd.myriad-dreamin.com/typst/templates/blob/main/charged-ieee/template
 
 - `g-page`: 要显示的页码。默认为 `1`。仅在幻灯片模式下可用。
 - `g-mode`: 显示模式。
-  - `doc`: 以文档模式查看文档。
+  - `doc`: 以文章模式查看文档。
   - `slide`: 以幻灯片模式查看文档。
 - `g-version`: 要使用的 typst 编译器版本。
   - 可以是 `v0.13.0`、`v0.13.1`、`v0.14.0` 或 `latest`。

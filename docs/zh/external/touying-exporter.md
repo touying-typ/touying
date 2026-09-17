@@ -1,10 +1,12 @@
 ---
-sidebar_position: 1
+sidebar_position: 2
 ---
 
 # Touying Exporter
 
 [touying-exporter](https://github.com/touying-typ/touying-exporter) 是一个命令行工具，用于将 Touying 演示文稿导出为各种格式。它是专为 Touying 演示文稿设计的，但也可以用于其他 Typst 文件。用于 Touying 的导出演示文稿幻灯片工具。
+
+如果需要交互式编辑、放映和实验性的可编辑 PPTX 导出，我们推荐使用 [Tylina](./tylina.md)；需要命令行自动化或 HTML 导出时，再使用 touying-exporter。
 
 ## Touying 模板
 
@@ -91,6 +93,47 @@ touying compile example.typ --sys-inputs '{"title":"My Presentation","author":"J
 
 = #title
 By #author
+```
+
+### 用 `utils.get-input` 读取输入
+
+任何通过 `--sys-inputs`（或者 `typst compile --input key=value`）传入的值，到了 Typst
+这一侧都是字符串，`sys.inputs.at(..)` 拿到的也是原样未加工的字符串。Touying 提供了
+`utils.get-input`，它会先把每个值当作 Typst 来解析——这是在 Touying 文档中读取命令行输入的推荐方式，
+Touying 自己读取命令行覆盖项时用的正是这个函数。
+
+```typst
+#import "@preview/touying:0.8.0": *
+
+// 单个值；如果没有传入该 key，则为 `none`
+#let accent = utils.get-input(key: "accent")
+
+// 或者拿到整个字典，其中每个值都已被解析
+#let inputs = utils.get-input()
+```
+
+只要是 Typst 认识的东西，都会被解析成对应的值：
+
+| 命令行传入的内容 | `utils.get-input(key: ..)` 返回的结果 |
+| --- | --- |
+| `accent=red` | 颜色 `red` |
+| `pos=left` | alignment `left` |
+| `size=2em`、`count=3` | 长度 `2em`、整数 `3` |
+| `flag=true` | `true`；同理还有 `false`、`none` 和 `auto` |
+| `config='(a: 1, b: (2, 3))'` | 该字典 |
+| `mode=handout` | 字符串 `"handout"` |
+
+最后一行正是这个函数用起来顺手的地方：一个 Typst 不认识的裸词——字母、数字、`_` 和 `-`——会原样以字符串形式返回，因此普通的值不需要加引号。没有传入的 key 会得到 `none`。
+
+有两点需要留意：
+
+- 一个裸词如果*恰好*是某个 Typst 绑定，就会被解析掉，而不是保留为文本：`name=red` 会得到颜色，而不是字符串 `"red"`。如果想要字符串，请写成 `name='"red"'`。
+- 一个既不是裸词、也不是合法 Typst 代码的值，会导致编译错误，而不是变成字符串：`title=My Presentation` 会因为其中的空格而失败。请把引号本身也作为值的一部分传入，即 `title='"My Presentation"'`，或者直接读取 `sys.inputs` 来处理自由格式的文本。
+
+这同样适用于 `touying compile`，它的 `--sys-inputs` JSON 值就是 Typst 收到的原始文本：
+
+```sh
+touying compile example.typ --sys-inputs '{"accent":"red","title":"\"My Presentation\""}'
 ```
 
 ## 作为 Python 包使用

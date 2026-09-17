@@ -1,10 +1,12 @@
 ---
-sidebar_position: 2
+sidebar_position: 3
 ---
 
 # Gistd
 
 [Gistd](https://github.com/Myriad-Dreamin/gistd) instantly share [typst](https://typst.app) documents on git and other network storage. The most important feature is that it based on typst.ts to compile typst document, you can select and copy text!
+
+For a complete editable workspace, presenting tools, and editable or visual-fidelity PPTX export, use the recommended [Tylina integration](./tylina.md).
 
 - [Global (Cloudflare CDN)](https://gistd.myriad-dreamin.com)
 - [Asia Region (Mirror, 亚洲区域镜像)](https://gistd-cn.myriad-dreamin.com)
@@ -35,7 +37,7 @@ These URL parameters can change the behavior of gistd.
 
 - `g-page`: The page number to display. Default is `1`. Only available in the slide mode.
 - `g-mode`: The mode to display.
-  - `doc`: View the document in the document mode.
+  - `doc`: View the document in the article mode.
   - `slide`: View the document in the slide mode.
 - `g-version`: The typst compiler version to use.
   - Could be `v0.13.0`, `v0.13.1`, `v0.14.0`, or `latest`.

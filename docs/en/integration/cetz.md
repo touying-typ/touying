@@ -13,7 +13,7 @@ There also is `touying-reducer`, for which you have to specify the bindings your
 An example:
 
 ```example
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import themes.metropolis: *
 #import "@preview/cetz:0.5.2"
 #import "@preview/fletcher:0.5.8" as fletcher: node, edge
@@ -73,7 +73,7 @@ An example:
 Similarly we can also use `only` and `uncover`. Notice that for Cetz you need to wrap touying's smart animation commands in an array `(only(...),)` whereas in Fletcher you can write them natively.
 
 ```example
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import "@preview/cetz:0.5.2"
 #import themes.simple: *
 #show: simple-theme.with(aspect-ratio: "16-9")
@@ -107,7 +107,7 @@ We can also pass the slide self and then use the utils methods. You don't need t
 
 
 ```example
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import "@preview/cetz:0.5.2"
 #import themes.simple: *
 #show: simple-theme.with(aspect-ratio: "16-9")
@@ -123,13 +123,13 @@ We can also pass the slide self and then use the utils methods. You don't need t
     
     rect((0,0), (5,5))
 
-    (uncover("2-3", {
+    uncover("2-3", {
       rect((0,0), (1,1))
       rect((1,1), (2,2))
       rect((2,2), (3,3))
-    }),)
+    })
 
-    (only(3, line((0,0), (2.5, 2.5), name: "line")),)
+    only(3, line((0,0), (2.5, 2.5), name: "line"))
   })
 ])
 ```

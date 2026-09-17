@@ -107,11 +107,11 @@ config-page(footer: [Custom Footer])
 
 :::warning[警告]
 
-因此，你不应该自己使用 `set page(..)` 命令，因为会被 Touying 重置。
+因此，你不应该自己使用 `set page(..)` 命令，因为可能会被 Touying 覆盖。
 
 :::
 
-借助这种方式，我们也可以通过 `self.page` 实时查询当前页面的参数，这对一些需要获取页边距或当前页面背景颜色的函数很有用，例如 `transparent-cover`。这里就部分等价于 context get rule，而且实际上用起来会更方便。
+借助这种方式，我们也可以通过 `self.page` 实时查询当前页面的参数，这对一些需要获取页边距或当前页面背景颜色的函数很有用。这里就部分等价于 context get rule，而且实际上用起来会更方便。
 
 
 ## 页面分栏
@@ -119,7 +119,7 @@ config-page(footer: [Custom Footer])
 如果你需要将页面分为两栏或三栏，你可以使用 Touying `slide` 函数默认提供的 `composer` 功能，最简单的示例如下：
 
 ```example
->>> #import "@preview/touying:0.7.4": *
+>>> #import "@preview/touying:0.8.0": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
 #slide[
@@ -132,7 +132,7 @@ config-page(footer: [Custom Footer])
 如果你需要更改分栏的方式，可以修改 `slide` 的 `composer` 参数，其中默认的参数是 `cols.with(columns: auto, gutter: 1em)`，如果我们要让左边那一栏占据剩余宽度，可以使用
 
 ```example
->>> #import "@preview/touying:0.7.4": *
+>>> #import "@preview/touying:0.8.0": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
 #slide(composer: (1fr, auto))[
@@ -156,7 +156,7 @@ config-page(footer: [Custom Footer])
 `cols` 默认不会启用 `lazy-layout`。需要给 `cols` 传入 `lazy-layout: true`，然后在每个 block 内添加 `lazy-v(1fr)`：
 
 ```example
->>> #import "@preview/touying:0.7.4": *
+>>> #import "@preview/touying:0.8.0": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
 #cols(lazy-layout: true)[
@@ -187,7 +187,7 @@ config-page(footer: [Custom Footer])
 你也可以直接用 `lazy-layout` 包裹一个 `grid`：
 
 ```example
->>> #import "@preview/touying:0.7.4": *
+>>> #import "@preview/touying:0.8.0": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
 #lazy-layout(grid(
@@ -219,7 +219,7 @@ config-page(footer: [Custom Footer])
 使用 `config-common(breakable: false)` 可以防止内容溢出：
 
 ```typst
-// Prevent overflow, panic on overflow (default behavior when breakable: false)
+// Prevent overflow, warn on overflow (default behavior when breakable: false)
 #show: simple-theme.with(
   config-common(breakable: false),
 )
@@ -238,7 +238,7 @@ config-page(footer: [Custom Footer])
 配合使用的参数：
 
 - **`clip`**（默认 `false`）：设为 `true` 时，超出幻灯片高度的内容会被视觉截断。
-- **`detect-overflow`**（默认 `true`）：设为 `true` 时，会通过布局测量检测溢出，一旦内容高度超出幻灯片高度则直接 `panic()` 报错，便于及早发现问题；设为 `false` 可避免额外的布局开销。
+- **`detect-overflow`**（默认 `true`）：设为 `true` 时，会通过布局测量检测溢出。一旦内容高度超出可用高度，就会发出**警告**，并指明页码、幻灯片与子幻灯片编号；编译不会中断，文档仍会正常生成，因此既能及早发现问题，又不会让构建失败。设为 `false` 可避免额外的布局开销。
 
 :::note[注意]
 
@@ -249,7 +249,7 @@ config-page(footer: [Custom Footer])
 你也可以在演示文稿中途通过 `touying-set-config` 动态切换这些配置：
 
 ```example
->>> #import "@preview/touying:0.7.4": *
+>>> #import "@preview/touying:0.8.0": *
 >>> #import themes.simple: *
 >>> #show: simple-theme.with(config-common(breakable: false))
 == This slide's overflow will be clipped

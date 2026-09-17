@@ -12,6 +12,7 @@
 )
 
 #outline-slide()
+#speaker-note[During Outline \ more stuff \ even more stuff]
 
 = First Section
 

@@ -1,3 +1,6 @@
+#import "utils.typ"
+#import "core/tree.typ"
+
 // ---------------------------------------------------------------------
 // List, Enum, and Terms
 // ---------------------------------------------------------------------
@@ -18,7 +21,7 @@
         list.marker
       }
     }
-    let hanging-indent = measure(current-marker).width + .6em + .3pt
+    let hanging-indent = std.measure(current-marker).width + .6em + .3pt
     set terms(hanging-indent: hanging-indent)
     if type(list.marker) == array {
       terms.item(
@@ -109,9 +112,12 @@
 /// -> content
 #let nontight(lst) = {
   let fields = lst.fields()
-  fields.remove("children")
+  let _ = fields.remove("children")
+  // The label stays on the shown element, so it must not be passed to the
+  // constructor and must not be re-attached either.
+  let _ = fields.remove("label", default: none)
   fields.tight = false
-  return (lst.func())(..fields, ..lst.children)
+  (lst.func())(..fields, ..lst.children)
 }
 
 /// Apply as a show rule to make all lists, enumerations, and term lists use non-tight spacing by default (adds spacing between items).
@@ -147,24 +153,25 @@
 // Bibliography
 // ---------------------------------------------------------------------
 
-#let bibliography-state = state("footer-bibliography-state", ())
 #let bibliography-visited = state("footer-bibliography-visited", ())
 
-/// Display bibliography citations as footnotes. Place `#place(hide(bibliography(...)))` at the end of the document to register the bibliography entries.
+/// Display bibliography citations as footnotes.
+/// / Note: #[You still need to register the bibliography globally once. \ If you don't want to show the bibliography, \ use `hide(bibliography(...))` at the end of your document. ]
 ///
-/// Usage: `#show: magic.bibliography-as-footnote.with(bibliography(title: none, "ref.bib"))`
+/// Usage: `#show: magic.bibliography-as-footnote`
 ///
 /// - self (dictionary): The presentation context, used to read `footnote-style` if configured. Default is `none`.
 ///
 /// - numbering (str): The numbering format for footnote citations. Default is `"[1]"`.
 ///
-/// - bibliography (bibliography): The bibliography element, e.g. `bibliography("ref.bib")`.
+/// - footnote-style (dict): A dictionary of style properties to apply to the footnotes showing citation markers. These are the markers in the text not the entries, see #link("https://typst.app/docs/reference/model/footnote/") and #link("https://typst.app/docs/reference/text/super/") for how to style them.
+///  Default is `(typographic: false, baseline: 0em, size:1em)`, which makes the bibliography markers appear like normal text.
 ///
 /// -> content
 #let bibliography-as-footnote(
   self: none,
   numbering: "[1]",
-  bibliography,
+  footnote-style: (typographic: false, baseline: 0em, size: 1em),
   body,
 ) = {
   // Covering a citation with `hide()` hides its marker, but Typst still lays out
@@ -172,7 +179,13 @@
   // region, don't create a real footnote for it - instead reserve the same marker
   // width by advancing the real footnote counter and drawing just the superscript
   // number, matching how plain footnotes are handled in core.typ.
-  show hide: it => {
+  // Only a genuinely-hiding cover needs the placeholder: a visual-only method
+  // (color-changing-cover, alpha-changing-cover) keeps covered content visible,
+  // so its citations should stay real. This mirrors the footnote branch in
+  // core/parser.typ, which asks the same config rather than looking for `hide`.
+  show hide: it => if self != none and not utils.cover-hides-footnote(self) {
+    it
+  } else {
     show cite.where(form: "normal"): it2 => context {
       let n = counter(footnote).get().first() + 1
       counter(footnote).update(n)
@@ -189,7 +202,7 @@
         // counting and leaking its own entry. `measure` discards those side
         // effects and keeps only the width, which is all a placeholder needs.
         let fake = footnote(numbering: numbering, [])
-        box(width: measure(footnote-style(fake)).width)
+        box(width: std.measure(footnote-style(fake)).width)
       }
     }
     it
@@ -197,7 +210,12 @@
 
   show cite.where(form: "normal"): it => (
     context {
-      let label-str = str(here().page()) + str(it.key)
+      let label-str = "touying-footnote-bib:" + str(it.key)
+      if (
+        type(self) == dictionary and not self.at("article-mode", default: false)
+      ) {
+        label-str = label-str + str(here().page()) //dedup in slides mode per page. in article mode that is not stable
+      }
       let bibitem = {
         show: body => {
           show regex("^\[\d+\]\s"): it => ""
@@ -206,13 +224,14 @@
         cite(it.key, form: "full")
       }
       if it.key not in bibliography-visited.get() {
-        bibliography-state.update(x => (..x, bibitem))
         bibliography-visited.update(visited => visited + (it.key,))
       }
       box({
         if query(selector(label(label-str)).before(here())).len() > 0 {
-          [#footnote(label(label-str), numbering: numbering)]
+          set super(..footnote-style)
+          footnote(label(label-str), numbering: numbering)
         } else {
+          set super(..footnote-style)
           [#footnote(numbering: numbering, bibitem)#label(label-str)]
         }
       })
@@ -220,37 +239,4 @@
   )
 
   body
-}
-
-/// Display the collected bibliography entries. Avoids the "multiple bibliographies are not yet supported" error by rendering entries gathered by `bibliography-as-footnote`.
-///
-/// Usage: `#magic.bibliography()`
-///
-/// - title (str, auto, none): The heading for the bibliography section. When `auto`, uses a language-appropriate title. When `none`, no heading is shown. Default is `auto`.
-///
-/// -> content
-#let bibliography(title: auto) = {
-  context {
-    let title = title
-    let bibitems = bibliography-state.final()
-    if title == auto {
-      if text.lang == "zh" {
-        title = "参考文献"
-      } else {
-        title = "Bibliography"
-      }
-    }
-    if title != none {
-      heading(title)
-      v(.45em)
-    }
-    grid(
-      columns: (auto, 1fr),
-      column-gutter: .7em,
-      row-gutter: 1.2em,
-      ..range(bibitems.len())
-        .map(i => (numbering("[1]", i + 1), bibitems.at(i)))
-        .flatten(),
-    )
-  }
 }

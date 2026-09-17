@@ -11,8 +11,9 @@ sidebar_position: 2
 [`lr-navigation`](https://touying-typ.github.io/docs/reference/core/lr-navigation) 可创建可点击的上一页与下一页控件，支持按幻灯片、子幻灯片（物理页面）或两者同时导航。
 
 ```example
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import themes.simple: *
+
 #show: simple-theme.with(
   footer: self=>[
     #align(center,
@@ -28,12 +29,19 @@ sidebar_position: 2
     )
   ],
 )
+
 = Navigation Demo
+
 == Slide A
+
 This slide has a pause.
+
 #pause
+
 This appears on the next subslide.
+
 == Slide B
+
 Now the page-level links can jump between full slides.
 ```
 
@@ -44,8 +52,9 @@ Now the page-level links can jump between full slides.
 这种模式非常适合放在页眉中，在不使用完整侧边栏或进度条的情况下提供简洁的进度反馈。
 
 ```example
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import themes.simple: *
+
 #show: simple-theme.with(
     config-page(
         margin: (top: 4em, bottom: 2em, x: 2em),
@@ -60,13 +69,21 @@ Now the page-level links can jump between full slides.
         short-heading: true,
     ),
 )
+
 = Introduction
+
 == Motivation
+
 The mini-slides row updates as you move.
+
 == Scope
+
 Another subsection.
+
 = Methods
+
 == Setup
+
 Current section is highlighted.
 ```
 
@@ -77,8 +94,9 @@ Touying 没有提供单独的 `sidebar-navigation` 函数。实际上，侧边�
 使用此风格最快捷的方法是启用 dewdrop 内置的侧边栏导航并调整其选项：
 
 ```example
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import themes.dewdrop: *
+
 #show: dewdrop-theme.with(
     aspect-ratio: "16-9",
     navigation: "sidebar",
@@ -91,13 +109,21 @@ Touying 没有提供单独的 `sidebar-navigation` 函数。实际上，侧边�
     ),
 )
 #outline-slide()
+
 = Part I <touying:skip>
+
 == Problem
+
 Sidebar highlights where you are in the outline.
+
 == Constraints
+
 Indented subsection entries.
+
 = Part II
+
 == Solution
+
 The active section and subsection are emphasized automatically.
 ```
 

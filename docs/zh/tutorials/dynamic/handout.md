@@ -15,7 +15,7 @@ config-common(handout: true)
 将其放在主题设置中：
 
 ```example
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import themes.simple: *
 
 #show: simple-theme.with(
@@ -39,6 +39,8 @@ Third item.
 ```
 
 默认情况下，讲义模式只保留每张幻灯片的**最后一个**子幻灯片。
+
+也可以改用 `config-common(export-mode: "handout")` 来设置讲义模式，这样还可以在命令行上通过 `--input export-mode=handout` 直接指定，完全不需要修改源文件。参见[输出模式](../output-modes)。
 
 ## 选择保留哪个子幻灯片
 
@@ -65,6 +67,10 @@ config-common(handout: true, handout-subslides: "1-2")
 This slide is included when `handout: true` but invisible otherwise.
 ```
 
+## 仅在某一模式下显示的内容
+
+`#handout-only[..]`、`#presentation-only[..]`、`#slides-only[..]` 和 `#article-only[..]` 可以让一段内容只出现在适合它的模式里。详见[输出模式](../output-modes)。
+
 ## 工作流建议
 
 一种常见的工作流是：演示时保持 `handout: false`（默认值），导出分发用的 PDF 时切换为 `handout: true`：
@@ -76,3 +82,5 @@ This slide is included when `handout: true` but invisible otherwise.
 // 构建讲义 PDF 时
 #show: my-theme.with(config-common(handout: true))
 ```
+
+如果不想改动源文件，也可以用上面提到的 `--input export-mode=handout` 直接导出讲义。

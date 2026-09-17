@@ -1,5 +1,5 @@
 ---
-sidebar_position: 9
+sidebar_position: 10
 ---
 
 # 创建自己的主题
@@ -12,6 +12,7 @@ sidebar_position: 9
 - 自定义 footer；
 - 自定义 `slide` 方法；
 - 自定义特殊 slide 方法，如 `title-slide` 和 `focus-slide` 方法；
+- 自定义 `notes` 方法；
 
 为了演示如何使用 Touying 创建一个自己的主题，我们不妨来一步一步地创建一个简洁美观的 Bamboo 主题。
 
@@ -21,12 +22,12 @@ sidebar_position: 9
 如果你想在本地修改一个 Touying 内部的 themes，而不是自己从零开始创建，你可以选择通过下面的方式实现：
 
 1. 将 `themes` 目录下的 [主题代码](https://github.com/touying-typ/touying/tree/main/themes) 复制到本地，例如将 `themes/university.typ` 复制到本地 `university.typ` 中。
-2. 将 `university.typ` 文件顶部的 `#import "../src/exports.typ": *` 命令替换为 `#import "@preview/touying:0.7.4": *`
+2. 将 `university.typ` 文件顶部的 `#import "../src/exports.typ": *` 命令替换为 `#import "@preview/touying:0.8.0": *`
 
 然后就可以通过
 
 ```typst
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import "university.typ": *
 
 #show: university-theme.with(
@@ -53,7 +54,7 @@ sidebar_position: 9
 如果只是你自己使用，你可以直接导入 Touying：
 
 ```typst
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 ```
 
 如果你希望这个主题作为 Touying 的一部分，放置在 Touying `themes` 目录下，那你应该将上面的导入语句改为
@@ -77,7 +78,7 @@ sidebar_position: 9
 
 ```example
 // bamboo.typ
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 
 #let bamboo-theme(
   aspect-ratio: "16-9",
@@ -98,7 +99,7 @@ sidebar_position: 9
 }
 
 // main.typ
-<<< #import "@preview/touying:0.7.4": *
+<<< #import "@preview/touying:0.8.0": *
 <<< #import "bamboo.typ": *
 
 #show: bamboo-theme.with(aspect-ratio: "16-9")
@@ -201,7 +202,105 @@ config-methods(alert: utils.alert-with-primary-color)
 而我们还需要自定义一个 `slide` 方法，其中接收 `#let slide(title: auto, ..args) = touying-slide-wrapper(self => {..})`，回调函数中 `self` 是回调函数所必须的参数，用于获取最新的 `self`；而第二个 `title` 则是用于更新 `self.store.title`，以便在 header 中显示出来；第三个 `..args` 是用于收集剩余的参数，并传到 `touying-slide(self: self, ..args)` 里，这也是让 Touying `slide` 功能正常生效所必须的。并且，我们需要在 `bamboo-theme` 函数里使用 `config-methods(slide: slide)` 注册这个方法。
 ```example
 // bamboo.typ
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
+
+#let slide(title: auto, ..args) = touying-slide-wrapper(self => {
+  if title != auto {
+    self.store.title = title
+  }
+  // set page
+  let header(self) = {
+    set align(top)
+    show: components.cell.with(fill: self.colors.primary, inset: 1em)
+    set align(horizon)
+    set text(fill: self.colors.neutral-lightest, size: .7em)
+    utils.display-current-heading(level: 1)
+    linebreak()
+    set text(size: 1.5em)
+    if self.store.title != none {
+      utils.call-or-display(self, self.store.title)
+    } else {
+      utils.display-current-heading(level: 2)
+    }
+  }
+  let footer(self) = {
+    set align(bottom)
+    show: pad.with(.4em)
+    set text(fill: self.colors.neutral-darkest, size: .8em)
+    utils.call-or-display(self, self.store.footer)
+    h(1fr)
+    context utils.slide-counter.display() + " / " + utils.last-slide-number
+  }
+  self = utils.merge-dicts(
+    self,
+    config-page(
+      header: header,
+      footer: footer,
+    ),
+  )
+  touying-slide(self: self, ..args)
+})
+
+#let bamboo-theme(
+  aspect-ratio: "16-9",
+  footer: none,
+  ..args,
+  body,
+) = {
+  set text(size: 20pt)
+
+  show: touying-slides.with(
+    config-page(
+      paper: "presentation-" + aspect-ratio,
+      margin: (top: 4em, bottom: 1.5em, x: 2em),
+    ),
+    config-common(
+      slide-fn: slide,
+    ),
+    config-methods(
+      alert: utils.alert-with-primary-color,
+    ),
+    config-colors(
+      primary: rgb("#5E8B65"),
+      neutral-lightest: rgb("#ffffff"),
+      neutral-darkest: rgb("#000000"),
+    ),
+    config-store(
+      title: none,
+      footer: footer,
+    ),
+    ..args,
+  )
+
+  body
+}
+
+
+// main.typ
+<<< #import "@preview/touying:0.8.0": *
+<<< #import "bamboo.typ": *
+
+#show: bamboo-theme.with(aspect-ratio: "16-9")
+
+= First Section
+
+== First Slide
+
+A slide with a title and an *important* information.
+```
+
+
+## 自定义特殊 Slide
+
+我们在上面的基础 slide 的基础上，进一步加入一些特殊的 slide 函数，例如 `title-slide`，`focus-slide` 以及自定义 `slides` 方法。
+
+对于 `title-slide` 方法，首先，我们可以通过 `let info = self.info + args.named()` 获取到 `self.info` 里保存的信息，也可以用函数参数里传入的 `args.named()` 来更新信息，便于后续以 `info.title` 的方式使用。具体的页面内容 `body`，每个 theme 都会有所不同，这里就不再过多赘述。
+
+对于 `new-section-slide` 方法，也是同理，不过唯一要注意的是我们在 `config-methods()` 中注册了 `new-section-slide-fn: new-section-slide`，这样 `new-section-slide` 就会在碰到一级标题时自动被调用。
+
+```example
+// bamboo.typ
+#import "@preview/touying:0.8.0": *
 
 #let slide(title: auto, ..args) = touying-slide-wrapper(self => {
   if title != auto {
@@ -282,6 +381,8 @@ config-methods(alert: utils.alert-with-primary-color)
       margin: 2em,
     ),
   )
+  place(hide(heading[Focus Slide])) // put an invisible heading on the slide. Useful later
+
   set text(fill: self.colors.neutral-lightest, size: 2em)
   touying-slide(self: self, align(horizon + center, body))
 })
@@ -319,8 +420,9 @@ config-methods(alert: utils.alert-with-primary-color)
   body
 }
 
+
 // main.typ
-<<< #import "@preview/touying:0.7.4": *
+<<< #import "@preview/touying:0.8.0": *
 <<< #import "bamboo.typ": *
 
 #show: bamboo-theme.with(
@@ -350,17 +452,21 @@ A slide with a title and an *important* information.
 ```
 
 
-## 自定义特殊 Slide
+## 自定义 Notes {#customizing-the-notes}
 
-我们在上面的基础 slide 的基础上，进一步加入一些特殊的 slide 函数，例如 `title-slide`，`focus-slide` 以及自定义 `slides` 方法。
+最后一个方面是自定义我们的备注。
+从 Touying 0.8.0 起，你可以通过编写一个 `notes` 函数、并把它传给 `config-common(notes-fn: notes)`，来详细描述备注应该长什么样。
 
-对于 `title-slide` 方法，首先，我们可以通过 `let info = self.info + args.named()` 获取到 `self.info` 里保存的信息，也可以用函数参数里传入的 `args.named()` 来更新信息，便于后续以 `info.title` 的方式使用。具体的页面内容 `body`，每个 theme 都会有所不同，这里就不再过多赘述。
+你的 `notes` 函数应当构建在 `touying-notes` 之上，它让你可以像 slide 那样定义 setting 函数，并且还有一个可以自定义的 header。
+一个 `notes` 函数有两个 setting 函数：`note-setting` 和 `preview-setting`。
+前者变换备注，也就是主体内容。后者用于摆放和缩放在 [`show-only-notes` 模式](https://touying-typ.github.io/docs/reference/configs/config-common#show-only-notes)下渲染出来的「预览幻灯片」，类似于 LaTeX Beamer 的同名选项。两者都有合理的默认值，因此你可以省略其中任何一个。关于演讲者备注本身的更多说明，参见 [演讲者备注](speaker-notes.md)。
 
-对于 `new-section-slide` 方法，也是同理，不过唯一要注意的是我们在 `config-methods()` 中注册了 `new-section-slide-fn: new-section-slide`，这样 `new-section-slide` 就会在碰到一级标题时自动被调用。
+要设置页面背景之类的东西，我们不使用 `config-page()`，而是可以直接把一个带颜色的 `rect` 或者一个 `image` 传给它的 `fill` 参数。`header-fill` 参数也是同理。
+`header` 会占据备注页面上方的一部分，并占满整个宽度。默认情况下它会渲染当前的章节标题。
 
-```
+```example
 // bamboo.typ
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 
 #let slide(title: auto, ..args) = touying-slide-wrapper(self => {
   if title != auto {
@@ -417,6 +523,9 @@ A slide with a title and an *important* information.
     if info.date != none {
       block(utils.display-info-date(self))
     }
+    if info.contact != none {
+      block(info.contact)
+    }
   }
   touying-slide(self: self, body)
 })
@@ -438,9 +547,26 @@ A slide with a title and an *important* information.
       margin: 2em,
     ),
   )
+  place(hide(heading[Focus Slide])) // put an invisible heading on the slide. Useful later
+
   set text(fill: self.colors.neutral-lightest, size: 2em)
   touying-slide(self: self, align(horizon + center, body))
 })
+
+#let notes(self: none, ..args) = touying-notes(
+  self: self,
+  // Echo the slide header: same primary band, same light text.
+  header: self => pad(1em, text(
+    fill: self.colors.neutral-lightest,
+    size: .7em,
+    utils.display-current-heading(depth: self.slide-level),
+  )),
+  header-fill: self.colors.primary,
+  fill: self.colors.neutral-lightest,
+  note-setting: note => pad(1.5em, text(size: .8em, note)),
+  preview-setting: slide-preview => align(top+right, scale(x:20%, y:20%, slide-preview)),
+  ..args,
+)
 
 #let bamboo-theme(
   aspect-ratio: "16-9",
@@ -458,6 +584,7 @@ A slide with a title and an *important* information.
     config-common(
       slide-fn: slide,
       new-section-slide-fn: new-section-slide,
+      notes-fn: notes,
     ),
     config-methods(alert: utils.alert-with-primary-color),
     config-colors(
@@ -477,18 +604,20 @@ A slide with a title and an *important* information.
 
 
 // main.typ
-<<< #import "@preview/touying:0.7.4": *
+<<< #import "@preview/touying:0.8.0": *
 <<< #import "bamboo.typ": *
 
 #show: bamboo-theme.with(
   aspect-ratio: "16-9",
   footer: self => self.info.institution,
+  config-common(show-notes-on-second-screen: right),
   config-info(
     title: [Title],
     subtitle: [Subtitle],
     author: [Authors],
     date: datetime.today(),
     institution: [Institution],
+    contact: [contact\@mail.com],
   ),
 )
 
@@ -499,6 +628,10 @@ A slide with a title and an *important* information.
 == First Slide
 
 A slide with a title and an *important* information.
+
+#speaker-note[
+  Remember to explain why bamboo is the fastest-growing plant on earth.
+]
 
 #focus-slide[
   Focus on it!

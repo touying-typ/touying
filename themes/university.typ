@@ -230,7 +230,7 @@
   numbered: true,
   body,
 ) = touying-slide-wrapper(self => {
-  let slide-body = {
+  let setting(level, numbered, body) = {
     set std.align(horizon)
     show: pad.with(20%)
     set text(size: 1.5em, fill: self.colors.primary, weight: "bold")
@@ -251,7 +251,12 @@
     )
     body
   }
-  touying-slide(self: self, config: config, slide-body)
+  touying-slide(
+    self: self,
+    config: config,
+    setting: setting.with(level, numbered),
+    body,
+  )
 })
 
 
@@ -291,10 +296,18 @@
     self,
     config,
     config-common(freeze-slide-counter: true),
-    config-page(margin: 1em, ..args),
+    // 2em: was 1em scaled by the focus text's own `set text(size: 2em)`.
+    config-page(margin: 2em, ..args),
+    config,
   )
-  set text(fill: self.colors.neutral-lightest, weight: "bold", size: 2em)
-  touying-slide(self: self, std.align(horizon, body))
+  touying-slide(
+    self: self,
+    setting: it => std.align(
+      horizon,
+      text(fill: self.colors.neutral-lightest, weight: "bold", size: 2em, it),
+    ),
+    body,
+  )
 })
 
 
@@ -329,6 +342,19 @@
     ..bodies,
   )
 })
+/// Speaker-note panel for this theme. Only styling; `touying-notes` does the layout.
+#let notes(self: none, ..args) = touying-notes(
+  self: self,
+  header: self => pad(x: 32pt, y: 16pt, text(
+    fill: self.colors.neutral-lightest,
+    utils.display-current-heading(depth: self.slide-level),
+  )),
+  header-fill: self.colors.primary,
+  fill: self.colors.neutral-lightest,
+  ..args,
+)
+
+
 
 
 /// Touying university theme.
@@ -402,6 +428,7 @@
     ),
     config-common(
       slide-fn: slide,
+      notes-fn: notes,
       new-section-slide-fn: new-section-slide,
     ),
     config-methods(

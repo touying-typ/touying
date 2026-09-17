@@ -1,5 +1,13 @@
+#import "bundle.typ"
 #import "pdfpc.typ"
 #import "extern.typ": warning
+#import "core/tree.typ"
+#import "core/waypoints.typ": resolve-waypoints
+#import "core/subslides.typ": (
+  _is-placement, _is-swap, _parse-subslide-indices, check-visible,
+)
+
+
 /// Add page margin dictionary to another page margin dictionary.
 ///
 /// Example: `add-page-margin-dicts((top: 1cm, x: 2cm), (y: 3em))` returns `(x: 2cm, y: 3em)`
@@ -135,200 +143,6 @@
 #let loc-prior-newslide = state("touying-loc-prior-newslide", none)
 
 
-/// Remove leading and trailing empty elements from an array of content.
-///
-/// Example: `trim(([], [ ], parbreak(), linebreak(), [a], [ ], [b], [c], linebreak(), parbreak(), [ ], [ ]))` returns `([a], [ ], [b], [c])`
-///
-/// - arr (array): The array of content to trim.
-///
-/// - empty-contents (array): An array of content elements considered empty. Default is `([], [ ], parbreak(), linebreak())`.
-///
-/// -> array
-#let trim(arr, empty-contents: ([], [ ], parbreak(), linebreak())) = {
-  let i = 0
-  let j = arr.len() - 1
-  while i != arr.len() and arr.at(i) in empty-contents {
-    i += 1
-  }
-  while j != i - 1 and arr.at(j) in empty-contents {
-    j -= 1
-  }
-  arr.slice(i, j + 1)
-}
-
-
-/// Add a label to a content.
-///
-/// Example: `label-it("key", [a])` is equivalent to `[a <key>]`
-///
-/// - it (content): The content to label.
-///
-/// - label-name (str, label): The name of the label, or a label.
-///
-/// -> content
-#let label-it(it, label-name) = {
-  if type(label-name) == label {
-    [#it#label-name]
-  } else {
-    assert(type(label-name) == str, message: repr(label-name))
-    [#it#label(label-name)]
-  }
-}
-
-/// Reconstruct a content with a new body.
-///
-/// - body-name (str): The property name of the body field.
-///
-/// - labeled (bool): Indicates whether the label of the content should be preserved.
-///
-/// - named (bool): Indicates whether to pass fields as named arguments.
-///
-/// - it (content): The content to reconstruct.
-///
-/// - new-body (content): The new body you want to replace the old body with.
-///
-/// -> content
-#let reconstruct(
-  body-name: "body",
-  labeled: true,
-  named: false,
-  it,
-  ..new-body,
-) = {
-  let fields = it.fields()
-  let label = fields.remove("label", default: none)
-  let _ = fields.remove(body-name, default: none)
-  if named {
-    if label != none and labeled {
-      return [#(it.func())(..fields, ..new-body)#label]
-    } else {
-      return (it.func())(..fields, ..new-body)
-    }
-  } else {
-    if label != none and labeled {
-      return [#(it.func())(..fields.values(), ..new-body)#label]
-    } else {
-      return (it.func())(..fields.values(), ..new-body)
-    }
-  }
-}
-
-/// Reconstruct a table-like content with new children.
-///
-/// - named (bool): Whether to pass fields as named arguments. Default is `true`.
-///
-/// - labeled (bool): Whether to preserve the label of the content. Default is `true`.
-///
-/// - it (content): The content to reconstruct.
-///
-/// - new-children (array): The new children to replace the old children with.
-///
-/// -> content
-#let reconstruct-table-like(named: true, labeled: true, it, new-children) = {
-  reconstruct(
-    body-name: "children",
-    named: named,
-    labeled: labeled,
-    it,
-    ..new-children,
-  )
-}
-
-
-#let typst-builtin-sequence = [].func()
-
-/// Determine if a content is a sequence (i.e. created by concatenating content with `+` or implicit adjacency).
-///
-/// Example: `is-sequence([a])` returns `true`
-///
-/// - it (content): The content to check.
-///
-/// -> bool
-#let is-sequence(it) = {
-  type(it) == content and it.func() == typst-builtin-sequence
-}
-
-
-#let typst-builtin-styled = text(red)[].func()
-
-/// Determine if a content is styled (i.e. wrapped by Typst's internal styled element when `set` or `show` rules are applied).
-///
-/// Example: `is-styled(text(fill: red)[Red])` returns `true`
-///
-/// - it (content): The content to check.
-///
-/// -> bool
-#let is-styled(it) = {
-  type(it) == content and it.func() == typst-builtin-styled
-}
-
-
-#let typst-builtin-space = [ ].func()
-
-/// Determine if a content is a space (i.e. created by using whitespace in source code).
-///
-/// Example: `is-styled([ ])` returns `true`
-///
-/// - it (content): The content to check.
-///
-/// -> bool
-#let is-space(it) = {
-  type(it) == content and it.func() == typst-builtin-space
-}
-
-
-/// Reconstruct a styled content with a new body.
-///
-/// - it (content): The content to reconstruct.
-///
-/// - new-child (content): The new child you want to replace the old body with.
-///
-/// -> content
-#let reconstruct-styled(it, new-child) = {
-  typst-builtin-styled(new-child, it.styles)
-}
-
-
-/// Determine if a content is a `metadata(...)` element.
-///
-/// Example: `is-metadata(metadata((a: 1)))` returns `true`
-///
-/// - it (content): The content to check.
-///
-/// -> bool
-#let is-metadata(it) = {
-  type(it) == content and it.func() == metadata
-}
-
-
-/// Determine if a content is a metadata with a specific kind.
-///
-/// - it (content): The content to check.
-///
-/// - kind (str): The kind string to match.
-///
-/// -> bool
-#let is-kind(it, kind) = {
-  (
-    is-metadata(it)
-      and type(it.value) == dictionary
-      and it.value.at("kind", default: none) == kind
-  )
-}
-
-
-/// Determine if a content is a heading up to specific depth.
-///
-/// - it (content): The content to check.
-///
-/// - depth (int): Maximum heading depth to consider. Default is `9999`.
-///
-/// -> bool
-#let is-heading(it, depth: 9999) = {
-  type(it) == content and it.func() == heading and it.depth <= depth
-}
-
-
 /// Call a `self => {..}` function and return the result, or wrap plain content in `[]`.
 ///
 /// - self (dictionary): The presentation context.
@@ -343,35 +157,24 @@
   return [#it]
 }
 
+
 /// recursively checks if `it` has a text in it
 ///
 /// - it (content): the content to check
 /// - transparentize-table (bool): Whether to assume tables contain text. If `false` tables will get searched completely for available text.
+/// - text-blocks (bool): Whether so search through block level elements for text.
 /// -> bool
 #let _contains-text(it, transparentize-table) = {
-  if type(it) != content {
-    return false
-  }
-  if it.func() in (text, math.equation) {
-    return true
-  }
-  if it.has("body") {
-    return _contains-text(it.body, transparentize-table)
-  }
-  if it.has("child") {
-    return _contains-text(it.child, transparentize-table)
-  }
-  if it.has("children") {
-    if it.func() == table {
-      return transparentize-table
-    }
-    for child in it.children {
-      if _contains-text(child, transparentize-table) {
-        return true
-      }
-    }
-  }
-  return false
+  let is-text = node => (
+    type(node) == content
+      and (
+        node.func() in (text, math.equation)
+          // `raw` keeps its content in `text`, not in a body.
+          or node.has("text")
+          or (transparentize-table and node.func() == table)
+      )
+  )
+  tree.find-in-tree(it, is-text) != none
 }
 
 /// Wrap a function with a `self` parameter to make it callable as a method.
@@ -387,35 +190,68 @@
 
 /// The default `cover` method (wraps Typst's own `hide`) and touying's default value
 /// for `config-methods(cover: ..)`. Exposed as a stable, comparable value (rather than
-/// only living as a private default in `configs.typ`) so other code can check
-/// `self.methods.cover == utils.hiding-cover` as a best-effort way to tell whether
-/// covering is genuinely invisible, as opposed to a visual-only style like
-/// `color-changing-cover`/`alpha-changing-cover`.
+/// only living as a private default in `configs.typ`) so it can be named and
+/// reconfigured like any other cover method.
 ///
-/// This is only identity comparison, so it cannot recognize a hand-written cover
-/// function that happens to also just call `hide` - use the `cover-hides-footnote`
-/// config to override the result explicitly where that distinction matters.
+/// To tell whether a configured method genuinely removes content, ask
+/// `cover-kind` rather than comparing against this by identity: `.with(..)`
+/// produces a different function value, so identity would miss it.
 ///
 /// -> function
 #let hiding-cover = method-wrapper(hide)
 
-/// Resolve the `cover-hides-footnote` config: whether the presentation's configured
-/// `cover` method genuinely hides content (as opposed to a visual-only style like
-/// `color-changing-cover`/`alpha-changing-cover`). Explicit `true`/`false` is
-/// returned as-is; `auto` (the default) falls back to comparing `self.methods.cover`
-/// against `hiding-cover` by identity - see `hiding-cover` for that check's limits.
+/// the string cover methods expect on self to return their kind
+/// see cover-kind below
+#let cover-kind-query = "touying-cover-kind-query"
+
+
+/// Passed as `self` to a `"recolour"` cover method to ask it for a show rule
+/// that covers a figure's caption, rather than to cover anything directly.
+///
+/// A caption cannot be covered by rebuilding it: its supplement and number are
+/// generated during layout and are not in the content tree, so covering only
+/// what is there leaves a bare `Figure 1:` behind, and covering the caption
+/// element itself turns it into a block that breaks away onto its own line. The
+/// method is therefore asked for a `show figure.caption` rule, which it returns
+/// wrapped around the figure it is handed.
+///
+/// Only recolouring methods are asked. A method that hides or paints covers the
+/// caption whole, which needs no such rule.
+#let cover-caption-query = "cover-caption"
+
+
+/// What kind of cover `fn` is: `"recolour"` if it restyles the content it
+/// covers, `"paint"` if it draws over it, `"hide"` if it removes it.
+///
+/// - fn (function): The configured cover method.
+///
+/// -> str
+#let cover-kind(fn) = {
+  let answer = fn(self: cover-kind-query, [])
+  if type(answer) == str { answer } else if (
+    type(answer) == content and answer.func() == hide
+  ) { "hide" } else { "paint" }
+}
+
+
+/// Whether the presentation's configured `cover` method genuinely removes the
+/// content it covers, rather than merely restyling it.
+///
+/// This decides how a footnote covered by `#pause` is rendered: a method that
+/// removes content must not create a real footnote at all, because the entry
+/// would appear below the separator while the content it belongs to is still
+/// hidden. A method that only restyles should create the real footnote and let
+/// it be dimmed along with everything else.
+///
+/// The method is asked what it is, via `cover-kind`. A method that does not
+/// answer is read from what it returns, which recognises a plain `hide` but not
+/// one wrapped in a `block` or `place` -- such a method should answer the query
+/// itself. See `cover-kind-query`.
 ///
 /// - self (dictionary): The presentation context.
 ///
 /// -> bool
-#let cover-hides-footnote(self) = {
-  let configured = self.at("cover-hides-footnote", default: auto)
-  if configured == auto {
-    self.methods.cover == hiding-cover
-  } else {
-    configured
-  }
-}
+#let cover-hides-footnote(self) = cover-kind(self.methods.cover) == "hide"
 
 
 /// Extract all method functions from `self` and bind `self` as their first named argument.
@@ -544,24 +380,12 @@
 ///
 /// -> content
 #let current-heading(level: auto, hierachical: true, depth: 9999) = {
-  let heading-selector = {
-    // In normal typst documents, `query(heading)` suffices to select all
-    // headings. When using bundle export, this would result in the headings
-    // of other documents messing up the selection (see #406).
-    // We solve this restricting the `heading` selector to only the current
-    // document, with a trick mentioned in a Typst forum post:
-    // https://forum.typst.app/t/how-to-query-headings-in-current-document/9308
-    // This has the disadvantage that it does not work in "normal" documents
-    // (non-bundle exports), so we make a case distinction.
-
-    let current-and-prev-documents = query(selector(document).before(here()))
-    if current-and-prev-documents.len() > 0 {
-      let current-doc = current-and-prev-documents.last().location()
-      selector(heading).within(current-doc)
-    } else {
-      selector(heading)
-    }
-  }
+  // In normal typst documents, `query(heading)` suffices to select all
+  // headings. When using bundle export, this would result in the headings
+  // of other documents messing up the selection (see #406), so we ask for the
+  // headings of our own document only. `within-current-document` explains why
+  // that needs a case distinction on the export target.
+  let heading-selector = bundle.within-current-document(heading, here())
   let current-page = here().page()
   if not hierachical and level != auto {
     let headings = query(heading-selector).filter(h => (
@@ -589,34 +413,6 @@
   if level == current-level {
     return current-heading
   }
-}
-
-#let reconstruct-heading(it, new-body, ..args) = {
-  assert(
-    type(it) == content and it.func() == heading,
-    message: "it must be a heading",
-  )
-  let heading-args = (
-    numbering: it.numbering,
-    bookmarked: it.bookmarked,
-    depth: it.depth,
-    offset: it.offset,
-    outlined: it.outlined,
-    hanging-indent: it.hanging-indent,
-    supplement: it.supplement,
-  )
-  if args != (:) { heading-args = merge-dicts(heading-args, args.named()) }
-
-  if it.has("label") {
-    return [#heading(
-        ..heading-args,
-        new-body,
-      )#it.label]
-  }
-  heading(
-    ..heading-args,
-    new-body,
-  )
 }
 
 
@@ -959,6 +755,8 @@
       } else {
         it.depth * "=" + " " + markup-text(it.body) + "\n"
       }
+    } else if tree.is-styled(it) {
+      markup-text(it.child)
     } else if it.has("children") {
       it.children.map(markup-text).join()
     } else if it.has("body") {
@@ -997,7 +795,7 @@
     //nice just a multiplication
     to-convert = container-dimension * to-convert
   } else {
-    to-convert = measure(v(to-convert)).height //get in pt if em
+    to-convert = std.measure(v(to-convert)).height //get in pt if em
   }
   to-convert
 }
@@ -1005,7 +803,7 @@
 #let _limit-content-width(width: none, body, container-size) = {
   let mutable-width = width
   if width == none {
-    mutable-width = calc.min(container-size.width, measure(body).width)
+    mutable-width = calc.min(container-size.width, std.measure(body).width)
   } else {
     mutable-width = _size-to-pt(width, container-size.width)
   }
@@ -1079,7 +877,7 @@
       )
 
       //get size of the content when boxed to the prescale width, which is the initial size before scaling, may be different from the container-width
-      let size = measure(boxed-content)
+      let size = std.measure(boxed-content)
       if size.height == 0pt or size.width == 0pt {
         return body
       }
@@ -1102,12 +900,16 @@
 
         let adjust-width(ratio, body, boxed-content, size) = {
           let w-ratio = (
-            measure(scale(
-              ratio,
-              boxed-content,
-              origin: top + left,
-              reflow: true,
-            )).width
+            std
+              .measure(
+                scale(
+                  ratio,
+                  boxed-content,
+                  origin: top + left,
+                  reflow: true,
+                ),
+              )
+              .width
               / size.width
           )
 
@@ -1121,12 +923,14 @@
 
         let adjust-height(ratio, body, boxed-content, size) = {
           let h-ratio = (
-            measure(scale(
-              ratio,
-              boxed-content,
-              origin: top + left,
-              reflow: true,
-            )).height
+            std
+              .measure(scale(
+                ratio,
+                boxed-content,
+                origin: top + left,
+                reflow: true,
+              ))
+              .height
               / size.height
           )
 
@@ -1137,12 +941,14 @@
           ratio *= calc.sqrt(1 / h-ratio)
 
           h-ratio = (
-            measure(scale(
-              ratio,
-              _boxed-content,
-              origin: top + left,
-              reflow: true,
-            )).height
+            std
+              .measure(scale(
+                ratio,
+                _boxed-content,
+                origin: top + left,
+                reflow: true,
+              ))
+              .height
               / size.height
           )
           ratio /= h-ratio
@@ -1163,13 +969,17 @@
         }
         if not force-height {
           //fix the width one last time linearly.
-          let scaled-width = measure(scale(
-            ratio,
-            boxed-content,
-            origin: top + left,
-            reflow: true,
-          )).width
-          let current-box-width = measure(boxed-content).width
+          let scaled-width = std
+            .measure(
+              scale(
+                ratio,
+                boxed-content,
+                origin: top + left,
+                reflow: true,
+              ),
+            )
+            .width
+          let current-box-width = std.measure(boxed-content).width
           boxed-content = box(
             width: current-box-width * (mutable-width / scaled-width),
             body,
@@ -1239,7 +1049,7 @@
   }
 
   layout(layout-size => {
-    let content-width = measure(body).width
+    let content-width = std.measure(body).width
     let width = _size-to-pt(width, layout-size.width)
     if (
       content-width != 0pt
@@ -1262,6 +1072,9 @@
     }
   })
 }
+/// used to break a show rule recursion when covering captions via show rules without reconstructing the content
+#let _caption-covered-label = <touying-caption-covered>
+
 /// true for all typst content that is not inline.
 #let is-block(it) = {
   // whenever sth is wrapped in a box it is automatically inlined.
@@ -1345,11 +1158,11 @@
     return []
   }
   //handle all sorts of weird wrappers and space-like content
-  if body.func() == typst-builtin-styled {
+  if body.func() == tree.typst-builtin-styled {
     // unwrap styled content and re-apply style after covering, to avoid the
     // cover rect being wrapped in the styled element which can cause issues
     // with certain styles (e.g. `set text-color(red)` would make the rect red)
-    return reconstruct-styled(
+    return tree.reconstruct-styled(
       body,
       cover-with-rect(
         self: self,
@@ -1361,11 +1174,11 @@
     )
   }
   //skip space/empty content
-  if body.func() in (parbreak, linebreak, typst-builtin-space, h, v) {
+  if body.func() in (parbreak, linebreak, tree.typst-builtin-space, h, v) {
     return body
   }
   // split up sequences to find actual content types
-  if body.func() == typst-builtin-sequence {
+  if body.func() == tree.typst-builtin-sequence {
     let bodies = body.children
     return bodies
       .map(b => {
@@ -1401,7 +1214,15 @@
     context {
       // Measure a reference character wrapped in par() to pick up show rules
       // like `show par: set text(2em)` that affect rendered text size.
-      let h = measure(par[Xg]).height
+      let h = std
+        .measure(
+          par(text(
+            top-edge: "bounds",
+            bottom-edge: "bounds",
+            [Xg],
+          )),
+        )
+        .height
       strike(
         stroke: 1.6 * h + fill,
         offset: -0.35 * h,
@@ -1419,19 +1240,25 @@
     // a single box won't cause overflow issues.  strike doesn't work on math.
     let to-display = layout(layout-size => {
       context {
-        let new-body-func = if not body.func() in (align, math.equation) {
+        // new-body-func is called as new-body-func([Xg]) to measure reference text
+        // height.  It must accept a content argument — use par as a safe fallback
+        // for math.equation and for elements whose constructor requires non-content
+        // args (image, raw, …).  For those, measuring the body itself is used.
+        let new-body-func = if body.func() == math.equation {
+          par
+        } else if body.has("body") or body.func() == text {
           (body.func())
         } else {
-          par
+          none // image, raw, etc. — measure body directly
         }
 
         let m-body = body
         if body.func() == align {
           m-body = par(body.body)
         }
-        let body-size = measure(m-body)
+        let body-size = std.measure(m-body)
         let bounding-width = calc.min(body-size.width, layout-size.width)
-        let wrapped-body-size = measure(box(m-body, width: bounding-width))
+        let wrapped-body-size = std.measure(box(m-body, width: bounding-width))
 
         let named = cover-args.named()
         if "width" not in named {
@@ -1441,29 +1268,60 @@
           named.insert("height", wrapped-body-size.height)
         }
         if "outset" not in named {
-          // Inline math needs extra outset for superscripts/limits (top)
-          // and subscripts with descenders like g, y, p (bottom)
-          // let math-text-size = measure($X g$).height
-          let real-text-size = measure(new-body-func([Xg])).height
-          let top-outset = if inline { 0.35 * real-text-size } else {
-            0.15 * real-text-size
+          // Only text-like content has ascenders/descenders that extend beyond
+          // the measured bounding box and need outset to be fully covered.
+          // Non-text elements (rect, block, image, …) measure to their true
+          // bounding box, so adding outset would make the cover too tall.
+          let is-text-like-body = (
+            body.func() in (text, math.equation, par, align)
+          )
+          if is-text-like-body {
+            let real-text-size = if new-body-func != none {
+              std.measure(new-body-func([Xg])).height
+            } else {
+              std.measure(body).height
+            }
+            let top-outset = if inline { 0.35 * real-text-size } else {
+              0.15 * real-text-size
+            }
+            let bottom-outset = if inline { 0.65 * real-text-size } else {
+              0.45 * real-text-size
+            }
+            named.insert("outset", (
+              top: top-outset,
+              bottom: bottom-outset,
+              left: 1pt,
+              right: 1pt,
+            ))
+          } else if _contains-text(body, false) {
+            named.insert("outset", if inline { 1pt } else {
+              (top: 1pt, bottom: 2pt, left: 1pt, right: 1pt)
+            })
+          } else {
+            // Nothing with an ascender or a descender in it, so it measures to
+            // its true bounding box and any margin would show as an outline
+            // around the very thing being covered.
+            named.insert("outset", 0pt)
           }
-          let bottom-outset = if inline { 0.65 * real-text-size } else {
-            0.45 * real-text-size
-          }
-          named.insert("outset", (top: top-outset, bottom: bottom-outset))
         }
         if not inline {
-          named.at("width") = layout-size.width
+          // Use the measured content width when available; fall back to the full
+          // layout width when measure returns 0pt (e.g. tiling-fill elements whose
+          // relative width can't resolve inside the measurement context).
+          named.at("width") = if wrapped-body-size.width > 0pt {
+            wrapped-body-size.width
+          } else {
+            layout-size.width
+          }
         }
 
         //calculate the extra required padding on top and bottom bc the non-covered text gives this to the layout, but wrapping text twice in a box kills it.
         // this is required when you switch between non-text block to text block or the size changes, but somehow the spacing gets eaten when two large text blocks follow each other, then this is wrong. but we cannot detect that.
         let extra = if (
-          (body.has("body") and body.body.func() == text)
+          (body.has("body") and body.body != none and body.body.func() == text)
             or body.func() in (align, math.equation)
         ) {
-          ((1.52 * measure(new-body-func([Xg])).height / text.size) - 1)
+          ((1.52 * std.measure(new-body-func([Xg])).height / text.size) - 1)
         } else { 0 }
         let extra-top = (
           extra * if block.above == auto { par.spacing } else { block.above }
@@ -1472,6 +1330,8 @@
           extra * if block.below == auto { par.spacing } else { block.below }
         )
 
+        // Prevent the overlay rect from inheriting outer set rect(stroke: …) rules.
+        named.insert("stroke", none)
         stack(
           spacing: -wrapped-body-size.height,
           if body.func() in (align, place) {
@@ -1530,7 +1390,7 @@
 ///
 /// -> color
 #let update-alpha(color, alpha) = (
-  color.opacify(100%).transparentize(100% - alpha)
+  color.oklch().opacify(100%).transparentize(100% - alpha)
 )
 
 
@@ -1543,96 +1403,645 @@
 /// - body (content): The content to cover.
 ///
 /// -> content
-#let semi-transparent-cover(self: none, alpha: 85%, ..cover-args, body) = {
+#let semi-transparent-cover(
+  self: none,
+  alpha: 85%,
+  is-fallback: false,
+  ..cover-args,
+  body,
+) = {
+  // See `cover-kind`: announce what this method is, so a caller can tell a
+  // painting cover from a recolouring one without inspecting the function.
+  if self == cover-kind-query { return "paint" }
+  if not is-fallback {
+    warning(
+      "Using `semi-transparent-cover` as the main cover method is not recommended as it may produce inconsistent results. Use the `alpha-changing-cover` with its auto fallback instead, which should guarantee a consistent look.",
+    )
+  }
   cover-with-rect(
     ..cover-args,
     fill: update-alpha(
-      self.page.at("fill", default: rgb("#ffffff")),
+      if self == none { rgb("#ffffff") } else {
+        self.page.at("fill", default: rgb("#ffffff"))
+      },
       alpha,
     ),
     body,
   )
 }
 
-/// Cover content with a text-color-changing mechanism.
+// -------------------------------------
+//   Covering content
+// -------------------------------------
+//
+// Both cover methods walk the same tree. They differ in how a colour is
+// derived, and in when they give up and hand an element to `fallback-hide`.
+// `color-changing-cover` overwrites every colour with one flat value, which it
+// can do without ever reading the colour in force, so it makes no `context`
+// call; `alpha-changing-cover` reads the colour that is actually in force and
+// fades it.
+
+/// Elements that paint themselves, and so have a fill or a stroke to cover.
+/// Some of them also carry a body, which is covered in the ordinary way.
+#let _cover-shapes = (
+  rect,
+  square,
+  circle,
+  ellipse,
+  box,
+  block,
+  highlight,
+  underline,
+  overline,
+  strike,
+  table.cell,
+  grid.cell,
+  table.hline,
+  table.vline,
+  grid.hline,
+  grid.vline,
+  line,
+  polygon,
+  curve,
+  math.cancel,
+)
+
+
+/// Rebuild a stroke with a new paint, keeping its geometry.
+///
+/// - map-paint (function): `paint => paint`.
+///
+/// - s (any): The stroke value.
+///
+/// -> any
+#let _restroke(map-paint, s) = {
+  if type(s) == color {
+    map-paint(s)
+  } else if type(s) == stroke {
+    let paint = map-paint(if s.paint == auto { black } else { s.paint })
+    if paint == none { return s }
+    let args = (paint: paint)
+    if s.thickness != auto { args.thickness = s.thickness }
+    if s.cap != auto { args.cap = s.cap }
+    if s.join != auto { args.join = s.join }
+    if s.dash != auto { args.dash = s.dash }
+    if s.miter-limit != auto { args.miter-limit = s.miter-limit }
+    stroke(..args)
+  } else { s }
+}
+
+
+/// The fill a shape inherits when it sets none of its own.
+///
+/// Only meaningful inside `context`, so only the alpha method asks.
+///
+/// - f (function): The element function.
+///
+/// -> any
+#let _inherited-fill(f) = {
+  if f in (rect, square) {
+    rect.fill
+  } else if f in (circle, ellipse) {
+    circle.fill
+  } else if f == box {
+    box.fill
+  } else if f == block {
+    block.fill
+  } else if f == highlight {
+    highlight.fill
+  } else if f == table.cell {
+    table.cell.fill
+  } else if f == grid.cell {
+    grid.cell.fill
+  } else if f in (polygon, curve) {
+    polygon.fill
+  }
+}
+
+
+/// The stroke a shape inherits when it sets none of its own.
+///
+/// - f (function): The element function.
+///
+/// -> any
+#let _inherited-stroke(f) = {
+  if f in (rect, square) {
+    rect.stroke
+  } else if f in (circle, ellipse) {
+    circle.stroke
+  } else if f == box {
+    box.stroke
+  } else if f == block {
+    block.stroke
+  } else if f == line {
+    line.stroke
+  } else if f == underline {
+    underline.stroke
+  } else if f == overline {
+    overline.stroke
+  } else if f == strike {
+    strike.stroke
+  } else if f == table.cell {
+    table.cell.stroke
+  } else if f == grid.cell {
+    grid.cell.stroke
+  } else if f == table.hline {
+    table.hline.stroke
+  } else if f == table.vline {
+    table.vline.stroke
+  } else if f == grid.hline {
+    grid.hline.stroke
+  } else if f == grid.vline {
+    grid.vline.stroke
+  } else if f in (polygon, curve) {
+    polygon.stroke
+  } else if f == math.cancel {
+    math.cancel.stroke
+  }
+}
+
+
+/// Walk `it`, covering as `policy` says.
+///
+/// `method` is the recolouring to apply to a text leaf. It is threaded rather
+/// than read from the policy because it changes on the way down: inside a
+/// `styled` node or a list item, an outer `set text` already handles inherited
+/// colours, so only a leaf that sets its own may be touched again.
+///
+/// The chain is exhaustive and mutually exclusive on purpose. A code block in
+/// Typst joins every expression in it, so a missing `else` emits content twice.
+///
+/// - policy (dictionary): See `color-changing-cover` and
+///   `alpha-changing-cover`, which are the only two that build one.
+///
+/// - method (function): The recolouring for a text leaf.
+///
+/// - it (any): The content to cover.
+///
+/// -> content
+#let _cover-tree(policy, method, it) = {
+  let recurse(m, c) = _cover-tree(policy, m, c)
+  let relabel(it, result) = {
+    let lbl = it.at("label", default: none)
+    if lbl == none { result } else { tree.label-it(result, lbl) }
+  }
+
+  if type(it) != content {
+    it
+  } else if it.func() == text or it.func() == tree.typst-builtin-math-symbol {
+    method(it)
+  } else if tree.is-sequence(it) {
+    it.children.map(c => recurse(method, c)).sum(default: [])
+  } else if tree.is-styled(it) {
+    tree.reconstruct-styled(
+      it,
+      (policy.styled-wrap)(recurse(policy.recolour-explicit, it.child)),
+    )
+  } else if it.func() in _cover-shapes {
+    let fields = it.fields()
+    let _ = fields.remove("label", default: none)
+    let fill = if "fill" in fields { fields.fill } else {
+      (policy.inherited-fill)(it.func())
+    }
+    let painted = fill != none and fill != auto
+    let new-fill = if painted { (policy.map-fill)(fill) }
+    // A fill this policy cannot express, or one it would flatten together with
+    // the content on top of it, goes to the fallback whole.
+    if painted and (new-fill == none or policy.fallback-for-filled) {
+      relabel(it, (policy.fallback)(it))
+    } else {
+      let stroke = if "stroke" in fields { fields.stroke } else {
+        (policy.inherited-stroke)(it.func())
+      }
+      if stroke != none and stroke != auto {
+        fields.stroke = (policy.map-stroke)(stroke)
+      }
+      if new-fill != none { fields.fill = new-fill }
+      // The body goes positionally: most built-in constructors reject `body:`.
+      let body = fields.remove("body", default: none)
+      let result = if body == none {
+        tree.call-with-fields(it.func(), fields)
+      } else {
+        tree.call-with-fields(it.func(), fields, recurse(method, body))
+      }
+      relabel(it, result)
+    }
+  } else if it.func() in (table, grid) {
+    let fields = it.fields()
+    let _ = fields.remove("label", default: none)
+    let children = fields.remove("children")
+    let fill = fields.at("fill", default: none)
+    let new-fill = if fill != none and fill != auto { (policy.map-fill)(fill) }
+    if new-fill != none { fields.fill = new-fill }
+    let stroke = fields.at("stroke", default: none)
+    if stroke != none and stroke != auto {
+      fields.stroke = (policy.map-stroke)(stroke)
+    }
+    let result = (it.func())(
+      ..fields,
+      ..children.map(c => recurse(method, c)),
+    )
+    // A fill the policy could not express stays as it is, so the whole table
+    // has to be covered by the fallback instead.
+    relabel(it, if fill != none and new-fill == none {
+      (policy.fallback)(result)
+    } else { result })
+  } else if it.func() in (list.item, enum.item, terms.item, list, enum, terms) {
+    // The markers are generated, not part of the tree, so they are covered by
+    // the outer `set text` rather than here; explicit-only avoids covering an
+    // explicit colour twice.
+    tree.rebuild(
+      it,
+      tree.children-of(it).map(c => recurse(policy.recolour-explicit, c)),
+    )
+  } else if it.func() == footnote {
+    // A footnote's entry is laid out at the bottom of the page, outside the
+    // scope of the `set text` that covers the flow, so the colour has to
+    // travel with the body instead of being inherited.
+    let body = it.at("body", default: none)
+    tree.rebuild(it, (
+      if type(body) == content {
+        (policy.styled-wrap)(recurse(policy.recolour-explicit, body))
+      } else { body },
+    ))
+  } else if it.func() == figure {
+    let result = tree.rebuild(
+      it,
+      tree.children-of(it).map(c => recurse(method, c)),
+    )
+    // A figure's supplement and counter are generated during layout and never
+    // appear in the tree, so the caption needs a show rule of its own.
+    (policy.caption-wrap)(result)
+  } else if it.func() in (raw, cite, ref) {
+    text(fill: (policy.leaf-fill)(), it)
+  } else if (
+    it.func() in (parbreak, linebreak)
+      or tree.is-space(it)
+      or tree.is-metadata(
+        it,
+      )
+  ) {
+    it
+  } else if tree.children-of(it).len() > 0 {
+    tree.rebuild(it, tree.children-of(it).map(c => recurse(method, c)))
+  } else {
+    (policy.fallback)(it)
+  }
+}
+
+
+/// White at the alpha that fades a shape to the same lightness the covered
+/// text ends up with, so a shape that cannot be recoloured is dimmed to match
+/// rather than left bright or hidden outright.
+///
+/// Reads `text.fill`, so it must be called inside `context`.
+///
+/// - color (color): The colour covered text is forced to.
+///
+/// -> color
+#let _flat-overlay-fill(color) = {
+  let luma-of(c) = {
+    let parts = c.components(alpha: false)
+    if parts.len() == 1 { parts.at(0) } else {
+      0.299 * parts.at(0) + 0.587 * parts.at(1) + 0.114 * parts.at(2)
+    }
+  }
+  let text-luma = if type(text.fill) == std.color { luma-of(text.fill) } else {
+    0%
+  }
+  update-alpha(rgb("#ffffff"), calc.abs(luma-of(color) - text-luma))
+}
+
+
+/// Cover content by forcing every colour to one flat colour.
+///
+/// A compiler-light alternative to `alpha-changing-cover`: it overwrites
+/// colours rather than reading them, so it makes no `context` call.
 ///
 /// Example: `config-methods(cover: utils.color-changing-cover.with(color: gray))`
 ///
-/// - color (color): The color to apply to text when covered. Default is `gray`.
+/// - color (color): The colour to force on covered content. Default is `gray`.
 ///
-/// - fallback-hide (func): The function to use to hide the content if it does not contain text. Default is typst's own `hide`. You may pass `none` to not hide non-text content. To hide content with a semi-transparent/color overlay, you can pass in `semi-transparent-cover`/`cover-with-rect.with(fill: ...)`.
+/// - fallback-for-filled (bool): Whether an element that paints its own background is
+///   handed to `fallback-hide` instead of being recoloured. Flattening such an
+///   element and the content on top of it to a single colour would leave the
+///   content unreadable, so this defaults to `true`. Set it to `false` to
+///   recolour them like everything else. Applies to images, rect, ... so that content is still visible.
 ///
-/// - transparentize-table (bool): Whether to transparentize table content. Default is `false`.
+/// - fallback-hide (func): Applied to what cannot be recoloured, such as
+///   images, and to filled elements while `fallback-for-filled` is on. `auto` overlays
+///   them so they dim to match the recoloured text instead of disappearing.
+///   Pass `none` to leave them untouched.
+///
+/// - fallback-hide-args (dict): Extra named arguments for `fallback-hide`.
 ///
 /// - it (content): The content to cover.
-///
-/// - fallback-hide-args (dict): The named arguments to pass to the fallback hide function if the content does not contain text.
 ///
 /// -> content
 #let color-changing-cover(
   self: none,
   color: gray,
-  fallback-hide: hide,
-  transparentize-table: false,
+  fallback-for-filled: true,
+  fallback-hide: auto,
   fallback-hide-args: (:),
   it,
 ) = {
-  let _fallback-hide = fallback-hide
-  if fallback-hide == none {
-    _fallback-hide = it => it
+  let recolour-fields(fields) = {
+    if "fill" in fields and type(fields.fill) in (std.color, gradient) {
+      fields.fill = color
+    }
+    if (
+      "stroke" in fields and fields.stroke != none and fields.stroke != auto
+    ) {
+      fields.stroke = _restroke(_ => color, fields.stroke)
+    }
+    fields
   }
-  if not _contains-text(it, transparentize-table) {
-    if _fallback-hide in (semi-transparent-cover, cover-with-rect) {
-      _fallback-hide(self: self, it, ..fallback-hide-args)
-    } else {
-      _fallback-hide(it)
+  let rebuild-text(it) = {
+    let fields = it.fields()
+    let lbl = fields.remove("label", default: none)
+    let body = fields.remove("body", default: none)
+    fields = recolour-fields(fields)
+    let result = if body == none { text(..fields) } else {
+      text(..fields, body)
+    }
+    if lbl == none { result } else { tree.label-it(result, lbl) }
+  }
+  let sets-own-colour(it) = {
+    let fields = it.fields()
+    (
+      ("fill" in fields and type(fields.fill) in (std.color, gradient))
+        or (
+          "stroke" in fields and fields.stroke != none and fields.stroke != auto
+        )
+    )
+  }
+  // Leaving a leaf that sets no colour of its own alone matters: wrapping it
+  // in a fresh `text(..)` splits it out of the run it was shaped in, which
+  // moves smart quotes and kerning.
+  let explicit-only(it) = {
+    if it.func() == text and sets-own-colour(it) { rebuild-text(it) } else {
+      it
+    }
+  }
+
+  let policy = (
+    recolour-explicit: explicit-only,
+    styled-wrap: inner => {
+      set text(fill: color)
+      inner
+    },
+    map-fill: value => if type(value) in (std.color, gradient) { color },
+    map-stroke: value => _restroke(_ => color, value),
+    inherited-fill: _ => none,
+    inherited-stroke: _ => none,
+    leaf-fill: () => color,
+    caption-wrap: result => {
+      show figure.caption: set text(fill: color)
+      result
+    },
+    fallback-for-filled: fallback-for-filled,
+  )
+
+  let run(fallback) = {
+    let policy = policy
+    policy.fallback = fallback
+    set text(fill: color)
+    _cover-tree(
+      policy,
+      // A leaf that sets no colour of its own is left exactly as it is: the
+      // `set text` above already reaches it, and wrapping it in anything
+      // splits it out of the run it was shaped in, which moves smart quotes
+      // and kerning.
+      it => if it.func() == text and sets-own-colour(it) {
+        rebuild-text(it)
+      } else { it },
+      it,
+    )
+  }
+
+  if self == cover-kind-query { return "recolour" }
+  // Early exit via `self`: cover the caption of `it` rather than `it` itself.
+  // A caption cannot be covered by rebuilding it -- the supplement and counter
+  // are generated during layout, and rebuilding turns the caption into a block
+  // that breaks away from its supplement -- so it is covered by a show rule
+  // wrapped around the figure instead. The inner rule reaches a colour the
+  // user set inside the caption, which the outer `set` cannot override, and
+  // the metadata marks a run already covered so the rule does not match its
+  // own output.
+  if self == cover-caption-query {
+    return {
+      show figure.caption: _cap => {
+        show tree.typst-builtin-styled: _it => if (
+          not _it.child.has("label")
+            or _it.child.label != _caption-covered-label
+        ) {
+          set text(fill: color)
+          [#_it.child#_caption-covered-label]
+        } else {
+          _it
+        }
+        set text(fill: color)
+        _cap
+      }
+      it
+    }
+  }
+
+  if fallback-hide == none {
+    run(it => it)
+  } else if fallback-hide == auto {
+    // The only `context` this method uses, and the overlay has to be measured
+    // out here: inside `run`, `set text(fill: color)` makes `text.fill` report
+    // the cover colour and the overlay comes out fully transparent.
+    context {
+      let overlay = _flat-overlay-fill(color)
+      run(it => cover-with-rect(
+        fill: overlay,
+        inline: type(it) == content and it.func() == box,
+        it,
+      ))
     }
   } else {
-    show regex(".+"): set text(color)
-    it
+    run(fallback-hide.with(..fallback-hide-args))
   }
 }
 
 
-/// Cover content with an alpha-changing mechanism.
+/// Cover content by fading every colour towards transparency.
+///
+/// Reads the colour actually in force and lowers its alpha, so covered content
+/// keeps its own hues. That costs `context` calls; `color-changing-cover` is
+/// the cheaper option if compile time matters, at the price of a flat look.
+///
+/// Note: this covers ordinary Typst content. Diagram packages such as cetz
+/// paint outside it and are handled by `fallback-hide`.
 ///
 /// Example: `config-methods(cover: utils.alpha-changing-cover.with(alpha: 25%))`
 ///
-/// - alpha (ratio): The opacity to apply to text colors when covered. Default is `25%`.
+/// - alpha (ratio): The opacity to fade covered colours to. Default is `25%`.
 ///
-/// - fallback-hide (func): The function to use to hide the content if it does not contain text. Default is typst's own `hide`. You may pass `none` to not hide non-text content. To hide content with a semi-transparent/color overlay, you can pass in `semi-transparent-cover`/`cover-with-rect.with(fill: ...)`.
+/// - fallback-hide (func): Applied to what cannot be faded, such as images and
+///   tiling fills. `auto` overlays them with `semi-transparent-cover` so they
+///   match the surrounding fade. Pass `none` to leave them untouched.
 ///
-/// - transparentize-table (bool): Whether to transparentize table content. Default is `false`.
+/// - fallback-hide-args (dict): Extra named arguments for `fallback-hide`.
 ///
 /// - it (content): The content to cover.
-///
-/// - fallback-hide-args (args): The arguments to pass to the fallback hide function if the content does not contain text.
 ///
 /// -> content
 #let alpha-changing-cover(
   self: none,
   alpha: 25%,
-  fallback-hide: hide,
-  transparentize-table: false,
+  fallback-hide: auto,
   fallback-hide-args: (:),
   it,
-) = context {
-  let _fallback-hide = fallback-hide
-  if fallback-hide == none {
-    _fallback-hide = it => it
-  }
-
-  if not _contains-text(it, transparentize-table) {
-    if _fallback-hide in (semi-transparent-cover, cover-with-rect) {
-      _fallback-hide(self: self, it, ..fallback-hide-args)
+) = if self == cover-kind-query { "recolour" } else {
+  context {
+    let fallback = if fallback-hide == none {
+      it => it
+    } else if fallback-hide == auto {
+      semi-transparent-cover.with(
+        self: self,
+        alpha: 100% - alpha,
+        is-fallback: true,
+      )
     } else {
-      _fallback-hide(it)
+      fallback-hide.with(..fallback-hide-args)
     }
-  } else {
-    show regex(".+"): el => context {
-      text(update-alpha(text.fill, alpha), el)
+
+    // A gradient has no `fields()`, so it is taken apart and put back together.
+    let fade-gradient(g) = {
+      let stops = g.stops().map(s => (update-alpha(s.first(), alpha), s.last()))
+      let kind = g.kind()
+      if kind == gradient.linear {
+        gradient.linear(
+          ..stops,
+          space: g.space(),
+          relative: g.relative(),
+          angle: g.angle(),
+        )
+      } else if kind == gradient.radial {
+        gradient.radial(
+          ..stops,
+          space: g.space(),
+          relative: g.relative(),
+          center: g.center(),
+          radius: g.radius(),
+          focal-center: g.focal-center(),
+          focal-radius: g.focal-radius(),
+        )
+      } else {
+        gradient.conic(
+          ..stops,
+          space: g.space(),
+          relative: g.relative(),
+          angle: g.angle(),
+          center: g.center(),
+        )
+      }
     }
-    it
+    let fade(value) = {
+      if type(value) == std.color {
+        update-alpha(value, alpha)
+      } else if type(value) == gradient {
+        fade-gradient(value)
+      }
+    }
+
+    let sets-own-colour(it) = {
+      let fields = it.fields()
+      (
+        ("fill" in fields and type(fields.fill) in (std.color, gradient))
+          or (
+            "stroke" in fields
+              and fields.stroke != none
+              and fields.stroke != auto
+          )
+      )
+    }
+    let rebuild-text(it) = {
+      let fields = it.fields()
+      let lbl = fields.remove("label", default: none)
+      let body = fields.remove("body", default: none)
+      if "fill" in fields and type(fields.fill) in (std.color, gradient) {
+        fields.fill = fade(fields.fill)
+      }
+      if (
+        "stroke" in fields and fields.stroke != none and fields.stroke != auto
+      ) {
+        fields.stroke = _restroke(fade, fields.stroke)
+      }
+      let result = if body == none { text(..fields) } else {
+        text(..fields, body)
+      }
+      if lbl == none { result } else { tree.label-it(result, lbl) }
+    }
+    let explicit-only(it) = {
+      if it.func() == text and sets-own-colour(it) { rebuild-text(it) } else {
+        it
+      }
+    }
+
+    let policy = (
+      recolour-explicit: explicit-only,
+      styled-wrap: inner => context {
+        // Read the colour after the wrapper's own rules have applied, then fade
+        // it as the innermost rule, which is the one that wins.
+        set text(
+          fill: if type(text.fill) in (std.color, gradient) {
+            fade(text.fill)
+          } else {
+            text.fill
+          },
+          stroke: if text.stroke == none { text.stroke } else {
+            _restroke(fade, text.stroke)
+          },
+        )
+        inner
+      },
+      map-fill: fade,
+      map-stroke: value => _restroke(fade, value),
+      inherited-fill: _inherited-fill,
+      inherited-stroke: _inherited-stroke,
+      leaf-fill: () => fade(text.fill),
+      caption-wrap: result => context {
+        show figure.caption: set text(fill: fade(text.fill))
+        result
+      },
+      fallback: fallback,
+      fallback-for-filled: false,
+    )
+
+    // Early exit via `self`: see `color-changing-cover` for why a caption is
+    // covered by a show rule around the figure rather than by rebuilding it.
+    if self == cover-caption-query {
+      return {
+        show figure.caption: _cap => {
+          show tree.typst-builtin-styled: _it => if (
+            not _it.child.has("label")
+              or _it.child.label != _caption-covered-label
+          ) {
+            set text(fill: fade(text.fill))
+            [#_it.child#_caption-covered-label]
+          } else {
+            _it
+          }
+          set text(fill: fade(text.fill))
+          _cap
+        }
+        it
+      }
+    }
+
+    set text(fill: fade(text.fill))
+    _cover-tree(
+      policy,
+      it => if it.func() == text and sets-own-colour(it) {
+        rebuild-text(it)
+      } else { it },
+      it,
+    )
   }
 }
 
@@ -1658,463 +2067,89 @@
 // Attribution: This file is based on the code from https://github.com/andreasKroepelin/polylux/blob/main/logic.typ
 // Author: Andreas Kröpelin
 
-#let _parse-subslide-indices(s) = {
-  let parts = s.split(",").map(p => p.trim())
-  let parse-part(part) = {
-    let match-until = part.match(regex("^-([[:digit:]]+)$"))
-    let match-beginning = part.match(regex("^([[:digit:]]+)-$"))
-    let match-range = part.match(regex("^([[:digit:]]+)-([[:digit:]]+)$"))
-    let match-single = part.match(regex("^([[:digit:]]+)$"))
-    if match-until != none {
-      let parsed = int(match-until.captures.first())
-      // assert(parsed > 0, "parsed idx is non-positive")
-      (until: parsed)
-    } else if match-beginning != none {
-      let parsed = int(match-beginning.captures.first())
-      // assert(parsed > 0, "parsed idx is non-positive")
-      (beginning: parsed)
-    } else if match-range != none {
-      let parsed-first = int(match-range.captures.first())
-      let parsed-last = int(match-range.captures.last())
-      // assert(parsed-first > 0, "parsed idx is non-positive")
-      // assert(parsed-last > 0, "parsed idx is non-positive")
-      (beginning: parsed-first, until: parsed-last)
-    } else if match-single != none {
-      let parsed = int(match-single.captures.first())
-      // assert(parsed > 0, "parsed idx is non-positive")
-      parsed
-    } else {
-      panic("failed to parse visible slide idx:" + part)
-    }
-  }
-  parts.map(parse-part)
+
+/// Resolve a visibility spec to a form `check-visible` understands.
+///
+/// `resolved-subslides` is supplied by the `last-subslide` callback at
+/// placement time and already has its `"h"` replaced by the repetitions
+/// counter, so it takes precedence over the spec the user wrote.
+///
+/// - spec (int, array, str, label, dictionary): The spec the caller was given.
+/// - resolved-spec (int, array, str, label, dictionary, none): The
+///   placement-time replacement, or `none` to use `spec`.
+/// -> int | array | str | dictionary
+#let _get-resolved-subslides(self, spec, resolved-spec) = resolve-waypoints(
+  self,
+  if resolved-spec != none { resolved-spec } else { spec },
+)
+
+
+/// Pick the cover function to hide content with: the caller's override when it
+/// gave one, otherwise the theme's cover method bound to `self`.
+///
+/// - cover-fn (function, auto): The caller's override, or `auto`.
+/// -> function
+#let _get-cover-fn(self, cover-fn) = if cover-fn != auto {
+  cover-fn
+} else {
+  self.methods.cover.with(self: self)
 }
 
 
-/// Check if a subslide index is visible given a visibility specification.
+/// Resolve `item-by-item`'s `start` to a concrete subslide number.
 ///
-/// Example: `check-visible(3, "2-")` returns `true`
+/// The forms `start` accepts:
+/// - an int, used directly,
+/// - a label or waypoint marker dictionary, resolved against the waypoint map,
+/// - a string holding exactly one number, parsed as a subslide spec.
 ///
-/// - idx (int): The current subslide index.
+/// A waypoint that resolves to a range yields the range's first subslide, and
+/// one that resolves to nothing at all falls back to 1 so that an unresolved
+/// waypoint still renders rather than aborting the compile.
 ///
-/// - visible-subslides (int, array, str): Specifies which subslides are visible.
-///
-///    Supported formats:
-///
-///    - A single integer, e.g. `3` — only subslide 3.
-///    - An array, e.g. `(1, 2, 4)` — equivalent to `"1, 2, 4"`.
-///    - A string with ranges, e.g. `"-2, 4, 6-8, 10-"` — subslides 1, 2, 4, 6, 7, 8, 10, and all after 10.
-///
-/// -> bool
-#let check-visible(idx, visible-subslides) = {
-  if type(visible-subslides) == int {
-    idx == visible-subslides
-  } else if type(visible-subslides) == array {
-    visible-subslides.any(s => check-visible(idx, s))
-  } else if type(visible-subslides) == str {
-    if visible-subslides.starts-with("!") {
-      // Negation: "!2-4" means everything except subslides 2-4
-      not check-visible(idx, visible-subslides.slice(1))
-    } else {
-      let parts = _parse-subslide-indices(visible-subslides)
-      check-visible(idx, parts)
-    }
+/// - start (int, label, str, dictionary): The starting subslide or waypoint.
+/// -> int
+#let _get-item-by-item-start(self, start) = {
+  if type(start) == int {
+    start
   } else if (
-    type(visible-subslides) == content and visible-subslides.has("text")
-  ) {
-    let parts = _parse-subslide-indices(visible-subslides.text)
-    check-visible(idx, parts)
-  } else if type(visible-subslides) == dictionary {
-    let kind = visible-subslides.at("kind", default: none)
-    if kind == "not" {
-      // Negation: visible everywhere except where inner is visible.
-      not check-visible(idx, visible-subslides.inner)
-    } else {
-      let lower-okay = if "beginning" in visible-subslides {
-        visible-subslides.beginning <= idx
-      } else {
-        true
-      }
-
-      let upper-okay = if "until" in visible-subslides {
-        visible-subslides.until >= idx
-      } else {
-        true
-      }
-
-      lower-okay and upper-okay
-    }
-  } else {
-    panic(
-      "you may only provide a single integer, an array of integers, or a string, got:"
-        + repr(visible-subslides),
-    )
-  }
-}
-
-
-/// Look up a waypoint label (with hierarchical prefix matching).
-///
-/// When looking up `<top>`, this also matches any child labels like
-/// `<top:sub>`, `<top:sub:deep>`, etc.  The returned range spans from
-/// the earliest `first` to the latest `last` across all matches.
-///
-/// Returns `(first: int, last: int)` or `none` when the label is unknown.
-#let _lookup-waypoint-range(waypoints, lbl-str) = {
-  let prefix = lbl-str + ":"
-  let matches = waypoints
-    .pairs()
-    .filter(p => p.at(0) == lbl-str or p.at(0).starts-with(prefix))
-  if matches.len() > 0 {
-    let first = calc.min(..matches.map(p => p.at(1).first))
-    let last = calc.max(..matches.map(p => p.at(1).last))
-    (first: first, last: last)
-  } else {
-    none
-  }
-}
-
-
-/// Resolve a (possibly shifted) waypoint reference to a concrete label string.
-///
-/// Handles nested `prev-wp` / `next-wp` chains by walking to adjacent
-/// waypoints in subslide order.  Returns `none` during a waypoint pre-pass
-/// when the label cannot be resolved.
-#let _resolve-waypoint-label(waypoints, wp, prepass: false) = {
-  if type(wp) == str {
-    wp
-  } else if type(wp) == label {
-    str(wp)
-  } else if type(wp) == dictionary {
-    let kind = wp.at("kind", default: none)
-    if kind in ("touying-waypoint-prev", "touying-waypoint-next") {
-      let base = _resolve-waypoint-label(waypoints, wp.inner, prepass: prepass)
-      if base == none { return none }
-      // Build sorted label list by first-subslide
-      let sorted = waypoints.pairs().sorted(key: p => p.at(1).first)
-      let labels = sorted.map(p => p.at(0))
-      let idx = labels.position(l => l == base)
-      // If no exact match, try hierarchical prefix match (e.g. <parent>
-      // when only <parent:a>, <parent:b> exist).  Directional: next-wp
-      // anchors to the last child (to skip past the group), prev-wp
-      // anchors to the first child (to land before the group).
-      // When an exact parent label exists, it is used directly.
-      if idx == none {
-        let prefix = base + ":"
-        let children = labels
-          .enumerate()
-          .filter(p => p.at(1).starts-with(prefix))
-        if children.len() > 0 {
-          idx = if kind == "touying-waypoint-next" {
-            children.last().at(0)
-          } else {
-            children.first().at(0)
-          }
-        }
-      }
-      if idx == none {
-        if prepass { return none }
-        assert(false, message: "Unknown waypoint label: <" + base + ">")
-      }
-      let amount = wp.at("amount", default: 1)
-      let step = if kind == "touying-waypoint-prev" { -amount } else { amount }
-      let new-idx = idx + step
-      if new-idx < 0 or new-idx >= labels.len() {
-        if prepass { return none }
-        let dir = if kind == "touying-waypoint-prev" { "previous" } else {
-          "next"
-        }
-        assert(
-          false,
-          message: "No "
-            + dir
-            + " waypoint "
-            + str(amount)
-            + " step(s) from <"
-            + base
-            + ">",
-        )
-      }
-      labels.at(new-idx)
-    } else if kind in ("touying-waypoint-first", "touying-waypoint-last") {
-      // get-first / get-last — extract embedded label
-      wp.label
-    } else if kind in ("touying-waypoint-from", "touying-waypoint-until") {
-      // from-wp / until-wp — recurse into inner
-      _resolve-waypoint-label(waypoints, wp.inner, prepass: prepass)
-    } else {
-      if prepass { return none }
-      panic("Cannot resolve waypoint label from " + repr(wp))
-    }
-  } else {
-    if prepass { return none }
-    panic("Cannot resolve waypoint label from " + repr(wp))
-  }
-}
-
-
-/// Resolve waypoint labels in a visible-subslides specification.
-///
-/// Recursively replaces label references and waypoint marker dictionaries
-/// (`get-first`, `get-last`, `from-wp`, `until-wp`, `prev-wp`, `next-wp`) with
-/// their resolved subslide numbers / ranges using the waypoint mapping from
-/// `self.waypoints`.
-///
-/// Supports hierarchical labels: if `<part>` is not an exact match, all
-/// waypoints whose name starts with `part:` are combined into a single range.
-///
-/// When an array contains `from-wp` / `until-wp` markers the elements are
-/// combined into a bounded range (min of beginnings, max of ends):
-/// `(from-wp(<a>), until-wp(<b>))` yields the range from `<a>` to just before `<b>`.
-///
-/// - self (dictionary): The presentation context containing `waypoints`.
-///
-/// - visible-subslides: The visible-subslides specification to resolve.
-///
-/// -> int | str | array | dictionary
-#let resolve-waypoints(self, visible-subslides) = {
-  let waypoints = self.at("waypoints", default: (:))
-  let prepass = self.at("_waypoint-prepass", default: false)
-
-  // --- label ----------------------------------------------------------
-  if type(visible-subslides) == label {
-    let lbl = str(visible-subslides)
-    let range = _lookup-waypoint-range(waypoints, lbl)
-    if range == none {
-      if prepass { return (beginning: 1, until: 1) }
-      assert(false, message: "Unknown waypoint label: <" + lbl + ">")
-    }
-    (beginning: range.first, until: range.last)
-
-    // --- dictionary (waypoint markers) ----------------------------------
-  } else if type(visible-subslides) == dictionary {
-    let kind = visible-subslides.at("kind", default: none)
-
-    if kind == "touying-waypoint-first" {
-      let lbl = visible-subslides.label
-      let range = _lookup-waypoint-range(waypoints, lbl)
-      if range == none {
-        if prepass { return 1 }
-        assert(false, message: "Unknown waypoint label: <" + lbl + ">")
-      }
-      range.first
-    } else if kind == "touying-waypoint-last" {
-      let lbl = visible-subslides.label
-      let range = _lookup-waypoint-range(waypoints, lbl)
-      if range == none {
-        if prepass { return 1 }
-        assert(false, message: "Unknown waypoint label: <" + lbl + ">")
-      }
-      range.last
-    } else if kind == "touying-waypoint-from" {
-      let inner = visible-subslides.inner
-      let inner-kind = if type(inner) == dictionary {
-        inner.at("kind", default: none)
-      } else { none }
-      if inner-kind in ("touying-waypoint-first", "touying-waypoint-last") {
-        // Resolve get-first/get-last to a concrete subslide number
-        let resolved = resolve-waypoints(self, inner)
-        (beginning: resolved)
-      } else {
-        let lbl = _resolve-waypoint-label(
-          waypoints,
-          inner,
-          prepass: prepass,
-        )
-        if lbl == none {
-          if prepass { return (beginning: 1) }
-          assert(
-            false,
-            message: "Cannot resolve waypoint reference in from-wp()",
-          )
-        }
-        let range = _lookup-waypoint-range(waypoints, lbl)
-        if range == none {
-          if prepass { return (beginning: 1) }
-          assert(false, message: "Unknown waypoint label: <" + lbl + ">")
-        }
-        (beginning: range.first)
-      }
-    } else if kind == "touying-waypoint-until" {
-      let inner = visible-subslides.inner
-      let inner-kind = if type(inner) == dictionary {
-        inner.at("kind", default: none)
-      } else { none }
-      if inner-kind in ("touying-waypoint-first", "touying-waypoint-last") {
-        // Resolve get-first/get-last to a concrete subslide number
-        let resolved = resolve-waypoints(self, inner)
-        (until: resolved - 1)
-      } else {
-        let lbl = _resolve-waypoint-label(
-          waypoints,
-          inner,
-          prepass: prepass,
-        )
-        if lbl == none {
-          if prepass { return (until: 1) }
-          assert(
-            false,
-            message: "Cannot resolve waypoint reference in until-wp()",
-          )
-        }
-        let range = _lookup-waypoint-range(waypoints, lbl)
-        if range == none {
-          if prepass { return (until: 1) }
-          assert(false, message: "Unknown waypoint label: <" + lbl + ">")
-        }
-        (until: range.first - 1)
-      }
-    } else if kind in ("touying-waypoint-prev", "touying-waypoint-next") {
-      let lbl = _resolve-waypoint-label(
-        waypoints,
-        visible-subslides,
-        prepass: prepass,
+    type(start) == label
+      or (
+        type(start) == dictionary and start.at("kind", default: none) != none
       )
-      if lbl == none {
-        if prepass { return (beginning: 1, until: 1) }
-        assert(
-          false,
-          message: "Cannot resolve shifted waypoint reference",
-        )
-      }
-      let range = _lookup-waypoint-range(waypoints, lbl)
-      if range == none {
-        if prepass { return (beginning: 1, until: 1) }
-        assert(false, message: "Unknown waypoint label: <" + lbl + ">")
-      }
-      (beginning: range.first, until: range.last)
-    } else if kind == "touying-waypoint-not" {
-      // Negate: resolve inner waypoint to a range, then wrap for check-visible.
-      let inner = visible-subslides.inner
-      let inner-kind = if type(inner) == dictionary {
-        inner.at("kind", default: none)
-      } else { none }
-      if inner-kind != none {
-        // Inner is another waypoint marker — resolve it first.
-        let resolved = resolve-waypoints(self, inner)
-        (kind: "not", inner: resolved)
-      } else {
-        // Inner is a plain label string — look up its range directly.
-        let lbl = _resolve-waypoint-label(waypoints, inner, prepass: prepass)
-        if lbl == none {
-          if prepass { return (kind: "not", inner: (beginning: 1, until: 1)) }
-          assert(
-            false,
-            message: "Cannot resolve waypoint reference in not-wp()",
-          )
-        }
-        let range = _lookup-waypoint-range(waypoints, lbl)
-        if range == none {
-          if prepass { return (kind: "not", inner: (beginning: 1, until: 1)) }
-          assert(false, message: "Unknown waypoint label: <" + lbl + ">")
-        }
-        (kind: "not", inner: (beginning: range.first, until: range.last))
-      }
+  ) {
+    let resolved = resolve-waypoints(self, start)
+    if type(resolved) == int {
+      resolved
+    } else if type(resolved) == dictionary and "beginning" in resolved {
+      resolved.beginning
+    } else if type(resolved) == dictionary and "first" in resolved {
+      resolved.first
     } else {
-      visible-subslides
-    }
-
-    // --- array ----------------------------------------------------------
-  } else if type(visible-subslides) == array {
-    // If the array contains from/until range markers, span the full range.
-    let has-range-markers = visible-subslides.any(s => (
-      type(s) == dictionary
-        and s.at("kind", default: "")
-          in ("touying-waypoint-from", "touying-waypoint-until")
-    ))
-    if has-range-markers {
-      // Range construction: combine from/until markers into a single range.
-      // Multiple `from-wp`s → take earliest (min); multiple `until-wp`s → take latest (max).
-      // This spans the whole duration from the first `from-wp` to the last `until-wp`.
-      let resolved = visible-subslides.map(s => resolve-waypoints(self, s))
-      let beginning = none
-      let end = none
-      for r in resolved {
-        if type(r) == dictionary {
-          if "beginning" in r {
-            beginning = if beginning == none {
-              r.beginning
-            } else {
-              calc.min(beginning, r.beginning)
-            }
-          }
-          if "until" in r {
-            end = if end == none { r.until } else { calc.max(end, r.until) }
-          }
-        }
-      }
-      let result = (:)
-      if beginning != none {
-        result.insert("beginning", beginning)
-      }
-      if end != none {
-        result.insert("until", end)
-      }
-      result
-    } else {
-      visible-subslides.map(s => resolve-waypoints(self, s))
-    }
-
-    // --- pass-through (int, str, etc.) ----------------------------------
-  } else {
-    visible-subslides
-  }
-}
-
-
-#let last-required-subslide(visible-subslides) = {
-  if type(visible-subslides) == label {
-    // Labels are resolved at render time; the pauses that define waypoints
-    // already contribute to the repetitions count.  Return 1 (not 0) so that
-    // the parser's two-pass escape hatch (next-last-subslide > 0) recognises
-    // that a fn-wrapper exists inside a nested sequence.  A value of 1 never
-    // inflates the repeat count because repetitions is always >= 1.
-    1
-  } else if type(visible-subslides) == int {
-    visible-subslides
-  } else if type(visible-subslides) == array {
-    calc.max(..visible-subslides.map(s => last-required-subslide(s)))
-  } else if type(visible-subslides) == str {
-    if visible-subslides.starts-with("!") {
-      // Negation cannot introduce new subslides, only use existing ones.
-      0
-    } else {
-      let parts = _parse-subslide-indices(visible-subslides)
-      last-required-subslide(parts)
-    }
-  } else if type(visible-subslides) == dictionary {
-    let kind = visible-subslides.at("kind", default: none)
-    if (
-      kind
-        in (
-          "touying-waypoint-first",
-          "touying-waypoint-last",
-          "touying-waypoint-from",
-          "touying-waypoint-until",
-          "touying-waypoint-prev",
-          "touying-waypoint-next",
-          "touying-waypoint-not",
-        )
-    ) {
-      // Will be resolved at render time; pauses determine repeat count.
-      // Return 1 (not 0) so fn-wrapper escape hatch triggers (see label branch).
       1
+    }
+  } else if type(start) == str {
+    let parts = _parse-subslide-indices(start)
+    if parts.len() == 1 and type(parts.first()) == int {
+      parts.first()
     } else {
-      let last = 0
-      if "beginning" in visible-subslides {
-        last = calc.max(last, visible-subslides.beginning)
-      }
-      if "until" in visible-subslides {
-        last = calc.max(last, visible-subslides.until)
-      }
-      last
+      panic(
+        "item-by-item: `start` string must be a single number (e.g. \"3\"), "
+          + "not a range or multi-value spec. Got: \""
+          + start
+          + "\".",
+      )
     }
   } else {
     panic(
-      "you may only provide `auto`, a single integer, an array of integers, a string or a waypoint label or marker",
+      "item-by-item: `start` must be an integer, a string with a single number, "
+        + "a waypoint label, or a single-position waypoint marker "
+        + "(get-first, get-last, prev-wp, next-wp). Got: "
+        + str(type(start)),
     )
   }
 }
+
 
 /// Take effect in some subslides.
 ///
@@ -2149,10 +2184,11 @@
   if is-method {
     fn
   } else {
-    let visible-subslides = if resolved-subslides != none {
-      resolved-subslides
-    } else { visible-subslides }
-    let visible-subslides = resolve-waypoints(self, visible-subslides)
+    let visible-subslides = _get-resolved-subslides(
+      self,
+      visible-subslides,
+      resolved-subslides,
+    )
     if check-visible(self.subslide, visible-subslides) {
       fn(cont)
     } else {
@@ -2198,13 +2234,12 @@
   cover-fn: auto,
   resolved-subslides: none,
 ) = {
-  let visible-subslides = if resolved-subslides != none {
-    resolved-subslides
-  } else { visible-subslides }
-  let visible-subslides = resolve-waypoints(self, visible-subslides)
-  let cover = if cover-fn != auto { cover-fn } else {
-    self.methods.cover.with(self: self)
-  }
+  let visible-subslides = _get-resolved-subslides(
+    self,
+    visible-subslides,
+    resolved-subslides,
+  )
+  let cover = _get-cover-fn(self, cover-fn)
   if check-visible(self.subslide, visible-subslides) {
     uncover-cont
   } else {
@@ -2247,35 +2282,162 @@
   only-cont,
   resolved-subslides: none,
 ) = {
-  let visible-subslides = if resolved-subslides != none {
-    resolved-subslides
-  } else { visible-subslides }
-  let visible-subslides = resolve-waypoints(self, visible-subslides)
+  let visible-subslides = _get-resolved-subslides(
+    self,
+    visible-subslides,
+    resolved-subslides,
+  )
   if check-visible(self.subslide, visible-subslides) {
     only-cont
   }
 }
 
 
-/// Display content only in handout mode.
-/// Don't reserve space when hidden, content is completely not existing there.
+/// Runtime half of `#animate` — see its docstring for the model. Called
+/// through `touying-fn-wrapper`, so it receives `self` and can read
+/// `self.subslide` and the slide's waypoints.
 ///
-/// Example:
+/// - effects (array): Normalized effect entries, each a dictionary with
+///   `effect`, `subslides` and `priority` keys.
 ///
-/// ```typst
-/// #handout-only[This content is only visible in handout mode.]
-/// ```
+/// - body (content): The content being animated.
 ///
-/// - cont (content): The content to display in handout mode.
+/// - alignment (alignment): Where `body` itself sits inside the reserved box,
+///   when one is needed. Each swap carries its own alignment.
+
+///
+/// - resolved-subslides (array, none): Per-effect specs with `"h"` already
+///   substituted, supplied by the `last-subslide` callback at placement time.
 ///
 /// -> content
-#let handout-only(self: none, cont) = {
-  if self.handout {
+#let animate(
+  self: none,
+  effects: (),
+  alignment: top + left,
+  resolved-subslides: none,
+  body,
+) = {
+  // Each effect's spec, resolved once. `resolved-subslides`, when present,
+  // runs parallel to `effects` and carries each spec with its "h" already
+  // replaced by the placement-time repetitions counter.
+  let specs = effects
+    .enumerate()
+    .map(((i, eff)) => _get-resolved-subslides(
+      self,
+      eff.subslides,
+      if resolved-subslides != none { resolved-subslides.at(i) } else { none },
+    ))
+
+  // What applies at subslide `idx`: the one winning placement, and the styles
+  // to nest around it. Both come back tagged with the index of the effect they
+  // came from, so that a configuration can be identified without comparing
+  // content.
+  let resolve-at(idx) = {
+    let active = effects
+      .enumerate()
+      .filter(((i, _)) => check-visible(idx, specs.at(i)))
+
+    // Placements are resolved, never composed: the cover method is `hide`,
+    // which is not a style node, and "remove" drops the content outright, so
+    // nothing nested inside either could undo it. The implicit default sits at
+    // priority 0 and effects default to priority 1, so writing any placement
+    // at all replaces it; among the rest the highest priority wins, ties going
+    // to the last one written.
+    let winner = active
+      .filter(((_, eff)) => _is-placement(eff.effect))
+      .fold((-1, (effect: "show", priority: 0)), (best, it) => {
+        if it.last().priority >= best.last().priority { it } else { best }
+      })
+
+    // Styles all apply, nesting innermost-first. Reversed before grouping, so
+    // that within one priority the *last* style written ends up innermost and
+    // therefore wins any property the two of them both set - matching the way
+    // a later placement wins its own tie. Grouped by priority explicitly
+    // rather than sorted, so the within-priority order does not depend on
+    // `array.sorted` being stable.
+    let style-entries = active
+      .filter(((_, eff)) => not _is-placement(eff.effect))
+      .rev()
+    let styles = ()
+    for p in style-entries.map(((_, eff)) => eff.priority).dedup().sorted() {
+      styles += style-entries.filter(((_, eff)) => eff.priority == p)
+    }
+    (winner, styles)
+  }
+
+  let apply-styles(styles, cont) = {
+    for (_, eff) in styles {
+      cont = (eff.effect)(cont, self: self)
+    }
     cont
   }
+
+  // The content a configuration puts on the page, or `none` where it puts
+  // nothing. `reserving-only` additionally drops what does not lay claim to
+  // space: a swap only reserves when it asks to stretch.
+  let render(config, reserving-only: false) = {
+    let ((_, winner), styles) = config
+    let eff = winner.effect
+    if eff == "remove" {
+      none
+    } else if _is-swap(eff) {
+      if reserving-only and not eff.stretch {
+        none
+      } else {
+        (apply-styles(styles, eff.body), eff.alignment)
+      }
+    } else if eff == "cover" {
+      ((self.methods.cover)(self: self, apply-styles(styles, body)), alignment)
+    } else {
+      (apply-styles(styles, body), alignment)
+    }
+  }
+
+  let here = render(resolve-at(self.subslide))
+
+  // Measuring costs a `context` and a pass over the slide's subslides, so it
+  // only happens once some swap actually asks to stretch. Everything else —
+  // show, cover, remove, and swaps that let the layout reflow — needs no
+  // reserved size at all: the cover method already preserves layout by itself.
+  if not effects.any(eff => _is-swap(eff.effect) and eff.effect.stretch) {
+    if here != none { here.first() }
+  } else if here == none {
+    // Removed here, so nothing to place — the reservation is moot.
+  } else {
+    context {
+      // Walk the slide's subslides and measure what each *distinct*
+      // configuration reserves. Distinct is by which effects are in play, not
+      // by the content they produce, so a style that is active across five
+      // subslides is measured once. Measuring the styled result (rather than
+      // the bare body) is the point: a style that changes the size would
+      // otherwise be left out of the reservation it belongs in.
+      let seen = ()
+      let sizes = ()
+      for idx in range(1, calc.max(self.at("repeat", default: 1), 1) + 1) {
+        let config = resolve-at(idx)
+        let ((wi, _), styles) = config
+        let key = (wi,) + styles.map(((i, _)) => i)
+        if key in seen {
+          continue
+        }
+        seen.push(key)
+        let reserved = render(config, reserving-only: true)
+        if reserved != none {
+          sizes.push(std.measure(reserved.first()))
+        }
+      }
+      if sizes.len() == 0 {
+        here.first()
+      } else {
+        box(
+          width: calc.max(..sizes.map(sz => sz.width)),
+          height: calc.max(..sizes.map(sz => sz.height)),
+          align(here.last(), here.first()),
+        )
+      }
+    }
+  }
 }
-
-
 
 
 /// `#alternatives` has a couple of "cousins" that might be more convenient in some situations. The first one is `#alternatives-match` that has a name inspired by match-statements in many functional programming languages. The idea is that you give it a dictionary mapping from subslides to content:
@@ -2317,7 +2479,7 @@
 
   if stretch {
     context {
-      let sizes = contents.map(c => measure(c))
+      let sizes = contents.map(c => std.measure(c))
       let max-width = calc.max(..sizes.map(sz => sz.width))
       let max-height = calc.max(..sizes.map(sz => sz.height))
       for (i, (_, content)) in subslides-contents.enumerate() {
@@ -2464,64 +2626,198 @@
     fn = (idx, it) => it
   }
   let cover = self.methods.cover.with(self: self)
-  let item-funcs = (list.item, enum.item, terms.item)
+  let start = _get-item-by-item-start(self, start)
 
-  // Resolve waypoint-based start to a concrete subslide number.
-  let start = if type(start) == int {
-    start
-  } else if (
-    type(start) == label
-      or (
-        type(start) == dictionary and start.at("kind", default: none) != none
-      )
-  ) {
-    let resolved = resolve-waypoints(self, start)
-    if type(resolved) == int {
-      resolved
-    } else if type(resolved) == dictionary and "beginning" in resolved {
-      resolved.beginning
-    } else if type(resolved) == dictionary and "first" in resolved {
-      resolved.first
-    } else {
-      1
-    }
-  } else if type(start) == str {
-    let parts = _parse-subslide-indices(start)
-    if parts.len() == 1 and type(parts.first()) == int {
-      parts.first()
-    } else {
-      panic(
-        "item-by-item: `start` string must be a single number (e.g. \"3\"), "
-          + "not a range or multi-value spec. Got: \""
-          + start
-          + "\".",
-      )
-    }
-  } else {
-    panic(
-      "item-by-item: `start` must be an integer, a string with a single number, "
-        + "a waypoint label, or a single-position waypoint marker "
-        + "(get-first, get-last, prev-wp, next-wp). Got: "
-        + type(start),
+  if tree.is-styled(cont) {
+    return tree.reconstruct-styled(
+      cont,
+      item-by-item-fn(self: self, start: start, fn, cont.child),
     )
   }
 
-  if is-sequence(cont) {
-    // Markup list/enum/terms: items appear as list.item/enum.item/terms.item in a sequence
-    let item-count = 0
-    let result = ()
-    for child in cont.children {
-      if type(child) == content and child.func() in item-funcs {
-        if check-visible(self.subslide, (beginning: start + item-count)) {
-          result.push(fn(start + item-count - self.subslide, child))
-        } else {
-          result.push(fn(start + item-count - self.subslide, cover(child)))
+  // Covering an item costs its container two things, and each is corrected
+  // below. `cover-hidden` in `core/parser.typ` corrects the same two on the
+  // `#pause` path.
+  //
+  // A covered item stops being laid out as a row, so the container loses that
+  // row's height and everything below creeps upwards as items are revealed.
+  //
+  // A non-tight container additionally loses its wider pitch, because the
+  // parbreak that widened it only counts while the run is in one piece.
+  //
+  // Both corrections apply per segment: the consecutive items of one run that
+  // are either all covered or all visible. Revealing an item splits a run into
+  // two segments, which is what has to be stitched back to the layout the run
+  // had in one piece.
+  if tree.is-sequence(cont) {
+    let meaningful = cont.children.filter(c => c not in tree.empty-contents)
+
+    if (
+      meaningful.len() == 1
+        and (
+          tree.is-styled(meaningful.first())
+            or tree.is-sequence(
+              meaningful.first(),
+            )
+        )
+    ) {
+      // A `#set` at the top of the body leaves the items inside a lone
+      // `styled` child; animate that instead of treating it as one item.
+      let inner = item-by-item-fn(
+        self: self,
+        start: start,
+        fn,
+        meaningful.first(),
+      )
+      let at = cont.children.position(c => c not in tree.empty-contents)
+
+      return cont
+        .children
+        .enumerate()
+        .map(((i, c)) => if i == at { inner } else { c })
+        .sum(default: [])
+    }
+    // The runs Typst will gather this body's items into.
+    let runs = tree.get-list-like-runs-among(cont.children)
+
+    // Which run each item belongs to and its 1-based position in it, keyed by
+    // the item's index in `cont.children`.
+    let placement = (:)
+    for run in runs {
+      let rank = 0
+      for index in range(run.start, run.end) {
+        if tree.is-list-like-item(cont.children.at(index)) {
+          rank += 1
+          placement.insert(str(index), (run: run, rank: rank))
         }
-        item-count += 1
-      } else {
-        result.push(fn(start + item-count - self.subslide, child))
       }
     }
+
+    // Cover a segment and hand back a block that reserves the rows its items
+    // would have occupied.
+    let build-covered-block-with-row-gaps(
+      items,
+      run,
+      first-number,
+      opens-container: false,
+    ) = {
+      // A container of one item has no row gap to preserve.
+      if run.items.len() == 1 {
+        return (block(cover(items.sum())),)
+      }
+      let body = if run.tight {
+        items.sum()
+      } else {
+        // Rebuilt as its own container, so `first-number` is where an enum
+        // keeps counting from.
+        tree.build-list-like-from(
+          items,
+          tight: false,
+          first-number: first-number,
+        )
+      }
+      // The row gap reads the active styles, so only a context can resolve it.
+      (
+        context {
+          let gap = tree.get-row-spacing-of-list-like(
+            run.kind,
+            tight: run.tight,
+          )
+          block(
+            // A segment that opens a container is separated from what
+            // precedes it by paragraph spacing rather than a row gap.
+            above: if opens-container { par.spacing } else { gap },
+            below: gap,
+            cover(body),
+          )
+        },
+      )
+    }
+
+    // The segment being gathered, and where its finished content accumulates.
+    let empty-segment = (items: (), covered: false, run: none, first-number: 1)
+
+    let result = ()
+    let item-count = 0
+    let current = empty-segment
+    let preceding-run = none
+
+    // A finished segment as the content it contributes: covered segments need a
+    // reserving block, visible ones only a container when the run is non-tight.
+    let emit(segment, preceding-run) = {
+      let run = segment.run
+      if segment.covered {
+        build-covered-block-with-row-gaps(
+          segment.items,
+          run,
+          segment.first-number,
+          opens-container: preceding-run != none
+            and preceding-run.start != run.start,
+        )
+      } else if run.tight {
+        segment.items
+      } else {
+        (
+          tree.build-list-like-from(
+            segment.items,
+            tight: false,
+            first-number: segment.first-number,
+          ),
+        )
+      }
+    }
+
+    // Walk the children, closing a segment wherever its run or its visibility
+    // changes and passing everything that is not an item straight through.
+    for (index, child) in cont.children.enumerate() {
+      let place = placement.at(str(index), default: none)
+      let run = if place == none { none } else { place.run }
+      let is-covered = (
+        run != none
+          and not check-visible(self.subslide, (beginning: start + item-count))
+      )
+      let continues-segment = (
+        run != none
+          and current.items.len() != 0
+          and current.run.start == run.start
+          and current.covered == is-covered
+      )
+
+      if not continues-segment and current.items.len() != 0 {
+        result += emit(current, preceding-run)
+        preceding-run = current.run
+        current = empty-segment
+      }
+
+      let styled = fn(start + item-count - self.subslide, child)
+
+      // Not an item: it passes through, and may end the container.
+      if run == none {
+        // A parbreak holds a non-tight container together, so the run before it
+        // is still what a later segment continues. Anything else ends it.
+        if not tree.is-space(child) and not tree.is-parbreak(child) {
+          preceding-run = none
+        }
+        result.push(styled)
+        continue
+      }
+
+      // An item: it opens the segment if there is none, then joins it.
+
+      if current.items.len() == 0 {
+        current.run = run
+        current.covered = is-covered
+        current.first-number = place.rank
+      }
+      current.items.push(styled)
+      item-count += 1
+    }
+
+    // The last segment has no following child to close it.
+    if current.items.len() != 0 {
+      result += emit(current, preceding-run)
+    }
+
     result.sum(default: [])
   } else if cont.func() == list or cont.func() == enum {
     // Programmatic list/enum container
@@ -2532,10 +2828,14 @@
         if check-visible(self.subslide, (beginning: start + idx)) {
           fn(start + idx - self.subslide, item)
         } else {
-          reconstruct(item, fn(start + idx - self.subslide, cover(item.body)))
+          tree.rebuild(item, (
+            fn(start + idx - self.subslide, cover(
+              item.body,
+            )),
+          ))
         }
       })
-    reconstruct-table-like(cont, new-items)
+    tree.reconstruct-table-like(cont, new-items)
   } else if cont.func() == terms {
     // Programmatic terms container
     let new-items = cont
@@ -2545,13 +2845,13 @@
         if check-visible(self.subslide, (beginning: start + idx)) {
           fn(start + idx - self.subslide, item)
         } else {
-          terms.item(
+          tree.rebuild(item, (
             fn(start + idx - self.subslide, cover(item.term)),
             fn(start + idx - self.subslide, cover(item.description)),
-          )
+          ))
         }
       })
-    reconstruct-table-like(cont, new-items)
+    tree.reconstruct-table-like(cont, new-items)
   } else {
     // Fallback: show content as-is
     cont
@@ -2631,8 +2931,9 @@
     default: none,
   )
   assert(
-    show-notes-on-second-screen in (none, bottom, right),
-    message: "`show-notes-on-second-screen` should be `none`, `bottom` or `right`",
+    show-notes-on-second-screen in (none, top, bottom, left, right),
+    message: "`show-notes-on-second-screen` should be `none`, `top`, `bottom`, "
+      + "`left` or `right`",
   )
   let is-visible = (
     subslide == none
@@ -2755,6 +3056,131 @@
   mapping.at(text.lang, default: mapping.en)
 }
 
+/// Every name Typst knows is parsed; a single word it does not know becomes a
+/// string, so shell-friendly input needs no quoting.
+///
+/// "Knows" means a `std` binding (`red`, `left`, `calc`, ..), one of the keywords
+/// that are not bindings (`true`, `false`, `none`, `auto`), or a number, with or
+/// without a unit. Everything else that is a single bare word - letters, digits,
+/// `_` and `-` - is returned verbatim; anything else at all goes through `eval`.
+#let _std-names = dictionary(std).keys()
+
+#let _parse-input(value) = {
+  if value == none {
+    return none
+  }
+  let known = (
+    value in _std-names
+      or value in ("true", "false", "none", "auto")
+      or value.match(
+        regex("^-?\\d+(\\.\\d+)?(e-?\\d+)?(pt|mm|cm|in|em|deg|rad|fr|%)?$"),
+      )
+        != none
+  )
+  if not known and value.match(regex("^[\\p{L}\\p{N}_\\-]+$")) != none {
+    return value
+  }
+  eval(value)
+}
+
+/// *Returns input given to the compiler.*
+///
+/// Anything Typst knows is parsed as Typst: `red` is a colour, `left` an alignment,
+/// `3` and `2em` numbers, `true`/`false`/`none`/`auto` keywords, and dictionaries,
+/// arrays and function calls all work. A single word Typst does *not* know becomes
+/// a string, so `--input export-mode=handout` needs no shell quoting.
+///
+/// Example:
+/// `typst compile --input export-mode=handout myslide.typ` \
+/// Then in the code you can do:
+/// `#let export-mode = utils.get-input(key: "export-mode")`
+///
+/// Example 2:
+/// `typst compile FILE --input config='("foo": 1, "bar": [1, 2, 3], "baz": ("nested": 4))'`
+///
+/// You may also provide no key to get the entire inputs dictionary with parsed values:
+/// `#let inputs = utils.get-input()`
+///
+/// - key (str, none): The input key to retrieve. If `none`, returns the entire inputs dictionary with parsed values.
+///
+/// -> any
+#let get-input(key: none) = {
+  if key == none {
+    let values = (:)
+    for key in sys.inputs.keys() {
+      if key == "x-preview" { continue } // skip tinymist preview input
+      values.insert(key, _parse-input(sys.inputs.at(key, default: none)))
+    }
+    values
+  } else {
+    _parse-input(sys.inputs.at(key, default: none))
+  }
+}
+
+
+/// Rescale an image element to fit within a column-fraction of the available content width.
+///
+/// - img-el (content): The raw image element — used only for measuring its declared `width`.
+/// - display-el (content): The element that is actually rendered (may be `img-el` itself, or a figure containing it).
+/// - col-fraction (ratio): Fraction of `container-width` this image should occupy (e.g. `40%` → `0.4`).
+/// - container-width (none, length): The available content-area width in points. When `none` (default), it is measured automatically via `layout()`.
+/// - align-direction (alignment): `left` or `right` — which side the image is placed on.
+///
+/// -> content
+#let rescale-image(
+  img-el,
+  display-el,
+  col-fraction,
+  align-direction,
+  container-width: none,
+) = {
+  let _render(cw) = {
+    let obstacle-width = (col-fraction * 1pt).pt() * cw
+
+    let img-width = img-el.fields().at("width", default: none)
+    let p = if img-width != none and type(img-width) == relative {
+      (img-width.ratio * 1pt).pt()
+    } else if img-width != none and type(img-width) == ratio {
+      (img-width * 1pt).pt()
+    } else {
+      1.0
+    }
+    let inv = if p > 0 { 1.0 / p } else { 1.0 }
+
+    let overlay(..args) = {
+      box(place(
+        top + (if align-direction == right { left } else { right }),
+        ..args,
+      ))
+      sym.wj
+      h(0pt, weak: true)
+    }
+
+    let visible-width = obstacle-width * inv * 0.95
+    let dx-offset = obstacle-width * inv * 0.025
+    let img-size = std.measure(display-el, width: visible-width)
+    let other-direction = if align-direction == right { 1 } else { -1 }
+
+    stack(
+      spacing: -par.leading,
+      overlay(
+        box(width: visible-width, display-el),
+        dy: -par.leading,
+        dx: dx-offset * other-direction,
+      ),
+      hide(box(width: obstacle-width, height: img-size.height)),
+    )
+  }
+
+  if container-width != none {
+    _render(container-width)
+  } else {
+    layout(size => _render(size.width))
+  }
+}
+
+#let dbg(val) = [#metadata(repr(val))<dbg>]
+
 #let _parse-nav-symbol(s, target, other) = {
   if type(s) == dictionary {
     let d = s
@@ -2834,6 +3260,15 @@
   return (left: s, right: scale(x: -100%, s))
 }
 
+/// Takes in a symbol or a dictionary of symbols and
+/// emits a 2d dict for filled|stroked-styled x left|right-orientated symbols,
+/// usable as a set of navigation symbols.
+///
+/// The dict may compose multiple different symbols and
+/// the function will try to fill in the gaps as best as possible.
+///
+/// - symbol (symbol|dictionary): the symbol to build the variants for.
+/// -> dictionary
 #let create-nav-symbols(symbol) = {
   if type(symbol) == dictionary {
     let allowed = ("filled", "stroked", "left", "right")
@@ -2855,3 +3290,83 @@
 
   return nav-symbols
 }
+
+
+// -------------------------------------
+// Moved to core/tree.typ in 0.8.0
+// -------------------------------------
+//
+// A deprecation warning is content, and Typst only reports it once that
+// content is laid out, so only the functions that return content can carry
+// one. The rest have to say so by refusing to run.
+
+#let _moved(name) = panic(
+  "`utils." + name + "` moved to `core.tree` in 0.8.0.",
+)
+
+#let typst-builtin-sequence = tree.typst-builtin-sequence
+#let typst-builtin-styled = tree.typst-builtin-styled
+#let typst-builtin-space = tree.typst-builtin-space
+#let typst-builtin-math-symbol = tree.typst-builtin-math-symbol
+
+#let is-sequence(..) = _moved("is-sequence")
+#let is-styled(..) = _moved("is-styled")
+#let is-space(..) = _moved("is-space")
+#let is-math-symbol(..) = _moved("is-math-symbol")
+#let is-metadata(..) = _moved("is-metadata")
+#let is-kind(..) = _moved("is-kind")
+#let is-heading(..) = _moved("is-heading")
+#let trim(..) = _moved("trim")
+#let sequence-to-array(..) = _moved("sequence-to-array")
+#let positional-fields(..) = _moved("positional-fields")
+
+// -------------------------------------
+// Moved to core/subslides.typ and core/waypoints.typ in 0.8.0
+// -------------------------------------
+
+#let _moved-to(name, module) = panic(
+  "`utils." + name + "` moved to touying's `core." + module + " in 0.8.0.",
+)
+
+#let check-visible(..) = _moved-to("check-visible", "subslides")
+#let last-required-subslide(..) = _moved-to(
+  "last-required-subslide",
+  "subslides",
+)
+#let resolve-waypoints(..) = _moved-to("resolve-waypoints", "waypoints")
+
+#let _deprecated(name, fn, extra: "") = (..args) => {
+  tree._deprecation-warning("utils." + name, "0.9.0", extra: extra)
+  fn(..args)
+}
+
+#let label-it = _deprecated(
+  "label-it",
+  tree.label-it,
+  extra: "The function moved to `core.tree` in v0.8.0.",
+)
+#let call-with-fields = _deprecated(
+  "call-with-fields",
+  tree.call-with-fields,
+  extra: "The function moved to `core.tree` in v0.8.0.",
+)
+#let reconstruct = _deprecated(
+  "reconstruct",
+  tree.reconstruct,
+  extra: "The function moved to `core.tree` in v0.8.0.",
+)
+#let reconstruct-table-like = _deprecated(
+  "reconstruct-table-like",
+  tree.reconstruct-table-like,
+  extra: "The function moved to `core.tree` in v0.8.0.",
+)
+#let reconstruct-styled = _deprecated(
+  "reconstruct-styled",
+  tree.reconstruct-styled,
+  extra: "The function moved to `core.tree` in v0.8.0.",
+)
+#let reconstruct-heading = _deprecated(
+  "reconstruct-heading",
+  tree.reconstruct-heading,
+  extra: "The function moved to `core.tree` in v0.8.0.",
+)

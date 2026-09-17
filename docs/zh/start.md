@@ -9,7 +9,7 @@ sidebar_position: 2
 要使用 Touying，您只需要在文档里加入
 
 ```example
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import themes.simple: *
 
 #show: simple-theme.with(aspect-ratio: "16-9")
@@ -34,7 +34,7 @@ Hello, Typst!
 事实上，Touying 提供了多种 slides 编写风格，实际上您也可以使用 `#slide[..]` 的写法，以获得 Touying 提供的更多更强大的功能。
 
 ```example
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import themes.university: *
 #import "@preview/cetz:0.5.2"
 #import "@preview/fletcher:0.5.8" as fletcher: node, edge
@@ -96,7 +96,7 @@ Meanwhile, #pause we can also use `#meanwhile` to #pause display other content s
 
 == Complex Animation
 
-At subslide #touying-fn-wrapper((self: none) => str(self.subslide)), we can
+At subslide #touying-fn-wrapper-raw((self: none) => str(self.subslide)), we can
 
 use #uncover("2-")[`#uncover` function] for reserving space,
 
@@ -266,3 +266,11 @@ Please pay attention to the current slide number.
 ```
 
 Touying 提供了很多内置的主题，能够简单地编写精美的 slides，例如此处的 `#show: university-theme.with()` 可以使用 university 主题。关于主题更详细的教程，您可以参阅后面的章节。
+
+:::tip
+
+上面例子里出现的 `#speaker-note[..]` 是演讲者备注。除了 `config-common(show-notes-on-second-screen: right)`
+（也可以取 `top`、`bottom`、`left`、`right`）之外，Touying 还支持导出 pdfpc 文件等多种方式，
+详见[演讲者备注](./tutorials/speaker-notes.md)教程。
+
+:::

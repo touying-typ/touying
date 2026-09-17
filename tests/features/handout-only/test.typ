@@ -15,3 +15,11 @@ This content should always be visible.
 == Handout Only Slide <touying:handout>
 
 This entire slide is only visible in handout mode.
+
+== Markers Inside a Slide
+
+#slide[
+  Always visible.
+  #handout-only[Only in handout, written inside a slide body.]
+  #presentation-only[Only in the presentation, written inside a slide body.]
+]

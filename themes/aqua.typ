@@ -154,10 +154,15 @@
 ///
 /// - leading (length): The leading of paragraphs in the outline. Default is `50pt`.
 #let outline-slide(config: (:), leading: 50pt) = touying-slide-wrapper(self => {
-  set text(size: 30pt, fill: self.colors.primary)
-  set par(leading: leading)
-
   let body = {
+    place(hide(heading(
+      //place invisible heading so that the title is discoverable via get-current-heading
+      level: self.slide-level,
+      utils.i18n-outline-title,
+      bookmarked: false,
+      outlined: false,
+      numbering: none,
+    )))
     grid(
       columns: (1fr, 1fr),
       rows: 1fr,
@@ -204,7 +209,16 @@
       margin: 0em,
     ),
   )
-  touying-slide(self: self, config: config, body)
+  touying-slide(
+    self: self,
+    config: config,
+    setting: it => {
+      set text(size: 30pt, fill: self.colors.primary)
+      set par(leading: leading)
+      it
+    },
+    body,
+  )
 })
 
 
@@ -219,7 +233,7 @@
 /// - body (content): The body of the section. It will be passed by touying automatically.
 #let new-section-slide(config: (:), level: 1, body) = touying-slide-wrapper(
   self => {
-    let slide-body = {
+    let setting(level, body) = {
       stack(
         dir: ttb,
         spacing: 12%,
@@ -250,7 +264,12 @@
         background: utils.call-or-display(self, self.store.background),
       ),
     )
-    touying-slide(self: self, config: config, slide-body)
+    touying-slide(
+      self: self,
+      config: config,
+      setting: setting.with(level),
+      body,
+    )
   },
 )
 
@@ -265,11 +284,32 @@
     self,
     config,
     config-common(freeze-slide-counter: true),
-    config-page(fill: self.colors.primary, margin: 2em),
+    // 4em: was 2em scaled by the focus text's own `set text(size: 2em)`.
+    config-page(fill: self.colors.primary, margin: 4em),
   )
-  set text(fill: self.colors.neutral-lightest, size: 2em, weight: "bold")
-  touying-slide(self: self, config: config, align(horizon + center, body))
+  touying-slide(
+    self: self,
+    config: config,
+    setting: it => align(
+      horizon + center,
+      text(fill: self.colors.neutral-lightest, size: 2em, weight: "bold", it),
+    ),
+    body,
+  )
 })
+/// Speaker-note panel for this theme. Only styling; `touying-notes` does the layout.
+#let notes(self: none, ..args) = touying-notes(
+  self: self,
+  header: self => pad(x: 32pt, y: 16pt, text(
+    fill: self.colors.neutral-lightest,
+    utils.display-current-heading(depth: self.slide-level),
+  )),
+  header-fill: self.colors.primary,
+  fill: self.colors.primary-lightest,
+  ..args,
+)
+
+
 
 
 /// Touying aqua theme.
@@ -323,6 +363,7 @@
     ),
     config-common(
       slide-fn: slide,
+      notes-fn: notes,
       new-section-slide-fn: new-section-slide,
     ),
     config-methods(

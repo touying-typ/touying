@@ -1,0 +1,221 @@
+// touying-render's `subslides:` used to only ever resolve to a single,
+// frozen stage of `body` - a bare waypoint label or a range/complement
+// marker (`from-wp`, `until-wp`, `not-wp`) collapsed down to its first
+// subslide instead of exposing the whole range. This test pins down the
+// generalization: any spec that captures more than one subslide now steps
+// through all of them, one per outer subslide, and a genuinely
+// single-point spec (a plain int, `get-first`, `get-last`) still behaves
+// exactly as before. Compile-only: asserted via `query()` rather than an
+// image reference, since what's being pinned down is "which stage renders
+// on which subslide", not appearance.
+
+#import "/lib.typ": *
+#import themes.simple: *
+
+#show: simple-theme.with(config-common(new-section-slide-fn: none))
+
+// Each scenario gets its own copy of the animated content with its own
+// uniquely-labeled stages, so a `query()` after the fact can be attributed
+// to exactly one scenario, with zero cross-scenario contamination. Each
+// stage is gated with `only("h")` (exclusive reveal at exactly the current
+// position) rather than left as a bare `#pause` chain (cumulative reveal),
+// so that "which stage rendered" is a clean presence/absence question — a
+// bare `#pause` chain would legitimately keep every earlier stage's label
+// around too, which is correct pause semantics but would make assertions
+// about *this* feature murkier. `#pause` is what drives the stage count
+// here, keeping each scenario's member arithmetic obvious to read; that a
+// fn-wrapper's own extent counts toward it too is `features/render-repeat`'s
+// job to pin down, not this test's.
+#let stages(prefix) = [
+  #only("h")[First #label(prefix + "-1")]
+  #pause
+  #only("h")[Second #label(prefix + "-2")]
+  #pause
+  #only("h")[Third #label(prefix + "-3")]
+  #pause
+  #only("h")[Fourth #label(prefix + "-4")]
+]
+
+// Both waypoints are `advance: false` — positions come entirely from the
+// explicit `#pause` calls, so each scenario's expected member list can be
+// read straight off the source. Leaving them advancing would shift every
+// position by one: an advancing waypoint claims the *next* subslide
+// unconditionally, so one placed right after a `#pause` lands two steps
+// on, not one. Correct, but noise for a test about member selection —
+// that an advancing waypoint's own advance is counted at all is
+// `features/render-repeat`'s job.
+#let wp-stages(prefix) = [
+  #waypoint(label(prefix + "-a"), advance: false)
+  #only("h")[A #label(prefix + "-wp-a")]
+  #pause
+  #waypoint(label(prefix + "-b"), advance: false)
+  #only("h")[B #label(prefix + "-wp-b")]
+  #pause
+  #only("h")[B2 #label(prefix + "-wp-b2")]
+]
+
+== Regression: a plain int is still a single, frozen stage
+#touying-render(stages("int"), subslides: 2)
+
+== Contiguous range steps through every member
+#touying-render(stages("range"), subslides: "2-4")
+
+== A negative int counts back from this render's last stage
+// `touying-render` resolves its spec after the parse pass has fixed the stage count
+// `stages` has four stages, so -1 is stage 4 and -2 is stage 3.
+#touying-render(stages("neg-last"), subslides: -1)
+
+#touying-render(stages("neg-second-last"), subslides: -2)
+
+== Negated range collapses its gap onto the next member
+#touying-render(stages("negated"), subslides: "!2-3")
+
+== Bare "h" pins this render's own numbering anchor (render-base)
+#touying-render(stages("here"), subslides: "h")
+
+== Bare "!h" is the complement of that single anchor point
+#touying-render(stages("neg-here"), subslides: "!h")
+
+== A bare waypoint label now exposes its whole range, not just its start
+#touying-render(wp-stages("bare"), subslides: label("bare-b"))
+
+== get-last still pins a single subslide
+#touying-render(wp-stages("last"), subslides: get-last(label("last-b")))
+
+== Waypoint positions share an explicit base's absolute numbering
+#let offset-wp-stages = [
+  #waypoint(<offset-a>, advance: false)
+  #only("h")[A #label("offset-wp-a")]
+  #pause
+  #waypoint(<offset-b>, advance: false)
+  #only(<offset-b>)[B #label("offset-wp-b")]
+]
+#touying-render(
+  offset-wp-stages,
+  subslides: get-last(<offset-b>),
+  base: 3,
+)
+
+== Auto plus start steps only through stages at or after an explicit base
+#let offset-auto-stages = [
+  #only("h")[First #label("offset-auto-first")]
+  #pause
+  #only("h")[Second #label("offset-auto-second")]
+]
+#touying-render(
+  offset-auto-stages,
+  subslides: auto,
+  base: 3,
+  start: 1,
+  repeat-last: false,
+)
+#only(1)[outer one #label("offset-auto-outer-1")]
+#only(2)[outer two #label("offset-auto-outer-2")]
+
+// `<shared-wp>` is declared both on the slide and inside the body, at
+// positions that select different stages, so each scenario shows which of the
+// two maps the marker was resolved against. One slide each: `base: auto`
+// counts from the enclosing flow, so sharing a slide would couple them.
+#let shared-wp-stages(prefix) = [
+  #only("h")[A #label(prefix + "-wp-a")]
+  #pause
+  #waypoint(<shared-wp>, advance: false)
+  #only("h")[B #label(prefix + "-wp-b")]
+]
+
+== A waypoint label names the rendered body's own waypoint
+#waypoint(<shared-wp>, advance: false)
+#pause
+#touying-render(shared-wp-stages("own"), subslides: get-last(<shared-wp>))
+
+== use-outer-waypoints aims the same marker at the enclosing slide instead
+#waypoint(<shared-wp>, advance: false)
+#pause
+#touying-render(
+  shared-wp-stages("outer"),
+  subslides: get-last(<shared-wp>),
+  use-outer-waypoints: true,
+)
+
+#context {
+  // --- plain int: unchanged single-frame behavior ---
+  assert.eq(query(label("int-1")).len(), 0)
+  assert.eq(query(label("int-2")).len(), 1)
+  assert.eq(query(label("int-3")).len(), 0)
+  assert.eq(query(label("int-4")).len(), 0)
+
+  // --- "2-4": every member shown exactly once, stage 1 never shown ---
+  assert.eq(query(label("range-1")).len(), 0)
+  assert.eq(query(label("range-2")).len(), 1)
+  assert.eq(query(label("range-3")).len(), 1)
+  assert.eq(query(label("range-4")).len(), 1)
+
+  // --- "!2-3": stages 2 and 3 skipped, the gap collapses onto stage 4 ---
+  assert.eq(query(label("negated-1")).len(), 1)
+  assert.eq(query(label("negated-2")).len(), 0)
+  assert.eq(query(label("negated-3")).len(), 0)
+  assert.eq(query(label("negated-4")).len(), 1)
+
+  // --- negative ints resolve against the render's own stage count (4):
+  // -1 is the last stage, -2 the second-to-last, each a single frozen
+  // stage just like the plain-int case above ---
+  assert.eq(query(label("neg-last-1")).len(), 0)
+  assert.eq(query(label("neg-last-2")).len(), 0)
+  assert.eq(query(label("neg-last-3")).len(), 0)
+  assert.eq(query(label("neg-last-4")).len(), 1)
+
+  assert.eq(query(label("neg-second-last-1")).len(), 0)
+  assert.eq(query(label("neg-second-last-2")).len(), 0)
+  assert.eq(query(label("neg-second-last-3")).len(), 1)
+  assert.eq(query(label("neg-second-last-4")).len(), 0)
+
+  // --- bare "h": pins render-base (1 here, since base: auto and this
+  // slide has no #pause of its own before the call) — single frame ---
+  assert.eq(query(label("here-1")).len(), 1)
+  assert.eq(query(label("here-2")).len(), 0)
+  assert.eq(query(label("here-3")).len(), 0)
+  assert.eq(query(label("here-4")).len(), 0)
+
+  // --- bare "!h": everything except render-base (1), stepped through ---
+  assert.eq(query(label("neg-here-1")).len(), 0)
+  assert.eq(query(label("neg-here-2")).len(), 1)
+  assert.eq(query(label("neg-here-3")).len(), 1)
+  assert.eq(query(label("neg-here-4")).len(), 1)
+
+  // --- bare waypoint label spans both of its subslides: both must
+  // appear, not just the first ---
+  assert.eq(query(label("bare-wp-a")).len(), 0)
+  assert.eq(query(label("bare-wp-b")).len(), 1)
+  assert.eq(query(label("bare-wp-b2")).len(), 1)
+
+  // --- get-last: only the waypoint's own final subslide ---
+  assert.eq(query(label("last-wp-a")).len(), 0)
+  assert.eq(query(label("last-wp-b")).len(), 0)
+  assert.eq(query(label("last-wp-b2")).len(), 1)
+
+  // The first waypoint is at absolute stage 3 and the second at 4. Its last
+  // member must be 4, not a local range endpoint shifted twice.
+  assert.eq(query(label("offset-wp-a")).len(), 0)
+  assert.eq(query(label("offset-wp-b")).len(), 1)
+
+  // `auto` + `start` exposes the natural stage list. With base 3 that list is
+  // (3, 4), so the two inner stages align with outer subslides 1 and 2.
+  assert.eq(
+    query(label("offset-auto-first")).first().location().page(),
+    query(label("offset-auto-outer-1")).first().location().page(),
+  )
+  assert.eq(
+    query(label("offset-auto-second")).first().location().page(),
+    query(label("offset-auto-outer-2")).first().location().page(),
+  )
+
+  // --- `<shared-wp>` resolved against the body's own map: it sits before
+  // stage B there, so B is what shows and A never does ---
+  assert.eq(query(label("own-wp-a")).len(), 0)
+  assert.eq(query(label("own-wp-b")).len(), 2)
+
+  // --- the same marker with `use-outer-waypoints`: the slide's own `<shared-wp>`
+  // sits at its first subslide, selecting stage A instead ---
+  assert.eq(query(label("outer-wp-a")).len(), 2)
+  assert.eq(query(label("outer-wp-b")).len(), 0)
+}

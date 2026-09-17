@@ -107,18 +107,18 @@ config-page(footer: [Custom Footer])
 
 :::warning[Warning]
 
-Therefore, you should not use the `set page(..)` command yourself, as it will be reset by Touying.
+Therefore, you should not use the `set page(..)` command yourself, as it might be overriden by Touying.
 
 :::
 
-With this approach, we can also query the current page parameters in real-time using `self.page`, which is very useful for functions that need to obtain the page margins or the current page background color, such as `transparent-cover`. This is somewhat equivalent to context get rule, and in practice, it is more convenient to use.
+With this approach, we can also query the current page parameters in real-time using `self.page`, which is very useful for functions that need to obtain the page margins or the current page background color. This is somewhat equivalent to context get rule, and in practice, it is more convenient to use.
 
 ## Page Columnization
 
 If you need to divide a page into two or three columns, you can use the `composer` feature provided by the default `slide` function in Touying. The simplest example is as follows:
 
 ```example
->>> #import "@preview/touying:0.7.4": *
+>>> #import "@preview/touying:0.8.0": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
 #slide[
@@ -131,7 +131,7 @@ If you need to divide a page into two or three columns, you can use the `compose
 If you need to change the way columns are divided, you can modify the `composer` parameter of `slide`, where the default parameter is `cols.with(columns: auto, gutter: 1em)`. If we want the left column to take up the remaining width, we can use:
 
 ```example
->>> #import "@preview/touying:0.7.4": *
+>>> #import "@preview/touying:0.8.0": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
 #slide(composer: (1fr, auto))[
@@ -155,7 +155,7 @@ When using multi-column layouts (via `cols` or a manual `grid`), columns with di
 `cols` does not enable `lazy-layout` by default. Pass `lazy-layout: true` to `cols`, then add `lazy-v(1fr)` inside each block:
 
 ```example
->>> #import "@preview/touying:0.7.4": *
+>>> #import "@preview/touying:0.8.0": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
 #cols(lazy-layout: true)[
@@ -185,7 +185,7 @@ This is different from using `v(1fr)` inside `#slide[][]`. The `slide` composer 
 You can also wrap a `grid` with `lazy-layout` directly:
 
 ```example
->>> #import "@preview/touying:0.7.4": *
+>>> #import "@preview/touying:0.8.0": *
 >>> #import themes.simple: *
 >>> #show: simple-theme
 #lazy-layout(grid(
@@ -217,7 +217,7 @@ By default, when slide content exceeds the page height, Touying automatically ov
 Use `config-common(breakable: false)` to prevent content from overflowing:
 
 ```typst
-// Prevent overflow, panic on overflow (default behavior when breakable: false)
+// Prevent overflow, warn on overflow (default behavior when breakable: false)
 #show: simple-theme.with(
   config-common(breakable: false),
 )
@@ -236,7 +236,7 @@ Use `config-common(breakable: false)` to prevent content from overflowing:
 Related parameters:
 
 - **`clip`** (default `false`): When `true`, content that exceeds the slide height is visually truncated.
-- **`detect-overflow`** (default `true`): When `true`, a layout measurement is performed and `panic()` is called if the content height exceeds the available slide height, making it easy to catch overflow early. Set to `false` to avoid the extra layout overhead.
+- **`detect-overflow`** (default `true`): When `true`, a layout measurement is performed and a **warning** is emitted if the content height exceeds the available slide height, naming the page, slide and subslide. Compilation is not aborted — the document still builds — which makes it easy to catch overflow early without breaking the build. Set to `false` to avoid the extra layout overhead.
 
 :::note[Note]
 
@@ -247,7 +247,7 @@ Related parameters:
 You can also dynamically switch these settings mid-presentation using `touying-set-config`:
 
 ```example
->>> #import "@preview/touying:0.7.4": *
+>>> #import "@preview/touying:0.8.0": *
 >>> #import themes.simple: *
 >>> #show: simple-theme.with(config-common(breakable: false))
 == This slide's overflow will be clipped

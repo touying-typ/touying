@@ -8,59 +8,102 @@ As you already know, both `uncover` and `#pause` use the `cover` function to con
 
 ## Default Cover Function: `hide`
 
-The `cover` function is a method stored in `s.methods.cover`, which is later used by `uncover` and `#pause`.
+The `cover` function is a method stored in `self.methods.cover`, which is later used by `uncover` and `#pause`.
 
-The default `cover` function is the [hide](https://typst.app/docs/reference/layout/hide/) function. This function makes the internal content invisible without affecting the layout.
+The default `cover` function is the [hide](https://typst.app/docs/reference/layout/hide/) function. This function makes the internal content invisible without affecting the layout. It is written onto the config as detailed below.
 
 ## Updating the Cover Function
 
-In some cases, you might want to use your own `cover` function. In that case, you can set your own `cover` function using:
+In some cases, you might want to use your own `cover` function. In that case, you can set your own `cover` function using: 
 
 ```typst
-config-methods(cover: (self: none, body) => hide(body))
+config-methods(cover: utils.hiding-cover)
 ```
 
-## hack: handle enum and list
+See [Writing Your Own Cover Function](#writing-your-own-cover-function) below for what touying expects of a method you write yourself.
 
-You will find that the existing cover function cannot hide the mark of enum and list, refer to [here](https://github.com/touying-typ/touying/issues/10), so you can hack:
+## Alpha and Color Changing Cover Function
+
+Touying supports a semi-transparenting cover function, which can be enabled by setting:
 
 ```typst
-config-methods(cover: (self: none, body) => box(scale(x: 0%, body)))
+config-methods(cover: utils.alpha-changing-cover)
 ```
 
-## Semi-Transparent Cover Function
+You can adjust the transparency through the `alpha: ..` parameter by adding `.with(alpha: 30%)`.
 
-Touying supports a semi-transparent cover function, which can be enabled by adding:
+Or you may try its cousin `utils.color-changing-cover` which changes all colors to the one specified.
 
-```typst
-config-methods(cover: utils.semi-transparent-cover.with(alpha: 85%))
-```
-
-You can adjust the transparency through the `alpha: ..` parameter.
-
-:::warning[Warning]
-
-Note that the `transparent-cover` here does not preserve text layout like `hide` does because it adds an extra layer of `box`, which may disrupt the original structure of the page.
-
-:::
 
 :::tip[Internals]
 
-The `utils.semi-transparent-cover` method is defined as:
+The `utils.alpha-changing-cover` method works by changing all colors it encounters to have a lower alpha value. This can be costly because we need to access typst's context at every level of nested style or context.
+
+If you notice your project compiling slowly you can try switching to `utils.color-changing-cover`.
+
+Both methods cannot change all colors displayed. Some contents like images or tilings cannot be interfered with. As such both methods utilize a `fallback-hide` which aims to mimic the same effect by overlaying the content with a gray semi-transparent rectangle via `utils.semi-transparent-cover`. Using that function as main semi-transparent-cover is no longer recommended as it has multiple not to be fixed bugs. 
+
+:::
+
+### Covering Filled Shapes
+
+An element that paints its own background should usually not be recolored: the shape and the text on top of it would both be forced to the same color, leaving the text unreadable. Imagine an image becoming a gray rectangle.
+`utils.color-changing-cover` can therefore hand filled elements to the fallback hide instead, controlled by `fallback-for-filled: true` (the default). Turn it off to recolor them like everything else, so the slide greys uniformly:
 
 ```typst
-#let semi-transparent-cover(self: none, constructor: rgb, alpha: 85%, body) = {
-  cover-with-rect(
-    fill: update-alpha(
-      constructor: constructor,
-      self.page.fill,
-      alpha,
-    ),
-    body,
-  )
+config-methods(cover: utils.color-changing-cover.with(fallback-for-filled: false))
+```
+
+`utils.alpha-changing-cover` has no such parameter — lowering alpha dims a shape without flattening it against its content.
+
+## Writing Your Own Cover Function
+
+A cover function takes `self` as a named argument and the content to cover positionally, and returns the covered content:
+
+```typst
+#let my-cover(self: none, body) = block(hide(body))
+
+config-methods(cover: my-cover)
+```
+
+### Announce what your method does
+
+Touying needs to know whether your method *removes* or *hides* the content it covers or merely *restyles* it, because that changes how a covered footnote has to be rendered:
+
+- A method that removes content must not create a real footnote at all — the entry would appear below the separator line while the content it belongs to is still hidden. Touying draws a placeholder marker instead, reserving the same width.
+- A method that only restyles should create the real footnote and let it be dimmed along with everything else.
+
+So answer `utils.cover-kind-query` when you are asked for it:
+
+```typst
+#let my-cover(self: none, body) = if self == utils.cover-kind-query {
+  "hide"
+} else {
+  block(hide(body))
 }
 ```
 
-It creates a semi-transparent rectangular mask with the same color as the background to simulate the effect of transparent content. Here, `constructor: rgb` and `alpha: 85%` indicate the background color's construction function and transparency level, respectively.
+Return `"hide"` if your method removes/hides content, `"recolour"` if it restyles it, or `"paint"` if it draws over it.
 
-:::
+Every method touying ships answers this. A method that does not answer is guessed at from what it returns, which recognizes a plain `hide` but not one wrapped in a `block` or `place` — which is why announcing is worth the one line.
+
+### Covering a figure caption
+
+If you answered `"recolour"`, touying may also hand you `utils.cover-caption-query` as `self`. A caption cannot be covered by covering the content you are given: its `Figure 1:` supplement and number are generated during layout and are not part of that content, so they would stay uncovered, and covering the caption element itself turns it into a block that breaks away onto its own line. Return a `show figure.caption` rule wrapped around what you are handed instead:
+
+```typst
+#let my-cover(self: none, body) = if self == utils.cover-kind-query {
+  "recolour"
+} else if self == utils.cover-caption-query {
+  show figure.caption: set text(fill: gray)
+  body
+} else {
+  text(fill: gray, body)
+}
+```
+
+Methods that hide or paint are not asked — for them the caption is covered whole like anything else.
+
+### Customizing footnote markers
+
+Use `config-common(footnote-style: ..)`, i.e. the function you would otherwise pass to `show footnote: ..`. Touying installs it as `show footnote: footnote-style` and also uses it to draw the placeholder marker described above, so real footnotes and placeholders stay visually consistent. A `show footnote: it => ..` rule you write yourself would only reach real, revealed footnotes, not the placeholder.

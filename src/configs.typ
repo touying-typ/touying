@@ -1,9 +1,11 @@
 #import "pdfpc.typ"
 #import "utils.typ"
+#import "magic.typ"
 #import "extern.typ"
-#import "core.typ": (
-  slide, touying-fn-wrapper-raw, touying-slide, touying-slide-wrapper,
-)
+#import "core/parser.typ"
+#import "core/slides.typ": slide, touying-notes, touying-slide
+#import "core/animation.typ": touying-slide-wrapper
+#import "core/blocks.typ": touying-fn-wrapper-raw
 
 #let _default = metadata((kind: "touying-default"))
 
@@ -71,19 +73,10 @@
       let fn = if "fn" in marks.at(0).value { marks.at(0).value.fn } else {
         none
       }
-      let warning-msg = (
-        "Unsupported mark `"
-          + kind
-          + if fn != none {
-            "` from `" + repr(fn)
-          }
-          + "` at page "
-          + str(page-num)
-          + " in section '"
-          + str(slide-name)
-          + "'. You can't use it inside some functions like `context`. You may want to use the callback-style `utils."
-          + repr(fn)
-          + "` function instead."
+      let warning-msg = parser.unsupported-mark-message(
+        kind,
+        fn,
+        "page " + str(page-num) + " in section '" + str(slide-name) + "'",
       )
       if self.at("enable-mark-warning", default: true) {
         panic(warning-msg)
@@ -94,15 +87,6 @@
   }
   if self.at("enable-pdfpc", default: true) {
     context pdfpc.pdfpc-file(here())
-  }
-  if self.at("show-bibliography-as-footnote", default: none) != none {
-    let args = self.at("show-bibliography-as-footnote", default: none)
-    let bibliography = if type(args) == dictionary {
-      args.at("bibliography")
-    } else {
-      args
-    }
-    place(hide(bibliography))
   }
 }
 
@@ -139,7 +123,7 @@
 ///
 /// - clip (bool): Whether to clip overflowing slide content when `breakable` is `false`. When `true`, content that exceeds the slide height will be visually truncated. When `false`, overflowing content remains visible but does not create new pages. Only takes effect when `breakable` is `false`. Default is `false`.
 ///
-/// - detect-overflow (bool): Whether to detect and warn on slide content overflow when `breakable` is `false`. When `true`, a layout measurement is performed and a warning is emitted if the content height exceeds the available slide height, which is useful for catching overflow early in agentic workflows without aborting compilation. When `false`, no overflow detection is performed. Only takes effect when `breakable` is `false`. Default is `true`.
+/// - detect-overflow (auto, bool): Whether to detect and warn on slide content overflow. When enabled, a layout measurement is performed and a warning is emitted if the content height exceeds the available slide height, which is useful for catching overflow early in agentic workflows without aborting compilation. `auto` means enabled when `breakable` is false.
 ///
 /// - handout (bool): Whether to enable the handout mode. By default, it retains only the last subslide of each slide, but this can be overridden via `handout-subslides`. Default is `false`.
 ///
@@ -157,13 +141,13 @@
 ///
 /// - new-subsubsubsection-slide-fn (function): The function to create a new slide for a new subsubsubsection. Default is `none`.
 ///
-/// - receive-body-for-new-section-slide-fn (bool): Whether to receive the body for the new section slide function. Default is `true`.
+/// - receive-body-for-new-section-slide-fn (bool): Whether to receive the body for the new section slide function. Default is `false`.
 ///
-/// - receive-body-for-new-subsection-slide-fn (bool): Whether to receive the body for the new subsection slide function. Default is `true`.
+/// - receive-body-for-new-subsection-slide-fn (bool): Whether to receive the body for the new subsection slide function. Default is `false`.
 ///
-/// - receive-body-for-new-subsubsection-slide-fn (bool): Whether to receive the body for the new subsubsection slide function. Default is `true`.
+/// - receive-body-for-new-subsubsection-slide-fn (bool): Whether to receive the body for the new subsubsection slide function. Default is `false`.
 ///
-/// - receive-body-for-new-subsubsubsection-slide-fn (bool): Whether to receive the body for the new subsubsubsection slide function. Default is `true`.
+/// - receive-body-for-new-subsubsubsection-slide-fn (bool): Whether to receive the body for the new subsubsubsection slide function. Default is `false`.
 ///
 /// - show-strong-with-alert (bool): Whether to show strong with alert. Default is `true`.
 ///
@@ -177,11 +161,11 @@
 ///
 /// - zero-margin-footer (bool): Whether to show the full footer (with negative padding). Default is `true`.
 ///
-/// - auto-offset-for-heading (bool): Whether to add an offset relative to slide-level for headings. Default is `true`.
+/// - auto-offset-for-heading (bool): Whether to add an offset relative to slide-level for headings. Default is `false`.
 ///
 /// - enable-pdfpc (bool): Whether to add `<pdfpc-file>` label for querying. Default is `true`.
 ///
-///   You can export the .pdfpc file directly using: `typst query --root . ./example.typ --field value --one "<pdfpc-file>" > ./example.pdfpc`
+///   You can export the .pdfpc file directly using: `typst eval --in ./example.typ 'query(<pdfpc-file>).first().value' > ./example.pdfpc`
 ///
 /// - enable-mark-warning (bool): Whether to enable the mark warning. Default is `true`.
 ///
@@ -190,6 +174,8 @@
 /// - show-only-notes (bool): Whether to show the speaker notes as the main content with the slide shown as a small thumbnail in the top right corner. Default is `false`.
 ///
 ///   This is similar to LaTeX Beamer's `\setbeameroption{show only notes}`. It is useful for using speaker notes with presentation tools that let you load two PDFs and synchronize them, one to display on the main screen and one on the auxiliary screen.
+///
+/// - notes-fn (function): The function rendering the speaker-note panel, used both on a second screen and in `show-only-notes` mode. It receives `(self: none, note: none, slide-preview: none)` and returns content. Default is `touying-notes`; a theme overrides it the same way it overrides `slide-fn`. See `touying-notes` for what a theme gets to style.
 ///
 /// - show-notes-on-second-screen (none, alignment): Whether to show the speaker notes on the second screen. Default is `none`.
 ///
@@ -205,10 +191,6 @@
 ///
 ///   A footnote covered by `#pause` must not create a real footnote (its entry would leak below the separator before the pause reveals it), so touying draws a placeholder marker to reserve the same width instead. `show footnote: set super(..)` does not currently affect Typst's footnote marker rendering, and a raw `show footnote: it => ..` rule would only be reflected on real, revealed footnotes - not on touying's placeholder. Set this option instead so both stay visually consistent; touying installs it as `show footnote: footnote-style` and also uses it to draw the placeholder.
 ///
-/// - cover-hides-footnote (auto, bool): Whether the configured `cover` method genuinely hides content, as opposed to a visual-only style like `color-changing-cover`/`alpha-changing-cover` that keeps content visible. Default is `auto`, which assumes `true` only for touying's own default cover method and `false` otherwise.
-///
-///   This decides how a footnote covered by `#pause` is handled: a genuinely-hiding cover must not create a real footnote at all (see `footnote-style`), while a visual-only cover should show the real footnote, just recolored/de-emphasized like the rest of the covered content. Since Typst cannot inspect what an arbitrary `cover` function does, `auto` can only recognize touying's own default cover method by identity - set this explicitly if you supply a custom `cover` method that also genuinely hides content.
-///
 /// - nontight-list-enum-and-terms (bool): Whether to make `tight` argument always be `false` for list, enum, and terms. Default is `false`.
 ///
 /// - align-list-marker-with-baseline (bool): Whether to align the list marker with the baseline. Default is `false`.
@@ -221,9 +203,7 @@
 ///
 /// - show-hide-set-list-marker-none (bool): Whether to set the list marker to none for hide function. Default is `true`.
 ///
-/// - show-bibliography-as-footnote (bool): Whether to show the bibliography as footnote. Default is `none`.
-///
-///   It receives a bibliography function like `bibliography(title: none, "ref.bib")`, or a dict like `(numbering: "[1]", bibliography: bibliography(title: none, "ref.bib"))`.
+/// - show-bibliography-as-footnote (bool): Whether to show the bibliography as footnote. Default is `false`.
 ///
 /// - frozen-states (array): The frozen states for the frozen states and counters. Default is `()`.
 ///
@@ -233,7 +213,7 @@
 ///
 /// - default-frozen-counters (array): The default frozen counters for the frozen states and counters. The default value is `(counter(math.equation), counter(figure.where(kind: table)), counter(figure.where(kind: image)))`.
 ///
-/// - label-only-on-last-subslide (array): We only label some contents in the last subslide, which is useful for ref equations, figures, footnotes, and theorems with multiple subslides. Default is `(figure, math.equation, footnote)`.
+/// - label-only-on-last-subslide (array): Element functions whose label is attached only on a slide's last subslide. A slide body is parsed once per subslide, so without this a labelled element emits its label on every rendered page and `#ref` to it becomes ambiguous. Useful for referencing equations, figures, footnotes, code blocks and theorems that span several subslides. Default is `(figure, math.equation, heading, footnote)`. Wrap a figure around other content to also get the effect. (see https://typst.app/docs/reference/model/ref/ on why)
 ///
 /// - preamble (function): The function to run before each slide. Default is `none`.
 ///
@@ -254,6 +234,12 @@
 /// - default-composer (auto, function, array): The default composer for slides. It is used when the `composer` argument of the `slide` function is `auto`. Default is `auto`, which falls back to using `cols.with(lazy-layout: false)`.
 ///
 ///   For example, `config-common(default-composer: cols.with(lazy-layout: false, gutter: 2em))` sets the default gutter between columns to `2em` for all slides.
+///
+/// - article-mode (bool): Whether to enable the article mode. In article mode, the content will flow continuously without page breaks between slides, and some slide-specific features will be disabled. Default is `false`. Rather than using this flag, use the export-mode flag instead.
+///
+/// - export-mode (str): The export mode for the presentation. It can be `slides`, `article`, `presentation`, `handout`. Default is `slides`. In case of `slides` the `handout`-flag determines whether to render a presentation or a handout.
+///
+/// - article-theme (theme): The theme to use when rendering in article mode. Can be an arbitrary theme but whether it works correctly is not guaranteed. Default is `auto`, in which case we use touying's builtin article theme.
 ///
 /// -> dictionary
 #let config-common(
@@ -299,11 +285,11 @@
   page-preamble: _default,
   default-page-preamble: _default,
   show-only-notes: _default,
+  notes-fn: _default,
   show-notes-on-second-screen: _default,
   horizontal-line-to-pagebreak: _default,
   reset-footnote-number-per-slide: _default,
   footnote-style: _default,
-  cover-hides-footnote: _default,
   nontight-list-enum-and-terms: _default,
   align-list-marker-with-baseline: _default,
   align-enum-marker-with-baseline: _default,
@@ -311,6 +297,9 @@
   show-hide-set-list-marker-none: _default,
   show-bibliography-as-footnote: _default,
   default-composer: _default,
+  article-mode: _default,
+  export-mode: _default,
+  article-theme: _default,
   ..args,
 ) = {
   assert(args.pos().len() == 0, message: "Unexpected positional arguments.")
@@ -356,11 +345,11 @@
       page-preamble: page-preamble,
       default-page-preamble: default-page-preamble,
       show-only-notes: show-only-notes,
+      notes-fn: notes-fn,
       show-notes-on-second-screen: show-notes-on-second-screen,
       horizontal-line-to-pagebreak: horizontal-line-to-pagebreak,
       reset-footnote-number-per-slide: reset-footnote-number-per-slide,
       footnote-style: footnote-style,
-      cover-hides-footnote: cover-hides-footnote,
       nontight-list-enum-and-terms: nontight-list-enum-and-terms,
       align-list-marker-with-baseline: align-list-marker-with-baseline,
       align-enum-marker-with-baseline: align-enum-marker-with-baseline,
@@ -368,6 +357,9 @@
       show-hide-set-list-marker-none: show-hide-set-list-marker-none,
       show-bibliography-as-footnote: show-bibliography-as-footnote,
       default-composer: default-composer,
+      article-mode: article-mode,
+      export-mode: export-mode,
+      article-theme: article-theme,
     ))
       + args.named()
   )
@@ -379,57 +371,6 @@
 }
 
 #let _default-cover = utils.hiding-cover
-
-#let _default-show-only-notes(
-  self: none,
-  width: 0pt,
-  height: 0pt,
-  cutout: false,
-) = {
-  let header-fill = rgb("#CCCCCC")
-  let header-height = 88pt
-  let header-content = {
-    utils.display-current-heading(level: 1, depth: self.slide-level)
-    linebreak()
-    [ --- ]
-    utils.display-current-heading(level: 2, depth: self.slide-level)
-  }
-  let body-fill = rgb("#E6E6E6")
-  let body-content = {
-    pad(x: 48pt, utils.current-slide-note)
-    // clear the slide note
-    utils.slide-note-state.update(none)
-  }
-
-  let template(hdr-fill, hdr-content, bdy-fill, bdy-content) = block(
-    fill: bdy-fill,
-    width: width,
-    height: height,
-    {
-      set align(left + top)
-      set text(size: 24pt, fill: black, weight: "regular")
-      block(
-        width: 100%,
-        height: header-height,
-        inset: (left: 32pt, top: 16pt),
-        outset: 0pt,
-        fill: hdr-fill,
-        hdr-content,
-      )
-      bdy-content
-    },
-  )
-
-  if cutout {
-    (
-      background: template(header-fill, none, body-fill, none),
-      foreground: template(none, header-content, none, body-content),
-      cutout-height: header-height,
-    )
-  } else {
-    template(header-fill, header-content, body-fill, body-content)
-  }
-}
 
 #let _default-alert = utils.method-wrapper(text.with(weight: "bold"))
 
@@ -443,7 +384,7 @@
 ///
 /// - cover (function): The function to cover content. The default value is `utils.method-wrapper(hide)` function.
 ///
-///   You can configure it with `cover: utils.semi-transparent-cover` to use the semi-transparent cover.
+///   You can configure it with `cover: utils.alpha-changing-cover` to use a transparent cover effect.
 ///
 /// - uncover (function): The function to uncover content. The default value is `utils.uncover` function.
 ///
@@ -462,8 +403,6 @@
 /// - item-by-item (function): The function to show items one by one. The default value is `utils.item-by-item` function.
 ///
 /// - alert (function): The function to alert the content. The default value is `utils.method-wrapper(text.with(weight: "bold"))` function.
-///
-/// - show-only-notes (function): The function used to render speaker notes, either as the primary content (`show-only-notes: true` mode) or on a second screen. It should accept `(self: none, width: 0pt, height: 0pt, cutout: false)`. When `cutout: true`, return a dictionary with `background`, `foreground`, and `cutout-height` keys.
 ///
 /// - convert-label-to-short-heading (function): The function to convert label to short heading. It is useful for the short heading for heading with label. It will be used in function with `short-heading`.
 ///
@@ -488,7 +427,6 @@
   // alert interface
   alert: _default,
   // show notes
-  show-only-notes: _default,
   // convert label to short heading
   convert-label-to-short-heading: _default,
   ..args,
@@ -507,7 +445,6 @@
       alternatives-cases: alternatives-cases,
       item-by-item: item-by-item,
       alert: alert,
-      show-only-notes: show-only-notes,
       convert-label-to-short-heading: convert-label-to-short-heading,
     ))
       + args.named(),
@@ -744,12 +681,90 @@
 }
 
 
+/// Article-mode configuration.
+///
+/// Controls how slide content is rendered when using article mode via the
+/// dual theme. These settings are consumed by `render-content-as-article`
+/// and `_wrap-section` in core.typ.
+///
+/// When you pass `auto` to the `title-block-fn` it will show
+/// ```typc
+/// (..args) => context{
+///   let title = document.title
+///   let authors = document.author
+///   if type(authors) == array {
+///     authors = authors.reduce((a, b) => a + " and " + b)
+///   }
+///   let date = if document.date == auto {datetime.today()} else {document.date}
+///   let description = document.description
+///   let keywords = document.keywords
+///   if type(keywords) == array {
+///     keywords = keywords.reduce((a, b) => a + ", " + b)
+///   }
+///   align(center, block[
+///     #std.title(title)
+///
+///     *#authors*
+///
+///     #date.display()
+///
+///     #v(1em)
+///
+///     #block(width:page.width*0.6, text(style:"italic", description))
+///
+///     #text(weight:"semibold", style:"italic", tracking:0.5pt, keywords)
+///   ])
+/// },
+/// ```
+///
+/// - available-fields (dict): The fields from the config to pass to the article-theme. A dict mapping config to the theme fields. E.g. (the-title: "info.title", the-author: "info.author") will pass the config-info fields `title` and `author` in the config to the theme as `the-title` and `the-author`. Default is (:), which passes no fields.
+///
+/// - title-block-fn (function): A function returning the title block to show at the beginning of the rendered article. If your theme has an automatic function for this you don't need it. And you can always use `#article-only` before the first slide to show your custom title block. Default is `none`.
+///
+/// - wrap (dictionary, bool): Which elements float to the side of the text (done with `meander`), and how. At the top level, `false` disables wrapping and `true` floats every extractable candidate with the defaults. In a dictionary, every key other than `width`, `align` and `overrides` names an element function, so `image: true` (the default) floats raw images according to the specified width and alignment defaults, `table: (align: left)` floats tables to left instead. Each takes `false` to stay in the flow, `true` for the shared defaults, or a dictionary of overrides. Tables and figures that do not float are centered at the bottom of the section and all other elements are kept inline. `overrides` is an array of dictionaries with a `target` predicate, for cases a name cannot express. \ Example: \ `config-article(wrap: (
+///   width: 40%,
+///   image: true,
+///   table: (align: left, width: 30%),
+///   overrides: ((
+///     target: el => el.func() == figure and
+///       el.body.func() == image,
+///     align: left,
+///     width: 40%
+///   ),)
+/// ))`.\ Recalled or Rendered content is never wrapped. A graphic via `touying-reduce/graphic` is by default not wrapped, but touying marks its graphics in article mode with a graphics marker which you can select via: `graphic-marker-of(cetz.canvas)` for an animated cetz canvas. You can also mark your own graphics to allow the predicate to match: `#graphic-marker(cetz.canvas)[#cetz.canvas(..)]`.
+///
+/// - linearize (auto, bool, dict): Whether a container that arranges content is flattened into the prose. `auto` (the default) linearizes `#columns(..)`, and a `table` or `grid` that declares no header or footer: declaring one is what says its rows and columns carry meaning. `components.cols` and `side-by-side` internally build a grid without a header. `true` or `false` force it for all three. A dict allows you to specify for each, e.g. `(table: false, grid: auto, columns: true)`. A figure's body is never flattened.
+///
+/// -> dictionary
+#let config-article(
+  available-fields: _default,
+  title-block-fn: _default,
+  wrap: _default,
+  linearize: _default,
+  ..args,
+) = {
+  assert(args.pos().len() == 0, message: "Unexpected positional arguments.")
+  return (
+    article: _get-dict-without-default((
+      available-fields: available-fields,
+      title-block-fn: title-block-fn,
+      wrap: wrap,
+      linearize: linearize,
+    ))
+      + args.named(),
+  )
+}
+
+
 /// The default configuration values used when no explicit configuration is provided.
 #let default-config = utils.merge-dicts(
   config-common(
     breakable: true,
     clip: false,
-    detect-overflow: true,
+    // `auto`: detect whenever `breakable` is false, which is the only time a
+    // fixed slide height exists to measure against. An explicit `true` is a
+    // request that also warns when `breakable` makes it impossible.
+    detect-overflow: auto,
     handout: false,
     handout-subslides: none,
     slide-level: 2,
@@ -772,26 +787,34 @@
     enable-pdfpc: true,
     enable-mark-warning: true,
     reset-page-counter-to-slide-counter: true,
-    // some black magics for better slides writing,
-    // maybe will be deprecated in the future
     show-only-notes: false,
+    notes-fn: touying-notes,
     show-notes-on-second-screen: none,
     horizontal-line-to-pagebreak: true,
     reset-footnote-number-per-slide: true,
     footnote-style: auto,
-    cover-hides-footnote: auto,
+    // some black magics for better slides writing,
+    // maybe will be deprecated in the future
     nontight-list-enum-and-terms: false,
     align-list-marker-with-baseline: false,
     align-enum-marker-with-baseline: false,
     scale-list-items: none,
     show-hide-set-list-marker-none: true,
-    show-bibliography-as-footnote: none,
+    show-bibliography-as-footnote: false,
+    article-mode: false,
+    export-mode: "slides",
+    article-theme: auto,
     enable-frozen-states-and-counters: true,
     frozen-states: (),
     default-frozen-states: _default-frozen-states,
     frozen-counters: (),
     default-frozen-counters: _default-frozen-counters,
-    label-only-on-last-subslide: (figure, math.equation, heading, footnote),
+    label-only-on-last-subslide: (
+      figure,
+      math.equation,
+      heading,
+      footnote,
+    ),
     preamble: none,
     default-preamble: _default-preamble,
     slide-preamble: none,
@@ -817,7 +840,6 @@
     // alert interface
     alert: _default-alert,
     // show notes
-    show-only-notes: _default-show-only-notes,
     // convert label to short heading
     convert-label-to-short-heading: _default-convert-label-to-short-heading,
   ),
@@ -870,24 +892,37 @@
     margin: (x: 3em, y: 2.8em),
     numbering: "1",
   ),
+  config-article(
+    available-fields: (:),
+    title-block-fn: none,
+    wrap: (
+      width: 50%,
+      align: right,
+      image: true,
+    ),
+    linearize: auto,
+  ),
   config-store(),
 )
+/// all the real config prefixes: `("methods", "info", "colors", "page", "article", "store")`
+#let _prefixes = ("methods", "info", "colors", "page", "article", "store")
 
 /// Gets the current config at the point of the call. Returns a dict with context evaluated values.
+/// You cannot compute with the resulting values, only display it because `touying-get-config` uses a context expression internally. If you need to compute with config values use the callback `touying-fn-wrapper-raw` instead and access what you need on `self` directly.
 ///
 /// Usage:
 /// ```typc
 /// touying-get-config() // returns the whole config dict
 /// touying-get-config().common.handout // returns the value of the "handout" config in the "common" category
 /// touying-get-config().handout // same as above. common is also registered at the top level.
-/// touying-get-config("commmon.handout") // same as above. You can also query with a key, and you will get the subconfig or value back.
+/// touying-get-config("common.handout") // same as above. You can also query with a key, and you will get the subconfig or value back.
 /// ```
 ///
 /// - key (str): The key of the subconfiguration to retrieve. Default `none`, returns the entire config. May also be passed in as a positional argument.
 ///   Only necessary when you set custom keys into touyings' config. Theme configuration is naturally available as `touying-get-config().store.long-theme-key`
 /// - default (any): The default value to return if the key is not found.
 /// -> dict
-#let touying-get-config(key: none, default: type, ..args) = {
+#let touying-get-config(key: none, default: _default, ..args) = {
   assert(
     args.pos().len() <= 1,
     message: "Only one positional argument is allowed.",
@@ -900,12 +935,16 @@
     type(key) == str or key == none,
     message: "Key must be a string or none.",
   )
+  assert(
+    key == none or args.pos().len() == 0,
+    message: "A key may be passed either as named or positional argument, not both.",
+  )
   let key_ = key
   if args.pos().len() == 1 {
     key_ = args.pos().first()
   }
 
-  let rec-defer-retrieval(config, keychain, default: type) = {
+  let rec-defer-retrieval(config, keychain, default: _default) = {
     if type(config) == dictionary {
       let defered = (:)
       for k in config.keys() {
@@ -915,13 +954,26 @@
           default: default,
         ))
       }
+      // The flat top-level keys are also reachable under `common`. Mirror the
+      // entries just deferred rather than recursing on the same dictionary,
+      // which would never terminate. Only the root has a `common`.
+      if keychain == () {
+        let common = (:)
+        for k in config.keys() {
+          if k not in _prefixes {
+            common.insert(k, defered.at(k))
+          }
+        }
+        defered.insert("common", common)
+      }
+
       return defered
     } else {
       //when we reached a leaf value in the config, we evaluate it at context time via keychain.
       return touying-fn-wrapper-raw((self: none) => {
         let value = self
         for cur in keychain {
-          if cur not in value.keys() and default != type {
+          if cur not in value.keys() and default != _default {
             return default
           }
           value = value.at(cur)
@@ -935,7 +987,7 @@
     config,
     keychain,
     key: none,
-    default: type,
+    default: _default,
   ) = {
     if type(config) == dictionary {
       if key != none {
@@ -949,6 +1001,43 @@
           this-key = key.slice(0, first-dot)
           rest-key = key.slice(first-dot + 1)
         }
+        // `common` is a virtual category holding the flat top-level keys, so it
+        // only exists at the root - `page.common` is an ordinary miss.
+        if this-key == "common" and keychain == () {
+          if rest-key == none {
+            let common = (:)
+            for k in config.keys() {
+              if k not in _prefixes {
+                common.insert(k, rec-defer-retrieval(
+                  config.at(k),
+                  keychain + (k,),
+                  default: default,
+                ))
+              }
+            }
+            return common
+          }
+          // Compare whole segments: `common.storefront` is a plain key lookup,
+          // only `common.store` names the category.
+          if rest-key.split(".").first() in _prefixes {
+            if default != _default {
+              return default
+            }
+            panic(
+              "`"
+                + rest-key.split(".").first()
+                + "` is a config category, not a key under `common`: "
+                + key,
+            )
+          }
+          return rec-defer-retrieval-with-key(
+            config,
+            keychain,
+            key: rest-key,
+            default: default,
+          )
+        }
+
         if this-key in config.keys() {
           return rec-defer-retrieval-with-key(
             config.at(this-key),
@@ -980,7 +1069,7 @@
       return rec-defer-retrieval(none, keychain, default: default)
     } else {
       // got a leaf value, but key is not empty.
-      if default != type {
+      if default != _default {
         return default
       }
       panic(

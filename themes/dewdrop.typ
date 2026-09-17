@@ -214,18 +214,26 @@
   touying-slide(
     self: self,
     config: config,
-    components.adaptive-columns(
-      start: text(
-        1.2em,
-        fill: self.colors.primary,
-        weight: "bold",
-        utils.call-or-display(self, title),
+    place(hide(heading(
+      //place invisible heading so that the title is discoverable via get-current-heading
+      level: self.slide-level,
+      utils.call-or-display(self, title),
+      bookmarked: false,
+      outlined: false,
+      numbering: none,
+    )))
+      + components.adaptive-columns(
+        start: text(
+          1.2em,
+          fill: self.colors.primary,
+          weight: "bold",
+          utils.call-or-display(self, title),
+        ),
+        text(
+          fill: self.colors.neutral-darkest,
+          outline(title: none, indent: 1em, depth: self.slide-level, ..args),
+        ),
       ),
-      text(
-        fill: self.colors.neutral-darkest,
-        outline(title: none, indent: 1em, depth: self.slide-level, ..args),
-      ),
-    ),
   )
 })
 
@@ -251,30 +259,33 @@
       footer: dewdrop-footer,
     ),
   )
+  let setting(title, args, body) = {
+    components.adaptive-columns(
+      start: text(
+        1.2em,
+        fill: self.colors.primary,
+        weight: "bold",
+        utils.call-or-display(self, title),
+      ),
+      text(
+        fill: self.colors.neutral-darkest,
+        components.progressive-outline(
+          alpha: self.store.alpha,
+          title: none,
+          indent: 1em,
+          depth: self.slide-level,
+          ..args,
+        ),
+      ),
+    )
+    body
+  }
+
   touying-slide(
     self: self,
     config: config,
-    {
-      components.adaptive-columns(
-        start: text(
-          1.2em,
-          fill: self.colors.primary,
-          weight: "bold",
-          utils.call-or-display(self, title),
-        ),
-        text(
-          fill: self.colors.neutral-darkest,
-          components.progressive-outline(
-            alpha: self.store.alpha,
-            title: none,
-            indent: 1em,
-            depth: self.slide-level,
-            ..args,
-          ),
-        ),
-      )
-      body
-    },
+    setting: setting.with(title, args),
+    body,
   )
 })
 
@@ -289,11 +300,32 @@
     self,
     config,
     config-common(freeze-slide-counter: true),
-    config-page(fill: self.colors.primary, margin: 2em),
+    // 3em: was 2em scaled by the focus text's own `set text(size: 1.5em)`.
+    config-page(fill: self.colors.primary, margin: 3em),
   )
-  set text(fill: self.colors.neutral-lightest, size: 1.5em)
-  touying-slide(self: self, config: config, align(horizon + center, body))
+  touying-slide(
+    self: self,
+    config: config,
+    setting: it => align(
+      horizon + center,
+      text(fill: self.colors.neutral-lightest, size: 1.5em, it),
+    ),
+    body,
+  )
 })
+/// Speaker-note panel for this theme. Only styling; `touying-notes` does the layout.
+#let notes(self: none, ..args) = touying-notes(
+  self: self,
+  header: self => pad(x: 32pt, y: 16pt, text(
+    fill: self.colors.neutral-lightest,
+    utils.display-current-heading(depth: self.slide-level),
+  )),
+  header-fill: self.colors.primary,
+  fill: self.colors.neutral-light,
+  ..args,
+)
+
+
 
 
 /// Touying dewdrop theme.
@@ -343,8 +375,6 @@
 /// - primary (color): The primary color of the slides. Default is `rgb("#0c4842")`.
 ///
 /// - alpha (fraction, float): The alpha of transparency. Default is `60%`.
-///
-/// - outline-title (content, function): The title of the outline. Default is `utils.i18n-outline-title`.
 ///
 /// - subslide-preamble (content, function): The preamble of the subslide. Default is `self => block(text(1.2em, weight: "bold", fill: self.colors.primary, utils.display-current-heading(depth: self.slide-level)))`.
 #let dewdrop-theme(
@@ -421,6 +451,7 @@
     ),
     config-common(
       slide-fn: slide,
+      notes-fn: notes,
       new-section-slide-fn: new-section-slide,
     ),
     config-methods(

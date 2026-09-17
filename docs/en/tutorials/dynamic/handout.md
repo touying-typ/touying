@@ -15,7 +15,7 @@ config-common(handout: true)
 Place this inside your theme setup:
 
 ```example
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import themes.simple: *
 
 #show: simple-theme.with(
@@ -39,6 +39,8 @@ Third item.
 ```
 
 By default, handout mode keeps only the **last** subslide of each slide.
+
+Handout mode can also be set with `config-common(export-mode: "handout")`, which can in turn be passed on the command line with `--input export-mode=handout` without touching the source file at all. See [Output Modes](../output-modes).
 
 ## Choosing Which Subslide to Keep
 
@@ -65,6 +67,10 @@ Use the `<touying:handout>` label to create slides that appear **only** in hando
 This slide is included when `handout: true` but invisible otherwise.
 ```
 
+## Content for One Mode Only
+
+`#handout-only[..]`, `#presentation-only[..]`, `#slides-only[..]` and `#article-only[..]` keep a piece of content out of the modes it does not suit. They are covered in [Output Modes](../output-modes).
+
 ## Workflow Tip
 
 A common workflow is to keep `handout: false` (the default) while presenting, then switch to `handout: true` when exporting a PDF to share with your audience:
@@ -76,3 +82,5 @@ A common workflow is to keep `handout: false` (the default) while presenting, th
 // When building the handout PDF
 #show: my-theme.with(config-common(handout: true))
 ```
+
+If you would rather not touch the source file at all, use `--input export-mode=handout` from the command line instead, as noted above.

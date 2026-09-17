@@ -1,6 +1,6 @@
 [package]
 name = "touying"
-version = "0.7.4"
+version = "0.8.0"
 entrypoint = "lib.typ"
 authors = ["OrangeX4", "zral0kh", "enklht", "Andreas Kröpelin", "ntjess", "Enivex", "Pol Dellaiera", "pride7", "Coekjan"]
 license = "MIT"
@@ -9,7 +9,7 @@ repository = "https://github.com/touying-typ/touying"
 keywords = ["presentation", "pre", "slide", "slides", "lecture", "touying", "beamer", "talk"]
 categories = ["presentation"]
 exclude = ["examples"]
-compiler = "0.12.0"
+compiler = "0.15.0"
 
 [tool.tytanic]
 default.ppi = 72

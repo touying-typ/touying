@@ -42,10 +42,10 @@
 /// - title (string): The title of the theorem. Default is `none`.
 ///
 /// - it (content): The content of the theorem.
-#let tblock(title: none, it) = touying-fn-wrapper(_tblock.with(
-  title: title,
+#let tblock(title: none, it) = touying-fn-wrapper-raw(
+  _tblock.with(title: title),
   it,
-))
+)
 
 
 /// Default slide function for the presentation.
@@ -232,29 +232,36 @@
   level: none,
   ..args,
 ) = touying-slide-wrapper(self => {
-  self.store.title = title
   touying-slide(
     self: self,
     config: config,
-    std.align(
-      self.store.align,
-      components.adaptive-columns(
-        text(
-          fill: self.colors.primary,
-          weight: "bold",
-          components.custom-progressive-outline(
-            level: level,
-            alpha: self.store.alpha,
-            indent: (0em, 1em),
-            vspace: (.4em,),
-            numbered: (numbered,),
-            depth: 1,
-            ..args.named(),
+    place(hide(heading(
+      //place invisible heading so that the title is discoverable via get-current-heading
+      level: self.slide-level,
+      utils.call-or-display(self, title),
+      bookmarked: false,
+      outlined: false,
+      numbering: none,
+    )))
+      + std.align(
+        self.store.align,
+        components.adaptive-columns(
+          text(
+            fill: self.colors.primary,
+            weight: "bold",
+            components.custom-progressive-outline(
+              level: level,
+              alpha: self.store.alpha,
+              indent: (0em, 1em),
+              vspace: (.4em,),
+              numbered: (numbered,),
+              depth: 1,
+              ..args.named(),
+            ),
           ),
-        ),
-      )
-        + args.pos().sum(default: none),
-    ),
+        )
+          + args.pos().sum(default: none),
+      ),
   )
 })
 
@@ -308,13 +315,21 @@
     config-common(freeze-slide-counter: true),
     config-page(
       fill: self.colors.primary,
-      margin: 2em,
+      // 3em: was 2em scaled by the focus text's own `set text(size: 1.5em)`.
+      margin: 3em,
       header: none,
       footer: none,
     ),
   )
-  set text(fill: self.colors.neutral-lightest, weight: "bold", size: 1.5em)
-  touying-slide(self: self, config: config, std.align(align, body))
+  touying-slide(
+    self: self,
+    config: config,
+    setting: it => std.align(
+      align,
+      text(fill: self.colors.neutral-lightest, weight: "bold", size: 1.5em, it),
+    ),
+    body,
+  )
 })
 
 
@@ -327,9 +342,17 @@
 /// - body (array): is the content of the slide.
 #let ending-slide(config: (:), title: none, body) = touying-slide-wrapper(
   self => {
-    let content = {
+    let setting(title, body) = {
       set std.align(center + horizon)
       if title != none {
+        place(hide(heading(
+          //place invisible heading so that the title is discoverable via get-current-heading
+          level: self.slide-level,
+          title,
+          bookmarked: false,
+          outlined: false,
+          numbering: none,
+        )))
         block(
           fill: self.colors.tertiary,
           inset: (top: 0.7em, bottom: 0.7em, left: 3em, right: 3em),
@@ -339,9 +362,27 @@
       }
       body
     }
-    touying-slide(self: self, config: config, content)
+    touying-slide(
+      self: self,
+      config: config,
+      setting: setting.with(title),
+      body,
+    )
   },
 )
+/// Speaker-note panel for this theme. Only styling; `touying-notes` does the layout.
+#let notes(self: none, ..args) = touying-notes(
+  self: self,
+  header: self => pad(x: 32pt, y: 16pt, text(
+    fill: self.colors.secondary,
+    utils.display-current-heading(depth: self.slide-level),
+  )),
+  header-fill: self.colors.primary,
+  fill: self.colors.neutral-lightest,
+  ..args,
+)
+
+
 
 
 /// Touying stargazer theme.
@@ -383,10 +424,6 @@
 /// - title (content, function): is the title in the header of the slide. The default is `self => utils.display-current-heading(depth: self.slide-level)`.
 ///
 /// - header-right (content, function): is the right part of the header. The default is `self => self.info.logo`.
-///
-/// - footer (content, function): is the footer of the slide. The default is `none`.
-///
-/// - footer-right (content, function): is the right part of the footer. The default is `context utils.slide-counter.display() + " / " + utils.last-slide-number`.
 ///
 /// - progress-bar (boolean): is whether to show the progress bar in the footer. The default is `true`.
 ///
@@ -458,6 +495,7 @@
     ),
     config-common(
       slide-fn: slide,
+      notes-fn: notes,
       new-section-slide-fn: new-section-slide,
     ),
     config-methods(

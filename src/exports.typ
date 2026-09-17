@@ -1,50 +1,37 @@
-#import "core.typ": (
-  alert,
-  alternatives,
-  alternatives-cases,
-  alternatives-fn,
-  alternatives-match,
-  appendix,
-  effect,
-  empty-slide,
-  from-wp,
-  get-first,
-  get-last,
-  handout-only,
-  item-by-item,
-  item-by-item-fn,
-  item-by-item-functions,
-  jump,
-  lr-navigation,
-  meanwhile,
-  next-wp,
-  not-wp,
-  only,
-  pause,
-  prev-wp,
-  slide,
-  speaker-note,
-  touying-diagram,
-  touying-equation,
-  touying-fn-wrapper,
-  touying-fn-wrapper-raw,
-  touying-mitex,
-  touying-raw,
-  touying-recall,
-  touying-reduce,
+//metadata emitters
+#import "core/animation.typ": (
+  alternatives, alternatives-cases, alternatives-fn, alternatives-match,
+  animate, animate-hidden, animate-removed, effect, handout-only, item-by-item,
+  item-by-item-fn, item-by-item-functions, jump, meanwhile, only, pause,
+  presentation-only, slides-only, swap, touying-fn-wrapper, touying-render,
+  touying-slide-wrapper, uncover,
+)
+#import "core/blocks.typ": (
+  alert, lr-navigation, speaker-note, touying-diagram, touying-equation,
+  touying-fn-wrapper-raw, touying-mitex, touying-raw, touying-reduce,
   touying-reducer,
-  touying-set-config, // touying-get-config from configs.typ
-  touying-slide,
-  touying-slide-wrapper,
-  uncover,
-  until-wp,
-  waypoint,
 )
+#import "core/waypoints.typ": (
+  from-wp, get-first, get-last, next-wp, not-wp, prev-wp, until-wp, waypoint,
+)
+// rendering logic: for article-mode and slides-mode: rely on parser.typ for parsing the metadata
+#import "core/article.typ": (
+  article-keep-layout, article-linearize, article-only, article-text,
+  graphic-marker, graphic-marker-of,
+)
+#import "core/parser.typ": measure
+#import "core/slides.typ": (
+  appendix, empty-slide, slide, touying-notes, touying-recall,
+  touying-set-config, touying-slide,
+)
+//configs
 #import "configs.typ": (
-  config-colors, config-common, config-info, config-methods, config-page,
-  config-store, default-config, touying-get-config,
+  config-article, config-colors, config-common, config-info, config-methods,
+  config-page, config-store, default-config, touying-get-config,
 )
-#import "slides.typ": touying-slides
+//entrypoint
+#import "entrypoint.typ": touying-slides
+//other
 #import "utils.typ"
 #import "magic.typ"
 #import "pdfpc.typ"

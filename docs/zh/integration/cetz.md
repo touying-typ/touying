@@ -13,7 +13,7 @@ Touying 提供了 `touying-diagram`/`touying-reduce` 函数（同义），它们
 一个例子：
 
 ```example
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import themes.metropolis: *
 #import "@preview/cetz:0.5.2"
 #import "@preview/fletcher:0.5.8" as fletcher: node, edge
@@ -73,7 +73,7 @@ Touying 提供了 `touying-diagram`/`touying-reduce` 函数（同义），它们
 同样，我们也可以使用 `only` 和 `uncover`。注意：在 Cetz 中，你需要将 Touying 的智能动画命令包裹在数组中，如 `(only(...),)`，而在 Fletcher 中则可以直接原生书写。
 
 ```example
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import "@preview/cetz:0.5.2"
 #import themes.simple: *
 #show: simple-theme.with(aspect-ratio: "16-9")
@@ -106,7 +106,7 @@ Cetz in Touying in subslide #touying-get-config("subslide")
 我们也可以传入 slide 的 self，然后使用 utils 方法。无需将这些包裹在数组中。注意：你必须为此正确计算子幻灯片数量，并传入正确的 `repeat` 数量。
 
 ```example
-#import "@preview/touying:0.7.4": *
+#import "@preview/touying:0.8.0": *
 #import "@preview/cetz:0.5.2"
 #import themes.simple: *
 #show: simple-theme.with(aspect-ratio: "16-9")
@@ -122,13 +122,13 @@ Cetz in Touying in subslide #touying-get-config("subslide")
     
     rect((0,0), (5,5))
 
-    (uncover("2-3", {
+    uncover("2-3", {
       rect((0,0), (1,1))
       rect((1,1), (2,2))
       rect((2,2), (3,3))
-    }),)
+    })
 
-    (only(3, line((0,0), (2.5, 2.5), name: "line")),)
+    only(3, line((0,0), (2.5, 2.5), name: "line"))
   })
 ])
 ```

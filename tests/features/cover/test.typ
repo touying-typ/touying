@@ -14,8 +14,12 @@
 Regular content here.#pause This content appears |with semi-transparent cover effect. Math: $E = m c^(f f)_g$ and also Raw: `inline code` and Quote: #quote(block: false)[This is a quote.]
 
 #figure(
-  rect(fill: red),
-  caption: [A red rectangle.],
+  {
+    rect(fill: red)
+    pause
+    rect(fill: blue, height: 8pt)
+  },
+  caption: [A red rectangle. #pause Caption tail.],
 )
 
 == Text Blocks with Semi-transparent Cover
@@ -51,8 +55,12 @@ Regular content here.#pause This content appears |with semi-transparent cover ef
 Content that gets hidden completely when covered.#pause New content replaces the old content entirely.
 
 #figure(
-  rect(fill: red),
-  caption: [A red rectangle.],
+  {
+    rect(fill: red)
+    pause
+    rect(fill: blue, height: 8pt)
+  },
+  caption: [A red rectangle. #pause Caption tail.],
 )
 
 == Color Changing Cover
@@ -60,30 +68,40 @@ Content that gets hidden completely when covered.#pause New content replaces the
   cover: utils.color-changing-cover.with(color: gray),
 ))
 Regular content here.#pause This text should appear in gray when covered.
-
+#let pantone = color.spot(
+  "PANTONE 2221 C",
+  rgb("#239dad"),
+)
 #figure(
-  rect(fill: red),
-  caption: [A red rectangle.],
+  {
+    rect(fill: pantone.tint(40%))
+    pause
+    rect(fill: blue, height: 8pt)
+  },
+  caption: [A red rectangle. #pause Caption tail.],
 )
 
 #pause
 
 More text with gray cover effect.
 
-== Color Changing Cover with Color Fallback Overlay
+== Color Changing Cover without Filled Fallback
 #show: touying-set-config.with(config-methods(
   cover: utils.color-changing-cover.with(
     color: gray,
-    fallback-hide: utils.cover-with-rect,
-    fallback-hide-args: (fill: gray.transparentize(50%)),
+    fallback-for-filled: false,
   ),
 ))
 
-Regular content here.#pause This text should appear in gray when covered, and non-text content should be covered with a semi-transparent gray rectangle.
+Regular content here.#pause This text should appear in gray when covered, and so should non-text content: with the filled fallback off, a filled shape is recoloured like everything else rather than being overlaid.
 
 #figure(
-  rect(fill: red),
-  caption: [A red rectangle.],
+  {
+    rect(fill: red)
+    pause
+    rect(fill: blue, height: 8pt)
+  },
+  caption: [A red rectangle. #pause Caption tail.],
 )
 
 #pause
@@ -97,8 +115,12 @@ More text with the same effect.
 Regular content here.#pause This text should appear semi-transparent when covered.
 
 #figure(
-  rect(fill: red),
-  caption: [A red rectangle.],
+  {
+    rect(fill: pantone.tint(40%))
+    pause
+    rect(fill: blue, height: 8pt)
+  },
+  caption: [A red rectangle. #pause Caption tail.],
 )
 
 #pause
@@ -117,10 +139,46 @@ More semi-transparent text.
 Regular content here.#pause This text should appear semi-transparent when covered, and non-text content should be covered with a semi-transparent gray overlay.
 
 #figure(
-  rect(fill: red),
-  caption: [A red rectangle.],
+  {
+    rect(fill: red)
+    pause
+    rect(fill: blue, height: 8pt)
+  },
+  caption: [A red rectangle. #pause Caption tail.],
 )
 
 #pause
 
 More semi-transparent text.
+
+== Cover Reconstruction: Layout
+#show: touying-set-config.with(config-methods(
+  cover: utils.alpha-changing-cover.with(alpha: 25%),
+))
+
+Positional fields and labels must survive a cover rebuild.
+#pause
+
+#align(center)[Centered] <cov-align>
+A #link("https://typst.app")[link] in a sentence.
+#rotate(10deg, reflow: true)[Rotated]
+#block(width: 100%, height: 0.8cm, stroke: 0.5pt)[#place(
+  top + right,
+)[Placed] <cov-place>]
+#columns(2)[Two #colbreak() columns] <cov-columns>
+
+== Cover Reconstruction: Math and Shapes
+#show: touying-set-config.with(config-methods(
+  cover: utils.color-changing-cover.with(color: gray),
+))
+
+The same for math classes and shapes with positional vertices.
+#pause
+
+$ underbrace(a + b, "sum") quad a class("binary", star) b $
+#polygon(fill: blue, (0pt, 0pt), (20pt, 0pt), (10pt, 16pt))
+#curve(fill: red, curve.move((0pt, 0pt)), curve.line((20pt, 12pt)), curve.line((
+  0pt,
+  12pt,
+)))
+#raw("let x = 1\nlet y = 2", lang: "typst", block: true)
