@@ -1076,19 +1076,23 @@
 ///     anchor (`base`, or the outer slide's current position when
 ///     `base: auto`)
 ///   - `label`/waypoint marker (`get-first(<wp>)`, `get-last(<wp>)`,
-///     `from-wp`, `until-wp`, `not-wp`, ...): resolved against `body`'s own
-///     waypoints. A single-point marker (`get-first`, `get-last`) exposes
-///     one frozen stage; a bare label or a range/complement marker
-///     (`from-wp`, `until-wp`, `not-wp`) exposes every subslide it spans —
-///     `not-wp`'s gap is simply skipped over, collapsing onto whichever
-///     member comes right after it.
+///     `from-wp`, `until-wp`, `not-wp`, ...): a single-point marker
+///     (`get-first`, `get-last`) exposes one frozen stage; a bare label or
+///     a range/complement marker (`from-wp`, `until-wp`, `not-wp`) exposes
+///     every subslide it spans — `not-wp`'s gap is simply skipped over,
+///     collapsing onto whichever member comes right after it.
+///
+///   A waypoint marker names one of `body`'s own waypoints, the same way it
+///   does for `touying-recall`. Set `use-outer-waypoints` to aim it at the
+///   enclosing slide's waypoints instead.
 ///
 /// - base (auto, int): Starting repetition counter for `body`'s own
 ///   internal pause-numbering — purely internal to `body`, never affects
 ///   the enclosing slide's own numbering (see `start` for that).
 ///   Use this to align absolute with relative animations that you render.
-///   - `auto` (default): in slide mode, inherits the current slide's
-///     repetition counter and waypoints; in article mode, resolves to `1`.
+///   - `auto` (default): in slide mode, starts at the enclosing slide's
+///     repetition counter as it stands where this call sits; in article
+///     mode, resolves to `1`.
 ///   - `int`: explicit offset, e.g. `base: 3` makes the first pause
 ///     create subslide 4 instead of 2.
 ///
@@ -1111,6 +1115,11 @@
 ///   - `false`: remove `body` again (no reserved layout space) once past
 ///     its own natural duration, instead of freezing on the last member.
 ///
+/// - use-outer-waypoints (bool): Resolve a waypoint marker in `subslides`
+///   against the enclosing slide's waypoints instead of `body`'s own, to aim
+///   at a position named outside. Needs `base: auto`, an explicit `base`
+///   makes `body` its own timeline. Default is `false`.
+///
 /// -> content
 #let touying-render(
   body,
@@ -1118,6 +1127,7 @@
   base: auto,
   start: auto,
   repeat-last: true,
+  use-outer-waypoints: false,
 ) = {
   [#metadata((
     kind: "touying-render",
@@ -1126,6 +1136,7 @@
     base: base,
     start: start,
     repeat-last: repeat-last,
+    use-outer-waypoints: use-outer-waypoints,
   ))<touying-temporary-mark>]
 }
 

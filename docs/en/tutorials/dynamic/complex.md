@@ -216,7 +216,9 @@ The rule is the same in both classes: **the last effect you wrote wins**, a plac
 
 `subslides` takes the same specs as `uncover`, including ranges like `"2-4"` and `"h"` for the current position, and it may step through a whole range rather than a single frame. `base:` sets the subslide the content counts from, and `start:` and `repeat-last:` behave as in `alternatives`.
 
-Pass an explicit `base:` for self-contained content. With `base: auto` the content resolves against the enclosing slide's own animation, which is what you want for `"h"` and rarely what you want for anything else.
+Pass an explicit `base:` for self-contained content. With `base: auto` the content counts from the enclosing slide's own animation, which is what you want for `"h"` and rarely what you want for anything else.
+
+A waypoint label in `subslides` names one of the rendered content's own waypoints, just as it does for `touying-recall`. To aim at a waypoint of the surrounding slide instead, pass `use-outer-waypoints: true`.
 
 ## touying-recall
 

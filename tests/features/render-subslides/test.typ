@@ -77,17 +77,10 @@
 #touying-render(stages("neg-here"), subslides: "!h")
 
 == A bare waypoint label now exposes its whole range, not just its start
-// base: 1 (not auto) is required so subslides: resolves against
-// wp-stages("bare")'s own internal waypoints, rather than the enclosing
-// slide's (an existing, unrelated coupling this test isn't about).
-#touying-render(wp-stages("bare"), subslides: label("bare-b"), base: 1)
+#touying-render(wp-stages("bare"), subslides: label("bare-b"))
 
 == get-last still pins a single subslide
-#touying-render(
-  wp-stages("last"),
-  subslides: get-last(label("last-b")),
-  base: 1,
-)
+#touying-render(wp-stages("last"), subslides: get-last(label("last-b")))
 
 == Waypoint positions share an explicit base's absolute numbering
 #let offset-wp-stages = [
@@ -118,6 +111,31 @@
 )
 #only(1)[outer one #label("offset-auto-outer-1")]
 #only(2)[outer two #label("offset-auto-outer-2")]
+
+// `<shared-wp>` is declared both on the slide and inside the body, at
+// positions that select different stages, so each scenario shows which of the
+// two maps the marker was resolved against. One slide each: `base: auto`
+// counts from the enclosing flow, so sharing a slide would couple them.
+#let shared-wp-stages(prefix) = [
+  #only("h")[A #label(prefix + "-wp-a")]
+  #pause
+  #waypoint(<shared-wp>, advance: false)
+  #only("h")[B #label(prefix + "-wp-b")]
+]
+
+== A waypoint label names the rendered body's own waypoint
+#waypoint(<shared-wp>, advance: false)
+#pause
+#touying-render(shared-wp-stages("own"), subslides: get-last(<shared-wp>))
+
+== use-outer-waypoints aims the same marker at the enclosing slide instead
+#waypoint(<shared-wp>, advance: false)
+#pause
+#touying-render(
+  shared-wp-stages("outer"),
+  subslides: get-last(<shared-wp>),
+  use-outer-waypoints: true,
+)
 
 #context {
   // --- plain int: unchanged single-frame behavior ---
@@ -190,4 +208,14 @@
     query(label("offset-auto-second")).first().location().page(),
     query(label("offset-auto-outer-2")).first().location().page(),
   )
+
+  // --- `<shared-wp>` resolved against the body's own map: it sits before
+  // stage B there, so B is what shows and A never does ---
+  assert.eq(query(label("own-wp-a")).len(), 0)
+  assert.eq(query(label("own-wp-b")).len(), 2)
+
+  // --- the same marker with `use-outer-waypoints`: the slide's own `<shared-wp>`
+  // sits at its first subslide, selecting stage A instead ---
+  assert.eq(query(label("outer-wp-a")).len(), 2)
+  assert.eq(query(label("outer-wp-b")).len(), 0)
 }

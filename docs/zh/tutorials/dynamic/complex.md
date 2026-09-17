@@ -217,7 +217,9 @@ body 必须作为 `touying-fn-wrapper-raw` 的*位置*参数传入，这一点�
 
 `subslides` 接受和 `uncover` 相同的写法，包括 `"2-4"` 这样的范围以及表示当前位置的 `"h"`，它也可以一次步进整个范围而不只是单个帧。`base:` 设定内容据以计数的子幻灯片起点，`start:` 和 `repeat-last:` 的行为与 `alternatives` 中的同名参数一致。
 
-对于自成一体的内容，请显式传入 `base:`。若使用 `base: auto`，内容会依照外层幻灯片自身的动画来解析，这正是 `"h"` 所需要的行为，但对其他情况而言则很少是你想要的。
+对于自成一体的内容，请显式传入 `base:`。若使用 `base: auto`，内容会从外层幻灯片自身的动画开始计数，这正是 `"h"` 所需要的行为，但对其他情况而言则很少是你想要的。
+
+`subslides` 中的 waypoint 标签指向被渲染内容自身的 waypoint，这与 `touying-recall` 的行为一致。若想改为指向外层幻灯片的 waypoint，请传入 `use-outer-waypoints: true`。
 
 ## touying-recall
 
