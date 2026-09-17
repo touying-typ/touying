@@ -14,7 +14,11 @@
 Regular content here.#pause This content appears |with semi-transparent cover effect. Math: $E = m c^(f f)_g$ and also Raw: `inline code` and Quote: #quote(block: false)[This is a quote.]
 
 #figure(
-  { rect(fill: red); pause; rect(fill: blue, height: 8pt) },
+  {
+    rect(fill: red)
+    pause
+    rect(fill: blue, height: 8pt)
+  },
   caption: [A red rectangle. #pause Caption tail.],
 )
 
@@ -51,7 +55,11 @@ Regular content here.#pause This content appears |with semi-transparent cover ef
 Content that gets hidden completely when covered.#pause New content replaces the old content entirely.
 
 #figure(
-  { rect(fill: red); pause; rect(fill: blue, height: 8pt) },
+  {
+    rect(fill: red)
+    pause
+    rect(fill: blue, height: 8pt)
+  },
   caption: [A red rectangle. #pause Caption tail.],
 )
 
@@ -65,7 +73,11 @@ Regular content here.#pause This text should appear in gray when covered.
   rgb("#239dad"),
 )
 #figure(
-  { rect(fill: pantone.tint(40%)); pause; rect(fill: blue, height: 8pt) },
+  {
+    rect(fill: pantone.tint(40%))
+    pause
+    rect(fill: blue, height: 8pt)
+  },
   caption: [A red rectangle. #pause Caption tail.],
 )
 
@@ -77,14 +89,18 @@ More text with gray cover effect.
 #show: touying-set-config.with(config-methods(
   cover: utils.color-changing-cover.with(
     color: gray,
-    fallback-for-filled: false
+    fallback-for-filled: false,
   ),
 ))
 
 Regular content here.#pause This text should appear in gray when covered, and so should non-text content: with the filled fallback off, a filled shape is recoloured like everything else rather than being overlaid.
 
 #figure(
-  { rect(fill: red); pause; rect(fill: blue, height: 8pt) },
+  {
+    rect(fill: red)
+    pause
+    rect(fill: blue, height: 8pt)
+  },
   caption: [A red rectangle. #pause Caption tail.],
 )
 
@@ -99,7 +115,11 @@ More text with the same effect.
 Regular content here.#pause This text should appear semi-transparent when covered.
 
 #figure(
-  { rect(fill: pantone.tint(40%)); pause; rect(fill: blue, height: 8pt) },
+  {
+    rect(fill: pantone.tint(40%))
+    pause
+    rect(fill: blue, height: 8pt)
+  },
   caption: [A red rectangle. #pause Caption tail.],
 )
 
@@ -119,7 +139,11 @@ More semi-transparent text.
 Regular content here.#pause This text should appear semi-transparent when covered, and non-text content should be covered with a semi-transparent gray overlay.
 
 #figure(
-  { rect(fill: red); pause; rect(fill: blue, height: 8pt) },
+  {
+    rect(fill: red)
+    pause
+    rect(fill: blue, height: 8pt)
+  },
   caption: [A red rectangle. #pause Caption tail.],
 )
 
