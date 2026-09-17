@@ -278,7 +278,8 @@
 
 /// Normalise `config-article(wrap: ..)` into an ordered list of float specs.
 ///
-/// Each spec is `(match: element => bool, width: ratio, align: alignment)`, and
+/// Each spec is `(match: element => bool, width: ratio/relative/length,
+/// align: alignment)`, and
 /// the first whose `match` accepts a candidate decides how it floats. A
 /// candidate no spec accepts stays in the flow.
 ///
