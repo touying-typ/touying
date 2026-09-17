@@ -91,39 +91,36 @@
   }
 }
 
-#let cblock(title: none, it) = touying-fn-wrapper((self: none) => {
-  _cblock(
-    self: self,
-    title: title,
-    title-fill: self.colors.primary,
-    body-fill: self.colors.primary-light,
-    it,
-  )
-})
+#let cblock(title: none, it) = touying-fn-wrapper-raw(
+  _cblock.with(title: title),
+  it,
+)
 
 #let tblock = cblock
 
-#let alert-block(title: none, it) = touying-fn-wrapper((self: none) => {
-  _cblock(
+#let alert-block(title: none, it) = touying-fn-wrapper-raw(
+  (self: none, it) => _cblock(
     self: self,
     title: title,
     title-fill: self.colors.alert,
     title-color: white,
     body-fill: self.colors.alert-light,
     it,
-  )
-})
+  ),
+  it,
+)
 
-#let example-block(title: none, it) = touying-fn-wrapper((self: none) => {
-  _cblock(
+#let example-block(title: none, it) = touying-fn-wrapper-raw(
+  (self: none, it) => _cblock(
     self: self,
     title: title,
     title-fill: self.colors.example,
     title-color: white,
     body-fill: self.colors.example-light,
     it,
-  )
-})
+  ),
+  it,
+)
 
 // Header definition
 #let madrid-header(self) = {
@@ -295,7 +292,8 @@
     config,
   )
   self.store.title = none
-  let info = self.info + args.named()
+  self.info = self.info + args.named()
+  let info = self.info
   info.authors = {
     let authors = if "authors" in info {
       info.authors
@@ -368,7 +366,11 @@
       text(
         size: 0.95em,
         fill: self.colors.neutral-darkest,
-        utils.display-info-date(self),
+        if type(info.date) == datetime {
+          info.date.display(self.at("datetime-format", default: auto))
+        } else {
+          info.date
+        },
       )
     }
 
@@ -388,6 +390,7 @@
   numbered: true,
   body,
 ) = touying-slide-wrapper(self => {
+  self = utils.merge-dicts(self, config)
   self.store.title = utils.display-current-heading(
     level: level,
     numbered: false,
@@ -405,9 +408,14 @@
 })
 
 /// Focus slide
-#let focus-slide(config: (:), body) = touying-slide-wrapper(self => {
+#let focus-slide(
+  config: (:),
+  align: horizon + center,
+  body,
+) = touying-slide-wrapper(self => {
   self = utils.merge-dicts(
     self,
+    config,
     config-common(freeze-slide-counter: true),
     config-page(
       fill: self.colors.primary,
@@ -416,8 +424,15 @@
       footer: none,
     ),
   )
-  set text(fill: self.colors.neutral-lightest, weight: "bold", size: 1.5em)
-  touying-slide(self: self, config: config, align(horizon + center, body))
+  touying-slide(
+    self: self,
+    config: config,
+    setting: it => std.align(
+      align,
+      text(fill: self.colors.neutral-lightest, weight: "bold", size: 1.5em, it),
+    ),
+    body,
+  )
 })
 
 /// Outline slide for Madrid theme
@@ -446,7 +461,6 @@
 /// Main Madrid theme definition
 #let madrid-theme(
   aspect-ratio: "16-9",
-  page-size: "A4",
   align: top + left,
   title: self => utils.display-current-heading(depth: self.slide-level),
   subtitle: none,
