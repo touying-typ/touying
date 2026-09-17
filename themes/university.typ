@@ -68,6 +68,7 @@
   let footer(self) = {
     set std.align(center + bottom)
     set text(size: .4em)
+    show linebreak: none
     {
       let cell(..args, it) = components.cell(
         ..args,
