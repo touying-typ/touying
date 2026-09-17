@@ -40,9 +40,16 @@ Other improvements:
 - animations are now fully supported in equations, even in functions like `frac` or `mat`.
 - `touying-recall` was extended from whole slides to any labelled element
 - `touying-fn-wrapper-raw` now parses and nests its body, so `#alert[.. #pause ..]` works, and much more besides
+- list animations are finally also layout-stable in item-by-item and when nontight bc of `parbreak` 
 - `.pdfpc` files can be written directly as bundle assets instead of through a separate `typst query` step
 - the footnote bibliography was rebuilt on real Typst bibliographies, and
 - the speaker-note panel is now a theme-supplied function with documentation to match.
+- a `measure` function that overrides typst's own one. Supports measuring animated content.
+- an improved `touying-reducer` making integration of other packages more straight-forward
+- `alpha-changing-cover` and `color-changing-cover` have been overhauled and are perfect cover functions now.
+- you may animate figures and captions now
+
+- and **many many** bug fixes
 
 Internally, `src/core.typ` (6288 lines) was split into modules and the content handling was unified and several functions (mainly out of utils) moved places.
 
