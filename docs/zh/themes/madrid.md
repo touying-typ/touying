@@ -43,5 +43,5 @@ Madrid 主题提供了 Beamer 风格的圆角块：
 - `#title-slide()`：标题页，在圆角蓝色框中展示标题，下方展示作者、机构与日期。
 - `#outline-slide()`：大纲/目录页。
 - `#slide(...)`：普通内容页。
-- `#new-section-slide(...)`：章节分页。
+- `#new-section-slide(config: (:), level: 1, numbered: true, body)`：章节分页。
 - `#focus-slide[...]`：聚焦页。

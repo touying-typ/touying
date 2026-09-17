@@ -3,7 +3,12 @@
 
 #import "../src/exports.typ": *
 
-// 3D Beamer-style spherical bullet marker
+/// 3D Beamer-style spherical bullet marker.
+///
+/// - color (color): The primary color of the sphere.
+/// - light-color (color): The highlight color near the top-left light source.
+/// - dark-color (color): The shadow color near the bottom-right.
+/// -> content
 #let beamer-ball(
   color: rgb("#3333b3"),
   light-color: rgb("#a8b8ff"),
@@ -25,7 +30,10 @@
   )
 }
 
-// Navigation symbols helper
+/// Decorative navigation symbols helper recreating the LaTeX Beamer navigation bar.
+///
+/// - fill (color): Fill color for the decorative navigation symbols.
+/// -> content
 #let navigation-symbols(fill: rgb("#9292d6").transparentize(40%)) = {
   set text(size: 6.5pt, fill: fill)
   box(
@@ -91,13 +99,28 @@
   }
 }
 
+/// Standard rounded block for Madrid theme.
+///
+/// - title (content, none): The title of the block.
+/// - it (content): The content of the block.
+/// -> content
 #let cblock(title: none, it) = touying-fn-wrapper-raw(
   _cblock.with(title: title),
   it,
 )
 
+/// Alias for `#cblock` to match standard Touying theorem block interface.
+///
+/// - title (content, none): The title of the block.
+/// - it (content): The content of the block.
+/// -> content
 #let tblock = cblock
 
+/// Alert rounded block for Madrid theme with red header styling.
+///
+/// - title (content, none): The title of the alert block.
+/// - it (content): The content of the alert block.
+/// -> content
 #let alert-block(title: none, it) = touying-fn-wrapper-raw(
   (self: none, it) => _cblock(
     self: self,
@@ -110,6 +133,11 @@
   it,
 )
 
+/// Example rounded block for Madrid theme with green header styling.
+///
+/// - title (content, none): The title of the example block.
+/// - it (content): The content of the example block.
+/// -> content
 #let example-block(title: none, it) = touying-fn-wrapper-raw(
   (self: none, it) => _cblock(
     self: self,
@@ -124,6 +152,9 @@
 
 // Header definition
 #let madrid-header(self) = {
+  if self.store.header != auto {
+    return utils.call-or-display(self, self.store.header)
+  }
   if self.store.title != none {
     place(
       top + left,
@@ -158,6 +189,9 @@
 
 // Footer definition
 #let madrid-footer(self) = {
+  if self.store.footer != auto {
+    return utils.call-or-display(self, self.store.footer)
+  }
   set align(bottom)
 
   // Optional navigation symbols above footer on the right
@@ -185,7 +219,7 @@
       rect(
         width: 100%,
         height: 100%,
-        fill: rgb("#191959"),
+        fill: self.colors.primary.darken(50%),
         inset: (x: 0.8em),
         stroke: none,
         align(
@@ -200,7 +234,7 @@
       rect(
         width: 100%,
         height: 100%,
-        fill: rgb("#262686"),
+        fill: self.colors.primary.darken(25%),
         inset: (x: 1.2em),
         stroke: none,
         align(
@@ -458,12 +492,33 @@
   ..args,
 )
 
-/// Main Madrid theme definition
+/// Main Madrid theme definition recreating the classic LaTeX Beamer Madrid theme.
+///
+/// - aspect-ratio (str): The aspect ratio of the slides. Default is `"16-9"`.
+/// - align (alignment): The default alignment of slide content. Default is `top + left`.
+/// - title (content, function): The title displayed in the header banner. Default is current heading.
+/// - subtitle (content, function, none): Optional subtitle displayed below the title in the header banner.
+/// - header (content, function, auto): Custom slide header override. Default is `auto`.
+/// - footer (content, function, auto): Custom slide footer override. Default is `auto`.
+/// - header-height (length): Height of the top header banner. Default is `2.2em`.
+/// - navigation-symbols (bool): Whether to display decorative Beamer navigation symbols. Default is `false`.
+/// - footer-left (content, function): Content displayed in the left footer cell. Default is author.
+/// - footer-right (content, function): Content displayed in the center footer cell. Default is title.
+/// - footer-date (content, function): Content displayed in the date part of the right footer cell. Default is date.
+/// - primary (color): Primary theme color. Default is `rgb("#3333b3")`.
+/// - primary-light (color): Light primary color for block bodies. Default is `rgb("#e8ebfa")`.
+/// - alert (color): Accent color for alert blocks. Default is `rgb("#cc0000")`.
+/// - alert-light (color): Light alert color for alert block bodies. Default is `rgb("#fae8e8")`.
+/// - example (color): Accent color for example blocks. Default is `rgb("#008000")`.
+/// - example-light (color): Light example color for example block bodies. Default is `rgb("#e8fae8")`.
+/// - font (auto, str, array): Font family for text. Default is `auto`.
 #let madrid-theme(
   aspect-ratio: "16-9",
   align: top + left,
   title: self => utils.display-current-heading(depth: self.slide-level),
   subtitle: none,
+  header: auto,
+  footer: auto,
   header-height: 2.2em,
   navigation-symbols: false,
   footer-left: self => {
@@ -551,6 +606,8 @@
       align: align,
       title: title,
       subtitle: subtitle,
+      header: header,
+      footer: footer,
       header-height: header-height,
       navigation-symbols: navigation-symbols,
       footer-left: footer-left,
