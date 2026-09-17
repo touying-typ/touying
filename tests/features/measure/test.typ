@@ -66,8 +66,10 @@
   // zero here is the correct answer, not the bug above.
   assert.eq(measure([#only("2")[Gone]], subslide: 1).height, 0pt)
 
-  // `item-by-item` removes the space of items it has not revealed yet, so it
-  // *shrinks* as it advances. Its first subslide is its largest.
+  // `item-by-item` keeps the rows of items it has not revealed yet, so it
+  // occupies the same height on every subslide: covering an item must not
+  // cost the list that item's row, or everything below it would creep upward
+  // as items appear. `features/item-by-item-measure` pins the positions.
   let items = [
     #item-by-item[
       - one
@@ -78,10 +80,11 @@
   assert.eq(std.measure(items).height, 0pt)
   let first = measure(items, subslide: 1).height
   let last = measure(items, subslide: auto).height
-  assert(first > last)
+  assert.eq(first, last)
 
   // `subslide: none` maximises over every subslide, which is the worst case
-  // and therefore what an overflow check wants.
+  // and therefore what an overflow check wants. Here every subslide is that
+  // same worst case.
   assert.eq(measure(items, subslide: none).height, first)
 
   // Each dimension is maximised independently: the tallest and the widest
