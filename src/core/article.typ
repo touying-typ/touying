@@ -216,7 +216,13 @@
     type(core) == content
       and tree.is-kind(core.at("body", default: none), "touying-slide-wrapper")
   ) {
-    return core.body
+    // A label on the call sits on the block, not on the mark inside it, so
+    // unwrapping to the bare mark would drop it and with it whatever mode
+    // the slide was restricted to.
+    let lbl = core.at("label", default: none)
+    return if lbl == none { core.body } else {
+      [#metadata(core.body.value)#lbl]
+    }
   }
   core
 }
@@ -288,7 +294,12 @@
 /// -> array
 #let _wrap-config(article-cfg) = {
   let wrap = article-cfg.at("wrap", default: (:))
-  if type(wrap) == bool { wrap = (overrides: ((target: _ => wrap),)) }
+  // `false` is "float nothing", which is an empty rule set rather than a rule
+  // matching everything with floating turned off.
+  if type(wrap) == bool {
+    if not wrap { return () }
+    wrap = (overrides: ((target: _ => true),))
+  }
   assert(
     type(wrap) == dictionary,
     message: "config-article(wrap:) takes a dictionary. Got: " + repr(wrap),
@@ -473,7 +484,16 @@
         })
 
         let floats = floated.map(c => {
-          let w = env.size.width * c.spec.width
+          // A ratio is a share of the text width; an absolute length is taken
+          // as given, and a `relative` carries one of each.
+          let width = c.spec.width
+          let w = if type(width) == ratio {
+            env.size.width * width
+          } else if type(width) == relative {
+            env.size.width * width.ratio + width.length
+          } else {
+            width
+          }
           let filled = fill-images(_strip-graphic-markers(c.element), w)
           // A bare image already fills the width exactly. Anything else is
           // boxed to it, so the width means the same thing for a table or a
