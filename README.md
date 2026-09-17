@@ -48,7 +48,6 @@ Other improvements:
 - an improved `touying-reducer` making integration of other packages more straight-forward
 - `alpha-changing-cover` and `color-changing-cover` have been overhauled and are perfect cover functions now.
 - you may animate figures and captions now
-
 - and **many many** bug fixes
 
 Internally, `src/core.typ` (6288 lines) was split into modules and the content handling was unified and several functions (mainly out of utils) moved places.
