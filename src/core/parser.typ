@@ -2496,10 +2496,14 @@
           // anchor against.
           let start-spec = child.value.at("start", default: auto)
           let repeat-last-spec = child.value.at("repeat-last", default: true)
-          if (
+          // Pushed rather than emitted here: this function ends in an explicit
+          // `return`, which discards whatever the walk joined along the way.
+          let inert-anchor-warning = if (
             self.at("article-mode", default: false)
               and (start-spec != auto or repeat-last-spec != true)
           ) {
+            start-spec = auto
+            repeat-last-spec = true
             extern.warning(
               "touying-render: start:/repeat-last: have no effect in "
                 + "article mode (there is no subslide progression to gate "
@@ -2507,8 +2511,9 @@
                 + "suppress this warning once you've confirmed that's what "
                 + "you want.",
             )
-            start-spec = auto
-            repeat-last-spec = true
+          }
+          if inert-anchor-warning != none {
+            result.push(inert-anchor-warning)
           }
           // Compute render context (inlined from _prepare-render-context)
           let reducer-data = if tree.is-kind(
