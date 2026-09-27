@@ -302,7 +302,7 @@
     return s
   }
   let lowercase = lower(s)
-  upper(lowercase.at(0)) + lowercase.slice(1)
+  upper(lowercase.at(0)) + lowercase.slice(lowercase.at(0).len())
 }
 
 
