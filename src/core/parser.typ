@@ -202,7 +202,33 @@
 }
 
 
-#let _parse-touying-reducer(self: none, base: 1, index: 1, reducer) = {
+/// Parse an external package's animated diagram and extract its repetitions.
+///
+/// Walks the elements handed to a reducer such as `cetz-canvas` or
+/// `fletcher-diagram`, resolving the pause markers and fn-wrappers among them
+/// and covering the rest with the package's own cover function.
+///
+/// Besides the drawn diagram and its repetition count, returns what the caller
+/// needs to place the diagram on the right subslides:
+///   - min-repetitions: the lowest the counter reached inside, which a
+///     `#meanwhile` among the elements lowers and a later `#pause` hides again,
+///   - has-fn-wrapper: whether any element sets its own visibility, by an
+///     absolute subslide number or a waypoint.
+///
+/// - self (dictionary): The presentation context
+/// - need-cover (bool): Whether hidden content should be covered
+/// - base (int): Base repetition count
+/// - index (int): Current subslide index
+/// - reducer (dictionary): The reducer metadata to parse
+///
+/// -> (array, int, int, bool)
+#let _parse-touying-reducer(
+  self: none,
+  need-cover: true,
+  base: 1,
+  index: 1,
+  reducer,
+) = {
   let parsed-results = ()
   // get cover function from self
   let cover = reducer.cover
@@ -244,12 +270,14 @@
   // is what `cover` sees, because a cover function like `cetz.draw.hide` is
   // written for one of the package's own elements, not for its pieces.
   //
-  // -> (array, int, int, int)
+  // -> (array, int, int, int, int, bool)
   let visit(
     nodes,
     repetitions,
     max-repetitions,
     last-subslide,
+    min-repetitions,
+    has-fn-wrapper,
     wrap-leaf: false,
   ) = {
     let out = ()
@@ -271,6 +299,7 @@
             repetitions = child.value.n
             last-subslide = 0
           }
+          min-repetitions = calc.min(min-repetitions, repetitions)
         } else if kind == "touying-waypoint" {
           // Waypoint inside reducer: advance repetitions if applicable.
           // Only implicit/explicit waypoints supported, no waypoint markers.
@@ -285,6 +314,7 @@
             )
             repetitions = waypoints.at(lbl).first
             last-subslide = 0
+            min-repetitions = calc.min(min-repetitions, repetitions)
           } else if (
             child.value.at("advance", default: true) and lbl in waypoints
           ) {
@@ -309,6 +339,7 @@
           // Handle function wrappers (uncover, only, alternatives, etc.)
           // These always escape the pause zone: they handle their own
           // visibility.
+          has-fn-wrapper = true
           let extra-args = (:)
           if child.value.last-subslide != none {
             let resolved = if type(child.value.last-subslide) == function {
@@ -356,16 +387,20 @@
         // `hide` both want that array back, not the bare item inside it.
         // The array itself is handed on, keeping the one-array shape a block
         // body's `reduce` expects.
-        let (items, rep, maxrep, ls) = visit(
+        let (items, rep, maxrep, ls, inner-min, inner-fn-wrapper) = visit(
           child,
           repetitions,
           max-repetitions,
           last-subslide,
+          min-repetitions,
+          has-fn-wrapper,
           wrap-leaf: true,
         )
         repetitions = rep
         max-repetitions = maxrep
         last-subslide = ls
+        min-repetitions = inner-min
+        has-fn-wrapper = inner-fn-wrapper
         out.push(items)
       } else if (
         type(child) != array
@@ -374,17 +409,21 @@
         // A container with marks inside, or holding a label that this subslide
         // must not emit: visit its sub-content and put the container back
         // around the result, dropping its own label when it is held back.
-        let (items, rep, maxrep, ls) = visit(
+        let (items, rep, maxrep, ls, inner-min, inner-fn-wrapper) = visit(
           tree.children-of(child),
           repetitions,
           max-repetitions,
           last-subslide,
+          min-repetitions,
+          has-fn-wrapper,
         )
         repetitions = rep
         max-repetitions = maxrep
         last-subslide = ls
+        min-repetitions = inner-min
+        has-fn-wrapper = inner-fn-wrapper
         out.push(tree.rebuild(child, items, labeled: not held-back(child)))
-      } else if repetitions <= index {
+      } else if repetitions <= index or not need-cover {
         out.push(child)
       } else if wrap-leaf {
         // Inside a joined block the element was handed over re-wrapped, so a
@@ -398,15 +437,24 @@
         out.push(cover(child))
       }
     }
-    (out, repetitions, max-repetitions, last-subslide)
+    (
+      out,
+      repetitions,
+      max-repetitions,
+      last-subslide,
+      min-repetitions,
+      has-fn-wrapper,
+    )
   }
 
-  let (result, repetitions, max-repetitions, last-subslide) = visit(
-    reducer.args,
-    base,
-    base,
-    0,
-  )
+  let (
+    result,
+    repetitions,
+    max-repetitions,
+    last-subslide,
+    min-repetitions,
+    has-fn-wrapper,
+  ) = visit(reducer.args, base, base, 0, base, false)
 
   // Safety net: filter out any remaining touying metadata nodes before passing
   // to the external reduce function (e.g. fletcher.diagram, cetz.canvas).
@@ -437,7 +485,12 @@
   } else { drawn })
   max-repetitions = calc.max(max-repetitions, repetitions)
   max-repetitions = calc.max(max-repetitions, last-subslide)
-  return (parsed-results, max-repetitions)
+  return (
+    parsed-results,
+    max-repetitions,
+    min-repetitions,
+    has-fn-wrapper,
+  )
 }
 
 
@@ -1611,7 +1664,7 @@
       dr,
     )
     let max-rep-raw = if probe-reducer-data != none {
-      let (_, mrr) = _parse-touying-reducer(
+      let (_, mrr, ..) = _parse-touying-reducer(
         self: self + (waypoints: provisional-cwp, subslide: 9999),
         base: 1,
         index: 9999,
@@ -1740,7 +1793,7 @@
           dr,
         )
         let max-rep-raw = if reducer-data != none {
-          let (_, mrr) = _parse-touying-reducer(
+          let (_, mrr, ..) = _parse-touying-reducer(
             self: minimal-self + (waypoints: provisional-cwp, subslide: 9999),
             base: render-base,
             index: 9999,
@@ -1792,7 +1845,7 @@
             )
         )
         if reducer-data != none {
-          let (r, _) = _parse-touying-reducer(
+          let (r, ..) = _parse-touying-reducer(
             self: render-self,
             base: render-base,
             index: target,
@@ -2438,8 +2491,19 @@
           min-repetitions = calc.min(min-repetitions, repetitions)
         } else if kind == "touying-reducer" {
           // Handle external package reducers (CeTZ, Fletcher) with animations
-          let (conts, nextrepetitions) = _parse-touying-reducer(
+          // The elements decide their own visibility whenever one of them
+          // carries an absolute subslide number or a waypoint, so the walk
+          // covers them individually and the diagram is built on every
+          // subslide. Without such an element it animates by the flow alone,
+          // and the counter it inherited is what places it.
+          let (
+            conts,
+            nextrepetitions,
+            inner-min-repetitions,
+            inner-has-fn-wrapper,
+          ) = _parse-touying-reducer(
             self: self,
+            need-cover: need-cover,
             base: repetitions,
             index: index,
             child.value,
@@ -2463,13 +2527,21 @@
           } else {
             cont
           }
-          if repetitions <= index or not need-cover {
+          if (
+            calc.min(repetitions, inner-min-repetitions) <= index
+              or inner-has-fn-wrapper
+              or not need-cover
+          ) {
             result.push(cont)
           } else {
             hidden-parts.push(cont)
           }
           repetitions = nextrepetitions
-          min-repetitions = calc.min(min-repetitions, repetitions)
+          min-repetitions = calc.min(
+            min-repetitions,
+            repetitions,
+            inner-min-repetitions,
+          )
         } else if kind == "touying-render" {
           // Render inline content at a specific subslide.
           // In slide mode, default (auto) renders at the current slide index.
@@ -2536,7 +2608,7 @@
           // caller (`_parse-touying-reducer` already folds them itself, hence
           // the asymmetry between the branches).
           let probe(wp) = if reducer-data != none {
-            let (_, mrr) = _parse-touying-reducer(
+            let (_, mrr, ..) = _parse-touying-reducer(
               self: self + (waypoints: wp, subslide: 9999),
               base: render-base,
               index: 9999,
@@ -2696,7 +2768,7 @@
           // Render at target (inlined from _render-at-subslide)
           let render-self = self + (waypoints: cwp, subslide: target)
           let cont = if reducer-data != none {
-            let (r, _) = _parse-touying-reducer(
+            let (r, ..) = _parse-touying-reducer(
               self: render-self,
               base: render-base,
               index: target,
@@ -3713,7 +3785,7 @@
     dr,
   )
   let max-rep-raw = if reducer-data != none {
-    let (_, mrr) = _parse-touying-reducer(
+    let (_, mrr, ..) = _parse-touying-reducer(
       self: self + (waypoints: provisional-cwp, subslide: 9999),
       base: render-base,
       index: 9999,
@@ -3758,7 +3830,7 @@
 ) = {
   let render-self = self + (waypoints: cwp, subslide: target)
   if reducer-data != none {
-    let (r, _) = _parse-touying-reducer(
+    let (r, ..) = _parse-touying-reducer(
       self: render-self,
       base: render-base,
       index: target,
