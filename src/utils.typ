@@ -694,12 +694,14 @@
     it
   } else if type(it) == content {
     if it.func() == raw {
-      if it.block {
+      // Optional fields are absent on content built by a direct call such as
+      // `raw("x")`, so they have to be read with a default.
+      if it.at("block", default: false) {
         (
           "\n"
             + indent * " "
             + "```"
-            + it.lang
+            + it.at("lang", default: none)
             + it
               .text
               .split("\n")
@@ -750,10 +752,11 @@
         "#link(\"" + it.dest + "\")[" + markup-text(it.body) + "]"
       }
     } else if it.func() == heading {
+      let depth = tree.heading-depth(it)
       if mode == "md" {
-        it.depth * "#" + " " + markup-text(it.body) + "\n"
+        depth * "#" + " " + markup-text(it.body) + "\n"
       } else {
-        it.depth * "=" + " " + markup-text(it.body) + "\n"
+        depth * "=" + " " + markup-text(it.body) + "\n"
       }
     } else if tree.is-styled(it) {
       markup-text(it.child)
@@ -1076,11 +1079,14 @@
 #let _caption-covered-label = <touying-caption-covered>
 
 /// true for all typst content that is not inline.
+///
+/// Needs context: content built by a call such as `raw("x")` carries no
+/// `block` field, and then the active `set` rule decides.
 #let is-block(it) = {
   // whenever sth is wrapped in a box it is automatically inlined.
   //first get the variable stuff
   if it.func() in (math.equation, raw, quote) {
-    return it.block
+    return it.at("block", default: (it.func()).block)
   }
   (
     it.func()
@@ -1194,7 +1200,15 @@
   }
 
   if inline == auto {
-    inline = not is-block(body)
+    // Decided in context so `is-block` sees the `set` rules around `body`.
+    return context cover-with-rect(
+      self: self,
+      ..cover-args,
+      fill: fill,
+      inline: not is-block(body),
+      is-first: is-first,
+      body,
+    )
   }
 
   //debug colors keep these!!!
@@ -1491,7 +1505,8 @@
 }
 
 
-/// The fill a shape inherits when it sets none of its own.
+/// The fill a shape inherits when it sets none of its own: the one its
+/// `set` rule gives, or Typst's default.
 ///
 /// Only meaningful inside `context`, so only the alpha method asks.
 ///
@@ -1499,64 +1514,63 @@
 ///
 /// -> any
 #let _inherited-fill(f) = {
-  if f in (rect, square) {
-    rect.fill
-  } else if f in (circle, ellipse) {
-    circle.fill
-  } else if f == box {
-    box.fill
-  } else if f == block {
-    block.fill
-  } else if f == highlight {
-    highlight.fill
-  } else if f == table.cell {
-    table.cell.fill
-  } else if f == grid.cell {
-    grid.cell.fill
-  } else if f in (polygon, curve) {
-    polygon.fill
+  if (
+    f
+      in (
+        rect,
+        square,
+        circle,
+        ellipse,
+        box,
+        block,
+        highlight,
+        table,
+        grid,
+        table.cell,
+        grid.cell,
+        polygon,
+        curve,
+      )
+  ) {
+    f.fill
   }
 }
 
 
-/// The stroke a shape inherits when it sets none of its own.
+/// The stroke a shape inherits when it sets none of its own: the one its
+/// `set` rule gives, or Typst's default.
 ///
 /// - f (function): The element function.
 ///
 /// -> any
 #let _inherited-stroke(f) = {
-  if f in (rect, square) {
-    rect.stroke
-  } else if f in (circle, ellipse) {
-    circle.stroke
-  } else if f == box {
-    box.stroke
-  } else if f == block {
-    block.stroke
-  } else if f == line {
-    line.stroke
-  } else if f == underline {
-    underline.stroke
-  } else if f == overline {
-    overline.stroke
-  } else if f == strike {
-    strike.stroke
-  } else if f == table.cell {
-    table.cell.stroke
-  } else if f == grid.cell {
-    grid.cell.stroke
-  } else if f == table.hline {
-    table.hline.stroke
-  } else if f == table.vline {
-    table.vline.stroke
-  } else if f == grid.hline {
-    grid.hline.stroke
-  } else if f == grid.vline {
-    grid.vline.stroke
-  } else if f in (polygon, curve) {
-    polygon.stroke
-  } else if f == math.cancel {
-    math.cancel.stroke
+  if (
+    f
+      in (
+        rect,
+        square,
+        circle,
+        ellipse,
+        box,
+        block,
+        line,
+        underline,
+        overline,
+        strike,
+        table,
+        grid,
+        table.cell,
+        grid.cell,
+        table.hline,
+        table.vline,
+        grid.hline,
+        grid.vline,
+        polygon,
+        curve,
+        math.cancel,
+      )
+  ) {
+    f.stroke
   }
 }
 
@@ -1630,10 +1644,14 @@
     let fields = it.fields()
     let _ = fields.remove("label", default: none)
     let children = fields.remove("children")
-    let fill = fields.at("fill", default: none)
+    let fill = if "fill" in fields { fields.fill } else {
+      (policy.inherited-fill)(it.func())
+    }
     let new-fill = if fill != none and fill != auto { (policy.map-fill)(fill) }
     if new-fill != none { fields.fill = new-fill }
-    let stroke = fields.at("stroke", default: none)
+    let stroke = if "stroke" in fields { fields.stroke } else {
+      (policy.inherited-stroke)(it.func())
+    }
     if stroke != none and stroke != auto {
       fields.stroke = (policy.map-stroke)(stroke)
     }
@@ -2693,32 +2711,39 @@
       }
     }
 
+    // Rebuild a segment as its own container. One that begins its run is
+    // numbered by Typst itself, so `set enum(start: ..)` applies; a later one
+    // is told which number it continues from, and needs context for that.
+    let continues-enum(run, first-rank) = (
+      run.kind == enum.item and first-rank != 1
+    )
+    let build-container(items, run, first-rank) = tree.build-list-like-from(
+      items,
+      tight: false,
+      first-number: if continues-enum(run, first-rank) {
+        tree.get-enum-number-at(run.items, first-rank)
+      } else { auto },
+    )
+
     // Cover a segment and hand back a block that reserves the rows its items
     // would have occupied.
     let build-covered-block-with-row-gaps(
       items,
       run,
-      first-number,
+      first-rank,
       opens-container: false,
     ) = {
       // A container of one item has no row gap to preserve.
       if run.items.len() == 1 {
         return (block(cover(items.sum())),)
       }
-      let body = if run.tight {
-        items.sum()
-      } else {
-        // Rebuilt as its own container, so `first-number` is where an enum
-        // keeps counting from.
-        tree.build-list-like-from(
-          items,
-          tight: false,
-          first-number: first-number,
-        )
-      }
-      // The row gap reads the active styles, so only a context can resolve it.
+      // The row gap and the numbering read the active styles, so only a
+      // context can resolve them.
       (
         context {
+          let body = if run.tight { items.sum() } else {
+            build-container(items, run, first-rank)
+          }
           let gap = tree.get-row-spacing-of-list-like(
             run.kind,
             tight: run.tight,
@@ -2735,7 +2760,7 @@
     }
 
     // The segment being gathered, and where its finished content accumulates.
-    let empty-segment = (items: (), covered: false, run: none, first-number: 1)
+    let empty-segment = (items: (), covered: false, run: none, first-rank: 1)
 
     let result = ()
     let item-count = 0
@@ -2750,19 +2775,18 @@
         build-covered-block-with-row-gaps(
           segment.items,
           run,
-          segment.first-number,
+          segment.first-rank,
           opens-container: preceding-run != none
             and preceding-run.start != run.start,
         )
       } else if run.tight {
         segment.items
       } else {
+        let build() = build-container(segment.items, run, segment.first-rank)
         (
-          tree.build-list-like-from(
-            segment.items,
-            tight: false,
-            first-number: segment.first-number,
-          ),
+          if continues-enum(run, segment.first-rank) { context build() } else {
+            build()
+          },
         )
       }
     }
@@ -2807,7 +2831,7 @@
       if current.items.len() == 0 {
         current.run = run
         current.covered = is-covered
-        current.first-number = place.rank
+        current.first-rank = place.rank
       }
       current.items.push(styled)
       item-count += 1

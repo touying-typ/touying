@@ -85,6 +85,34 @@ Regular content here.#pause This text should appear in gray when covered.
 
 More text with gray cover effect.
 
+== Color Changing Cover Continues a Tight Enum
+
+// Covered enum items continue the count of the visible ones above them,
+// starting from `set enum(start: ..)`. Should read 5 to 7.
+
+#[
+  #set enum(start: 5)
+
+  + five
+  + six #pause
+  + seven
+]
+
+== Color Changing Cover Continues a Loose Enum
+
+// The same across blank lines, which makes the enum non-tight. `9.` numbers
+// itself and the count goes on from it. Should read 1, 2, 3, 9, 10.
+
++ one
+
++ two #pause
+
++ three
+
+9. nine
+
++ ten
+
 == Color Changing Cover without Filled Fallback
 #show: touying-set-config.with(config-methods(
   cover: utils.color-changing-cover.with(
@@ -126,6 +154,20 @@ Regular content here.#pause This text should appear semi-transparent when covere
 #pause
 
 More semi-transparent text.
+
+== Alpha Changing Cover Fades Inherited Table Colours
+
+// A fill and stroke from `set table(..)` are faded like explicit ones.
+
+#[
+  #set table(fill: blue.lighten(60%), stroke: 2pt + green)
+
+  #table(columns: 2)[a][b]
+
+  #pause
+
+  #table(columns: 2)[c][d]
+]
 
 == Alpha Changing Cover with Semi-transparent Fallback Overlay
 #show: touying-set-config.with(config-methods(

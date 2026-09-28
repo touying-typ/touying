@@ -32,6 +32,19 @@ Second footnote, should be numbered 11#footnote[second, numbered 11] here.
 Third footnote, should be numbered 12#footnote[third, numbered 12] here.
 
 
+== Footnote With Its Own Numbering
+
+// A footnote is rebuilt from its own fields, so a `numbering` given to it
+// survives. The placeholder drawn while it is hidden must use that numbering
+// too, or the marker changes width when it is revealed.
+
+Shown at once#footnote(numbering: "*")[star] here.
+
+#pause
+
+Revealed later#footnote(numbering: "a")[letter] here.
+
+
 == Footnote Style Config
 
 // `show footnote: set super(..)` does not affect Typst's own footnote marker

@@ -137,16 +137,16 @@
 ///
 /// - block (bool): Whether the equation is a block element. Default is `true`.
 ///
-/// - numbering (none, str): The numbering of the equation. Default is `none`.
+/// - numbering (auto, none, str, function): The numbering of the equation. Default is `auto`, which leaves it to `set math.equation(numbering: ..)`.
 ///
-/// - supplement (auto, str): The supplement of the equation. Default is `auto`.
+/// - supplement (auto, none, content, function): The supplement of the equation. Default is `auto`, which leaves it to `set math.equation(supplement: ..)`.
 ///
 /// - body (string, content, function): The content of the equation. It should be a string, a raw text, or a function that receives `self` as an argument and returns a string.
 ///
 /// -> content
 #let touying-mitex(
   block: true,
-  numbering: none,
+  numbering: auto,
   supplement: auto,
   mitex,
   body,
@@ -179,7 +179,7 @@
 ///
 /// - block (bool): Whether the raw block is a block element. Default is `true`.
 ///
-/// - lang (none, str): The language for syntax highlighting. When `none`, the language is inferred from the raw block body if possible. Default is `none`.
+/// - lang (auto, none, str): The language for syntax highlighting. Default is `auto`, which takes the language of the raw block body, or else leaves it to `set raw(lang: ..)`. `none` turns highlighting off.
 ///
 /// - fill-empty-lines (bool): Whether to replace hidden lines with empty lines to preserve the layout of visible lines. Default is `true`.
 ///
@@ -190,7 +190,7 @@
 /// -> content
 #let touying-raw(
   block: true,
-  lang: none,
+  lang: auto,
   fill-empty-lines: true,
   simple: false,
   body,
@@ -199,7 +199,7 @@
   block: if type(body) == content and body.has("block") { body.block } else {
     block
   },
-  lang: if lang == none and type(body) == content and body.has("lang") {
+  lang: if lang == auto and type(body) == content and body.has("lang") {
     body.lang
   } else {
     lang

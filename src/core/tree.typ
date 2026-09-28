@@ -119,6 +119,21 @@
 }
 
 
+/// The depth of a heading, whether or not it has been materialized.
+///
+/// A heading built by `heading[..]` rather than `= ..` markup has no `depth`
+/// field until a show rule sees it, and `heading(level: 2)[..]` sets only
+/// `level`. `level` is `offset + depth`, so it is the fallback, not the first
+/// choice.
+///
+/// - it (content): The heading.
+///
+/// -> int
+#let heading-depth(it) = {
+  let level = it.at("level", default: auto)
+  it.at("depth", default: if type(level) == int { level } else { 1 })
+}
+
 /// Determine if a content is a heading up to specific depth.
 ///
 /// - it (content): The content to check.
@@ -126,7 +141,7 @@
 ///
 /// -> bool
 #let is-heading(it, depth: 9999) = {
-  type(it) == content and it.func() == heading and it.depth <= depth
+  type(it) == content and it.func() == heading and heading-depth(it) <= depth
 }
 
 
@@ -239,6 +254,8 @@
     ("dest",)
   } else if f == rotate {
     ("angle",)
+  } else if f == enum.item {
+    ("number",)
   } else if f == terms.item {
     ("term",)
   } else if f == math.class {
@@ -957,19 +974,21 @@
 /// producing one. An empty run yields empty content.
 ///
 /// `tight` has to be stated because a run emitted on its own has lost the
-/// parbreak that would have told Typst to widen it. `first-number` likewise:
-/// position in the container is what numbers an item, so a rebuilt enum
-/// restarts at 1 without it. It is ignored for a list and for terms, which are
-/// not numbered.
+/// parbreak that would have told Typst to widen it. `first-number` likewise,
+/// for a run that does not begin the enum: position in the container is what
+/// numbers an item, so a rebuilt enum restarts without it. See
+/// `get-enum-number-at` for working it out. It is ignored for a list and for
+/// terms, which are not numbered.
 ///
 /// - items (array): The run's items, in order. All of one kind, or it panics.
 ///
 /// - tight (bool): Whether the container is tight.
 ///
-/// - first-number (int): The number the first item carries, for an enum.
+/// - first-number (auto, int): The number the first item carries, for an
+///   enum. `auto` leaves it to Typst, so `set enum(start: ..)` applies.
 ///
 /// -> content
-#let build-list-like-from(items, tight: true, first-number: 1) = {
+#let build-list-like-from(items, tight: true, first-number: auto) = {
   if items.len() == 0 {
     return []
   }
@@ -986,12 +1005,37 @@
   )
 
   if kind == enum.item {
-    enum(tight: tight, start: first-number, ..items)
+    enum(
+      tight: tight,
+      ..if first-number != auto { (start: first-number) },
+      ..items,
+    )
   } else if kind == terms.item {
     terms(tight: tight, ..items)
   } else {
     list(tight: tight, ..items)
   }
+}
+
+/// The number the enum shows for the item at `rank` in a run.
+///
+/// Follows Typst's own rule: counting starts from `set enum(start: ..)` and
+/// goes up by one per item, and an item given a number of its own (`5.` in
+/// markup) resets the count to it. Needs context, for the `set` rule.
+///
+/// - items (array): The run's enum items, in order.
+///
+/// - rank (int): The item's position in the run, from 1.
+///
+/// -> int
+#let get-enum-number-at(items, rank) = {
+  let start = enum.start
+  let number = if start == auto { 0 } else { start - 1 }
+  for item in items.slice(0, rank) {
+    let own = item.at("number", default: none)
+    number = if own == none { number + 1 } else { own }
+  }
+  number
 }
 
 /// The gap Typst puts between two rows of a container built from items of the

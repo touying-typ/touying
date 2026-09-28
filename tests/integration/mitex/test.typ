@@ -19,3 +19,12 @@ $
 #meanwhile
 
 Touying equation is very simple.
+
+== touying-mitex Follows set math.equation
+
+// `touying-mitex` passes `numbering` and `supplement` on only when they were
+// given, so `set math.equation(..)` applies.
+
+#set math.equation(numbering: "(1)", supplement: [Eq.])
+
+#touying-mitex(mitex, `f(x) = \pause x^2`)
