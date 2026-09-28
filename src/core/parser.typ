@@ -2261,7 +2261,58 @@
       // reached but which still belongs to the same container.
       let span = last-result.slice(visible-run.start) + items + rest
       let list-is-nontight = tree.contains-nontight-list-like(span)
-      let covered = cover-fn(build-covered-body(items, list-is-nontight))
+      // Covered enum items continue the count of the visible ones above them,
+      // but emitted on their own they would count from the start again. The
+      // first one is given the number it would have had, and the rest count
+      // on from it as usual. The number depends on `set enum(start: ..)`, so
+      // it is read in context, around the cover rather than inside it, where
+      // a recolouring cover could not see the items.
+      //
+      // Whether they continue is asked of the visible tail and the covered
+      // items together, which is the run Typst would have built from them.
+      let visible-tail = last-result.slice(visible-run.start)
+      let first-hidden-item-index = items.position(tree.is-list-like-item)
+      let joined = visible-tail + items
+      let at = if first-hidden-item-index != none {
+        visible-tail.len() + first-hidden-item-index
+      }
+      let continued-run = if at != none {
+        tree
+          .get-list-like-runs-among(joined)
+          .find(run => run.start < visible-tail.len() and at < run.end)
+      }
+      let first-hidden-item = if continued-run != none {
+        items.at(first-hidden-item-index)
+      }
+      let continues-enum = (
+        continued-run != none
+          and continued-run.kind == enum.item
+          and first-hidden-item.at("number", default: none) == none
+      )
+      let covered = if continues-enum {
+        context {
+          let fields = first-hidden-item.fields()
+          let lbl = fields.remove("label", default: none)
+          let body = fields.remove("body")
+          // Counted rather than looked up, since two items can be equal.
+          let rank = (
+            joined
+              .slice(continued-run.start, at)
+              .filter(tree.is-list-like-item)
+              .len()
+              + 1
+          )
+          fields.number = tree.get-enum-number-at(continued-run.items, rank)
+          let numbered = tree.call-with-fields(enum.item, fields, body)
+          let items = items
+          items.at(first-hidden-item-index) = if lbl == none { numbered } else {
+            tree.label-it(numbered, lbl)
+          }
+          cover-fn(build-covered-body(items, list-is-nontight))
+        }
+      } else {
+        cover-fn(build-covered-body(items, list-is-nontight))
+      }
       // A gap needs a reserved row only where items sit on both sides:
       // - above, a container interrupted by a `#pause`,
       // - below, a `#meanwhile` revealing further items after the cover.

@@ -101,3 +101,15 @@
   ]
 ]
 
+== Item-by-item Follows set enum
+
+#set enum(start: 5)
+
+#item-by-item[
+  + five
+
+  + six
+
+  + seven
+]
+
