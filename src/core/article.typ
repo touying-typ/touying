@@ -207,24 +207,24 @@
 /// with `<touying-temporary-mark>`. Every `is-kind(.., "touying-slide-wrapper")`
 /// test here predates that block and expects the bare node.
 ///
-/// - it (any): The child.
+/// - it (any): The content element.
 ///
 /// -> any
-#let _core-of(it) = {
-  let core = tree.unstyled(it)
+#let _unwrap(it) = {
+  let el = tree.unstyled(it)
   if (
-    type(core) == content
-      and tree.is-kind(core.at("body", default: none), "touying-slide-wrapper")
+    type(el) == content
+      and tree.is-kind(el.at("body", default: none), "touying-slide-wrapper")
   ) {
     // A label on the call sits on the block, not on the mark inside it, so
     // unwrapping to the bare mark would drop it and with it whatever mode
     // the slide was restricted to.
-    let lbl = core.at("label", default: none)
-    return if lbl == none { core.body } else {
-      [#metadata(core.body.value)#lbl]
+    let lbl = el.at("label", default: none)
+    return if lbl == none { el.body } else {
+      [#metadata(el.body.value)#lbl]
     }
   }
-  core
+  el
 }
 
 /// Whether the article walker has to see a child on its own.
@@ -237,10 +237,10 @@
 ///
 /// -> bool
 #let _is-structural(it) = {
-  let core = _core-of(it)
-  if tree.is-metadata(core) { return true }
-  if type(core) != content { return false }
-  core.func() in (heading, pagebreak) or core in ([—], [---])
+  let el = _unwrap(it)
+  if tree.is-metadata(el) { return true }
+  if type(el) != content { return false }
+  el.func() in (heading, pagebreak) or el in ([—], [---])
 }
 
 
@@ -256,14 +256,14 @@
 /// breaks there too, so content on the far side of one is not part of the same
 /// run of prose. A bare `---` does not, since the article drops it.
 ///
-/// - core (any): The child, already unstyled.
+/// - el (any): The child, already unstyled.
 ///
 /// - slide-level (int): Headings this deep or shallower start a slide.
 ///
 /// -> bool
-#let _starts-region(core, slide-level) = (
-  tree.is-heading(core, depth: slide-level)
-    or (type(core) == content and core.func() == pagebreak)
+#let _starts-region(el, slide-level) = (
+  tree.is-heading(el, depth: slide-level)
+    or (type(el) == content and el.func() == pagebreak)
 )
 
 
@@ -870,20 +870,20 @@
   for child in children {
     // The child may still be wrapped in the `styled` node a top-level
     // `#set`/`#show` put it in, so classify on what it really is.
-    let core = _core-of(child)
-    let is-heading = type(core) == content and core.func() == heading
+    let el = _unwrap(child)
+    let is-heading = type(el) == content and el.func() == heading
     if skipping-depth != none {
-      if is-heading and core.depth <= skipping-depth {
+      if is-heading and tree.heading-depth(el) <= skipping-depth {
         skipping-depth = none
       } else {
         continue
       }
     }
-    let lbl = if type(core) == content and core.has("label") {
-      str(core.label)
+    let lbl = if type(el) == content and el.has("label") {
+      str(el.label)
     }
     if lbl != none and check-current-mode-skip(self, lbl) {
-      if is-heading { skipping-depth = core.depth }
+      if is-heading { skipping-depth = tree.heading-depth(el) }
       continue
     }
     out.push(child)
@@ -906,13 +906,13 @@
   let out = ()
   for child in children {
     out.push(child)
-    let core = _core-of(child)
-    if tree.is-kind(core, "touying-set-config") {
+    let el = _unwrap(child)
+    if tree.is-kind(el, "touying-set-config") {
       // restyle first, so a top-level `#set` wrapping the config node still
       // wraps its body; flatten-children then groups the run under one shared
       // styled node rather than one per child.
       out += _expand-set-config(tree.flatten-children(
-        tree.restyle(child, core.value.body),
+        tree.restyle(child, el.value.body),
         structural: _is-structural,
       ))
     }
@@ -938,14 +938,14 @@
   let open-waypoint = none
 
   for child in children {
-    let core = _core-of(child)
+    let el = _unwrap(child)
     let is-slide-heading = (
-      type(core) == content
-        and core.func() == heading
-        and core.depth <= slide-level
+      type(el) == content
+        and el.func() == heading
+        and tree.heading-depth(el) <= slide-level
     )
 
-    let is-waypoint = tree.is-kind(core, "touying-waypoint")
+    let is-waypoint = tree.is-kind(el, "touying-waypoint")
     if is-slide-heading or is-waypoint {
       if open-waypoint != none {
         let anchor = waypoint-anchor(slide-label, open-waypoint)
@@ -954,9 +954,9 @@
       }
 
       if is-slide-heading {
-        slide-label = if core.has("label") { core.label }
+        slide-label = if el.has("label") { el.label }
       } else {
-        open-waypoint = core.value.label
+        open-waypoint = el.value.label
       }
     }
 
@@ -999,11 +999,11 @@
   // whole-slide target."
   let whole-slide-labels = ()
   for child in children {
-    let core = _core-of(child)
-    let lbl = if type(core) == content and core.func() == heading {
-      core.at("label", default: none)
-    } else if tree.is-kind(core, "touying-slide-wrapper") {
-      core.at("label", default: none)
+    let el = _unwrap(child)
+    let lbl = if type(el) == content and el.func() == heading {
+      el.at("label", default: none)
+    } else if tree.is-kind(el, "touying-slide-wrapper") {
+      el.at("label", default: none)
     } else {
       none
     }
@@ -1210,12 +1210,12 @@
     let slide-crumbs = ()
     for child in children {
       // A top-level `#set`/`#show` leaves every child wrapped in a `styled`
-      // node, so classify on `core` and put the styles back with `_restyle`
+      // node, so classify on `el` and put the styles back with `_restyle`
       // around anything pulled out of a mark's payload.
-      let core = _core-of(child)
-      let is-section-heading = type(core) == content and core.func() == heading
-      let starts-region = _starts-region(core, slide-level)
-      if tree.is-kind(core, "touying-article-text") {
+      let el = _unwrap(child)
+      let is-section-heading = type(el) == content and el.func() == heading
+      let starts-region = _starts-region(el, slide-level)
+      if tree.is-kind(el, "touying-article-text") {
         // Rendered, not discarded: a touying-recall inside the article-text
         // body resolves against breadcrumbs left by the content it replaces.
         let r = _render-run(use-self, current-run)
@@ -1230,21 +1230,21 @@
           )
         } else {
           slide-text = tree.restyle(child, _reject-layout-markers(
-            _resolve-block-recalls(core.value.body),
+            _resolve-block-recalls(el.value.body),
             "article-text",
           ))
         }
-      } else if tree.is-kind(core, "touying-article-only") {
+      } else if tree.is-kind(el, "touying-article-only") {
         let r = _render-run(use-self, current-run)
         current-run = ()
         result += r.items
         result += r.breadcrumbs
         slide-crumbs += r.breadcrumbs
         result.push(tree.restyle(child, _reject-layout-markers(
-          _resolve-block-recalls(core.value.body),
+          _resolve-block-recalls(el.value.body),
           "article-only",
         )))
-      } else if tree.is-kind(core, "touying-set-config") {
+      } else if tree.is-kind(el, "touying-set-config") {
         let r = _render-run(use-self, current-run)
         current-run = ()
         result += r.items
@@ -1252,14 +1252,14 @@
         slide-crumbs += r.breadcrumbs
         // The body was spliced into `children` by _expand-set-config, so only
         // the config itself is handled here.
-        use-self = utils.merge-dicts(use-self, core.value.config)
-      } else if tree.is-kind(core, "touying-slide-wrapper") {
+        use-self = utils.merge-dicts(use-self, el.value.config)
+      } else if tree.is-kind(el, "touying-slide-wrapper") {
         let r = _render-run(use-self, current-run)
         current-run = ()
         result += r.items
         result += r.breadcrumbs
         slide-crumbs += r.breadcrumbs
-        let slide-result = (core.value.fn)(use-self)
+        let slide-result = (el.value.fn)(use-self)
         let payload = _unwrap-article-raw(slide-result)
         let raw-content = payload.at("content", default: none)
         // Not wrapped in an extra block(): a rendered slide's own content is
@@ -1293,11 +1293,11 @@
         } else {
           slide-crumbs += h.breadcrumbs
         }
-      } else if tree.is-kind(core, "touying-slides-only") {
+      } else if tree.is-kind(el, "touying-slides-only") {
         // Stripped in article mode — an article-mode/slide-mode
         // distinction the shared parser has no notion of, so it must be
         // filtered out here rather than left for the parser to see.
-      } else if core in ([—], [---]) {
+      } else if el in ([—], [---]) {
         // A bare slide separator. It breaks slides, so it means nothing in an
         // article and is dropped, whatever `horizontal-line-to-pagebreak`
         // says: that config is about slide output. Inside #article-text or
@@ -1334,11 +1334,11 @@
   let slide-text = none
   let slide-crumbs = ()
   for child in children {
-    // Same as the simple path above: classify on `core`, re-style anything
+    // Same as the simple path above: classify on `el`, re-style anything
     // pulled out of a mark's payload.
-    let core = _core-of(child)
-    let is-section-heading = type(core) == content and core.func() == heading
-    let starts-region = _starts-region(core, slide-level)
+    let el = _unwrap(child)
+    let is-section-heading = type(el) == content and el.func() == heading
+    let starts-region = _starts-region(el, slide-level)
     if (
       (is-section-heading or starts-region)
         and (current-items.len() > 0 or current-run.len() > 0)
@@ -1381,7 +1381,7 @@
       slide-crumbs = ()
     }
 
-    if tree.is-kind(core, "touying-article-text") {
+    if tree.is-kind(el, "touying-article-text") {
       // Rendered, not discarded: a touying-recall inside the article-text body
       // resolves against breadcrumbs left by the content it replaces.
       let r = _render-run(use-self, current-run)
@@ -1400,12 +1400,12 @@
         slide-text = tree.restyle(
           child,
           _reject-layout-markers(
-            _resolve-block-recalls(core.value.body),
+            _resolve-block-recalls(el.value.body),
             "article-text",
           ),
         )
       }
-    } else if tree.is-kind(core, "touying-article-only") {
+    } else if tree.is-kind(el, "touying-article-only") {
       let r = _render-run(use-self, current-run)
       current-run = ()
       current-items += r.items
@@ -1416,11 +1416,11 @@
       current-items.push(tree.restyle(
         child,
         _reject-layout-markers(
-          _resolve-block-recalls(core.value.body),
+          _resolve-block-recalls(el.value.body),
           "article-only",
         ),
       ))
-    } else if tree.is-kind(core, "touying-set-config") {
+    } else if tree.is-kind(el, "touying-set-config") {
       let r = _render-run(use-self, current-run)
       current-run = ()
       current-items += r.items
@@ -1430,8 +1430,8 @@
       current-blocks += r.blocks
       // The body was spliced into `children` by _expand-set-config, so only
       // the config itself is handled here.
-      use-self = utils.merge-dicts(use-self, core.value.config)
-    } else if tree.is-kind(core, "touying-slide-wrapper") {
+      use-self = utils.merge-dicts(use-self, el.value.config)
+    } else if tree.is-kind(el, "touying-slide-wrapper") {
       let r = _render-run(use-self, current-run)
       current-run = ()
       current-items += r.items
@@ -1439,7 +1439,7 @@
       slide-crumbs += r.breadcrumbs
       current-images += r.images
       current-blocks += r.blocks
-      let slide-result = (core.value.fn)(use-self)
+      let slide-result = (el.value.fn)(use-self)
       let payload = _unwrap-article-raw(slide-result)
       let raw-content = payload.at("content", default: none)
       // See the matching comment in the simple path above: no extra
@@ -1470,11 +1470,11 @@
       } else {
         slide-crumbs += h.breadcrumbs
       }
-    } else if tree.is-kind(core, "touying-slides-only") {
+    } else if tree.is-kind(el, "touying-slides-only") {
       // Stripped in article mode — an article-mode/slide-mode
       // distinction the shared parser has no notion of, so it must be
       // filtered out here rather than left for the parser to see.
-    } else if core in ([—], [---]) {
+    } else if el in ([—], [---]) {
       // See the simple path above: a slide separator means nothing in an
       // article, and survives only inside #article-text or #article-only.
     } else {

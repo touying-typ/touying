@@ -119,6 +119,21 @@
 }
 
 
+/// The depth of a heading, whether or not it has been materialized.
+///
+/// A heading built by `heading[..]` rather than `= ..` markup has no `depth`
+/// field until a show rule sees it, and `heading(level: 2)[..]` sets only
+/// `level`. `level` is `offset + depth`, so it is the fallback, not the first
+/// choice.
+///
+/// - it (content): The heading.
+///
+/// -> int
+#let heading-depth(it) = {
+  let level = it.at("level", default: auto)
+  it.at("depth", default: if type(level) == int { level } else { 1 })
+}
+
 /// Determine if a content is a heading up to specific depth.
 ///
 /// - it (content): The content to check.
@@ -126,7 +141,7 @@
 ///
 /// -> bool
 #let is-heading(it, depth: 9999) = {
-  type(it) == content and it.func() == heading and it.depth <= depth
+  type(it) == content and it.func() == heading and heading-depth(it) <= depth
 }
 
 

@@ -185,7 +185,7 @@
 
 #let _get-last-heading-depth(current-headings) = {
   if current-headings != () {
-    current-headings.at(-1).depth
+    tree.heading-depth(current-headings.at(-1))
   } else {
     0
   }
@@ -717,12 +717,20 @@
           default: none,
         )
           != none
-          or child.depth <= last-heading-depth
+          or tree.heading-depth(child) <= last-heading-depth
           or slide-parts != ()
-          or (child.depth == 1 and new-section-slide-fn != none)
-          or (child.depth == 2 and new-subsection-slide-fn != none)
-          or (child.depth == 3 and new-subsubsection-slide-fn != none)
-          or (child.depth == 4 and new-subsubsubsection-slide-fn != none)
+          or (tree.heading-depth(child) == 1 and new-section-slide-fn != none)
+          or (
+            tree.heading-depth(child) == 2 and new-subsection-slide-fn != none
+          )
+          or (
+            tree.heading-depth(child) == 3
+              and new-subsubsection-slide-fn != none
+          )
+          or (
+            tree.heading-depth(child) == 4
+              and new-subsubsubsection-slide-fn != none
+          )
       ) {
         slide-parts = tree.trim(slide-parts)
         if slide-parts != () or current-headings != () {
@@ -767,7 +775,7 @@
           self + (headings: current-headings, is-first-slide: is-first-slide)
         )
         if (
-          child.depth == 1
+          tree.heading-depth(child) == 1
             and new-section-slide-fn != none
             and not self.receive-body-for-new-section-slide-fn
         ) {
@@ -797,7 +805,7 @@
             ))
           }
         } else if (
-          child.depth == 2
+          tree.heading-depth(child) == 2
             and new-subsection-slide-fn != none
             and not self.receive-body-for-new-subsection-slide-fn
         ) {
@@ -826,7 +834,7 @@
             ))
           }
         } else if (
-          child.depth == 3
+          tree.heading-depth(child) == 3
             and new-subsubsection-slide-fn != none
             and not self.receive-body-for-new-subsubsection-slide-fn
         ) {
@@ -855,7 +863,7 @@
             ))
           }
         } else if (
-          child.depth == 4
+          tree.heading-depth(child) == 4
             and new-subsubsubsection-slide-fn != none
             and not self.receive-body-for-new-subsubsubsection-slide-fn
         ) {

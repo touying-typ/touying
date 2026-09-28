@@ -1279,10 +1279,14 @@
     result.push("\\phantom{" + hidden-parts.sum() + "}")
     hidden-parts = ()
   }
+  // `auto` means not given. Passing it on anyway would override a
+  // `set math.equation(..)` rule, since an explicit argument always wins.
   let equation = (eqt.mitex)(
     block: eqt.block,
-    numbering: eqt.numbering,
-    supplement: eqt.supplement,
+    ..(numbering: eqt.numbering, supplement: eqt.supplement)
+      .pairs()
+      .filter(((_, value)) => value != auto)
+      .to-dict(),
     result.sum(default: ""),
   )
   if (
@@ -1386,7 +1390,13 @@
     }
     result-text = result-lines.join("\n")
   }
-  let raw-block = raw(result-text, lang: raw-data.lang, block: raw-data.block)
+  // An explicit `lang` would override `set raw(lang: ..)`, so `auto` (not
+  // given) is left out.
+  let raw-block = raw(
+    result-text,
+    block: raw-data.block,
+    ..if raw-data.lang != auto { (lang: raw-data.lang) },
+  )
   if (
     raw-metadata.has("label")
       and raw-metadata.label != <touying-temporary-mark>
@@ -3357,12 +3367,16 @@
         last-subslide = calc.max(last-subslide, next-last-subslide)
         has-fn-wrapper = has-fn-wrapper or inner-has-fn-wrapper
       } else if type(child) == content and child.func() == footnote {
+        // Rebuilt from the footnote's own fields, so a `numbering` given to
+        // this one footnote survives.
+        let rebuilt = tree.reconstruct(
+          named: true,
+          labeled: labeled(child.func()),
+          child,
+          child.body,
+        )
         if repetitions <= index or not need-cover {
-          if labeled(child.func()) and child.has("label") {
-            result.push([#footnote(child.body)#child.label])
-          } else {
-            result.push(footnote(child.body))
-          }
+          result.push(rebuilt)
         } else if not utils.cover-hides-footnote(self) {
           // Only a genuinely-hiding cover needs the placeholder trick below: native
           // `hide()` does not by itself hide a footnote's entry, so real footnotes
@@ -3371,11 +3385,7 @@
           // content visible, just de-emphasized - a footnote under one of those
           // should still show its real marker and entry, recolored like everything
           // else, so push it through the normal cover mechanism instead.
-          if labeled(child.func()) and child.has("label") {
-            hidden-parts.push([#footnote(child.body)#child.label])
-          } else {
-            hidden-parts.push(footnote(child.body))
-          }
+          hidden-parts.push(rebuilt)
         } else {
           // `hide()` only hides a footnote's marker, not the entry it queues at the
           // bottom of the page - so a covered footnote must not call `footnote()` at
@@ -3388,9 +3398,13 @@
           hidden-parts.push(context {
             let n = counter(footnote).get().first() + 1
             counter(footnote).update(n)
+            let fn-numbering = child.at(
+              "numbering",
+              default: footnote.numbering,
+            )
             let footnote-style = self.at("footnote-style", default: auto)
             if footnote-style == auto {
-              super[#numbering(footnote.numbering, n)]
+              super[#numbering(fn-numbering, n)]
             } else {
               // Calling `footnote-style` directly on a constructed `footnote(..)`
               // would actually lay that footnote out for real the moment this
@@ -3398,7 +3412,7 @@
               // counter and leaking its own entry. `measure` runs that lookup in
               // an isolated, discarded layout, so only the resulting width (not
               // the side effects) survives - which is all a placeholder needs.
-              let fake = footnote(numbering: footnote.numbering, [])
+              let fake = footnote(numbering: fn-numbering, [])
               // `std.measure`: this module defines its own `measure` below, and
               // a plain name here would be a trap for anyone moving this code.
               box(width: std.measure(footnote-style(fake)).width)
@@ -3508,7 +3522,11 @@
         // the same test the other branches use to honour a `#meanwhile`, which
         // rewinds the counter and can be wound forward again by a later
         // `#pause`.
-        if is-figure and child.caption != none and need-cover {
+        if (
+          is-figure
+            and child.at("caption", default: none) != none
+            and need-cover
+        ) {
           let (_, _, _, after-body, ..) = (
             _parse-content-into-results-and-repetitions(
               self: self,

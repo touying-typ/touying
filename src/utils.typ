@@ -694,12 +694,14 @@
     it
   } else if type(it) == content {
     if it.func() == raw {
-      if it.block {
+      // Optional fields are absent on content built by a direct call such as
+      // `raw("x")`, so they have to be read with a default.
+      if it.at("block", default: false) {
         (
           "\n"
             + indent * " "
             + "```"
-            + it.lang
+            + it.at("lang", default: none)
             + it
               .text
               .split("\n")
@@ -750,10 +752,11 @@
         "#link(\"" + it.dest + "\")[" + markup-text(it.body) + "]"
       }
     } else if it.func() == heading {
+      let depth = tree.heading-depth(it)
       if mode == "md" {
-        it.depth * "#" + " " + markup-text(it.body) + "\n"
+        depth * "#" + " " + markup-text(it.body) + "\n"
       } else {
-        it.depth * "=" + " " + markup-text(it.body) + "\n"
+        depth * "=" + " " + markup-text(it.body) + "\n"
       }
     } else if tree.is-styled(it) {
       markup-text(it.child)
@@ -1076,11 +1079,14 @@
 #let _caption-covered-label = <touying-caption-covered>
 
 /// true for all typst content that is not inline.
+///
+/// Needs context: content built by a call such as `raw("x")` carries no
+/// `block` field, and then the active `set` rule decides.
 #let is-block(it) = {
   // whenever sth is wrapped in a box it is automatically inlined.
   //first get the variable stuff
   if it.func() in (math.equation, raw, quote) {
-    return it.block
+    return it.at("block", default: (it.func()).block)
   }
   (
     it.func()
@@ -1194,7 +1200,15 @@
   }
 
   if inline == auto {
-    inline = not is-block(body)
+    // Decided in context so `is-block` sees the `set` rules around `body`.
+    return context cover-with-rect(
+      self: self,
+      ..cover-args,
+      fill: fill,
+      inline: not is-block(body),
+      is-first: is-first,
+      body,
+    )
   }
 
   //debug colors keep these!!!
