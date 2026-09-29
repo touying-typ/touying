@@ -450,7 +450,7 @@
         alpha: alpha,
         title: none,
         numbered: (numbered,),
-        text-style: ((fill: self.colors.neutral-darkest,),),
+        text-style: ((fill: self.colors.neutral-darkest),),
         style-current: ((fill: self.colors.primary, weight: "bold"),),
         vspace: (0.3em,),
         depth: level,
