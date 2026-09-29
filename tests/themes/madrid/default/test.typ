@@ -43,6 +43,12 @@
   Example block content.
 ]
 
+= Another Section
+
+== Closing Slide
+
+The outline now highlights Another Section.
+
 #focus-slide[
   Focus slide
 ]

@@ -421,11 +421,18 @@
   touying-slide(self: self, body)
 })
 
-/// Section divider / Outline slide
+/// Section slide with a progressive outline. The current section is highlighted.
+///
+/// - config (dictionary): Per-slide configuration.
+/// - level (int): Heading level used to identify the current section.
+/// - numbered (bool): Whether to show section numbers when headings are numbered.
+/// - alpha (ratio): Transparency of other sections. Default is `60%`.
+/// - body (content): Additional content for the section slide.
 #let new-section-slide(
   config: (:),
   level: 1,
   numbered: true,
+  alpha: 60%,
   body,
 ) = touying-slide-wrapper(self => {
   self = utils.merge-dicts(self, config)
@@ -433,16 +440,25 @@
     level: level,
     numbered: false,
   )
-  let content = {
-    set std.align(center + horizon)
-    text(
-      size: 1.3em,
-      fill: self.colors.neutral-darkest,
-      utils.display-current-heading(level: level, numbered: numbered),
+  let setting(body) = {
+    set align(center + horizon)
+    block(
+      width: 65%,
+      components.custom-progressive-outline(
+        self: self,
+        level: level,
+        alpha: alpha,
+        title: none,
+        numbered: (numbered,),
+        text-style: ((fill: self.colors.neutral-darkest,),),
+        style-current: ((fill: self.colors.primary, weight: "bold"),),
+        vspace: (0.3em,),
+        depth: level,
+      ),
     )
     body
   }
-  touying-slide(self: self, config: config, content)
+  touying-slide(self: self, config: config, setting: setting, body)
 })
 
 /// Focus slide

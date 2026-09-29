@@ -44,6 +44,8 @@ The `madrid-theme` function accepts the following parameters:
 - `footer-date`: Content for the rightmost footer block (date by default).
 - `font`: Font family for text, default is `auto`.
 
+Each level-one heading (`= Section`) automatically creates a section slide with a progressive outline. The current section is highlighted in blue and other sections are faded. Use `config-common(new-section-slide-fn: none)` to disable these slides, or set `config-common(new-section-slide-fn: new-section-slide.with(alpha: 40%))` to change the fade.
+
 ## Color Theme
 
 The Madrid theme uses the classic Beamer Madrid colors by default:
@@ -74,7 +76,7 @@ The Madrid theme provides Beamer-style rounded blocks:
 - `#title-slide(config: (:), extra: none, ..args)`: Displays the presentation title in a rounded blue block with author and institution below.
 - `#outline-slide(config: (:), title: utils.i18n-outline-title, ..args)`: Displays a table of contents / outline slide.
 - `#slide(...)`: Default slide function with Madrid header banner and three-part footer bar.
-- `#new-section-slide(config: (:), level: 1, numbered: true, body)`: Slide separating major sections.
+- `#new-section-slide(config: (:), level: 1, numbered: true, alpha: 60%, body)`: Progressive outline slide that highlights the current section. `alpha` controls how much other sections fade.
 - `#focus-slide[Body]`: Full-bleed slide with primary background to focus the audience's attention.
 
 ## Speaker Notes
