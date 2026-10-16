@@ -233,7 +233,6 @@
 ]
 
 //== now some tests with nontight lists.
-//bc we do this locally this will break.
 
 #slide(
   composer: (1fr, 1fr),
