@@ -2391,6 +2391,7 @@
       }
       let covered = if gap-above-needs-row or gap-below-needs-row {
         context block(
+          width: 100%,
           above: if opens-new-container {
             par.spacing
           } else if gap-above-needs-row {
