@@ -245,7 +245,7 @@
   },
 )[
   #align(horizon)[
-    - should break
+    - first
     #pause
     - second
     - third
@@ -253,7 +253,7 @@
 ][
   #meanwhile
   #align(horizon)[
-    - should break
+    - first
     - second
     - third
   ]
