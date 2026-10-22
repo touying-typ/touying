@@ -1,4 +1,5 @@
-// A displayed equation in a covered list item stays centered when revealed.
+// Regression test for https://github.com/touying-typ/touying/issues/450.
+// Displayed equations stay centered as pause and item-by-item reveal list items.
 #import "/lib.typ": *
 #import themes.simple: *
 
@@ -16,3 +17,14 @@
     a + b = c
   $
 - Third item
+
+== Display equation inside item-by-item
+
+#item-by-item[
+  - First item
+  - Second item contains a displayed equation:
+    $
+      a + b = c
+    $
+  - Third item
+]
