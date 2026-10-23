@@ -2749,6 +2749,7 @@
             tight: run.tight,
           )
           block(
+            width: 100%,
             // A segment that opens a container is separated from what
             // precedes it by paragraph spacing rather than a row gap.
             above: if opens-container { par.spacing } else { gap },
