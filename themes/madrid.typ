@@ -34,27 +34,125 @@
   )
 }
 
-/// Decorative navigation symbols helper recreating the LaTeX Beamer navigation bar.
-///
-/// - fill (color): Fill color for the decorative navigation symbols.
-/// -> content
-#let navigation-symbols(fill: rgb("#9292d6").transparentize(40%)) = {
-  set text(size: 6.5pt, fill: fill)
-  box(
-    inset: (right: 1.2em, bottom: 0.25em),
-    [
-      #box(baseline: 0%, [◂]) #box(baseline: 0%, [▫]) #box(baseline: 0%, [▸])
-      #h(0.3em)
-      #box(baseline: 0%, [◂]) #box(baseline: 0%, [▤]) #box(baseline: 0%, [▸])
-      #h(0.3em)
-      #box(baseline: 0%, [◂]) #box(baseline: 0%, [§]) #box(baseline: 0%, [▸])
-      #h(0.3em)
-      #box(baseline: 0%, [◂]) #box(baseline: 0%, [▨]) #box(baseline: 0%, [▸])
-      #h(0.3em)
-      #box(baseline: 0%, [↺]) #box(baseline: 0%, [↻])
-    ],
+// Vector symbols avoid platform-dependent Unicode/emoji substitution.
+#let _nav-icon(kind, fill, width: 0.7em) = {
+  let paths = (
+    previous: "<path d='M7 2L3 5L7 8Z' fill='currentColor' stroke='none'/>",
+    next: "<path d='M3 2L7 5L3 8Z' fill='currentColor' stroke='none'/>",
+    slide: "<rect x='1.5' y='2.5' width='7' height='5'/>",
+    frame: "<path d='M3 1.5H9V6M1 3.5H7V8.5H1Z'/>",
+    subsection: "<path d='M2 2H8M2 4H8M2 6H8M2 8H8'/>",
+    section: "<path d='M2 1H7M3 3H9M2 5H7M3 7H9M2 9H7'/>",
+    document: "<path d='M2 1H6L8 3V9H2ZM6 1V3H8M3 5H7M3 7H7'/>",
+    back: "<path d='M2 5A3 3 0 1 0 3 2M2 1V5H6'/>",
+    forward: "<path d='M8 5A3 3 0 1 1 7 2M8 1V5H4'/>",
+    search: "<circle cx='4' cy='4' r='2.6'/><path d='M6 6L9 9'/>",
+  )
+  image(
+    bytes(
+      "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10' color='"
+        + fill.to-hex()
+        + "' fill='none' stroke='currentColor' stroke-width='.55'>"
+        + paths.at(kind)
+        + "</svg>",
+    ),
+    width: width,
+    height: 0.5em,
+    fit: "contain",
   )
 }
+
+/// Beamer-style vector navigation with links to pages, frames and sections.
+/// Search and viewer history are decorative: Typst cannot emit those PDF actions.
+///
+/// - fill (color): Symbol color.
+/// -> content
+#let navigation-symbols(fill: rgb("#adade0")) = context {
+  let current = here().page()
+  let last = counter(page).final().first()
+  let destination(p) = (page: calc.clamp(p, 1, last), x: 0pt, y: 0pt)
+  let control(kind, p, width: 0.7em) = link(destination(p), _nav-icon(
+    kind,
+    fill,
+    width: width,
+  ))
+  let markers = query(<touying-metadata>)
+    .filter(it => (
+      it.value.at("kind", default: none) == "touying-new-slide"
+    ))
+    .map(it => it.location().page())
+    .dedup()
+  let around(pages) = (
+    pages
+      .filter(p => p < pages.filter(p => p <= current).at(-1, default: 1))
+      .at(-1, default: 1),
+    pages.filter(p => p <= current).at(-1, default: 1),
+    pages.filter(p => p > current).at(0, default: last),
+  )
+  let group(icon, pages) = {
+    let (previous, start, next) = around(pages)
+    box(stack(
+      dir: ltr,
+      spacing: 0pt,
+      control("previous", previous, width: 0.5em),
+      control(icon, start),
+      control("next", next, width: 0.5em),
+    ))
+  }
+  box(stack(
+    dir: ltr,
+    spacing: 0.15em,
+    box(stack(
+      dir: ltr,
+      spacing: 0pt,
+      control("previous", current - 1, width: 0.5em),
+      control("slide", current),
+      control("next", current + 1, width: 0.5em),
+    )),
+    group("frame", markers),
+    group(
+      "subsection",
+      query(heading.where(level: 2)).map(it => it.location().page()).dedup(),
+    ),
+    group(
+      "section",
+      query(heading.where(level: 1)).map(it => it.location().page()).dedup(),
+    ),
+    box(stack(dir: ltr, spacing: 0pt, control("document", 1), control(
+      "document",
+      last,
+    ))),
+    // Preserve Beamer's familiar final group without mislabelling page links as history/search.
+    box(stack(
+      dir: ltr,
+      spacing: 0pt,
+      _nav-icon("back", fill),
+      _nav-icon("search", fill),
+      _nav-icon("forward", fill),
+    )),
+  ))
+}
+
+// A layered, font-relative shadow, kept outside the measured content bounds.
+#let _shadow(body, enabled: true, radius: 0.3em) = layout(available => context {
+  if enabled {
+    let size = std.measure(body, width: available.width)
+    box(width: size.width, height: size.height, {
+      for i in range(1, 5) {
+        place(top + left, dx: i * 0.06em, dy: i * 0.06em, rect(
+          width: size.width,
+          height: size.height,
+          radius: radius,
+          fill: black.transparentize(88%),
+          stroke: none,
+        ))
+      }
+      place(top + left, body)
+    })
+  } else {
+    body
+  }
+})
 
 // Custom block styling for Madrid (rounded Beamer blocks)
 #let _cblock(
@@ -65,42 +163,61 @@
   title-color: white,
   body-fill: none,
   body-color: black,
-  radius: 4pt,
+  radius: 0.35em,
   it,
 ) = {
-  let t-fill = if title-fill != none { title-fill } else { self.colors.primary }
+  let t-fill = if title-fill != none { title-fill } else {
+    self.colors.primary.darken(25%)
+  }
   let b-fill = if body-fill != none { body-fill } else {
     self.colors.primary-light
   }
 
-  if title != none {
-    grid(
-      columns: 1,
-      row-gutter: 0pt,
-      block(
-        fill: t-fill,
-        width: 100%,
-        inset: (x: 0.8em, top: 0.45em, bottom: 0.45em),
-        radius: (top: radius),
-        text(fill: title-color, weight: "bold", size: 0.95em, title),
-      ),
+  block(width: 100%, above: 1em, below: 0.4em, pad(x: -0.33em, _shadow(
+    enabled: self.store.block-shadow,
+    radius: radius,
+    if title != none {
+      grid(
+        columns: 1,
+        row-gutter: 0pt,
+        block(
+          fill: t-fill,
+          width: 100%,
+          inset: (x: 0.33em, top: 0.3em, bottom: 0.35em),
+          radius: (top: radius),
+          text(
+            ..if self.store.title-font == auto { (:) } else {
+              (font: self.store.title-font)
+            },
+            fill: title-color,
+            weight: "regular",
+            size: 1.1em,
+            title,
+          ),
+        ),
+        rect(width: 100%, height: 0.15em, stroke: none, fill: gradient.linear(
+          t-fill,
+          b-fill,
+          angle: 90deg,
+        )),
+        block(
+          fill: b-fill,
+          width: 100%,
+          inset: (x: 0.33em, top: 0.2em, bottom: 0.65em),
+          radius: (bottom: radius),
+          text(fill: body-color, it),
+        ),
+      )
+    } else {
       block(
         fill: b-fill,
         width: 100%,
-        inset: (x: 0.8em, top: 0.55em, bottom: 0.55em),
-        radius: (bottom: radius),
+        inset: (x: 0.33em, y: 0.3em),
+        radius: radius,
         text(fill: body-color, it),
-      ),
-    )
-  } else {
-    block(
-      fill: b-fill,
-      width: 100%,
-      inset: (x: 0.8em, top: 0.55em, bottom: 0.55em),
-      radius: radius,
-      text(fill: body-color, it),
-    )
-  }
+      )
+    },
+  )))
 }
 
 /// Standard rounded block for Madrid theme.
@@ -129,7 +246,7 @@
   (self: none, it) => _cblock(
     self: self,
     title: title,
-    title-fill: self.colors.alert,
+    title-fill: self.colors.alert.darken(25%),
     title-color: white,
     body-fill: self.colors.alert-light,
     it,
@@ -146,7 +263,7 @@
   (self: none, it) => _cblock(
     self: self,
     title: title,
-    title-fill: self.colors.example,
+    title-fill: self.colors.example.darken(25%),
     title-color: white,
     body-fill: self.colors.example-light,
     it,
@@ -166,14 +283,17 @@
         width: 100%,
         height: self.store.header-height,
         fill: self.colors.primary,
-        inset: (x: 1.2em),
+        inset: (x: 0.78em, top: 0.25em),
         align(
           left + horizon,
           {
             text(
+              ..if self.store.title-font == auto { (:) } else {
+                (font: self.store.title-font)
+              },
               fill: self.colors.neutral-lightest,
-              weight: "medium",
-              size: 1.2em,
+              weight: "regular",
+              size: 1.315em,
               utils.call-or-display(self, self.store.title),
             )
             if self.store.subtitle != none {
@@ -198,19 +318,32 @@
   }
   set align(bottom)
 
-  // Optional navigation symbols above footer on the right
+  if self.store.logo != none {
+    place(bottom + right, dx: -0.3em, dy: -1.8em, utils.call-or-display(
+      self,
+      self.store.logo,
+    ))
+  }
+
+  // Optional navigation symbols above footer on the right.
   if self.store.navigation-symbols {
     place(
       bottom + right,
-      dy: -1.7em,
-      navigation-symbols(),
+      dx: -0.3em,
+      dy: -1.05em,
+      navigation-symbols(fill: self.colors.primary.lighten(60%)),
     )
   }
 
-  set text(size: 0.5em)
+  set text(
+    ..if self.store.small-font == auto { (:) } else {
+      (font: self.store.small-font)
+    },
+    size: 0.55em,
+  )
   block(
     width: 100%,
-    height: 1.6em,
+    height: 1.45em,
     inset: 0pt,
     outset: 0pt,
     stroke: none,
@@ -224,7 +357,7 @@
         width: 100%,
         height: 100%,
         fill: self.colors.primary.darken(50%),
-        inset: (x: 0.8em),
+        inset: (x: 0.9em),
         stroke: none,
         align(
           center + horizon,
@@ -256,26 +389,41 @@
         fill: self.colors.primary,
         inset: (x: 0.8em),
         stroke: none,
-        grid(
-          columns: (1fr, auto),
-          align: (center + horizon, right + horizon),
+        align(right + horizon, {
           text(
             fill: self.colors.neutral-lightest,
             utils.call-or-display(self, self.store.footer-date),
-          ),
+          )
+          h(2.4em)
           text(
             fill: self.colors.neutral-lightest,
             context utils.slide-counter.display()
               + " / "
               + utils.last-slide-number,
-          ),
-        ),
+          )
+        }),
       ),
     ),
   )
 }
 
 /// Slide function
+#let _madrid-align(alignment, body) = {
+  // Beamer's centered frames have more stretch below the content than above.
+  if alignment in (horizon + left, horizon + center, horizon + right, horizon) {
+    let horizontal = if alignment == horizon + center { center } else if (
+      alignment == horizon + right
+    ) { right } else { left }
+    block(width: 100%, height: 100%, {
+      v(1fr)
+      std.align(horizontal, body)
+      v(1.5fr)
+    })
+  } else {
+    std.align(alignment, body)
+  }
+}
+
 #let slide(
   title: auto,
   subtitle: auto,
@@ -303,8 +451,11 @@
   if footer != auto {
     self.store.footer = footer
   }
+  if self.store.title == none {
+    self = utils.merge-dicts(self, config-page(margin: (top: 0.85em)))
+  }
   let new-setting = body => {
-    show: std.align.with(self.store.align)
+    show: _madrid-align.with(self.store.align)
     show: setting
     body
   }
@@ -318,16 +469,21 @@
   )
 })
 
-/// Title slide for Madrid theme
+/// Title slide for Madrid theme.
+///
+/// - numbered (bool): Whether this frame is counted. Default is `true`.
+/// - extra (content, none): Additional title-page content.
+/// - config (dictionary): Per-slide configuration, applied after defaults.
 #let title-slide(
   config: (:),
   extra: none,
+  numbered: true,
   ..args,
 ) = touying-slide-wrapper(self => {
   self = utils.merge-dicts(
     self,
-    config-common(freeze-slide-counter: true),
-    config-page(margin: (top: 1.8em, bottom: 2.2em, x: 1.2em)),
+    config-common(freeze-slide-counter: not numbered),
+    config-page(margin: (top: 2.06em, bottom: 3.5em, x: 0.67em)),
     config,
   )
   self.store.title = none
@@ -351,32 +507,35 @@
   }
 
   let body = {
-    set std.align(center)
-
-    v(0.4em)
+    set std.align(center + horizon)
+    set super(size: 0.73em)
 
     // Rounded blue box with title
-    block(
+    _shadow(enabled: self.store.title-shadow, block(
       fill: self.colors.primary,
-      inset: (x: 1.5em, top: 0.85em, bottom: 0.85em),
-      radius: 4.5pt,
+      inset: (x: 0.7em, top: 0.95em, bottom: 0.95em),
+      radius: 0.35em,
       width: 100%,
       breakable: false,
-      {
+      align(center, {
         text(
-          size: 1.35em,
+          ..if self.store.title-font == auto { (:) } else {
+            (font: self.store.title-font)
+          },
+          size: 1.315em,
           fill: self.colors.neutral-lightest,
-          weight: "medium",
+          weight: "regular",
           info.title,
         )
         if info.subtitle != none {
+          linebreak()
           v(0.3em)
-          text(size: 0.9em, fill: self.colors.neutral-lightest, info.subtitle)
+          text(size: 1em, fill: self.colors.neutral-lightest, info.subtitle)
         }
-      },
-    )
+      }),
+    ))
 
-    v(0.8em)
+    v(1.8em)
 
     // Author(s)
     if info.authors.len() > 0 {
@@ -394,15 +553,25 @@
 
     // Institution
     if info.institution != none {
-      v(0.7em)
-      text(size: 0.85em, fill: self.colors.neutral-darkest, info.institution)
+      v(0.55em)
+      text(
+        ..if self.store.small-font == auto { (:) } else {
+          (font: self.store.small-font)
+        },
+        size: 0.73em,
+        fill: self.colors.neutral-darkest,
+        {
+          set par(leading: 0.5em, spacing: 1.5em)
+          info.institution
+        },
+      )
     }
 
     // Date
     if info.date != none {
-      v(0.7em)
+      v(0.61em)
       text(
-        size: 0.85em,
+        size: 1em,
         fill: self.colors.neutral-darkest,
         if type(info.date) == datetime {
           info.date.display(self.at("datetime-format", default: auto))
@@ -421,40 +590,108 @@
   touying-slide(self: self, body)
 })
 
+// One renderer keeps normal and progressive outlines identical in geometry.
+#let _madrid-outline(
+  self,
+  progressive: false,
+  level: 1,
+  numbered: true,
+  alpha: 80%,
+  ..args,
+) = context {
+  let current = utils.current-heading(level: level)
+  let sections = query(heading.where(level: level))
+  let current-index = sections.position(it => (
+    current != none and it.location() == current.location()
+  ))
+  let next-page = if current-index != none {
+    sections.at(current-index + 1, default: none)
+  } else { none }
+  show outline.entry: it => {
+    let faded = (
+      progressive
+        and (
+          current == none
+            or it.element.location().page() < current.location().page()
+            or (
+              next-page != none
+                and it.element.location().page() >= next-page.location().page()
+            )
+        )
+    )
+    let color = if faded { self.colors.primary.lighten(alpha) } else {
+      self.colors.primary
+    }
+    let shade(c) = if faded { c.lighten(alpha) } else { c }
+    let marker = if it.level == 1 and numbered {
+      circle(
+        radius: 0.55em,
+        stroke: none,
+        fill: gradient.radial(
+          shade(self.colors.primary.lighten(65%)),
+          color,
+          shade(self.colors.primary.darken(35%)),
+          center: (30%, 25%),
+          radius: 80%,
+        ),
+        inset: 0pt,
+        align(center + horizon, text(fill: white, size: 0.73em, str(
+          query(heading.where(level: 1)).position(h => (
+            h.location() == it.element.location()
+          ))
+            + 1,
+        ))),
+      )
+    } else {
+      beamer-ball(
+        color: color,
+        light-color: color.lighten(65%),
+        dark-color: color.darken(35%),
+      )
+    }
+    block(
+      above: 0pt,
+      below: if it.level == 1 { 3.6em } else { 0.5em },
+      pad(left: (it.level - 1) * 1.5em, link(it.element.location(), grid(
+        columns: (1.54em, 1fr),
+        column-gutter: 0pt,
+        align: horizon,
+        marker, text(fill: color, utils.short-heading(self: self, it.element)),
+      ))),
+    )
+  }
+  pad(left: -0.33em, outline(title: none, ..args))
+}
+
 /// Section slide with a progressive outline. The current section is highlighted.
 ///
 /// - config (dictionary): Per-slide configuration.
 /// - level (int): Heading level used to identify the current section.
 /// - numbered (bool): Whether to show section numbers when headings are numbered.
-/// - alpha (ratio): Transparency of other sections. Default is `60%`.
+/// - alpha (ratio): Fade of other sections. Default is `80%`.
+/// - title (content, function): Outline slide title. Default is the theme's section-outline-title.
 /// - body (content): Additional content for the section slide.
 #let new-section-slide(
   config: (:),
   level: 1,
   numbered: true,
-  alpha: 60%,
+  alpha: 80%,
+  title: auto,
   body,
 ) = touying-slide-wrapper(self => {
-  self = utils.merge-dicts(self, config)
-  self.store.title = utils.display-current-heading(
-    level: level,
-    numbered: false,
-  )
+  self = utils.merge-dicts(self, config-page(margin: (bottom: 3.2em)), config)
+  self.store.title = if title == auto {
+    self.store.section-outline-title
+  } else { title }
   let setting(body) = {
-    set align(center + horizon)
-    block(
-      width: 65%,
-      components.custom-progressive-outline(
-        self: self,
-        level: level,
-        alpha: alpha,
-        title: none,
-        numbered: (numbered,),
-        text-style: ((fill: self.colors.neutral-darkest),),
-        style-current: ((fill: self.colors.primary, weight: "bold"),),
-        vspace: (0.3em,),
-        depth: level,
-      ),
+    set align(left + horizon)
+    _madrid-outline(
+      self,
+      progressive: true,
+      level: level,
+      numbered: numbered,
+      alpha: alpha,
+      depth: level,
     )
     body
   }
@@ -489,16 +726,25 @@
   )
 })
 
-/// Outline slide for Madrid theme
+/// Outline slide for Madrid theme.
+///
+/// - numbered (bool): Whether section spheres contain numbers. Default is `true`.
+/// - depth (int): Maximum heading depth. Default is `1` (sections only).
 #let outline-slide(
   config: (:),
   title: utils.i18n-outline-title,
+  numbered: true,
+  depth: 1,
   ..args,
-) = slide(
-  title: title,
-  config: config,
-  outline(title: none, indent: 1em, ..args),
-)
+) = touying-slide-wrapper(self => {
+  self = utils.merge-dicts(self, config-page(margin: (bottom: 3.2em)), config)
+  self.store.title = title
+  touying-slide(
+    self: self,
+    setting: body => std.align(left + horizon, body),
+    _madrid-outline(self, numbered: numbered, depth: depth, ..args),
+  )
+})
 
 /// Speaker-note panel for this theme. Only styling; `touying-notes` does the layout.
 #let notes(self: none, ..args) = touying-notes(
@@ -515,32 +761,46 @@
 /// Main Madrid theme definition recreating the classic LaTeX Beamer Madrid theme.
 ///
 /// - aspect-ratio (str): The aspect ratio of the slides. Default is `"16-9"`.
-/// - align (alignment): The default alignment of slide content. Default is `top + left`.
+/// - align (alignment): The default alignment of slide content. Default is `horizon + left`.
 /// - title (content, function): The title displayed in the header banner. Default is current heading.
 /// - subtitle (content, function, none): Optional subtitle displayed below the title in the header banner.
 /// - header (content, function, auto): Custom slide header override. Default is `auto`.
 /// - footer (content, function, auto): Custom slide footer override. Default is `auto`.
-/// - header-height (length): Height of the top header banner. Default is `2.2em`.
-/// - navigation-symbols (bool): Whether to display decorative Beamer navigation symbols. Default is `false`.
+/// - header-height (length): Height of the top header banner. Default is `2.5em`.
+/// - navigation-symbols (bool): Whether to display Beamer navigation symbols. Default is `true`.
+/// - logo (content, function, none): Bottom-right logo. Default reads `info.logo`.
+/// - block-shadow (bool): Whether rounded blocks cast shadows. Default is `true`.
+/// - title-shadow (bool): Whether the title panel casts a shadow. Default is `true`.
+/// - section-outline-title (content, function): Title for progressive outline slides.
+/// - font-size (length): Base font size. Default is `24pt`.
+/// - sans-math (bool): Use Beamer-style sans-serif math letters. Default is `true`.
 /// - footer-left (content, function): Content displayed in the left footer cell. Default is author.
 /// - footer-right (content, function): Content displayed in the center footer cell. Default is title.
 /// - footer-date (content, function): Content displayed in the date part of the right footer cell. Default is date.
 /// - primary (color): Primary theme color. Default is `rgb("#3333b3")`.
-/// - primary-light (color): Light primary color for block bodies. Default is `rgb("#e8ebfa")`.
-/// - alert (color): Accent color for alert blocks. Default is `rgb("#cc0000")`.
-/// - alert-light (color): Light alert color for alert block bodies. Default is `rgb("#fae8e8")`.
+/// - primary-light (color, auto): Block body color. Default derives from the primary color.
+/// - alert (color): Inline alert and alert block color. Default is `rgb("#ff0000")`.
+/// - alert-light (color, auto): Alert block body color. Default derives from the alert color.
 /// - example (color): Accent color for example blocks. Default is `rgb("#008000")`.
-/// - example-light (color): Light example color for example block bodies. Default is `rgb("#e8fae8")`.
+/// - example-light (color, auto): Example block body color. Default derives from the example color.
 /// - font (auto, str, array): Font family for text. Default is `auto`.
+/// - title-font (auto, str, array): Font for frame, title-panel and block headings. Default inherits the body font.
+/// - small-font (auto, str, array): Font for footer and institution text. Default inherits the body font.
 #let madrid-theme(
   aspect-ratio: "16-9",
-  align: top + left,
+  align: horizon + left,
   title: self => utils.display-current-heading(depth: self.slide-level),
   subtitle: none,
   header: auto,
   footer: auto,
-  header-height: 2.2em,
-  navigation-symbols: false,
+  header-height: 2.5em,
+  navigation-symbols: true,
+  logo: self => self.info.logo,
+  block-shadow: true,
+  title-shadow: true,
+  section-outline-title: utils.i18n-outline-title,
+  font-size: 24pt,
+  sans-math: true,
   footer-left: self => {
     let short-author = self.info.at("short-author", default: auto)
     if short-author != auto and short-author != none {
@@ -568,12 +828,14 @@
     }
   },
   primary: rgb("#3333b3"),
-  primary-light: rgb("#e8ebfa"),
-  alert: rgb("#cc0000"),
-  alert-light: rgb("#fae8e8"),
+  primary-light: auto,
+  alert: rgb("#ff0000"),
+  alert-light: auto,
   example: rgb("#008000"),
-  example-light: rgb("#e8fae8"),
+  example-light: auto,
   font: auto,
+  title-font: auto,
+  small-font: auto,
   ..args,
   body,
 ) = {
@@ -585,7 +847,7 @@
       footer: madrid-footer,
       header-ascent: 0em,
       footer-descent: 0em,
-      margin: (top: 5.2em, bottom: 2.2em, x: 1.2em),
+      margin: (top: 3.2em, bottom: 1.8em, x: 1em),
     ),
     config-common(
       slide-fn: slide,
@@ -594,36 +856,47 @@
     ),
     config-methods(
       init: (self: none, body) => {
-        if font != auto {
-          set text(font: font)
-        }
         set text(
-          size: 20pt,
+          ..if font == auto { (:) } else { (font: font) },
+          size: font-size,
           fill: self.colors.neutral-darkest,
         )
-        set par(justify: false, leading: 0.65em)
+        set par(justify: false, leading: 0.54em, spacing: 0.54em)
         set list(
           marker: beamer-ball(
             color: self.colors.primary,
             light-color: self.colors.primary.lighten(70%),
             dark-color: self.colors.primary.darken(30%),
           ),
-          body-indent: 0.5em,
-          spacing: 1em,
+          indent: 1em,
+          body-indent: 0.64em,
+          spacing: 0.8em,
+        )
+        set enum(spacing: 0.25em)
+        show math.equation: it => if sans-math { math.sans(it) } else { it }
+        show math.equation.where(block: true): set block(
+          above: 1em,
+          below: 1.5em,
         )
         show heading: set text(fill: self.colors.primary)
         body
       },
-      alert: utils.alert-with-primary-color,
+      alert: (self: none, body) => text(fill: self.colors.alert, body),
       tblock: _cblock,
     ),
     config-colors(
       primary: primary,
-      primary-light: primary-light,
+      primary-light: if primary-light == auto {
+        primary.darken(25%).lighten(90%)
+      } else { primary-light },
       alert: alert,
-      alert-light: alert-light,
+      alert-light: if alert-light == auto {
+        alert.darken(25%).lighten(90%)
+      } else { alert-light },
       example: example,
-      example-light: example-light,
+      example-light: if example-light == auto {
+        example.darken(25%).lighten(90%)
+      } else { example-light },
       neutral-lightest: rgb("#ffffff"),
       neutral-darkest: rgb("#000000"),
     ),
@@ -635,6 +908,12 @@
       footer: footer,
       header-height: header-height,
       navigation-symbols: navigation-symbols,
+      logo: logo,
+      block-shadow: block-shadow,
+      title-shadow: title-shadow,
+      section-outline-title: section-outline-title,
+      title-font: title-font,
+      small-font: small-font,
       footer-left: footer-left,
       footer-right: footer-right,
       footer-date: footer-date,

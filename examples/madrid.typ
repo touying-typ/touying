@@ -1,8 +1,12 @@
 #import "/lib.typ": *
 #import themes.madrid: *
 
+// Install Latin Modern, or pass its font directory with `typst --font-path`.
 #show: madrid-theme.with(
   aspect-ratio: "16-9",
+  font: "Latin Modern Sans",
+  title-font: "Latin Modern Sans 12",
+  small-font: "Latin Modern Sans 8",
   navigation-symbols: true,
   config-info(
     title: [Full Title of the Talk],
@@ -58,6 +62,8 @@ fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog.
   This is the exampleblock environment. The quick brown fox jumps over the lazy dog.
   The quick brown fox jumps over the lazy dog.
 ]
+
+== Alert Block
 
 #alert-block(title: [Block Title])[
   This is the alertblock environment. The quick brown fox jumps over the lazy dog.

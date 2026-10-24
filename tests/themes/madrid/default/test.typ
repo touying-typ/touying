@@ -32,7 +32,7 @@
 == Blocks
 
 #cblock(title: [Block Title])[
-  Standard block content.
+  Standard block content: $E = m c^2$.
 ]
 
 #alert-block(title: [Alert Block])[
