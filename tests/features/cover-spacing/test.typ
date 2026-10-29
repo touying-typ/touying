@@ -233,7 +233,6 @@
 ]
 
 //== now some tests with nontight lists.
-//bc we do this locally this will break.
 
 #slide(
   composer: (1fr, 1fr),
@@ -246,7 +245,7 @@
   },
 )[
   #align(horizon)[
-    - should break
+    - first
     #pause
     - second
     - third
@@ -254,7 +253,7 @@
 ][
   #meanwhile
   #align(horizon)[
-    - should break
+    - first
     - second
     - third
   ]
@@ -567,5 +566,68 @@
     - b
     - c
     - d
+  ]
+]
+
+= List spacing from show rules
+
+// The gap above a covered run of list items must come from the styles that
+// apply inside the list, not from those in effect between the items: a
+// show-set rule like `show list: set list(spacing: ..)` only applies inside
+// the list, so reading `list.spacing` outside it gives `auto`.
+
+== show-set list spacing
+#slide(
+  composer: (1fr, 1fr),
+  setting: body => {
+    for dy in (76pt, 130pt, 184pt) {
+      place(top + left, dy: dy)[#line(length: 100%, stroke: .4pt + red)]
+    }
+    show list: set list(spacing: 1.5em)
+    body
+  },
+)[
+  #align(horizon)[
+    - a
+    #pause
+    - b
+    - c
+  ]
+][
+  #meanwhile
+  #align(horizon)[
+    - a
+    - b
+    - c
+  ]
+]
+
+// touying's own `scale-list-items` styles nested lists with a show rule, so
+// the gap between nested items depends on the smaller nested text size.
+== scale-list-items
+#slide(
+  composer: (1fr, 1fr),
+  setting: body => {
+    for dy in (76pt, 93pt, 109pt, 125pt) {
+      place(top + left, dy: dy)[#line(length: 100%, stroke: .4pt + red)]
+    }
+    show: magic.scale-list-items.with(scale: .5)
+    body
+  },
+)[
+  #align(horizon)[
+    - outer
+      - one
+      #pause
+      - two
+      - three
+  ]
+][
+  #meanwhile
+  #align(horizon)[
+    - outer
+      - one
+      - two
+      - three
   ]
 ]
