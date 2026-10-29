@@ -44,11 +44,15 @@
 
 
 #let _default-frozen-states = (
-  // ctheorems state
+  // ctheorems 1.x: deprecated, supported until v0.9.0
   state("thm", (
     "counters": ("heading": ()),
     "latest": (),
   )),
+  // ctheorems 2.x
+  state("thm-counters", (:)),
+  state("thm-stored", ()),
+  state("thm-qed-done", ()),
 )
 
 #let _default-frozen-counters = (
@@ -207,7 +211,7 @@
 ///
 /// - frozen-states (array): The frozen states for the frozen states and counters. Default is `()`.
 ///
-/// - default-frozen-states (function): The default frozen states for the frozen states and counters. Default is state for `ctheorems` package.
+/// - default-frozen-states (array): The default frozen states for the frozen states and counters. Default is the states of the `ctheorems` package (1.x and 2.x).
 ///
 /// - frozen-counters (array): The frozen counters for the frozen states and counters. You can pass some counters like `(counter(math.equation),)`. Default is `()`.
 ///
