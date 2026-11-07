@@ -1,0 +1,181 @@
+name: Docs Release
+
+# Publishes the documentation of a *released* version.
+# Only runs when a GitHub Release is published.
+#
+# The site is the same Docusaurus site that docs-preview.yml builds for pull
+# requests. It is deployed to the gh-pages branch of this repository, under
+# latest/, next to the pr-preview/ folders:
+#
+#   https://touying-typ.github.io/touying/latest/
+
+on:
+  release:
+    types: [released]
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: >-
+          Tag (or other ref) whose docs to publish, e.g. 0.8.0. Leave empty
+          for the tag of the latest release.
+        required: false
+        type: string
+
+# A running deployment is never cancelled; a newer queued run replaces an older one.
+concurrency:
+  group: docs-release
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  resolve:
+    name: Decide which tag to publish
+    # Not for forks, which would push their own gh-pages.
+    if: github.repository == 'touying-typ/touying'
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.pick.outputs.tag }}
+    steps:
+      - name: Pick the tag
+        id: pick
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT_TAG: ${{ github.event.release.tag_name }}
+          INPUT_REF: ${{ inputs.ref }}
+        run: |
+          set -euo pipefail
+          latest="$(gh release view --repo "$GITHUB_REPOSITORY" --json tagName --jq .tagName)"
+          tag="${EVENT_TAG:-${INPUT_REF:-$latest}}"
+          # A backport (0.7.5 after 0.8.0) must not replace the newer docs. Only
+          # a tag below the latest release is skipped, and a manual run never is.
+          if [ -n "$EVENT_TAG" ] && [ "$EVENT_TAG" != "$latest" ] &&
+            [ "$(printf '%s\n%s\n' "$EVENT_TAG" "$latest" | sort -V | tail -n 1)" = "$latest" ]; then
+            echo "::notice::$EVENT_TAG is older than the latest release ($latest), so latest/ is left alone."
+            exit 0
+          fi
+          echo "Publishing docs of: $tag"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+  publish:
+    name: Publish docs of a release
+    needs: resolve
+    if: needs.resolve.outputs.tag != ''
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # push to gh-pages
+
+    steps:
+      # No credentials in .git/config: npm and pip run third party code below.
+      - name: Checkout touying at the release tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.resolve.outputs.tag }}
+          persist-credentials: false
+
+      - name: Checkout website repo
+        uses: actions/checkout@v4
+        with:
+          repository: touying-typ/touying-typ.github.io
+          path: website
+          submodules: false
+          persist-credentials: false
+
+      - name: Inject the release docs into website
+        run: |
+          mkdir -p website/touying
+          rsync -a --exclude='.git' --exclude='website' . website/touying/
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: website/package-lock.json
+
+      - name: Install Typst
+        uses: typst-community/setup-typst@v4
+
+      - name: Install Python dependencies
+        run: pip install Pillow
+
+      - name: Install Node dependencies
+        working-directory: website
+        run: npm ci
+
+      - name: Copy docs from touying into website structure
+        working-directory: website
+        run: npm run copy-docs
+
+      - name: Generate API reference documentation
+        working-directory: website
+        run: npm run generate-docs
+
+      - name: Generate slide preview images
+        id: generate-images
+        working-directory: website
+        run: npm run generate-images
+        continue-on-error: true
+
+      - name: Warn if slide image generation failed
+        if: steps.generate-images.outcome == 'failure'
+        run: |
+          echo "::warning::Slide preview image generation failed. The docs are published without generated slide images. Check the 'Generate slide preview images' step log."
+
+      - name: Build website
+        working-directory: website
+        run: npm run build
+        env:
+          DOCUSAURUS_BASE_URL: /touying/latest/
+
+      # The deploy step deletes whatever latest/ holds, and a nearly empty site
+      # can build (copy-docs exits 0 without docs, broken links only warn).
+      # The build of 0.8.0 has 410 HTML files.
+      - name: Check that the build is a whole site
+        run: |
+          set -euo pipefail
+          test -s website/build/index.html
+          test -s website/build/zh/index.html
+          n="$(find website/build -name '*.html' | wc -l)"
+          if [ "$n" -lt 100 ]; then
+            echo "::error::Only $n HTML files were built, refusing to publish."
+            exit 1
+          fi
+          echo "Built $n HTML files."
+
+      # pr-preview/ is pushed to the same branch by rossjrw/pr-preview-action.
+      # Both sides rebase and retry, and they write different folders.
+      - name: Deploy to gh-pages
+        env:
+          TAG: ${{ needs.resolve.outputs.tag }}
+          PAGES_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git clone --depth 1 --branch gh-pages \
+            "https://x-access-token:${PAGES_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" pages
+          mkdir -p pages/latest
+          rsync -a --delete website/build/ pages/latest/
+          cd pages
+          git add --all latest
+          if git diff --cached --quiet; then
+            echo "latest/ is already up to date."
+            exit 0
+          fi
+          git commit -m "Publish docs of ${TAG}"
+          for attempt in 1 2 3 4 5; do
+            if git push origin gh-pages; then
+              echo "Published https://${GITHUB_REPOSITORY_OWNER}.github.io/touying/latest/"
+              exit 0
+            fi
+            echo "Push rejected (attempt $attempt), rebasing onto gh-pages."
+            sleep $((attempt * 2))
+            git pull --rebase origin gh-pages || {
+              echo "Rebase failed (attempt $attempt)."
+              git rebase --abort 2>/dev/null || true
+            }
+          done
+          echo "::error::Could not push to gh-pages after five attempts."
+          exit 1

@@ -1041,12 +1041,14 @@
 /// The gap Typst puts between two rows of a container built from items of the
 /// given kind.
 ///
-/// With the container's `spacing` set the user named it. Left `auto` it comes
-/// from the paragraph metrics instead, which is `par.spacing` when the
-/// container is non-tight and `par.leading` when it is tight.
+/// The gap is measured on a container of that kind laid out here, rather than
+/// read from `list.spacing` etc.: show-set rules such as
+/// `show list: set list(spacing: ..)` only apply inside the elements they
+/// match, and this is called between the items, outside any container. The
+/// measurement also covers the `auto` fallback to `par.spacing` (non-tight)
+/// and `par.leading` (tight).
 ///
-/// Must be called from a context, as it reads the active container and
-/// paragraph styles.
+/// Must be called from a context, as it lays out with the active styles.
 ///
 /// - kind (function): One of `list.item`, `enum.item`, `terms.item`.
 ///
@@ -1054,22 +1056,19 @@
 ///
 /// -> length
 #let get-row-spacing-of-list-like(kind, tight: true) = {
-  let spacing = if kind == list.item {
-    list.spacing
+  // Two rows of zero height (without marker or number), so the container's
+  // height is exactly the gap.
+  let row = box(height: 0pt)
+  let container = if kind == list.item {
+    list(marker: none, tight: tight, row, row)
   } else if kind == enum.item {
-    enum.spacing
+    enum(numbering: (..) => none, tight: tight, row, row)
   } else if kind == terms.item {
-    terms.spacing
+    terms(tight: tight, terms.item(row, row), terms.item(row, row))
   } else {
-    auto
+    return if tight { par.leading } else { par.spacing }
   }
-  if spacing != auto {
-    spacing
-  } else if tight {
-    par.leading
-  } else {
-    par.spacing
-  }
+  measure(container).height
 }
 
 /// The runs of items Typst would gather into list-like containers, in order.
