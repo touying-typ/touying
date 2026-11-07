@@ -1,13 +1,7 @@
 name: Docs Release
 
 # Publishes the documentation of a *released* version.
-#
-# `main` is the nightly: people who want it can use it, but the docs describe
-# the version that is published on Typst Universe. So this does not run on
-# pushes to main. It runs when a GitHub Release is released (published as a
-# full release, or a prerelease promoted to one), and it can be run by hand to
-# backfill a version. The tag of a release event has to contain this file, so a
-# release made before this workflow existed is published by hand.
+# Only runs when a GitHub Release is published.
 #
 # The site is the same Docusaurus site that docs-preview.yml builds for pull
 # requests. It is deployed to the gh-pages branch of this repository, under
@@ -27,9 +21,7 @@ on:
         required: false
         type: string
 
-# One deployment at a time. A running deployment is never cancelled, so a
-# half-pushed site cannot happen. GitHub keeps at most one waiting run per
-# group: if two runs queue behind a running one, only the newer of them stays.
+# A running deployment is never cancelled; a newer queued run replaces an older one.
 concurrency:
   group: docs-release
   cancel-in-progress: false
@@ -40,8 +32,7 @@ permissions:
 jobs:
   resolve:
     name: Decide which tag to publish
-    # Fork owners who enable Actions would otherwise try to push their own
-    # gh-pages on every release they draft.
+    # Not for forks, which would push their own gh-pages.
     if: github.repository == 'touying-typ/touying'
     runs-on: ubuntu-latest
     outputs:
@@ -57,11 +48,8 @@ jobs:
           set -euo pipefail
           latest="$(gh release view --repo "$GITHUB_REPOSITORY" --json tagName --jq .tagName)"
           tag="${EVENT_TAG:-${INPUT_REF:-$latest}}"
-          # A release event for an older version (a backport such as 0.7.5 after
-          # 0.8.0) must not replace the docs of the newer one. Only an event tag
-          # that sorts below the latest release is skipped, so a lookup that has
-          # not caught up with a brand new release cannot cause a skip. A manual
-          # run names its ref on purpose and is never skipped.
+          # A backport (0.7.5 after 0.8.0) must not replace the newer docs. Only
+          # a tag below the latest release is skipped, and a manual run never is.
           if [ -n "$EVENT_TAG" ] && [ "$EVENT_TAG" != "$latest" ] &&
             [ "$(printf '%s\n%s\n' "$EVENT_TAG" "$latest" | sort -V | tail -n 1)" = "$latest" ]; then
             echo "::notice::$EVENT_TAG is older than the latest release ($latest), so latest/ is left alone."
@@ -79,18 +67,13 @@ jobs:
       contents: write # push to gh-pages
 
     steps:
-      # ── 1. The released touying sources, at the workspace root ─────────────
-      # Credentials are not kept in .git/config: npm and pip run third party
-      # code later in this job, and the deploy step brings its own token.
+      # No credentials in .git/config: npm and pip run third party code below.
       - name: Checkout touying at the release tag
         uses: actions/checkout@v4
         with:
           ref: ${{ needs.resolve.outputs.tag }}
           persist-credentials: false
 
-      # ── 2. The Docusaurus website (config, theme, build scripts) ───────────
-      # Its submodule is replaced by the release's own content below, so it is
-      # not initialised.
       - name: Checkout website repo
         uses: actions/checkout@v4
         with:
@@ -104,7 +87,6 @@ jobs:
           mkdir -p website/touying
           rsync -a --exclude='.git' --exclude='website' . website/touying/
 
-      # ── 3. Build, exactly as docs-preview.yml does ─────────────────────────
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
@@ -141,17 +123,14 @@ jobs:
         run: |
           echo "::warning::Slide preview image generation failed. The docs are published without generated slide images. Check the 'Generate slide preview images' step log."
 
-      # The website config already sets onBrokenLinks to 'warn' (docusaurus.config.js),
-      # so a navbar link to a page this release lacks does not fail the build.
       - name: Build website
         working-directory: website
         run: npm run build
         env:
           DOCUSAURUS_BASE_URL: /touying/latest/
 
-      # copy-docs exits 0 when the docs folder is missing, and broken links only
-      # warn, so a nearly empty site can build. The next step deletes whatever
-      # latest/ holds, so refuse to publish anything that is not a whole site.
+      # The deploy step deletes whatever latest/ holds, and a nearly empty site
+      # can build (copy-docs exits 0 without docs, broken links only warn).
       # The build of 0.8.0 has 410 HTML files.
       - name: Check that the build is a whole site
         run: |
@@ -165,10 +144,8 @@ jobs:
           fi
           echo "Built $n HTML files."
 
-      # ── 4. Replace latest/ on gh-pages, leave everything else alone ────────
-      # pr-preview/ is owned by rossjrw/pr-preview-action, which pushes to the
-      # same branch. Both sides rebase and retry a rejected push, and they write
-      # different folders, so a rebase never conflicts.
+      # pr-preview/ is pushed to the same branch by rossjrw/pr-preview-action.
+      # Both sides rebase and retry, and they write different folders.
       - name: Deploy to gh-pages
         env:
           TAG: ${{ needs.resolve.outputs.tag }}
