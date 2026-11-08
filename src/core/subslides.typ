@@ -136,18 +136,6 @@
   }
 }
 
-/// The placement effects `animate` understands as strings. See `animate` for
-/// why placements are resolved rather than composed.
-#let animate-placements = ("show", "cover", "remove")
-
-#let _is-swap(eff) = (
-  type(eff) == dictionary and eff.at("kind", default: none) == "touying-swap"
-)
-
-#let _is-placement(eff) = (
-  (type(eff) == str and eff in animate-placements) or _is-swap(eff)
-)
-
 #let last-required-subslide(visible-subslides) = {
   if type(visible-subslides) == label {
     // Labels are resolved at render time; the pauses that define waypoints

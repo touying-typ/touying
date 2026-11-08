@@ -61,7 +61,7 @@ config-methods(cover: utils.color-changing-cover.with(fallback-for-filled: false
 
 `utils.alpha-changing-cover` 没有该参数——降低透明度只会让图形变淡，而不会使它与其内容混为一色。
 
-## 编写你自己的 Cover 函数
+## 编写你自己的 Cover 函数 {#writing-your-own-cover-function}
 
 Cover 函数以具名参数接收 `self`，以位置参数接收待遮盖的内容，并返回遮盖后的内容：
 

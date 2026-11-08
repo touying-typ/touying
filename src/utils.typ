@@ -4,7 +4,7 @@
 #import "core/tree.typ"
 #import "core/waypoints.typ": resolve-waypoints
 #import "core/subslides.typ": (
-  _is-placement, _is-swap, _parse-subslide-indices, check-visible,
+  _parse-subslide-indices, assert-no-negative-subslides, check-visible,
 )
 
 
@@ -2175,20 +2175,28 @@
 ///
 /// You can also add an abbreviation by using `#let effect-red = effect.with(text.with(fill: red))` for your own effects.
 ///
+/// Does not autocount subslides, see [`effect`](../animation/effect) for the version that does.
+///
+/// - self (dictionary, none): The slide context. Pass the `self` of a callback-style slide, or get the functions with `utils.methods(self)`.
+///
 /// - fn (function): The function that will be called in the subslide.
 ///      Or you can use a method function like `(self: none) => { .. }`.
 ///
-/// - visible-subslides (int, array, str): A single integer, an array of integers, or a string specifying the visible subslides.
+/// - visible-subslides (int, array, str, label, dictionary): Specifies in which subslides the content is visible.
 ///
 ///    Supported formats:
 ///
 ///    - A single integer, e.g. `3` — only subslide 3.
 ///    - An array, e.g. `(1, 2, 4)` — equivalent to `"1, 2, 4"`.
 ///    - A string with ranges, e.g. `"-2, 4, 6-8, 10-"` — subslides 1, 2, 4, 6, 7, 8, 10, and all after 10.
+///    - A label, e.g. `<my-waypoint>` — shows from that waypoint's start until the next waypoint.
+///    - A waypoint marker, e.g. `from-wp(<label>)`, `until-wp(<label>)`, `get-first(<label>)`, etc.
 ///
 /// - cont (content): The content to display when the content is visible in the subslide.
 ///
 /// - is-method (bool): Whether the function is a method function. Default is `false`.
+///
+/// - resolved-subslides (int, array, str, label, dictionary, none): Optional, used internally by Touying for parsing the waypoints.
 ///
 /// -> content
 #let effect(
@@ -2217,6 +2225,8 @@
 
 /// Uncover content in some subslides. Reserved space when hidden (like `#hide()`).
 ///
+/// Does not autocount subslides, see [`uncover`](../animation/uncover) for the version that does.
+///
 /// #example(
 /// >>> #let is-dark = sys.inputs.at("x-color-theme", default: none) == "dark";
 /// >>> #let text-color = if is-dark { std.white } else { std.black };
@@ -2232,17 +2242,23 @@
 /// #uncover("2-")[Only visible from subslide 2]
 /// )
 ///
-/// - visible-subslides (int, array, str): A single integer, an array of integers, or a string specifying the visible subslides.
+/// - self (dictionary, none): The slide context. Pass the `self` of a callback-style slide, or get the functions with `utils.methods(self)`.
+///
+/// - visible-subslides (int, array, str, label, dictionary): Specifies in which subslides the content is visible.
 ///
 ///   Supported formats:
 ///
 ///   - A single integer, e.g. `3` — only subslide 3.
 ///   - An array, e.g. `(1, 2, 4)` — equivalent to `"1, 2, 4"`.
 ///   - A string with ranges, e.g. `"-2, 4, 6-8, 10-"` — subslides 1, 2, 4, 6, 7, 8, 10, and all after 10.
+///   - A label, e.g. `<my-waypoint>` — shows from that waypoint's start until the next waypoint.
+///   - A waypoint marker, e.g. `from-wp(<label>)`, `until-wp(<label>)`, `get-first(<label>)`, etc.
 ///
 /// - uncover-cont (content): The content to display when visible.
 ///
 /// - cover-fn (function, auto): An optional cover function to use instead of the default cover method from the theme. Useful when using `uncover` inside external package integrations (e.g. `fletcher.hide` for fletcher diagrams).
+///
+/// - resolved-subslides (int, array, str, label, dictionary, none): Optional, used internally by Touying for parsing the waypoints.
 ///
 /// -> content
 #let uncover(
@@ -2268,6 +2284,8 @@
 
 /// Display content in some subslides only. No space is reserved when hidden.
 ///
+/// Does not autocount subslides, see [`only`](../animation/only) for the version that does.
+///
 /// #example(
 /// >>> #let is-dark = sys.inputs.at("x-color-theme", default: none) == "dark";
 /// >>> #let text-color = if is-dark { std.white } else { std.black };
@@ -2283,15 +2301,21 @@
 /// #only("2")[Only on subslide 2]
 /// )
 ///
-/// - visible-subslides (int, array, str): A single integer, an array of integers, or a string specifying the visible subslides.
+/// - self (dictionary, none): The slide context. Pass the `self` of a callback-style slide, or get the functions with `utils.methods(self)`.
+///
+/// - visible-subslides (int, array, str, label, dictionary): Specifies in which subslides the content is visible.
 ///
 ///   Supported formats:
 ///
 ///   - A single integer, e.g. `3` — only subslide 3.
 ///   - An array, e.g. `(1, 2, 4)` — equivalent to `"1, 2, 4"`.
 ///   - A string with ranges, e.g. `"-2, 4, 6-8, 10-"` — subslides 1, 2, 4, 6, 7, 8, 10, and all after 10.
+///   - A label, e.g. `<my-waypoint>` — shows from that waypoint's start until the next waypoint.
+///   - A waypoint marker, e.g. `from-wp(<label>)`, `until-wp(<label>)`, `get-first(<label>)`, etc.
 ///
 /// - only-cont (content): The content to display when visible.
+///
+/// - resolved-subslides (int, array, str, label, dictionary, none): Optional, used internally by Touying for parsing the waypoints.
 ///
 /// -> content
 #let only(
@@ -2311,21 +2335,114 @@
 }
 
 
-/// Runtime half of `#animate` — see its docstring for the model. Called
-/// through `touying-fn-wrapper`, so it receives `self` and can read
-/// `self.subslide` and the slide's waypoints.
+/// The placement effects that `animate` understands as strings: `"show"`, `"cover"` and `"remove"`.
+/// Together with [`swap`](../animation/swap) they are the placements, of which exactly one applies in each
+/// subslide. See [`animate`](../animation/animate) for how it is chosen and why placements are resolved rather
+/// than composed.
+#let animate-placements = ("show", "cover", "remove")
+
+// Recognises the dictionary that `swap` (core/animation.typ) builds.
+#let _is-swap(eff) = (
+  type(eff) == dictionary and eff.at("kind", default: none) == "touying-swap"
+)
+
+#let _is-placement(eff) = (
+  (type(eff) == str and eff in animate-placements) or _is-swap(eff)
+)
+
+/// The effects of `animate` as an array. A single effect may be written without
+/// the enclosing array, and `(:)` and `()` both mean "no effects", i.e. plain
+/// `body`.
 ///
-/// - effects (array): Normalized effect entries, each a dictionary with
-///   `effect`, `subslides` and `priority` keys.
+/// - effects (array, dictionary): The effects as the caller wrote them.
+///
+/// -> array
+#let _effect-array(effects) = if type(effects) == dictionary {
+  if effects.len() == 0 { () } else { (effects,) }
+} else {
+  effects
+}
+
+/// Check the effects of `animate` and fill in the keys they leave out: every
+/// entry that comes back has `effect`, `subslides` (default `"1-"`) and
+/// `priority` (default `1`). Normalizing an entry that is already normalized
+/// changes nothing.
+///
+/// - effects (array, dictionary): The effects as the caller wrote them.
+///
+/// -> array
+#let _normalize-effects(effects) = {
+  let effects = _effect-array(effects)
+  let effects = effects
+    .enumerate()
+    .map(((i, eff)) => {
+      assert(
+        type(eff) == dictionary and "effect" in eff,
+        message: "animate: effects.at("
+          + str(i)
+          + ") must be a dictionary with "
+          + "an `effect` key, got "
+          + repr(eff),
+      )
+      let kind = eff.effect
+      assert(
+        type(kind) == function or _is-placement(kind),
+        message: "animate: effects.at("
+          + str(i)
+          + ").effect must be a function, "
+          + "a swap, or one of "
+          + repr(animate-placements)
+          + ", got "
+          + repr(kind),
+      )
+      let subslides = eff.at("subslides", default: "1-")
+      assert-no-negative-subslides(
+        "animate: effects.at(" + str(i) + ").subslides",
+        subslides,
+      )
+      assert(
+        subslides != auto,
+        message: "animate: effects.at("
+          + str(i)
+          + ").subslides does not support "
+          + "`auto`; write \"h\" for this effect's own placement position, or an "
+          + "explicit range.",
+      )
+      (
+        effect: kind,
+        subslides: subslides,
+        priority: eff.at("priority", default: 1),
+      )
+    })
+  effects
+}
+
+// Put `placement` in front of the caller's own effects as an ordinary
+// priority-0 placement. It therefore beats `animate`'s implicit priority-0
+// "show" (a tie, and this one is written later), while anything the caller
+// writes still beats it — their own effects default to priority 1, and even an
+// explicit priority-0 placement of theirs comes later in the list and so wins
+// the tie in turn.
+#let _with-base-placement(placement, effects) = {
+  let effects = _effect-array(effects)
+  ((effect: placement, subslides: "1-", priority: 0),) + effects
+}
+
+/// Animate content arbitrarily with your own or builtin effects.
+///
+/// Does not autocount subslides, see [`animate`](../animation/animate) for the version that does.
+/// The effects and examples are described there.
+///
+/// - self (dictionary, none): The slide context. Pass the `self` of a callback-style slide, or get the functions with `utils.methods(self)`.
+///
+/// - effects (array, dictionary): The effects, see [`animate`](../animation/animate#effects).
 ///
 /// - body (content): The content being animated.
 ///
 /// - alignment (alignment): Where `body` itself sits inside the reserved box,
 ///   when one is needed. Each swap carries its own alignment.
-
 ///
-/// - resolved-subslides (array, none): Per-effect specs with `"h"` already
-///   substituted, supplied by the `last-subslide` callback at placement time.
+/// - resolved-subslides (array, none): Optional, used internally by Touying for parsing the waypoints.
 ///
 /// -> content
 #let animate(
@@ -2335,6 +2452,8 @@
   resolved-subslides: none,
   body,
 ) = {
+  let effects = _normalize-effects(effects)
+
   // Each effect's spec, resolved once. `resolved-subslides`, when present,
   // runs parallel to `effects` and carries each spec with its "h" already
   // replaced by the placement-time repetitions counter.
@@ -2458,6 +2577,63 @@
 }
 
 
+/// `animate` starting from covered rather than shown, so the effects say when `body` *appears* instead of when it
+/// disappears. See [`animate`](../animation/animate) for everything else.
+///
+/// Does not autocount subslides, see [`animate-hidden`](../animation/animate-hidden) for the version that does.
+///
+/// - self (dictionary, none): The slide context. Pass the `self` of a callback-style slide, or get the functions with `utils.methods(self)`.
+///
+/// - effects (array, dictionary): The effects, see [`animate`](../animation/animate#effects).
+///
+/// - alignment (alignment): Where `body` itself sits inside the reserved box,
+///   when one is needed. Each swap carries its own alignment.
+///
+/// - body (content): The content being animated.
+///
+/// -> content
+#let animate-hidden(
+  self: none,
+  effects: (),
+  alignment: top + left,
+  body,
+) = animate(
+  self: self,
+  effects: _with-base-placement("cover", effects),
+  alignment: alignment,
+  body,
+)
+
+
+/// `animate` starting from removed rather than shown. Like `animate-hidden`, except the subslides where `body` is
+/// absent reserve no space at all, the way `only` differs from `uncover`. See [`animate`](../animation/animate) for
+/// everything else.
+///
+/// Does not autocount subslides, see [`animate-removed`](../animation/animate-removed) for the version that does.
+///
+/// - self (dictionary, none): The slide context. Pass the `self` of a callback-style slide, or get the functions with `utils.methods(self)`.
+///
+/// - effects (array, dictionary): The effects, see [`animate`](../animation/animate#effects).
+///
+/// - alignment (alignment): Where `body` itself sits inside the reserved box,
+///   when one is needed. Each swap carries its own alignment.
+///
+/// - body (content): The content being animated.
+///
+/// -> content
+#let animate-removed(
+  self: none,
+  effects: (),
+  alignment: top + left,
+  body,
+) = animate(
+  self: self,
+  effects: _with-base-placement("remove", effects),
+  alignment: alignment,
+  body,
+)
+
+
 /// `#alternatives` has a couple of "cousins" that might be more convenient in some situations. The first one is `#alternatives-match` that has a name inspired by match-statements in many functional programming languages. The idea is that you give it a dictionary mapping from subslides to content:
 ///
 /// Example:
@@ -2468,6 +2644,10 @@
 ///   "2, 6": [this is shown less often]
 /// ))
 /// ```
+///
+/// Does not autocount subslides, see [`alternatives-match`](../animation/alternatives-match) for the version that does.
+///
+/// - self (dictionary, none): The slide context. Pass the `self` of a callback-style slide, or get the functions with `utils.methods(self)`.
 ///
 /// - subslides-contents (dictionary): A dictionary mapping from subslides to content.
 ///
@@ -2536,6 +2716,10 @@
 ///
 /// Example: `#alternatives[Ann][Bob][Christopher]` will show "Ann" in the first subslide, "Bob" in the second subslide, and "Christopher" in the third subslide.
 ///
+/// Does not autocount subslides, see [`alternatives`](../animation/alternatives) for the version that does.
+///
+/// - self (dictionary, none): The slide context. Pass the `self` of a callback-style slide, or get the functions with `utils.methods(self)`.
+///
 /// - start (int): The starting subslide number. Default is `1`.
 ///
 /// - repeat-last (bool): Whether the last alternative should persist on all remaining subslides. Default is `true`.
@@ -2566,6 +2750,10 @@
 /// You can have very fine-grained control over the content depending on the current subslide by using #alternatives-fn. It accepts a function (hence the name) that maps the current subslide index to some content.
 ///
 /// Example: `#alternatives-fn(start: 2, count: 7, subslide => { numbering("(i)", subslide) })`
+///
+/// Does not autocount subslides, see [`alternatives-fn`](../animation/alternatives-fn) for the version that does.
+///
+/// - self (dictionary, none): The slide context. Pass the `self` of a callback-style slide, or get the functions with `utils.methods(self)`.
 ///
 /// - start (int): The starting subslide number. Default is `1`.
 ///
@@ -2615,6 +2803,10 @@
 /// ])
 /// ```
 ///
+/// Does not autocount subslides, see [`alternatives-cases`](../animation/alternatives-cases) for the version that does.
+///
+/// - self (dictionary, none): The slide context. Pass the `self` of a callback-style slide, or get the functions with `utils.methods(self)`.
+///
 /// - cases (array): An array of strings that specify the subslides for each case.
 ///
 /// - fn (function): A function that maps the case to content. The argument `case` is the index of the cases array you input.
@@ -2633,8 +2825,9 @@
 }
 
 /// Display list, enum, or terms items one by one with animation and styling.
-/// For more details see `utils.item-by-item`.
+/// For more details see `utils.item-by-item`. Does not autocount subslides, see [`item-by-item-fn`](../animation/item-by-item-fn) for the version that does.
 ///
+/// - self (dictionary, none): The slide context. Pass the `self` of a callback-style slide, or get the functions with `utils.methods(self)`.
 /// - start (int, label, str, dictionary): The starting subslide number or waypoint.
 /// - fn (function): A function that gets `(idx, it)` and returns the styled item content for the item at the relative index `idx` (may be negative if it was revealed already)
 /// - cont (content): The content containing the items to display.
@@ -2886,9 +3079,9 @@
 
 /// Display list, enum, or terms items one by one with animation.
 ///
-/// Each item is revealed on a successive subslide.  By default (`start: auto`),
-/// revealing is relative to the current pause position.  `start` also accepts
-/// a waypoint label or marker to anchor the reveal sequence. From the anchor one additional item is revealed per subslide.
+/// Each item is revealed on a successive subslide, beginning at `start`, which can also be a waypoint label or marker.
+///
+/// Does not autocount subslides, see [`item-by-item`](../animation/item-by-item) for the version that does.
 ///
 ///  #example(
 /// >>> #let is-dark = sys.inputs.at("x-color-theme", default: none) == "dark";
@@ -2909,7 +3102,10 @@
 /// ]
 /// )
 ///
-/// - start (auto | int | label | dictionary): The subslide on which the first\n///   item appears.  Resolved from a waypoint when a label or marker is given.
+/// - self (dictionary, none): The slide context. Pass the `self` of a callback-style slide, or get the functions with `utils.methods(self)`.
+///
+/// - start (int, str, label, dictionary): The subslide on which the first item appears.
+///   Resolved from a waypoint when a label or marker is given.
 ///
 /// - cont (content): The content containing a list, enum, or terms element.
 ///

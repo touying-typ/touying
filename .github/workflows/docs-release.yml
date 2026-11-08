@@ -69,13 +69,13 @@ jobs:
     steps:
       # No credentials in .git/config: npm and pip run third party code below.
       - name: Checkout touying at the release tag
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ needs.resolve.outputs.tag }}
           persist-credentials: false
 
       - name: Checkout website repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: touying-typ/touying-typ.github.io
           path: website
@@ -88,14 +88,14 @@ jobs:
           rsync -a --exclude='.git' --exclude='website' . website/touying/
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
-          node-version: 20
+          node-version: 24
           cache: npm
           cache-dependency-path: website/package-lock.json
 
       - name: Install Typst
-        uses: typst-community/setup-typst@v4
+        uses: typst-community/setup-typst@v5
 
       - name: Install Python dependencies
         run: pip install Pillow
@@ -107,6 +107,136 @@ jobs:
       - name: Copy docs from touying into website structure
         working-directory: website
         run: npm run copy-docs
+
+      # Until the fix in touying-typ.github.io is merged, its generator skips every
+      # module in src/core. This does nothing once the generator has the fix.
+      - name: Patch the website's reference generator
+        working-directory: website
+        run: |
+          python3 - <<'PY'
+          import pathlib
+          import sys
+
+          path = pathlib.Path("scripts/generate-docs.py")
+          text = path.read_text(encoding="utf-8")
+
+          if "core/animation.typ" in text:
+              print("::notice::The website generator already lists src/core, nothing to patch.")
+              sys.exit(0)
+
+          replacements = [
+              (
+                  '''    ("core.typ", "Core", "Core functions and definitions for Touying."),
+              ("components.typ", "Components", "Reusable UI components for slides."),
+              ("slides.typ", "Slides", "Core slide creation functions."),
+          ''',
+                  '''    ("entrypoint.typ", "Entrypoint", "The entry point that sets Touying up for a document."),
+              # Touying 0.8.0 split core.typ and slides.typ into src/core/. A file that is
+              # missing is skipped, so both layouts are listed and each version of the
+              # submodule documents the files it has.
+              ("core.typ", "Core", "Core functions and definitions for Touying."),
+              ("slides.typ", "Slides", "Core slide creation functions."),
+              ("core/animation.typ", "Animation", "Animation functions: pause, uncover, only, animate and friends."),
+              ("core/blocks.typ", "Blocks", "Content blocks with their own animation behaviour."),
+              ("core/waypoints.typ", "Waypoints", "Named positions in a slide's animation timeline."),
+              ("core/slides.typ", "Slides", "Core slide creation functions."),
+              ("core/article.typ", "Article", "Article mode functions."),
+              ("components.typ", "Components", "Reusable UI components for slides."),
+          ''',
+              ),
+              (
+                  '''            # A line with 2+ leading spaces is a continuation of the current param
+                      if line.startswith("  ") and line.strip():
+                          current_param["description"] += " " + line.strip()
+                          continue
+                      # An empty line is just a blank separator inside the param block
+                      if line == "":
+                          continue
+                      # Any other non-empty non-indented line inside a param block:
+                      # treat as continuation too (rare edge case)
+                      if line.strip() and not line.startswith("-"):
+                          current_param["description"] += " " + line.strip()
+                          continue
+          ''',
+                  '''            # Keep the line structure of the description: paragraphs, nested
+                      # lists and code stay Markdown. The two spaces that indent a
+                      # continuation under `- name (type):` are removed.
+                      if line.startswith("  ") and line.strip():
+                          current_param["description"] += "\\n" + line[2:]
+                          continue
+                      # A blank line separates paragraphs inside the param block
+                      if line == "":
+                          current_param["description"] += "\\n"
+                          continue
+                      # Any other non-empty non-indented line inside a param block:
+                      # treat as continuation too (rare edge case)
+                      if line.strip() and not line.startswith("-"):
+                          current_param["description"] += "\\n" + line.strip()
+                          continue
+          ''',
+              ),
+              (
+                  '''    # Flush last param
+              if current_param is not None:
+                  params.append(current_param)
+
+              description =''',
+                  '''    # Flush last param
+              if current_param is not None:
+                  params.append(current_param)
+              for param in params:
+                  param["description"] = param["description"].strip()
+
+              description =''',
+              ),
+              (
+                  '''    in_code_block = False
+              for line in lines:
+                  if line.strip().startswith("```"):
+                      in_code_block = not in_code_block
+                      result.append(line)
+                      continue
+                  if in_code_block:
+                      result.append(line)
+                      continue
+          ''',
+                  '''    in_code_block = False
+              in_inline_code = False
+              for line in lines:
+                  if line.strip().startswith("```"):
+                      in_code_block = not in_code_block
+                      result.append(line)
+                      continue
+                  if in_code_block:
+                      result.append(line)
+                      continue
+
+                  # A code span can run over several lines. The lines of it after the first
+                  # are code and are not escaped.
+                  in_span = in_inline_code
+                  in_inline_code ^= line.count("`") % 2 == 1
+                  if in_span:
+                      head, tick, tail = line.partition("`")
+                      result.append(head + tick + _escape_angle_brackets_outside_code(tail) if tick else head)
+                      continue
+          ''',
+              ),
+              (
+                  'module_id = os.path.splitext(source_file)[0]',
+                  'module_id = os.path.splitext(os.path.basename(source_file))[0]',
+              ),
+          ]
+
+          for old, new in replacements:
+              if text.count(old) != 1:
+                  print("::warning::The website generator changed, so it is used as it is and "
+                        "the reference may lack the modules in src/core.")
+                  sys.exit(0)
+              text = text.replace(old, new)
+
+          path.write_text(text, encoding="utf-8")
+          print("Patched the website generator to document src/core.")
+          PY
 
       - name: Generate API reference documentation
         working-directory: website

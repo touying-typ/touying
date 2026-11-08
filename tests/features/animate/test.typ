@@ -151,6 +151,29 @@
   ),
 )#mark("styled-measure")
 
+== the same through utils.methods
+// A callback-style slide gets the functions bound to `self`. They do not count
+// subslides, so the slide asks for two itself.
+#slide(repeat: 2, self => {
+  let (animate, animate-hidden, animate-removed, item-by-item-fn) = utils.methods(self)
+  [
+    #animate(medium, effects: ((effect: "cover", subslides: 1),))#mark("m-covered")
+
+    // a single effect, written without the enclosing array
+    #animate(medium, effects: (effect: "remove", subslides: 1))#mark("m-single")
+
+    #animate-hidden(medium, effects: ((effect: "show", subslides: 2),))#mark("m-hidden")
+
+    #animate-removed(medium, effects: ((effect: "show", subslides: 2),))#mark("m-removed")
+
+    // item-by-item-fn is a method as well; this only has to be callable
+    #item-by-item-fn((idx, it) => it)[
+      - one
+      - two
+    ]
+  ]
+})
+
 == Assertions
 #context {
   // Every marker sits at the end of its own line, so its x is the width of
@@ -209,4 +232,13 @@
 
   // measured styled: subslide 2's pin-200 sets the reservation for all three
   assert.eq(xs("styled-measure"), (pinned, pinned, pinned))
+
+  // --- through utils.methods ---------------------------------------------
+
+  // the same widths as the top-level functions, on each of the two subslides
+  assert.eq(xs("m-covered"), (mm, mm))
+  assert.eq(xs("m-single"), (x("removed"), mm))
+  // animate-hidden keeps the space while covered, animate-removed does not
+  assert.eq(xs("m-hidden"), (mm, mm))
+  assert.eq(xs("m-removed"), (x("removed"), mm))
 }

@@ -381,10 +381,11 @@ A slide with a title and an *important* information.
       margin: 2em,
     ),
   )
-  place(hide(heading[Focus Slide])) // put an invisible heading on the slide. Useful later
-
   set text(fill: self.colors.neutral-lightest, size: 2em)
-  touying-slide(self: self, align(horizon + center, body))
+  touying-slide(self: self, align(horizon + center, {
+    place(hide(heading[Focus Slide])) // put an invisible heading on the slide. Useful later
+    body
+  }))
 })
 
 #let bamboo-theme(
@@ -547,10 +548,11 @@ A slide with a title and an *important* information.
       margin: 2em,
     ),
   )
-  place(hide(heading[Focus Slide])) // put an invisible heading on the slide. Useful later
-
   set text(fill: self.colors.neutral-lightest, size: 2em)
-  touying-slide(self: self, align(horizon + center, body))
+  touying-slide(self: self, align(horizon + center, {
+    place(hide(heading[Focus Slide])) // put an invisible heading on the slide. Useful later
+    body
+  }))
 })
 
 #let notes(self: none, ..args) = touying-notes(

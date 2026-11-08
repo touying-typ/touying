@@ -1,9 +1,9 @@
 #import "../utils.typ"
+#import "../utils.typ": _normalize-effects, _with-base-placement
 #import "waypoints.typ": from-wp, waypoint-kinds // needed to support alternatives repeat-last with waypoints
 #import "tree.typ"
 #import "subslides.typ": (
-  _is-placement, _parse-subslide-indices, animate-placements,
-  assert-no-negative-subslides, last-required-subslide,
+  _parse-subslide-indices, assert-no-negative-subslides, last-required-subslide,
 )
 #import "blocks.typ": (
   alert, speaker-note, touying-equation, touying-fn-wrapper-raw, touying-mitex,
@@ -1141,7 +1141,7 @@
 }
 
 /// Replace `body` with `swap-body` while this effect is active. Only for use
-/// as an `#animate` effect.
+/// as an `animate` effect, both in [`animate`](../animation/animate) and in `utils.animate`.
 ///
 /// - swap-body (content): What to render in `body`'s place.
 ///
@@ -1249,7 +1249,6 @@
 ///
 /// - alignment (alignment): Where `body` itself sits inside the reserved box,
 ///   when a swap makes one necessary. Each swap carries its own alignment.
-
 ///
 /// -> content
 #let animate(
@@ -1257,54 +1256,7 @@
   effects: (),
   alignment: top + left,
 ) = {
-  // A single effect may be written without the enclosing array; `(:)` and `()`
-  // both mean "no effects", i.e. plain `body`.
-  let effects = if type(effects) == dictionary {
-    if effects.len() == 0 { () } else { (effects,) }
-  } else {
-    effects
-  }
-  let effects = effects
-    .enumerate()
-    .map(((i, eff)) => {
-      assert(
-        type(eff) == dictionary and "effect" in eff,
-        message: "animate: effects.at("
-          + str(i)
-          + ") must be a dictionary with "
-          + "an `effect` key, got "
-          + repr(eff),
-      )
-      let kind = eff.effect
-      assert(
-        type(kind) == function or _is-placement(kind),
-        message: "animate: effects.at("
-          + str(i)
-          + ").effect must be a function, "
-          + "a swap, or one of "
-          + repr(animate-placements)
-          + ", got "
-          + repr(kind),
-      )
-      let subslides = eff.at("subslides", default: "1-")
-      assert-no-negative-subslides(
-        "animate: effects.at(" + str(i) + ").subslides",
-        subslides,
-      )
-      assert(
-        subslides != auto,
-        message: "animate: effects.at("
-          + str(i)
-          + ").subslides does not support "
-          + "`auto`; write \"h\" for this effect's own placement position, or an "
-          + "explicit range.",
-      )
-      (
-        effect: kind,
-        subslides: subslides,
-        priority: eff.at("priority", default: 1),
-      )
-    })
+  let effects = _normalize-effects(effects)
   // A label spec names a waypoint, which has to exist by the time the spec is
   // resolved — same implicit declaration `effect`/`uncover` make.
   for eff in effects {
@@ -1347,21 +1299,6 @@
   }
 }
 
-
-// Put `placement` in front of the caller's own effects as an ordinary
-// priority-0 placement. It therefore beats `animate`'s implicit priority-0
-// "show" (a tie, and this one is written later), while anything the caller
-// writes still beats it — their own effects default to priority 1, and even an
-// explicit priority-0 placement of theirs comes later in the list and so wins
-// the tie in turn.
-#let _with-base-placement(placement, effects) = {
-  let effects = if type(effects) == dictionary {
-    if effects.len() == 0 { () } else { (effects,) }
-  } else {
-    effects
-  }
-  ((effect: placement, subslides: "1-", priority: 0),) + effects
-}
 
 /// `#animate` starting from covered rather than shown, so effects say when
 /// `body` *appears* instead of when it disappears. See `animate` for

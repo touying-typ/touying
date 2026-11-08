@@ -165,7 +165,7 @@ Content that is hidden by showing with low alpha value.
 ## Local Config Overrides
 If you want to affect only one specific slide, you can set the config locally via `#slide(config: ...)[...]`.
 ```example
->>> #import "../lib.typ": *
+>>> #import "@preview/touying:0.8.0": *
 >>> #import themes.simple: *
 
 >>> #show: simple-theme.with(aspect-ratio: "16-9")
@@ -180,9 +180,12 @@ You may even defer a config change to the beginning of the next slide.
 This is also how `show: appendix` works, but also useful for setting a custom preamble or similar that affects not just the slide's content. (Note that config-common has no effect, you can also write your config dict without it.)
 
 ```example
->>> #import "../lib.typ": *
+>>> #import "@preview/touying:0.8.0": *
 >>> #import themes.simple: *
+>>> #import "@preview/codly:1.3.0": *
+>>> #import "@preview/codly-languages:0.1.10": *
 
+>>> #show: codly-init.with()
 >>> #show: simple-theme.with(aspect-ratio: "16-9")
 == Content Slide
 Some content.

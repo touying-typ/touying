@@ -173,7 +173,7 @@ Content that is hidden by showing with low alpha value.
 
 如果你只想影响某一张幻灯片，可以通过 `#slide(config: ...)[...]` 局部设置配置：
 ```example
->>> #import "../lib.typ": *
+>>> #import "@preview/touying:0.8.0": *
 >>> #import themes.simple: *
 
 >>> #show: simple-theme.with(aspect-ratio: "16-9")
@@ -187,7 +187,7 @@ Only this slide has a light purple background, but the next slide goes back bein
 
 你也可以将配置变更推迟到下一张幻灯片开始时生效。`show: appendix` 正是通过此机制实现的，同样适用于需要在幻灯片内容之外生效的自定义前言等场景。（注意 `config-common` 在此处无效，你也可以不使用它直接书写配置。）
 ```example
->>> #import "../lib.typ": *
+>>> #import "@preview/touying:0.8.0": *
 >>> #import themes.simple: *
 >>> #import "@preview/codly:1.3.0": *
 >>> #import "@preview/codly-languages:0.1.10": *

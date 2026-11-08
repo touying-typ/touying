@@ -841,6 +841,10 @@
     alternatives-fn: utils.alternatives-fn,
     alternatives-cases: utils.alternatives-cases,
     item-by-item: utils.item-by-item,
+    item-by-item-fn: utils.item-by-item-fn,
+    animate: utils.animate,
+    animate-hidden: utils.animate-hidden,
+    animate-removed: utils.animate-removed,
     // alert interface
     alert: _default-alert,
     // show notes
