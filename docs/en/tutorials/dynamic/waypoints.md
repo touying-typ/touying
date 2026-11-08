@@ -92,8 +92,8 @@ For more control, use waypoint markers (`wp-m`) to reference specific parts of a
 
 | Marker | Meaning |
 |---|---|
-| `from-wp(<label>)` | All subslides following the first subslide of the waypoint. |
-| `until-wp(<label>)` | All subslides until the last subslide of the waypoint's range. |
+| `from-wp(<label>)` | From the first subslide of the waypoint to the end of the slide. |
+| `until-wp(<label>)` | All subslides up to, but exlcuding, the first subslide of the waypoint. |
 | `get-first(<label>)` | The first subslide of the waypoint's range. |
 | `get-last(<label>)` | The last subslide of the waypoint's range. |
 | `prev-wp(<label>)` | The previous waypoint to the given one. |

@@ -131,7 +131,7 @@
 ///
 /// - handout (bool): Whether to enable the handout mode. By default, it retains only the last subslide of each slide, but this can be overridden via `handout-subslides`. Default is `false`.
 ///
-/// - handout-subslides (none, int, array, str): The subslides to include in handout mode. Accepts the same format as `visible-subslides` (e.g. `2`, `(1, 3)`, `"2-"`, `"1, 3-5"`). When `none`, the last subslide is used (default behavior). Default is `none`.
+/// - handout-subslides (none, int, array, str, label, dictionary): The subslides to include in handout mode. Accepts the same format as `visible-subslides` (e.g. `2`, `(1, 3)`, `"2-"`, `"1, 3-5"`), or a waypoint label (its last subslide) or waypoint marker (a range marker keeps every subslide it spans), and additionally `"waypoints"`, which selects the last subslide of every waypoint. When `none`, the last subslide is used (default behavior). Default is `none`.
 ///
 /// - slide-level (int): The level of the slides. Default is `2`, which means the level 1 and 2 headings will be treated as slides.
 ///

@@ -152,6 +152,26 @@
   assert.eq(measure(wp-body, subslide: <second>).height, 40pt)
   assert.eq(measure(wp-body, subslide: get-last(<second>)).height, 40pt)
 
+  // A waypoint that spans several subslides measures as the largest of them,
+  // like `none` does for the whole body. `get-first` and `get-last` name one.
+  let wp-span = [
+    #only("1")[#block(height: 5pt)[z]]
+    #waypoint(<span>)
+    #only("2")[#block(height: 20pt)[a]]
+    #pause
+    #only("3")[#block(height: 50pt)[b]]
+    #pause
+    #only("4")[#block(height: 30pt)[c]]
+    #waypoint(<tail>)
+    #only("5")[#block(height: 10pt)[d]]
+  ]
+  assert.eq(measure(wp-span, subslide: <span>).height, 50pt)
+  assert.eq(measure(wp-span, subslide: get-first(<span>)).height, 20pt)
+  assert.eq(measure(wp-span, subslide: get-last(<span>)).height, 30pt)
+  assert.eq(measure(wp-span, subslide: <tail>).height, 10pt)
+  // a range marker is measured over everything it spans as well
+  assert.eq(measure(wp-span, subslide: not-wp(not-wp(<span>))).height, 50pt)
+
   // Waypoint advances must be measured against a provisional map. Otherwise
   // the following pause is counted one stage too early and `auto` stops at the
   // middle state.

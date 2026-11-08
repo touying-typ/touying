@@ -5,11 +5,11 @@
 #import "subslides.typ": check-visible, resolve-negative-subslides
 #import "waypoints.typ": (
   _compute-waypoint-ranges, _resolve-waypoint-forest, _waypoint-known,
-  resolve-waypoints, waypoint-kinds,
+  last-subslides-of-waypoints, resolve-waypoints, waypoint-kinds,
 )
 #import "parser.typ": (
   _collect-waypoints, _parse-content-into-results-and-repetitions,
-  _resolve-waypoint-to-int, check-current-mode-skip, expand-mode-marks,
+  _resolve-waypoint-to-last, check-current-mode-skip, expand-mode-marks,
   mark-visible-in-mode,
 )
 #import "animation.typ": touying-slide-wrapper
@@ -141,7 +141,8 @@
 ///   etc.) are supported — resolved against the recalled content's *own*
 ///   waypoints, not the original slide's. A waypoint range (a bare label,
 ///   or one whose marker doesn't pin a single subslide) collapses to its
-///   first/beginning subslide, same as the whole-slide case above; there's
+///   last subslide, where its content is fully revealed (`get-first(<wp>)`
+///   names the first); there's
 ///   no equivalent to `"waypoints"` here since there's only ever one
 ///   recalled instance, not a whole slide's worth of subslides to expand
 ///   (`touying-render` supports exactly that, for content addressed by
@@ -1945,19 +1946,55 @@
       }
     }
 
+    // `"waypoints"` stands for the last subslide of every waypoint, alone or
+    // as one element of an array. It is expanded to plain integers here, since
+    // the spec parser below only knows ranges.
+    if handout-subslides == "waypoints" {
+      handout-subslides = last-subslides-of-waypoints(self, repeat)
+    } else if type(handout-subslides) == array {
+      handout-subslides = handout-subslides
+        .map(idx => if idx == "waypoints" {
+          last-subslides-of-waypoints(self, repeat)
+        } else { (idx,) })
+        .flatten()
+    }
+
+    let is-waypoint(spec) = (
+      type(spec) == label
+        or (
+          type(spec) == dictionary
+            and spec.at("kind", default: "") in waypoint-kinds
+        )
+    )
+    // Only a range marker spans several subslides, see below.
+    let is-range-marker(spec) = (
+      type(spec) == dictionary
+        and spec.at("kind", default: "")
+          in (
+            "touying-waypoint-from",
+            "touying-waypoint-until",
+            "touying-waypoint-not",
+          )
+    )
+    // A single waypoint is the same as an array that holds it.
+    if is-waypoint(handout-subslides) {
+      handout-subslides = (handout-subslides,)
+    }
+
     if type(handout-subslides) == array {
       for (i, subslide-idx) in handout-subslides.enumerate() {
-        if (
-          type(subslide-idx) == label
-            or (
-              type(subslide-idx) == dictionary
-                and subslide-idx.at("kind", default: "") in waypoint-kinds
-            )
-        ) {
-          // resolve waypoint labels to their first subslide, only for handout.
+        if is-waypoint(subslide-idx) {
+          // A handout shows how a waypoint ends: a label (or `prev-wp`,
+          // `next-wp`, `get-first`, `get-last`) is one page, the last subslide
+          // it names. A range marker (`from-wp`, `until-wp`, `not-wp`) keeps
+          // every subslide it spans, which `check-visible` expands below.
           // `arr[i] = ..` is not index assignment in Typst - it parses as a call
           // and panics with "expected function, found array".
-          handout-subslides.at(i) = _resolve-waypoint-to-int(self, subslide-idx)
+          handout-subslides.at(i) = if is-range-marker(subslide-idx) {
+            resolve-waypoints(self, subslide-idx)
+          } else {
+            _resolve-waypoint-to-last(self, subslide-idx, end: repeat)
+          }
         } else if type(subslide-idx) == int or type(subslide-idx) == str {
           // do nothing
         } else {
@@ -2055,13 +2092,7 @@
       (resolve-negative-subslides(self.repeat, recall-spec),)
     } else if type(recall-spec) == str and recall-spec == "waypoints" {
       // "waypoints" → last subslide of every waypoint
-      let wp-map = self.at("waypoints", default: (:))
-      if wp-map.len() == 0 {
-        (repeat,)
-      } else {
-        let sorted = wp-map.pairs().sorted(key: p => p.at(1).first)
-        sorted.map(p => p.at(1).last).dedup()
-      }
+      last-subslides-of-waypoints(self, repeat)
     } else if type(recall-spec) == label or type(recall-spec) == dictionary {
       // Waypoint label or marker — resolve using the slide's waypoint map
       let resolved = resolve-waypoints(self, recall-spec)

@@ -1541,6 +1541,26 @@
   }
 }
 
+// Like `_resolve-waypoint-to-int`, but a range yields its last subslide. That is
+// the one to pick when a single subslide is chosen to *show* a waypoint: its
+// content is fully revealed there, while the first is only where it begins. A
+// range without an end (`from-wp`, `not-wp`) ends at `end`, the last subslide.
+#let _resolve-waypoint-to-last(self, spec, end: none) = {
+  let resolved = resolve-waypoints(self, spec)
+  if type(resolved) == int {
+    resolved
+  } else if type(resolved) == dictionary {
+    let first = resolved.at("beginning", default: resolved.at(
+      "first",
+      default: 1,
+    ))
+    let fallback = if end != none { end } else { first }
+    resolved.at("until", default: resolved.at("last", default: fallback))
+  } else {
+    panic("unexpected resolved waypoint type: " + repr(resolved))
+  }
+}
+
 /// Every subslide index in `[lo, hi]` that `check-visible` accepts
 /// `spec` for. `check-visible` already understands every dict/string shape
 /// `subslides:` can resolve to (`(beginning:, until:)`, `(kind: "not",
@@ -1837,7 +1857,11 @@
         ) {
           // The map was collected from `render-base`, so it already uses the
           // same absolute numbering as `repeat`.
-          _resolve-waypoint-to-int((waypoints: cwp), recall-subslide)
+          _resolve-waypoint-to-last(
+            (waypoints: cwp),
+            recall-subslide,
+            end: repeat,
+          )
         } else {
           // `repeat` is the absolute final index, so convert it to a plain
           // stage count before resolving negative indices against `base`.
@@ -3983,7 +4007,7 @@
       ) {
         // The map was collected from `render-base`, so it already uses the
         // same absolute numbering as `repeat` above.
-        _resolve-waypoint-to-int((waypoints: cwp), subslides)
+        _resolve-waypoint-to-last((waypoints: cwp), subslides, end: repeat)
       } else {
         // `repeat` is the absolute final index, so convert it to a plain
         // stage count before resolving negative indices against `base`.
@@ -4057,7 +4081,9 @@
 ///   - `none`: the largest width and height over *every* subslide. Each
 ///     dimension is maximised independently.
 ///   - `int`: that subslide, counted in `body`'s own numbering (see `base`).
-///   - a waypoint label or marker: resolved against `body`'s own waypoints.
+///   - a waypoint label or marker: resolved against `body`'s own waypoints. The size is the largest over the
+///     subslides it spans, so a bare label gives the largest size of that waypoint; `get-first(<wp>)` and
+///     `get-last(<wp>)` name a single subslide.
 ///
 /// - base (auto, int): Starting value of `body`'s internal subslide counter,
 ///   exactly as in `touying-render`. `auto` (default) means `1`, so a
@@ -4090,31 +4116,38 @@
     render-base,
     target,
   )
-  if subslide == none {
-    // Maximise each dimension independently over every subslide: the widest
-    // and the tallest subslide need not be the same one.
-    // `std.measure`: this module now binds `measure` to this very function,
-    // so a bare call would recurse.
-    let sizes = range(render-base, repeat + 1).map(
-      target => std.measure(render-at(target), ..args),
-    )
+  // Maximise each dimension independently over the given subslides: the widest
+  // and the tallest subslide need not be the same one.
+  // `std.measure`: this module now binds `measure` to this very function, so a
+  // bare call would recurse.
+  let measure-max(targets) = {
+    let sizes = targets.map(target => std.measure(render-at(target), ..args))
     (
       width: calc.max(..sizes.map(s => s.width)),
       height: calc.max(..sizes.map(s => s.height)),
     )
+  }
+  if subslide == none {
+    measure-max(range(render-base, repeat + 1))
+  } else if (
+    type(subslide) == label
+      or (
+        type(subslide) == dictionary
+          and subslide.at("kind", default: "") in waypoint-kinds
+      )
+  ) {
+    // A waypoint names the subslides it spans, and the size needed for it is the
+    // largest over them. `cwp` was collected from `render-base`, so the members
+    // are in the same numbering as `repeat` above.
+    measure-max(_resolve-waypoint-to-members(
+      (waypoints: cwp),
+      subslide,
+      repeat,
+      base: render-base,
+    ))
   } else {
     let target = if subslide == auto {
       repeat
-    } else if (
-      type(subslide) == label
-        or (
-          type(subslide) == dictionary
-            and subslide.at("kind", default: "") in waypoint-kinds
-        )
-    ) {
-      // `cwp` was collected from `render-base`, so the resolved position is
-      // already in the same numbering as `repeat` above.
-      _resolve-waypoint-to-int((waypoints: cwp), subslide)
     } else {
       // `repeat` is the absolute final index, so convert it to a plain stage
       // count before resolving negative indices against `base`.

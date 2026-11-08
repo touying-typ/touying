@@ -155,16 +155,27 @@
 // A callback-style slide gets the functions bound to `self`. They do not count
 // subslides, so the slide asks for two itself.
 #slide(repeat: 2, self => {
-  let (animate, animate-hidden, animate-removed, item-by-item-fn) = utils.methods(self)
+  let (
+    animate,
+    animate-hidden,
+    animate-removed,
+    item-by-item-fn,
+  ) = utils.methods(self)
   [
-    #animate(medium, effects: ((effect: "cover", subslides: 1),))#mark("m-covered")
+    #animate(medium, effects: ((effect: "cover", subslides: 1),))#mark(
+      "m-covered",
+    )
 
     // a single effect, written without the enclosing array
     #animate(medium, effects: (effect: "remove", subslides: 1))#mark("m-single")
 
-    #animate-hidden(medium, effects: ((effect: "show", subslides: 2),))#mark("m-hidden")
+    #animate-hidden(medium, effects: ((effect: "show", subslides: 2),))#mark(
+      "m-hidden",
+    )
 
-    #animate-removed(medium, effects: ((effect: "show", subslides: 2),))#mark("m-removed")
+    #animate-removed(medium, effects: ((effect: "show", subslides: 2),))#mark(
+      "m-removed",
+    )
 
     // item-by-item-fn is a method as well; this only has to be callable
     #item-by-item-fn((idx, it) => it)[

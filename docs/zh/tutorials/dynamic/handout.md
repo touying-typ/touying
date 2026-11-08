@@ -55,7 +55,14 @@ config-common(handout: true, handout-subslides: (1, -1))
 
 // 用字符串表示范围（与 `only`/`uncover` 语法相同）
 config-common(handout: true, handout-subslides: "1-2")
+
+// 保留每个 waypoint 的最后一个子幻灯片
+config-common(handout: true, handout-subslides: "waypoints")
 ```
+
+`"waypoints"` 为每个 [waypoint](./waypoints) 保留一页，显示该 waypoint 的最终状态，这样讲义可以跟随动画的各个阶段，而不包含中间步骤。它也可以作为数组的一个元素，例如 `(1, "waypoints")`。没有 waypoint 的幻灯片保留其最后一个子幻灯片。
+
+也可以单独指定 waypoint。单独的标签（如 `<intro>`）表示该 waypoint 的*最后一个*子幻灯片，即其内容完全显示时的状态，因此 `handout-subslides: (<intro>, <result>)` 为每个 waypoint 保留一页。如需第一个子幻灯片，请使用 `get-first(<intro>)`。范围标记会保留它们所覆盖的所有子幻灯片：`from-wp(<intro>)` 保留从该 waypoint 起到幻灯片结束的部分，`until-wp(<intro>)` 保留它之前的所有部分，`not-wp(not-wp(<intro>))` 恰好保留这一个 waypoint 的所有子幻灯片。
 
 ## 仅在讲义中显示的幻灯片
 

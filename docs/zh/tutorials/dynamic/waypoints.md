@@ -92,8 +92,8 @@ sidebar_position: 7
 
 | 标记 | 含义 |
 |---|---|
-| `from-wp(<label>)` | 从路标的第一个 subslide 之后的所有 subslides。|
-| `until-wp(<label>)` | 直到路标范围最后一个 subslide 的所有 subslides。|
+| `from-wp(<label>)` | 从路标的第一个 subslide 起直到幻灯片结束的所有 subslides（包含第一个）。|
+| `until-wp(<label>)` | 直到路标的第一个 subslide 之前的所有 subslides（不包含它）。|
 | `get-first(<label>)` | 路标范围的第一个 subslide。|
 | `get-last(<label>)` | 路标范围的最后一个 subslide。|
 | `prev-wp(<label>)` | 给定路标的前一个路标。|
