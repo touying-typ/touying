@@ -4,6 +4,44 @@ sidebar_position: 8
 
 # Changelog
 
+## v0.8.1
+
+A patch release with fixes and a few corrections to behaviour that 0.8.0 introduced.
+
+### Behaviour changes
+
+- **A bare waypoint label picks its last subslide in three places**
+
+  A bare label in `handout-subslides` keeps the last subslide of the waypoint, as the label of `touying-recall` on labelled content does. `measure` takes the largest size over the waypoint's range. The range markers `from-wp`, `until-wp` and `not-wp` keep every subslide they span, so `not-wp(not-wp(<a>))` is exactly the range of `<a>`. `handout-subslides: "waypoints"` selects the last subslide of every waypoint.
+
+  **Migration:** where you need other subslides than the last one, use a range marker such as `from-wp`, `until-wp` or `not-wp`.
+
+- **Footnote numbering restarts per slide, not per page**
+
+  `reset-footnote-number-per-slide` now restarts the numbering only at the start of a slide, and `counter(footnote)` is one of the default frozen counters, so the numbers stay the same on every subslide. Before, the counter was reset on every page. A breakable slide that overflowed onto a second page restarted at 1 there, and with `reset-footnote-number-per-slide: false` the numbers of a slide ran ahead from one subslide to the next. Now overflow pages keep counting, and with `false` the numbering continues across slides while staying identical across the subslides of one slide. 
+
+- **`touying-reduce` works with alchemist 0.2.0**
+
+  A package's own `touying-reducer-bindings` are used when `reduce` and `cover` are both functions. Otherwise touying uses the bindings it has for the package's `name`.
+
+- **Slide Preambles are now called again and preambles will be reworked soon together with more external hooks**
+  `slide-preamble` and `default-slide-preamble` are called again (they were silently dropped in March 2026). A slide now starts with `preamble` (first slide only), then `slide-preamble`, then the content a deferred config change collected in front of the slide, which used to run first.
+  And finally the subslide preamble. These all run after the header is constructed, only the `page-preamble` is run before the header (old behaviour).
+
+  Bc preambles were not easy to use for external packages they will be reworked soon in a rework that aims to allow better 3rd party package integration. The touying-reducer-bindings will stay, but other hooks will be added.
+
+### Fixes
+- `#heading[..]` outside a slide call no longer fails with `field "depth" in heading is not known at this point` (#434, #437).
+- A `#figure` without a caption that is hidden by a `#pause` no longer fails with `field "caption" in figure is not known at this point` (#437).
+- `animate`, `animate-hidden`, `animate-removed` and `item-by-item-fn` are now listed in default methods through `self.methods` and `utils.methods(self)` just like `uncover` and `only`.
+- `capitalize` and `titlecase` work on non-ASCII input (#436).
+- Reducers announce the inner minimum repetitions and function wrappers of their content (#431).
+- Aligned content no longer shifts when paused list items are revealed (#442).
+- `measure` of a list applies the row gap, so show-set rules take effect (#443).
+- The ctheorems 2.x states are frozen across subslides (#452, #454). Support for ctheorems 1.x is deprecated and will be removed in v0.9.0.
+- The documentation of `until-wp` and `from-wp` now says what they do: `until-wp` stops before the first subslide of the waypoint, `from-wp` includes it and runs to the end.
+- The API reference lists the functions of `src/core/*.typ` and `touying-slides`, and the documentation of each release is published by the new `docs-release` workflow.
+
 ## v0.8.0
 
 A big release, and the first that requires **Typst 0.15**.

@@ -13,10 +13,9 @@ Themes in Touying encapsulate some of their own global styles, which are placed 
 ```typst
 config-methods(
   init: (self: none, body) => {
-    set text(fill: self.colors.neutral-darkest, size: 25pt)
+    set text(size: 25pt)
     show footnote.entry: set text(size: .6em)
-    show strong: self.methods.alert.with(self: self)
-    show heading.where(level: self.slide-level + 1): set text(1.4em)
+    show heading.where(level: 1): set text(1.4em)
 
     body
   },
@@ -114,7 +113,7 @@ In the body, `#article-only[..]`, `#article-text[..]`, `#slides-only[..]` and `#
 
 ## Preamble
 
-The `config-common(preamble: ...)` option lets you run setup code on every slide without repeating it manually. This is useful when integrating packages like `codly`:
+The `config-common(preamble: ...)` option runs setup code once, before the first slide of the presentation. This is useful when integrating packages like `codly`:
 
 ```typst
 #show: simple-theme.with(

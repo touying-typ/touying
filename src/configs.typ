@@ -60,6 +60,7 @@
   counter(math.equation),
   counter(figure.where(kind: table)),
   counter(figure.where(kind: image)),
+  counter(footnote),
 )
 
 #let _default-preamble = self => {
@@ -94,10 +95,13 @@
   }
 }
 
-#let _default-page-preamble = self => {
+#let _default-slide-preamble = self => {
   if self.at("reset-footnote-number-per-slide", default: true) {
     counter(footnote).update(0)
   }
+}
+
+#let _default-page-preamble = self => {
   if self.at("reset-page-counter-to-slide-counter", default: true) {
     context counter(page).update(calc.max(1, utils.slide-counter.get().first()))
   }
@@ -111,12 +115,6 @@
         v: calc.max(1, utils.slide-counter.get().first()),
       )) <pdfpc>
     ]
-  }
-}
-
-#let _default-slide-preamble = self => {
-  if self.at("reset-footnote-number-per-slide", default: true) {
-    counter(footnote).update(0)
   }
 }
 
@@ -189,7 +187,7 @@
 ///
 ///   You can use markdown-like syntax `---` to divide slides.
 ///
-/// - reset-footnote-number-per-slide (bool): Whether to reset the footnote number per slide. Default is `true`.
+/// - reset-footnote-number-per-slide (bool): Whether to restart the footnote numbering at 1 on every slide (done in `default-slide-preamble`). When `false` the numbering continues across slides. The numbering stays the same across the subslides of one slide either way, because `counter(footnote)` is one of the default frozen counters. Default is `true`.
 ///
 /// - footnote-style (auto, function): Customizes how footnote markers are displayed, i.e. the function you would otherwise pass to `show footnote: ..`. Default is `auto`, which uses Typst's own default marker rendering.
 ///
@@ -215,17 +213,17 @@
 ///
 /// - frozen-counters (array): The frozen counters for the frozen states and counters. You can pass some counters like `(counter(math.equation),)`. Default is `()`.
 ///
-/// - default-frozen-counters (array): The default frozen counters for the frozen states and counters. The default value is `(counter(math.equation), counter(figure.where(kind: table)), counter(figure.where(kind: image)))`.
+/// - default-frozen-counters (array): The default frozen counters for the frozen states and counters. The default value is `(counter(heading), counter(math.equation), counter(figure.where(kind: table)), counter(figure.where(kind: image)), counter(footnote))`.
 ///
 /// - label-only-on-last-subslide (array): Element functions whose label is attached only on a slide's last subslide. A slide body is parsed once per subslide, so without this a labelled element emits its label on every rendered page and `#ref` to it becomes ambiguous. Useful for referencing equations, figures, footnotes, code blocks and theorems that span several subslides. Default is `(figure, math.equation, heading, footnote)`. Wrap a figure around other content to also get the effect. (see https://typst.app/docs/reference/model/ref/ on why)
 ///
-/// - preamble (function): The function to run before each slide. Default is `none`.
+/// - preamble (function): The function (or content) to run once, before the first slide of the presentation. Default is `none`.
 ///
-/// - default-preamble (function): The default preamble for each slide. Default is a function to check the mark warning and add pdfpc file.
+/// - default-preamble (function): The default preamble, run once before the first slide together with `preamble`. Default is a function to check the mark warning and add pdfpc file.
 ///
-/// - slide-preamble (function): The function to run before each slide. Default is `none`.
+/// - slide-preamble (function): The function (or content) to run at the start of every slide, on its first subslide, after `preamble` and `default-preamble`. Default is `none`.
 ///
-/// - default-slide-preamble (function): The default preamble for each slide. Default is `none`.
+/// - default-slide-preamble (function): The default preamble for each slide, run right after `slide-preamble`. Default is a function that restarts the footnote numbering if `reset-footnote-number-per-slide` is `true`.
 ///
 /// - subslide-preamble (function): The function to run before each subslide. Default is `none`.
 ///
@@ -233,7 +231,7 @@
 ///
 /// - page-preamble (function): The function to run before each page. Default is `none`.
 ///
-/// - default-page-preamble (function): The default preamble for each page. Default is a function to reset the footnote number per slide and reset the page counter to the slide counter.
+/// - default-page-preamble (function): The default preamble for each page. Default is a function to reset the page counter to the slide counter.
 ///
 /// - default-composer (auto, function, array): The default composer for slides. It is used when the `composer` argument of the `slide` function is `auto`. Default is `auto`, which falls back to using `cols.with(lazy-layout: false)`.
 ///

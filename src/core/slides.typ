@@ -1714,16 +1714,22 @@
 
   // Slide and subslide preamble functions for setup and metadata
   let slide-preamble(self) = {
-    // do the leading function calls first
-    let leading-preamble = self
-      .at("leading-preamble", default: ())
-      .sum(default: none)
-    utils.call-or-display(self, leading-preamble)
-
+    // From the most general to the most specific: the document preamble (first
+    // slide only), then the slide preamble, then the content that a deferred
+    // config change collected in front of this slide.
     if self.at("is-first-slide", default: false) {
       utils.call-or-display(self, self.at("preamble", default: none))
       utils.call-or-display(self, self.at("default-preamble", default: none))
     }
+    utils.call-or-display(self, self.at("slide-preamble", default: none))
+    utils.call-or-display(self, self.at(
+      "default-slide-preamble",
+      default: none,
+    ))
+    let leading-preamble = self
+      .at("leading-preamble", default: ())
+      .sum(default: none)
+    utils.call-or-display(self, leading-preamble)
     [#metadata((kind: "touying-new-slide")) <touying-metadata>]
     // add headings for the first subslide
     print-invisible-headings(self)

@@ -810,9 +810,9 @@ This content is shown with a low alpha cover.
 
 关于被遮盖的脚注为何这样绘制，以及自定义 `cover` 方法需要声明什么，请参阅[编写你自己的 Cover 函数](./tutorials/dynamic/cover.md#writing-your-own-cover-function)。
 
-### 如何使用 preamble 在每张幻灯片前插入内容？
+### 如何使用 preamble 在幻灯片前插入内容？
 
-使用 `config-common(preamble: ...)` 在每张幻灯片前插入固定内容，`subslide-preamble` 在子幻灯片前插入：
+`config-common(preamble: ...)` 只在整个演示文稿的第一张幻灯片之前执行一次。每个子幻灯片之前的内容由主题决定：例如 `simple` 在那里显示幻灯片标题，并提供自己的 `subslide-preamble` 参数：
 
 ```example
 #import "@preview/touying:0.8.0": *
@@ -820,10 +820,8 @@ This content is shown with a low alpha cover.
 
 #show: simple-theme.with(
   aspect-ratio: "16-9",
-  config-common(
-    preamble: text(gray)[This appears before every slide],
-    subslide-preamble: [Special prelude for each subslide],
-  ),
+  config-common(preamble: text(gray)[This appears once, before the first slide's content]),
+  subslide-preamble: [Special prelude for each subslide],
 )
 
 = Section
@@ -836,6 +834,8 @@ Content here.
 
 More content.
 ```
+
+共有 `preamble`、`slide-preamble`、`subslide-preamble` 和 `page-preamble`，它们按各自的执行时机命名。只有 `page-preamble` 在幻灯片的页眉之前执行，其余的都在各自内容的第一页页眉之后执行。
 
 ### 如何使用 `---` 分隔幻灯片？
 

@@ -122,7 +122,7 @@ Touying 的所有配置都通过一组 `config-*` 函数传给主题，它们返
 
 ## 前言（Preamble）
 
-`config-common(preamble: ...)` 选项允许你在每张幻灯片上执行初始化代码，而无需手动重复。这在集成 `codly` 等包时非常有用：
+`config-common(preamble: ...)` 选项在整个演示文稿的第一张幻灯片之前执行一次初始化代码。这在集成 `codly` 等包时非常有用：
 ```typst
 #show: simple-theme.with(
   config-common(preamble: {

@@ -823,9 +823,9 @@ A `show footnote: it => ..` rule of your own only reaches real, revealed footnot
 
 See [Writing Your Own Cover Function](./tutorials/dynamic/cover.md#writing-your-own-cover-function) for why a covered footnote is drawn that way, and what a custom `cover` method has to declare.
 
-### How do I use preamble to insert content before every slide?
+### How do I use preamble to insert content before the slides?
 
-Use `config-common(preamble: ...)` and `subslide-preamble`:
+`config-common(preamble: ...)` runs once, before the first slide of the presentation. The theme decides what comes before each subslide: `simple`, for example, shows the slide's heading there and takes its own `subslide-preamble` argument:
 
 ```example
 #import "@preview/touying:0.8.0": *
@@ -833,10 +833,8 @@ Use `config-common(preamble: ...)` and `subslide-preamble`:
 
 #show: simple-theme.with(
   aspect-ratio: "16-9",
-  config-common(
-    preamble: text(gray)[This appears before every slide],
-    subslide-preamble: [Special prelude for each subslide],
-  ),
+  config-common(preamble: text(gray)[This appears once, before the first slide's content]),
+  subslide-preamble: [Special prelude for each subslide],
 )
 
 = Section
@@ -849,6 +847,8 @@ Content here.
 
 More content.
 ```
+
+There is the `preamble`, `slide-preamble`, `subslide-preamble` and `page-preamble`, named based on when they run. Only the page-preamble runs before the header of the slide, the others after the first page header of their respective content.
 
 ### How do I use `---` to separate slides?
 
