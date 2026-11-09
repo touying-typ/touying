@@ -139,8 +139,12 @@
 #let slide-note-state = state("touying-slide-note-state", none)
 #let current-slide-note = context slide-note-state.get()
 
-// state to store the location of the newslide for handling frozen states
-#let loc-prior-newslide = state("touying-loc-prior-newslide", none)
+// Where the previous frozen subslide began, for the frozen states and counters.
+// `none` until the first frozen subslide.
+#let previous-frozen-subslide-loc = state(
+  "touying-previous-frozen-subslide-loc",
+  none,
+)
 
 
 /// Call a `self => {..}` function and return the result, or wrap plain content in `[]`.

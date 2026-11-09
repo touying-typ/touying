@@ -1584,12 +1584,203 @@
   (header, footer, body-transform)
 }
 
-#let _rewind-states(states, location) = {
-  for s in states {
-    if type(s) == dictionary {
-      (s.update)((s.at)(selector(location)))
+// Frozen states and counters.
+
+#let _is-int-array(it) = type(it) == array and it.all(v => type(v) == int)
+
+/// Counter values have one integer per level. The outer levels keep their
+/// value, the first changed level moves by the same amount, and the inner
+/// levels are taken from `after`, because a step resets them: `(7, 1)` follows
+/// `(2, 3)` to `(2, 5)` and becomes `(7, 3)`.
+#let _apply-counter-step(current, before, after) = {
+  let shared-levels = calc.min(before.len(), after.len())
+  let first-changed-level = range(shared-levels + 1).find(level => (
+    level == shared-levels or before.at(level) != after.at(level)
+  ))
+
+  let outer-levels = range(first-changed-level).map(level => current.at(
+    level,
+    default: after.at(level),
+  ))
+  // The step only removed inner levels, or did nothing.
+  if first-changed-level >= after.len() { return outer-levels }
+
+  let moved-by = (
+    after.at(first-changed-level) - before.at(first-changed-level, default: 0)
+  )
+  let moved-level = current.at(first-changed-level, default: 0) + moved-by
+  outer-levels + (moved-level,) + after.slice(first-changed-level + 1)
+}
+
+/// Items were removed from or appended to the end of the array, like in a list
+/// that is added to.
+#let _apply-array-step(current, before, after) = {
+  let removed-count = before.len() - after.len()
+  if removed-count >= 0 {
+    current.slice(0, calc.max(0, current.len() - removed-count))
+  } else {
+    current + after.slice(before.len())
+  }
+}
+
+/// Apply to `current` the step that took `before` to `after`. Swap the two to
+/// undo it. Only the difference between them is used, `current` does not have
+/// to equal `before`. Values of other types become `after`, which for the
+/// frozen states is a read that lags (#447).
+#let _apply-state-step(current, before, after) = {
+  let all-are(check) = (current, before, after).all(check)
+
+  if all-are(v => type(v) == int) {
+    current + after - before
+  } else if all-are(_is-int-array) {
+    _apply-counter-step(current, before, after)
+  } else if all-are(v => type(v) == array) {
+    _apply-array-step(current, before, after)
+  } else if all-are(v => type(v) == dictionary) {
+    let result = (:)
+    for (key, after-value) in after {
+      result.insert(key, if key in current and key in before {
+        _apply-state-step(current.at(key), before.at(key), after-value)
+      } else {
+        after-value
+      })
+    }
+    // Keys that only `current` has stay. Keys that `before` had and `after`
+    // does not were removed by the step.
+    for (key, current-value) in current {
+      if key not in before and key not in after {
+        result.insert(key, current-value)
+      }
+    }
+    result
+  } else {
+    after
+  }
+}
+
+#let _slide-start-copy-key = "touying-frozen-copy"
+
+/// Undo the previous subslide on `value`, for use inside an update function.
+#let _undo-previous-subslide(value, before, after, is-last-subslide) = {
+  let undone = if type(value) == dictionary and _slide-start-copy-key in value {
+    value.at(_slide-start-copy-key) //restore from copy
+  } else {
+    _apply-state-step(value, after, before) //get diff and reverse
+  }
+
+  if type(undone) == dictionary and not is-last-subslide {
+    undone.insert(_slide-start-copy-key, undone)
+  }
+  undone
+}
+
+/// recognize a theorion counter by one of its keys
+#let _is-theorion-counter(item) = (
+  type(item) == dictionary and "get-inherited-levels" in item
+)
+
+/// The value of `item` at `loc`, as of the previous layout pass.
+#let _read-at(item, loc) = if type(item) == dictionary {
+  (item.at)(selector(loc))
+} else {
+  item.at(selector(loc))
+}
+
+/// The state that holds the start-of-slide value of the Theorion counter at
+/// position `index`. It is built from update functions, so unlike a read it is
+/// not behind.
+#let _slide-start-state(index) = state(
+  "touying-frozen-record:" + str(index),
+  none,
+)
+
+/// Remember what the slide starts with. A
+/// dictionary state stores a copy of itself. For a Theorion counter, the
+/// start value of the previous slide is moved along by what happened since
+/// `previous-frozen-subslide-loc`, or taken as it is on the first slide, where
+/// that is `none`. Call in `context`.
+#let _remember-slide-start(frozen-items, previous-frozen-subslide-loc) = {
+  for (index, item) in frozen-items.enumerate() {
+    if _is-theorion-counter(item) {
+      // The previous slide's start value, moved along by what has happened
+      // since the previous frozen subslide began.
+      let value-here = _read-at(item, here())
+      let value-at-previous-frozen-subslide = if (
+        previous-frozen-subslide-loc != none
+      ) {
+        _read-at(item, previous-frozen-subslide-loc)
+      }
+
+      _slide-start-state(index).update(previous-slide-start-value => {
+        if (
+          previous-slide-start-value == none
+            or previous-frozen-subslide-loc == none
+        ) {
+          value-here
+        } else {
+          _apply-state-step(
+            previous-slide-start-value,
+            value-at-previous-frozen-subslide,
+            value-here,
+          )
+        }
+      })
+    } else if type(item) == state {
+      item.update(value => {
+        if type(value) == dictionary {
+          let _ = value.remove(_slide-start-copy-key, default: none)
+          value.insert(_slide-start-copy-key, value)
+        }
+        value
+      })
+    } // Counters, and states that do not hold a dictionary: nothing to remember,
+    // they are rewound by undoing the previous subslide's step.
+  }
+}
+
+/// Rewinds all items to the values at the given previous location, but not if its the last subslide, there we want to keep the change.
+/// Call in `context`.
+///
+/// An item is rewound in one of three ways, depending on what it is:
+/// - Counters, and states holding a number or an array (ctheorems 2.x
+///   `thm-stored`, `thm-qed-done`): undo the previous subslide's step.
+/// - States holding a dictionary (ctheorems 2.x `thm-counters`): restore the
+///   copy stored in the first subslide. ctheorems 1.x rebuilds its dictionary
+///   on every update, which loses the copy, so it is only undone step by step.
+/// - Theorion's counters: set the start value of the slide, because their
+///   update takes no function.
+#let _rewind-to-slide-start(
+  frozen-items,
+  previous-subslide-loc,
+  is-last-subslide,
+) = {
+  for (index, item) in frozen-items.enumerate() {
+    if _is-theorion-counter(item) {
+      (item.update)(_slide-start-state(index).get())
+      continue
+    }
+
+    // The previous subslide turned the first value into the second.
+    let value-at-previous-subslide = _read-at(item, previous-subslide-loc)
+    let value-here = _read-at(item, here())
+
+    if type(item) == state {
+      item.update(value => _undo-previous-subslide(
+        value,
+        value-at-previous-subslide,
+        value-here,
+        is-last-subslide,
+      ))
     } else {
-      s.update(s.at(selector(location)))
+      // Counters reject negative numbers, which only early passes produce.
+      let undo-previous-subslide-nn = (..value) => _undo-previous-subslide(
+        value.pos(),
+        value-at-previous-subslide,
+        value-here,
+        is-last-subslide,
+      ).map(level => calc.max(0, level))
+
+      item.update(undo-previous-subslide-nn)
     }
   }
 }
@@ -1748,18 +1939,44 @@
         and not self.handout
         and self.repeat > 1
     ) {
+      // An item listed twice is rewound once.
+      let frozen-items = (
+        self.frozen-states
+          + self.default-frozen-states
+          + self.frozen-counters
+          + self.default-frozen-counters
+      ).dedup()
+      for item in frozen-items {
+        if type(item) == dictionary and not _is-theorion-counter(item) {
+          panic(
+            "frozen-states and frozen-counters take Typst counters and states, and Theorion's counters. Got a dictionary with the keys "
+              + repr(item.keys()),
+          )
+        }
+      }
+      // `previous-frozen-subslide-loc` is where the previous frozen subslide
+      // began. A slide with a single subslide freezes nothing and does not
+      // update it, so on a first subslide it can point several slides back.
       if self.subslide == 1 {
         context {
-          utils.loc-prior-newslide.update(here())
+          _remember-slide-start(
+            frozen-items,
+            utils.previous-frozen-subslide-loc.get(),
+          )
+          utils.previous-frozen-subslide-loc.update(here())
         }
       } else {
         context {
-          let loc-prior-newslide = utils.loc-prior-newslide.get()
-          _rewind-states(self.frozen-states, loc-prior-newslide)
-          _rewind-states(self.default-frozen-states, loc-prior-newslide)
-          _rewind-states(self.frozen-counters, loc-prior-newslide)
-          _rewind-states(self.default-frozen-counters, loc-prior-newslide)
+          let previous-subslide-loc = utils.previous-frozen-subslide-loc.get()
+          if previous-subslide-loc != none {
+            _rewind-to-slide-start(
+              frozen-items,
+              previous-subslide-loc,
+              self.subslide == self.repeat,
+            )
+          }
         }
+        context utils.previous-frozen-subslide-loc.update(here())
       }
     }
     utils.call-or-display(self, self.at("subslide-preamble", default: none))

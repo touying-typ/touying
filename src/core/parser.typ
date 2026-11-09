@@ -3539,31 +3539,34 @@
           // bottom of the page - so a covered footnote must not call `footnote()` at
           // all, or its entry leaks through before it should be revealed. To still
           // reserve the same marker width (so revealing it later doesn't reflow the
-          // paragraph), advance the real footnote counter and draw just the
-          // superscript number. Reading/writing the real counter - rather than
-          // tracking our own - keeps this correct even if the user manipulates
+          // paragraph), step the real footnote counter and draw just the
+          // superscript number. Using the real counter - rather than tracking
+          // our own - keeps this correct even if the user manipulates
           // `counter(footnote)` themselves elsewhere in the document.
-          hidden-parts.push(context {
-            let n = counter(footnote).get().first() + 1
-            counter(footnote).update(n)
-            let fn-numbering = child.at(
-              "numbering",
-              default: footnote.numbering,
-            )
-            let footnote-style = self.at("footnote-style", default: auto)
-            if footnote-style == auto {
-              super[#numbering(fn-numbering, n)]
-            } else {
-              // Calling `footnote-style` directly on a constructed `footnote(..)`
-              // would actually lay that footnote out for real the moment this
-              // content is shown (even inside `hide()`) - double-counting the
-              // counter and leaking its own entry. `measure` runs that lookup in
-              // an isolated, discarded layout, so only the resulting width (not
-              // the side effects) survives - which is all a placeholder needs.
-              let fake = footnote(numbering: fn-numbering, [])
-              // `std.measure`: this module defines its own `measure` below, and
-              // a plain name here would be a trap for anyone moving this code.
-              box(width: std.measure(footnote-style(fake)).width)
+          hidden-parts.push({
+            counter(footnote).step()
+            context {
+              // Behind the step, so this is already the number of the footnote.
+              let n = counter(footnote).get().first()
+              let fn-numbering = child.at(
+                "numbering",
+                default: footnote.numbering,
+              )
+              let footnote-style = self.at("footnote-style", default: auto)
+              if footnote-style == auto {
+                super[#numbering(fn-numbering, n)]
+              } else {
+                // Calling `footnote-style` directly on a constructed `footnote(..)`
+                // would actually lay that footnote out for real the moment this
+                // content is shown (even inside `hide()`) - double-counting the
+                // counter and leaking its own entry. `measure` runs that lookup in
+                // an isolated, discarded layout, so only the resulting width (not
+                // the side effects) survives - which is all a placeholder needs.
+                let fake = footnote(numbering: fn-numbering, [])
+                // `std.measure`: this module defines its own `measure` below, and
+                // a plain name here would be a trap for anyone moving this code.
+                box(width: std.measure(footnote-style(fake)).width)
+              }
             }
           })
         }
