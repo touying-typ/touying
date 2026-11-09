@@ -120,7 +120,7 @@ Touying 的所有配置都通过一组 `config-*` 函数传给主题，它们返
 
 在正文里，`#article-only[..]`、`#article-text[..]`、`#slides-only[..]` 和 `#presentation-only[..]` 可以按输出目标切换内容。
 
-## 前言（Preamble）
+## 前言（Preambles）
 
 `config-common(preamble: ...)` 选项在整个演示文稿的第一张幻灯片之前执行一次初始化代码。这在集成 `codly` 等包时非常有用：
 ```typst
@@ -131,7 +131,8 @@ Touying 的所有配置都通过一组 `config-*` 函数传给主题，它们返
 )
 ```
 
-你也可以针对单张幻灯片局部设置此选项，详见下文。
+若要在每张幻灯片之前运行代码，请使用 `slide-preamble`；若要在每个子幻灯片中运行代码或注入内容，请使用 `subslide-preamble`。这些前言都在对应页面的页眉排版之后、页面的任何正文内容之前运行。
+你还可以指定 `page-preamble`，它在页眉之前、针对每一页运行，包括溢出的幻灯片页等。
 
 ## 全局配置覆盖（Show-Rule）
 
@@ -200,7 +201,7 @@ Some content.
 // you can just write `show: appendix`
 == Appendix
 The total slide count no longer increases.
-#show: touying-set-config.with(defer:true, (preamble:{codly(languages: codly-languages)}))
+#show: touying-set-config.with(defer:true, (slide-preamble:{codly(languages: codly-languages)}))
 == Deferred Config Change
 Now we have codly available.
 ```

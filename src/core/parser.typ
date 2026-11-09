@@ -1312,7 +1312,7 @@
       // then reset the repetitions
       max-repetitions = calc.max(max-repetitions, repetitions)
       repetitions = 1
-    } else if child == "\\\n" or child == "&" {
+    } else if child == "\\\\\n" or child == "&" {
       // clear the hidden-parts when encounter linebreak or parbreak
       if hidden-parts.len() != 0 {
         result.push("\\phantom{" + hidden-parts.sum() + "}")
@@ -2311,6 +2311,11 @@
       next-is-list: false,
       rest: (),
     ) = {
+      // a hide of only space would break a list apart and pure whitespace does not need to be covered.
+      if items.all(tree.is-space) {
+        return (result: last-result, covered: items.sum(default: []))
+      }
+
       // The elements bordering the gaps above and below the block. Only spaces
       // are skipped: a parbreak or linebreak there is the user breaking the
       // container deliberately, which the decisions below have to see.

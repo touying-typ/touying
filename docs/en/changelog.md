@@ -10,6 +10,12 @@ A patch release with fixes and a few corrections to behaviour that 0.8.0 introdu
 
 ### Behaviour changes
 
+- **An em dash between inline content no longer splits slides**
+
+  A `—` or `---` with inline content on both sides, such as `Text — `code``, stays part of the sentence. Before, it was read as a horizontal line, which started a new slide and dropped the dash. Inline content is text, raw, emphasis, links, references, citations, footnotes and similar. A dash next to a blank line, a heading or any other block still splits slides.
+
+  **Migration:** where a break is wanted, put a blank line or a heading around `---`.
+
 - **A bare waypoint label picks its last subslide in three places**
 
   A bare label in `handout-subslides` keeps the last subslide of the waypoint, as the label of `touying-recall` on labelled content does. `measure` takes the largest size over the waypoint's range. The range markers `from-wp`, `until-wp` and `not-wp` keep every subslide they span, so `not-wp(not-wp(<a>))` is exactly the range of `<a>`. `handout-subslides: "waypoints"` selects the last subslide of every waypoint.
@@ -38,6 +44,7 @@ A patch release with fixes and a few corrections to behaviour that 0.8.0 introdu
 - Reducers announce the inner minimum repetitions and function wrappers of their content (#431).
 - Aligned content no longer shifts when paused list items are revealed (#442).
 - `measure` of a list applies the row gap, so show-set rules take effect (#443).
+- A `#meanwhile` between list items after an earlier `#pause` no longer splits the list, so the rows no longer move when the next subslide is shown (#439).
 - The ctheorems 2.x states are frozen across subslides (#452, #454). Support for ctheorems 1.x is deprecated and will be removed in v0.9.0.
 - The documentation of `until-wp` and `from-wp` now says what they do: `until-wp` stops before the first subslide of the waypoint, `from-wp` includes it and runs to the end.
 - The API reference lists the functions of `src/core/*.typ` and `touying-slides`, and the documentation of each release is published by the new `docs-release` workflow.

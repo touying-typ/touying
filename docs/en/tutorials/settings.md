@@ -111,7 +111,7 @@ All of Touying's configuration is passed to a theme through a set of `config-*` 
 
 In the body, `#article-only[..]`, `#article-text[..]`, `#slides-only[..]` and `#presentation-only[..]` switch content in or out depending on the output target. See [Article Mode](../integration/article-mode) for the full picture.
 
-## Preamble
+## Preambles
 
 The `config-common(preamble: ...)` option runs setup code once, before the first slide of the presentation. This is useful when integrating packages like `codly`:
 
@@ -122,7 +122,9 @@ The `config-common(preamble: ...)` option runs setup code once, before the first
   }),
 )
 ```
-However you may also set this locally for individual slides, see below.
+
+To run things before every slide use `slide-preamble` and to run code or inject content into every subslide use the `subslide-preamble`. All these run after the header of the respective content's page is laid out, but before any main content of the page.
+You may also specify a `page-preamble` which runs before the header and for each page, even overflown slides or similar.
 
 ## Show-Rule Config Overrides
 
@@ -192,7 +194,7 @@ Some content.
 // you can just write `show: appendix`
 == Appendix
 Page counter does no longer increase.
-#show: touying-set-config.with(defer:true, (preamble:{codly(languages: codly-languages)}))
+#show: touying-set-config.with(defer:true, (slide-preamble:{codly(languages: codly-languages)}))
 == Deferred Config Change
 Now we have codly available.
 ```

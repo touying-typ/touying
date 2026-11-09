@@ -225,11 +225,11 @@
 ///
 /// - default-slide-preamble (function): The default preamble for each slide, run right after `slide-preamble`. Default is a function that restarts the footnote numbering if `reset-footnote-number-per-slide` is `true`.
 ///
-/// - subslide-preamble (function): The function to run before each subslide. Default is `none`.
+/// - subslide-preamble (function): The function to run before each subslide. After the slide-preambles. Default is `none`.
 ///
 /// - default-subslide-preamble (function): The default preamble for each subslide. Default is `none`.
 ///
-/// - page-preamble (function): The function to run before each page. Default is `none`.
+/// - page-preamble (function): The function to run before each page in the header. Default is `none`.
 ///
 /// - default-page-preamble (function): The default preamble for each page. Default is a function to reset the page counter to the slide counter.
 ///
