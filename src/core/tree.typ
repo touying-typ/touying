@@ -34,6 +34,8 @@
 #let typst-builtin-styled = text(red)[].func()
 #let typst-builtin-space = [ ].func()
 #let typst-builtin-math-symbol = ($x$).body.func()
+// The element behind shorthands such as `~` and `---`. It is not `symbol`, the type.
+#let typst-builtin-symbol = [~].func()
 #let typst-builtin-context = (context []).func()
 
 /// Determine if a content is a sequence (i.e. created by concatenating content with `+` or implicit adjacency).
@@ -942,6 +944,71 @@
 /// -> bool
 #let is-parbreak(it) = type(it) == content and it.func() == parbreak
 
+/// Whether a content is an em dash.
+/// Typst makes the same node of a typed `—` and of the `---` shorthand.
+///
+/// - it (any): The content to check.
+///
+/// -> bool
+#let is-em-dash(it) = it in ([—], [---])
+
+/// What `is-inline-prose` accepts. An allow-list, because an element not known
+/// to flow in a line is safer treated as a block.
+#let _pure-inline-prose-funcs = (
+  text,
+  strong,
+  emph,
+  link,
+  ref,
+  cite,
+  footnote,
+  smartquote,
+  typst-builtin-symbol,
+  box,
+  highlight,
+  underline,
+  overline,
+  strike,
+  sub,
+  super,
+)
+
+/// Whether a content is known to flow inside a line of text. A dash is not
+/// prose, so two dashes in a row stay a horizontal line.
+///
+/// - it (any): The content to check.
+///
+/// -> bool
+#let is-inline-prose(it) = {
+  if type(it) != content or is-em-dash(it) { return false }
+  let f = it.func()
+  // These can be inline or block. Unlike `utils.is-block` there is no context
+  // here to read the default from, so an element built by a call, which has no
+  // `block` field, counts as inline.
+  if f in (raw, math.equation, quote) {
+    return not it.at("block", default: false)
+  }
+  f in _pure-inline-prose-funcs
+}
+
+/// Whether an em dash node splits slides, given the nearest non-space content
+/// on each side of it (`none` at an edge).
+///
+/// Typst gives `---` and a typed em dash the same node, and a newline is a
+/// space like any other, so only the neighbours tell them apart: a dash with
+/// prose on both sides is part of the sentence.
+///
+/// - before (any): The nearest non-space content before the dash.
+///
+/// - after (any): The nearest non-space content after the dash.
+///
+/// -> bool
+#let is-horizontal-line(before, after) = {
+  not (
+    is-inline-prose(before) and is-inline-prose(after)
+  )
+}
+
 /// The name of a value's type, as a diagnostic would want to print it.
 ///
 /// For content this is its element function, spelled out where `repr` is no
@@ -967,6 +1034,61 @@
   }
 }
 
+/// The width of the number column the enum would have if `items` were one
+/// container.
+///
+/// A column is as wide as its widest number, so an enum split into several
+/// containers has a different column in each, and the rows of one shift
+/// sideways when the others are revealed. Reading the width off a container
+/// laid out here, rather than numbering the items by hand, takes in explicit
+/// numbers, `numbering` patterns and functions, `full`, and the parent numbers
+/// of a nested enum without redoing any of them.
+///
+/// The bodies are emptied since only the column is wanted. What surrounds the
+/// column does not depend on the rows, so it is taken off with a one-row
+/// container whose number is zero wide.
+///
+/// Must be called from a context, as it lays out with the active styles.
+///
+/// - items (array): All the enum items of the run, in order.
+///
+/// -> length
+#let get-enum-number-width(items) = {
+  let blank = items.map(item => {
+    let number = item.at("number", default: none)
+    if number == none { enum.item([]) } else { enum.item(number, []) }
+  })
+  let with-numbers = measure(enum(..blank)).width
+  let without-numbers = measure(
+    enum(numbering: (..) => box(width: 0pt), enum.item([])),
+  ).width
+  with-numbers - without-numbers
+}
+
+/// The `numbering` that gives every number the same width, so that the column
+/// is `width` wide whichever numbers a container holds.
+///
+/// Typst aligns the number in its cell, but the cell is only as wide as the
+/// widest number, so the alignment is reapplied inside the fixed width. A
+/// `number-align` without a horizontal part, such as `top`, aligns to the start.
+///
+/// The numbering and the alignment are read where the number is placed, inside
+/// the enum, because a `set` in a show rule of enum only applies there.
+///
+/// - width (length): The column width, from `get-enum-number-width`.
+///
+/// -> function
+#let build-fixed-width-numbering(width) = (..numbers) => context {
+  let horizontal = enum.number-align.x
+  box(
+    width: width,
+    align(
+      if horizontal == none { start } else { horizontal },
+      numbering(enum.numbering, ..numbers),
+    ),
+  )
+}
+
 /// Build the container Typst would have built from a run of items.
 ///
 /// The kind is taken from the items themselves, which must all share it: a run
@@ -987,8 +1109,16 @@
 /// - first-number (auto, int): The number the first item carries, for an
 ///   enum. `auto` leaves it to Typst, so `set enum(start: ..)` applies.
 ///
+/// - number-width (none, length): Gives an enum a number column of exactly
+///   this width, see `get-enum-number-width`.
+///
 /// -> content
-#let build-list-like-from(items, tight: true, first-number: auto) = {
+#let build-list-like-from(
+  items,
+  tight: true,
+  first-number: auto,
+  number-width: none,
+) = {
   if items.len() == 0 {
     return []
   }
@@ -1008,6 +1138,9 @@
     enum(
       tight: tight,
       ..if first-number != auto { (start: first-number) },
+      ..if number-width != none {
+        (numbering: build-fixed-width-numbering(number-width))
+      },
       ..items,
     )
   } else if kind == terms.item {
@@ -1019,9 +1152,10 @@
 
 /// The number the enum shows for the item at `rank` in a run.
 ///
-/// Follows Typst's own rule: counting starts from `set enum(start: ..)` and
-/// goes up by one per item, and an item given a number of its own (`5.` in
-/// markup) resets the count to it. Needs context, for the `set` rule.
+/// Follows Typst's own rule: counting starts from `set enum(start: ..)`, or
+/// from the number of items when the enum is reversed, and goes up (down when
+/// reversed) by one per item, and an item given a number of its own (`5.` in
+/// markup) resets the count to it. Needs context, for the `set` rules.
 ///
 /// - items (array): The run's enum items, in order.
 ///
@@ -1029,11 +1163,18 @@
 ///
 /// -> int
 #let get-enum-number-at(items, rank) = {
+  let step = if enum.reversed { -1 } else { 1 }
   let start = enum.start
-  let number = if start == auto { 0 } else { start - 1 }
+  let number = if start != auto {
+    start - step
+  } else if enum.reversed {
+    items.len() + 1
+  } else {
+    0
+  }
   for item in items.slice(0, rank) {
     let own = item.at("number", default: none)
-    number = if own == none { number + 1 } else { own }
+    number = if own == none { number + step } else { own }
   }
   number
 }
@@ -1220,6 +1361,109 @@
 
   run.items = children.slice(run.start, end).filter(is-list-like-item)
   run
+}
+
+/// Which run each list-like item belongs to and its 1-based position in it.
+///
+/// - children (array): A sequence's children, in order.
+///
+/// - runs (array): The runs of `children`, from `get-list-like-runs-among`.
+///
+/// -> dictionary Keyed by the item's index in `children`, as a string. Each
+///   value is `(run: run, rank: int)`.
+#let get-list-like-placements(children, runs) = {
+  let placement = (:)
+  for run in runs {
+    let rank = 0
+    for index in range(run.start, run.end) {
+      if is-list-like-item(children.at(index)) {
+        rank += 1
+        placement.insert(str(index), (run: run, rank: rank))
+      }
+    }
+  }
+  placement
+}
+
+/// The enum runs that are shown in part: some of their items are visible and
+/// some are covered.
+///
+/// - children (array): A sequence's children, in order.
+///
+/// - placement (dictionary): From `get-list-like-placements`.
+///
+/// - is-visible (function): `n => bool`, whether the n-th list-like item of
+///   `children`, counting from 0, is visible.
+///
+/// -> dictionary Keyed by the run's start index, as a string. Each value is the
+///   run.
+#let get-split-enum-runs(children, placement, is-visible) = {
+  let split-runs = (:)
+  let seen = (:)
+  let seen-count = 0
+  for index in range(children.len()) {
+    let place = placement.at(str(index), default: none)
+    if place == none { continue }
+    let key = str(place.run.start)
+    let kinds = seen.at(key, default: (visible: false, covered: false))
+    if is-visible(seen-count) { kinds.visible = true } else {
+      kinds.covered = true
+    }
+    seen.insert(key, kinds)
+    seen-count += 1
+    if kinds.visible and kinds.covered and place.run.kind == enum.item {
+      split-runs.insert(key, place.run)
+    }
+  }
+  split-runs
+}
+
+/// Take apart the run of list-like items that `result` ends in, so a caller can
+/// re-emit it as an explicit container: `head` precedes the run, `items` are
+/// its items and `tail` follows it. `none` when there is no such run.
+///
+/// Covering the run after a parbreak leaves the parbreak separating nothing,
+/// so the remaining items revert to tight and every visible row moves. A block
+/// after a container cannot move it, so the tightness has to be asserted on the
+/// visible items themselves.
+///
+/// - result (array): The caller's accumulated children.
+///
+/// - parbreak-is-visible (bool): Which side of the boundary the parbreak fell:
+///   - `true`: before it, so it is this run's last element and is held aside.
+///   - `false`: past it, so it is among the covered items and the run ends at
+///     the tail.
+///
+/// -> none, dictionary
+#let split-visible-tail(result, parbreak-is-visible: true) = {
+  // Trailing spaces are not part of the run and are put back untouched.
+  let content-end = result.len()
+  while content-end > 0 and is-space(result.at(content-end - 1)) {
+    content-end -= 1
+  }
+  if content-end == 0 { return none }
+
+  // Nothing to do when the parbreak was expected here but is not.
+  if parbreak-is-visible and not is-parbreak(result.at(content-end - 1)) {
+    return none
+  }
+
+  // The held-aside parbreak, if it is on this side, plus those spaces.
+  let run-end = if parbreak-is-visible { content-end - 1 } else { content-end }
+
+  // A covered run emitted earlier stands in for items of this same container,
+  // so it is the one non-item element that does not end it. `cover-hidden`
+  // wraps it in a `context` block.
+  let run = get-list-like-run-ending-at(
+    result,
+    run-end,
+    opaque: el-func => el-func == typst-builtin-context,
+  )
+  (
+    head: result.slice(0, run.start),
+    items: run.items,
+    tail: result.slice(run-end),
+  )
 }
 
 /// The last element of `children` that is not a space, or `none`.

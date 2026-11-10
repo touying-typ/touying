@@ -2221,57 +2221,6 @@
       )
     }
 
-    // Rewrite the run of visible items that `result` ends in as an explicitly
-    // non-tight container.
-    //
-    // Covering the run after the parbreak leaves the parbreak separating
-    // nothing, so the remaining items revert to tight and every visible row
-    // moves. A block after a container cannot move it, so the tightness has to
-    // be asserted on the visible items themselves.
-    //
-    // `parbreak-is-visible` says which side of the boundary the parbreak fell:
-    // - before it, it is this run's last element and is held aside,
-    // - past it, it is among the covered items and the run ends at the tail.
-    let rebuild-visible-tail-nontight(result, parbreak-is-visible: true) = {
-      // Trailing spaces are not part of the run and are put back untouched.
-      let content-end = result.len()
-      while content-end > 0 and tree.is-space(result.at(content-end - 1)) {
-        content-end -= 1
-      }
-      if content-end == 0 { return result }
-
-      // Nothing to do when the parbreak was expected here but is not.
-      if (
-        parbreak-is-visible and not tree.is-parbreak(result.at(content-end - 1))
-      ) {
-        return result
-      }
-
-      // The held-aside parbreak, if it is on this side, plus those spaces.
-      let run-end = if parbreak-is-visible { content-end - 1 } else {
-        content-end
-      }
-      let kept-tail = result.slice(run-end)
-
-      // A covered run emitted earlier stands in for items of this same
-      // container, so it is the one non-item element that does not end it.
-      // `cover-hidden` wraps it in a `context` block.
-      let run = tree.get-list-like-run-ending-at(
-        result,
-        run-end,
-        opaque: el-func => el-func == tree.typst-builtin-context,
-      )
-
-      // A container of one item has no tightness to preserve.
-      if run.items.len() < 2 { return result }
-
-      (
-        result.slice(0, run.start)
-          + (tree.build-list-like-from(run.items, tight: false),)
-          + kept-tail
-      )
-    }
-
     // The covered items as the body to hand to the cover method.
     //
     // The reserved rows include the gaps between the covered items. Covered as
@@ -2341,7 +2290,8 @@
       )
       // `rest` is what follows the cover, which a later `#pause` has not yet
       // reached but which still belongs to the same container.
-      let span = last-result.slice(visible-run.start) + items + rest
+      let visible-tail = last-result.slice(visible-run.start)
+      let span = visible-tail + items + rest
       let list-is-nontight = tree.contains-nontight-list-like(span)
       // Covered enum items continue the count of the visible ones above them,
       // but emitted on their own they would count from the start again. The
@@ -2352,16 +2302,24 @@
       //
       // Whether they continue is asked of the visible tail and the covered
       // items together, which is the run Typst would have built from them.
-      let visible-tail = last-result.slice(visible-run.start)
       let first-hidden-item-index = items.position(tree.is-list-like-item)
-      let joined = visible-tail + items
       let at = if first-hidden-item-index != none {
         visible-tail.len() + first-hidden-item-index
       }
       let continued-run = if at != none {
         tree
-          .get-list-like-runs-among(joined)
+          .get-list-like-runs-among(span)
           .find(run => run.start < visible-tail.len() and at < run.end)
+      }
+      // An enum split by this cover is laid out as two containers, and each
+      // sizes its number column to its own widest number. Both are given the
+      // width the whole enum has, or the visible rows shift sideways when the
+      // covered ones are revealed. Any item of the run counts, the ones after
+      // the cover included.
+      let split-enum-items = if (
+        continued-run != none and continued-run.kind == enum.item
+      ) {
+        continued-run.items
       }
       let first-hidden-item = if continued-run != none {
         items.at(first-hidden-item-index)
@@ -2371,14 +2329,15 @@
           and continued-run.kind == enum.item
           and first-hidden-item.at("number", default: none) == none
       )
-      let covered = if continues-enum {
-        context {
+      let build-covered(number-width) = {
+        let items = items
+        if continues-enum {
           let fields = first-hidden-item.fields()
           let lbl = fields.remove("label", default: none)
           let body = fields.remove("body")
           // Counted rather than looked up, since two items can be equal.
           let rank = (
-            joined
+            span
               .slice(continued-run.start, at)
               .filter(tree.is-list-like-item)
               .len()
@@ -2386,13 +2345,30 @@
           )
           fields.number = tree.get-enum-number-at(continued-run.items, rank)
           let numbered = tree.call-with-fields(enum.item, fields, body)
-          let items = items
           items.at(first-hidden-item-index) = if lbl == none { numbered } else {
             tree.label-it(numbered, lbl)
           }
-          cover-fn(build-covered-body(items, list-is-nontight))
         }
-      } else {
+        if split-enum-items != none {
+          // The covered part of the run, which ends where the run does or
+          // where the covered items do.
+          let run-end = calc.min(
+            continued-run.end - visible-tail.len(),
+            items.len(),
+          )
+          let part = items.slice(first-hidden-item-index, run-end)
+          items = (
+            items.slice(0, first-hidden-item-index)
+              + (
+                tree.build-list-like-from(
+                  part.filter(tree.is-list-like-item),
+                  tight: continued-run.tight,
+                  number-width: number-width,
+                ),
+              )
+              + items.slice(run-end)
+          )
+        }
         cover-fn(build-covered-body(items, list-is-nontight))
       }
       // A gap needs a reserved row only where items sit on both sides:
@@ -2410,15 +2386,21 @@
       )
       // Covering one side of a non-tight container would let the other revert
       // to tight, so the visible run is re-emitted as an explicit container.
-      let result = if first-hidden-is-item and list-is-nontight {
-        rebuild-visible-tail-nontight(
+      let tail-run = if (
+        first-hidden-is-item and (list-is-nontight or split-enum-items != none)
+      ) {
+        tree.split-visible-tail(
           last-result,
           parbreak-is-visible: tree.is-parbreak(last-visible-item),
         )
-      } else {
-        last-result
       }
-      let covered = if gap-above-needs-row or gap-below-needs-row {
+      // A container of one item has no tightness to preserve, unless it is
+      // part of a split enum and needs the width.
+      let rebuilds-tail = (
+        tail-run != none
+          and (tail-run.items.len() >= 2 or split-enum-items != none)
+      )
+      let wrap-covered(body) = if gap-above-needs-row or gap-below-needs-row {
         context block(
           width: 100%,
           above: if opens-new-container {
@@ -2433,12 +2415,47 @@
           } else {
             auto
           },
-          covered,
+          body,
         )
       } else {
-        covered
+        body
       }
-      (result: result, covered: covered)
+
+      if split-enum-items == none {
+        let result = if rebuilds-tail {
+          (
+            tail-run.head
+              + (tree.build-list-like-from(tail-run.items, tight: false),)
+              + tail-run.tail
+          )
+        } else {
+          last-result
+        }
+        return (result: result, covered: wrap-covered(build-covered(none)))
+      }
+
+      // Both parts of a split enum need the width of the whole enum, which is
+      // measured once here. The visible part moves into the same context so it
+      // can share it.
+      let covered = context {
+        let width = tree.get-enum-number-width(split-enum-items)
+        let visible = if rebuilds-tail {
+          (
+            tree.build-list-like-from(
+              tail-run.items,
+              tight: continued-run.tight,
+              first-number: tree.get-enum-number-at(continued-run.items, 1),
+              number-width: width,
+            ),
+            ..tail-run.tail,
+          ).sum()
+        }
+        visible + wrap-covered(build-covered(width))
+      }
+      (
+        result: if rebuilds-tail { tail-run.head } else { last-result },
+        covered: covered,
+      )
     }
 
     // Flatten sequences and handle each child element

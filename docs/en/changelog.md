@@ -12,7 +12,7 @@ A patch release with fixes and a few corrections to behaviour that 0.8.0 introdu
 
 - **An em dash between inline content no longer splits slides**
 
-  A `—` or `---` with inline content on both sides, such as `Text — `code``, stays part of the sentence. Before, it was read as a horizontal line, which started a new slide and dropped the dash. Inline content is text, raw, emphasis, links, references, citations, footnotes and similar. A dash next to a blank line, a heading or any other block still splits slides.
+  A `—` or `---` with inline content on both sides, such as `Text — `code``, stays part of the sentence. Before, it was read as a horizontal line, which started a new slide and dropped the dash. Inline content is text, symbols such as `~`, raw, math, emphasis, links, references, citations, footnotes, boxes and similar. A dash next to a blank line, a heading, any other block or a touying marker or wrapper such as `#pause` or `#alert[..]` still splits slides.
 
   **Migration:** where a break is wanted, put a blank line or a heading around `---`.
 
@@ -24,7 +24,7 @@ A patch release with fixes and a few corrections to behaviour that 0.8.0 introdu
 
 - **Footnote numbering restarts per slide, not per page**
 
-  `reset-footnote-number-per-slide` now restarts the numbering only at the start of a slide, and `counter(footnote)` is one of the default frozen counters, so the numbers stay the same on every subslide. Before, the counter was reset on every page. A breakable slide that overflowed onto a second page restarted at 1 there, and with `reset-footnote-number-per-slide: false` the numbers of a slide ran ahead from one subslide to the next. Now overflow pages keep counting, and with `false` the numbering continues across slides while staying identical across the subslides of one slide. 
+  `reset-footnote-number-per-slide` now restarts the numbering only at the start of a slide, and `counter(footnote)` is one of the default frozen counters, so the numbers stay the same on every subslide. Before, the counter was reset on every page. A breakable slide that overflowed onto a second page restarted at 1 there, and with `reset-footnote-number-per-slide: false` the numbers of a slide ran ahead from one subslide to the next. Now overflow pages keep counting, and with `false` the numbering continues across slides while staying identical across the subslides of one slide.
 
 - **`touying-reduce` works with alchemist 0.2.0**
 
@@ -44,6 +44,8 @@ A patch release with fixes and a few corrections to behaviour that 0.8.0 introdu
 - Reducers announce the inner minimum repetitions and function wrappers of their content (#431).
 - Aligned content no longer shifts when paused list items are revealed (#442).
 - `measure` of a list applies the row gap, so show-set rules take effect (#443).
+- The numbers of an enum with a `#pause` stay aligned: the covered and the visible part get the same number column width, so items no longer move sideways when the covered part is revealed (#438).
+- `touying-mitex` keeps the height of a line break that is still hidden, so the visible lines no longer move sideways when the next line is revealed.
 - A `#meanwhile` between list items after an earlier `#pause` no longer splits the list, so the rows no longer move when the next subslide is shown (#439).
 - The ctheorems 2.x states are frozen across subslides (#452, #454). Support for ctheorems 1.x is deprecated and will be removed in v0.9.0.
 - The documentation of `until-wp` and `from-wp` now says what they do: `until-wp` stops before the first subslide of the waypoint, `from-wp` includes it and runs to the end.

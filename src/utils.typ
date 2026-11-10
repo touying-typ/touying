@@ -2895,31 +2895,39 @@
     // The runs Typst will gather this body's items into.
     let runs = tree.get-list-like-runs-among(cont.children)
 
-    // Which run each item belongs to and its 1-based position in it, keyed by
-    // the item's index in `cont.children`.
-    let placement = (:)
-    for run in runs {
-      let rank = 0
-      for index in range(run.start, run.end) {
-        if tree.is-list-like-item(cont.children.at(index)) {
-          rank += 1
-          placement.insert(str(index), (run: run, rank: rank))
-        }
-      }
-    }
+    let placement = tree.get-list-like-placements(cont.children, runs)
 
-    // Rebuild a segment as its own container. One that begins its run is
-    // numbered by Typst itself, so `set enum(start: ..)` applies; a later one
-    // is told which number it continues from, and needs context for that.
-    let continues-enum(run, first-rank) = (
-      run.kind == enum.item and first-rank != 1
+    // Rebuild a segment as its own container. An enum segment is told which
+    // number it begins with: Typst counts each container from its own start, or
+    // down from its own length when reversed. That needs context.
+    let is-numbered(run) = run.kind == enum.item
+    // The enum runs that are partly covered. Each of their segments is a
+    // container of its own and would size its number column to its own widest
+    // number, so all of them get the width of the whole run, measured once.
+    let split-runs = tree.get-split-enum-runs(
+      cont.children,
+      placement,
+      n => check-visible(self.subslide, (beginning: start + n)),
     )
-    let build-container(items, run, first-rank) = tree.build-list-like-from(
+    // A `fn` that wraps its items leaves nothing to give a column to.
+    let needs-equal-numbers(segment-items, run) = (
+      str(run.start) in split-runs and segment-items.all(tree.is-list-like-item)
+    )
+    // A segment that needs the width is a function of the measured widths, as
+    // measuring has to wait for a context that covers every segment.
+    let build-container(
       items,
+      run,
+      first-rank,
       tight: false,
-      first-number: if continues-enum(run, first-rank) {
+      widths: none,
+    ) = tree.build-list-like-from(
+      items,
+      tight: tight,
+      first-number: if is-numbered(run) {
         tree.get-enum-number-at(run.items, first-rank)
       } else { auto },
+      number-width: if widths != none { widths.at(str(run.start)) },
     )
 
     // Cover a segment and hand back a block that reserves the rows its items
@@ -2936,25 +2944,29 @@
       }
       // The row gap and the numbering read the active styles, so only a
       // context can resolve them.
-      (
-        context {
-          let body = if run.tight { items.sum() } else {
-            build-container(items, run, first-rank)
-          }
-          let gap = tree.get-row-spacing-of-list-like(
-            run.kind,
+      let build(widths) = context {
+        let body = if run.tight and widths == none {
+          items.sum()
+        } else {
+          build-container(
+            items,
+            run,
+            first-rank,
             tight: run.tight,
+            widths: widths,
           )
-          block(
-            width: 100%,
-            // A segment that opens a container is separated from what
-            // precedes it by paragraph spacing rather than a row gap.
-            above: if opens-container { par.spacing } else { gap },
-            below: gap,
-            cover(body),
-          )
-        },
-      )
+        }
+        let gap = tree.get-row-spacing-of-list-like(run.kind, tight: run.tight)
+        block(
+          width: 100%,
+          // A segment that opens a container is separated from what
+          // precedes it by paragraph spacing rather than a row gap.
+          above: if opens-container { par.spacing } else { gap },
+          below: gap,
+          cover(body),
+        )
+      }
+      if needs-equal-numbers(items, run) { (build,) } else { (build(none),) }
     }
 
     // The segment being gathered, and where its finished content accumulates.
@@ -2977,12 +2989,27 @@
           opens-container: preceding-run != none
             and preceding-run.start != run.start,
         )
+      } else if needs-equal-numbers(segment.items, run) {
+        (
+          widths => build-container(
+            segment.items,
+            run,
+            segment.first-rank,
+            tight: run.tight,
+            widths: widths,
+          ),
+        )
       } else if run.tight {
         segment.items
       } else {
-        let build() = build-container(segment.items, run, segment.first-rank)
+        let build() = build-container(
+          segment.items,
+          run,
+          segment.first-rank,
+          tight: false,
+        )
         (
-          if continues-enum(run, segment.first-rank) { context build() } else {
+          if is-numbered(run) { context build() } else {
             build()
           },
         )
@@ -2998,6 +3025,39 @@
         run != none
           and not check-visible(self.subslide, (beginning: start + item-count))
       )
+
+      // Spaces and parbreaks between two items of one segment do not end it,
+      // or every item would be a segment of its own and no segment could know
+      // how wide its number column should be. What they mean for the container
+      // is already in `run.tight`.
+      if (
+        run == none
+          and current.items.len() != 0
+          and (tree.is-space(child) or tree.is-parbreak(child))
+      ) {
+        let next-index = index + 1
+        while (
+          next-index < cont.children.len()
+            and (
+              tree.is-space(cont.children.at(next-index))
+                or tree.is-parbreak(cont.children.at(next-index))
+            )
+        ) {
+          next-index += 1
+        }
+        let next-place = placement.at(str(next-index), default: none)
+        if (
+          next-place != none
+            and next-place.run.start == current.run.start
+            and current.covered
+              == not check-visible(
+                self.subslide,
+                (beginning: start + item-count),
+              )
+        ) {
+          continue
+        }
+      }
       let continues-segment = (
         run != none
           and current.items.len() != 0
@@ -3040,7 +3100,20 @@
       result += emit(current, preceding-run)
     }
 
-    result.sum(default: [])
+    if not result.any(piece => type(piece) == function) {
+      return result.sum(default: [])
+    }
+    context {
+      let widths = (:)
+      for (key, run) in split-runs {
+        widths.insert(key, tree.get-enum-number-width(run.items))
+      }
+      result
+        .map(piece => if type(piece) == function { piece(widths) } else {
+          piece
+        })
+        .sum(default: [])
+    }
   } else if cont.func() == list or cont.func() == enum {
     // Programmatic list/enum container
     let new-items = cont

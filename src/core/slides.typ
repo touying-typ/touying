@@ -28,7 +28,7 @@
 /// Example: `#let appendix(body) = touying-set-config((appendix: true), defer:true, body)` and you can use `#show: appendix` to set the appendix for the presentation.
 ///
 /// The keyword `defer` is useful for features like `appendix`, which should not take effect until the next slide starts. All following content is also then wrapped into the preamble, e.g. `counter-update`, set or other show rules. Putting content after a deferred config show rule will not render it visibly in the document.
-/// You may even use `#show: touying-set-config.with((preamble: fn), defer:true)` to set a preamble function for the next slide or do similar config changes without calling the `slide` function explicitly.
+/// You may even use `#show: touying-set-config.with((slide-preamble: fn), defer:true)` to set a preamble function for the next slide or do similar config changes without calling the `slide` function explicitly.
 /// Just relying on the deferred config change's ability to capture functions and running them also in the preamble is considered an antipattern. Use the explicit fields on `#slide` instead.
 ///
 /// - config (dictionary): The new configurations for the presentation.
@@ -424,10 +424,23 @@
   // Each element is a (callable, slide-self) pair. Empty means no pending wrapper.
   let last-wrapper-info = ()
 
+  // The nearest child from `start` in direction `step` that is not a space.
+  // Only asked for at an em dash, and it stops at the first hit.
+  let nearest-non-space(start, step) = {
+    for i in range(
+      start,
+      if step > 0 { children.len() } else { -1 },
+      step: step,
+    ) {
+      if not tree.is-space(children.at(i)) { return children.at(i) }
+    }
+    none
+  }
+
   // Is we have a horizontal line
   let horizontal-line = false
   // Iterate over the children
-  for child in children {
+  for (child-index, child) in children.enumerate() {
     // Handle horizontal-line
     // split content when we have a horizontal line
     if (
@@ -690,7 +703,14 @@
         if slide-content != none { output-slides.push(slide-content) }
       }
       absorb-leading-preamble = false
-    } else if horizontal-line-to-pagebreak and child in ([—], [---]) {
+    } else if (
+      horizontal-line-to-pagebreak
+        and tree.is-em-dash(child)
+        and tree.is-horizontal-line(
+          nearest-non-space(child-index - 1, -1),
+          nearest-non-space(child-index + 1, 1),
+        )
+    ) {
       horizontal-line = true
       continue
     } else if (
