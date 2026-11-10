@@ -20,6 +20,20 @@ $
 
 Touying equation is very simple.
 
+== touying-mitex Keeps Hidden Line Breaks
+
+// A line that is still hidden has to keep its height, so the visible lines
+// stay where they are while the rest is revealed.
+
+#touying-mitex(
+  mitex,
+  `
+  a &= b \\
+  \pause c &= d \\
+  \pause e &= f
+`,
+)
+
 == touying-mitex Follows set math.equation
 
 // `touying-mitex` passes `numbering` and `supplement` on only when they were

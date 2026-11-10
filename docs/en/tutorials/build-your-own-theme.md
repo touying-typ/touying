@@ -391,10 +391,11 @@ A special slide usually wants to style the whole page: centre it, pad it, enlarg
       margin: 2em,
     ),
   )
-  place(hide(heading[Focus Slide])) // put an invisible heading on the slide. Useful later
-
   set text(fill: self.colors.neutral-lightest, size: 2em)
-  touying-slide(self: self, setting: align.with(horizon + center), body)
+  touying-slide(self: self, setting: align.with(horizon + center), {
+    place(hide(heading[Focus Slide])) // put an invisible heading on the slide. Useful later
+    body
+  })
 })
 
 #let bamboo-theme(
@@ -558,10 +559,11 @@ The `header` takes up an upper portion of the note page and the full width. By d
       margin: 2em,
     ),
   )
-  place(hide(heading[Focus Slide])) // put an invisible heading on the slide. Useful later
-
   set text(fill: self.colors.neutral-lightest, size: 2em)
-  touying-slide(self: self, setting: align.with(horizon + center), body)
+  touying-slide(self: self, setting: align.with(horizon + center), {
+    place(hide(heading[Focus Slide])) // put an invisible heading on the slide. Useful later
+    body
+  })
 })
 
 #let notes(self: none, ..args) = touying-notes(

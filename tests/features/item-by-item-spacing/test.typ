@@ -3,7 +3,7 @@
 // item stops being laid out as a list row, so without a correction the
 // enclosing list shrinks and everything after it creeps upwards as items are
 // revealed. The same correction the parser applies around a `#pause`-broken
-// list (`cover-hidden`) is applied here by `_item-row-spacing`.
+// list (`_assemble-entries`) is applied here by `item-by-item-fn`.
 //
 // Compile-only: what is pinned is a position, not an appearance.
 

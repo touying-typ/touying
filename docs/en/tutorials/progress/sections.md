@@ -127,10 +127,10 @@ The values -1 and 1 are reserved for other headings under the same top-level hea
 
 You can e.g. use like so
 ```example
->>>#import "@preview/touying:0.8.0": *
->>>#import themes.simple: *
->>>#show: simple-theme
->>>#set heading(numbering: "1.1")
+>>> #import "@preview/touying:0.8.0": *
+>>> #import themes.simple: *
+>>> #show: simple-theme
+>>> #set heading(numbering: "1.1")
 
 = Start
 == Start Sub

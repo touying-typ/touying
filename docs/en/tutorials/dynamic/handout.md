@@ -55,7 +55,14 @@ config-common(handout: true, handout-subslides: (1, -1))
 
 // Keep a range expressed as a string (same syntax as `only`/`uncover`)
 config-common(handout: true, handout-subslides: "1-2")
+
+// Keep the last subslide of every waypoint
+config-common(handout: true, handout-subslides: "waypoints")
 ```
+
+`"waypoints"` keeps one page per [waypoint](./waypoints), each showing that waypoint's final state, so a handout can follow the phases of an animation without the steps in between. It can also be one element of an array, e.g. `(1, "waypoints")`. A slide without waypoints keeps just its last subslide.
+
+Individual waypoints can be chosen too. A bare label such as `<intro>` stands for the *last* subslide of that waypoint, where its content is fully shown, so `handout-subslides: (<intro>, <result>)` keeps one page per waypoint. Use `get-first(<intro>)` for the first subslide instead. Range markers keep every subslide they span: `from-wp(<intro>)` the rest of the slide from the waypoint on, `until-wp(<intro>)` everything before it, and `not-wp(not-wp(<intro>))` exactly the subslides of that one waypoint.
 
 ## Handout-only Slides
 

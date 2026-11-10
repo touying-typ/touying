@@ -13,10 +13,9 @@ Themes in Touying encapsulate some of their own global styles, which are placed 
 ```typst
 config-methods(
   init: (self: none, body) => {
-    set text(fill: self.colors.neutral-darkest, size: 25pt)
+    set text(size: 25pt)
     show footnote.entry: set text(size: .6em)
-    show strong: self.methods.alert.with(self: self)
-    show heading.where(level: self.slide-level + 1): set text(1.4em)
+    show heading.where(level: 1): set text(1.4em)
 
     body
   },
@@ -112,9 +111,9 @@ All of Touying's configuration is passed to a theme through a set of `config-*` 
 
 In the body, `#article-only[..]`, `#article-text[..]`, `#slides-only[..]` and `#presentation-only[..]` switch content in or out depending on the output target. See [Article Mode](../integration/article-mode) for the full picture.
 
-## Preamble
+## Preambles
 
-The `config-common(preamble: ...)` option lets you run setup code on every slide without repeating it manually. This is useful when integrating packages like `codly`:
+The `config-common(preamble: ...)` option runs setup code once, before the first slide of the presentation. This is useful when integrating packages like `codly`:
 
 ```typst
 #show: simple-theme.with(
@@ -123,7 +122,9 @@ The `config-common(preamble: ...)` option lets you run setup code on every slide
   }),
 )
 ```
-However you may also set this locally for individual slides, see below.
+
+To run things before every slide use `slide-preamble` and to run code or inject content into every subslide use the `subslide-preamble`. All these run after the header of the respective content's page is laid out, but before any main content of the page.
+You may also specify a `page-preamble` which runs before the header and for each page, even overflown slides or similar.
 
 ## Show-Rule Config Overrides
 
@@ -165,7 +166,7 @@ Content that is hidden by showing with low alpha value.
 ## Local Config Overrides
 If you want to affect only one specific slide, you can set the config locally via `#slide(config: ...)[...]`.
 ```example
->>> #import "../lib.typ": *
+>>> #import "@preview/touying:0.8.0": *
 >>> #import themes.simple: *
 
 >>> #show: simple-theme.with(aspect-ratio: "16-9")
@@ -180,9 +181,12 @@ You may even defer a config change to the beginning of the next slide.
 This is also how `show: appendix` works, but also useful for setting a custom preamble or similar that affects not just the slide's content. (Note that config-common has no effect, you can also write your config dict without it.)
 
 ```example
->>> #import "../lib.typ": *
+>>> #import "@preview/touying:0.8.0": *
 >>> #import themes.simple: *
+>>> #import "@preview/codly:1.3.0": *
+>>> #import "@preview/codly-languages:0.1.10": *
 
+>>> #show: codly-init.with()
 >>> #show: simple-theme.with(aspect-ratio: "16-9")
 == Content Slide
 Some content.
@@ -190,7 +194,7 @@ Some content.
 // you can just write `show: appendix`
 == Appendix
 Page counter does no longer increase.
-#show: touying-set-config.with(defer:true, (preamble:{codly(languages: codly-languages)}))
+#show: touying-set-config.with(defer:true, (slide-preamble:{codly(languages: codly-languages)}))
 == Deferred Config Change
 Now we have codly available.
 ```

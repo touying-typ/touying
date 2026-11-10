@@ -287,7 +287,7 @@
 /// ```
 ///
 /// - package (module): The external package to integrate with touying. It should expose its name for auto-binding to work (e.g. `cetz`).
-/// - bindings (dictionary): Optional explicit bindings for the reduce and cover functions. Should be a dictionary with keys `reduce` and `cover`, where each value is a closure taking in the module and returning the function you need: e.g. `mod=>mod.hide`. If any fields are `none`, it checks whether the package has `touying-reducer-bindings` otherwise touying will look up predefined bindings in `extern.auto-reducer-bindings` based on the package name.
+/// - bindings (dictionary): Optional explicit bindings for the reduce and cover functions. Should be a dictionary with keys `reduce` and `cover`, where each value is a closure taking in the module and returning the function you need: e.g. `mod=>mod.hide`. If any fields are `none`, it uses the package's own `touying-reducer-bindings` when they are usable (a dictionary whose `reduce` and `cover` are functions), and otherwise the predefined bindings in `extern.auto-reducer-bindings` for the package's name.
 /// - args (arguments): The positional and named arguments passed to the reduce function.
 /// -> content
 #let touying-reduce(package, bindings: (reduce: none, cover: none), ..args) = {
@@ -314,18 +314,27 @@
       + repr(bindings),
   )
   if bindings.reduce == none or bindings.cover == none {
-    //two cases to look bindings up:
-    // 1. in the package itself
+    // Where to look the bindings up, in this order:
+    // 1. in the package itself, if they are usable (both of them functions)
     // 2. in the auto-reducer-bindings based on the package name
-    bindings = pckg.at("touying-reducer-bindings", default: none)
-
-    if bindings == none and "name" in pckg.keys() {
-      bindings = extern.auto-reducer-bindings.at(pckg.name, default: none)
-    }
-
-    //last option: test if it is fletcher, using repr is not necessarily stable, but hey, works
-    if bindings == none and (repr(package) == "<module fletcher>") {
-      bindings = extern.auto-reducer-bindings.at("fletcher", default: none)
+    // 3. fletcher does not expose its name: test its repr, not necessarily
+    //    stable, but hey, works
+    let check-external-bindings(module, candidate) = (
+      type(candidate) == dictionary
+        and type(candidate.at("reduce", default: none)) == function
+        and type(candidate.at("cover", default: none)) == function
+    )
+    let own = pckg.at("touying-reducer-bindings", default: none)
+    let name = pckg.at("name", default: none)
+    bindings = if check-external-bindings(pckg, own) {
+      own
+    } else if type(name) == str and name in extern.auto-reducer-bindings {
+      extern.auto-reducer-bindings.at(name)
+    } else if repr(package) == "<module fletcher>" {
+      extern.auto-reducer-bindings.at("fletcher")
+    } else {
+      // Unusable bindings are kept, so that the error below names them.
+      own
     }
 
     assert(

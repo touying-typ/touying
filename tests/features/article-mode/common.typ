@@ -1,4 +1,4 @@
-#import "../../../lib.typ": *
+#import "/lib.typ": *
 #import "@preview/cetz:0.4.2"
 
 #import themes.article: article-theme

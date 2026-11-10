@@ -25,4 +25,9 @@
     "reduce": module => module.skeletize,
     "cover": module => module.hide,
   ),
+  // all other packages should expose the dict
+  // `let touying-reducer-bindings = ("reduce": module => module.REDUCTION_FUNCTION, "cover": module => module.HIDE_FUNCTION)`
+  // where your reduction function would be the function that users write input to
+  // and the hide function should preserve the content dimensions
+  // if something is deeper inside your package look at the way it is done for cetz where "cover": module => module.draw.hide.with(bounds:true)
 )

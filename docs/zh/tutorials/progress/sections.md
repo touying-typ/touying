@@ -128,10 +128,10 @@ Content.
 示例用法如下：
 
 ```example
->>>#import "@preview/touying:0.8.0": *
->>>#import themes.simple: *
->>>#show: simple-theme
->>>#set heading(numbering: "1.1")
+>>> #import "@preview/touying:0.8.0": *
+>>> #import themes.simple: *
+>>> #show: simple-theme
+>>> #set heading(numbering: "1.1")
 
 = Start
 == Start Sub

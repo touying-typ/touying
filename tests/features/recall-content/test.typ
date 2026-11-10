@@ -131,10 +131,11 @@ cumulative state up to there: "First stage. Second stage."
 
 == Recall via Waypoint: bare label
 
-A bare waypoint label (not wrapped in `get-first`/`get-last`) also collapses
-to its first subslide. `<wp-b>` sits at the block's own final stage, so this
-shows the full cumulative text — same output as the `base: auto` column of
-the base-shifted grid below.
+A bare waypoint label (not wrapped in `get-first`/`get-last`) collapses to its
+last subslide, like `get-last`: recalling is remembering, and the end of a
+waypoint is where its content is complete. `<wp-b>` spans the block's last two
+stages, so this shows the full cumulative text including "third again" — same
+output as the `base: auto` column of the base-shifted grid below.
 
 #touying-recall(<wp-block>, subslides: <wp-b>)
 

@@ -34,7 +34,11 @@
 #let typst-builtin-styled = text(red)[].func()
 #let typst-builtin-space = [ ].func()
 #let typst-builtin-math-symbol = ($x$).body.func()
+// The element behind shorthands such as `~` and `---`. It is not `symbol`, the type.
+#let typst-builtin-symbol = [~].func()
 #let typst-builtin-context = (context []).func()
+#let typst-builtin-state-update = state("touying-probe").update(none).func()
+#let typst-builtin-counter-update = counter("touying-probe").step().func()
 
 /// Determine if a content is a sequence (i.e. created by concatenating content with `+` or implicit adjacency).
 ///
@@ -103,6 +107,21 @@
       and type(it.value) == dictionary
       and it.value.at("kind", default: none) == kind
   )
+}
+
+/// Whether a content is laid out as nothing: metadata, a state or counter
+/// update, or a sequence of those. Typst gathers list items across it.
+///
+/// - it (any): The content to check.
+///
+/// -> bool
+#let is-tag-like(it) = {
+  if type(it) != content { return false }
+  let f = it.func()
+  if f in (metadata, typst-builtin-state-update, typst-builtin-counter-update) {
+    return true
+  }
+  f == typst-builtin-sequence and it.children.all(is-tag-like)
 }
 
 /// Determine if a content is one of touying's own marks, of any kind.
@@ -911,9 +930,9 @@
 //     `par.spacing` and the container starts lower.
 //   - Items of DIFFERENT kinds are always separate containers, parbreak or no
 //     parbreak, and each stays tight. A parbreak between them changes nothing.
-//   - A space between items is insignificant. A linebreak written at the end of
-//     an item line is absorbed into that item; one standing alone as a sibling
-//     ends the run, as does any other content.
+//   - A space between items is insignificant, and so is metadata. A linebreak
+//     written at the end of an item line is absorbed into that item; one
+//     standing alone as a sibling ends the run, as does any other content.
 //
 // And what a run owes its members: markers and numbers belong to the
 // container and are assigned at layout time from an item's position in it. An
@@ -942,6 +961,71 @@
 /// -> bool
 #let is-parbreak(it) = type(it) == content and it.func() == parbreak
 
+/// Whether a content is an em dash.
+/// Typst makes the same node of a typed `—` and of the `---` shorthand.
+///
+/// - it (any): The content to check.
+///
+/// -> bool
+#let is-em-dash(it) = it in ([—], [---])
+
+/// What `is-inline-prose` accepts. An allow-list, because an element not known
+/// to flow in a line is safer treated as a block.
+#let _pure-inline-prose-funcs = (
+  text,
+  strong,
+  emph,
+  link,
+  ref,
+  cite,
+  footnote,
+  smartquote,
+  typst-builtin-symbol,
+  box,
+  highlight,
+  underline,
+  overline,
+  strike,
+  sub,
+  super,
+)
+
+/// Whether a content is known to flow inside a line of text. A dash is not
+/// prose, so two dashes in a row stay a horizontal line.
+///
+/// - it (any): The content to check.
+///
+/// -> bool
+#let is-inline-prose(it) = {
+  if type(it) != content or is-em-dash(it) { return false }
+  let f = it.func()
+  // These can be inline or block. Unlike `utils.is-block` there is no context
+  // here to read the default from, so an element built by a call, which has no
+  // `block` field, counts as inline.
+  if f in (raw, math.equation, quote) {
+    return not it.at("block", default: false)
+  }
+  f in _pure-inline-prose-funcs
+}
+
+/// Whether an em dash node splits slides, given the nearest non-space content
+/// on each side of it (`none` at an edge).
+///
+/// Typst gives `---` and a typed em dash the same node, and a newline is a
+/// space like any other, so only the neighbours tell them apart: a dash with
+/// prose on both sides is part of the sentence.
+///
+/// - before (any): The nearest non-space content before the dash.
+///
+/// - after (any): The nearest non-space content after the dash.
+///
+/// -> bool
+#let is-horizontal-line(before, after) = {
+  not (
+    is-inline-prose(before) and is-inline-prose(after)
+  )
+}
+
 /// The name of a value's type, as a diagnostic would want to print it.
 ///
 /// For content this is its element function, spelled out where `repr` is no
@@ -967,6 +1051,61 @@
   }
 }
 
+/// The width of the number column the enum would have if `items` were one
+/// container.
+///
+/// A column is as wide as its widest number, so an enum split into several
+/// containers has a different column in each, and the rows of one shift
+/// sideways when the others are revealed. Reading the width off a container
+/// laid out here, rather than numbering the items by hand, takes in explicit
+/// numbers, `numbering` patterns and functions, `full`, and the parent numbers
+/// of a nested enum without redoing any of them.
+///
+/// The bodies are emptied since only the column is wanted. What surrounds the
+/// column does not depend on the rows, so it is taken off with a one-row
+/// container whose number is zero wide.
+///
+/// Must be called from a context, as it lays out with the active styles.
+///
+/// - items (array): All the enum items of the run, in order.
+///
+/// -> length
+#let get-enum-number-width(items) = {
+  let blank = items.map(item => {
+    let number = item.at("number", default: none)
+    if number == none { enum.item([]) } else { enum.item(number, []) }
+  })
+  let with-numbers = measure(enum(..blank)).width
+  let without-numbers = measure(
+    enum(numbering: (..) => box(width: 0pt), enum.item([])),
+  ).width
+  with-numbers - without-numbers
+}
+
+/// The `numbering` that gives every number the same width, so that the column
+/// is `width` wide whichever numbers a container holds.
+///
+/// Typst aligns the number in its cell, but the cell is only as wide as the
+/// widest number, so the alignment is reapplied inside the fixed width. A
+/// `number-align` without a horizontal part, such as `top`, aligns to the start.
+///
+/// The numbering and the alignment are read where the number is placed, inside
+/// the enum, because a `set` in a show rule of enum only applies there.
+///
+/// - width (length): The column width, from `get-enum-number-width`.
+///
+/// -> function
+#let build-fixed-width-numbering(width) = (..numbers) => context {
+  let horizontal = enum.number-align.x
+  box(
+    width: width,
+    align(
+      if horizontal == none { start } else { horizontal },
+      numbering(enum.numbering, ..numbers),
+    ),
+  )
+}
+
 /// Build the container Typst would have built from a run of items.
 ///
 /// The kind is taken from the items themselves, which must all share it: a run
@@ -987,8 +1126,16 @@
 /// - first-number (auto, int): The number the first item carries, for an
 ///   enum. `auto` leaves it to Typst, so `set enum(start: ..)` applies.
 ///
+/// - number-width (none, length): Gives an enum a number column of exactly
+///   this width, see `get-enum-number-width`.
+///
 /// -> content
-#let build-list-like-from(items, tight: true, first-number: auto) = {
+#let build-list-like-from(
+  items,
+  tight: true,
+  first-number: auto,
+  number-width: none,
+) = {
   if items.len() == 0 {
     return []
   }
@@ -1008,6 +1155,9 @@
     enum(
       tight: tight,
       ..if first-number != auto { (start: first-number) },
+      ..if number-width != none {
+        (numbering: build-fixed-width-numbering(number-width))
+      },
       ..items,
     )
   } else if kind == terms.item {
@@ -1019,9 +1169,10 @@
 
 /// The number the enum shows for the item at `rank` in a run.
 ///
-/// Follows Typst's own rule: counting starts from `set enum(start: ..)` and
-/// goes up by one per item, and an item given a number of its own (`5.` in
-/// markup) resets the count to it. Needs context, for the `set` rule.
+/// Follows Typst's own rule: counting starts from `set enum(start: ..)`, or
+/// from the number of items when the enum is reversed, and goes up (down when
+/// reversed) by one per item, and an item given a number of its own (`5.` in
+/// markup) resets the count to it. Needs context, for the `set` rules.
 ///
 /// - items (array): The run's enum items, in order.
 ///
@@ -1029,13 +1180,33 @@
 ///
 /// -> int
 #let get-enum-number-at(items, rank) = {
+  let step = if enum.reversed { -1 } else { 1 }
   let start = enum.start
-  let number = if start == auto { 0 } else { start - 1 }
+  let number = if start != auto {
+    start - step
+  } else if enum.reversed {
+    items.len() + 1
+  } else {
+    0
+  }
   for item in items.slice(0, rank) {
     let own = item.at("number", default: none)
-    number = if own == none { number + 1 } else { own }
+    number = if own == none { number + step } else { own }
   }
   number
+}
+
+/// Build consecutive items of `run`, the first at `first-rank`, as the run in
+/// one piece lays them out: as tight, and numbered on. Needs context for an enum.
+#let build-list-like-part(items, run, first-rank, number-width: none) = {
+  build-list-like-from(
+    items,
+    tight: run.tight,
+    first-number: if run.kind == enum.item {
+      get-enum-number-at(run.items, first-rank)
+    } else { auto },
+    number-width: number-width,
+  )
 }
 
 /// The gap Typst puts between two rows of a container built from items of the
@@ -1056,19 +1227,38 @@
 ///
 /// -> length
 #let get-row-spacing-of-list-like(kind, tight: true) = {
-  // Two rows of zero height (without marker or number), so the container's
-  // height is exactly the gap.
+  // Two rows of zero height (without marker, number or separator), so the
+  // container's height is exactly the gap.
   let row = box(height: 0pt)
   let container = if kind == list.item {
     list(marker: none, tight: tight, row, row)
   } else if kind == enum.item {
     enum(numbering: (..) => none, tight: tight, row, row)
   } else if kind == terms.item {
-    terms(tight: tight, terms.item(row, row), terms.item(row, row))
+    terms(
+      separator: none,
+      tight: tight,
+      terms.item(row, row),
+      terms.item(row, row),
+    )
   } else {
     return if tight { par.leading } else { par.spacing }
   }
   measure(container).height
+}
+
+// Content that sits between list items without ending their container.
+#let is-list-spacer(it) = (
+  it == none or is-space(it) or is-parbreak(it) or is-tag-like(it)
+)
+
+// The spacing between a row of `run` and the next row of `other`: `auto` when
+// there is none on one side, the row gap inside one run, paragraph spacing
+// between two containers.
+#let get-gap-between-list-likes(run, other) = {
+  if run == none or other == none { return auto }
+  if run.start != other.start { return par.spacing }
+  get-row-spacing-of-list-like(run.kind, tight: run.tight)
 }
 
 /// The runs of items Typst would gather into list-like containers, in order.
@@ -1088,8 +1278,11 @@
 /// - children (array): A sequence's children, in order. Content that is not a
 ///   sequence has to be wrapped as a one-element array by the caller.
 ///
+/// - steps-over (function): `child => bool`, further children that do not end
+///   a run, such as `is-tag-like`.
+///
 /// -> array
-#let get-list-like-runs-among(children) = {
+#let get-list-like-runs-among(children, steps-over: child => false) = {
   let empty-run = (kind: none, items: (), tight: true, start: 0, end: 0)
 
   let found-runs = ()
@@ -1102,7 +1295,10 @@
 
   let breaks-run(child) = {
     not (
-      is-list-like-item(child) or is-space(child) or is-parbreak(child)
+      is-list-like-item(child)
+        or is-space(child)
+        or is-parbreak(child)
+        or steps-over(child)
     )
   }
 
@@ -1115,7 +1311,7 @@
       current = empty-run
       break-is-pending = false
     }
-    if stop-run or is-space(child) { continue }
+    if stop-run or is-space(child) or steps-over(child) { continue }
 
     if is-parbreak(child) {
       break-is-pending = true
@@ -1140,111 +1336,57 @@
   found-runs
 }
 
-/// Determine whether any container built from `children` is non-tight.
-///
-/// True when a parbreak falls between two same-kind items, which is what makes
-/// Typst widen the container they form. Items of different kinds are separate
-/// containers, each tight, so a parbreak between those does not count.
+/// Which run each list-like item belongs to and its 1-based position in it.
 ///
 /// - children (array): A sequence's children, in order.
 ///
-/// -> bool
-#let contains-nontight-list-like(children) = {
-  get-list-like-runs-among(children).any(run => not run.tight)
-}
-
-/// The run of items `children.slice(0, end)` ends in, if it ends in one.
+/// - runs (array): The runs of `children`, from `get-list-like-runs-among`.
 ///
-/// Same result shape as one entry of `get-list-like-runs-among`, with `kind`
-/// `none` and `items` empty when there is no such run.
-///
-/// `opaque` widens what the walk may step over, on top of the spaces and
-/// parbreaks it always steps over. It is for a caller that has replaced part of
-/// a run with a node of its own and knows that node still stands in for items of
-/// that run.
-///
-/// - children (array): Children in order. Unlike the other helpers here this
-///   one also takes a caller's own accumulated array, which may hold values
-///   that are not content at all; those simply end the run.
-///
-/// - end (int): Index just past the last element to consider.
-///
-/// - opaque (function): `el-func => bool`, further element functions to step over.
-///
-/// -> dictionary
-#let get-list-like-run-ending-at(children, end, opaque: el-func => false) = {
-  let run = (kind: none, items: (), tight: true, start: end, end: end)
-  let break-is-pending = false
-
-  let continues-run(child, open-kind) = (
-    is-list-like-item(child)
-      and (open-kind == none or child.func() == open-kind)
-  )
-
-  // Neither spacers nor whatever the caller declared opaque end the run.
-  let is-steppable(child) = (
-    is-space(child)
-      or is-parbreak(child)
-      or (
-        type(child) == content
-          and not is-list-like-item(child)
-          and opaque(
-            child.func(),
-          )
-      )
-  )
-
-  // Walk back until something ends the run, widening it if a parbreak turns out
-  // to sit between two of its items.
-  let index = end
-  while index > 0 {
-    let child = children.at(index - 1)
-
-    if is-parbreak(child) and run.kind != none {
-      break-is-pending = true
+/// -> dictionary Keyed by the item's index in `children`, as a string. Each
+///   value is `(run: run, rank: int)`.
+#let get-list-like-placements(children, runs) = {
+  let placement = (:)
+  for run in runs {
+    let rank = 0
+    for index in range(run.start, run.end) {
+      if is-list-like-item(children.at(index)) {
+        rank += 1
+        placement.insert(str(index), (run: run, rank: rank))
+      }
     }
+  }
+  placement
+}
 
-    if is-steppable(child) {
-      index -= 1
-      continue
+/// The enum runs that are shown in part: some of their items are visible and
+/// some are covered.
+///
+/// - children (array): A sequence's children, in order.
+///
+/// - placement (dictionary): From `get-list-like-placements`.
+///
+/// - is-visible (function): `n => bool`, whether the n-th list-like item of
+///   `children`, counting from 0, is visible.
+///
+/// -> dictionary Keyed by the run's start index, as a string. Each value is the
+///   run.
+#let get-split-enum-runs(children, placement, is-visible) = {
+  let split-runs = (:)
+  let seen = (:)
+  let seen-count = 0
+  for index in range(children.len()) {
+    let place = placement.at(str(index), default: none)
+    if place == none { continue }
+    let key = str(place.run.start)
+    let kinds = seen.at(key, default: (visible: false, covered: false))
+    if is-visible(seen-count) { kinds.visible = true } else {
+      kinds.covered = true
     }
-
-    if not continues-run(child, run.kind) { break }
-
-    run.kind = child.func()
-    if break-is-pending { run.tight = false }
-    break-is-pending = false
-    index -= 1
-    run.start = index
+    seen.insert(key, kinds)
+    seen-count += 1
+    if kinds.visible and kinds.covered and place.run.kind == enum.item {
+      split-runs.insert(key, place.run)
+    }
   }
-
-  run.items = children.slice(run.start, end).filter(is-list-like-item)
-  run
-}
-
-/// The last element of `children` that is not a space, or `none`.
-///
-/// Only spaces are skipped. A parbreak or linebreak is a meaningful separator
-/// and is what the caller wants to be told about.
-///
-/// - children (array): A sequence's children, in order.
-///
-/// -> any
-#let find-last-non-space(children) = {
-  for child in children.rev() {
-    if not is-space(child) { return child }
-  }
-  none
-}
-
-/// The first element of `children` that is not a space, or `none`.
-///
-/// - children (array): A sequence's children, in order.
-///
-/// -> any
-#let find-first-non-space(children) = {
-  for child in children {
-    if not is-space(child) { return child }
-  }
-  none
+  split-runs
 }

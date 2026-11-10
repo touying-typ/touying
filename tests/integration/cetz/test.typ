@@ -1,4 +1,4 @@
-#import "../../../lib.typ": *
+#import "/lib.typ": *
 #import themes.university: *
 #import "@preview/cetz:0.5.2"
 

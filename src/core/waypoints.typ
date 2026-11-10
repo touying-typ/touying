@@ -549,6 +549,31 @@
 }
 
 
+/// The last subslide of every waypoint in a slide, in the order the waypoints
+/// begin, without duplicates. This is the "every animation phase at its final
+/// state" selection behind `subslides: "waypoints"` in `touying-recall` and
+/// `handout-subslides`.
+///
+/// A slide without waypoints has no phases to pick between, so it yields just
+/// its last subslide.
+///
+/// - self (dictionary): The slide context, carrying the resolved `waypoints`.
+/// - repeat (int): The slide's total number of subslides.
+///
+/// -> array
+#let last-subslides-of-waypoints(self, repeat) = {
+  let waypoints = self.at("waypoints", default: (:))
+  if waypoints.len() == 0 {
+    (repeat,)
+  } else {
+    waypoints
+      .pairs()
+      .sorted(key: p => p.at(1).first)
+      .map(p => p.at(1).last)
+      .dedup()
+  }
+}
+
 /// Resolve waypoint labels in a visible-subslides specification.
 ///
 /// Recursively replaces label references and waypoint marker dictionaries
