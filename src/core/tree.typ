@@ -37,6 +37,8 @@
 // The element behind shorthands such as `~` and `---`. It is not `symbol`, the type.
 #let typst-builtin-symbol = [~].func()
 #let typst-builtin-context = (context []).func()
+#let typst-builtin-state-update = state("touying-probe").update(none).func()
+#let typst-builtin-counter-update = counter("touying-probe").step().func()
 
 /// Determine if a content is a sequence (i.e. created by concatenating content with `+` or implicit adjacency).
 ///
@@ -105,6 +107,21 @@
       and type(it.value) == dictionary
       and it.value.at("kind", default: none) == kind
   )
+}
+
+/// Whether a content is laid out as nothing: metadata, a state or counter
+/// update, or a sequence of those. Typst gathers list items across it.
+///
+/// - it (any): The content to check.
+///
+/// -> bool
+#let is-tag-like(it) = {
+  if type(it) != content { return false }
+  let f = it.func()
+  if f in (metadata, typst-builtin-state-update, typst-builtin-counter-update) {
+    return true
+  }
+  f == typst-builtin-sequence and it.children.all(is-tag-like)
 }
 
 /// Determine if a content is one of touying's own marks, of any kind.
@@ -913,9 +930,9 @@
 //     `par.spacing` and the container starts lower.
 //   - Items of DIFFERENT kinds are always separate containers, parbreak or no
 //     parbreak, and each stays tight. A parbreak between them changes nothing.
-//   - A space between items is insignificant. A linebreak written at the end of
-//     an item line is absorbed into that item; one standing alone as a sibling
-//     ends the run, as does any other content.
+//   - A space between items is insignificant, and so is metadata. A linebreak
+//     written at the end of an item line is absorbed into that item; one
+//     standing alone as a sibling ends the run, as does any other content.
 //
 // And what a run owes its members: markers and numbers belong to the
 // container and are assigned at layout time from an item's position in it. An
@@ -1179,6 +1196,19 @@
   number
 }
 
+/// Build consecutive items of `run`, the first at `first-rank`, as the run in
+/// one piece lays them out: as tight, and numbered on. Needs context for an enum.
+#let build-list-like-part(items, run, first-rank, number-width: none) = {
+  build-list-like-from(
+    items,
+    tight: run.tight,
+    first-number: if run.kind == enum.item {
+      get-enum-number-at(run.items, first-rank)
+    } else { auto },
+    number-width: number-width,
+  )
+}
+
 /// The gap Typst puts between two rows of a container built from items of the
 /// given kind.
 ///
@@ -1197,19 +1227,38 @@
 ///
 /// -> length
 #let get-row-spacing-of-list-like(kind, tight: true) = {
-  // Two rows of zero height (without marker or number), so the container's
-  // height is exactly the gap.
+  // Two rows of zero height (without marker, number or separator), so the
+  // container's height is exactly the gap.
   let row = box(height: 0pt)
   let container = if kind == list.item {
     list(marker: none, tight: tight, row, row)
   } else if kind == enum.item {
     enum(numbering: (..) => none, tight: tight, row, row)
   } else if kind == terms.item {
-    terms(tight: tight, terms.item(row, row), terms.item(row, row))
+    terms(
+      separator: none,
+      tight: tight,
+      terms.item(row, row),
+      terms.item(row, row),
+    )
   } else {
     return if tight { par.leading } else { par.spacing }
   }
   measure(container).height
+}
+
+// Content that sits between list items without ending their container.
+#let is-list-spacer(it) = (
+  it == none or is-space(it) or is-parbreak(it) or is-tag-like(it)
+)
+
+// The spacing between a row of `run` and the next row of `other`: `auto` when
+// there is none on one side, the row gap inside one run, paragraph spacing
+// between two containers.
+#let get-gap-between-list-likes(run, other) = {
+  if run == none or other == none { return auto }
+  if run.start != other.start { return par.spacing }
+  get-row-spacing-of-list-like(run.kind, tight: run.tight)
 }
 
 /// The runs of items Typst would gather into list-like containers, in order.
@@ -1229,8 +1278,11 @@
 /// - children (array): A sequence's children, in order. Content that is not a
 ///   sequence has to be wrapped as a one-element array by the caller.
 ///
+/// - steps-over (function): `child => bool`, further children that do not end
+///   a run, such as `is-tag-like`.
+///
 /// -> array
-#let get-list-like-runs-among(children) = {
+#let get-list-like-runs-among(children, steps-over: child => false) = {
   let empty-run = (kind: none, items: (), tight: true, start: 0, end: 0)
 
   let found-runs = ()
@@ -1243,7 +1295,10 @@
 
   let breaks-run(child) = {
     not (
-      is-list-like-item(child) or is-space(child) or is-parbreak(child)
+      is-list-like-item(child)
+        or is-space(child)
+        or is-parbreak(child)
+        or steps-over(child)
     )
   }
 
@@ -1256,7 +1311,7 @@
       current = empty-run
       break-is-pending = false
     }
-    if stop-run or is-space(child) { continue }
+    if stop-run or is-space(child) or steps-over(child) { continue }
 
     if is-parbreak(child) {
       break-is-pending = true
@@ -1279,88 +1334,6 @@
     found-runs.push(current)
   }
   found-runs
-}
-
-/// Determine whether any container built from `children` is non-tight.
-///
-/// True when a parbreak falls between two same-kind items, which is what makes
-/// Typst widen the container they form. Items of different kinds are separate
-/// containers, each tight, so a parbreak between those does not count.
-///
-/// - children (array): A sequence's children, in order.
-///
-/// -> bool
-#let contains-nontight-list-like(children) = {
-  get-list-like-runs-among(children).any(run => not run.tight)
-}
-
-/// The run of items `children.slice(0, end)` ends in, if it ends in one.
-///
-/// Same result shape as one entry of `get-list-like-runs-among`, with `kind`
-/// `none` and `items` empty when there is no such run.
-///
-/// `opaque` widens what the walk may step over, on top of the spaces and
-/// parbreaks it always steps over. It is for a caller that has replaced part of
-/// a run with a node of its own and knows that node still stands in for items of
-/// that run.
-///
-/// - children (array): Children in order. Unlike the other helpers here this
-///   one also takes a caller's own accumulated array, which may hold values
-///   that are not content at all; those simply end the run.
-///
-/// - end (int): Index just past the last element to consider.
-///
-/// - opaque (function): `el-func => bool`, further element functions to step over.
-///
-/// -> dictionary
-#let get-list-like-run-ending-at(children, end, opaque: el-func => false) = {
-  let run = (kind: none, items: (), tight: true, start: end, end: end)
-  let break-is-pending = false
-
-  let continues-run(child, open-kind) = (
-    is-list-like-item(child)
-      and (open-kind == none or child.func() == open-kind)
-  )
-
-  // Neither spacers nor whatever the caller declared opaque end the run.
-  let is-steppable(child) = (
-    is-space(child)
-      or is-parbreak(child)
-      or (
-        type(child) == content
-          and not is-list-like-item(child)
-          and opaque(
-            child.func(),
-          )
-      )
-  )
-
-  // Walk back until something ends the run, widening it if a parbreak turns out
-  // to sit between two of its items.
-  let index = end
-  while index > 0 {
-    let child = children.at(index - 1)
-
-    if is-parbreak(child) and run.kind != none {
-      break-is-pending = true
-    }
-
-    if is-steppable(child) {
-      index -= 1
-      continue
-    }
-
-    if not continues-run(child, run.kind) { break }
-
-    run.kind = child.func()
-    if break-is-pending { run.tight = false }
-    break-is-pending = false
-    index -= 1
-    run.start = index
-  }
-
-  run.items = children.slice(run.start, end).filter(is-list-like-item)
-  run
 }
 
 /// Which run each list-like item belongs to and its 1-based position in it.
@@ -1416,79 +1389,4 @@
     }
   }
   split-runs
-}
-
-/// Take apart the run of list-like items that `result` ends in, so a caller can
-/// re-emit it as an explicit container: `head` precedes the run, `items` are
-/// its items and `tail` follows it. `none` when there is no such run.
-///
-/// Covering the run after a parbreak leaves the parbreak separating nothing,
-/// so the remaining items revert to tight and every visible row moves. A block
-/// after a container cannot move it, so the tightness has to be asserted on the
-/// visible items themselves.
-///
-/// - result (array): The caller's accumulated children.
-///
-/// - parbreak-is-visible (bool): Which side of the boundary the parbreak fell:
-///   - `true`: before it, so it is this run's last element and is held aside.
-///   - `false`: past it, so it is among the covered items and the run ends at
-///     the tail.
-///
-/// -> none, dictionary
-#let split-visible-tail(result, parbreak-is-visible: true) = {
-  // Trailing spaces are not part of the run and are put back untouched.
-  let content-end = result.len()
-  while content-end > 0 and is-space(result.at(content-end - 1)) {
-    content-end -= 1
-  }
-  if content-end == 0 { return none }
-
-  // Nothing to do when the parbreak was expected here but is not.
-  if parbreak-is-visible and not is-parbreak(result.at(content-end - 1)) {
-    return none
-  }
-
-  // The held-aside parbreak, if it is on this side, plus those spaces.
-  let run-end = if parbreak-is-visible { content-end - 1 } else { content-end }
-
-  // A covered run emitted earlier stands in for items of this same container,
-  // so it is the one non-item element that does not end it. `cover-hidden`
-  // wraps it in a `context` block.
-  let run = get-list-like-run-ending-at(
-    result,
-    run-end,
-    opaque: el-func => el-func == typst-builtin-context,
-  )
-  (
-    head: result.slice(0, run.start),
-    items: run.items,
-    tail: result.slice(run-end),
-  )
-}
-
-/// The last element of `children` that is not a space, or `none`.
-///
-/// Only spaces are skipped. A parbreak or linebreak is a meaningful separator
-/// and is what the caller wants to be told about.
-///
-/// - children (array): A sequence's children, in order.
-///
-/// -> any
-#let find-last-non-space(children) = {
-  for child in children.rev() {
-    if not is-space(child) { return child }
-  }
-  none
-}
-
-/// The first element of `children` that is not a space, or `none`.
-///
-/// - children (array): A sequence's children, in order.
-///
-/// -> any
-#let find-first-non-space(children) = {
-  for child in children {
-    if not is-space(child) { return child }
-  }
-  none
 }

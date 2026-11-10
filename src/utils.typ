@@ -1699,9 +1699,7 @@
   } else if (
     it.func() in (parbreak, linebreak)
       or tree.is-space(it)
-      or tree.is-metadata(
-        it,
-      )
+      or tree.is-tag-like(it)
   ) {
     it
   } else if tree.children-of(it).len() > 0 {
@@ -2851,8 +2849,8 @@
   }
 
   // Covering an item costs its container two things, and each is corrected
-  // below. `cover-hidden` in `core/parser.typ` corrects the same two on the
-  // `#pause` path.
+  // below. `_assemble-entries` in `core/parser.typ` corrects the same two on
+  // the `#pause` path.
   //
   // A covered item stops being laid out as a row, so the container loses that
   // row's height and everything below creeps upwards as items are revealed.
@@ -2897,9 +2895,6 @@
 
     let placement = tree.get-list-like-placements(cont.children, runs)
 
-    // Rebuild a segment as its own container. An enum segment is told which
-    // number it begins with: Typst counts each container from its own start, or
-    // down from its own length when reversed. That needs context.
     let is-numbered(run) = run.kind == enum.item
     // The enum runs that are partly covered. Each of their segments is a
     // container of its own and would size its number column to its own widest
@@ -2913,22 +2908,17 @@
     let needs-equal-numbers(segment-items, run) = (
       str(run.start) in split-runs and segment-items.all(tree.is-list-like-item)
     )
-    // A segment that needs the width is a function of the measured widths, as
-    // measuring has to wait for a context that covers every segment.
-    let build-container(
-      items,
-      run,
-      first-rank,
-      tight: false,
-      widths: none,
-    ) = tree.build-list-like-from(
-      items,
-      tight: tight,
-      first-number: if is-numbered(run) {
-        tree.get-enum-number-at(run.items, first-rank)
-      } else { auto },
-      number-width: if widths != none { widths.at(str(run.start)) },
-    )
+    // Rebuild a segment as its own container, told what the whole run gives
+    // it. A segment that needs the width is a function of the measured widths,
+    // as measuring has to wait for a context that covers every segment.
+    let build-container(items, run, first-rank, widths: none) = {
+      tree.build-list-like-part(
+        items,
+        run,
+        first-rank,
+        number-width: if widths != none { widths.at(str(run.start)) },
+      )
+    }
 
     // Cover a segment and hand back a block that reserves the rows its items
     // would have occupied.
@@ -2948,13 +2938,7 @@
         let body = if run.tight and widths == none {
           items.sum()
         } else {
-          build-container(
-            items,
-            run,
-            first-rank,
-            tight: run.tight,
-            widths: widths,
-          )
+          build-container(items, run, first-rank, widths: widths)
         }
         let gap = tree.get-row-spacing-of-list-like(run.kind, tight: run.tight)
         block(
@@ -2995,7 +2979,6 @@
             segment.items,
             run,
             segment.first-rank,
-            tight: run.tight,
             widths: widths,
           ),
         )
@@ -3006,7 +2989,6 @@
           segment.items,
           run,
           segment.first-rank,
-          tight: false,
         )
         (
           if is-numbered(run) { context build() } else {

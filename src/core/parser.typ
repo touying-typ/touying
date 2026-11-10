@@ -1623,6 +1623,253 @@
 }
 
 
+// -------------------------------------
+//   Covering lists of items without moving rows
+//
+//   Typst gathers adjacent items into a list, enum or terms container only
+//   after the parse, then numbers, spaces and sizes it as a whole. A cover is
+//   a container boundary, so covering part of a run cuts it into containers
+//   that each count from the start, size their own number column, turn tight
+//   unless a parbreak falls inside them, and lose the row gaps at the cuts.
+//
+//   So the parse only collects `entries`: content, and `(covered: parts)` for
+//   a cover that takes items. `_assemble-entries` reads the runs off `flat`,
+//   the body without covers, cuts each run into parts, its consecutive items
+//   on one side of a cover, and rebuilds every part of a cut run as a
+//   container told what the whole run gives it. It yields pieces: content, or
+//   `(needs, build)` for an enum part whose number column is measured first.
+//   Metadata between the items of a cut run is put after the run, where Typst
+//   lays it out and queries it too.
+// -------------------------------------
+
+// Entry the parser leaves for a cover that takes list-like items.
+#let _is-covered-entry(entry) = type(entry) == dictionary and "covered" in entry
+
+// Piece that waits for the number column width of its run.
+#let _is-deferred(piece) = type(piece) == dictionary and "build" in piece
+
+// Cover hidden parts now, or leave a `covered` entry when they hold items.
+// Invisible content stays uncovered: a cover would cut the list around it.
+#let _cover-or-collect(cover-fn, parts) = {
+  if parts.all(tree.is-list-spacer) { return parts.sum(default: []) }
+  if parts.any(tree.is-list-like-item) { return (covered: parts) }
+  cover-fn(parts.sum())
+}
+
+// The entries with the covered ones spliced back in, and for each child the
+// index of the covered entry it came from.
+#let _splice-covered-entries(entries) = {
+  let flat = ()
+  let covered-by = ()
+  for (index, entry) in entries.enumerate() {
+    let children = if _is-covered-entry(entry) { entry.covered } else {
+      (entry,)
+    }
+    for child in children.filter(it => it != none) {
+      flat.push(child)
+      covered-by.push(if _is-covered-entry(entry) { index })
+    }
+  }
+  (flat: flat, covered-by: covered-by)
+}
+
+// The parts of a run: its consecutive items on one side of a cover, with the
+// rank of the first in the run.
+#let _split-run-into-parts(run, flat, covered-by, placement) = {
+  let parts = ()
+  for index in range(run.start, run.end) {
+    if not tree.is-list-like-item(flat.at(index)) { continue }
+    if (
+      parts.len() != 0
+        and covered-by.at(parts.last().last) == covered-by.at(index)
+    ) {
+      parts.last().last = index
+      parts.last().items.push(flat.at(index))
+    } else {
+      parts.push((
+        run: run,
+        first: index,
+        last: index,
+        first-rank: placement.at(str(index)).rank,
+        items: (flat.at(index),),
+      ))
+    }
+  }
+  parts.map(part => part + (part-count: parts.len()))
+}
+
+// Rebuild a part of a cut run as a container that continues the run's
+// numbering and keeps its tightness.
+#let _build-part(part) = {
+  let run = part.run
+  if run.kind == enum.item and part.part-count >= 2 {
+    let key = str(run.start)
+    return (
+      needs: ((key): run.items),
+      build: widths => tree.build-list-like-part(
+        part.items,
+        run,
+        part.first-rank,
+        number-width: widths.at(key),
+      ),
+    )
+  }
+  // An enum in one part starts where its run does, and a single item has no
+  // tightness to keep.
+  if run.tight or part.items.len() < 2 { return part.items.sum() }
+  tree.build-list-like-from(part.items, tight: false)
+}
+
+// Build a piece once the number column widths are measured.
+#let _build-deferred(piece, widths) = if _is-deferred(piece) {
+  (piece.build)(widths)
+} else { piece }
+
+// One context per stretch of deferred pieces, so a run's number column is
+// measured once for all its parts.
+#let _resolve-deferred(pieces) = {
+  let build-stretch(stretch) = context {
+    let widths = (:)
+    for piece in stretch.filter(_is-deferred) {
+      for (key, items) in piece.needs {
+        if key not in widths {
+          widths.insert(key, tree.get-enum-number-width(items))
+        }
+      }
+    }
+    stretch.map(piece => _build-deferred(piece, widths)).sum()
+  }
+  let resolved = ()
+  let stretch = ()
+  let spacers = ()
+  for piece in pieces {
+    if _is-deferred(piece) {
+      stretch += spacers + (piece,)
+      spacers = ()
+    } else if stretch.len() != 0 and tree.is-list-spacer(piece) {
+      spacers.push(piece)
+    } else {
+      if stretch.len() != 0 {
+        resolved.push(build-stretch(stretch))
+        stretch = ()
+      }
+      resolved += spacers + (piece,)
+      spacers = ()
+    }
+  }
+  if stretch.len() != 0 { resolved.push(build-stretch(stretch)) }
+  (resolved + spacers).sum(default: [])
+}
+
+// Turn what the parser collected into content, rebuilding the parts of every
+// run a cover cut.
+#let _assemble-entries(entries, cover-fn) = {
+  // Covered entries are the only dictionaries, and most bodies have none.
+  if dictionary not in entries.map(type) { return entries.sum(default: []) }
+
+  let (flat, covered-by) = _splice-covered-entries(entries)
+  let runs = tree.get-list-like-runs-among(flat, steps-over: tree.is-tag-like)
+  let placement = tree.get-list-like-placements(flat, runs)
+
+  // Indexed by position in `flat`. A part is emitted at its first item, the
+  // metadata of a run after its last item, and everything they replace is
+  // skipped where it stands.
+  let part-starting-at = (:)
+  let tags-after = (:)
+  let is-emitted-elsewhere = (:)
+  for run in runs {
+    let parts = _split-run-into-parts(run, flat, covered-by, placement)
+    if parts.all(part => covered-by.at(part.first) == none) { continue }
+    for part in parts {
+      part-starting-at.insert(str(part.first), part)
+      for index in range(part.first, part.last + 1) {
+        is-emitted-elsewhere.insert(str(index), true)
+      }
+    }
+    let tag-indices = range(run.start, run.end).filter(index => (
+      tree.is-tag-like(flat.at(index))
+    ))
+    for index in tag-indices { is-emitted-elsewhere.insert(str(index), true) }
+    let tags = tag-indices.map(index => flat.at(index))
+    tags-after.insert(str(run.end - 1), tags)
+  }
+  // What `flat` contributes at `index` to the output, as a list of pieces.
+  let emit-at(index, with-tags: true) = {
+    let key = str(index)
+    let emitted = if key in part-starting-at {
+      (_build-part(part-starting-at.at(key)),)
+    } else if key in is-emitted-elsewhere { () } else { (flat.at(index),) }
+    if with-tags { emitted + tags-after.at(key, default: ()) } else { emitted }
+  }
+  // The run of the first item in direction `step`, looking past spacers.
+  let find-bordering-run(index, step) = {
+    while (
+      index >= 0 and index < flat.len() and tree.is-list-spacer(flat.at(index))
+    ) {
+      index += step
+    }
+    let place = if index >= 0 { placement.at(str(index), default: none) }
+    if place != none { place.run }
+  }
+
+  // Cover `flat` from `from` up to `end`, with row gaps where it cuts a run.
+  // The metadata of a run that ends the cover goes just outside it.
+  let build-covered(from, end) = {
+    let last = end - 1
+    while last > from and tree.is-list-spacer(flat.at(last)) { last -= 1 }
+    let moves-tags = str(last) in tags-after
+    let body = range(from, last).map(emit-at).flatten()
+    body += emit-at(last, with-tags: not moves-tags)
+    let after = if moves-tags {
+      tags-after.at(str(last)) + range(last + 1, end).map(emit-at).flatten()
+    } else { () }
+    let first-run = find-bordering-run(from, 1)
+    let last-run = find-bordering-run(end - 1, -1)
+    let run-above = find-bordering-run(from - 1, -1)
+    let run-below = find-bordering-run(end, 1)
+    // A gap stands in for the rows between covered and visible items of a run.
+    let reserves-rows = (
+      (first-run != none and run-above != none)
+        or (last-run != none and run-below != none)
+    )
+    let build(widths) = {
+      let covered = (
+        cover-fn(body.map(piece => _build-deferred(piece, widths)).sum())
+          + after.sum(default: [])
+      )
+      if not reserves-rows { return covered }
+      block(
+        width: 100%,
+        above: tree.get-gap-between-list-likes(first-run, run-above),
+        below: tree.get-gap-between-list-likes(last-run, run-below),
+        covered,
+      )
+    }
+    let needs = body.filter(_is-deferred).map(piece => piece.needs)
+    if needs.len() != 0 { (needs: needs.sum(), build: build) } else if (
+      reserves-rows
+    ) { context build(none) } else { build(none) }
+  }
+
+  let pieces = ()
+  let index = 0
+  while index < flat.len() {
+    let cover = covered-by.at(index)
+    if cover == none {
+      pieces += emit-at(index)
+      index += 1
+      continue
+    }
+    let end = index
+    while end < flat.len() and covered-by.at(end) == cover { end += 1 }
+    pieces.push(build-covered(index, end))
+    index = end
+  }
+  _resolve-deferred(pieces)
+}
+
+
+
 ///
 /// This is the core parsing function that handles all types of content including
 /// animations, pauses, meanwhile markers, and various content types. It recursively
@@ -2196,316 +2443,11 @@
     let result = ()
     let hidden-parts = ()
 
-    // -------------------------------------
-    //   Covering lists of items without moving rows
-    //
-    //   Covering part of an item run costs the container the rows those items
-    //   occupied, and its wider pitch when a parbreak had made it non-tight.
-    //   `item-by-item-fn` in `utils.typ` corrects the same two.
-    // -------------------------------------
-
-    // The gap bordering a covered run next to the item `it`, or paragraph
-    // spacing when `it` is not an item.
-    //
-    // Only the `nontight-list-enum-and-terms` config is touying's own; it makes
-    // every container non-tight and so decides the `auto` fallback.
-    let get-spacing-bordering(it, nontight: false) = {
-      if not tree.is-list-like-item(it) {
-        return par.spacing
-      }
-      tree.get-row-spacing-of-list-like(
-        it.func(),
-        tight: not (
-          nontight or self.at("nontight-list-enum-and-terms", default: true)
-        ),
-      )
-    }
-
-    // The covered items as the body to hand to the cover method.
-    //
-    // The reserved rows include the gaps between the covered items. Covered as
-    // a bare sequence they lay out tight and reserve too little, so a non-tight
-    // run is rebuilt as its own container.
-    let build-covered-body(items, is-nontight) = {
-      // A trailing mark or metadata follows the container rather than belonging
-      // to it, so the scan ends just past the last item.
-      let steps-back = items.rev().position(tree.is-list-like-item)
-      if steps-back == none { return items.sum() }
-
-      let run-end = items.len() - steps-back
-      let run = tree.get-list-like-run-ending-at(items, run-end)
-      if not is-nontight or run.items.len() < 2 { return items.sum() }
-
-      (
-        items.slice(0, run.start).sum(default: [])
-          + tree.build-list-like-from(run.items, tight: false)
-          + items.slice(run-end).sum(default: [])
-      )
-    }
-
-    /// Cover a run of hidden elements, correcting the container spacing it
-    /// would otherwise cost.
-    ///
-    /// Returns `(result, covered)`:
-    /// - `result` is `last-result`, rewritten when the covered run forces the
-    ///   visible items before it to stay non-tight,
-    /// - `covered` is the content to append after it.
-    ///
-    /// `next-is-list` and `rest` are look-ahead the caller supplies, since a
-    /// `#pause` splits one container across several calls.
-    let cover-hidden(
-      cover-fn,
-      items,
-      last-result,
-      next-is-list: false,
-      rest: (),
-    ) = {
-      // a hide of only space would break a list apart and pure whitespace does not need to be covered.
-      if items.all(tree.is-space) {
-        return (result: last-result, covered: items.sum(default: []))
-      }
-
-      // The elements bordering the gaps above and below the block. Only spaces
-      // are skipped: a parbreak or linebreak there is the user breaking the
-      // container deliberately, which the decisions below have to see.
-      let first-hidden = tree.find-first-non-space(items)
-      let last-hidden-item = tree.find-last-non-space(items)
-      let last-visible-item = tree.find-last-non-space(last-result)
-
-      // A gap only needs correcting where items sit on both of its sides.
-      let first-hidden-is-item = tree.is-list-like-item(first-hidden)
-      let last-hidden-is-item = tree.is-list-like-item(last-hidden-item)
-      let last-visible-is-item = tree.is-list-like-item(last-visible-item)
-
-      // Would Typst have built one non-tight container across this boundary?
-      // A parbreak widens the container its items form, and that pitch applies
-      // to every row on both sides. Items of different kinds are separate
-      // containers regardless, so a parbreak between those changes nothing.
-      //
-      // The parbreak can fall on either side, so the question is asked of the
-      // visible tail and the covered items together, as the source had them.
-      let visible-run = tree.get-list-like-run-ending-at(
-        last-result,
-        last-result.len(),
-      )
-      // `rest` is what follows the cover, which a later `#pause` has not yet
-      // reached but which still belongs to the same container.
-      let visible-tail = last-result.slice(visible-run.start)
-      let span = visible-tail + items + rest
-      let list-is-nontight = tree.contains-nontight-list-like(span)
-      // Covered enum items continue the count of the visible ones above them,
-      // but emitted on their own they would count from the start again. The
-      // first one is given the number it would have had, and the rest count
-      // on from it as usual. The number depends on `set enum(start: ..)`, so
-      // it is read in context, around the cover rather than inside it, where
-      // a recolouring cover could not see the items.
-      //
-      // Whether they continue is asked of the visible tail and the covered
-      // items together, which is the run Typst would have built from them.
-      let first-hidden-item-index = items.position(tree.is-list-like-item)
-      let at = if first-hidden-item-index != none {
-        visible-tail.len() + first-hidden-item-index
-      }
-      let continued-run = if at != none {
-        tree
-          .get-list-like-runs-among(span)
-          .find(run => run.start < visible-tail.len() and at < run.end)
-      }
-      // An enum split by this cover is laid out as two containers, and each
-      // sizes its number column to its own widest number. Both are given the
-      // width the whole enum has, or the visible rows shift sideways when the
-      // covered ones are revealed. Any item of the run counts, the ones after
-      // the cover included.
-      let split-enum-items = if (
-        continued-run != none and continued-run.kind == enum.item
-      ) {
-        continued-run.items
-      }
-      let first-hidden-item = if continued-run != none {
-        items.at(first-hidden-item-index)
-      }
-      let continues-enum = (
-        continued-run != none
-          and continued-run.kind == enum.item
-          and first-hidden-item.at("number", default: none) == none
-      )
-      let build-covered(number-width) = {
-        let items = items
-        if continues-enum {
-          let fields = first-hidden-item.fields()
-          let lbl = fields.remove("label", default: none)
-          let body = fields.remove("body")
-          // Counted rather than looked up, since two items can be equal.
-          let rank = (
-            span
-              .slice(continued-run.start, at)
-              .filter(tree.is-list-like-item)
-              .len()
-              + 1
-          )
-          fields.number = tree.get-enum-number-at(continued-run.items, rank)
-          let numbered = tree.call-with-fields(enum.item, fields, body)
-          items.at(first-hidden-item-index) = if lbl == none { numbered } else {
-            tree.label-it(numbered, lbl)
-          }
-        }
-        if split-enum-items != none {
-          // The covered part of the run, which ends where the run does or
-          // where the covered items do.
-          let run-end = calc.min(
-            continued-run.end - visible-tail.len(),
-            items.len(),
-          )
-          let part = items.slice(first-hidden-item-index, run-end)
-          items = (
-            items.slice(0, first-hidden-item-index)
-              + (
-                tree.build-list-like-from(
-                  part.filter(tree.is-list-like-item),
-                  tight: continued-run.tight,
-                  number-width: number-width,
-                ),
-              )
-              + items.slice(run-end)
-          )
-        }
-        cover-fn(build-covered-body(items, list-is-nontight))
-      }
-      // A gap needs a reserved row only where items sit on both sides:
-      // - above, a container interrupted by a `#pause`,
-      // - below, a `#meanwhile` revealing further items after the cover.
-      //
-      // Each side is decided on its own; anything else keeps `auto` spacing.
-      let gap-above-needs-row = first-hidden-is-item and last-visible-is-item
-      let gap-below-needs-row = last-hidden-is-item and next-is-list
-
-      // Items of different kinds are two containers, separated by paragraph
-      // spacing rather than a row gap.
-      let opens-new-container = (
-        gap-above-needs-row and first-hidden.func() != last-visible-item.func()
-      )
-      // Covering one side of a non-tight container would let the other revert
-      // to tight, so the visible run is re-emitted as an explicit container.
-      let tail-run = if (
-        first-hidden-is-item and (list-is-nontight or split-enum-items != none)
-      ) {
-        tree.split-visible-tail(
-          last-result,
-          parbreak-is-visible: tree.is-parbreak(last-visible-item),
-        )
-      }
-      // A container of one item has no tightness to preserve, unless it is
-      // part of a split enum and needs the width.
-      let rebuilds-tail = (
-        tail-run != none
-          and (tail-run.items.len() >= 2 or split-enum-items != none)
-      )
-      let wrap-covered(body) = if gap-above-needs-row or gap-below-needs-row {
-        context block(
-          width: 100%,
-          above: if opens-new-container {
-            par.spacing
-          } else if gap-above-needs-row {
-            get-spacing-bordering(first-hidden, nontight: list-is-nontight)
-          } else {
-            auto
-          },
-          below: if gap-below-needs-row {
-            get-spacing-bordering(last-hidden-item, nontight: list-is-nontight)
-          } else {
-            auto
-          },
-          body,
-        )
-      } else {
-        body
-      }
-
-      if split-enum-items == none {
-        let result = if rebuilds-tail {
-          (
-            tail-run.head
-              + (tree.build-list-like-from(tail-run.items, tight: false),)
-              + tail-run.tail
-          )
-        } else {
-          last-result
-        }
-        return (result: result, covered: wrap-covered(build-covered(none)))
-      }
-
-      // Both parts of a split enum need the width of the whole enum, which is
-      // measured once here. The visible part moves into the same context so it
-      // can share it.
-      let covered = context {
-        let width = tree.get-enum-number-width(split-enum-items)
-        let visible = if rebuilds-tail {
-          (
-            tree.build-list-like-from(
-              tail-run.items,
-              tight: continued-run.tight,
-              first-number: tree.get-enum-number-at(continued-run.items, 1),
-              number-width: width,
-            ),
-            ..tail-run.tail,
-          ).sum()
-        }
-        visible + wrap-covered(build-covered(width))
-      }
-      (
-        result: if rebuilds-tail { tail-run.head } else { last-result },
-        covered: covered,
-      )
-    }
-
     // Flatten sequences and handle each child element
     let children = if tree.is-sequence(it) {
       it.children
     } else {
       (it,)
-    }
-
-    // -------------------------------------
-    //   Looking ahead for the rest of a container
-    //
-    //   A `#pause` splits one container across several `cover-hidden` calls, so
-    //   what follows the cover has to be read off `children`.
-    // -------------------------------------
-
-    // Is the first sibling after `from-index` an item? A covered run needs a
-    // gap reserved below it only then, as after a `#meanwhile`.
-    //
-    // Only spaces are stepped over, so a parbreak or linebreak yields false.
-    let next-sibling-is-item(from-index) = {
-      let index = from-index + 1
-      while index < children.len() {
-        let sibling = children.at(index)
-        if not tree.is-space(sibling) {
-          return tree.is-list-like-item(sibling)
-        }
-        index += 1
-      }
-      false
-    }
-
-    // The rest of the container after `from-index`. A parbreak further down
-    // still widens the whole container, so a call seeing only the items before
-    // it would reserve the tight pitch.
-    let get-list-continuation-after(from-index, kind) = {
-      let continuation = ()
-      let index = from-index + 1
-      while index < children.len() {
-        let sibling = children.at(index)
-        let belongs = (
-          tree.is-space(sibling)
-            or tree.is-parbreak(sibling)
-            or (tree.is-list-like-item(sibling) and sibling.func() == kind)
-        )
-        if not belongs { break }
-        continuation.push(sibling)
-        index += 1
-      }
-      continuation
     }
 
     // Process each child element for animation markers and content types
@@ -2535,33 +2477,13 @@
             // If we jumped back into the visible zone, flush hidden-parts in order
             // (so they appear before subsequent visible content, not after it)
             if hidden-parts.len() != 0 and repetitions <= index {
-              {
-                let covered = cover-hidden(
-                  cover,
-                  hidden-parts,
-                  result,
-                  next-is-list: next-sibling-is-item(_child_i),
-                )
-                result = covered.result
-                result.push(covered.covered)
-              }
+              result.push(_cover-or-collect(cover, hidden-parts))
               hidden-parts = ()
             }
           } else {
             // absolute: reveal all hidden content then jump to target subslide.
-            // Visible content (e.g. list items) may follow directly, so look
-            // ahead to correct the spacing below the covered run.
             if hidden-parts.len() != 0 {
-              {
-                let covered = cover-hidden(
-                  cover,
-                  hidden-parts,
-                  result,
-                  next-is-list: next-sibling-is-item(_child_i),
-                )
-                result = covered.result
-                result.push(covered.covered)
-              }
+              result.push(_cover-or-collect(cover, hidden-parts))
               hidden-parts = ()
             }
             max-repetitions = calc.max(
@@ -3008,11 +2930,7 @@
           // the correct order relative to subsequent visible content (fn-wrappers
           // always render in-place and never go through hidden-parts themselves).
           if hidden-parts.len() != 0 {
-            {
-              let covered = cover-hidden(cover, hidden-parts, result)
-              result = covered.result
-              result.push(covered.covered)
-            }
+            result.push(_cover-or-collect(cover, hidden-parts))
             hidden-parts = ()
           }
           result.push((child.value.fn)(
@@ -3077,11 +2995,7 @@
           // Propagate a #meanwhile that fired inside the wrapper
           if meanwhile-escaped {
             if hidden-parts.len() != 0 {
-              {
-                let covered = cover-hidden(cover, hidden-parts, result)
-                result = covered.result
-                result.push(covered.covered)
-              }
+              result.push(_cover-or-collect(cover, hidden-parts))
               hidden-parts = ()
             }
             max-repetitions = calc.max(max-repetitions, repetitions)
@@ -3281,31 +3195,7 @@
       } else if child == linebreak() or child == parbreak() {
         // clear the hidden-parts when encounter linebreak or parbreak
         if hidden-parts.len() != 0 {
-          {
-            // This parbreak may be the one that makes the container
-            // non-tight, and the items it applies to are still ahead, so hand
-            // them over along with the parbreak itself.
-            let hidden-run = tree.get-list-like-run-ending-at(
-              hidden-parts,
-              hidden-parts.len(),
-            )
-            let covered = cover-hidden(
-              cover,
-              hidden-parts,
-              result,
-              rest: if hidden-run.kind == none { () } else {
-                (
-                  (child,)
-                    + get-list-continuation-after(
-                      _child_i,
-                      hidden-run.kind,
-                    )
-                )
-              },
-            )
-            result = covered.result
-            result.push(covered.covered)
-          }
+          result.push(_cover-or-collect(cover, hidden-parts))
           hidden-parts = ()
         }
         result.push(child)
@@ -3360,11 +3250,7 @@
         // Propagate meanwhile effect from inside the sequence
         if final-repetitions < repetitions {
           if hidden-parts.len() != 0 {
-            {
-              let covered = cover-hidden(cover, hidden-parts, result)
-              result = covered.result
-              result.push(covered.covered)
-            }
+            result.push(_cover-or-collect(cover, hidden-parts))
             hidden-parts = ()
           }
           max-repetitions = calc.max(max-repetitions, repetitions)
@@ -3406,11 +3292,7 @@
         // Propagate meanwhile effect from inside the styled element
         if final-repetitions < repetitions {
           if hidden-parts.len() != 0 {
-            {
-              let covered = cover-hidden(cover, hidden-parts, result)
-              result = covered.result
-              result.push(covered.covered)
-            }
+            result.push(_cover-or-collect(cover, hidden-parts))
             hidden-parts = ()
           }
           max-repetitions = calc.max(max-repetitions, repetitions)
@@ -3459,11 +3341,7 @@
         // Propagate meanwhile effect from inside the list item
         if final-repetitions < repetitions {
           if hidden-parts.len() != 0 {
-            {
-              let covered = cover-hidden(cover, hidden-parts, result)
-              result = covered.result
-              result.push(covered.covered)
-            }
+            result.push(_cover-or-collect(cover, hidden-parts))
             hidden-parts = ()
           }
           max-repetitions = calc.max(max-repetitions, repetitions)
@@ -3512,11 +3390,7 @@
         // Propagate meanwhile effect from inside the table/grid/stack
         if final-repetitions < repetitions {
           if hidden-parts.len() != 0 {
-            {
-              let covered = cover-hidden(cover, hidden-parts, result)
-              result = covered.result
-              result.push(covered.covered)
-            }
+            result.push(_cover-or-collect(cover, hidden-parts))
             hidden-parts = ()
           }
           max-repetitions = calc.max(max-repetitions, repetitions)
@@ -3752,11 +3626,7 @@
         // Propagate meanwhile effect from inside the reconstructable element
         if final-repetitions < repetitions {
           if hidden-parts.len() != 0 {
-            {
-              let covered = cover-hidden(cover, hidden-parts, result)
-              result = covered.result
-              result.push(covered.covered)
-            }
+            result.push(_cover-or-collect(cover, hidden-parts))
             hidden-parts = ()
           }
           max-repetitions = calc.max(max-repetitions, repetitions)
@@ -3805,11 +3675,7 @@
         // Propagate meanwhile effect from inside the terms item
         if final-repetitions < repetitions {
           if hidden-parts.len() != 0 {
-            {
-              let covered = cover-hidden(cover, hidden-parts, result)
-              result = covered.result
-              result.push(covered.covered)
-            }
+            result.push(_cover-or-collect(cover, hidden-parts))
             hidden-parts = ()
           }
           max-repetitions = calc.max(max-repetitions, repetitions)
@@ -3850,14 +3716,10 @@
     }
     // clear the hidden-parts when end
     if hidden-parts.len() != 0 {
-      {
-        let covered = cover-hidden(cover, hidden-parts, result)
-        result = covered.result
-        result.push(covered.covered)
-      }
+      result.push(_cover-or-collect(cover, hidden-parts))
       hidden-parts = ()
     }
-    parsed-results.push(result.sum(default: []))
+    parsed-results.push(_assemble-entries(result, cover))
   }
   max-repetitions = calc.max(max-repetitions, repetitions)
   min-repetitions = calc.min(min-repetitions, repetitions)

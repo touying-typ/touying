@@ -1,6 +1,6 @@
 // The two cover paths must agree with each other and with plain Typst.
 //
-// `#pause` inside a list (`cover-hidden`, in `core/parser.typ`) and
+// `#pause` inside a list (`_assemble-entries`, in `core/parser.typ`) and
 // `#item-by-item` (in `utils.typ`) both have to keep a list's layout fixed
 // while its items are revealed. They arrive there by different code, so each
 // is checked against the same two invariants:
