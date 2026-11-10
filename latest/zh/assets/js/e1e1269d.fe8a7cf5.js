@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkdocs=self.webpackChunkdocs||[]).push([[9931],{98546:e=>{e.exports=JSON.parse('{"permalink":"/touying/latest/zh/blog/page/2","page":2,"postsPerPage":10,"totalPages":2,"totalCount":11,"previousPage":"/touying/latest/zh/blog","blogDescription":"Blog","blogTitle":"Blog"}')}}]);

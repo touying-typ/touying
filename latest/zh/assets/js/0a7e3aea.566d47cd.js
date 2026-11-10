@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkdocs=self.webpackChunkdocs||[]).push([[2003],{82065:e=>{e.exports=JSON.parse('{"label":"release","permalink":"/touying/latest/zh/blog/tags/release","allTagsPath":"/touying/latest/zh/blog/tags","count":10,"unlisted":false}')}}]);
