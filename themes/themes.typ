@@ -5,4 +5,5 @@
 #import "university.typ"
 #import "aqua.typ"
 #import "stargazer.typ"
+#import "madrid.typ"
 #import "article.typ"
