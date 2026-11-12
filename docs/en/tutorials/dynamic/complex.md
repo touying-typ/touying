@@ -237,6 +237,8 @@ At its first stage that was #touying-recall(<fig>, subslides: 1).
 
 `subslides` picks the stage, and `base:` has the same meaning as above. This is what makes an animated diagram usable in [Article Mode](../../integration/article-mode), where only the final frame would otherwise survive.
 
+Recalling a whole slide emits the slide's labels again, which would make them occur twice. Each copy therefore names them with a number: the first recall of `<intro>` carries `<intro-1>` and its waypoint anchors `<intro-1.wp>`, the second `<intro-2>`, and so on. The slide keeps `<intro>`. A label after the call names the copy instead, `#touying-recall(<intro>)<intro-again>` gives `<intro-again>` and `<intro-again.wp>`. Recalling labelled content does not emit its label again, but a label after the call goes onto the recalled content itself, so `#touying-recall(<fig>)<fig-again>` can be referenced as `@fig-again` where the content is a figure.
+
 ## Callback-style variants
 
 All function of course have their callback counterpart in `utils`. Use those if you cannot or don't want to use the self-counting animation functions.

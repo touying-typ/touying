@@ -183,7 +183,7 @@
   show: body => {
     if (
       not self.at("article-mode")
-        and self.at("nontight-list-enum-and-terms", default: true)
+        and self.at("nontight-list-enum-and-terms", default: false)
     ) {
       magic.nontight-list-enum-and-terms(body)
     } else {

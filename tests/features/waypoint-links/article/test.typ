@@ -6,6 +6,7 @@
 
 #body
 #reuse-body
+#call-body
 
 == Check <s:check>
 
@@ -17,4 +18,7 @@
   // Both land in the flowing text of the first slide.
   assert.eq(page-of("s:one.more"), 1)
   assert.eq(page-of("s:one.last"), 1)
+
+  assert.eq(page-of("s:call.more"), page-of("s:call"))
+  assert.eq(page-of("s:call.last"), page-of("s:call"))
 }

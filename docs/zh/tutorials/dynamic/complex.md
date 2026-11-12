@@ -238,6 +238,8 @@ At its first stage that was #touying-recall(<fig>, subslides: 1).
 
 `subslides` 用来挑选阶段，`base:` 的含义与上文相同。这正是让一张带动画的图表可以在[文章模式](../../integration/article-mode)中派上用场的原因——否则在文章里就只会留下最后一帧。
 
+召回整张幻灯片时会再次输出这张幻灯片的标签，这会让标签出现两次。因此每个副本都会给标签加上编号：`<intro>` 的第一次 recall 带有 `<intro-1>`，其路标锚点为 `<intro-1.wp>`，第二次为 `<intro-2>`，依此类推，原幻灯片保留 `<intro>`。调用之后写一个标签则会用它来命名副本，`#touying-recall(<intro>)<intro-again>` 得到 `<intro-again>` 和 `<intro-again.wp>`。召回带标签的内容不会再次输出它的标签，但调用之后的标签会直接加在被召回的内容上，所以内容是图（figure）时，`#touying-recall(<fig>)<fig-again>` 可以用 `@fig-again` 引用。
+
 ## Callback-style variants
 
 当然，所有函数在 `utils` 中都有对应的回调风格版本。如果你无法使用或者不想使用这些自计数的动画函数，可以改用它们。

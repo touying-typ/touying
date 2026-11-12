@@ -221,7 +221,7 @@
 ///
 /// - default-preamble (function): The default preamble, run once before the first slide together with `preamble`. Default is a function to check the mark warning and add pdfpc file.
 ///
-/// - slide-preamble (function): The function (or content) to run at the start of every slide, on its first subslide, after `preamble` and `default-preamble`. Default is `none`.
+/// - slide-preamble (function): The function (or content) to run at the start of every slide, on its first subslide, after `preamble`, `default-preamble` and the content a deferred config change collected in front of the slide. Default is `none`.
 ///
 /// - default-slide-preamble (function): The default preamble for each slide, run right after `slide-preamble`. Default is a function that restarts the footnote numbering if `reset-footnote-number-per-slide` is `true`.
 ///

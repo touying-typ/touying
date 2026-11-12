@@ -1140,10 +1140,28 @@
 }
 
 
-/// The enclosing slide's label, or `none` when it carries none.
+/// A recalled copy of content carries the label the user wrote after the call.
+///
+/// Needs context, to tell block-level content from inline content.
+#let _replace-recall-label(result, new-label) = if (
+  new-label == none or result == none
+) {
+  result
+} else {
+  tree.replace-label(
+    result,
+    new-label,
+    inline: type(result) != content or not utils.is-block(result),
+  )
+}
+
+
+/// The enclosing slide's label, or `none` when it carries none. The label
+/// after a slide call wins over the label of the heading section it sits in.
 ///
 /// -> label or none
 #let slide-label-of(self) = {
+  if self.at("slide-label", default: none) != none { return self.slide-label }
   let headings = self.at("headings", default: ())
   if headings == () or not headings.last().has("label") {
     return none
@@ -1978,7 +1996,7 @@
   // be called from inside this function's own body: they're defined later
   // in this file and themselves depend on
   // _parse-content-into-results-and-repetitions.
-  let resolve-recall-fallback(self, raw-label, subslides, base) = {
+  let resolve-recall-fallback(self, raw-label, subslides, base, new-label) = {
     if type(raw-label) != label {
       panic(
         "touying-recall: a native label (e.g. <my-label>) is required "
@@ -2031,6 +2049,15 @@
       return none
     }
     context {
+      // Only the last subslide carries the label, as it does for any labelled
+      // content on a slide with subslides.
+      let labelled(result) = if (
+        self.at("subslide", default: none) == self.at("repeat", default: none)
+      ) {
+        _replace-recall-label(result, new-label)
+      } else {
+        result
+      }
       // Always check the breadcrumb first, regardless of subslide:
       // a touying-reducer's own real label is never itself attached
       // to anything (it only lives inside the metadata dict), so
@@ -2132,7 +2159,7 @@
             index: target,
             reducer-data,
           )
-          r.sum(default: none)
+          labelled(r.sum(default: none))
         } else {
           let (conts, ..) = _parse-content-into-results-and-repetitions(
             self: render-self,
@@ -2140,7 +2167,7 @@
             index: target,
             raw-content,
           )
-          conts.sum(default: none)
+          labelled(conts.sum(default: none))
         }
       } else {
         if recall-subslide != auto {
@@ -2161,7 +2188,7 @@
               + " was not found in the document.",
           )
         }
-        found.first()
+        labelled(found.first())
       }
     }
   }
@@ -2452,7 +2479,10 @@
 
     // Process each child element for animation markers and content types
     for _child_i in range(children.len()) {
-      let child = children.at(_child_i)
+      let child = tree.unwrap-labelled-mark(
+        children.at(_child_i),
+        ("touying-slide-recaller",),
+      )
       let recall-breadcrumb = maybe-build-recall-breadcrumb(child)
       if recall-breadcrumb != none {
         if repetitions <= index or not need-cover {
@@ -2923,6 +2953,7 @@
                 v.raw-label,
                 v.at("subslides", default: none),
                 v.at("base", default: auto),
+                v.at("new-label", default: none),
               ),
             ))
 
@@ -2962,6 +2993,7 @@
                 v.raw-label,
                 v.at("subslides", default: none),
                 v.at("base", default: auto),
+                v.at("new-label", default: none),
               ),
             ))
           // Parse the body so markers inside it are counted and rendered like
@@ -3139,7 +3171,9 @@
             result.push(waypoint-anchor(
               slide-label,
               open-waypoint,
-              wp-map: wp,
+              wp-map: if self.at("article-mode", default: false) { none } else {
+                wp
+              },
               index: index,
               rendered: self.at("rendered-subslides", default: none),
             ))
@@ -3171,6 +3205,7 @@
             child.value.raw-label,
             child.value.at("subslides", default: none),
             child.value.at("base", default: auto),
+            child.value.at("new-label", default: none),
           )
           if repetitions <= index or not need-cover {
             result.push(recalled)
@@ -3708,7 +3743,9 @@
       result.push(waypoint-anchor(
         slide-label,
         open-waypoint,
-        wp-map: self.at("waypoints", default: (:)),
+        wp-map: if self.at("article-mode", default: false) { none } else {
+          self.at("waypoints", default: (:))
+        },
         index: index,
         rendered: self.at("rendered-subslides", default: none),
       ))
@@ -3848,7 +3885,7 @@
 /// the final state directly and any explicit subslide is an error.
 ///
 /// -> content
-#let _build-native-recall(lbl, subslides, base) = {
+#let _build-native-recall(lbl, subslides, base, new-label: none) = {
   let subslides = if subslides == none { auto } else { subslides }
   if (
     subslides != auto
@@ -3904,13 +3941,16 @@
           base: render-base,
         )
       }
-      _render-at-subslide(
-        minimal-self,
-        raw-content,
-        reducer-data,
-        cwp,
-        render-base,
-        target,
+      _replace-recall-label(
+        _render-at-subslide(
+          minimal-self,
+          raw-content,
+          reducer-data,
+          cwp,
+          render-base,
+          target,
+        ),
+        new-label,
       )
     } else {
       if subslides != auto {
@@ -3930,7 +3970,7 @@
             + " was not found in the document.",
         )
       }
-      found.first()
+      _replace-recall-label(found.first(), new-label)
     }
   }
 }

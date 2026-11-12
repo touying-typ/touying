@@ -172,7 +172,7 @@ sidebar_position: 7
 
 ## 全局链接锚点
 
-路标还会在其捕获内容的末尾——也就是该路标最后一个 subslide 处——发出一个链接锚点。如果你的幻灯片标记为 `<myslide>`，路标标记为 `<first-wp>`，那么你就可以通过 `<myslide.first-wp>` 来引用它。
+路标还会在其捕获内容的末尾——也就是该路标最后一个 subslide 处——发出一个链接锚点。如果你的幻灯片标记为 `<myslide>`，路标标记为 `<first-wp>`，那么你就可以通过 `<myslide.first-wp>` 来引用它。幻灯片的标签可以是标题标签（`== Title <myslide>`），也可以是 `#slide[..]` 调用之后的标签（`#slide[..]<myslide>`），它同时也是该幻灯片第一个 subslide 上的锚点。被 recall 的幻灯片副本会把它们命名为 `<myslide-1>` 和 `<myslide-1.first-wp>`，下一个副本命名为 `<myslide-2>`，依此类推，因为同一个标签在文档中只能出现一次。
 
 ## 更多示例
 

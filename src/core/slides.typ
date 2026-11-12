@@ -23,6 +23,20 @@
   body: body,
 ))<touying-temporary-mark>]
 
+// Whether content is drawn as nothing, seen through the `styled` node of a set
+// rule and through sequences.
+#let _is-invisible(it) = if tree.is-sequence(it) {
+  it.children.all(_is-invisible)
+} else if tree.is-styled(it) {
+  _is-invisible(it.child)
+} else {
+  tree.is-list-spacer(it)
+}
+
+// Whether a child starts the first slide of a non-deferred config body: what is
+// drawn, and the touying marks, which the parser has to see in the slide.
+#let _starts-slide(it) = not _is-invisible(it) or tree.is-touying-mark(it)
+
 /// Inject configuration changes into a block of content. Changes take effect only within `body` or the slide you call it in. Best used as a show rule. Useful for implementing features like `#show: appendix` or changing the cover method on the fly.
 ///
 /// Example: `#let appendix(body) = touying-set-config((appendix: true), defer:true, body)` and you can use `#show: appendix` to set the appendix for the presentation.
@@ -84,6 +98,14 @@
 /// falls through to the query lookup instead (recalling just the
 /// heading) rather than erroring. An explicit `#slide(...)[...]<label>` call has the
 /// same forward-reference limitation.
+///
+/// A recalled whole slide emits its labels again, so each copy names them
+/// `<label-1>`, `<label-2>`, ... (and `<label-1.waypoint>`) in the order of the
+/// recalls, which keeps every label unique. A label after the call names the
+/// copy instead: `#touying-recall(<intro>)<intro-again>` gives `<intro-again>`
+/// and `<intro-again.waypoint>`. Recalled content carries no label unless the
+/// call has one, which then sits on the recalled content itself, so a
+/// reference to a recalled figure works.
 ///
 /// Example:
 ///
@@ -172,7 +194,7 @@
 /// ```
 ///
 /// -> content
-#let touying-recall(lbl, subslides: auto, base: auto) = [#metadata((
+#let touying-recall(lbl, subslides: auto, base: auto) = box[#metadata((
   kind: "touying-slide-recaller",
   label: if type(lbl) == label {
     str(lbl)
@@ -183,6 +205,32 @@
   subslides: subslides,
   base: base,
 ))<touying-temporary-mark>]
+
+// The labels a slide emits are its own label and the waypoint anchors under it,
+// `<label>` and `<label.waypoint>`. A recalled copy carries them as
+// `<name>` and `<name.waypoint>`.
+#let _rename-slide-labels(slide-content, slide-label, name) = tree.map-tree(
+  slide-content,
+  node => {
+    let lbl = if type(node) == content { node.at("label", default: none) }
+    if lbl == none { return none }
+    let old-name = str(lbl)
+    if (
+      old-name != slide-label and not old-name.starts-with(slide-label + ".")
+    ) {
+      return none
+    }
+    let renamed = label(name + old-name.slice(slide-label.len()))
+    if node.func() == heading {
+      let fields = node.fields()
+      let _ = fields.remove("label")
+      let body = fields.remove("body")
+      [#heading(..fields, body)#renamed]
+    } else if tree.is-metadata(node) {
+      [#metadata(node.value)#renamed]
+    }
+  },
+)
 
 #let _get-last-heading-depth(current-headings) = {
   if current-headings != () {
@@ -295,6 +343,7 @@
 // - is-first-slide (bool): Whether this is the first slide of the presentation
 // - is-outer-call (bool): Whether this is the outermost call to the function (used for recursion)
 // - absorb-leading-preamble (bool): Whether to include the preamble content from before the next split
+// - leading-content-starts-slide (bool): With `absorb-leading-preamble`, the content before the first split is the first slide instead of the preamble of the next one, as in the body of a non-deferred config. Only what is drawn nothing, like a counter update, is still absorbed.
 // - body (content): The content to be split into slides
 //
 // -> content
@@ -305,6 +354,7 @@
   is-first-slide: false,
   is-outer-call: false,
   absorb-leading-preamble: false,
+  leading-content-starts-slide: false,
   body,
 ) = {
   // Extract arguments
@@ -362,7 +412,10 @@
     if tree.is-sequence(child) {
       return child.children.map(_expand-child)
     }
-    _unwrap-slide-wrapper(child)
+    tree.unwrap-labelled-mark(
+      _unwrap-slide-wrapper(child),
+      ("touying-slide-recaller",),
+    )
   }
   children = children.map(_expand-child).flatten()
 
@@ -424,18 +477,7 @@
   // Each element is a (callable, slide-self) pair. Empty means no pending wrapper.
   let last-wrapper-info = ()
 
-  // The nearest child from `start` in direction `step` that is not a space.
-  // Only asked for at an em dash, and it stops at the first hit.
-  let nearest-non-space(start, step) = {
-    for i in range(
-      start,
-      if step > 0 { children.len() } else { -1 },
-      step: step,
-    ) {
-      if not tree.is-space(children.at(i)) { return children.at(i) }
-    }
-    none
-  }
+  let is-rule-dash = tree.make-rule-dash-test(children)
 
   // Is we have a horizontal line
   let horizontal-line = false
@@ -521,7 +563,13 @@
       }
 
       let slide-self = (
-        self + (headings: current-headings, is-first-slide: is-first-slide)
+        self
+          + (
+            headings: current-headings,
+            is-first-slide: is-first-slide,
+            leading-preamble: leading-preamble,
+            slide-label: tree.get-slide-call-label(child),
+          )
       )
 
       // honor uses wishes like <touying:handout> etc. by skipping depending on the mode. Same as for the heading-based skipping logic.
@@ -532,6 +580,7 @@
           continue
         }
       }
+      leading-preamble = ()
 
       (
         slide-content,
@@ -631,9 +680,24 @@
         if slide-content != none { output-slides.push(slide-content) }
       }
       let recall-entry = recaller-map.at(child.value.label)
+      // A recalled copy names its labels after the label the user wrote after
+      // the call, or else `<label-1>`, `<label-2>`, ... so that a label stays
+      // unique in the document and a `#link` can pick the copy.
+      let copy-name = if child.value.at("new-label", default: none) != none {
+        str(child.value.new-label)
+      } else {
+        let copy = recall-entry.at("copies", default: 0) + 1
+        while child.value.label + "-" + str(copy) in recaller-map { copy += 1 }
+        recaller-map.at(child.value.label).copies = copy
+        child.value.label + "-" + str(copy)
+      }
       let recall-subslide = child.value.at("subslides", default: auto)
       if recall-subslide == auto {
-        output-slides.push(recall-entry.content)
+        output-slides.push(_rename-slide-labels(
+          recall-entry.content,
+          child.value.label,
+          copy-name,
+        ))
       } else {
         // Pass the raw subslide spec through to touying-slide, which will
         // resolve it after computing `repeat` and `waypoints`.
@@ -645,7 +709,11 @@
               enable-frozen-states-and-counters: false,
             )
         )
-        output-slides.push((recall-entry.callable)(recalled-self))
+        output-slides.push(_rename-slide-labels(
+          (recall-entry.callable)(recalled-self),
+          child.value.label,
+          copy-name,
+        ))
       }
       absorb-leading-preamble = false
     } else if tree.is-kind(child, "touying-slide-recaller") {
@@ -668,7 +736,14 @@
       // is lost — it just fires at slide-render time instead of
       // article-walk time.)
       if absorb-leading-preamble and current-headings == () {
-        leading-preamble.push(child)
+        if leading-content-starts-slide and _starts-slide(child) {
+          absorb-leading-preamble = false
+          slide-parts += leading-preamble
+          leading-preamble = ()
+          slide-parts.push(child)
+        } else {
+          leading-preamble.push(child)
+        }
       } else if new-start {
         slide-parts.push(child)
       } else {
@@ -702,14 +777,14 @@
         )
         if slide-content != none { output-slides.push(slide-content) }
       }
+      // The probe of a config body (`new-start: false`) has to see the part
+      // after the break as the next slide.
+      new-start = true
       absorb-leading-preamble = false
     } else if (
       horizontal-line-to-pagebreak
         and tree.is-em-dash(child)
-        and tree.is-horizontal-line(
-          nearest-non-space(child-index - 1, -1),
-          nearest-non-space(child-index + 1, 1),
-        )
+        and is-rule-dash(child-index)
     ) {
       horizontal-line = true
       continue
@@ -936,16 +1011,21 @@
           child.value.body
         }
         leading-preamble = ()
-        output-slides.push(
-          split-content-into-slides(
-            self: utils.merge-dicts(self, child.value.config),
-            recaller-map: recaller-map,
-            new-start: true,
-            is-first-slide: is-first-slide,
-            absorb-leading-preamble: true,
-            inner-body,
+        let config-slides = split-content-into-slides(
+          self: utils.merge-dicts(self, child.value.config),
+          recaller-map: recaller-map,
+          new-start: true,
+          is-first-slide: is-first-slide,
+          absorb-leading-preamble: true,
+          leading-content-starts-slide: not child.value.at(
+            "defer",
+            default: false,
           ),
+          inner-body,
         )
+        // The first slide, which the document preamble belongs to, is made.
+        if config-slides != none { is-first-slide = false }
+        output-slides.push(config-slides)
       } else {
         // now the big complicated logic ...
         slide-parts = tree.trim(slide-parts)
@@ -1010,15 +1090,17 @@
             parts.sum(default: none)
           }
           leading-preamble = ()
-          output-slides.push(
-            split-content-into-slides(
-              self: utils.merge-dicts(self, child.value.config),
-              recaller-map: recaller-map,
-              new-start: true,
-              absorb-leading-preamble: true,
-              recursive-body,
-            ),
+          let config-slides = split-content-into-slides(
+            self: utils.merge-dicts(self, child.value.config),
+            recaller-map: recaller-map,
+            new-start: true,
+            is-first-slide: is-first-slide,
+            absorb-leading-preamble: true,
+            leading-content-starts-slide: not is-deferred,
+            recursive-body,
           )
+          if config-slides != none { is-first-slide = false }
+          output-slides.push(config-slides)
         } else {
           // Immediate path: slide-parts is non-empty and defer is false.
           // Handle like styled content — split the config body, recombine
@@ -1130,6 +1212,16 @@
       // When absorbing leading preamble and no heading seen yet, recurse into
       // the styled node with absorb-leading-preamble: true. The set/show rules
       // will propagate via reconstruct-styled on the output.
+      if (
+        absorb-leading-preamble
+          and leading-content-starts-slide
+          and current-headings == ()
+          and _starts-slide(child)
+      ) {
+        absorb-leading-preamble = false
+        slide-parts += leading-preamble
+        leading-preamble = ()
+      }
       if absorb-leading-preamble and current-headings == () {
         let inner-body = if leading-preamble != () {
           leading-preamble.sum(default: none) + child.child
@@ -1145,6 +1237,7 @@
           absorb-leading-preamble: true,
           inner-body,
         )
+        if inner-result != none { is-first-slide = false }
         output-slides.push(tree.reconstruct-styled(child, inner-result))
       } else {
         // Split the content into slides recursively for styled content
@@ -1190,18 +1283,15 @@
               )
               if slide-content != none { output-slides.push(slide-content) }
             }
-            output-slides.push(
-              tree.reconstruct-styled(
-                child,
-                split-content-into-slides(
-                  self: self,
-                  recaller-map: recaller-map,
-                  new-start: true,
-                  is-first-slide: is-first-slide,
-                  child.child,
-                ),
-              ),
+            let styled-slides = split-content-into-slides(
+              self: self,
+              recaller-map: recaller-map,
+              new-start: true,
+              is-first-slide: is-first-slide,
+              child.child,
             )
+            if styled-slides != none { is-first-slide = false }
+            output-slides.push(tree.reconstruct-styled(child, styled-slides))
           } else {
             // Add the pre-heading content to the current slide, then flush and
             // emit the new slides directly instead of using _delayed-wrapper,
@@ -1282,7 +1372,14 @@
         // Before any heading is seen, accumulate as preamble to inject into
         // the first real slide's content — avoids ghost slides from counter-updates
         // and metadata injected by touying-set-config bodies.
-        leading-preamble.push(child)
+        if leading-content-starts-slide and _starts-slide(child) {
+          absorb-leading-preamble = false
+          slide-parts += leading-preamble
+          leading-preamble = ()
+          slide-parts.push(child)
+        } else {
+          leading-preamble.push(child)
+        }
       } else if new-start {
         slide-parts.push(child)
       } else {
@@ -1291,9 +1388,14 @@
     }
   }
 
-  // Handle the last slide
+  // Handle the last slide. Content a deferred config handed on, with no slide
+  // left to take it, becomes a slide of its own.
   slide-parts = tree.trim(slide-parts)
-  if slide-parts != () or current-headings != () {
+  if (
+    slide-parts != ()
+      or current-headings != ()
+      or leading-preamble.any(it => not _is-invisible(it))
+  ) {
     let flush-self = (
       self
         + (
@@ -1925,25 +2027,28 @@
 
   // Slide and subslide preamble functions for setup and metadata
   let slide-preamble(self) = {
-    // From the most general to the most specific: the document preamble (first
-    // slide only), then the slide preamble, then the content that a deferred
-    // config change collected in front of this slide.
+    // The document preamble runs once, at the start. The content that a deferred
+    // config change collected in front of this slide is an optional preamble of
+    // the slide, and runs before it, since it can affect it.
     if self.at("is-first-slide", default: false) {
       utils.call-or-display(self, self.at("preamble", default: none))
       utils.call-or-display(self, self.at("default-preamble", default: none))
     }
+    let leading-preamble = self
+      .at("leading-preamble", default: ())
+      .sum(default: none)
+    utils.call-or-display(self, leading-preamble)
     utils.call-or-display(self, self.at("slide-preamble", default: none))
     utils.call-or-display(self, self.at(
       "default-slide-preamble",
       default: none,
     ))
-    let leading-preamble = self
-      .at("leading-preamble", default: ())
-      .sum(default: none)
-    utils.call-or-display(self, leading-preamble)
     [#metadata((kind: "touying-new-slide")) <touying-metadata>]
     // add headings for the first subslide
     print-invisible-headings(self)
+    if self.at("slide-label", default: none) != none {
+      [#metadata("touying-slide-label-anchor")#label(str(self.slide-label))]
+    }
   }
   // preamble for the subslides
   let subslide-preamble(self) = {
@@ -2142,6 +2247,12 @@
     let content = if result.content != none {
       article-setting-fn(result.content)
     } else { none }
+    if content != none and self.at("slide-label", default: none) != none {
+      content = (
+        [#metadata("touying-slide-label-anchor")#label(str(self.slide-label))]
+          + content
+      )
+    }
     let payload = (
       kind: "touying-article-raw",
       content: content,

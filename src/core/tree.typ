@@ -109,6 +109,24 @@
   )
 }
 
+/// The label that names a slide call, or `none`. `touying:` labels filter by
+/// mode and name nothing.
+///
+/// - wrapper (content): A `touying-slide-wrapper` node, with the label the user
+///   put after the call.
+///
+/// -> label or none
+#let get-slide-call-label(wrapper) = {
+  let lbl = wrapper.at("label", default: none)
+  if (
+    lbl != none
+      and lbl != <touying-temporary-mark>
+      and not str(lbl).starts-with("touying:")
+  ) {
+    lbl
+  }
+}
+
 /// Whether a content is laid out as nothing: metadata, a state or counter
 /// update, or a sequence of those. Typst gathers list items across it.
 ///
@@ -217,6 +235,29 @@
     assert(type(label-name) == str, message: repr(label-name))
     [#it#label(label-name)]
   }
+}
+
+
+/// The mark inside a `box` that exists so a label written after the call has an
+/// element of its own. The label moves into the mark's value as `new-label` and
+/// the box goes, so it has no effect on the layout.
+///
+/// - it (any): The child to look at.
+///
+/// - kinds (array): The mark kinds that ride in such a box.
+///
+/// -> any
+#let unwrap-labelled-mark(it, kinds) = {
+  if type(it) != content or it.func() != box { return it }
+  let mark = it.at("body", default: none)
+  if not kinds.any(kind => is-kind(mark, kind)) { return it }
+  // A box the user styled around a mark is theirs, and stays.
+  if not it.fields().keys().all(field => field in ("body", "label")) {
+    return it
+  }
+  let lbl = it.at("label", default: none)
+  if lbl == none { return mark }
+  [#metadata(mark.value + (new-label: lbl))<touying-temporary-mark>]
 }
 
 
@@ -680,6 +721,9 @@
       terms.item(new-children.at(0), new-children.at(1))
     } else {
       let _ = fields.remove("body", default: none)
+      // Only a realized figure, one found by `query`, knows its counter, and
+      // the constructor does not take it.
+      let _ = fields.remove("counter", default: none)
       if new-children.len() > 1 { fields.caption = new-children.at(1) }
       call-with-fields(it.func(), fields, new-children.first())
     }
@@ -687,6 +731,31 @@
   } else {
     it
   }
+}
+
+
+/// Give content a label of its own, and take away the one it carries.
+///
+/// An element holds one label. A lone element is rebuilt without its own label
+/// and gets the new one. A sequence, or an element that cannot be rebuilt, goes
+/// into a wrapper that carries it: a `box` for `inline` content, or a `block`.
+///
+/// - cont (any): The content.
+///
+/// - lbl (label): The new label.
+///
+/// - inline (bool): Whether a wrapper has to stay inline.
+///
+/// -> content
+#let replace-label(cont, lbl, inline: false) = {
+  let wrap(it) = label-it(if inline { box(it) } else { block(it) }, lbl)
+  if type(cont) != content or is-sequence(cont) { return wrap(cont) }
+  if cont.at("label", default: none) == none { return label-it(cont, lbl) }
+  // Rebuilt without its label. A shape `rebuild` does not know comes back as it
+  // was, label included, and that one needs the wrapper.
+  let rebuilt = rebuild(cont, children-of(cont), labeled: false)
+  if rebuilt.at("label", default: none) != none { return wrap(cont) }
+  label-it(rebuilt, lbl)
 }
 
 
@@ -707,15 +776,19 @@
 ///
 /// -> content
 #let map-tree(labeled: true, it, visit) = {
-  let potential-replacement = visit(it)
-  if potential-replacement != none { return potential-replacement }
+  // `(node, changed)`. Whether something changed is tracked rather than read
+  // off comparing the rebuilt children, which cannot see a changed label.
+  let walk(it) = {
+    let potential-replacement = visit(it)
+    if potential-replacement != none { return (potential-replacement, true) }
 
-  let kids = children-of(it)
-  if kids.len() == 0 { return it }
-  let new-kids = kids.map(k => map-tree(k, visit, labeled: labeled))
-
-  if new-kids == kids { return it }
-  rebuild(it, new-kids, labeled: labeled)
+    let kids = children-of(it)
+    if kids.len() == 0 { return (it, false) }
+    let walked = kids.map(walk)
+    if not walked.any(kid => kid.last()) { return (it, false) }
+    (rebuild(it, walked.map(kid => kid.first()), labeled: labeled), true)
+  }
+  walk(it).first()
 }
 
 
@@ -749,6 +822,9 @@
 ///
 /// -> content
 #let resolve-marks(it, kinds, resolve) = map-tree(it, node => {
+  // Only the recall mark rides in a box, so another box around a mark is the
+  // user's own.
+  let node = unwrap-labelled-mark(node, ("touying-slide-recaller",))
   if (
     is-metadata(node)
       and type(node.value) == dictionary
@@ -835,51 +911,6 @@
     out = typst-builtin-styled(out, styles)
   }
   out
-}
-
-
-/// Flatten `it` into the list of children a walker classifies, keeping runs of
-/// unclassified children under one shared `styled` wrapper.
-///
-/// Giving every child its own copy of the styles would not preserve the
-/// document: Typst's realizer groups adjacent elements and a wrapper between
-/// them stops it, so `#set par(..)` would break a paragraph apart and
-/// `#set enum(..)` would restart the numbering at every boundary. Only the
-/// children `structural` accepts are peeled out on their own.
-///
-/// - structural (function): `it => bool`, the children the caller needs to see
-///   individually.
-///
-/// - it (any): The root.
-///
-/// -> array
-#let flatten-children(structural: it => false, it) = {
-  if is-styled(it) {
-    let out = ()
-    let run = ()
-    for child in flatten-children(it.child, structural: structural) {
-      if structural(child) {
-        if run.len() > 0 {
-          out.push(typst-builtin-styled(run.sum(default: []), it.styles))
-          run = ()
-        }
-        out.push(typst-builtin-styled(child, it.styles))
-      } else {
-        run.push(child)
-      }
-    }
-    if run.len() > 0 {
-      out.push(typst-builtin-styled(run.sum(default: []), it.styles))
-    }
-    return out
-  }
-  if is-sequence(it) {
-    return it
-      .children
-      .map(c => flatten-children(c, structural: structural))
-      .flatten()
-  }
-  (it,)
 }
 
 
@@ -1005,6 +1036,14 @@
   if f in (raw, math.equation, quote) {
     return not it.at("block", default: false)
   }
+  // A set rule wraps its content in `styled`, so what counts is inside.
+  if is-styled(it) { return is-inline-prose(it.child) }
+  if is-sequence(it) {
+    return (
+      it.children.any(is-inline-prose)
+        and it.children.all(child => is-space(child) or is-inline-prose(child))
+    )
+  }
   f in _pure-inline-prose-funcs
 }
 
@@ -1024,6 +1063,93 @@
   not (
     is-inline-prose(before) and is-inline-prose(after)
   )
+}
+
+/// Make the test `index => bool` for whether the child at `index` of `children`
+/// is an em dash that splits slides.
+///
+/// Meant to be made once and asked at every child: it only looks into a dash,
+/// and only as far as the first non-space neighbour on each side. The array is
+/// captured here rather than passed per call, because handing a large array to
+/// a function on every child makes the walk quadratic.
+///
+/// A styled dash is one a nested wrapper already peeled out as a line, so it
+/// stays one.
+///
+/// - children (array): The siblings, in order.
+///
+/// -> function
+#let make-rule-dash-test(children) = {
+  let nearest-non-space(start, step) = {
+    for i in range(
+      start,
+      if step > 0 { children.len() } else { -1 },
+      step: step,
+    ) {
+      if not is-space(children.at(i)) { return children.at(i) }
+    }
+    none
+  }
+
+  index => {
+    let child = children.at(index)
+    if is-styled(child) { return is-em-dash(unstyled(child)) }
+    (
+      is-em-dash(child)
+        and is-horizontal-line(
+          nearest-non-space(index - 1, -1),
+          nearest-non-space(index + 1, 1),
+        )
+    )
+  }
+}
+
+
+/// Flatten `it` into the list of children a walker classifies, keeping runs of
+/// unclassified children under one shared `styled` wrapper.
+///
+/// Giving every child its own copy of the styles would not preserve the
+/// document: Typst's realizer groups adjacent elements and a wrapper between
+/// them stops it, so `#set par(..)` would break a paragraph apart and
+/// `#set enum(..)` would restart the numbering at every boundary. Only the
+/// children `structural` accepts, and the em dashes that are horizontal lines,
+/// are peeled out on their own.
+///
+/// - structural (function): `it => bool`, the children the caller needs to see
+///   individually.
+///
+/// - it (any): The root.
+///
+/// -> array
+#let flatten-children(structural: it => false, it) = {
+  if is-styled(it) {
+    let out = ()
+    let run = ()
+    let children = flatten-children(it.child, structural: structural)
+    let is-rule-dash = make-rule-dash-test(children)
+    for (index, child) in children.enumerate() {
+      if structural(child) or is-rule-dash(index) {
+        if run.len() > 0 {
+          out.push(typst-builtin-styled(run.sum(default: []), it.styles))
+          run = ()
+        }
+        out.push(typst-builtin-styled(child, it.styles))
+      } else {
+        run.push(child)
+      }
+    }
+    if run.len() > 0 {
+      out.push(typst-builtin-styled(run.sum(default: []), it.styles))
+    }
+    return out
+  }
+  if is-sequence(it) {
+    return it
+      .children
+      .map(c => flatten-children(c, structural: structural))
+      .flatten()
+  }
+  (it,)
 }
 
 /// The name of a value's type, as a diagnostic would want to print it.

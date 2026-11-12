@@ -174,7 +174,7 @@ Here `<done>` is pinned to subslide 4, so "All done" is revealed one step ahead 
 
 ## Global Link Anchors
 
-A waypoint also emits a link anchor at the end of its captured content, meaning also at the last subslide of the waypoint. If your slide is labelled `<myslide>` and the waypoint `first-wp>` then you can refer to it via `<myslide.first-wp>`.
+A waypoint also emits a link anchor at the end of its captured content, meaning also at the last subslide of the waypoint. If your slide is labelled `<myslide>` and the waypoint `<first-wp>` then you can refer to it via `<myslide.first-wp>`. The slide's label is either the heading label (`== Title <myslide>`) of the heading that belongs to the slide or the label after a `#slide[..]` call (`#slide[..]<myslide>`), and it is an anchor on the first subslide of the slide as well. A recalled copy of the slide names these `<myslide-1>` and `<myslide-1.first-wp>`, the next copy `<myslide-2>`, and so on, because a label may should occur once in a document.
 
 
 ## More Examples
