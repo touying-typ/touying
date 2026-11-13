@@ -49,7 +49,7 @@ before content #pause
 
 == Recall Table: default (auto — final state)
 
-#touying-recall(<my-table>)
+#touying-recall(<my-table>)<my-table-copy>
 
 == Recall Table: subslide 1
 
@@ -180,3 +180,9 @@ output as the `base: auto` column of the base-shifted grid below.
 )[Only-gated recall (no reserved space): #touying-recall(<my-table>, subslides: 2)]
 
 text stays and moves upwards
+
+// A label after the call goes onto the recalled content, and recalling emits
+// no label of its own.
+#context {
+  assert.eq(query(<my-table-copy>).len(), 1)
+}

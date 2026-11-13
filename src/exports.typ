@@ -2,9 +2,9 @@
 #import "core/animation.typ": (
   alternatives, alternatives-cases, alternatives-fn, alternatives-match,
   animate, animate-hidden, animate-removed, effect, handout-only, item-by-item,
-  item-by-item-fn, item-by-item-functions, jump, meanwhile, only, pause,
-  presentation-only, slides-only, swap, touying-fn-wrapper, touying-render,
-  touying-slide-wrapper, uncover,
+  item-by-item-fn, item-by-item-functions, jump, meanwhile, measure, only,
+  pause, presentation-only, slides-only, swap, touying-fn-wrapper,
+  touying-render, touying-slide-wrapper, uncover,
 )
 #import "core/blocks.typ": (
   alert, lr-navigation, speaker-note, touying-diagram, touying-equation,
@@ -19,15 +19,14 @@
   article-keep-layout, article-linearize, article-only, article-text,
   graphic-marker, graphic-marker-of,
 )
-#import "core/parser.typ": measure
 #import "core/slides.typ": (
-  appendix, empty-slide, slide, touying-notes, touying-recall,
-  touying-set-config, touying-slide,
+  empty-slide, slide, touying-notes, touying-recall, touying-slide,
 )
 //configs
 #import "configs.typ": (
-  config-article, config-colors, config-common, config-info, config-methods,
-  config-page, config-store, default-config, touying-get-config,
+  appendix, config-article, config-colors, config-common, config-info,
+  config-methods, config-page, config-store, default-config, touying-get-config,
+  touying-set-config,
 )
 //entrypoint
 #import "entrypoint.typ": touying-slides

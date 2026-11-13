@@ -56,7 +56,32 @@
   ]
 }
 
+// A label after a slide call names the slide like a heading label does, so it
+// takes the same anchors and links.
+#let call-body = {
+  [
+    #slide[
+      A
+      #waypoint(<more>)
+      B
+      #pause
+      C
+      #waypoint(<last>)
+      D
+    ]<s:call>
+
+    == Call links
+
+    #link(label("s:call"))[to the slide]
+    #link(label("s:call.more"))[to more]
+  ]
+}
+
 #let assert-common() = {
+  assert.eq(query(label("s:call")).len(), 1)
+  assert.eq(query(label("s:call.more")).len(), 1)
+  assert.eq(query(label("s:call.last")).len(), 1)
+
   assert.eq(query(label("s:one.more")).len(), 1)
   assert.eq(query(label("s:one.last")).len(), 1)
   assert.eq(query(label("s:a.shared")).len(), 1)

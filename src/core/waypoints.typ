@@ -6,7 +6,7 @@
 /// ------------------------------------------------
 
 /// the different metadata kinds used for waypoints and waypoint markers.
-#let waypoint-kinds = (
+#let _waypoint-kinds = (
   "waypoint",
   "implicit-waypoint",
   "waypoint-first",
@@ -561,7 +561,7 @@
 /// - repeat (int): The slide's total number of subslides.
 ///
 /// -> array
-#let last-subslides-of-waypoints(self, repeat) = {
+#let _last-subslides-of-waypoints(self, repeat) = {
   let waypoints = self.at("waypoints", default: (:))
   if waypoints.len() == 0 {
     (repeat,)
@@ -593,7 +593,7 @@
 /// - visible-subslides: The visible-subslides specification to resolve.
 ///
 /// -> int | str | array | dictionary
-#let resolve-waypoints(self, visible-subslides) = {
+#let _resolve-waypoints(self, visible-subslides) = {
   let waypoints = self.at("waypoints", default: (:))
   let prepass = self.at("_waypoint-prepass", default: false)
 
@@ -634,7 +634,7 @@
       } else { none }
       if inner-kind in ("touying-waypoint-first", "touying-waypoint-last") {
         // Resolve get-first/get-last to a concrete subslide number
-        let resolved = resolve-waypoints(self, inner)
+        let resolved = _resolve-waypoints(self, inner)
         (beginning: resolved)
       } else {
         let lbl = _resolve-waypoint-label(
@@ -663,7 +663,7 @@
       } else { none }
       if inner-kind in ("touying-waypoint-first", "touying-waypoint-last") {
         // Resolve get-first/get-last to a concrete subslide number
-        let resolved = resolve-waypoints(self, inner)
+        let resolved = _resolve-waypoints(self, inner)
         (until: resolved - 1)
       } else {
         let lbl = _resolve-waypoint-label(
@@ -712,7 +712,7 @@
       } else { none }
       if inner-kind != none {
         // Inner is another waypoint marker — resolve it first.
-        let resolved = resolve-waypoints(self, inner)
+        let resolved = _resolve-waypoints(self, inner)
         (kind: "not", inner: resolved)
       } else {
         // Inner is a plain label string — look up its range directly.
@@ -747,7 +747,7 @@
       // Range construction: combine from/until markers into a single range.
       // Multiple `from-wp`s → take earliest (min); multiple `until-wp`s → take latest (max).
       // This spans the whole duration from the first `from-wp` to the last `until-wp`.
-      let resolved = visible-subslides.map(s => resolve-waypoints(self, s))
+      let resolved = visible-subslides.map(s => _resolve-waypoints(self, s))
       let beginning = none
       let end = none
       for r in resolved {
@@ -773,7 +773,7 @@
       }
       result
     } else {
-      visible-subslides.map(s => resolve-waypoints(self, s))
+      visible-subslides.map(s => _resolve-waypoints(self, s))
     }
 
     // --- pass-through (int, str, etc.) ----------------------------------

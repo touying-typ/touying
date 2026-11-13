@@ -6,6 +6,7 @@
 
 #body
 #reuse-body
+#call-body
 
 == Check <s:check>
 
@@ -51,4 +52,34 @@
   // nothing to link to and no anchor is emitted — rather than one pointing at
   // a page that does not show it.
   assert.eq(query(label("s:partial.p3")).len(), 0)
+
+  assert.eq(page-of("s:call.more"), page-of("s:call"))
+  assert.eq(page-of("s:call.last"), page-of("s:call"))
+}
+
+== Recalls
+
+// A recalled copy of a slide names its anchors with a number, or with the label
+// written after the call, and every label keeps occurring once.
+#touying-recall(<s:one>)
+#touying-recall(<s:call>)<s:call-again>
+
+== Recall check
+
+#context {
+  let count(name) = query(label(name)).len()
+  for name in (
+    "s:one",
+    "s:one.more",
+    "s:one-1",
+    "s:one-1.more",
+    "s:one-1.last",
+    "s:call",
+    "s:call.more",
+    "s:call-again",
+    "s:call-again.more",
+    "s:call-again.last",
+  ) {
+    assert.eq(count(name), 1, message: "label `" + name + "` has to occur once")
+  }
 }

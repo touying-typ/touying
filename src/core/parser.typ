@@ -3,8 +3,8 @@
 #import "tree.typ"
 #import "subslides.typ": check-visible, resolve-negative-subslides
 #import "waypoints.typ": (
-  _compute-waypoint-ranges, _resolve-waypoint-forest, _waypoint-known,
-  resolve-waypoints, waypoint-kinds,
+  _compute-waypoint-ranges, _resolve-waypoint-forest, _resolve-waypoints,
+  _waypoint-kinds, _waypoint-known,
 )
 
 /// The diagnostic for a touying mark that was never consumed.
@@ -1140,10 +1140,28 @@
 }
 
 
-/// The enclosing slide's label, or `none` when it carries none.
+/// A recalled copy of content carries the label the user wrote after the call.
+///
+/// Needs context, to tell block-level content from inline content.
+#let _replace-recall-label(result, new-label) = if (
+  new-label == none or result == none
+) {
+  result
+} else {
+  tree.replace-label(
+    result,
+    new-label,
+    inline: type(result) != content or not utils.is-block(result),
+  )
+}
+
+
+/// The enclosing slide's label, or `none` when it carries none. The label
+/// after a slide call wins over the label of the heading section it sits in.
 ///
 /// -> label or none
 #let slide-label-of(self) = {
+  if self.at("slide-label", default: none) != none { return self.slide-label }
   let headings = self.at("headings", default: ())
   if headings == () or not headings.last().has("label") {
     return none
@@ -1531,7 +1549,7 @@
 }
 
 #let _resolve-waypoint-to-int(self, spec) = {
-  let resolved = resolve-waypoints(self, spec)
+  let resolved = _resolve-waypoints(self, spec)
   if type(resolved) == int {
     resolved
   } else if type(resolved) == dictionary {
@@ -1546,7 +1564,7 @@
 // content is fully revealed there, while the first is only where it begins. A
 // range without an end (`from-wp`, `not-wp`) ends at `end`, the last subslide.
 #let _resolve-waypoint-to-last(self, spec, end: none) = {
-  let resolved = resolve-waypoints(self, spec)
+  let resolved = _resolve-waypoints(self, spec)
   if type(resolved) == int {
     resolved
   } else if type(resolved) == dictionary {
@@ -1586,7 +1604,7 @@
 ///
 /// -> array (sorted, ascending, non-empty)
 #let _resolve-waypoint-to-members(self, spec, bound, base: 1) = {
-  let resolved = resolve-waypoints(self, spec)
+  let resolved = _resolve-waypoints(self, spec)
   if type(resolved) == int {
     (resolved,)
   } else {
@@ -1978,7 +1996,7 @@
   // be called from inside this function's own body: they're defined later
   // in this file and themselves depend on
   // _parse-content-into-results-and-repetitions.
-  let resolve-recall-fallback(self, raw-label, subslides, base) = {
+  let resolve-recall-fallback(self, raw-label, subslides, base, new-label) = {
     if type(raw-label) != label {
       panic(
         "touying-recall: a native label (e.g. <my-label>) is required "
@@ -1995,7 +2013,7 @@
         and type(recall-subslide) != label
         and not (
           type(recall-subslide) == dictionary
-            and recall-subslide.at("kind", default: "") in waypoint-kinds
+            and recall-subslide.at("kind", default: "") in _waypoint-kinds
         )
     ) {
       panic(
@@ -2031,6 +2049,15 @@
       return none
     }
     context {
+      // Only the last subslide carries the label, as it does for any labelled
+      // content on a slide with subslides.
+      let labelled(result) = if (
+        self.at("subslide", default: none) == self.at("repeat", default: none)
+      ) {
+        _replace-recall-label(result, new-label)
+      } else {
+        result
+      }
       // Always check the breadcrumb first, regardless of subslide:
       // a touying-reducer's own real label is never itself attached
       // to anything (it only lives inside the metadata dict), so
@@ -2099,7 +2126,7 @@
           type(recall-subslide) == label
             or (
               type(recall-subslide) == dictionary
-                and recall-subslide.at("kind", default: "") in waypoint-kinds
+                and recall-subslide.at("kind", default: "") in _waypoint-kinds
             )
         ) {
           // The map was collected from `render-base`, so it already uses the
@@ -2132,7 +2159,7 @@
             index: target,
             reducer-data,
           )
-          r.sum(default: none)
+          labelled(r.sum(default: none))
         } else {
           let (conts, ..) = _parse-content-into-results-and-repetitions(
             self: render-self,
@@ -2140,7 +2167,7 @@
             index: target,
             raw-content,
           )
-          conts.sum(default: none)
+          labelled(conts.sum(default: none))
         }
       } else {
         if recall-subslide != auto {
@@ -2161,7 +2188,7 @@
               + " was not found in the document.",
           )
         }
-        found.first()
+        labelled(found.first())
       }
     }
   }
@@ -2452,7 +2479,10 @@
 
     // Process each child element for animation markers and content types
     for _child_i in range(children.len()) {
-      let child = children.at(_child_i)
+      let child = tree.unwrap-labelled-mark(
+        children.at(_child_i),
+        ("touying-slide-recaller",),
+      )
       let recall-breadcrumb = maybe-build-recall-breadcrumb(child)
       if recall-breadcrumb != none {
         if repetitions <= index or not need-cover {
@@ -2700,7 +2730,7 @@
             type(start-spec) == label
               or (
                 type(start-spec) == dictionary
-                  and start-spec.at("kind", default: "") in waypoint-kinds
+                  and start-spec.at("kind", default: "") in _waypoint-kinds
               )
           ) {
             _resolve-waypoint-to-int(self, start-spec)
@@ -2737,7 +2767,7 @@
               type(spec) == label
                 or (
                   type(spec) == dictionary
-                    and spec.at("kind", default: "") in waypoint-kinds
+                    and spec.at("kind", default: "") in _waypoint-kinds
                 )
             ) {
               // Both maps already use absolute positions. A `not-wp` marker
@@ -2923,6 +2953,7 @@
                 v.raw-label,
                 v.at("subslides", default: none),
                 v.at("base", default: auto),
+                v.at("new-label", default: none),
               ),
             ))
 
@@ -2962,6 +2993,7 @@
                 v.raw-label,
                 v.at("subslides", default: none),
                 v.at("base", default: auto),
+                v.at("new-label", default: none),
               ),
             ))
           // Parse the body so markers inside it are counted and rendered like
@@ -3139,7 +3171,9 @@
             result.push(waypoint-anchor(
               slide-label,
               open-waypoint,
-              wp-map: wp,
+              wp-map: if self.at("article-mode", default: false) { none } else {
+                wp
+              },
               index: index,
               rendered: self.at("rendered-subslides", default: none),
             ))
@@ -3171,6 +3205,7 @@
             child.value.raw-label,
             child.value.at("subslides", default: none),
             child.value.at("base", default: auto),
+            child.value.at("new-label", default: none),
           )
           if repetitions <= index or not need-cover {
             result.push(recalled)
@@ -3708,7 +3743,9 @@
       result.push(waypoint-anchor(
         slide-label,
         open-waypoint,
-        wp-map: self.at("waypoints", default: (:)),
+        wp-map: if self.at("article-mode", default: false) { none } else {
+          self.at("waypoints", default: (:))
+        },
         index: index,
         rendered: self.at("rendered-subslides", default: none),
       ))
@@ -3848,7 +3885,7 @@
 /// the final state directly and any explicit subslide is an error.
 ///
 /// -> content
-#let _build-native-recall(lbl, subslides, base) = {
+#let _build-native-recall(lbl, subslides, base, new-label: none) = {
   let subslides = if subslides == none { auto } else { subslides }
   if (
     subslides != auto
@@ -3856,7 +3893,7 @@
       and type(subslides) != label
       and not (
         type(subslides) == dictionary
-          and subslides.at("kind", default: "") in waypoint-kinds
+          and subslides.at("kind", default: "") in _waypoint-kinds
       )
   ) {
     panic(
@@ -3889,7 +3926,7 @@
         type(subslides) == label
           or (
             type(subslides) == dictionary
-              and subslides.at("kind", default: "") in waypoint-kinds
+              and subslides.at("kind", default: "") in _waypoint-kinds
           )
       ) {
         // The map was collected from `render-base`, so it already uses the
@@ -3904,13 +3941,16 @@
           base: render-base,
         )
       }
-      _render-at-subslide(
-        minimal-self,
-        raw-content,
-        reducer-data,
-        cwp,
-        render-base,
-        target,
+      _replace-recall-label(
+        _render-at-subslide(
+          minimal-self,
+          raw-content,
+          reducer-data,
+          cwp,
+          render-base,
+          target,
+        ),
+        new-label,
       )
     } else {
       if subslides != auto {
@@ -3930,120 +3970,9 @@
             + " was not found in the document.",
         )
       }
-      found.first()
+      _replace-recall-label(found.first(), new-label)
     }
   }
 }
 
 
-
-/// Measure content that may contain touying animations.
-///
-/// Typst's own `measure` sees touying's animation functions as bare metadata
-/// marks, which occupy no space: `std.measure(#uncover("2-")[U])` returns a height
-/// of `0pt`, while the same content written with `#pause` measures correctly.
-/// This parses the body the way a slide would, renders it at one subslide, and
-/// measures *that*, so the result matches what the slide will actually show.
-///
-/// It is a drop-in replacement of the normal `measure` function.
-/// Like `measure`, this must be called from a context — and it deliberately
-/// opens none of its own, so it returns a *dictionary* the caller can compute
-/// with rather than opaque content. It also inherits the caller's region, so
-/// it behaves correctly inside `layout`:
-///
-/// ```typst
-/// #import "@preview/touying:0.8.0": measure
-/// #context {
-///   let body = [...] //some animated content
-///   let h = measure(body, width: 100%).height
-///   // ... use h in arithmetic ...
-/// }
-/// ```
-///
-/// - body (content): The content to measure.
-///
-/// - subslide (auto, none, int, label, dictionary): Which subslide to measure.
-///   - `auto` (default): the last subslide, i.e. the fully revealed state.
-///     Content with no animations has exactly one, so this is the whole of it.
-///   - `none`: the largest width and height over *every* subslide. Each
-///     dimension is maximised independently.
-///   - `int`: that subslide, counted in `body`'s own numbering (see `base`).
-///   - a waypoint label or marker: resolved against `body`'s own waypoints. The size is the largest over the
-///     subslides it spans, so a bare label gives the largest size of that waypoint; `get-first(<wp>)` and
-///     `get-last(<wp>)` name a single subslide.
-///
-/// - base (auto, int): Starting value of `body`'s internal subslide counter,
-///   exactly as in `touying-render`. `auto` (default) means `1`, so a
-///   `subslide` number here means the same thing it would there.
-///
-/// - args (any): Everything else is forwarded to `measure` unchanged, so
-///   `width` and `height` work as usual.
-///
-/// -> dictionary
-#let measure(body, subslide: auto, base: auto, ..args) = {
-  // The cover method only has to reserve space, never to look right: nothing
-  // measured here is shown. `hide` keeps the covered content's own size, which
-  // is exactly what a measurement needs.
-  let minimal-self = (
-    methods: (cover: utils.method-wrapper(hide)),
-    waypoints: (:),
-    subslide: 1,
-  )
-  let render-base = if base == auto { 1 } else { base }
-  let (reducer-data, cwp, repeat, _) = _prepare-render-context(
-    minimal-self,
-    body,
-    render-base,
-  )
-  let render-at(target) = _render-at-subslide(
-    minimal-self,
-    body,
-    reducer-data,
-    cwp,
-    render-base,
-    target,
-  )
-  // Maximise each dimension independently over the given subslides: the widest
-  // and the tallest subslide need not be the same one.
-  // `std.measure`: this module now binds `measure` to this very function, so a
-  // bare call would recurse.
-  let measure-max(targets) = {
-    let sizes = targets.map(target => std.measure(render-at(target), ..args))
-    (
-      width: calc.max(..sizes.map(s => s.width)),
-      height: calc.max(..sizes.map(s => s.height)),
-    )
-  }
-  if subslide == none {
-    measure-max(range(render-base, repeat + 1))
-  } else if (
-    type(subslide) == label
-      or (
-        type(subslide) == dictionary
-          and subslide.at("kind", default: "") in waypoint-kinds
-      )
-  ) {
-    // A waypoint names the subslides it spans, and the size needed for it is the
-    // largest over them. `cwp` was collected from `render-base`, so the members
-    // are in the same numbering as `repeat` above.
-    measure-max(_resolve-waypoint-to-members(
-      (waypoints: cwp),
-      subslide,
-      repeat,
-      base: render-base,
-    ))
-  } else {
-    let target = if subslide == auto {
-      repeat
-    } else {
-      // `repeat` is the absolute final index, so convert it to a plain stage
-      // count before resolving negative indices against `base`.
-      resolve-negative-subslides(
-        repeat - render-base + 1,
-        subslide,
-        base: render-base,
-      )
-    }
-    std.measure(render-at(target), ..args)
-  }
-}

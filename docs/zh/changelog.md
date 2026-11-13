@@ -12,9 +12,11 @@ A patch release with fixes and a few corrections to behaviour that 0.8.0 introdu
 
 - **An em dash between inline content no longer splits slides**
 
-  A `—` or `---` with inline content on both sides, such as `Text — `code``, stays part of the sentence. Before, it was read as a horizontal line, which started a new slide and dropped the dash. A dash next to a blank line, a heading, any other block or a touying marker or wrapper such as `#pause` or `#alert[..]` still splits slides.
+  A `—` or `---` with inline content on both sides, such as `Text — `code``, stays part of the sentence. Before, it was read as a horizontal line, which started a new slide and dropped the dash. Inline content is text, symbols such as `~`, raw, math, emphasis, links, references, citations, footnotes, boxes and similar. A dash next to a blank line, a heading, any other block or a touying marker or wrapper such as `#pause` or `#alert[..]` still splits slides.
 
-  **Migration:** where a break is wanted, put a blank line around `---`.
+  Article mode follows the same rule: such a dash stays in its paragraph instead of being dropped, and a dash that is a horizontal line is still dropped.
+
+  **Migration:** where a break is wanted, put a blank line or a heading around `---`.
 
 - **A bare waypoint label picks its last subslide in three places**
 
@@ -30,13 +32,14 @@ A patch release with fixes and a few corrections to behaviour that 0.8.0 introdu
 
   A package's own `touying-reducer-bindings` are used when `reduce` and `cover` are both functions. Otherwise touying uses the bindings it has for the package's `name`.
 
-- **Slide Preambles are now called again and preambles will be reworked soon together with more external hooks**
-  `slide-preamble` and `default-slide-preamble` are called again (they were silently dropped in March 2026). A slide now starts with `preamble` (first slide only), then `slide-preamble`, then the content a deferred config change collected in front of the slide, which used to run first.
-  And finally the subslide preamble. These all run after the header is constructed, only the `page-preamble` is run before the header (old behaviour).
+- **`slide-preamble` and `default-slide-preamble` run again**
 
-  Bc preambles were not easy to use for external packages they will be reworked soon in a rework that aims to allow better 3rd party package integration. The touying-reducer-bindings will stay, but other hooks will be added.
+  They were silently dropped in March 2026 and are called again. A slide now runs `preamble` at the start of the document, then the content a deferred config change collected in front of the slide, as in 0.8.0, then `slide-preamble` and then the subslide preamble. All of these run after the header is built, before any content other content in the slide body. Only `page-preamble` runs before it, as before.
 
 ### Fixes
+- Content in the body of a `touying-set-config` before the first heading, `#slide` or pagebreak is no longer dropped or merged into the wrong slide.
+- A label after a slide call (`#slide[..]<name>`) now labels the slide like a heading label does: `#link(<name>)` reaches its first subslide and the waypoint anchors `<name.waypoint>` exist, in presentation, handout and article mode. Waypoint anchors in article mode are no longer dropped when their waypoint does not end on the last subslide.
+- A recalled whole slide no longer emits its slide labels a second time: each copy gets a fresh label, by default with a counter like `<og-label-1>`, `<og-label-2>`, ... (and `<og-label-1.waypoint>`). You may specify a new label by writing `#touying-recall(<intro>)<intro-again>`. This also works for recalled content, thus a recalled figure, e.g. recalled at only one subslide, can be referenced. Recalling content without a new label simply emits it without one.
 - `#heading[..]` outside a slide call no longer fails with `field "depth" in heading is not known at this point` (#434, #437).
 - A `#figure` without a caption that is hidden by a `#pause` no longer fails with `field "caption" in figure is not known at this point` (#437).
 - `animate`, `animate-hidden`, `animate-removed` and `item-by-item-fn` are now listed in default methods through `self.methods` and `utils.methods(self)` just like `uncover` and `only`.
@@ -47,9 +50,18 @@ A patch release with fixes and a few corrections to behaviour that 0.8.0 introdu
 - The numbers of an enum with a `#pause` stay aligned: the covered and the visible part get the same number column width, so items no longer move sideways when the covered part is revealed (#438).
 - `touying-mitex` keeps the height of a line break that is still hidden, so the visible lines no longer move sideways when the next line is revealed.
 - A `#meanwhile` between list items after an earlier `#pause` no longer splits the list, so the rows no longer move when the next subslide is shown (#439).
+- Covering part of a list, enum or terms keeps the container together: items after a `#meanwhile`, and covered enum items after a blank line, keep their numbers, number column, tightness and row gaps, as they did before 0.7.0. Enums that `#pause` cuts keep `reversed`, `start` and explicit numbers, and a `show enum: set enum(numbering: ..)` or `number-align` rule still reaches the parts. A visible `separator` of `terms` no longer enlarges the reserved gap of a covered terms part.
+- `utils.color-changing-cover` no longer moves the content that follows a `state.update` or `counter.step` inside the covered part.
+- A `touying-set-config` before the first slide no longer drops the document `preamble`, which runs once, on the first slide that is made, also when configs written as calls make slides before the first heading. A `#pagebreak()` inside the body of a config that follows slide content starts a slide, as it does without the config.
 - The ctheorems 2.x states are frozen across subslides (#452, #454). Support for ctheorems 1.x is deprecated and will be removed in v0.9.0.
 - The documentation of `until-wp` and `from-wp` now says what they do: `until-wp` stops before the first subslide of the waypoint, `from-wp` includes it and runs to the end.
 - The API reference lists the functions of `src/core/*.typ` and `touying-slides`, and the documentation of each release is published by the new `docs-release` workflow.
+
+### Upcoming changes
+
+- **Better Integration of External Packages**
+
+  Preambles are hard to use from external packages, so a coming release is likely to rework them and other parts that allow better third-party package integration. `touying-reducer-bindings` will stay and more hooks will be added next to it so packages announce what the need from touying to work and the end user does not have to write this stuff themselves. The `default-*-preamble` keys only exist to keep touying's own setup alive when a theme or user sets some custom preamble, and may be deprecated. 0.8.1 changes nothing beyond the fix above.
 
 ## v0.8.0
 
@@ -746,7 +758,7 @@ Thanks for the contributions from [@enklht](https://github.com/enklht).
 ## v0.5.1 & v0.5.2
 
 - Fix somg bugs.
-
+- `nontight-list-enum-and-terms` now defaults to `false`
 
 ## v0.5.0
 

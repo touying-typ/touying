@@ -5,8 +5,8 @@
 #import "parser.typ": (
   _build-native-recall, _members-in-range, _prepare-render-context,
   _render-at-subslide, _resolve-string-to-members, _resolve-waypoint-to-members,
-  check-current-mode-skip, unsupported-mark-message, waypoint-anchor,
-  waypoint-kinds,
+  _waypoint-kinds, check-current-mode-skip, unsupported-mark-message,
+  waypoint-anchor,
 )
 
 /// Content that replaces the slide content when in article mode. Place it after your slide, before the next one.
@@ -240,7 +240,7 @@
   let el = _unwrap(it)
   if tree.is-metadata(el) { return true }
   if type(el) != content { return false }
-  el.func() in (heading, pagebreak) or el in ([—], [---])
+  el.func() in (heading, pagebreak)
 }
 
 
@@ -1130,7 +1130,7 @@
         type(spec) == label
           or (
             type(spec) == dictionary
-              and spec.at("kind", default: "") in waypoint-kinds
+              and spec.at("kind", default: "") in _waypoint-kinds
           )
       ) {
         // Article mode has no enclosing slide waypoint map to inherit. This
@@ -1184,6 +1184,7 @@
         raw-label,
         v.at("subslides", default: none),
         v.at("base", default: auto),
+        new-label: v.at("new-label", default: none),
       )
     },
   )
@@ -1208,7 +1209,8 @@
     let slide-start = 0
     let slide-text = none
     let slide-crumbs = ()
-    for child in children {
+    let is-rule-dash = tree.make-rule-dash-test(children)
+    for (child-index, child) in children.enumerate() {
       // A top-level `#set`/`#show` leaves every child wrapped in a `styled`
       // node, so classify on `el` and put the styles back with `_restyle`
       // around anything pulled out of a mark's payload.
@@ -1259,7 +1261,9 @@
         result += r.items
         result += r.breadcrumbs
         slide-crumbs += r.breadcrumbs
-        let slide-result = (el.value.fn)(use-self)
+        let slide-result = (el.value.fn)(
+          use-self + (slide-label: tree.get-slide-call-label(el)),
+        )
         let payload = _unwrap-article-raw(slide-result)
         let raw-content = payload.at("content", default: none)
         // Not wrapped in an extra block(): a rendered slide's own content is
@@ -1297,12 +1301,13 @@
         // Stripped in article mode — an article-mode/slide-mode
         // distinction the shared parser has no notion of, so it must be
         // filtered out here rather than left for the parser to see.
-      } else if el in ([—], [---]) {
-        // A bare slide separator. It breaks slides, so it means nothing in an
-        // article and is dropped, whatever `horizontal-line-to-pagebreak`
-        // says: that config is about slide output. Inside #article-text or
-        // #article-only it survives, because those bodies are emitted whole
-        // rather than walked.
+      } else if is-rule-dash(child-index) {
+        // A slide separator, which is a dash that is not part of a sentence
+        // (the same test as in slide mode). It means nothing in an article and
+        // is dropped, whatever `horizontal-line-to-pagebreak` says: that
+        // config is about slide output. Inside #article-text or #article-only
+        // it survives, because those bodies are emitted whole rather than
+        // walked. A dash inside a sentence stays in its run.
       } else {
         current-run.push(child)
       }
@@ -1333,7 +1338,8 @@
   let slide-head = ()
   let slide-text = none
   let slide-crumbs = ()
-  for child in children {
+  let is-rule-dash = tree.make-rule-dash-test(children)
+  for (child-index, child) in children.enumerate() {
     // Same as the simple path above: classify on `el`, re-style anything
     // pulled out of a mark's payload.
     let el = _unwrap(child)
@@ -1439,7 +1445,9 @@
       slide-crumbs += r.breadcrumbs
       current-images += r.images
       current-blocks += r.blocks
-      let slide-result = (el.value.fn)(use-self)
+      let slide-result = (el.value.fn)(
+        use-self + (slide-label: tree.get-slide-call-label(el)),
+      )
       let payload = _unwrap-article-raw(slide-result)
       let raw-content = payload.at("content", default: none)
       // See the matching comment in the simple path above: no extra
@@ -1474,7 +1482,7 @@
       // Stripped in article mode — an article-mode/slide-mode
       // distinction the shared parser has no notion of, so it must be
       // filtered out here rather than left for the parser to see.
-    } else if el in ([—], [---]) {
+    } else if is-rule-dash(child-index) {
       // See the simple path above: a slide separator means nothing in an
       // article, and survives only inside #article-text or #article-only.
     } else {

@@ -30,7 +30,7 @@ Now we can recall previous topics using the recall function.
 
 We can also recall the second topic:
 
-#touying-recall(<second-topic>)
+#touying-recall(<second-topic>)<second-topic-again>
 
 == Multiple Recalls
 
@@ -45,3 +45,19 @@ Then, let's recall the second topic:
 == Cross-references in Content
 
 You can also reference slides inline like in your text content.
+
+// A recalled slide emits its labels again, so a copy names them with a number,
+// or with the label written after the call.
+#context {
+  let count(name) = query(label(name)).len()
+  for name in (
+    "first-topic",
+    "first-topic-1",
+    "first-topic-2",
+    "second-topic",
+    "second-topic-again",
+    "second-topic-1",
+  ) {
+    assert.eq(count(name), 1, message: "label `" + name + "` has to occur once")
+  }
+}
