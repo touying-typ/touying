@@ -4,8 +4,32 @@
 #import "@preview/uniwarn:0.1.1"
 #uniwarn.register-namespace("touying")
 #let warning = uniwarn.warning.with(namespace: "touying", prefix: "[touying] ")
-#let touying-enable-warnings = uniwarn.enable-warnings.with("touying")
-#let touying-disable-warnings = uniwarn.disable-warnings.with("touying")
+
+/// Turn off the warnings that touying emits, from this point of the document on.
+/// Touying uses [uniwarn](https://typst.app/universe/package/uniwarn) with the
+/// namespace `touying`. The call returns content and has to be placed in the
+/// document, so write `#touying-disable-warnings()` with the parentheses.
+///
+/// Example:
+///
+/// ```typ
+/// #touying-disable-warnings()
+/// ```
+///
+/// -> content
+#let touying-disable-warnings() = uniwarn.disable-warnings("touying")
+
+/// Turn the warnings that touying emits back on after
+/// `touying-disable-warnings()`. They are on by default.
+///
+/// Example:
+///
+/// ```typ
+/// #touying-enable-warnings()
+/// ```
+///
+/// -> content
+#let touying-enable-warnings() = uniwarn.enable-warnings("touying")
 
 
 // ==================================

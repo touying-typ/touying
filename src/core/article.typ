@@ -5,8 +5,8 @@
 #import "parser.typ": (
   _build-native-recall, _members-in-range, _prepare-render-context,
   _render-at-subslide, _resolve-string-to-members, _resolve-waypoint-to-members,
-  check-current-mode-skip, unsupported-mark-message, waypoint-anchor,
-  waypoint-kinds,
+  _waypoint-kinds, check-current-mode-skip, unsupported-mark-message,
+  waypoint-anchor,
 )
 
 /// Content that replaces the slide content when in article mode. Place it after your slide, before the next one.
@@ -1130,7 +1130,7 @@
         type(spec) == label
           or (
             type(spec) == dictionary
-              and spec.at("kind", default: "") in waypoint-kinds
+              and spec.at("kind", default: "") in _waypoint-kinds
           )
       ) {
         // Article mode has no enclosing slide waypoint map to inherit. This

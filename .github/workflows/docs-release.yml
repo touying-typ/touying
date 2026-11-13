@@ -108,134 +108,44 @@ jobs:
         working-directory: website
         run: npm run copy-docs
 
-      # Until the fix in touying-typ.github.io is merged, its generator skips every
-      # module in src/core. This does nothing once the generator has the fix.
-      - name: Patch the website's reference generator
+      # The reference documents the modules this list names, in this order. The
+      # list belongs to the version being published (the module layout of src/
+      # changes between versions), so it is written here and always replaces the
+      # one in the website's generator. A generator without a SOURCE_FILES list
+      # fails the step instead of publishing a reference that lacks modules.
+      - name: Set the modules of the reference
         working-directory: website
         run: |
           python3 - <<'PY'
           import pathlib
-          import sys
+          import re
 
-          path = pathlib.Path("scripts/generate-docs.py")
-          text = path.read_text(encoding="utf-8")
-
-          if "core/animation.typ" in text:
-              print("::notice::The website generator already lists src/core, nothing to patch.")
-              sys.exit(0)
-
-          replacements = [
-              (
-                  '''    ("core.typ", "Core", "Core functions and definitions for Touying."),
-              ("components.typ", "Components", "Reusable UI components for slides."),
-              ("slides.typ", "Slides", "Core slide creation functions."),
-          ''',
-                  '''    ("entrypoint.typ", "Entrypoint", "The entry point that sets Touying up for a document."),
-              # Touying 0.8.0 split core.typ and slides.typ into src/core/. A file that is
-              # missing is skipped, so both layouts are listed and each version of the
-              # submodule documents the files it has.
-              ("core.typ", "Core", "Core functions and definitions for Touying."),
-              ("slides.typ", "Slides", "Core slide creation functions."),
+          modules = [
+              ("configs.typ", "Configs", "Configuration functions for presentation settings."),
+              ("entrypoint.typ", "Entrypoint", "The entry point that sets Touying up for a document."),
+              ("core/slides.typ", "Slides", "Slides, recalling slides and speaker notes."),
               ("core/animation.typ", "Animation", "Animation functions: pause, uncover, only, animate and friends."),
               ("core/blocks.typ", "Blocks", "Content blocks with their own animation behaviour."),
               ("core/waypoints.typ", "Waypoints", "Named positions in a slide's animation timeline."),
-              ("core/slides.typ", "Slides", "Core slide creation functions."),
               ("core/article.typ", "Article", "Article mode functions."),
               ("components.typ", "Components", "Reusable UI components for slides."),
-          ''',
-              ),
-              (
-                  '''            # A line with 2+ leading spaces is a continuation of the current param
-                      if line.startswith("  ") and line.strip():
-                          current_param["description"] += " " + line.strip()
-                          continue
-                      # An empty line is just a blank separator inside the param block
-                      if line == "":
-                          continue
-                      # Any other non-empty non-indented line inside a param block:
-                      # treat as continuation too (rare edge case)
-                      if line.strip() and not line.startswith("-"):
-                          current_param["description"] += " " + line.strip()
-                          continue
-          ''',
-                  '''            # Keep the line structure of the description: paragraphs, nested
-                      # lists and code stay Markdown. The two spaces that indent a
-                      # continuation under `- name (type):` are removed.
-                      if line.startswith("  ") and line.strip():
-                          current_param["description"] += "\\n" + line[2:]
-                          continue
-                      # A blank line separates paragraphs inside the param block
-                      if line == "":
-                          current_param["description"] += "\\n"
-                          continue
-                      # Any other non-empty non-indented line inside a param block:
-                      # treat as continuation too (rare edge case)
-                      if line.strip() and not line.startswith("-"):
-                          current_param["description"] += "\\n" + line.strip()
-                          continue
-          ''',
-              ),
-              (
-                  '''    # Flush last param
-              if current_param is not None:
-                  params.append(current_param)
-
-              description =''',
-                  '''    # Flush last param
-              if current_param is not None:
-                  params.append(current_param)
-              for param in params:
-                  param["description"] = param["description"].strip()
-
-              description =''',
-              ),
-              (
-                  '''    in_code_block = False
-              for line in lines:
-                  if line.strip().startswith("```"):
-                      in_code_block = not in_code_block
-                      result.append(line)
-                      continue
-                  if in_code_block:
-                      result.append(line)
-                      continue
-          ''',
-                  '''    in_code_block = False
-              in_inline_code = False
-              for line in lines:
-                  if line.strip().startswith("```"):
-                      in_code_block = not in_code_block
-                      result.append(line)
-                      continue
-                  if in_code_block:
-                      result.append(line)
-                      continue
-
-                  # A code span can run over several lines. The lines of it after the first
-                  # are code and are not escaped.
-                  in_span = in_inline_code
-                  in_inline_code ^= line.count("`") % 2 == 1
-                  if in_span:
-                      head, tick, tail = line.partition("`")
-                      result.append(head + tick + _escape_angle_brackets_outside_code(tail) if tick else head)
-                      continue
-          ''',
-              ),
-              (
-                  'module_id = os.path.splitext(source_file)[0]',
-                  'module_id = os.path.splitext(os.path.basename(source_file))[0]',
-              ),
+              ("utils.typ", "Utils", "Utility functions used throughout Touying."),
+              ("magic.typ", "Magic", "Show-rule helpers that enhance Typst behaviour."),
+              ("pdfpc.typ", "Pdfpc", "Functions for generating pdfpc presenter metadata."),
+              ("extern.typ", "Warnings", "Turning the warnings of Touying off and on."),
           ]
+          block = "SOURCE_FILES = [\n" + "".join(
+              f"    ({name!r}, {title!r}, {description!r}),\n"
+              for name, title, description in modules
+          ) + "]"
 
-          for old, new in replacements:
-              if text.count(old) != 1:
-                  print("::warning::The website generator changed, so it is used as it is and "
-                        "the reference may lack the modules in src/core.")
-                  sys.exit(0)
-              text = text.replace(old, new)
-
+          path = pathlib.Path("scripts/generate-docs.py")
+          text = path.read_text(encoding="utf-8")
+          text, count = re.subn(r"^SOURCE_FILES = \[.*?^\]", lambda _: block, text, flags=re.S | re.M)
+          if count != 1:
+              raise SystemExit("scripts/generate-docs.py has no SOURCE_FILES list to replace")
           path.write_text(text, encoding="utf-8")
-          print("Patched the website generator to document src/core.")
+          print(f"The reference documents {len(modules)} modules.")
           PY
 
       - name: Generate API reference documentation

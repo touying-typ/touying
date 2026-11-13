@@ -1085,9 +1085,9 @@ We bind the functions into touying so you can directly do
 #import "@preview/touying:0.8.0": *
 
 //to disable the warnings emitted by touying
-#touying-disable-warnings
+#touying-disable-warnings()
 //to reenable the warnings emitted by touying
-#touying-enable-warnings
+#touying-enable-warnings()
 ```
 
 But you can also do

@@ -1062,9 +1062,9 @@ Touying 使用 `uniwarn` 来处理其命名空间为 `touying` 的警告。
 #import "@preview/touying:0.8.0": *
 
 // 禁用 Touying 发出的警告
-#touying-disable-warnings
+#touying-disable-warnings()
 // 重新启用 Touying 发出的警告
-#touying-enable-warnings
+#touying-enable-warnings()
 ```
 
 你也可以这样做：

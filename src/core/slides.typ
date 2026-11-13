@@ -4,8 +4,9 @@
 #import "tree.typ"
 #import "subslides.typ": check-visible, resolve-negative-subslides
 #import "waypoints.typ": (
-  _compute-waypoint-ranges, _resolve-waypoint-forest, _waypoint-known,
-  last-subslides-of-waypoints, resolve-waypoints, waypoint-kinds,
+  _compute-waypoint-ranges, _last-subslides-of-waypoints,
+  _resolve-waypoint-forest, _resolve-waypoints, _waypoint-kinds,
+  _waypoint-known,
 )
 #import "parser.typ": (
   _collect-waypoints, _parse-content-into-results-and-repetitions,
@@ -37,49 +38,7 @@
 // drawn, and the touying marks, which the parser has to see in the slide.
 #let _starts-slide(it) = not _is-invisible(it) or tree.is-touying-mark(it)
 
-/// Inject configuration changes into a block of content. Changes take effect only within `body` or the slide you call it in. Best used as a show rule. Useful for implementing features like `#show: appendix` or changing the cover method on the fly.
-///
-/// Example: `#let appendix(body) = touying-set-config((appendix: true), defer:true, body)` and you can use `#show: appendix` to set the appendix for the presentation.
-///
-/// The keyword `defer` is useful for features like `appendix`, which should not take effect until the next slide starts. All following content is also then wrapped into the preamble, e.g. `counter-update`, set or other show rules. Putting content after a deferred config show rule will not render it visibly in the document.
-/// You may even use `#show: touying-set-config.with((slide-preamble: fn), defer:true)` to set a preamble function for the next slide or do similar config changes without calling the `slide` function explicitly.
-/// Just relying on the deferred config change's ability to capture functions and running them also in the preamble is considered an antipattern. Use the explicit fields on `#slide` instead.
-///
-/// - config (dictionary): The new configurations for the presentation.
-///
-/// - defer (bool): Whether to defer applying the config changes until the next slides preamble. Default is false (apply immediately).
-///
-/// - body (content): The content of the slide.
-///
-/// -> content
-#let touying-set-config(config, defer: false, body) = [#metadata((
-  kind: "touying-set-config",
-  config: config,
-  defer: defer,
-  body: body,
-))<touying-temporary-mark>]
-
 //get-config is in src/config.typ as we need the default-config.
-
-
-/// Begin the appendix of the presentation. The *total* slide number
-/// (`utils.last-slide-number`) is frozen at the last non-appendix slide, so
-/// appendix slides do not inflate the total shown in footers. The slide counter
-/// itself keeps advancing, so an appendix footer reads e.g. `5/3`. To stop the
-/// counter as well, use `config-common(freeze-slide-counter: true)`.
-///
-/// Equivalent to `#show: touying-set-config.with((appendix: true), defer: true)`.
-///
-/// Example: `#show: appendix`
-///
-/// - body (content): The content of the appendix.
-///
-/// -> content
-#let appendix(body) = touying-set-config(
-  (appendix: true),
-  body,
-  defer: true,
-)
 
 
 /// Recall content by its label.
@@ -2304,11 +2263,11 @@
     // as one element of an array. It is expanded to plain integers here, since
     // the spec parser below only knows ranges.
     if handout-subslides == "waypoints" {
-      handout-subslides = last-subslides-of-waypoints(self, repeat)
+      handout-subslides = _last-subslides-of-waypoints(self, repeat)
     } else if type(handout-subslides) == array {
       handout-subslides = handout-subslides
         .map(idx => if idx == "waypoints" {
-          last-subslides-of-waypoints(self, repeat)
+          _last-subslides-of-waypoints(self, repeat)
         } else { (idx,) })
         .flatten()
     }
@@ -2317,7 +2276,7 @@
       type(spec) == label
         or (
           type(spec) == dictionary
-            and spec.at("kind", default: "") in waypoint-kinds
+            and spec.at("kind", default: "") in _waypoint-kinds
         )
     )
     // Only a range marker spans several subslides, see below.
@@ -2345,7 +2304,7 @@
           // `arr[i] = ..` is not index assignment in Typst - it parses as a call
           // and panics with "expected function, found array".
           handout-subslides.at(i) = if is-range-marker(subslide-idx) {
-            resolve-waypoints(self, subslide-idx)
+            _resolve-waypoints(self, subslide-idx)
           } else {
             _resolve-waypoint-to-last(self, subslide-idx, end: repeat)
           }
@@ -2446,10 +2405,10 @@
       (resolve-negative-subslides(self.repeat, recall-spec),)
     } else if type(recall-spec) == str and recall-spec == "waypoints" {
       // "waypoints" → last subslide of every waypoint
-      last-subslides-of-waypoints(self, repeat)
+      _last-subslides-of-waypoints(self, repeat)
     } else if type(recall-spec) == label or type(recall-spec) == dictionary {
       // Waypoint label or marker — resolve using the slide's waypoint map
-      let resolved = resolve-waypoints(self, recall-spec)
+      let resolved = _resolve-waypoints(self, recall-spec)
       if type(resolved) == int {
         (resolved,)
       } else if type(resolved) == dictionary {

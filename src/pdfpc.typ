@@ -3,13 +3,13 @@
 
 #import "bundle.typ"
 
-/// Generate pdfpc metadata for the presentation. Called internally in the preamble when `enable-pdfpc` is `true`.
-///
-/// The result carries the `<pdfpc-file>` label. Turn it into a `.pdfpc` file either with `#pdfpc.bundle-assets()` in a bundle export, or with the shell command `typst eval --in ./example.typ 'query(<pdfpc-file>).first().value' > ./example.pdfpc`.
-///
-/// - loc (location): A location inside the presentation. It tells the slides of this presentation apart from those of the other documents in a bundle export.
-///
-/// -> content
+// Generate pdfpc metadata for the presentation. Called internally in the preamble when `enable-pdfpc` is `true`.
+//
+// The result carries the `<pdfpc-file>` label. Turn it into a `.pdfpc` file either with `#pdfpc.bundle-assets()` in a bundle export, or with the shell command `typst eval --in ./example.typ 'query(<pdfpc-file>).first().value' > ./example.pdfpc`.
+//
+// - loc (location): A location inside the presentation. It tells the slides of this presentation apart from those of the other documents in a bundle export.
+//
+// -> content
 #let pdfpc-file(loc) = {
   // A bundle export compiles several presentations at once and introspection
   // sees all of them, so a plain `query(<pdfpc>)` would merge the notes and
@@ -101,7 +101,7 @@
 /// Example:
 ///
 /// ```typ
-/// #import "@preview/touying:0.8.0": *
+/// #import "@preview/touying:0.8.1": *
 /// #import themes.simple: *
 ///
 /// #pdfpc.bundle-assets()
@@ -152,9 +152,9 @@
 }
 
 
-/// Emit a raw speaker note string for the current slide into the pdfpc metadata. Called internally by `utils.speaker-note`.
-///
-/// -> content
+// Emit a raw speaker note string for the current slide into the pdfpc metadata. Called internally by `utils.speaker-note`.
+//
+// -> content
 #let speaker-note(text) = {
   let text = if type(text) == str {
     text

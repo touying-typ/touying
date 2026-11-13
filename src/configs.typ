@@ -913,6 +913,49 @@
 /// all the real config prefixes: `("methods", "info", "colors", "page", "article", "store")`
 #let _prefixes = ("methods", "info", "colors", "page", "article", "store")
 
+/// Inject configuration changes into a block of content. Changes take effect only within `body` or the slide you call it in. Best used as a show rule. Useful for implementing features like `#show: appendix` or changing the cover method on the fly.
+///
+/// Example: `#let appendix(body) = touying-set-config((appendix: true), defer:true, body)` and you can use `#show: appendix` to set the appendix for the presentation.
+///
+/// The keyword `defer` is useful for features like `appendix`, which should not take effect until the next slide starts. All following content is also then wrapped into the preamble, e.g. `counter-update`, set or other show rules. Putting content after a deferred config show rule will not render it visibly in the document.
+/// You may even use `#show: touying-set-config.with((slide-preamble: fn), defer:true)` to set a preamble function for the next slide or do similar config changes without calling the `slide` function explicitly.
+/// Just relying on the deferred config change's ability to capture functions and running them also in the preamble is considered an antipattern. Use the explicit fields on `#slide` instead.
+///
+/// - config (dictionary): The new configurations for the presentation.
+///
+/// - defer (bool): Whether to defer applying the config changes until the next slides preamble. Default is false (apply immediately).
+///
+/// - body (content): The content of the slide.
+///
+/// -> content
+#let touying-set-config(config, defer: false, body) = [#metadata((
+  kind: "touying-set-config",
+  config: config,
+  defer: defer,
+  body: body,
+))<touying-temporary-mark>]
+
+
+/// Begin the appendix of the presentation. The *total* slide number
+/// (`utils.last-slide-number`) is frozen at the last non-appendix slide, so
+/// appendix slides do not inflate the total shown in footers. The slide counter
+/// itself keeps advancing, so an appendix footer reads e.g. `5/3`. To stop the
+/// counter as well, use `config-common(freeze-slide-counter: true)`.
+///
+/// Equivalent to `#show: touying-set-config.with((appendix: true), defer: true)`.
+///
+/// Example: `#show: appendix`
+///
+/// - body (content): The content of the appendix.
+///
+/// -> content
+#let appendix(body) = touying-set-config(
+  (appendix: true),
+  body,
+  defer: true,
+)
+
+
 /// Gets the current config at the point of the call. Returns a dict with context evaluated values.
 /// You cannot compute with the resulting values, only display it because `touying-get-config` uses a context expression internally. If you need to compute with config values use the callback `touying-fn-wrapper-raw` instead and access what you need on `self` directly.
 ///

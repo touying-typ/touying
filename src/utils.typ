@@ -2,7 +2,7 @@
 #import "pdfpc.typ"
 #import "extern.typ": warning
 #import "core/tree.typ"
-#import "core/waypoints.typ": resolve-waypoints
+#import "core/waypoints.typ": _resolve-waypoints
 #import "core/subslides.typ": (
   _parse-subslide-indices, assert-no-negative-subslides, check-visible,
 )
@@ -2098,7 +2098,7 @@
 /// - resolved-spec (int, array, str, label, dictionary, none): The
 ///   placement-time replacement, or `none` to use `spec`.
 /// -> int | array | str | dictionary
-#let _get-resolved-subslides(self, spec, resolved-spec) = resolve-waypoints(
+#let _get-resolved-subslides(self, spec, resolved-spec) = _resolve-waypoints(
   self,
   if resolved-spec != none { resolved-spec } else { spec },
 )
@@ -2138,7 +2138,7 @@
         type(start) == dictionary and start.at("kind", default: none) != none
       )
   ) {
-    let resolved = resolve-waypoints(self, start)
+    let resolved = _resolve-waypoints(self, start)
     if type(resolved) == int {
       resolved
     } else if type(resolved) == dictionary and "beginning" in resolved {
@@ -2675,7 +2675,7 @@
   let contents = subslides-contents.map(it => it.last())
 
   // Pre-resolve all subslide specs (handles waypoint labels, markers, etc.)
-  let resolved = subslides-contents.map(((s, _)) => resolve-waypoints(self, s))
+  let resolved = subslides-contents.map(((s, _)) => _resolve-waypoints(self, s))
 
   if stretch {
     context {
