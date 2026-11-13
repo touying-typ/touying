@@ -168,7 +168,12 @@
           inset: 0em,
           breakable: false,
           {
-            text(size: 2em, fill: self.colors.primary, strong(info.title))
+            text(
+              size: 2em,
+              fill: self.colors.primary,
+              weight: "bold",
+              info.title,
+            )
             if info.subtitle != none {
               parbreak()
               text(size: 1.2em, fill: self.colors.primary, info.subtitle)
