@@ -154,8 +154,10 @@
 
 // Emit a raw speaker note string for the current slide into the pdfpc metadata. Called internally by `utils.speaker-note`.
 //
+// `body` keeps the original note next to the text, for tools that typeset notes themselves. The `.pdfpc` file only uses the text.
+//
 // -> content
-#let speaker-note(text) = {
+#let speaker-note(text, body: none) = {
   let text = if type(text) == str {
     text
   } else if type(text) == content and text.func() == raw {
@@ -163,7 +165,11 @@
   } else {
     panic("A note must either be a string or a raw block")
   }
-  [ #metadata((t: "Note", v: text)) <pdfpc> ]
+  let value = (t: "Note", v: text)
+  if body != none {
+    value.body = body
+  }
+  [ #metadata(value) <pdfpc> ]
 }
 
 #let end-slide = [

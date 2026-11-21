@@ -3227,7 +3227,7 @@
       } else {
         markup-text(note, mode: mode).trim()
       }
-      pdfpc.speaker-note(raw-text)
+      pdfpc.speaker-note(raw-text, body: note)
     }
     if show-only-notes or show-notes-on-second-screen != none {
       slide-note-state.update(old => if old == none {
