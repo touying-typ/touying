@@ -34,6 +34,10 @@ More content.
 == Metadata
 
 #context {
+  // Notes keep their original content next to the text.
+  let notes = query(<pdfpc>).map(it => it.value).filter(it => it.t == "Note")
+  assert.eq(notes.map(it => it.body), ([First note], [Second note]))
+
   let files = query(<pdfpc-file>)
   // The metadata is assembled once, in the preamble of the first slide.
   assert.eq(files.len(), 1)

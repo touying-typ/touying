@@ -418,6 +418,10 @@ Things to watch when upgrading: a `#pause` after `uncover`/`only`/`alternatives`
 
 - theme(stargazer): it also documented `footer` and `footer-right` when never using those.
 
+- **feat: pdfpc note metadata keeps the original note** ([#462](https://github.com/touying-typ/touying/issues/462))
+
+  `#speaker-note[..]` now also stores the note's content as `body` in its `<pdfpc>` metadata, next to the text in `v`. Tools that read notes with `query(<pdfpc>)` can typeset them, math included. The `.pdfpc` file is unchanged.
+
 ### Documentation
 
 Almost every page was touched. The largest items:
