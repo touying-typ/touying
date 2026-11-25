@@ -54,6 +54,7 @@ A patch release with fixes and a few corrections to behaviour that 0.8.0 introdu
 - `utils.color-changing-cover` no longer moves the content that follows a `state.update` or `counter.step` inside the covered part.
 - A `touying-set-config` before the first slide no longer drops the document `preamble`, which runs once, on the first slide that is made, also when configs written as calls make slides before the first heading. A `#pagebreak()` inside the body of a config that follows slide content starts a slide, as it does without the config.
 - The ctheorems 2.x states are frozen across subslides (#452, #454). Support for ctheorems 1.x is deprecated and will be removed in v0.9.0.
+- With `show-bibliography-as-footnote`, a citation whose footnote does not fit on the page together with it no longer fails with `citation could not be located` (#395).
 - The documentation of `until-wp` and `from-wp` now says what they do: `until-wp` stops before the first subslide of the waypoint, `from-wp` includes it and runs to the end.
 - The API reference lists the functions of `src/core/*.typ` and `touying-slides`, and the documentation of each release is published by the new `docs-release` workflow.
 
