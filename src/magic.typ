@@ -210,11 +210,21 @@
 
   show cite.where(form: "normal"): it => (
     context {
-      let label-str = "touying-footnote-bib:" + str(it.key)
-      if (
+      // A label is part of the footnote's identity, so it must not depend on
+      // the page: with a page-derived label, a citation that moves to another
+      // page between layout iterations gets a new location each time, which
+      // Typst reports as "citation could not be located".
+      let key = str(it.key)
+      let label-str = "touying-footnote-bib:" + key + "-"
+      let made = query(selector(<touying-footnote-bib>).before(here())).filter(
+        m => m.value == key,
+      )
+      let reuse = if (
         type(self) == dictionary and not self.at("article-mode", default: false)
       ) {
-        label-str = label-str + str(here().page()) //dedup in slides mode per page. in article mode that is not stable
+        made.position(m => m.location().page() == here().page()) //dedup in slides mode per page. in article mode that is not stable
+      } else if made.len() > 0 {
+        0
       }
       let bibitem = {
         show: body => {
@@ -227,12 +237,14 @@
         bibliography-visited.update(visited => visited + (it.key,))
       }
       box({
-        if query(selector(label(label-str)).before(here())).len() > 0 {
+        if reuse != none {
           set super(..footnote-style)
-          footnote(label(label-str), numbering: numbering)
+          footnote(label(label-str + str(reuse)), numbering: numbering)
         } else {
           set super(..footnote-style)
-          [#footnote(numbering: numbering, bibitem)#label(label-str)]
+          let new-label = label(label-str + str(made.len()))
+          [#footnote(numbering: numbering, bibitem)#new-label]
+          [#metadata(key)<touying-footnote-bib>]
         }
       })
     }
